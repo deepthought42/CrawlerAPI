@@ -31,6 +31,10 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
+/**
+ * 
+ * 
+ */
 @Component
 public class TestCreatorService {
 	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
@@ -106,13 +110,20 @@ public class TestCreatorService {
 	 * @throws JsonProcessingException
 	 * @throws MalformedURLException
 	 */
-	public Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host) throws JsonProcessingException, MalformedURLException {
+	public Test createTest(
+			List<String> path_keys, 
+			List<PathObject> path_objects, 
+			PageState result_page, 
+			long crawl_time, 
+			String browser_name, 
+			String domain_host
+	) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
 		
 		log.warn("Creating test........");
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
-		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){
@@ -123,6 +134,17 @@ public class TestCreatorService {
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
 			test.addRecord(test_record);
 			
+			/*
+			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+			Future<Object> future = Patterns.ask(discovery_actor, new AccountRequest(), timeout);
+			Account account;
+			try {
+				account = (Account) Await.result(future, timeout.duration());
+				SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			*/
 			return test;
 		}
 

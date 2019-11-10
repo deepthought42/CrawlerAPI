@@ -15,7 +15,7 @@ public class BrowserUtilsTests {
 		String url = "http://qanairy.com";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		
-		assertTrue("http://www.qanairy.com".equals(sanitized_url));
+		assertTrue("http://qanairy.com".equals(sanitized_url));
 	}
 	
 	@Test
@@ -23,7 +23,7 @@ public class BrowserUtilsTests {
 		String url = "http://qanairy.com?value=test";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		
-		assertTrue("http://www.qanairy.com".equals(sanitized_url));
+		assertTrue("http://qanairy.com".equals(sanitized_url));
 	}
 	
 	@Test
@@ -47,6 +47,6 @@ public class BrowserUtilsTests {
 		String url = "http://zaelab.com/services";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		
-		assertTrue("http://www.zaelab.com/services".equals(sanitized_url));
+		assertTrue("http://zaelab.com/services".equals(sanitized_url));
 	}
 }

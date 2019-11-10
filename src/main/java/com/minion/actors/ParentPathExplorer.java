@@ -26,6 +26,7 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.minion.util.TimingUtils;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
@@ -187,7 +188,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-
+							TimingUtils.pauseThread(1000);
 							PageState result = browser_service.buildPage(browser);
 
 							//if result matches expected page then build new path using parent element state and break from loop
@@ -259,7 +260,7 @@ public class ParentPathExplorer extends AbstractActor {
 					log.warn("domain url :: "+domain.getUrl());
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
 
-			  		Test test = test_creator_service.createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
+			  		Test test = test_creator_service.createTest( final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());

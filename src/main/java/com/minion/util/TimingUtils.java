@@ -1,6 +1,6 @@
 package com.minion.util;
 
-public class Timing {
+public class TimingUtils {
 	public static void pauseThread(long time){
 		try{
 			Thread.sleep(time);

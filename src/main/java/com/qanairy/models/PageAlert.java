@@ -43,7 +43,7 @@ public class PageAlert implements PathObject, Persistable {
 	public void performChoice(WebDriver driver){
 		try{
 			Alert alert = driver.switchTo().alert();
-			if(choice.equals("accept")){
+			if("accept".equals(choice)){
 				alert.accept();
 			}
 			else{

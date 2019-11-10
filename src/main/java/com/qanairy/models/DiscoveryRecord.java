@@ -155,4 +155,12 @@ public class DiscoveryRecord implements Persistable {
 	public void setExpandedUrls(List<String> expanded_urls) {
 		this.expanded_urls = expanded_urls;
 	}
+	
+	public Long getId() {
+		return id;
+	}
+	
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

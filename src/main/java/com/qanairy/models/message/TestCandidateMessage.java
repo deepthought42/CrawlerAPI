@@ -23,7 +23,15 @@ public class TestCandidateMessage {
 	private BrowserType browser;
 	private Domain domain;
 	
-	public TestCandidateMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PageState result_page, BrowserType browser, ActorRef domain_actor, Domain domain){
+	public TestCandidateMessage(
+			List<String> keys, 
+			List<PathObject> path_objects, 
+			ActorRef discovery_actor, 
+			PageState result_page, 
+			BrowserType browser, 
+			ActorRef domain_actor, 
+			Domain domain
+	){
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
 		this.keys = keys;

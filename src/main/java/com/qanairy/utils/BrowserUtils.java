@@ -231,9 +231,42 @@ public class BrowserUtils {
 			domain = domain.substring(0, param_index);
 		}
 
+		//URL new_url = new URL(domain);
+		//check if host is subdomain
+		/*
+		String new_host = new_url.getHost();
+		
+		int count = new_host.split("\\.").length;
+		if(count <= 2 && !new_host.startsWith("www.")){
+			new_host = "www."+new_host;
+		}
+		String new_key = new_host+new_url.getPath();
+		*/
+		if(domain.charAt(domain.length()-1) == '/'){
+			domain = domain.substring(0, domain.length()-1);
+		}
+		
+		domain = domain.replace("index.html", "");
+		domain = domain.replace("index.htm", "");
+		
+		if(domain.charAt(domain.length()-1) == '/') {
+			domain = domain.substring(0, domain.length()-1);
+		}
+		
+		return domain;
+	}
+	
+	public static String sanitizeUserUrl(String url) throws MalformedURLException {
+		String domain = url;
+		int param_index = domain.indexOf("?");
+		if(param_index >= 0){
+			domain = domain.substring(0, param_index);
+		}
+
 		URL new_url = new URL(domain);
 
 		//check if host is subdomain
+		
 		String new_host = new_url.getHost();
 		
 		int count = new_host.split("\\.").length;

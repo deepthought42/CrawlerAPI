@@ -79,7 +79,7 @@ public class Test implements Persistable {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -94,8 +94,8 @@ public class Test implements Persistable {
 		setLastRunTimestamp(new Date());
 		setName(generateTestName());
 		setBrowserStatuses(new HashMap<String, String>());
-		setIsRunning(false);
 		setArchived(false);
+		setIsRunning(false);
 		setKey(generateKey());
 		setRunTime(0L);
 	}
@@ -128,7 +128,7 @@ public class Test implements Persistable {
 		setLastRunTimestamp(new Date());
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
-		setIsRunning(false);
+		setIsRunning(is_running);
 		setArchived(false);
 		setKey(generateKey());
 		setRunTime(0L);
@@ -146,16 +146,16 @@ public class Test implements Persistable {
 		assert last_test_passing_status != null;
 		
 		if(last_test_passing_status.equals(TestStatus.FAILING) && expected_page.equals(new_result_page)){
-			last_test_passing_status = TestStatus.FAILING; 
+			return TestStatus.FAILING; 
 		}
 		else if(last_test_passing_status.equals(TestStatus.FAILING) && !expected_page.equals(new_result_page)){
-			last_test_passing_status = TestStatus.UNVERIFIED;
+			return TestStatus.UNVERIFIED;
 		}
 		else if(last_test_passing_status.equals(TestStatus.PASSING) && expected_page.equals(new_result_page)){
-			last_test_passing_status = TestStatus.PASSING;
+			return TestStatus.PASSING;
 		}
 		else if(last_test_passing_status.equals(TestStatus.PASSING) && !expected_page.equals(new_result_page)){
-			last_test_passing_status = TestStatus.FAILING;
+			return TestStatus.FAILING;
 		}
 		
 		return last_test_passing_status;
@@ -376,7 +376,6 @@ public class Test implements Persistable {
 		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
 									   new ArrayList<PathObject>(test.getPathObjects()),
 									   test.getResult(), 
-									   test.isRunning(), 
 									   test.getSpansMultipleDomains());
 
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
@@ -405,7 +404,7 @@ public class Test implements Persistable {
 					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
 					path = path.replace("/", " ");
 					path = path.trim();
-					if(path.equals("/") || path.isEmpty()){
+					if("/".equals(path) || path.isEmpty()){
 						path = "home";
 					}
 					test_name +=  path + " page ";
@@ -423,7 +422,7 @@ public class Test implements Persistable {
 						tag_name = element.getAttribute("id").getVals().get(0);
 					}
 					else{
-						if(tag_name.equals("a")){
+						if("a".equals(tag_name)){
 							tag_name = "link";
 						}
 					}

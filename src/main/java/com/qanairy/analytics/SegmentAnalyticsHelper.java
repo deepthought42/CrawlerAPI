@@ -18,6 +18,7 @@ public class SegmentAnalyticsHelper {
 	}
 	
 	public static void sendTestFinishedRunningEvent(String userId, Test test) {
+		identify(userId);
 		Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("testId", test.getKey());
         final String anonymousId = UUID.randomUUID().toString();
@@ -30,6 +31,7 @@ public class SegmentAnalyticsHelper {
 	}
 
 	public static void testRunStarted(String userId, int test_count) {
+		identify(userId);
 		//Fire test run started event
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(test_count));
@@ -38,8 +40,20 @@ public class SegmentAnalyticsHelper {
    		    .properties(run_test_batch_props)
    		);
 	}
+	
+	public static void testCreated(String userId, String test_key) {
+		identify(userId);
+		//Fire test run started event
+	   	Map<String, String> test_created_props= new HashMap<String, String>();
+	   	test_created_props.put("test key", test_key);
+	   	buildSegment().enqueue(TrackMessage.builder("Test Created")
+   		    .userId(userId)
+   		    .properties(test_created_props)
+   		);
+	}
 
 	public static void signupEvent(String userId, String string) {
+		identify(userId);
 		Map<String, String> account_signup_properties = new HashMap<String, String>();
     	account_signup_properties.put("plan", "FREE");
     	buildSegment().enqueue(TrackMessage.builder("Signed Up")
@@ -48,12 +62,9 @@ public class SegmentAnalyticsHelper {
     		);
 	}
 
-	public static void identify(Account acct) {
-		Map<String, String> traits = new HashMap<String, String>();
-        traits.put("email", acct.getUsername());
+	public static void identify(String account_id) {
         buildSegment().enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUserId())
-    		    .traits(traits)
+    		    .userId(account_id)
     		);
 	}
 }

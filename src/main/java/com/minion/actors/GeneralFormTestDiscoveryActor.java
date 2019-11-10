@@ -133,7 +133,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 								long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getUrl(), result_page.getUrl(), test_path_objects);
 	
-						  		Test new_test = new Test(path_keys, test_path_objects, result_page, false, leaves_domain);
+						  		Test new_test = new Test(path_keys, test_path_objects, result_page, leaves_domain);
 			
 						  		new_test.setRunTime(crawl_time_in_ms);
 						  		new_test.setLastRunTimestamp(new Date());

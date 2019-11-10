@@ -252,7 +252,8 @@ public class BrowserService {
 				page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
 				page_state.setFullPageChecksum(full_page_screenshot_checksum);
 				page_state.addScreenshotChecksum(screenshot_checksum);
-
+				page_state.setFullPageWidth(full_page_screenshot.getWidth());
+				page_state.setFullPageHeight(full_page_screenshot.getHeight());
 				full_page_screenshot.flush();
 			}
 			

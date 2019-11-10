@@ -119,7 +119,7 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
-		//waitForPageToLoad();
+		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
 
@@ -235,8 +235,9 @@ public class Browser {
 	 */
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
-		ChromeOptions options = new ChromeOptions();
-		options.addArguments("user-agent=QanairyBot");
+		ChromeOptions chrome_options = new ChromeOptions();
+		chrome_options.addArguments("user-agent=QanairyBot");
+		chrome_options.addArguments("window-size=1920,1080");
 
 		//options.setHeadless(true);
 
@@ -254,7 +255,7 @@ public class Browser {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
 		log.info("Requesting chrome remote driver from hub");
-		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, chrome_options);
 		driver.manage().window().maximize();
 
 		//driver.manage().window().setSize(new Dimension(1024, 768));
@@ -306,7 +307,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
-		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 500).getImage();
+		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 1000).getImage();
 	}
 	
 	/**

@@ -224,7 +224,7 @@ public class BrowserUtils {
 		return null;
 	}
 	
-	public static String sanitizeUrl(String url) throws MalformedURLException {
+	public static String sanitizeUrl(String url) {
 		String domain = url;
 		int param_index = domain.indexOf("?");
 		if(param_index >= 0){

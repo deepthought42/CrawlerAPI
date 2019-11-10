@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.message.BugMessage;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
@@ -36,6 +37,7 @@ public class Form {
 	private Date date_discovered;
 	private String status;
 	private String type;
+	private List<BugMessage> bug_messages;
 	
 	@Relationship(type = "DEFINED_BY")
 	private ElementState form_tag;
@@ -203,5 +205,13 @@ public class Form {
 	@Override
 	public Form clone(){
 		return new Form(form_tag, form_fields, submit_field, name, predictions, this.getType(), date_discovered, this.getStatus());
+	}
+
+	public List<BugMessage> getBugMessages() {
+		return bug_messages;
+	}
+
+	public void setBugMessages(List<BugMessage> bug_messages) {
+		this.bug_messages = bug_messages;
 	}
 }

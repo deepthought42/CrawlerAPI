@@ -109,13 +109,14 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								username_elem = findInputElementByAttribute(elements, "email");
 								if(username_elem == null){
 									log.info("could not find username !!!!!!!!");
+									//register error on form that username field cannot be found, mark as bug
 									//throw error that cannot find username field
 								}
 							}
 
 							exploratory_path.addPathObject(username_elem);
 							exploratory_path.addToPathKeys(username_elem.getKey());
-
+							
 							Action type_username = new Action("sendKeys", user.getUsername());
 							Action action_record = action_repo.findByKey(type_username.getKey());
 							if(action_record != null){

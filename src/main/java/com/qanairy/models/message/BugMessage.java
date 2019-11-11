@@ -1,5 +1,7 @@
 package com.qanairy.models.message;
 
+import java.util.Date;
+
 import org.joda.time.DateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -17,14 +19,14 @@ public class BugMessage {
 
 	private String message;
 	private BugType bug_type;
-	private DateTime date_identified;
+	private Date date_identified;
 	
 	public BugMessage() {}
 	
 	public BugMessage(
 		String message,
 		BugType type,
-		DateTime date
+		Date date
 	) {
 		setMessage(message);
 		setBugType(type);
@@ -53,10 +55,10 @@ public class BugMessage {
 	public void setBugType(BugType bug_type) {
 		this.bug_type = bug_type;
 	}
-	public DateTime getDateIdentified() {
+	public Date getDateIdentified() {
 		return date_identified;
 	}
-	public void setDateIdentified(DateTime date_identified) {
+	public void setDateIdentified(Date date_identified) {
 		this.date_identified = date_identified;
 	}
 }

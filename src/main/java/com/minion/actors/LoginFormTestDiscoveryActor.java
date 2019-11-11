@@ -116,7 +116,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								username_elem = findInputElementByAttribute(elements, "email");
 								if(username_elem == null){
 									log.info("could not find username !!!!!!!!");
-									BugMessage bug_message = new BugMessage(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new DateTime());
+									BugMessage bug_message = new BugMessage(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new Date());
 									form_service.addBugMessage(form.getId(), bug_message);
 									//throw error that cannot find username field
 								}
@@ -142,7 +142,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							if(password_elem == null){
 								log.info("could not find password !!!!!!!!");
 								//throw error that cannot find password field
-								BugMessage bug_message = new BugMessage(MISSING_PASSWORD_ERROR, BugType.MISSING_FIELD, new DateTime());
+								BugMessage bug_message = new BugMessage(MISSING_PASSWORD_ERROR, BugType.MISSING_FIELD, new Date());
 								form_service.addBugMessage(form.getId(), bug_message);
 							}
 							

@@ -211,7 +211,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	}
 			    	*/
 					
-					boolean isLandable = BrowserService.checkIfLandable(test_msg.getDomain().getDiscoveryBrowserName(), test.getResult(), test );
+					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || test.getPathKeys().size() == 1;
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
@@ -272,7 +272,7 @@ public class DiscoveryActor extends AbstractActor{
 			        form_msg.setDiscoveryActor(getSelf());
 		    		
 			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(form_msg.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
 					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));

@@ -5,8 +5,6 @@ import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +22,6 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
-	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -50,8 +47,6 @@ public class DomainService {
 		assert !url.isEmpty();
 		assert test != null;
 		
-		log.warn("domain host :: "+url);
-		log.warn("test result when adding test :: " + test);
 		Domain domain = domain_repo.findByUrl(url);
 		domain.addTest(test);
 		return domain_repo.save(domain);
@@ -137,8 +132,6 @@ public class DomainService {
 		assert page_state != null;
     
 		Domain domain = domain_repo.findByUrl(url);
-		log.warn("domain url :: "+url);
-		log.warn("test result when adding test :: " + page_state);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
 	}

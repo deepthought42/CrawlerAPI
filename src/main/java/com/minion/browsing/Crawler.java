@@ -112,7 +112,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
+				//browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
@@ -194,7 +194,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
+				//browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
@@ -273,7 +273,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
+				//browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
@@ -373,7 +373,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
+				//browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
@@ -489,7 +489,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
+				//browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
@@ -622,9 +622,6 @@ public class Crawler {
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
-			catch(MalformedURLException e){
-				log.warn(e.getMessage());
-			}
 			catch(NullPointerException e){
 				e.printStackTrace();
 				log.warn("Error happened while exploratory actor attempted to crawl test ");
@@ -705,12 +702,6 @@ public class Crawler {
 				result_page = browser_service.buildPage(browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
-			}
-			catch(MalformedURLException e){
-				log.warn(e.getMessage());
-				if(e.getMessage().contains("unknown protocol: tel")){
-					break;
-				}
 			}
 			catch(NullPointerException e){
 				e.printStackTrace();

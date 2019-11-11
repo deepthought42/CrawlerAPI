@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -25,8 +26,10 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.BugType;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.message.BugMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
@@ -66,6 +69,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	@Autowired 
 	private ActionRepository action_repo;
 	
+	private final String MISSING_USERNAME_ERROR = "We were unable to find a username field";
+	private final String MISSING_PASSWORD_ERROR = "We were unable to find a password field";
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -83,9 +89,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(FormDiscoveryMessage.class, message -> {
+					Form form = form_service.clearBugMessages(message.getForm().getId());
 					//check that message data is of type Form and that the form type is set to login
 					log.info("login form test discovery actor is up!");
-					Form form = message.getForm();
+
 					Domain domain = message.getDomain();
 					//check if form type is set to login
 					if(form.getType().equals(FormType.LOGIN)){
@@ -109,22 +116,25 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								username_elem = findInputElementByAttribute(elements, "email");
 								if(username_elem == null){
 									log.info("could not find username !!!!!!!!");
+									BugMessage bug_message = new BugMessage(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new DateTime());
+									form_service.addBugMessage(form.getId(), bug_message);
 									//throw error that cannot find username field
 								}
 							}
 
-							exploratory_path.addPathObject(username_elem);
-							exploratory_path.addToPathKeys(username_elem.getKey());
-
-							Action type_username = new Action("sendKeys", user.getUsername());
-							Action action_record = action_repo.findByKey(type_username.getKey());
-							if(action_record != null){
-								type_username = action_record;
+							if(username_elem != null) {
+								//	add typing action to path with value equal to user.username
+								exploratory_path.addPathObject(username_elem);
+								exploratory_path.addToPathKeys(username_elem.getKey());
+								
+								Action type_username = new Action("sendKeys", user.getUsername());
+								Action action_record = action_repo.findByKey(type_username.getKey());
+								if(action_record != null){
+									type_username = action_record;
+								}
+								exploratory_path.addPathObject(type_username);
+								exploratory_path.addToPathKeys(type_username.getKey());
 							}
-							exploratory_path.addPathObject(type_username);
-							exploratory_path.addToPathKeys(type_username.getKey());
-							//	add typing action to path with value equal to user.username
-							
 							
 							//  get password element and add it to the path
 							ElementState password_elem = findInputElementByAttribute(elements, "password");
@@ -132,27 +142,32 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							if(password_elem == null){
 								log.info("could not find password !!!!!!!!");
 								//throw error that cannot find password field
+								BugMessage bug_message = new BugMessage(MISSING_PASSWORD_ERROR, BugType.MISSING_FIELD, new DateTime());
+								form_service.addBugMessage(form.getId(), bug_message);
 							}
 							
-							//  add typing action to path with value equal to user.password	
-							
-							exploratory_path.addPathObject(password_elem);
-							exploratory_path.addToPathKeys(password_elem.getKey());
-							Action type_password = new Action("sendKeys", user.getPassword());
-							action_record = action_repo.findByKey(type_password.getKey());
-							if(action_record != null){
-								type_password= action_record;
+							if(password_elem != null) {
+								//  add typing action to path with value equal to user.password	
+								
+								exploratory_path.addPathObject(password_elem);
+								exploratory_path.addToPathKeys(password_elem.getKey());
+								Action type_password = new Action("sendKeys", user.getPassword());
+								Action action_record = action_repo.findByKey(type_password.getKey());
+								if(action_record != null){
+									type_password= action_record;
+								}
+								exploratory_path.addPathObject(type_password);
+								exploratory_path.addToPathKeys(type_password.getKey());
 							}
-							exploratory_path.addPathObject(type_password);
-							exploratory_path.addToPathKeys(type_password.getKey());
-
+							
+							
 							//find submit button
 							exploratory_path.addPathObject(form.getSubmitField());
 							exploratory_path.addToPathKeys(form.getSubmitField().getKey());
 							
 							List<Action> action_list = new ArrayList<Action>();
 							Action submit_login = new Action("click", "");
-							action_record = action_repo.findByKey(submit_login.getKey());
+							Action action_record = action_repo.findByKey(submit_login.getKey());
 							if(action_record != null){
 								submit_login= action_record;
 							}

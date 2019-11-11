@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.assertthat.selenium_shutterbug.utils.web.ElementOutsideViewportException;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
@@ -107,12 +108,16 @@ public class BrowserService {
 	 * @param browser_name
 	 * @param page_state
 	 * @return
+	 * @throws  
 	 * @throws IOException
 	 * @throws GridException
 	 */
-	public static boolean checkIfLandable(String browser, PageState page_state, Test test){
+	public static boolean checkIfLandable(PageState page_state, Test test) {
 		//find last page in path
 		PageState last_page = PathUtils.getLastPageState(test.getPathObjects());
+		
+		log.warn("last page url :: "+last_page.getUrl());
+		log.warn("result page url :: " +test.getResult().getUrl());
 		return !last_page.getUrl().equals(page_state.getUrl());
 	}
 
@@ -985,9 +990,14 @@ public class BrowserService {
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
 			log.warn("scrolling to form element");
-			browser.scrollToElement(form_elem);
-			BrowserUtils.detectShortAnimation(browser, page.getUrl());
-
+			//browser.scrollToElement(form_elem);
+			//BrowserUtils.detectShortAnimation(browser, page.getUrl());
+			
+			//if form has 0 or negative height or width then get parent element
+			while(form_elem.getSize().getHeight() <= 0 || form_elem.getSize().getWidth() <= 0 ) {
+				form_elem = getParentElement(form_elem);
+			}
+			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 
@@ -999,39 +1009,42 @@ public class BrowserService {
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
-
+			log.warn("inputs extracted....fitlering inputs to get baseline for form");
 			input_elements = BrowserService.fitlerNonDisplayedElements(input_elements);
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			//input_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), input_elements, browser.getViewportSize());
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
 
+			log.warn("inputs left after filtering...  "+input_elements.size());
 			for(WebElement input_elem : input_elements){
+				log.warn("extracting attributes... ");
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
 				String form_element_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, host);
-				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), form_element_url, input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
+				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), form_element_url, input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(form_element_url))) );
 
-				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
-					browser.scrollToElement(input_elem);
-					BufferedImage viewport = browser.getViewportScreenshot();
-
-					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
-						continue;
-					}
-					BufferedImage img = browser.getElementScreenshot(input_elem);
-					String checksum = PageState.getFileChecksum(img);
-					viewport.flush();
-					String screenshot= null;
-					try {
-						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
-					} catch (Exception e) {
-						log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
-					}
-					img.flush();
-					input_tag.setScreenshot(screenshot);
-					input_tag.setScreenshotChecksum(checksum);
-					input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
+				if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
+					log.warn("element location x or y are negative");
+					continue;
 				}
+				
+				log.warn("input location x ...."+input_elem.getLocation().getX());
+				log.warn("input location y ...."+input_elem.getLocation().getY());
+				String checksum = "";
+				String screenshot= null;
+				try {
+					BufferedImage img = browser.getElementScreenshot(input_elem);
+					checksum = PageState.getFileChecksum(img);
+					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
+					img.flush();
+
+				} catch (Exception e) {
+					log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
+				}
+				log.warn("setting screenshots info ");
+				input_tag.setScreenshot(screenshot);
+				input_tag.setScreenshotChecksum(checksum);
+				input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
 
 				List<ElementState> group_inputs = constructGrouping(input_elem, browser);
 
@@ -1217,7 +1230,14 @@ public class BrowserService {
 			catch(RasterFormatException e){
 				err = true;
 				log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot): "+e.getMessage());
-			} catch (GridException e) {
+				
+			} 
+			catch(ElementOutsideViewportException e){
+				err = true;
+				log.warn("Element Outside Viewport Exception (retrieveAndUploadBrowserScreenshot): "+e.getMessage());
+				e.printStackTrace();
+			}	
+			catch (GridException e) {
 				err = true;
 				log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 			} catch (IOException e) {
@@ -1230,7 +1250,7 @@ public class BrowserService {
 				}
 			}
 			count++;
-		}while(err && count < 50);
+		}while(err && count < 10);
 
 		return screenshot_url;
 	}

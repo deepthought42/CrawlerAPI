@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +38,8 @@ public class Form {
 	private Date date_discovered;
 	private String status;
 	private String type;
+	
+	@Relationship(type = "HAS")
 	private List<BugMessage> bug_messages;
 	
 	@Relationship(type = "DEFINED_BY")
@@ -212,6 +215,22 @@ public class Form {
 	}
 
 	public void setBugMessages(List<BugMessage> bug_messages) {
+		if(this.bug_messages == null) {
+			this.bug_messages = new ArrayList<>();
+		}
 		this.bug_messages = bug_messages;
+	}
+	
+	public void addBugMessage(BugMessage bug_message) {
+		if(this.bug_messages == null) {
+			this.bug_messages = new ArrayList<>();
+		}
+		log.warn("bug meesages  :: "+this.bug_messages);
+		this.bug_messages.add(bug_message);
+	}
+
+	public void removeBugMessage(BugMessage msg) {
+		int idx = bug_messages.indexOf(msg);
+		this.bug_messages.remove(idx);
 	}
 }

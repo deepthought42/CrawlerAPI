@@ -1535,4 +1535,14 @@ public class BrowserService {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	public static boolean testContainsElement(List<String> keys) {
+		for(String key : keys) {
+			if(key.contains("elementstate")) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 }

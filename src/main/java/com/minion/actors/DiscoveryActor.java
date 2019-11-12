@@ -211,7 +211,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	}
 			    	*/
 					
-					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || test.getPathKeys().size() == 1;
+					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));

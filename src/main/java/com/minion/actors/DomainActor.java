@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -22,6 +23,7 @@ import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
@@ -171,6 +173,13 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(PageState.class, page_state -> {
 					page_state_service.save(page_state);
+				})
+				.match(FormMessage.class, form_msg -> {
+					Form form = form_msg.getForm();
+					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
+
+					page_state_record.addForm(form);
+					page_state_service.save(page_state_record);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

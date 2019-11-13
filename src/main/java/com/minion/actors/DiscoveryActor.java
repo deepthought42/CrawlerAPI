@@ -23,6 +23,7 @@ import com.minion.api.MessageBroadcaster;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -34,6 +35,7 @@ import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -307,6 +309,15 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(AccountRequest.class, account_request_msg -> {
 					getSender().tell(this.getAccount(), getSelf());
+				})
+				.match(FormMessage.class, form_msg -> {
+					Form form = form_msg.getForm();
+					try {
+						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					form_msg.getDomainActor().tell(form_msg, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

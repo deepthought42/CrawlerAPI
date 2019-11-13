@@ -26,6 +26,7 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.FormService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -55,6 +56,9 @@ public class DomainActor extends AbstractActor{
 	
 	@Autowired
 	private TestService test_service;
+	
+	@Autowired
+	private FormService form_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -176,6 +180,8 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(FormMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
+				    form = form_service.save(form);
+
 					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
 
 					page_state_record.addForm(form);

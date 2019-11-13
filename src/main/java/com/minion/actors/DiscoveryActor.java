@@ -312,6 +312,7 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(FormMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
+					
 					try {
 						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
 					} catch (Exception e) {

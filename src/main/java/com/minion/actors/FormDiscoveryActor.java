@@ -21,7 +21,6 @@ import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.FormService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
@@ -50,9 +49,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private ElementRuleExtractor rule_extractor;
-	
-	@Autowired
-	private FormService form_service;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -112,10 +108,7 @@ public class FormDiscoveryActor extends AbstractActor{
 									field.getRules().addAll(rules);
 								}
 							    DeepthoughtApi.predict(form);
-							  	
-							    form_service.save(form);
-							  	//page_state.addForm(form);
-							  	
+							  								  	
 							    FormMessage form_message = new FormMessage(form, page_state);
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);

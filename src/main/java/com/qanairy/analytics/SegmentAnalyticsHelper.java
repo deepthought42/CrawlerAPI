@@ -43,10 +43,21 @@ public class SegmentAnalyticsHelper {
 	
 	public static void testCreated(String userId, String test_key) {
 		identify(userId);
-		//Fire test run started event
+		//Fire test created event
 	   	Map<String, String> test_created_props= new HashMap<String, String>();
 	   	test_created_props.put("test key", test_key);
 	   	buildSegment().enqueue(TrackMessage.builder("Test Created")
+   		    .userId(userId)
+   		    .properties(test_created_props)
+   		);
+	}
+	
+	public static void formDiscovered(String userId, String form_key) {
+		identify(userId);
+		//Fire test created event
+	   	Map<String, String> test_created_props= new HashMap<String, String>();
+	   	test_created_props.put("form key", form_key);
+	   	buildSegment().enqueue(TrackMessage.builder("Form Discovered")
    		    .userId(userId)
    		    .properties(test_created_props)
    		);

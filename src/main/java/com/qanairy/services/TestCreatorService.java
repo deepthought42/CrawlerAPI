@@ -134,17 +134,6 @@ public class TestCreatorService {
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
 			test.addRecord(test_record);
 			
-			/*
-			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-			Future<Object> future = Patterns.ask(discovery_actor, new AccountRequest(), timeout);
-			Account account;
-			try {
-				account = (Account) Await.result(future, timeout.duration());
-				SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			*/
 			return test;
 		}
 

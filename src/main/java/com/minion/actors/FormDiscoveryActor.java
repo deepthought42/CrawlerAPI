@@ -115,7 +115,6 @@ public class FormDiscoveryActor extends AbstractActor{
 							    form_service.save(form);
 							  	page_state.addForm(form);
 							  	
-							  	//page_state_service.save(page_state);
 							  	message.getDomainActor().tell(page_state, getSelf());
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}

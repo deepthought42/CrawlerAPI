@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
@@ -41,6 +42,7 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
+import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -74,6 +76,9 @@ public class DiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private DomainService domain_service;
+	
+	@Autowired
+	private TestService test_service;
 	
 	@Autowired
 	private DiscoveryRecordService discovery_service;
@@ -197,7 +202,17 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
-					discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					Test existing_record = test_service.findByKey(test.getKey());
+					if(existing_record == null) {
+						
+						try {
+							SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					}
+					
 					if(domain_actor == null){
 						domain_actor = test_msg.getDomainActor();
 					}
@@ -281,8 +296,8 @@ public class DiscoveryActor extends AbstractActor{
 						log.warn("ending discovery");
 						return;
 					}
-					log.warn("NOT STOPPING DISCOVERY!!!!");
-			        if(form_test_discovery_actor == null){
+
+					if(form_test_discovery_actor == null){
 			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 			        }

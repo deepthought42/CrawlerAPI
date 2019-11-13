@@ -133,7 +133,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 100000);
+					}while(!forms_created && count < 1000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

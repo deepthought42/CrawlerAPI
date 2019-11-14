@@ -20,8 +20,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -33,6 +35,7 @@ import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -41,6 +44,9 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
+import com.qanairy.services.FormService;
+import com.qanairy.services.PageStateService;
+import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -76,10 +82,19 @@ public class DiscoveryActor extends AbstractActor{
 	private DomainService domain_service;
 	
 	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private TestService test_service;
+	
+	@Autowired
 	private DiscoveryRecordService discovery_service;
 	
 	@Autowired
 	private EmailService email_service;
+	
+	@Autowired
+	private FormService form_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -197,7 +212,17 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
-					discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					Test existing_record = test_service.findByKey(test.getKey());
+					if(existing_record == null) {
+						
+						try {
+							SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					}
+					
 					if(domain_actor == null){
 						domain_actor = test_msg.getDomainActor();
 					}
@@ -281,8 +306,8 @@ public class DiscoveryActor extends AbstractActor{
 						log.warn("ending discovery");
 						return;
 					}
-					log.warn("NOT STOPPING DISCOVERY!!!!");
-			        if(form_test_discovery_actor == null){
+
+					if(form_test_discovery_actor == null){
 			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 			        }
@@ -292,6 +317,39 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(AccountRequest.class, account_request_msg -> {
 					getSender().tell(this.getAccount(), getSelf());
+				})
+				.match(FormMessage.class, form_msg -> {
+					Form form = form_msg.getForm();
+					try {
+						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					try {
+					    form = form_service.save(form);
+					}catch(Exception e) {
+						try {
+							SegmentAnalyticsHelper.sendFormSaveError(account.getUserId(), e.getMessage());
+						} catch (Exception se) {
+							se.printStackTrace();
+						}
+					}
+
+					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
+
+					page_state_record.addForm(form);
+					try {
+						page_state_service.save(page_state_record);
+						
+					}catch(Exception e) {
+						try {
+							SegmentAnalyticsHelper.sendPageStateError(account.getUserId(), e.getMessage());
+						} catch (Exception se) {
+							se.printStackTrace();
+						}
+					}
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

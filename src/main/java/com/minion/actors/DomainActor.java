@@ -22,6 +22,7 @@ import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
@@ -114,6 +115,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
+					
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String url = test_msg.getDomain().getUrl();
@@ -170,6 +172,9 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(PageState.class, page_state -> {
 					page_state_service.save(page_state);
+				})
+				.match(FormMessage.class, form_msg -> {
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

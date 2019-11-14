@@ -17,10 +17,10 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.FormService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
@@ -49,9 +49,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private ElementRuleExtractor rule_extractor;
-	
-	@Autowired
-	private FormService form_service;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -111,12 +108,9 @@ public class FormDiscoveryActor extends AbstractActor{
 									field.getRules().addAll(rules);
 								}
 							    DeepthoughtApi.predict(form);
-							  	
-							    form_service.save(form);
-							  	page_state.addForm(form);
-							  	
-							  	//page_state_service.save(page_state);
-							  	message.getDomainActor().tell(page_state, getSelf());
+							  								  	
+							    FormMessage form_message = new FormMessage(form, page_state);
+							  	message.getDiscoveryActor().tell(form_message, getSelf());
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}
 						  	forms_created = true;
@@ -132,7 +126,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 100000);
+					}while(!forms_created && count < 1000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

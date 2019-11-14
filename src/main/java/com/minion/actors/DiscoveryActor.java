@@ -44,6 +44,8 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
+import com.qanairy.services.FormService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -80,6 +82,9 @@ public class DiscoveryActor extends AbstractActor{
 	private DomainService domain_service;
 	
 	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private TestService test_service;
 	
 	@Autowired
@@ -87,6 +92,9 @@ public class DiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private EmailService email_service;
+	
+	@Autowired
+	private FormService form_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -312,13 +320,36 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(FormMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
-					
 					try {
 						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					form_msg.getDomainActor().tell(form_msg, getSelf());
+					
+					try {
+					    form = form_service.save(form);
+					}catch(Exception e) {
+						try {
+							SegmentAnalyticsHelper.sendFormSaveError(account.getUserId(), e.getMessage());
+						} catch (Exception se) {
+							se.printStackTrace();
+						}
+					}
+
+					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
+
+					page_state_record.addForm(form);
+					try {
+						page_state_service.save(page_state_record);
+						
+					}catch(Exception e) {
+						try {
+							SegmentAnalyticsHelper.sendPageStateError(account.getUserId(), e.getMessage());
+						} catch (Exception se) {
+							se.printStackTrace();
+						}
+					}
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

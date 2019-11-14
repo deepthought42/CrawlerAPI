@@ -58,9 +58,6 @@ public class DomainActor extends AbstractActor{
 	private TestService test_service;
 	
 	@Autowired
-	private FormService form_service;
-	
-	@Autowired
 	private ActorSystem actor_system;
 	
 	private ActorRef discovery_actor;
@@ -179,13 +176,7 @@ public class DomainActor extends AbstractActor{
 					page_state_service.save(page_state);
 				})
 				.match(FormMessage.class, form_msg -> {
-					Form form = form_msg.getForm();
-				    form = form_service.save(form);
-
-					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
-
-					page_state_record.addForm(form);
-					page_state_service.save(page_state_record);
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

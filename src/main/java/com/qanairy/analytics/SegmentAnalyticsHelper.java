@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.qanairy.models.Account;
 import com.qanairy.models.Test;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -77,5 +76,27 @@ public class SegmentAnalyticsHelper {
         buildSegment().enqueue(IdentifyMessage.builder()
     		    .userId(account_id)
     		);
+	}
+
+	public static void sendPageStateError(String userId, String error) {
+		identify(userId);
+		//Fire test created event
+	   	Map<String, String> error_props= new HashMap<String, String>();
+	   	error_props.put("error", error);
+	   	buildSegment().enqueue(TrackMessage.builder("Page State Save Error")
+   		    .userId(userId)
+   		    .properties(error_props)
+   		);
+	}
+
+	public static void sendFormSaveError(String userId, String error) {
+		identify(userId);
+
+		Map<String, String> error_props= new HashMap<String, String>();
+	   	error_props.put("error", error);
+	   	buildSegment().enqueue(TrackMessage.builder("Form Save Error")
+	   			.userId(userId)
+	   		    .properties(error_props)
+	    );
 	}
 }

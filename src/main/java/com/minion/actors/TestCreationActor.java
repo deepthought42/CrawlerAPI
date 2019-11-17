@@ -29,6 +29,7 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.TimingUtils;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
@@ -122,7 +123,7 @@ public class TestCreationActor extends AbstractActor  {
 								
 				    			PageState result_page = browser_service.buildPage(browser);
 								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
-
+								
 								test = new Test(path_keys, path_objects, result_page, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
 								
@@ -140,9 +141,14 @@ public class TestCreationActor extends AbstractActor  {
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    		test = test_repo.save(test);
+						    		
+						    		SegmentAnalyticsHelper.sendTestCreatedInRecorder(acct_message.getAccountKey(), test.getKey());
+
 						    		log.warn("test creation domain url :: " + domain.getUrl());
 						    		domain_service.addTest(domain.getUrl(), test);
 
+						    		//here we check if the test passed in had a key indicating that it is an existing test. If it does have a key then we look up the test with the key
+						    		// and set its status to archived
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
 								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
 							    		old_test.setArchived(true);

@@ -44,7 +44,7 @@ public class SegmentAnalyticsHelper {
 		identify(userId);
 		//Fire test created event
 	   	Map<String, String> test_created_props= new HashMap<String, String>();
-	   	test_created_props.put("test key", test_key);
+	   	test_created_props.put("key", test_key);
 	   	buildSegment().enqueue(TrackMessage.builder("Test Created")
    		    .userId(userId)
    		    .properties(test_created_props)
@@ -54,11 +54,11 @@ public class SegmentAnalyticsHelper {
 	public static void formDiscovered(String userId, String form_key) {
 		identify(userId);
 		//Fire test created event
-	   	Map<String, String> test_created_props= new HashMap<String, String>();
-	   	test_created_props.put("form key", form_key);
+	   	Map<String, String> form_created_props= new HashMap<String, String>();
+	   	form_created_props.put("key", form_key);
 	   	buildSegment().enqueue(TrackMessage.builder("Form Discovered")
    		    .userId(userId)
-   		    .properties(test_created_props)
+   		    .properties(form_created_props)
    		);
 	}
 
@@ -98,5 +98,29 @@ public class SegmentAnalyticsHelper {
 	   			.userId(userId)
 	   		    .properties(error_props)
 	    );
+	}
+
+	public static void sendTestCreatedInRecorder(String userId, String test_key) {
+		identify(userId);
+
+		//Fire test created event
+	   	Map<String, String> test_created_props= new HashMap<String, String>();
+	   	test_created_props.put("key", test_key);
+	   	buildSegment().enqueue(TrackMessage.builder("Test Created via Recorder")
+   		    .userId(userId)
+   		    .properties(test_created_props)
+   		);
+	}
+
+	public static void sendDomainCreatedInRecorder(String userId, String key) {
+		identify(userId);
+
+		//Fire test created event
+	   	Map<String, String> domain_created_props= new HashMap<String, String>();
+	   	domain_created_props.put("key", key);
+	   	buildSegment().enqueue(TrackMessage.builder("Domain Created via Recorder")
+   		    .userId(userId)
+   		    .properties(domain_created_props)
+   		);
 	}
 }

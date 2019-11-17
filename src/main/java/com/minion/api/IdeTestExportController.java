@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.minion.structs.Message;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
@@ -111,13 +112,14 @@ public class IdeTestExportController {
     	}
     	
     	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"));
-    	URL domain_url = new URL(formatted_url);
-		formatted_url = domain_url.getHost()+domain_url.getPath();
+		formatted_url = BrowserUtils.sanitizeUrl(formatted_url);
+		URL domain_url = new URL(formatted_url);
 		
-    	Domain domain = domain_service.findByUrl(formatted_url);
+    	Domain domain = domain_service.findByHost(domain_url.getHost());
     	if(domain == null){
     		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","", domain_url.getHost());
     		domain = domain_service.save(domain);
+    		SegmentAnalyticsHelper.sendDomainCreatedInRecorder(acct.getUserId(), domain.getKey());
     	}
 
     	Map<String, Object> options = new HashMap<String, Object>();
@@ -126,7 +128,7 @@ public class IdeTestExportController {
 		
 		account_service.addDomainToAccount(acct, domain);
 
-		Message<JSONObject> message = new Message<JSONObject>(acct.getUsername(), test_json, options);
+		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options);
 
 		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());

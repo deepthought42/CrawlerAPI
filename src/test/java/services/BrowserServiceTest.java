@@ -199,6 +199,7 @@ public class BrowserServiceTest {
 					        +"  </div>"
 					        +"</li>"
 					      +"</ul>"
+					      +"</div>"
 					      +"</body>"
 						+"</html>";
 
@@ -209,7 +210,7 @@ public class BrowserServiceTest {
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 		
-		assertTrue(1 == template_elements.size());
+		assertTrue(0 == template_elements.size());
 	}
 
 	@Test
@@ -629,6 +630,6 @@ public class BrowserServiceTest {
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
-		assertTrue(6 == template_elements.size());	
+		assertTrue(7 == template_elements.size());	
 	}
 }

@@ -116,8 +116,6 @@ public class BrowserService {
 		//find last page in path
 		PageState last_page = PathUtils.getLastPageState(test.getPathObjects());
 		
-		log.warn("last page url :: "+last_page.getUrl());
-		log.warn("result page url :: " +test.getResult().getUrl());
 		return !last_page.getUrl().equals(page_state.getUrl());
 	}
 
@@ -177,7 +175,6 @@ public class BrowserService {
 				elements.add(element_state);
 			}
 		}
-
 		return elements;
 	}
 
@@ -396,17 +393,21 @@ public class BrowserService {
 			Point location = element.getLocation();
 			Dimension element_size = element.getSize();
 			
-			if(element.isDisplayed() && hasWidthAndHeight(element_size)){
+			if(element.isDisplayed() && hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element.getLocation())){
 				Map<String, String> css_props = Browser.loadCssProperties(element);
 				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "");
 				
 				ElementState element_state_record = element_service.findByKey(new_element_state.getKey());
 				if(element_state_record == null) {
-					BufferedImage element_screenshot = browser.getElementScreenshot(element);
-					String checksum = PageState.getFileChecksum(element_screenshot);
-					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
-					new_element_state.setScreenshot(screenshot_url);
-					new_element_state.setScreenshotChecksum(checksum);
+					try {
+						BufferedImage element_screenshot = browser.getElementScreenshot(element);
+						String checksum = PageState.getFileChecksum(element_screenshot);
+						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
+						new_element_state.setScreenshot(screenshot_url);
+						new_element_state.setScreenshotChecksum(checksum);
+					}catch(Exception e) {
+						continue;
+					}
 				}
 				else {
 					new_element_state = element_state_record;
@@ -1257,18 +1258,42 @@ public class BrowserService {
 
 	public Map<String, Template> findTemplates(List<ElementState> element_list){
 		//create a map for the various duplicate elements
-		Map<Integer, ElementState> reviewed_element_map = new HashMap<>();
 		Map<String, Template> element_templates = new HashMap<>();
 
+		//build hash of templates with elements attached
+		Map<String, List<ElementState>> template_hash = new HashMap<>();
 		//iterate over all elements in list
+		for(int idx1 = 0; idx1 < element_list.size(); idx1++){
+			String template_str = element_list.get(idx1).getTemplate();
+			if(template_hash.containsKey(template_str)) {
+				template_hash.get(template_str).add(element_list.get(idx1));
+			}
+			else {
+				template_hash.put(template_str, new ArrayList<>());
+			}
+		}
+		
+		for(String template_str : template_hash.keySet()) {
+			if(template_hash.get(template_str).size() > 1) {
+				element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
+				element_templates.get(template_str).getElements().addAll(template_hash.get(template_str));
+			}
+		}
+		
+		//iterate over all elements in list
+		/*
 		for(int idx1 = 0; idx1 < element_list.size()-1; idx1++){
+			log.warn("****************************************************************");
 			if(reviewed_element_map.containsKey(idx1)){
 				continue;
 			}
 			boolean at_least_one_match = false;
 			//for each element iterate over all elements in list
-			for(int idx2 = 0; idx2 < element_list.size(); idx2++){
-				if(idx1 == idx2){
+			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
+				String element1 =element_list.get(idx1).getName();
+				String element2 = element_list.get(idx2).getName();
+				if(idx1 == idx2 || !element1.equals(element2)){
+					log.warn("elements are the same !!");
 					continue;
 				}
 				//get largest string length
@@ -1278,22 +1303,22 @@ public class BrowserService {
 				}
 				
 				if(max_length == 0) {
+					log.warn("max length of 0 between both templates");
 					continue;
 				}
-				int length_diff = Math.abs(element_list.get(idx1).getTemplate().length() - element_list.get(idx2).getTemplate().length());
-				double length_similarity = length_diff / max_length;
-				if(length_similarity > 0.05){
-					continue;
-				}
+				
 				if(element_list.get(idx1).getTemplate().equals(element_list.get(idx2).getTemplate())){
+					log.warn("templates match !!");
 					String template_str = element_list.get(idx2).getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
 					}
 					element_templates.get(template_str).getElements().add(element_list.get(idx2));
+					at_least_one_match = true;
 					continue;
 				}
 
+				log.warn("getting levenshtein distance...");
 				//double distance = StringUtils.getJaroWinklerDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
 				//calculate distance between loop1 value and loop2 value
 				double distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
@@ -1304,7 +1329,7 @@ public class BrowserService {
 
 				//calculate distance of children if within 20%
 				if(distance == 0.0 || similarity < 0.025){
-					log.debug("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
+					log.warn("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
 					String template_str = element_list.get(idx1).getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
@@ -1317,8 +1342,10 @@ public class BrowserService {
 				String template_str = element_list.get(idx1).getTemplate();
 				element_templates.get(template_str).getElements().add(element_list.get(idx1));
 			}
-		}
+			log.warn("****************************************************************");
 
+		}
+*/
 		return element_templates;
 	}
 

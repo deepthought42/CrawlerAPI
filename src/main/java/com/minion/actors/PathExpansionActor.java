@@ -229,7 +229,7 @@ public class PathExpansionActor extends AbstractActor {
 
 	private Map<String, Template> getOrganismTemplateMap(List<ElementState> elements) {
 		Map<String, Template> template_elements = browser_service.findTemplates(elements);
-		template_elements = browser_service.reduceTemplatesToParents(template_elements);
+		//template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
 		Map<String, Template> list_map = new HashMap<>();

@@ -46,6 +46,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String css_selector;
 	private String outer_html;
 	private boolean part_of_form;
+	private boolean leaf;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -58,7 +59,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	private String template;
 			
-	public ElementState(){}
+	public ElementState(){
+	}
 	
 	/**
 	 * 
@@ -102,6 +104,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setTemplate("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
+		setIsLeaf(false);
 	}
 	
 	/**
@@ -140,6 +143,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setCssSelector("");
 		setTemplate("");
 		setRules(new HashSet<>());
+		setIsLeaf(false);
 		setKey(generateKey());
 	}
 	
@@ -454,5 +458,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setIsPartOfForm(boolean is_part_of_form) {
 		this.part_of_form = is_part_of_form;
+	}
+
+	public boolean isLeaf() {
+		return this.leaf;
+	}
+	
+	public void setIsLeaf(boolean is_leaf) {
+		this.leaf = is_leaf;
 	}
 }

@@ -63,8 +63,9 @@ public class PageStateService {
 				log.warn("Page state checking screenshots before save :: " + page_state.getScreenshotChecksums());
 				log.warn("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 				for(String checksum : page_state.getScreenshotChecksums()){
-					page_state_record = page_state_repo.findByScreenshotChecksumsContains(checksum);
-					if(page_state_record != null){
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(checksum);
+					if(!page_state_records.isEmpty()){
+						page_state_record = page_state_records.get(0);
 						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
 						page_state_record = page_state_repo.save(page_state_record);
 						break;
@@ -74,10 +75,9 @@ public class PageStateService {
 				if(page_state_record == null){
 					
 					for(Screenshot screenshot : page_state.getScreenshots()){
-						page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
-						if(page_state_record != null){
-							page_state_record.setElements(getElementStates(page_state_record.getKey()));
-							break;
+						List<PageState> page_state_records = findByScreenshotChecksum(screenshot.getChecksum());
+						if(page_state_records.isEmpty()){
+							continue;
 						}
 						page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
 						if(page_state_record != null){
@@ -225,7 +225,7 @@ public class PageStateService {
 		return page_state;
 	}
 	
-	public PageState findByScreenshotChecksum(String screenshot_checksum){
+	public List<PageState> findByScreenshotChecksum(String screenshot_checksum){
 		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
 	}
 	

@@ -85,7 +85,6 @@ public class BrowserUtils {
 		boolean transition_detected = false;
 		
 		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
@@ -98,7 +97,7 @@ public class BrowserUtils {
 			String new_checksum = PageState.getFileChecksum(screenshot);
 
 			transition_detected = !new_checksum.equals(last_checksum);
-			log.debug("animation new checksum :: " +new_checksum);
+			log.warn("animation new checksum :: " +new_checksum);
 			if( transition_detected ){
 				if( animated_state_checksum_hash.containsKey(new_checksum)){
 					break;
@@ -139,10 +138,10 @@ public class BrowserUtils {
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
-
+			
 			//calculate screenshot checksum
 			new_checksum = PageState.getFileChecksum(screenshot);
-
+		
 			transition_detected = !new_checksum.equals(last_checksum);
 
 			if( transition_detected ){
@@ -155,7 +154,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 20000);
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {

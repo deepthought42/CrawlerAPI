@@ -188,6 +188,7 @@ public class BrowserService {
 		element_state.setName(element.tagName());
 		element_state.setText(element.text());
 		element_state.setIsPartOfForm(isElementPartOfForm(element));
+		element_state.setIsLeaf(element.childNodeSize()==0);
 		return element_state;
 	}
 
@@ -224,19 +225,27 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
-		PageState page_state = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-		if(page_state == null) {
+		List<PageState> page_states = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+		
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+		
+		if(page_states.isEmpty()) {
+			page_states = page_state_service.findByScreenshotChecksum(full_page_screenshot_checksum);
+		}
+		if(page_states.isEmpty()) {
 			List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 			String browser_url = browser.getDriver().getCurrentUrl();
 			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-			
+			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
 			
 			//extract visible elements from list of elementstates provided
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url_without_params).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
+			viewport_screenshot.flush();
 			
-			page_state = new PageState( url_without_params,
+			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
@@ -246,22 +255,17 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 
-			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-			if(page_state_record == null) {
-				BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
-				String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-				String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
 				page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
 				page_state.setFullPageChecksum(full_page_screenshot_checksum);
 				page_state.addScreenshotChecksum(screenshot_checksum);
 				page_state.setFullPageWidth(full_page_screenshot.getWidth());
 				page_state.setFullPageHeight(full_page_screenshot.getHeight());
 				full_page_screenshot.flush();
-			}
 			
+			return page_state;
 		}
-		viewport_screenshot.flush();
-		return page_state;
+		
+		return page_states.get(0);
 	}
 
 	/**
@@ -523,6 +527,8 @@ public class BrowserService {
 		ElementState page_element = new ElementState(element_state.getText(), xpath, element_state.getName(), attributes, css_props, screenshot_url, checksum,
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), element_state.getInnerHtml());
 		page_element.setIsPartOfForm(element_state.isPartOfForm());
+		page_element.setIsLeaf(element_state.isLeaf());
+
 		element_state.setTemplate(extractTemplate(element_state.getOuterHtml(), element_state.getText()));
 
 		//element_state_service.save(page_element);
@@ -548,6 +554,7 @@ public class BrowserService {
 		page_element.setOuterHtml(elem.getAttribute("outerHTML"));
 		page_element.setIsPartOfForm(false);
 		page_element.setTemplate(extractTemplate(elem.getAttribute("outerHTML"), elem.getText()));
+		page_element.setIsLeaf(getChildElements(elem).isEmpty());
 
 		//element_state_service.save(page_element);
 		log.debug("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
@@ -1001,6 +1008,7 @@ public class BrowserService {
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
+			form_tag.setIsLeaf(getChildElements(form_elem).isEmpty());
 
 			double[] weights = new double[1];
 			weights[0] = 0.3;
@@ -1133,7 +1141,7 @@ public class BrowserService {
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, child, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 
 					ElementState elem = new ElementState(child.getText(), generateXpath(child, browser.getDriver(), attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url, child.getLocation().getX(), child.getLocation().getY(), child.getSize().getWidth(), child.getSize().getHeight(), child.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
-
+					elem.setIsLeaf(getChildElements(child).isEmpty());
 					//elem = element_state_service.save(elem);
 
 					//FormField input_field = new FormField(elem);
@@ -1201,6 +1209,7 @@ public class BrowserService {
 		
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, submit_element, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url, submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
+		elem.setIsLeaf(getChildElements(submit_element).isEmpty());
 
 
 		return elem;
@@ -1258,11 +1267,21 @@ public class BrowserService {
 
 	public Map<String, Template> findTemplates(List<ElementState> element_list){
 		//create a map for the various duplicate elements
-		Map<String, Template> element_templates = new HashMap<>();
+		log.warn("parent only list size :: " + element_list.size());
 
+		Map<String, Template> element_templates = new HashMap<>();
+		List<ElementState> parents_only_element_list = new ArrayList<>();
+		for(ElementState element : element_list) {
+			if(!element.isLeaf()) {
+				parents_only_element_list.add(element);
+			}
+		}
+
+		log.warn("parent only list size :: " + parents_only_element_list.size());
 		//build hash of templates with elements attached
-		Map<String, List<ElementState>> template_hash = new HashMap<>();
+		//Map<String, List<ElementState>> template_hash = new HashMap<>();
 		//iterate over all elements in list
+/*
 		for(int idx1 = 0; idx1 < element_list.size(); idx1++){
 			String template_str = element_list.get(idx1).getTemplate();
 			if(template_hash.containsKey(template_str)) {
@@ -1270,6 +1289,7 @@ public class BrowserService {
 			}
 			else {
 				template_hash.put(template_str, new ArrayList<>());
+				template_hash.get(template_str).add(element_list.get(idx1));
 			}
 		}
 		
@@ -1279,27 +1299,27 @@ public class BrowserService {
 				element_templates.get(template_str).getElements().addAll(template_hash.get(template_str));
 			}
 		}
-		
+		*/
 		//iterate over all elements in list
-		/*
-		for(int idx1 = 0; idx1 < element_list.size()-1; idx1++){
+		
+		Map<String, Boolean> identified_templates = new HashMap<String, Boolean>();
+		for(int idx1 = 0; idx1 < parents_only_element_list.size()-1; idx1++){
+			ElementState element1 = parents_only_element_list.get(idx1);
 			log.warn("****************************************************************");
-			if(reviewed_element_map.containsKey(idx1)){
+			boolean at_least_one_match = false;
+			if(identified_templates.containsKey(element1.getKey()) ) {
 				continue;
 			}
-			boolean at_least_one_match = false;
 			//for each element iterate over all elements in list
-			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
-				String element1 =element_list.get(idx1).getName();
-				String element2 = element_list.get(idx2).getName();
-				if(idx1 == idx2 || !element1.equals(element2)){
-					log.warn("elements are the same !!");
+			for(int idx2 = idx1+1; idx2 < parents_only_element_list.size(); idx2++){
+				ElementState element2 = parents_only_element_list.get(idx2);
+				if(identified_templates.containsKey(element2.getKey()) || !element1.getName().equals(element2.getName())){
 					continue;
 				}
 				//get largest string length
-				int max_length = element_list.get(idx1).getTemplate().length();
-				if(element_list.get(idx2).getTemplate().length() > max_length){
-					max_length = element_list.get(idx2).getTemplate().length();
+				int max_length = element1.getTemplate().length();
+				if(element2.getTemplate().length() > max_length){
+					max_length = element2.getTemplate().length();
 				}
 				
 				if(max_length == 0) {
@@ -1307,13 +1327,14 @@ public class BrowserService {
 					continue;
 				}
 				
-				if(element_list.get(idx1).getTemplate().equals(element_list.get(idx2).getTemplate())){
+				if(element1.getTemplate().equals(element2.getTemplate())){
 					log.warn("templates match !!");
-					String template_str = element_list.get(idx2).getTemplate();
+					String template_str = element2.getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
 					}
-					element_templates.get(template_str).getElements().add(element_list.get(idx2));
+					element_templates.get(template_str).getElements().add(element2);
+					identified_templates.put(element2.getKey(), Boolean.TRUE);
 					at_least_one_match = true;
 					continue;
 				}
@@ -1321,31 +1342,34 @@ public class BrowserService {
 				log.warn("getting levenshtein distance...");
 				//double distance = StringUtils.getJaroWinklerDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
 				//calculate distance between loop1 value and loop2 value
-				double distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
+				double distance = StringUtils.getLevenshteinDistance(element1.getTemplate(), element2.getTemplate());
 				//if value is within threshold then add loop2 value to map for loop1 value xpath
-				double avg_string_size = ((element_list.get(idx1).getTemplate().length() + element_list.get(idx2).getTemplate().length())/2.0);
+				double avg_string_size = ((element1.getTemplate().length() + element2.getTemplate().length())/2.0);
 				double similarity = distance / avg_string_size;
 				//double sigmoid = new Sigmoid(0,1).value(similarity);
 
 				//calculate distance of children if within 20%
 				if(distance == 0.0 || similarity < 0.025){
 					log.warn("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
-					String template_str = element_list.get(idx1).getTemplate();
+					String template_str = element1.getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
 					}
-					element_templates.get(template_str).getElements().add(element_list.get(idx2));
+					element_templates.get(template_str).getElements().add(element2);
+					identified_templates.put(element2.getKey(), Boolean.TRUE);
+
 					at_least_one_match = true;
 				}
 			}
 			if(at_least_one_match){
-				String template_str = element_list.get(idx1).getTemplate();
-				element_templates.get(template_str).getElements().add(element_list.get(idx1));
+				String template_str = element1.getTemplate();
+				element_templates.get(template_str).getElements().add(element1);
+				identified_templates.put(element1.getKey(), Boolean.TRUE);
 			}
 			log.warn("****************************************************************");
 
 		}
-*/
+
 		return element_templates;
 	}
 

@@ -35,6 +35,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
@@ -54,10 +55,8 @@ public class PathExpansionActor extends AbstractActor {
 	@Autowired
 	private BrowserService browser_service;
 	
-	private Map<String, ElementState> expanded_elements;
 
 	public PathExpansionActor() {
-		this.expanded_elements = new HashMap<String, ElementState>();
 	}
 
 	//subscribe to cluster changes
@@ -119,8 +118,12 @@ public class PathExpansionActor extends AbstractActor {
 		log.warn("element states to be expanded :: "+elements.size());
 
 		//iterate over all elements
-		for(ElementState page_element : elements){
-			expanded_elements.put(page_element.getKey(), page_element);
+		for(ElementState element : elements){
+			if(element.getClassification().equals(ElementClassification.SLIDER.getShortName()) || 
+				element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) || 
+				element.isPartOfForm()){
+				continue;
+			}
 			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -136,28 +139,23 @@ public class PathExpansionActor extends AbstractActor {
 
 
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
-			if(page_element.isPartOfForm()){
-				continue;
-			}
-			else {
-				//page element is not an input or a form
-				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
+			//page element is not an input or a form
+			PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
 
-				new_path.getPathObjects().add(page_element);
-				new_path.getKeys().add(page_element.getKey());
+			new_path.getPathObjects().add(element);
+			new_path.getKeys().add(element.getKey());
 
-				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					for(Action action : action_list){
-						ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
-						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
+			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+				for(Action action : action_list){
+					ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
+					ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
 
-						keys.add(action.getKey());
-						path_objects.add(action);
+					keys.add(action.getKey());
+					path_objects.add(action);
 
-						ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
+					ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
 
-						pathList.add(action_path);
-					}
+					pathList.add(action_path);
 				}
 			}
 		}
@@ -210,23 +208,19 @@ public class PathExpansionActor extends AbstractActor {
 			
 			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
-
-
-			//check path for mouseover event and if mouseover event exists then remove the element event was performed on from list
-			
 		}
 		
 		log.warn("####################################################################################################");
-		log.warn("####################################################################################################");
 
 		//filter list elements from last page elements
-		List<ElementState> filtered_elements = new ArrayList<>(expandable_elements);
-		Map<String, Template> templates = getOrganismTemplateMap(filtered_elements);
-		filtered_elements = filterListElements(filtered_elements, templates);
-		
-		return filtered_elements;
+		return filterListElements(expandable_elements);
 	}
-
+	
+	/**
+	 * 
+	 * @param elements
+	 * @return
+	 */
 	private Map<String, Template> getOrganismTemplateMap(List<ElementState> elements) {
 		Map<String, Template> template_elements = browser_service.findTemplates(elements);
 		//template_elements = browser_service.reduceTemplatesToParents(template_elements);
@@ -243,44 +237,15 @@ public class PathExpansionActor extends AbstractActor {
 		return list_map;
 	}
 
-	private List<ElementState> filterListElements(List<ElementState> elements,
-			Map<String, Template> list_map) {
-		List<ElementState> filtered_elements = removeListElements(elements, list_map);
-		for(Template template : list_map.values()){
-			List<ElementState> desired_list_elements = extractAllAtomElementsFromSingleTemplatedElement(template);
-			elements.addAll(desired_list_elements);
-		}
-		return filtered_elements;
-	}
-
-	private List<ElementState> extractAllAtomElementsFromSingleTemplatedElement(Template template) {
-		ElementState element = template.getElements().get(0);
-		List<ElementState> extracted_elements = new ArrayList<>();
-		Document html_doc = Jsoup.parseBodyFragment(element.getOuterHtml());
-		List<Element> leaf_elements = html_doc.body().select("*:not(:has(*))");
-		Map<String, Integer> xpath_cnt_map = new HashMap<>();
-
-		for(Element leaf : leaf_elements){
-			String xpath = BrowserService.generateXpathUsingJsoup(leaf, html_doc, leaf.attributes(), xpath_cnt_map);
-			Set<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(leaf);
-
-			extracted_elements.add(BrowserService.buildElementState(xpath, attributes, leaf));
-		}
-		
-		return extracted_elements;
-	}
-
-	private List<ElementState> removeListElements(List<ElementState> elements,
-			Map<String, Template> list_map) {
-		
+	private List<ElementState> filterListElements(
+		List<ElementState> elements
+	) {
 		List<ElementState> filtered_elements = new ArrayList<>();
-		//iterate over filtered elements
-		for(ElementState element : elements){
-			//iterate over templates
-			for(String template : list_map.keySet()){
-				if( !template.contains(element.getTemplate()) ){
-					filtered_elements.add(element);
-				}
+		for(ElementState element : elements) {
+			if(!element.getClassification().equals(ElementClassification.TEMPLATE) 
+				&& !element.getClassification().equals(ElementClassification.SLIDER)
+			){
+				filtered_elements.add(element);
 			}
 		}
 		return filtered_elements;

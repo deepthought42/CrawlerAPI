@@ -17,6 +17,7 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
@@ -47,6 +48,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String outer_html;
 	private boolean part_of_form;
 	private boolean leaf;
+	private String classification;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -59,8 +61,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	private String template;
 			
-	public ElementState(){
-	}
+	public ElementState(){}
 	
 	/**
 	 * 
@@ -105,6 +106,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setRules(new HashSet<>());
 		setKey(generateKey());
 		setIsLeaf(false);
+		setClassification(ElementClassification.CHILD);
 	}
 	
 	/**
@@ -123,7 +125,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html){
+						String inner_html, ElementClassification classification){
 		assert name != null;
 		assert xpath != null;
 		
@@ -144,6 +146,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setTemplate("");
 		setRules(new HashSet<>());
 		setIsLeaf(false);
+		setClassification(classification);
 		setKey(generateKey());
 	}
 	
@@ -466,5 +469,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void setIsLeaf(boolean is_leaf) {
 		this.leaf = is_leaf;
+	}
+
+	public String getClassification() {
+		return classification;
+	}
+
+	public void setClassification(ElementClassification classification) {
+		this.classification = classification.toString();
 	}
 }

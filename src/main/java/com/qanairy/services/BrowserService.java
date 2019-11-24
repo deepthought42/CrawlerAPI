@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import org.openqa.selenium.NoSuchElementException;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -50,6 +49,7 @@ import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
@@ -68,9 +68,6 @@ public class BrowserService {
 
 	@Autowired
 	private ElementRuleExtractor extractor;
-
-	@Autowired
-	private BrowserService browser_service;
 
 	@Autowired
 	private ElementStateService element_service;
@@ -128,14 +125,19 @@ public class BrowserService {
 	}
 
 	public static List<String> getXpathsUsingJSoup(String pageSource) {
-		Map<String, Integer> xpath_cnt_map = new HashMap<>();
 		List<String> elements = new ArrayList<>();
 		Document html_doc = Jsoup.parse(pageSource);
 		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+
 		for(Element element: web_elements){
 			int child_node_cnt = element.children().size();
-			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
+			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
+			if(child_node_cnt == 0 && 
+				!isStructureTag(element.tagName()) && 
+				!doesElementBelongToScriptTag(element) && 
+				!"iframe".equals(element.tagName())
+			){
 				elements.add(xpath);
 			}
 		}
@@ -143,42 +145,48 @@ public class BrowserService {
 		return elements;
 	}
 
-	public static List<ElementState> getChildElementsUsingJSoup(String pageSource) {
-		Map<String, Integer> xpath_cnt_map = new HashMap<>();
+	/**
+	 * 
+	 * @param pageSource
+	 * @param browser
+	 * @return
+	 */
+	public static List<ElementState> getAllElementsUsingJSoup(String pageSource, Browser browser) {
+		assert(pageSource != null);
+		assert(browser != null);
+		
 		List<ElementState> elements = new ArrayList<>();
 		Document html_doc = Jsoup.parse(pageSource);
 		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
-		for(Element element: web_elements){
-			int child_node_cnt = element.children().size();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
 
-			if(child_node_cnt == 0 && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				ElementState element_state = buildElementState(xpath, attributes, element);
-				elements.add(element_state);
-			}
-		}
-
-		return elements;
-	}
-
-	public static List<ElementState> getAllElementsUsingJSoup(String pageSource) {
-		Map<String, Integer> xpath_cnt_map = new HashMap<>();
-		List<ElementState> elements = new ArrayList<>();
-		Document html_doc = Jsoup.parse(pageSource);
-		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
 		for(Element element: web_elements){
 			if(!isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
+				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				ElementState element_state = buildElementState(xpath, attributes, element);
+				ElementClassification classification = null;
+				if(element.childNodeSize() > 0) {
+					classification = ElementClassification.ANCESTOR;
+				}
+				else {
+					classification = ElementClassification.CHILD;
+				}
+				Map<String, String> css_values = Browser.loadCssProperties(browser.findWebElementByXpath(xpath));
+
+				ElementState element_state = buildElementState(xpath, attributes, css_values, element, classification);
 				elements.add(element_state);
 			}
 		}
 		return elements;
 	}
 
-	public static ElementState buildElementState(String xpath, Set<Attribute> attributes, Element element) {
+	public static ElementState buildElementState(
+			String xpath, 
+			Set<Attribute> attributes, 
+			Map<String, String> css_values, 
+			Element element, 
+			ElementClassification classification
+	) {
 		ElementState element_state = new ElementState();
 		element_state.setXpath(xpath);
 		element_state.setAttributes(attributes);
@@ -189,6 +197,10 @@ public class BrowserService {
 		element_state.setText(element.text());
 		element_state.setIsPartOfForm(isElementPartOfForm(element));
 		element_state.setIsLeaf(element.childNodeSize()==0);
+		element_state.setClassification(classification);
+		element_state.setCssValues(css_values);
+		element_state.setKey(element_state.generateKey());
+		element_state.setType("ElementState");
 		return element_state;
 	}
 
@@ -232,10 +244,11 @@ public class BrowserService {
 		
 		if(page_states.isEmpty()) {
 			page_states = page_state_service.findByScreenshotChecksum(full_page_screenshot_checksum);
+			
 		}
 		if(page_states.isEmpty()) {
-			List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
+			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
+			List<ElementState> elements = BrowserService.getQualifiedChildElementsUsingJsoup(browser.getDriver().getPageSource(), browser);
 			
 			String browser_url = browser.getDriver().getCurrentUrl();
 			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
@@ -247,7 +260,7 @@ public class BrowserService {
 			
 			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
-					visible_elements,
+					elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
 					browser.getYScrollOffset(),
@@ -265,7 +278,114 @@ public class BrowserService {
 			return page_state;
 		}
 		
-		return page_states.get(0);
+		PageState page_state = page_states.get(0);
+		page_state.setElements(page_state_service.getElementStates(page_states.get(0).getKey()));
+		return page_state;
+	}
+
+	/**
+	 * Starts with the children of the body tag and walks the DOM to find and remove repeated cards and  
+	 * slider panels.
+	 * 
+	 * @param pageSource
+	 * 
+	 * @return
+	 */
+	private static List<ElementState> getQualifiedChildElementsUsingJsoup(String pageSource, Browser browser) {
+		Document html_doc = Jsoup.parse(pageSource);
+		Element root = html_doc.getElementsByTag("body").get(0);
+		log.warn("getting expandable elements...");
+		return getExpandableElements(root, html_doc, browser);
+	}
+		
+	/**
+	 * 
+	 * @param root
+	 * @param html_doc
+	 * @return
+	 */
+	public static List<ElementState> getExpandableElements(Element root, Document html_doc, Browser browser){
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+		List<ElementState> elements = new ArrayList<>();
+		
+		List<Element> child_elements = new ArrayList<>(root.children());
+		
+		for(int idx1 = 0; idx1 < child_elements.size(); idx1++) {
+			Element element = child_elements.get(idx1);
+			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
+			WebElement web_element = browser.findWebElementByXpath(xpath);
+			if(!web_element.isDisplayed()) {
+				continue;
+			}
+			Set<Attribute> attributes = generateAttributesUsingJsoup(element);
+			Map<String, String> css_values = Browser.loadCssProperties(web_element);
+
+			if(isStructureTag(element.tagName()) || "iframe".equals(element.tagName())) {
+				//do nothing
+				continue;
+			}
+			else if(isSliderElement(element)) {
+				//add element to list as slider element
+				ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.SLIDER);
+				elements.add(element_state);
+			}
+			else if(element.children().isEmpty()) {
+				//add element to list as CHILD element
+				ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.CHILD);
+				elements.add(element_state);
+			}
+			else {
+				//check if element is repeated amongst other elements
+				//send element to expandable list
+				boolean is_template = false;
+				String template = extractTemplate(element);
+				
+				for(int idx2 = idx1+1; idx2 < child_elements.size(); idx2++) {
+					Element other_element = child_elements.get(idx2);
+					if(other_element == element) {
+						continue;
+					}
+					String potential_template = extractTemplate(other_element);
+					
+					if(template.equals(potential_template)){
+						is_template=true;
+						//filter potential template from list for next round of review
+					}
+					
+					//double distance = StringUtils.getJaroWinklerDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
+					//calculate distance between loop1 value and loop2 value
+					double distance = StringUtils.getLevenshteinDistance(template, potential_template);
+					//if value is within threshold then add loop2 value to map for loop1 value xpath
+					double avg_string_size = (template.length() + potential_template.length())/2.0;
+					double similarity = distance / avg_string_size;
+					//double sigmoid = new Sigmoid(0,1).value(similarity);
+					//calculate distance of children if within 20%
+					if(distance == 0.0 || similarity < 0.025){
+						if(!is_template) {
+							elements.addAll(getExpandableElements(element, html_doc, browser));
+						}
+						log.warn("Distance ;  Similarity :: "+distance + "  ;  "+similarity);						
+						ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.TEMPLATE);
+						elements.add(element_state);
+						is_template = true;
+					}
+				}
+				
+				elements.addAll(getExpandableElements(element, html_doc, browser));
+			}
+		}		
+		
+		return elements;
+	}
+
+	private static boolean isSliderElement(Element element) {
+		
+		for(org.jsoup.nodes.Attribute attr : element.attributes()) {
+			if(attr.getValue().contains("slider")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -399,7 +519,7 @@ public class BrowserService {
 			
 			if(element.isDisplayed() && hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element.getLocation())){
 				Map<String, String> css_props = Browser.loadCssProperties(element);
-				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "");
+				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "", ElementClassification.CHILD);
 				
 				ElementState element_state_record = element_service.findByKey(new_element_state.getKey());
 				if(element_state_record == null) {
@@ -436,73 +556,7 @@ public class BrowserService {
 		return false;
 	}
 
-	/**
-	 * Retreives all elements on a given page that are visible. In this instance we take
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 * @throws IOException
-	 * @throws GridException
-	 */
-	public List<ElementState> getVisibleElementsWithinViewport(Browser browser, BufferedImage page_screenshot, Map<Integer, ElementState> visible_element_map, List<ElementState> elements, boolean element_pre_build)
-															 throws WebDriverException, GridException, IOException{
-		List<ElementState> visible_elements = new ArrayList<>();
-
-		boolean err = false;
-		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
-
-		do{
-			err = false;
-			try{
-				int start_idx = 0;
-				int visible_map_size = visible_element_map.size();
-
-				if(visible_map_size > 0){
-					start_idx = visible_element_map.keySet().size()-1;
-				}
-
-				List<ElementState> element_sublist = elements.subList(start_idx, elements.size());
-				for(ElementState element_state : element_sublist){
-					if(element_state == null) {
-						continue;
-					}
-					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-					Dimension element_size = element.getSize();
-					if(element.isDisplayed() && hasWidthAndHeight(element_size) && isElementVisibleInPane(browser, element.getLocation(), element_size)){
-						Map<String, String> css_props = Browser.loadCssProperties(element);
-						BufferedImage element_screenshot = browser.getElementScreenshot(element);
-						String checksum = PageState.getFileChecksum(element_screenshot);
-						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
-						
-						ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, element.getLocation(), element.getSize(), element_state, screenshot_url, checksum);
-						if(new_element_state != null){
-							visible_elements.add(new_element_state);
-							visible_element_map.put(visible_map_size, new_element_state);
-							visible_map_size++;
-						}
-					}
-				}
-			}
-			catch(NoSuchElementException e){
-				log.warn("No such element exception");
-			}
-			catch(WebDriverException e){
-				e.printStackTrace();
-				if(!e.getMessage().contains("no_such_element")){
-					throw e;
-				}
-				else{
-					err = true;
-				}
-			}
-		}while(err);
-
-		return visible_elements;
-	}
-
+	
 	/**
 	 *
 	 * @param browser
@@ -520,12 +574,13 @@ public class BrowserService {
 			Dimension element_size, 
 			ElementState element_state, 
 			String screenshot_url, 
-			String checksum
+			String checksum,
+			ElementClassification classification
 	) throws IOException{
 		long start_time = System.currentTimeMillis();
 
 		ElementState page_element = new ElementState(element_state.getText(), xpath, element_state.getName(), attributes, css_props, screenshot_url, checksum,
-										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), element_state.getInnerHtml());
+										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), element_state.getInnerHtml(), classification);
 		page_element.setIsPartOfForm(element_state.isPartOfForm());
 		page_element.setIsLeaf(element_state.isLeaf());
 
@@ -550,7 +605,7 @@ public class BrowserService {
 		long start_time = System.currentTimeMillis();
 
 		ElementState page_element = new ElementState(elem.getText(), xpath, elem.getTagName(), attributes, css_props, screenshot_url, checksum,
-										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
+										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML"), ElementClassification.ANCESTOR );
 		page_element.setOuterHtml(elem.getAttribute("outerHTML"));
 		page_element.setIsPartOfForm(false);
 		page_element.setTemplate(extractTemplate(elem.getAttribute("outerHTML"), elem.getText()));
@@ -589,22 +644,6 @@ public class BrowserService {
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
 				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name)
 				|| "template".equals(tag_name) || "audio".equals(tag_name);
-	}
-
-	/**
-	 * Filters out html, body, link, title, script, meta, head, iframe, or noscript tags
-	 *
-	 * @param tag_name
-	 *
-	 * @pre tag_name != null
-	 *
-	 * @return true if tag name is noscript, g, path, svg, polygon
-	 */
-	public static boolean isInternalStructTag(String tag_name) {
-		assert tag_name != null;
-
-		return "noscript".equals(tag_name)
-				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
@@ -840,14 +879,7 @@ public class BrowserService {
 
 		if(attributeChecks.size()>0){
 			xpath += "[";
-			//for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(0).toString();
-				/*
-				if(i < attributeChecks.size()-1){
-					xpath += " and ";
-				}
-			}
-				 */
+			xpath += attributeChecks.get(0).toString();
 			xpath += "]";
 		}
 
@@ -1277,29 +1309,7 @@ public class BrowserService {
 			}
 		}
 
-		log.warn("parent only list size :: " + parents_only_element_list.size());
-		//build hash of templates with elements attached
-		//Map<String, List<ElementState>> template_hash = new HashMap<>();
-		//iterate over all elements in list
-/*
-		for(int idx1 = 0; idx1 < element_list.size(); idx1++){
-			String template_str = element_list.get(idx1).getTemplate();
-			if(template_hash.containsKey(template_str)) {
-				template_hash.get(template_str).add(element_list.get(idx1));
-			}
-			else {
-				template_hash.put(template_str, new ArrayList<>());
-				template_hash.get(template_str).add(element_list.get(idx1));
-			}
-		}
-		
-		for(String template_str : template_hash.keySet()) {
-			if(template_hash.get(template_str).size() > 1) {
-				element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
-				element_templates.get(template_str).getElements().addAll(template_hash.get(template_str));
-			}
-		}
-		*/
+		log.warn("parent only list size :: " + parents_only_element_list.size());		
 		//iterate over all elements in list
 		
 		Map<String, Boolean> identified_templates = new HashMap<String, Boolean>();
@@ -1371,6 +1381,29 @@ public class BrowserService {
 		}
 
 		return element_templates;
+	}
+
+	/**
+	 * Checks if Attributes contains keywords indicative of a slider 
+	 * @param attributes
+	 * 
+	 * @return true if any of keywords present, otherwise false
+	 * 
+	 * @pre attributes != null
+	 * @pre !attributes.isEmpty()
+	 */
+	public static boolean doesAttributesContainSliderKeywords(Set<Attribute> attributes) {
+		assert attributes != null;
+		assert !attributes.isEmpty();
+		for(Attribute attr : attributes) {
+			List<String> attr_vals = attr.getVals();
+			for(String val : attr_vals) {
+				if(val.contains("slide")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Deprecated

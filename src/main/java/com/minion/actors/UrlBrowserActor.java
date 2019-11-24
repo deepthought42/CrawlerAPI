@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.openqa.selenium.Point;
@@ -41,6 +42,7 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
@@ -111,7 +113,6 @@ public class UrlBrowserActor extends AbstractActor {
 					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
 					List<PathObject> path_objects = null;
-					Map<String, Template> template_elements = new HashMap<>();
 					PageState page_state = null;
 					
 					do{
@@ -123,30 +124,32 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							
+							log.warn("successfully navigated to url ");
 							redirect = BrowserUtils.getPageTransition(url, browser, host);
+							log.warn("redirect detected as :: " + redirect.getKey());
 						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 								path_keys.add(redirect.getKey());
 								path_objects.add(redirect);
 							}
 
+						  	log.warn("detecting loading animation...");
 						  	animation = BrowserUtils.getLoadingAnimation(browser, host);
+						  	log.warn("done detecting loading animation");
 							if(animation != null){
 								path_keys.add(animation.getKey());
 								path_objects.add(animation);
 							}
+							log.warn("moving mouse to non interactive element");
 							browser.moveMouseToNonInteractive(new Point(300, 300));
-
+							log.warn("retrieving page source...");
 							String source = browser.getDriver().getPageSource();
+							log.warn("getting all elements using jsoup");
+							//List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source, browser);
 							
-							List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);
-							template_elements = browser_service.findTemplates(all_elements_list);
-							template_elements = browser_service.reduceTemplatesToParents(template_elements);
-							template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
-
+							//log.warn("parent only list size :: " + all_elements_list.size());
+							log.warn("building page...");
 							page_state = browser_service.buildPage(browser);
 
-							page_state.setTemplates(new ArrayList<>(template_elements.values()));
 							break;
 						}
 						catch(Exception e){
@@ -165,6 +168,7 @@ public class UrlBrowserActor extends AbstractActor {
 					log.warn("Done building page states ");
 					//send test to discovery actor
 					*/
+					log.warn("creating landing page test");
 					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 					message.getDiscoveryActor().tell(test_message, getSelf());

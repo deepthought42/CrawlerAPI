@@ -114,8 +114,8 @@ public class TestService {
 				 log.warn(e.getLocalizedMessage());
 			 }
 			 catch (Exception e) {
-				 e.printStackTrace();
-				 log.error(e.getLocalizedMessage());
+				 //e.printStackTrace();
+				 log.error("RUN TEST ERROR ::  " + e.getLocalizedMessage());
 			 }
 			 finally{
 				 if(browser != null){

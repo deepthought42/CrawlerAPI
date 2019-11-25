@@ -142,9 +142,7 @@ public class UrlBrowserActor extends AbstractActor {
 							log.warn("moving mouse to non interactive element");
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							log.warn("retrieving page source...");
-							String source = browser.getDriver().getPageSource();
 							log.warn("getting all elements using jsoup");
-							//List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source, browser);
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page...");

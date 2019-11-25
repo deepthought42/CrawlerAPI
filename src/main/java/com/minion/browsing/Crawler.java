@@ -623,8 +623,7 @@ public class Crawler {
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(NullPointerException e){
-				e.printStackTrace();
-				log.warn("Error happened while exploratory actor attempted to crawl test ");
+				log.warn("Null Pointer Exception happened during exploratory crawl ::  "+e.getMessage());
 			}
 			catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
@@ -641,7 +640,7 @@ public class Crawler {
 				//e.printStackTrace();
 			} catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null){
@@ -705,7 +704,7 @@ public class Crawler {
 			}
 			catch(NullPointerException e){
 				e.printStackTrace();
-				log.error("Error happened while exploratory actor attempted to crawl test ");
+				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
 			} 
 			catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
@@ -724,7 +723,7 @@ public class Crawler {
 			} 
 			catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null && !no_such_element_exception){

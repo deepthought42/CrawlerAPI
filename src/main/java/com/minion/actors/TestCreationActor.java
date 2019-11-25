@@ -1,5 +1,6 @@
 package com.minion.actors;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
@@ -285,11 +287,13 @@ public class TestCreationActor extends AbstractActor  {
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
 		Set<Attribute> attributes = browser.extractAttributes(element);
-		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element, (new URL(browser.getDriver().getCurrentUrl())).getHost());
-
+		BufferedImage img = browser.getElementScreenshot(element);
+		String checksum = PageState.getFileChecksum(img);
+		
 		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
-
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum);
+		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, browser.getBrowserName()+"-element");
+		elem.setScreenshot(screenshot_url);
 		elem = page_element_service.save(elem);
 		return elem;
 	}

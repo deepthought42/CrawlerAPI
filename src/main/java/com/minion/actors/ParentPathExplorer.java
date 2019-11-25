@@ -207,7 +207,6 @@ public class ParentPathExplorer extends AbstractActor {
 							last_element = parent_element;
 						}
 						catch(NullPointerException e){
-							e.printStackTrace();
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 						}

@@ -7,14 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -28,18 +22,14 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.ActionOrderOfOperations;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.PathStatus;
-import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
-import com.qanairy.services.BrowserService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -51,13 +41,6 @@ import com.qanairy.utils.PathUtils;
 public class PathExpansionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private BrowserService browser_service;
-	
-
-	public PathExpansionActor() {
-	}
 
 	//subscribe to cluster changes
 	@Override
@@ -192,9 +175,7 @@ public class PathExpansionActor extends AbstractActor {
 			return last_page_state.getElements();
 		}
 
-		List<ElementState> expandable_elements = new ArrayList<>();
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
-			log.warn("last page state url matches second to last page state url");
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
@@ -213,28 +194,10 @@ public class PathExpansionActor extends AbstractActor {
 		log.warn("####################################################################################################");
 
 		//filter list elements from last page elements
-		return filterListElements(expandable_elements);
-	}
-	
-	/**
-	 * 
-	 * @param elements
-	 * @return
-	 */
-	private Map<String, Template> getOrganismTemplateMap(List<ElementState> elements) {
-		Map<String, Template> template_elements = browser_service.findTemplates(elements);
-		//template_elements = browser_service.reduceTemplatesToParents(template_elements);
-		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
-
-		Map<String, Template> list_map = new HashMap<>();
-		for(String template : template_elements.keySet()){
-			TemplateType type = browser_service.classifyTemplate(template);
-			if(type == TemplateType.ORGANISM){
-				list_map.put(template, template_elements.get(template));
-			}
-		}
-		
-		return list_map;
+		log.warn("elements before filtering :: " + last_page_state.getElements().size());
+		List<ElementState> filtered_list = filterListElements(last_page_state.getElements());
+		log.warn("returning elements :: "+filtered_list.size());
+		return filtered_list;
 	}
 
 	private List<ElementState> filterListElements(
@@ -242,8 +205,8 @@ public class PathExpansionActor extends AbstractActor {
 	) {
 		List<ElementState> filtered_elements = new ArrayList<>();
 		for(ElementState element : elements) {
-			if(!element.getClassification().equals(ElementClassification.TEMPLATE) 
-				&& !element.getClassification().equals(ElementClassification.SLIDER)
+			if(!element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) 
+				&& !element.getClassification().equals(ElementClassification.SLIDER.getShortName())
 			){
 				filtered_elements.add(element);
 			}

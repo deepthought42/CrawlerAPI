@@ -4,10 +4,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.openqa.selenium.Point;
@@ -42,13 +39,10 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
-import com.qanairy.models.Template;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;

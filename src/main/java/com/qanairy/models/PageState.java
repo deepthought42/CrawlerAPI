@@ -67,9 +67,6 @@ public class PageState implements Persistable, PathObject {
 	private List<String> animated_image_checksums;
 
 	@Relationship(type = "HAS")
-	private List<Template> templates;
-
-	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
 
 	@Relationship(type = "HAS")
@@ -394,7 +391,15 @@ public class PageState implements Persistable, PathObject {
 		return Hex.encodeHexString(thedigest);
 	}
 
+	/**
+	 * 
+	 * @param buff_img
+	 * @return
+	 * @throws IOException
+	 */
 	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
+		assert buff_img != null;
+		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but

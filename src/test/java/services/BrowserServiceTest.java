@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -22,7 +21,6 @@ import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Template;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.services.BrowserService;
 
@@ -615,8 +613,6 @@ public class BrowserServiceTest {
 					      +"</body>"
 						+"</html>";
 
-		BrowserService browser_service = new BrowserService();
-	
 		assertTrue(true);	
 	}
 }

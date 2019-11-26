@@ -133,8 +133,7 @@ public class BrowserService {
 			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
 			if(child_node_cnt == 0 && 
 				!isStructureTag(element.tagName()) && 
-				!doesElementBelongToScriptTag(element) && 
-				!"iframe".equals(element.tagName())
+				!doesElementBelongToScriptTag(element)
 			){
 				elements.add(xpath);
 			}
@@ -225,11 +224,32 @@ public class BrowserService {
 			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
 			List<ElementState> elements = BrowserService.getQualifiedChildElementsUsingJsoup(browser.getDriver().getPageSource(), browser);
 			log.warn("Expandable elements found :: "+elements.size());
+			BufferedImage element_screenshot = null;
 
+			for(ElementState element : elements) {
+				if("child".equals(element.getClassification())) {
+					//add element to list as CHILD element
+					try {
+						element_screenshot = browser.getElementScreenshot(element);
+					}catch(Exception e) {
+						//e.printStackTrace();
+						log.warn("child element creation exception :: " +e.getMessage());
+						continue;
+					}
+					
+					String checksum = PageState.getFileChecksum(element_screenshot);
+					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(browser.getDriver().getCurrentUrl()).getHost(), element.getKey());
+					element_screenshot.flush();
+					element_screenshot = null;
+					element.setScreenshot(screenshot_url);
+					element.setScreenshotChecksum(checksum);
+				}
+			}
 			String browser_url = browser.getDriver().getCurrentUrl();
 			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
-			
+			full_page_screenshot.flush();
+
 			//extract visible elements from list of elementstates provided
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url_without_params).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			viewport_screenshot.flush();
@@ -247,9 +267,9 @@ public class BrowserService {
 			page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
 			page_state.setFullPageChecksum(full_page_screenshot_checksum);
 			page_state.addScreenshotChecksum(screenshot_checksum);
+			page_state.addScreenshotChecksum(full_page_screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-			full_page_screenshot.flush();
 			
 			return page_state;
 		}
@@ -272,36 +292,45 @@ public class BrowserService {
 	private static List<ElementState> getQualifiedChildElementsUsingJsoup(String pageSource, Browser browser) throws IOException {
 		Document html_doc = Jsoup.parse(pageSource);
 		Element root = html_doc.getElementsByTag("body").get(0);
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+
 		log.warn("getting expandable elements...");
-		return getExpandableElements(root, html_doc, browser);
+		return getExpandableElements(root, html_doc, browser, xpath_cnt);
 	}
 		
 	/**
+	 * Retrieves all expandable elements from within a {@linkplain Document} originating from a given root {@linkplain Element}
 	 * 
-	 * @param root
-	 * @param html_doc
+	 * @param root root {@linkplain Element} node to start from
+	 * @param html_doc html {@linkplain Document} 
+	 * 
 	 * @return
+	 * 
 	 * @throws IOException 
+	 * 
+	 * @pre assert root != null
+	 * @pre assert html_doc != null
+	 * @pre	assert browser != null		
 	 */
-	public static List<ElementState> getExpandableElements(Element root, Document html_doc, Browser browser) throws IOException{
-		Map<String, Integer> xpath_cnt = new HashMap<>();
+	public static List<ElementState> getExpandableElements(Element root, Document html_doc, Browser browser, Map<String, Integer> xpath_cnt) throws IOException{
+		assert root != null;
+		assert html_doc != null;
+		assert browser != null;
+		
 		List<ElementState> elements = new ArrayList<>();
 		
 		List<Element> child_elements = new ArrayList<>(root.children());
-		log.warn("Child elements for root node :: " + child_elements.size());
 		for(int idx1 = 0; idx1 < child_elements.size(); idx1++) {
 			Element element = child_elements.get(idx1);
-			if(	isStructureTag(element.tagName()) || 
-				"iframe".equals(element.tagName())
+			if(	isStructureTag(element.tagName())
 			) {
-				log.warn("element is a structure tag, or an iframe");
 				continue;
 			}
-			
 			
 			if(isSliderElement(element)) {
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
 				WebElement web_element = browser.findWebElementByXpath(xpath);
+				
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 				Map<String, String> css_values = Browser.loadCssProperties(web_element);
 				
@@ -312,27 +341,20 @@ public class BrowserService {
 			else if(element.children().size() == 0 ) {
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
 				WebElement web_element = browser.findWebElementByXpath(xpath);
-				if(web_element.isDisplayed() && hasWidthAndHeight(web_element.getSize()) && !isElementLargerThanViewport(browser, web_element.getSize()) && !doesElementHaveNegativePosition(web_element.getLocation())) {
+				
+				Dimension element_size = web_element.getSize();
+				if(web_element.isDisplayed() && hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(web_element.getLocation()) && !isElementLargerThanViewport(browser, element_size)) {
 					Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 					Map<String, String> css_values = Browser.loadCssProperties(web_element);
-					//add element to list as CHILD element
-					try {
-						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-						String checksum = PageState.getFileChecksum(element_screenshot);
-						ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.CHILD, "");
-						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(browser.getDriver().getCurrentUrl()).getHost(), element_state.getKey());
-						element_state.setScreenshot(screenshot_url);
-						element_state.setScreenshotChecksum(checksum);
-						elements.add(element_state);
-					}catch(Exception e) {
-						log.warn("child element creation exception :: " +e.getMessage());
-					}
+					ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.CHILD, "");
+					
+					elements.add(element_state);
 				}
 			}
 			else {
 				//check if element is repeated amongst other elements
 				//send element to expandable list
-				String template = extractTemplate(element);
+				//String template = extractTemplate(element);
 				
 				/*
 				for(int idx2 = 0; idx2 < child_elements.size(); idx2++) {
@@ -357,7 +379,7 @@ public class BrowserService {
 					}
 				}
 				*/
-				elements.addAll(getExpandableElements(element, html_doc, browser));
+				elements.addAll(getExpandableElements(element, html_doc, browser, xpath_cnt));
 			}
 		}		
 		
@@ -629,7 +651,7 @@ public class BrowserService {
 				|| "head".equals(tag_name) || "noscript".equals(tag_name)
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
 				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name)
-				|| "template".equals(tag_name) || "audio".equals(tag_name);
+				|| "template".equals(tag_name) || "audio".equals(tag_name) || "iframe".equals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
@@ -877,7 +899,7 @@ public class BrowserService {
 	    	try{
 	    		parent = last_element.parent();
 
-	    		if(!isStructureTag(parent.tagName()) && !"iframe".equals(element.tagName())){
+	    		if(!isStructureTag(parent.tagName())){
 		    		if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().isEmpty()){
 		    			break;
 		    		}
@@ -956,8 +978,8 @@ public class BrowserService {
 					count = xpath_cnt.get(xpath);
 				}
 				xpath_cnt.put(xpath, ++count);
-
-				return "("+xpath+")[" + count + "]";
+				String unique_xpath = "("+xpath+")[" + count + "]";
+				return unique_xpath;
 			}
 
 		}catch(InvalidSelectorException e){

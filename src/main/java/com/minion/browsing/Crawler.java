@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -723,7 +722,7 @@ public class Crawler {
 			} 
 			catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			finally{
 				if(browser != null && !no_such_element_exception){
@@ -731,7 +730,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100000);
+		}while(result_page == null && tries < 1000000);
 		return result_page;
 	}
 	

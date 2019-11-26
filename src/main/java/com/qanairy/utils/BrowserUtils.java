@@ -123,7 +123,18 @@ public class BrowserUtils {
 		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
 	}	
 	
+	/**
+	 * 
+	 * @param browser
+	 * @param host
+	 * @return
+	 * @throws IOException
+	 */
 	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host) throws IOException {
+		assert browser != null;
+		assert host != null;
+		assert !host.isEmpty();
+		
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;

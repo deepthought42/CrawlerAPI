@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -623,8 +622,7 @@ public class Crawler {
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(NullPointerException e){
-				e.printStackTrace();
-				log.warn("Error happened while exploratory actor attempted to crawl test ");
+				log.warn("Null Pointer Exception happened during exploratory crawl ::  "+e.getMessage());
 			}
 			catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
@@ -641,7 +639,7 @@ public class Crawler {
 				//e.printStackTrace();
 			} catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null){
@@ -705,7 +703,7 @@ public class Crawler {
 			}
 			catch(NullPointerException e){
 				e.printStackTrace();
-				log.error("Error happened while exploratory actor attempted to crawl test ");
+				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
 			} 
 			catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
@@ -732,7 +730,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100000);
+		}while(result_page == null && tries < 1000000);
 		return result_page;
 	}
 	

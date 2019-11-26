@@ -23,7 +23,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	//@Query("MATCH a=(p:PageState)-[h:HAS]->() MATCH (p)-[]->(s:Screenshot{checksum: {screenshot_checksum}}) RETURN a LIMIT 1")
 	//public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
 	@Query("MATCH a=(p:PageState)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
+	public List<PageState> findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
 	
 	//@Query("MATCH a=(p:PageState{full_page_checksum:{screenshot_checksum}})-[h:HAS]->() RETURN a LIMIT 1")
 	//public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );

@@ -70,8 +70,9 @@ public class AnimationDetectionActor extends AbstractActor{
 							
 							log.warning("navigating to url :: " + first_page_state.getUrl());
 							browser.navigateTo(first_page_state.getUrl());
+							log.warning("crawling path without building result");
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, first_page_state.getUrl());
-
+							log.warning("getting animation...");
 							Animation animation = BrowserUtils.getAnimation(browser, first_page_state.getUrl());
 							if(animation.getImageUrls().size() > 1){
 								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
@@ -82,7 +83,7 @@ public class AnimationDetectionActor extends AbstractActor{
 							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
 							
 						}catch(Exception e){
-							log.debug("exception occurred during Animation Detection.....  "+e.getMessage());
+							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
 							err = true;
 						}
 					}while(err);

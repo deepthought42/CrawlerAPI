@@ -21,7 +21,7 @@ public class ActionFactory {
 								"mouseover",
 								"scroll",
 								"sendKeys"};
-	private static Actions builder;
+	private Actions builder;
 	
 	public ActionFactory(WebDriver driver){
 		builder = new Actions(driver);

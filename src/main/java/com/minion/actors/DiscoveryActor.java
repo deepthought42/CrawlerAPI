@@ -247,9 +247,9 @@ public class DiscoveryActor extends AbstractActor{
 							return;
 						}
 						
-						log.warn("test doesn't span multiple domains. Is it landable??    ::   "+isLandable);
 						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
-							if(!explored_pages.containsKey(test.getResult().getUrl())) {
+							log.warn("exlored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
+							//if(!explored_pages.containsKey(test.getResult().getUrl())) {
 								explored_pages.put(test.getResult().getUrl(), test.getResult());
 								if(url_browser_actor == null){
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -257,7 +257,7 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain());
 								url_browser_actor.tell(url_message, getSelf() );
-							}
+							//}
 						}
 						else {
 							List<String> final_key_list = new ArrayList<>(test.getPathKeys());

@@ -389,7 +389,7 @@ public class BrowserService {
 	private static boolean isSliderElement(Element element) {
 		
 		for(org.jsoup.nodes.Attribute attr : element.attributes()) {
-			if(attr.getValue().contains("slider")) {
+			if(attr.getValue().toLowerCase().contains("slider") || attr.getKey().toLowerCase().contains("slider")) {
 				return true;
 			}
 		}

@@ -463,7 +463,7 @@ public class TestController {
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=false) String description,
-										@RequestParam(value="key", required=true) String key) throws MalformedURLException{
+										@RequestParam(value="key", required=true) String test_key) throws MalformedURLException{
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
@@ -476,10 +476,8 @@ public class TestController {
 		else{
 			group = group_record;
 		}
-		Test test = test_repo.findByKey(key);
-		test.addGroup(group);
 
-		test = test_service.save(test);
+		test_service.addGroup(test_key, group);
 		return group;
 	}
 

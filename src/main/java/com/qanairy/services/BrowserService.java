@@ -233,7 +233,7 @@ public class BrowserService {
 						element_screenshot = browser.getElementScreenshot(element);
 					}catch(Exception e) {
 						//e.printStackTrace();
-						log.warn("child element creation exception :: " +e.getMessage());
+						//log.warn("child element creation exception :: " +e.getMessage());
 						continue;
 					}
 					
@@ -389,7 +389,7 @@ public class BrowserService {
 	private static boolean isSliderElement(Element element) {
 		
 		for(org.jsoup.nodes.Attribute attr : element.attributes()) {
-			if(attr.getValue().contains("slider")) {
+			if(attr.getValue().toLowerCase().contains("slider") || attr.getKey().toLowerCase().contains("slider")) {
 				return true;
 			}
 		}
@@ -1413,6 +1413,8 @@ public class BrowserService {
 		template = template.replaceAll("<", " <");
 		template = template.replaceAll(">", "> ");
 		for(String word : text_atoms){
+			word = word.replaceAll("\\{.*?\\}", "");
+
 			word = word.replaceAll("[()]", "");
 			word = word.replace("\"", " ");
 			word = word.replace("[", "");

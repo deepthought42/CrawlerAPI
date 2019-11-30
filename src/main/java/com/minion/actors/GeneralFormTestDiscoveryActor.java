@@ -26,11 +26,11 @@ import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
-import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -52,9 +52,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 
 	@Autowired
 	private Crawler crawler;
-	
-	@Autowired
-	private TestService test_service;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
@@ -88,7 +85,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  	path_object_lists.addAll(generateAllFormPaths(message.getPage(), message.getForm()));
 						  							  	
 						  	//Evaluate all tests now
-						  	List<Test> tests = new ArrayList<Test>();
 					  		for(List<PathObject> path_object_list : path_object_lists) {
 	
 						  		List<String> path_keys = new ArrayList<String>();
@@ -138,13 +134,15 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		new_test.setRunTime(crawl_time_in_ms);
 						  		new_test.setLastRunTimestamp(new Date());
 						  		
-						  		new_test = test_service.save(new_test);
-						  		tests.add(new_test);
+						  		//new_test = test_service.save(new_test);
 						  		
 						  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getDiscovery().getKey());
 								discovery_record.setTestCount(discovery_record.getTestCount()+1);
 								discovery_record = discovery_repo.save(discovery_record);
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  
+								
+								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain());
+								message.getDiscoveryActor().tell(test_message, getSelf());
 					  		}
 							break;
 						}catch(Exception e){

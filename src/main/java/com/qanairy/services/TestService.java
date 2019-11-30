@@ -381,4 +381,9 @@ public class TestService {
 		}
 		return false;
 	}
+
+	public void addGroup(String test_key, Group group) {
+		Group group_record = group_service.save(group);
+		test_repo.addGroup(test_key, group_record.getKey());
+	}
 }

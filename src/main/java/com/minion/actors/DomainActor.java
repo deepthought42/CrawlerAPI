@@ -116,7 +116,11 @@ public class DomainActor extends AbstractActor{
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
 					
-					Test test_record = test_service.save(test);
+					Test test_record = test_service.findByKey(test.getKey());
+					if(test_record == null) {
+						test_record = test_service.save(test);
+					}
+					
 					if(domain == null){
 						String url = test_msg.getDomain().getUrl();
 						domain = domain_service.findByUrl(url);

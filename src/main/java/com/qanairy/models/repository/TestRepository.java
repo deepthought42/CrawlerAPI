@@ -53,4 +53,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	
 	@Query("MATCH (t:Test) WHERE {path_obj_key} in t.path_keys RETURN t")
 	public Set<Test> findAllTestRecordsContainingKey(@Param("path_obj_key") String path_object_key);
+	
+	@Query("MATCH (t:Test{key:{key}}),(g:Group{key:{group_key}}) CREATE (t)-[r:HAS_GROUP]->(g) RETURN r")
+	public void addGroup(String test_key, String group_key);
 }

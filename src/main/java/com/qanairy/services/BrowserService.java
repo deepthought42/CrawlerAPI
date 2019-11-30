@@ -1069,11 +1069,24 @@ public class BrowserService {
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
-
+			
 			log.warn("inputs left after filtering...  "+input_elements.size());
 			for(WebElement input_elem : input_elements){
+				boolean submit_elem_found = false;
+
 				log.warn("extracting attributes... ");
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
+				for(Attribute attribute : attributes){
+					if(attribute.contains("submit")){
+						submit_elem_found = true;
+						break;
+					}
+				}
+
+				if(submit_elem_found){
+					continue;
+				}
+				
 				img = browser.getElementScreenshot(input_elem);
 				checksum = PageState.getFileChecksum(img);
 				

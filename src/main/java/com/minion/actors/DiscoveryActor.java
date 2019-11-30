@@ -248,7 +248,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 						
 						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
-							log.warn("exlored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
+							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
 							//if(!explored_pages.containsKey(test.getResult().getUrl())) {
 								explored_pages.put(test.getResult().getUrl(), test.getResult());
 								if(url_browser_actor == null){

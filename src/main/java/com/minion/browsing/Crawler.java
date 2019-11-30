@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
+import com.minion.util.TimingUtils;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
@@ -563,6 +564,7 @@ public class Crawler {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
+		TimingUtils.pauseThread(1500L);
 	}
 
 	/**
@@ -575,6 +577,7 @@ public class Crawler {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
+		TimingUtils.pauseThread(1500L);
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance)

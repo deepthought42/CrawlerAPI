@@ -117,10 +117,8 @@ public class TestCreationActor extends AbstractActor  {
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-				    			TimingUtils.pauseThread(1000);
-				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-								
-								
+				    			TimingUtils.pauseThread(1500);
+						
 				    			PageState result_page = browser_service.buildPage(browser);
 								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 								
@@ -251,7 +249,6 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(action);
 
     			Crawler.performAction(action, element, browser.getDriver());
-    			TimingUtils.pauseThread(1500L);
 
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE

@@ -28,7 +28,7 @@ public class ApiTesting
 	
 	
 	@BeforeClass
-	public void setup() throws Exception {
+	public void setUp() throws Exception {
 		//PropertyConfigurator.configure("Log4j.properties");
 	}
 	

@@ -48,6 +48,9 @@ public class Test implements Persistable {
 	private long run_time_length;
 	private List<String> path_keys;
 	
+	@Relationship(type = "BELONGS_TO")
+	private Account account;
+
 	@Properties
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
@@ -439,5 +442,13 @@ public class Test implements Persistable {
 			}
 			
 			return test_name.trim();
+	}
+	
+	public Account getAccount() {
+		return account;
+	}
+	
+	public void setAccount(Account account) {
+		this.account = account;
 	}
 }

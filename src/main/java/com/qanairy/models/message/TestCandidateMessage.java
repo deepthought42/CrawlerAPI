@@ -22,6 +22,7 @@ public class TestCandidateMessage {
 	private PageState result_page;
 	private BrowserType browser;
 	private Domain domain;
+	private String account_id;
 	
 	public TestCandidateMessage(
 			List<String> keys, 
@@ -30,7 +31,8 @@ public class TestCandidateMessage {
 			PageState result_page, 
 			BrowserType browser, 
 			ActorRef domain_actor, 
-			Domain domain
+			Domain domain, 
+			String account_id
 	){
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
@@ -83,5 +85,13 @@ public class TestCandidateMessage {
 
 	public void setDomain(Domain domain) {
 		this.domain = domain;
+	}
+
+	public String getAccountId() {
+		return account_id;
+	}
+
+	public void setAccountId(String account_id) {
+		this.account_id = account_id;
 	}
 }

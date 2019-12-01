@@ -13,11 +13,13 @@ public class FormMessage {
 	private Form form;
 	private PageState page;
 	private ActorRef domain_actor;
-	private ActorRef discovery_actor; 
+	private ActorRef discovery_actor;
+	private String account_key;
 	
-	public FormMessage(Form form, PageState page) {
+	public FormMessage(Form form, PageState page, String account_key) {
 		setForm(form);
 		setPage(page);
+		setAccountKey(account_key);
 	}
 
 	public Form getForm() {
@@ -50,5 +52,13 @@ public class FormMessage {
 
 	public void setPage(PageState page) {
 		this.page = page;
+	}
+
+	public String getAccountKey() {
+		return account_key;
+	}
+
+	public void setAccountKey(String account_key) {
+		this.account_key = account_key;
 	}
 }

@@ -141,7 +141,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 								discovery_record = discovery_repo.save(discovery_record);
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  
 								
-								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain());
+								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
 								message.getDiscoveryActor().tell(test_message, getSelf());
 					  		}
 							break;

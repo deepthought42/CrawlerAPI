@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -24,6 +25,7 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
+import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -56,10 +58,13 @@ public class DomainActor extends AbstractActor{
 	private TestService test_service;
 	
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
 	private ActorSystem actor_system;
 	
 	private ActorRef discovery_actor;
-
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -119,6 +124,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.findByKey(test.getKey());
 					if(test_record == null) {
 						test_record = test_service.save(test);
+						account_service.addTest(test_record, test_msg.getAccount());
 					}
 					
 					if(domain == null){

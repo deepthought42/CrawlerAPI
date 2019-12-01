@@ -3,6 +3,7 @@ package com.qanairy.models.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.PathStatus;
@@ -19,8 +20,9 @@ public class PathMessage {
 	private Domain domain;
 	private PathStatus status;
 	private BrowserType browser;
+	private String account;
 	
-	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor, Domain domain){
+	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
 		setKeys(keys);
 		setPathObjects(path_objects);
 		setDiscoveryActor(discovery_actor);
@@ -28,6 +30,7 @@ public class PathMessage {
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
+		setAccountId(account);
 	}
 
 	public List<String> getKeys() {
@@ -47,7 +50,7 @@ public class PathMessage {
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomain());
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomain(), getAccountId());
 	}
 
 	public ActorRef getDiscoveryActor() {
@@ -88,5 +91,13 @@ public class PathMessage {
 
 	public void setDomain(Domain domain) {
 		this.domain = domain;
+	}
+
+	public String getAccountId() {
+		return account;
+	}
+
+	public void setAccountId(String account) {
+		this.account = account;
 	}
 }

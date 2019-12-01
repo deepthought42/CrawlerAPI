@@ -13,17 +13,27 @@ public class TestMessage {
 	private ActorRef discovery_actor;	
 	private ActorRef domain_actor;
 	private BrowserType browser;
+	private String account;
 	
-	public TestMessage(Test test, ActorRef discovery_actor, BrowserType browser, ActorRef domain_actor, Domain domain){
+	public TestMessage(Test test, ActorRef discovery_actor, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
 		setTest(test);
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
+		setAccount(account);
 	}
 	
+	public String getAccount() {
+		return account;
+	}
+
+	public void setAccount(String account_id) {
+		this.account = account_id;
+	}
+
 	public TestMessage clone(){
-		return new TestMessage(test, getDiscoveryActor(), getBrowser(), getDomainActor(), getDomain());
+		return new TestMessage(test, getDiscoveryActor(), getBrowser(), getDomainActor(), getDomain(), getAccount());
 	}
 
 	public ActorRef getDiscoveryActor() {

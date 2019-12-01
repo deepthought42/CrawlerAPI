@@ -260,7 +260,7 @@ public class ParentPathExplorer extends AbstractActor {
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
 
 			  		Test test = test_creator_service.createTest( final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
-					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain, message.getAccount());
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
 				})

@@ -132,7 +132,7 @@ public class DiscoveryActor extends AbstractActor{
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
 						startDiscovery(message);
-						setAccount(message.getAccount());
+						setAccount(account_service.findByUserId(message.getAccountId()));
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//look up discovery record if it's null
@@ -255,7 +255,7 @@ public class DiscoveryActor extends AbstractActor{
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
-								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain());
+								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
 							//}
 						}
@@ -269,7 +269,7 @@ public class DiscoveryActor extends AbstractActor{
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
 				  			final_object_list = PathUtils.reducePathObjects(final_object_list);
 				  			
-				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain());
+				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 				  			if(path_expansion_actor == null){
 				  				path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  						  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
@@ -420,15 +420,16 @@ public class DiscoveryActor extends AbstractActor{
 		//create new discovery
 		discovery_service.save(discovery_record);
 
-		message.getAccount().addDiscoveryRecord(discovery_record);
-		account_service.save(message.getAccount());
+		Account account = account_service.findByUserId(message.getAccountId());
+		account.addDiscoveryRecord(discovery_record);
+		account_service.save(account);
 
 		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain());
+		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		url_browser_actor.tell(url_message, getSelf() );
 	}
 

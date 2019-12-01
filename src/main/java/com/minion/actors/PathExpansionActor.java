@@ -67,7 +67,7 @@ public class PathExpansionActor extends AbstractActor {
 				log.warn("total path expansions found :: "+exploratory_paths.size());
 
 				for(ExploratoryPath expanded : exploratory_paths){
-					PathMessage path = new PathMessage(expanded.getPathKeys(), expanded.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXPANDED, message.getBrowser(), message.getDomainActor(), message.getDomain());
+					PathMessage path = new PathMessage(expanded.getPathKeys(), expanded.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXPANDED, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
 					message.getDiscoveryActor().tell(path, getSelf());
 				}
 			})
@@ -123,7 +123,7 @@ public class PathExpansionActor extends AbstractActor {
 
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
 			//page element is not an input or a form
-			PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
+			PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain(), path.getAccount());
 
 			new_path.getPathObjects().add(element);
 			new_path.getKeys().add(element.getKey());

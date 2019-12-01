@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
@@ -39,7 +39,7 @@ import akka.event.LoggingAdapter;
 @Scope("prototype")
 public class FormDiscoveryActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-	Cluster cluster = Cluster.get(getContext().getSystem());
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
 	private Crawler crawler;
@@ -81,7 +81,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  	do{
 				  		try{
 				  			log.warning("form discovery getting browser connection ::   "+message.getBrowser().toString());
-					  		browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
+					  		browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 					  		browser.navigateTo(last_page.getUrl());
 					  		log.warning("browser retrived :: "+browser);
 					  		log.warning("crawling path without building result  ::   "+message.getKeys());

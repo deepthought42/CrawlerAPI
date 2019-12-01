@@ -1,4 +1,4 @@
-package com.minion.util;
+package com.qanairy.utils;
 
 public class TimingUtils {
 	public static void pauseThread(long time){

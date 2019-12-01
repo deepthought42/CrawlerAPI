@@ -71,4 +71,12 @@ public class NumericRestrictionRule extends Rule {
 	public void setValue(String value) {
 		this.value = value;
 	}
+	
+	public long getId() {
+		return this.id;
+	}
+	
+	public void setId(long id) {
+		this.id = id;
+	}
 }

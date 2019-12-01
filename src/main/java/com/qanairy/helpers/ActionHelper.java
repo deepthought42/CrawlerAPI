@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.helpers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,11 +10,11 @@ import com.qanairy.models.Action;
  *   an action has less precedence.
  *
  */
-public class ActionOrderOfOperations {
+public class ActionHelper {
 	public static HashMap<String, Integer> actionOrderOfOperationsMap 
 		= new HashMap<String, Integer>();
 	
-	static List<List<Action>> action_lists = new ArrayList<List<Action>>();
+	private static List<List<Action>> action_lists = new ArrayList<List<Action>>();
 	
 	/*
 	 * ACTION POLICIES

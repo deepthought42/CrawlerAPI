@@ -1,6 +1,6 @@
-package com.minion.util;
+package com.qanairy.utils;
 
-public class ArrayUtility {
+public class ArrayUtils {
 	public static String joinArray(String[] arr){
 		if (arr.length > 0) {
 		    StringBuilder nameBuilder = new StringBuilder();

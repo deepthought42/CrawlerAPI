@@ -1,14 +1,12 @@
 package api;
 
-import org.testng.Assert;
-import org.testng.annotations.*;
-import org.json.JSONArray;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jayway.restassured.response.Response;
 import static com.jayway.restassured.RestAssured.*;
-import org.testng.asserts.SoftAssert;
 
 public class ApiTesting
 {
@@ -27,16 +25,15 @@ public class ApiTesting
 	protected static final String XML = "application/xml";
 	protected static String accessTokenValue = "";
 	private static final Logger LOGGER = LoggerFactory.getLogger("API Testing");
-	protected SoftAssert softAssert = new SoftAssert();
 	
 	
 	@BeforeClass
-	public void Setup() throws Exception {
+	public void setup() throws Exception {
 		//PropertyConfigurator.configure("Log4j.properties");
 	}
 	
 
-	@Test(description ="This test gets the correct access token.Positive Test")
+	@Test
 	public void Test_GetAccessToken() throws Exception {
 		LOGGER.info("Starting Test_GetAccessToken");
 		Response resp= given()

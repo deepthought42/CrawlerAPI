@@ -19,7 +19,7 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -58,7 +58,7 @@ public class BrowserTest {
 	//@Test
 	public void verifyGenerateXpathUsingJsoup(){
 		try{
-			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
+			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 			browser.navigateTo("https://staging-marketing.qanairy.com");
 			List<String> xpaths = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 			
@@ -76,7 +76,7 @@ public class BrowserTest {
 	//@Test
 	public void verifyGenerateParentXpath(){
 		try{
-			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
+			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 			browser.navigateTo("https://staging-marketing.qanairy.com");
 			WebElement element = browser.getDriver().findElement(By.xpath("//li//a[contains(@href,'features.html')]/../../.."));
 			Set<Attribute> attributes = browser.extractAttributes(element);
@@ -124,7 +124,7 @@ public class BrowserTest {
 	}
 	
 	public void scrollToElementInChrome() throws MalformedURLException{
-		Browser browser = BrowserConnectionFactory.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+		Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");
 		WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 		
@@ -138,7 +138,7 @@ public class BrowserTest {
 		int cnt = 0;
 		do{
 			try{
-				Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
+				Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo("https://qa-testbed.qanairy.com/elements/index.html");
 				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 				

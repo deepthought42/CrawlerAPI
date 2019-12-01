@@ -25,13 +25,6 @@ public class ApiTesting
 	protected static final String XML = "application/xml";
 	protected static String accessTokenValue = "";
 	private static final Logger LOGGER = LoggerFactory.getLogger("API Testing");
-	
-	
-	@BeforeClass
-	public void setUp() throws Exception {
-		//PropertyConfigurator.configure("Log4j.properties");
-	}
-	
 
 	@Test
 	public void Test_GetAccessToken() throws Exception {

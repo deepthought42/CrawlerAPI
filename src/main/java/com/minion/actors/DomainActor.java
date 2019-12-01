@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
-import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;

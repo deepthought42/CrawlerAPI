@@ -79,7 +79,7 @@ public class AnimationDetectionActor extends AbstractActor{
 								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
 							}
 
-							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor(), msg.getDomain(), msg.getAccount());
+							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor(), msg.getDomain(), msg.getAccountId());
 							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
 							
 						}catch(Exception e){

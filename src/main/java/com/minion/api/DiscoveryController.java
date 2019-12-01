@@ -151,7 +151,7 @@ public class DiscoveryController {
 				domain_actors.put(url, domain_actor);
 			}
 		    
-			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getId(), BrowserType.create(domain.getDiscoveryBrowserName()));
+			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
 			domain_actors.get(url).tell(discovery_action_msg, null);
 		}
         else{
@@ -206,7 +206,7 @@ public class DiscoveryController {
 			domain_actors.put(domain.getUrl(), domain_actor);
 		}
     	
-		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getId(), BrowserType.create(domain.getDiscoveryBrowserName()));
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}

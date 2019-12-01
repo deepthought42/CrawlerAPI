@@ -2,11 +2,13 @@ package com.qanairy.models;
 
 import java.util.Map;
 
+/**
+ * 
+ * 
+ */
 public class BrowserPassingStatuses {
 	private Map<String, Boolean> status_map;
 
-	public BrowserPassingStatuses(){}
-	
 	public Map<String, Boolean> getBrowserPassingStatuses() {
 		return status_map;
 	}

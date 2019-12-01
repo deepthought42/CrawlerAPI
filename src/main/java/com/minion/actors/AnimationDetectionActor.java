@@ -16,8 +16,8 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Animation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -65,7 +65,7 @@ public class AnimationDetectionActor extends AbstractActor{
 					do{
 						err = false;
 						try{
-							Browser browser = BrowserConnectionFactory.getConnection(msg.getBrowser(), BrowserEnvironment.DISCOVERY);
+							Browser browser = BrowserConnectionHelper.getConnection(msg.getBrowser(), BrowserEnvironment.DISCOVERY);
 							PageState first_page_state = PathUtils.getFirstPage(msg.getPathObjects());
 							
 							log.warning("navigating to url :: " + first_page_state.getUrl());

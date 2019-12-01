@@ -36,9 +36,8 @@ import org.springframework.stereotype.Component;
 import com.assertthat.selenium_shutterbug.utils.web.ElementOutsideViewportException;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.util.ArrayUtility;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -51,6 +50,7 @@ import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
+import com.qanairy.utils.ArrayUtils;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -95,7 +95,7 @@ public class BrowserService {
 	public Browser getConnection(String browser_name, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser_name != null;
 		assert !browser_name.isEmpty();
-		return BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), browser_env);
+		return BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), browser_env);
 	}
 
 	/**
@@ -826,7 +826,7 @@ public class BrowserService {
 		String xpath = "/"+element.getTagName();
 		for(Attribute attr : attributes){
 			if(valid_attributes.contains(attr.getName())){
-				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+				String attribute_values = ArrayUtils.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
 				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
 				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
@@ -1069,11 +1069,24 @@ public class BrowserService {
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
-
+			
 			log.warn("inputs left after filtering...  "+input_elements.size());
 			for(WebElement input_elem : input_elements){
+				boolean submit_elem_found = false;
+
 				log.warn("extracting attributes... ");
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
+				for(Attribute attribute : attributes){
+					if(attribute.contains("submit")){
+						submit_elem_found = true;
+						break;
+					}
+				}
+
+				if(submit_elem_found){
+					continue;
+				}
+				
 				img = browser.getElementScreenshot(input_elem);
 				checksum = PageState.getFileChecksum(img);
 				

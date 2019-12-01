@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 
 @SpringBootTest
 public class ExploratoryPathTests {

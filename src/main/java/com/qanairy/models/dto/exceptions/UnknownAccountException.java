@@ -10,6 +10,4 @@ public class UnknownAccountException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = -407342019498708399L;
-
-	public UnknownAccountException(){}
 }

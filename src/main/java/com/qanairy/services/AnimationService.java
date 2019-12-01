@@ -12,7 +12,7 @@ import com.qanairy.models.repository.AnimationRepository;
 @Service
 public class AnimationService {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageService.class.getName());
+	private static Logger log = LoggerFactory.getLogger(AnimationService.class.getName());
 
 	@Autowired
 	private AnimationRepository animation_repo;

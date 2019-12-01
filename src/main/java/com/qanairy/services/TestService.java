@@ -19,10 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Account;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Animation;
 import com.qanairy.models.Domain;
@@ -108,7 +108,7 @@ public class TestService {
 		 
 		 do{
 			 try {
-				 browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());

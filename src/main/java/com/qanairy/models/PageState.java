@@ -426,16 +426,12 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
-		//String screenshot = getScreenshotUrl();
-		
 		String key = getUrl();
 		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
 			key += element.getKey();
 		}
-		
 		
 		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}

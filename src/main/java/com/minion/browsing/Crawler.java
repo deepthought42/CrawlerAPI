@@ -25,9 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.minion.util.TimingUtils;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
@@ -45,6 +45,7 @@ import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
+import com.qanairy.utils.TimingUtils;
 
 import akka.pattern.Patterns;
 import akka.util.Timeout;
@@ -598,7 +599,7 @@ public class Crawler {
 		Browser browser = null;
 		do{
 			try{
-				browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 				log.warn("expected path url : "+expected_page.getUrl());
 				browser.navigateTo(expected_page.getUrl());
@@ -682,7 +683,7 @@ public class Crawler {
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
-					browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));

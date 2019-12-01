@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -110,7 +110,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		do{
 						  			try{
-								  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
+								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
 						  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());

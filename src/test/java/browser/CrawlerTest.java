@@ -12,8 +12,8 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
@@ -41,7 +41,7 @@ public class CrawlerTest {
 		do{
 			Browser browser = null;
 			try{
-				browser = BrowserConnectionFactory.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				System.err.println("navigating to url");
 				browser.navigateTo("https://staging-marketing.qanairy.com");
 				

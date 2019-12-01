@@ -478,4 +478,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public void setClassification(ElementClassification classification) {
 		this.classification = classification.toString();
 	}
+	
+	public long getId() {
+		return this.id;
+	}
+	
+	public void setId(long id) {
+		this.id = id;
+	}
 }

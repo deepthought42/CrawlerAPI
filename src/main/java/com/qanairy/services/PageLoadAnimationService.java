@@ -12,7 +12,7 @@ import com.qanairy.models.repository.PageLoadAnimationRepository;
 @Service
 public class PageLoadAnimationService {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageService.class.getName());
+	private static Logger log = LoggerFactory.getLogger(PageLoadAnimation.class.getName());
 
 	@Autowired
 	private PageLoadAnimationRepository animation_repo;

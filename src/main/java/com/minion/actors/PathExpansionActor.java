@@ -20,7 +20,7 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
-import com.minion.browsing.ActionOrderOfOperations;
+import com.qanairy.helpers.ActionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.ElementState;
@@ -128,7 +128,7 @@ public class PathExpansionActor extends AbstractActor {
 			new_path.getPathObjects().add(element);
 			new_path.getKeys().add(element.getKey());
 
-			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+			for(List<Action> action_list : ActionHelper.getActionLists()){
 				for(Action action : action_list){
 					ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
 					ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());

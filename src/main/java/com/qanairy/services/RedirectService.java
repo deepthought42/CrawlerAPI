@@ -13,7 +13,7 @@ import com.qanairy.models.repository.RedirectRepository;
 
 @Service
 public class RedirectService {
-	private static Logger log = LoggerFactory.getLogger(PageService.class.getName());
+	private static Logger log = LoggerFactory.getLogger(RedirectService.class.getName());
 
 	@Autowired
 	private RedirectRepository redirect_repo;

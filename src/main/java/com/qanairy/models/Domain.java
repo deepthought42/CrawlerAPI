@@ -26,7 +26,7 @@ public class Domain implements Persistable{
 	private String protocol;
 	private String logo_url;
 	private String discovery_browser;
-
+	
 	@Relationship(type = "HAS_TEST")
 	private Set<Test> tests = new HashSet<>();
 
@@ -37,7 +37,7 @@ public class Domain implements Persistable{
 	private Set<TestUser> test_users = new HashSet<>();
 	
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
-	private Set<Account> account = new HashSet<>();
+	private Account account;
 
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
 	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
@@ -183,11 +183,11 @@ public class Domain implements Persistable{
 		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl().toString());
 	}
 	
-	public Set<Account> getAccount() {
+	public Account getAccount() {
 		return account;
 	}
 
-	public void setAccount(Set<Account> account) {
+	public void setAccount(Account account) {
 		this.account = account;
 	}
 	

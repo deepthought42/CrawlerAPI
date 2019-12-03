@@ -141,17 +141,15 @@ public class DomainController {
 		}
 		
 		if(domain == null) {
-			domain = domain_service.findByUrl(sanitized_url);	
+			domain = domain_service.findByUrl(sanitized_url, acct.getUserId());	
 		}
 		//temporary while url is being phased in
 		if(domain == null) {
-			domain = domain_service.findByHost(url_obj.getHost());
+			domain = domain_service.findByHost(url_obj.getHost(), acct.getUserId());
 			domain.setUrl(sanitized_url);
 		}
 		
-    	acct.addDomain(domain);
-    	acct.setLastDomain(formatted_url);
-    	account_service.save(acct);
+		account_service.addDomainToAccount(acct, domain);
     	
     	return domain;
     }
@@ -184,7 +182,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Domain domain = domain_service.findByKey(key);
+    	Domain domain = domain_service.findByKey(key, acct.getUserId());
     	domain.setDiscoveryBrowserName(browser_name);
     	domain.setLogoUrl(logo_url);
     	domain.setProtocol(protocol);
@@ -683,7 +681,7 @@ public class DomainController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

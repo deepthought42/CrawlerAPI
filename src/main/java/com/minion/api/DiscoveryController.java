@@ -122,7 +122,7 @@ public class DiscoveryController {
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
     	log.warn("Starting discovery for url :: " + url);
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
     	
     	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
     	//Basically backwards compatibility. if they are still here after June 2020 then remove it
@@ -130,7 +130,7 @@ public class DiscoveryController {
     		log.warn("domain is null");
     		URL temp_url = new URL("http://"+url);
     		String host = temp_url.getHost();
-    		domain = domain_service.findByHost(host);
+    		domain = domain_service.findByHost(host, acct.getUserId());
     		log.warn("retrieved domain  "+domain+"  for host  : "+host);
     	}
 		if(domain.getUrl() == null || domain.getUrl().isEmpty()) {
@@ -198,7 +198,7 @@ public class DiscoveryController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

@@ -115,7 +115,7 @@ public class IdeTestExportController {
 		formatted_url = BrowserUtils.sanitizeUrl(formatted_url);
 		URL domain_url = new URL(formatted_url);
 		
-    	Domain domain = domain_service.findByHost(domain_url.getHost());
+    	Domain domain = domain_service.findByHost(domain_url.getHost(), acct.getUserId());
     	if(domain == null){
     		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","", domain_url.getHost());
     		domain = domain_service.save(domain);

@@ -128,17 +128,17 @@ public class DomainActor extends AbstractActor{
 					
 					if(domain == null){
 						String url = test_msg.getDomain().getUrl();
-						domain = domain_service.findByUrl(url);
+						domain = domain_service.findByUrl(url, test_msg.getAccount());
 					}
 					
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
-							domain.addPageState((PageState)obj);
+							domain_service.addPageState(domain.getUrl(), (PageState)obj, test_msg.getAccount());
 						}
 					}
 					
-					domain = domain_service.save(domain);					
-					domain_service.addPageState(domain.getUrl(), test.getResult());	
+					//domain = domain_service.save(domain);					
+					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());	
 
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
@@ -153,9 +153,9 @@ public class DomainActor extends AbstractActor{
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
-					domain_service.save(domain);
-					domain_service.addTest(domain.getUrl(), test_record);
-					domain_service.addPageState(domain.getUrl(), test.getResult());
+					//domain_service.save(domain);
+					domain_service.addTest(domain.getUrl(), test_record, test_msg.getAccount());
+					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {

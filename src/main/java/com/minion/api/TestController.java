@@ -91,7 +91,19 @@ public class TestController {
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request,
 													@RequestParam(value="url", required=true) String url)
 			throws UnknownAccountException, DomainNotOwnedByAccountException {
-		Set<Test> tests = domain_service.getVerifiedTests(url);
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+		Set<Test> tests = domain_service.getVerifiedTests(url, acct.getUserId());
 		for(Test test : tests){
 			test.setGroups(test_service.getGroups(test.getKey()));
 		}
@@ -168,8 +180,19 @@ public class TestController {
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request,
 			   								 	 	@RequestParam(value="url", required=true) String url)
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
-		int failed_tests = 0;
-		Domain domain = domain_service.findByUrl(url);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	int failed_tests = 0;
+		Domain domain = domain_service.findByUrl(url, acct.getUserId());
 		try{
 			Iterator<Test> tests = domain.getTests().iterator();
 
@@ -217,7 +240,19 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request,
 														@RequestParam(value="url", required=true) String url)
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	Set<Test> tests = domain_service.getUnverifiedTests(url);
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Set<Test> tests = account_service.getUnverifiedTests(url, acct.getUserId());
 
     	for(Test test : tests){
     		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());

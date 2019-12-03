@@ -21,7 +21,7 @@ public class TestMessage {
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
-		setAccount(account);
+		setAccount(account_id);
 	}
 	
 	public String getAccount() {

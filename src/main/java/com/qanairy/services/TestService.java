@@ -202,7 +202,7 @@ public class TestService {
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {
 		//Fire discovery started event
-    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl());
+    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl(), acct.getUserId());
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 

@@ -6,8 +6,9 @@ public class DiscoveryActionRequest {
 	private Domain domain;
 	private String account;
 	
-	public DiscoveryActionRequest(Domain domain) {
+	public DiscoveryActionRequest(Domain domain, String account_id) {
 		this.setDomain(domain);
+		this.setAccountId(account_id);
 	}
 
 	public Domain getDomain() {

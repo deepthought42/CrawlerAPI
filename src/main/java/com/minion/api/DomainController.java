@@ -140,16 +140,15 @@ public class DomainController {
 			domain = null;
 		}
 		
+		//check if domain is on account
+		Domain domain_record = null;
 		if(domain == null) {
-			domain = domain_service.findByUrl(sanitized_url, acct.getUserId());	
-		}
-		//temporary while url is being phased in
-		if(domain == null) {
-			domain = domain_service.findByHost(url_obj.getHost(), acct.getUserId());
-			domain.setUrl(sanitized_url);
+			domain_record = domain_service.findByUrl(sanitized_url, acct.getUserId());	
 		}
 		
-		account_service.addDomainToAccount(acct, domain);
+		if(domain_record == null) {
+			account_service.addDomainToAccount(acct, domain);
+		}
     	
     	return domain;
     }

@@ -141,7 +141,7 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(PathMessage.class, message -> {
 					Timeout timeout = Timeout.create(Duration.ofSeconds(60));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					if(discovery_action == DiscoveryAction.STOP) {
@@ -240,7 +240,7 @@ public class DiscoveryActor extends AbstractActor{
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain()), timeout);
+						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 						
 						if(discovery_action == DiscoveryAction.STOP) {
@@ -297,7 +297,7 @@ public class DiscoveryActor extends AbstractActor{
 			        form_msg.setDiscoveryActor(getSelf());
 		    		
 			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain(), account.getUserId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
 					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));

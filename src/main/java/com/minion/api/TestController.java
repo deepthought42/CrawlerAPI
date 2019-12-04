@@ -252,7 +252,7 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Set<Test> tests = account_service.getUnverifiedTests(url, acct.getUserId());
+    	Set<Test> tests = domain_service.getUnverifiedTests(url, acct.getUserId());
 
     	for(Test test : tests){
     		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());

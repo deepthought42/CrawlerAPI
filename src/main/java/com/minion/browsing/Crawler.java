@@ -674,7 +674,7 @@ public class Crawler {
 		
 		do{
 			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain()), timeout);
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
 			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 			
 			if(discovery_action == DiscoveryAction.STOP) {

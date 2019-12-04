@@ -50,10 +50,10 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (t:Test{key:{test_key}}),(a:Account{user_id:{account_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")
 	public void addTest(@Param("test_key") String test_key, @Param("account_key") String account_key);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH (:Account{user_id:{user_id}})-[:HAS_TEST]->(t) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (:Account{user_id:{user_id}})-[:HAS_TEST]->(t) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
 	@Query("MATCH (t:Account{user_id:{user_id}}),(a:Domain{key:{domain_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")

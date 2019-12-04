@@ -51,10 +51,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH  a=(f)-[:DEFINED_BY]->() MATCH b=(f)-[:HAS]->(e) OPTIONAL MATCH c=(e)-->() return a,b,c")
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH (:Account{user_id:{user_id}})-[:HAS_TEST]->(t) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (:Account{user_id:{user_id}})-[:HAS_TEST]->(t) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
 	@Query("MATCH (n:Domain{url:{url}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")

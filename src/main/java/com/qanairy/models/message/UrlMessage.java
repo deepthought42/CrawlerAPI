@@ -14,13 +14,13 @@ public class UrlMessage {
 	private Domain domain;
 	private String account;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain, String account){
+	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
-		setAccount(account);
+		setAccount(account_id);
 	}
 
 	public URL getUrl() {

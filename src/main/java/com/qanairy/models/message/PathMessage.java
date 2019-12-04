@@ -3,7 +3,6 @@ package com.qanairy.models.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.PathStatus;
@@ -30,7 +29,7 @@ public class PathMessage {
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
-		setAccountId(account);
+		setAccountId(account_id);
 	}
 
 	public List<String> getKeys() {

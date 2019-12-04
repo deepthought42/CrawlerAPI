@@ -41,6 +41,7 @@ public class TestCandidateMessage {
 		this.result_page = result_page;
 		setDomainActor(domain_actor);
 		setDomain(domain);
+		setAccountId(account_id);
 	}
 
 	public List<String> getKeys() {

@@ -131,9 +131,11 @@ public class DomainActor extends AbstractActor{
 						domain = domain_service.findByUrl(url, test_msg.getAccount());
 					}
 					
+					log.warn("domain actor account number :: "+test_msg.getAccount());
+					log.warn("domain url :: " +test_msg.getDomain().getUrl());
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
-							domain_service.addPageState(domain.getUrl(), (PageState)obj, test_msg.getAccount());
+							domain_service.addPageState(test_msg.getDomain().getUrl(), (PageState)obj, test_msg.getAccount());
 						}
 					}
 					

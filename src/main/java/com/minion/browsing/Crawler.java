@@ -612,11 +612,9 @@ public class Crawler {
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
 				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-				if(!browser_url.equals(last_page_state.getUrl())){
-					if(loading_animation != null){
-						path.getPathKeys().add(loading_animation.getKey());
-						path.getPathObjects().add(loading_animation);
-					}
+				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
+					path.getPathKeys().add(loading_animation.getKey());
+					path.getPathObjects().add(loading_animation);
 				}
 						
 				//verify that screenshot does not match previous page

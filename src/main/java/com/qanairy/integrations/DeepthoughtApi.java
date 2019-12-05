@@ -128,7 +128,6 @@ public class DeepthoughtApi {
         switch (status) {
             case 200:
             case 201:
-            	
                 BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
                 StringBuilder sb = new StringBuilder();
                 String line;
@@ -143,6 +142,7 @@ public class DeepthoughtApi {
             	log.info("***********************************************************");
             	log.info("RL returned a 400");
             	log.info("***********************************************************");
+            	break;
             case 500:
             	return;
             default:

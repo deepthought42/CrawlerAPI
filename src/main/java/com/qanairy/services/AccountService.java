@@ -73,8 +73,8 @@ public class AccountService {
 		return account_repo.getTestCountByMonth(username, month);
 	}
 	
-	public List<TestRecord> getTestRecords(String username) {
-		return account_repo.getTestRecords(username);
+	public List<TestRecord> getTestRecords(String username, String url) {
+		return account_repo.getTestRecords(username, url);
 	}
 
 	public Optional<Account> findById(long id) {

@@ -38,7 +38,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{user_id:{user_id}}) DELETE account")
 	public void deleteAccount(@Param("user_id") String user_id);
 
-	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain{url:{url}) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
+	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
 	public List<TestRecord> getTestRecords(@Param("username") String username, @Param("url") String url);
 
 	@Query("MATCH (account:Account{api_key:{api_key}}) RETURN account")

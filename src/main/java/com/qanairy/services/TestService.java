@@ -93,7 +93,7 @@ public class TestService {
 	 * @throws WebDriverException
 	 * @throws GridException
 	 */
-	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) {
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status, String url, String user_id) {
 		 assert test != null;
 
 		 TestStatus passing = null;
@@ -129,13 +129,13 @@ public class TestService {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 passing = Test.isTestPassing(getResult(test.getKey()), page, last_test_status);
+		 passing = Test.isTestPassing(getResult(test.getKey(), url, user_id), page, last_test_status );
  		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 		 return test_record;
 	 }
 
-	 public Test save(Test test) throws MalformedURLException {
+	 public Test save(Test test, String url, String user_id) throws MalformedURLException {
 		 assert test != null;
 		 Test record = test_repo.findByKey(test.getKey());
 
@@ -175,7 +175,7 @@ public class TestService {
 		}
 		else{
 			log.warn("test record already exists");
-			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
+			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey(), url, user_id );
 			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
 			record.setPathObjects(path_objects);
 			
@@ -202,12 +202,12 @@ public class TestService {
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {
 		//Fire discovery started event
-    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl());
+    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl(), acct.getUserId());
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 
     	for(Test test : tests){
-			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus());
+			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain.getUrl(), acct.getUserId());
 
 			log.warn("run test returned record  ::  "+record);
 			test_results.put(test.getKey(), record);
@@ -250,8 +250,8 @@ public class TestService {
      return test_repo.findByKey(key);
    }
 
-   public List<Test> findTestsWithPageState(String key) {
-     return test_repo.findTestWithPageState(key);
+   public List<Test> findTestsWithPageState(String key, String url, String user_id) {
+     return test_repo.findTestWithPageState(key, url, user_id);
    }
 
    /**
@@ -261,9 +261,9 @@ public class TestService {
     * 
     * @return List of ordered {@link PathObject}s
     */
-   public List<PathObject> getPathObjects(String test_key) {
+   public List<PathObject> getPathObjects(String test_key, String url, String user_id) {
 	   Test test = test_repo.findByKey(test_key);
-	   List<PathObject> path_obj_list = test_repo.getPathObjects(test_key);
+	   List<PathObject> path_obj_list = test_repo.getPathObjects(test_key, url, user_id);
 	   //order path objects
 	   List<PathObject> ordered_list = new ArrayList<PathObject>();
 	   for(String key : test.getPathKeys()) {
@@ -282,8 +282,8 @@ public class TestService {
      return test_repo.getGroups(key);
    }
    
-   public PageState getResult(String key) {
-	   return test_repo.getResult(key);
+   public PageState getResult(String key, String url, String user_id) {
+	   return test_repo.getResult(key, url, user_id);
    }
 
    /**
@@ -369,8 +369,8 @@ public class TestService {
 		return path_objects;
 	}
 
-	public Set<Test> findAllTestRecordsContainingKey(String path_object_key) {
-		return test_repo.findAllTestRecordsContainingKey(path_object_key);
+	public Set<Test> findAllTestRecordsContainingKey(String path_object_key, String url, String user_id) {
+		return test_repo.findAllTestRecordsContainingKey(path_object_key, url, user_id);
 	}
 
 	public boolean checkIfEndOfPathAlreadyExistsInPath(PageState resultPage, List<String> path_keys) {
@@ -382,8 +382,8 @@ public class TestService {
 		return false;
 	}
 
-	public void addGroup(String test_key, Group group) {
+	public void addGroup(String test_key, Group group, String url, String user_id) {
 		Group group_record = group_service.save(group);
-		test_repo.addGroup(test_key, group_record.getKey());
+		test_repo.addGroup(test_key, group_record.getKey(), url, user_id);
 	}
 }

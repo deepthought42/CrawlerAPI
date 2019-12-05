@@ -18,12 +18,14 @@ public class FormDiscoveryMessage {
 	private ActorRef domain_actor;
 	private ActorRef discovery_actor; 
 	private Domain domain;
+	private String account_id;
 	
-	public FormDiscoveryMessage(Form form, DiscoveryRecord discovery, Domain domain, PageState page) {
+	public FormDiscoveryMessage(Form form, DiscoveryRecord discovery, Domain domain, PageState page, String account_id) {
 		setForm(form);
 		setDiscovery(discovery);
 		setDomain(domain);
 		setPage(page);
+		setAccountId(account_id);
 	}
 
 	public Form getForm() {
@@ -72,5 +74,13 @@ public class FormDiscoveryMessage {
 
 	public void setPage(PageState page) {
 		this.page = page;
+	}
+
+	public String getAccountId() {
+		return account_id;
+	}
+
+	public void setAccountId(String account_id) {
+		this.account_id = account_id;
 	}
 }

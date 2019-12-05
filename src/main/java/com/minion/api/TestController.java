@@ -91,7 +91,19 @@ public class TestController {
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request,
 													@RequestParam(value="url", required=true) String url)
 			throws UnknownAccountException, DomainNotOwnedByAccountException {
-		Set<Test> tests = domain_service.getVerifiedTests(url);
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+		Set<Test> tests = domain_service.getVerifiedTests(url, acct.getUserId());
 		for(Test test : tests){
 			test.setGroups(test_service.getGroups(test.getKey()));
 		}
@@ -105,6 +117,7 @@ public class TestController {
 	 * @return
      * @throws JsonProcessingException
      * @throws MalformedURLException 
+     * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
@@ -112,8 +125,22 @@ public class TestController {
 									@RequestParam(value="key", required=true) String key,
 									@RequestParam(value="name", required=true) String name,
 									@RequestParam(value="firefox", required=false) String firefox_status,
-									@RequestParam(value="chrome", required=false) String chrome_status) throws JsonProcessingException, MalformedURLException{
-		Test test = test_service.findByKey(key);
+									@RequestParam(value="chrome", required=false) String chrome_status,
+									@RequestParam(value="url", required=true) String url
+	) throws JsonProcessingException, MalformedURLException, UnknownAccountException{
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Test test = test_service.findByKey(key);
 		Map<String, String> browser_statuses = test.getBrowserStatuses();
 		TestStatus status = TestStatus.FAILING;
 
@@ -146,7 +173,7 @@ public class TestController {
 		test_repo.save(test);
 
 		//get last test record
-		TestRecord record = test_repo.getMostRecentRecord(test.getKey());
+		TestRecord record = test_repo.getMostRecentRecord(test.getKey(), url, acct.getUserId());
 		record.setStatus(status);
 		test_record_repo.save(record);
 
@@ -168,8 +195,19 @@ public class TestController {
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request,
 			   								 	 	@RequestParam(value="url", required=true) String url)
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
-		int failed_tests = 0;
-		Domain domain = domain_service.findByUrl(url);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	int failed_tests = 0;
+		Domain domain = domain_service.findByUrl(url, acct.getUserId());
 		try{
 			Iterator<Test> tests = domain.getTests().iterator();
 
@@ -217,10 +255,22 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request,
 														@RequestParam(value="url", required=true) String url)
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	Set<Test> tests = domain_service.getUnverifiedTests(url);
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Set<Test> tests = domain_service.getUnverifiedTests(url, acct.getUserId());
 
     	for(Test test : tests){
-    		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());
+    		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey(), url, acct.getUserId());
     		test.setRecords(records);
     	}
     	return tests;
@@ -371,7 +421,7 @@ public class TestController {
 			test.setBrowserStatus(browser.trim(), TestStatus.RUNNING.toString());
 			test = test_repo.save(test);
 			
-    		TestRecord record = test_service.runTest(test, browser, last_test_status);
+    		TestRecord record = test_service.runTest(test, browser, last_test_status, host, acct.getUserId());
 			test_results.put(test.getKey(), record);
 
 			//set browser status first since we use browser statuses to determine overall test status
@@ -402,7 +452,7 @@ public class TestController {
 
 			acct.addTestRecord(record);
 			account_service.save(acct);
-			MessageBroadcaster.broadcastTestStatus(host, record, test);
+			MessageBroadcaster.broadcastTestStatus(host, record, test, acct.getUserId());
     	}
 
     	log.warn("returning test results");
@@ -458,12 +508,24 @@ public class TestController {
 	 *
 	 * @return the updated test
 	 * @throws MalformedURLException
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
-	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
+	public @ResponseBody Group addGroup(HttpServletRequest request,
+										@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=false) String description,
-										@RequestParam(value="key", required=true) String test_key) throws MalformedURLException{
+										@RequestParam(value="key", required=true) String test_key,
+										@RequestParam(value="url", required=true) String url
+	) throws MalformedURLException, UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
@@ -477,7 +539,7 @@ public class TestController {
 			group = group_record;
 		}
 
-		test_service.addGroup(test_key, group);
+		test_service.addGroup(test_key, group, url, acct.getUserId());
 		return group;
 	}
 
@@ -545,7 +607,7 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	Test test = test_service.findByKey(test_key);
-    	test.setPathObjects(test_service.getPathObjects(test.getKey()));
+    	test.setPathObjects(test_service.getPathObjects(test.getKey(), "", acct.getUserId()));
 		//convert test to ide test
 		/*
 		 * {

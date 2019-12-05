@@ -135,7 +135,7 @@ public class ParentPathExplorer extends AbstractActor {
 					//do while result matches expected result
 					do{
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
+						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 
 						if(discovery_action == DiscoveryAction.STOP) {
@@ -238,7 +238,7 @@ public class ParentPathExplorer extends AbstractActor {
 				    }
 
 				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
-					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
 						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
@@ -260,7 +260,7 @@ public class ParentPathExplorer extends AbstractActor {
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
 
 			  		Test test = test_creator_service.createTest( final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
-					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain, message.getAccountId());
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
 				})

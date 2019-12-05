@@ -67,7 +67,7 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private final int DISCOVERY_ACTOR_COUNT = 100;
+	private final int DISCOVERY_ACTOR_COUNT = 200;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -132,7 +132,7 @@ public class DiscoveryActor extends AbstractActor{
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
 						startDiscovery(message);
-						setAccount(message.getAccount());
+						setAccount(account_service.findByUserId(message.getAccountId()));
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//look up discovery record if it's null
@@ -141,7 +141,7 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(PathMessage.class, message -> {
 					Timeout timeout = Timeout.create(Duration.ofSeconds(60));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					if(discovery_action == DiscoveryAction.STOP) {
@@ -153,7 +153,7 @@ public class DiscoveryActor extends AbstractActor{
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						if(path_expansion_actor == null){
@@ -171,7 +171,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
@@ -206,7 +206,7 @@ public class DiscoveryActor extends AbstractActor{
 							}
 						}
 					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
 					discovery_service.save(discovery_record);
 				})
@@ -240,7 +240,7 @@ public class DiscoveryActor extends AbstractActor{
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain()), timeout);
+						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 						
 						if(discovery_action == DiscoveryAction.STOP) {
@@ -255,7 +255,7 @@ public class DiscoveryActor extends AbstractActor{
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
-								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain());
+								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
 							//}
 						}
@@ -269,7 +269,7 @@ public class DiscoveryActor extends AbstractActor{
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
 				  			final_object_list = PathUtils.reducePathObjects(final_object_list);
 				  			
-				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain());
+				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 				  			if(path_expansion_actor == null){
 				  				path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  						  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
@@ -286,18 +286,18 @@ public class DiscoveryActor extends AbstractActor{
 							}
 						}
 					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
 
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
 		    		
 			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain(), account.getUserId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
 					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
@@ -366,11 +366,11 @@ public class DiscoveryActor extends AbstractActor{
 				.build();
 	}
 
-	private DiscoveryRecord getDiscoveryRecord(String url, String browser) {
+	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
 		DiscoveryRecord discovery_record = null;
 		if(this.discovery_record == null){
 			log.warn("discovery actor is null for instance variable in discovery actor");
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(url, user_id);
 			
 			if(discovery_record == null){
 				log.warn("was unable to find running discovery record in db");
@@ -420,21 +420,22 @@ public class DiscoveryActor extends AbstractActor{
 		//create new discovery
 		discovery_service.save(discovery_record);
 
-		message.getAccount().addDiscoveryRecord(discovery_record);
-		account_service.save(message.getAccount());
+		Account account = account_service.findByUserId(message.getAccountId());
+		account.addDiscoveryRecord(discovery_record);
+		account_service.save(account);
 
 		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain());
+		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		url_browser_actor.tell(url_message, getSelf() );
 	}
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
 		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl());
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
 		}
 		
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);

@@ -286,7 +286,7 @@ public class AccountController {
     		}
     	}
 
-    	DiscoveryRecord most_recent_discovery = domain_service.getMostRecentDiscoveryRecord(domain_host);
+    	DiscoveryRecord most_recent_discovery = domain_service.getMostRecentDiscoveryRecord(domain_host, acct.getUserId());
 
     	long discovery_run_time = System.currentTimeMillis() - most_recent_discovery.getStartTime().getTime();
 

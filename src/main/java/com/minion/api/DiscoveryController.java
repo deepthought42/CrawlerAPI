@@ -78,7 +78,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-    	return domain_service.getMostRecentDiscoveryRecord(url);
+    	return domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
     }
 
     /**
@@ -114,7 +114,7 @@ public class DiscoveryController {
     	*/
 
     	//update domain host if not set		
-    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -122,7 +122,7 @@ public class DiscoveryController {
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
     	log.warn("Starting discovery for url :: " + url);
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
     	
     	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
     	//Basically backwards compatibility. if they are still here after June 2020 then remove it
@@ -130,7 +130,7 @@ public class DiscoveryController {
     		log.warn("domain is null");
     		URL temp_url = new URL("http://"+url);
     		String host = temp_url.getHost();
-    		domain = domain_service.findByHost(host);
+    		domain = domain_service.findByHost(host, acct.getUserId());
     		log.warn("retrieved domain  "+domain+"  for host  : "+host);
     	}
 		if(domain.getUrl() == null || domain.getUrl().isEmpty()) {
@@ -151,7 +151,7 @@ public class DiscoveryController {
 				domain_actors.put(url, domain_actor);
 			}
 		    
-			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
 			domain_actors.get(url).tell(discovery_action_msg, null);
 		}
         else{
@@ -198,7 +198,7 @@ public class DiscoveryController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -206,7 +206,7 @@ public class DiscoveryController {
 			domain_actors.put(domain.getUrl(), domain_actor);
 		}
     	
-		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}

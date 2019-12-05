@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
+	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -30,24 +33,25 @@ public class DomainService {
 		return domain_repo.getTestUsers(domain.getKey());
 	}
 
-	public Domain findByHost(String host) {
-		return domain_repo.findByHost(host);
+	public Domain findByHost(String host, String user_id) {
+		return domain_repo.findByHost(host, user_id);
 	}
 
-	public Domain findByUrl(String url) {
-		return domain_repo.findByUrl(url);
+	public Domain findByUrl(String url, String user_id) {
+		return domain_repo.findByUrl(url, user_id);
 	}
 	
 	public Domain save(Domain domain) {
 		return domain_repo.save(domain);	
 	}
 	
-	public Domain addTest(String url, Test test) throws MalformedURLException{
+	public Domain addTest(String url, Test test, String user_id) throws MalformedURLException{
 		assert url != null;
 		assert !url.isEmpty();
 		assert test != null;
-		
-		Domain domain = domain_repo.findByUrl(url);
+		assert user_id != null;
+
+		Domain domain = domain_repo.findByUrl(url, user_id);
 		domain.addTest(test);
 		return domain_repo.save(domain);
 	}
@@ -56,8 +60,8 @@ public class DomainService {
 		return domain_repo.getTestCount(url);
 	}
 
-	public DiscoveryRecord getMostRecentDiscoveryRecord(String url) {
-		return domain_repo.getMostRecentDiscoveryRecord(url);
+	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
+		return domain_repo.getMostRecentDiscoveryRecord(url, user_id);
 	}
 
 	public Set<DiscoveryRecord> getDiscoveryRecords(String url) {
@@ -92,16 +96,16 @@ public class DomainService {
 		return domain_repo.getPageStates(host);
 	}
 
-	public Domain findByKey(String key) {
-		return domain_repo.findByKey(key);
+	public Domain findByKey(String key, String user_id) {
+		return domain_repo.findByKey(key, user_id);
 	}
 
-	public Set<Test> getUnverifiedTests(String url) {
-		return domain_repo.getUnverifiedTests(url);
+	public Set<Test> getUnverifiedTests(String url, String user_id) {
+		return domain_repo.getUnverifiedTests(url, user_id);
 	}
 
-	public Set<Test> getVerifiedTests(String url) {
-		return domain_repo.getVerifiedTests(url);
+	public Set<Test> getVerifiedTests(String url, String user_id) {
+		return domain_repo.getVerifiedTests(url, user_id);
 	}
 
 	public Set<Test> getTests(String url) {
@@ -126,12 +130,17 @@ public class DomainService {
 	 * @pre !host.isEmpty()
 	 * @pre page_state != null
 	 */
-	public Domain addPageState(String url, PageState page_state) {
+	public Domain addPageState(String url, PageState page_state, String user_id) {
 		assert url != null;
 		assert !url.isEmpty();
 		assert page_state != null;
-    
-		Domain domain = domain_repo.findByUrl(url);
+		assert user_id != null;
+		
+		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
+		log.warn("user id :: "+user_id);
+		log.warn("domain url :: " + url);
+		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
+		Domain domain = domain_repo.findByUrl(url, user_id);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
 	}

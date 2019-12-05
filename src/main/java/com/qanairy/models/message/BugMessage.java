@@ -2,7 +2,6 @@ package com.qanairy.models.message;
 
 import java.util.Date;
 
-import org.joda.time.DateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;

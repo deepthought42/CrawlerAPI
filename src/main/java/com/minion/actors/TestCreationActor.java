@@ -115,7 +115,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
-				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
+				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser, acct_message.getAccountKey());
 				    			long end_time = System.currentTimeMillis();
 				    			TimingUtils.pauseThread(1500);
 						
@@ -143,7 +143,7 @@ public class TestCreationActor extends AbstractActor  {
 						    		SegmentAnalyticsHelper.sendTestCreatedInRecorder(acct_message.getAccountKey(), test.getKey());
 
 						    		log.warn("test creation domain url :: " + domain.getUrl());
-						    		domain_service.addTest(domain.getUrl(), test);
+						    		domain_service.addTest(domain.getUrl(), test, acct_message.getAccountKey());
 
 						    		//here we check if the test passed in had a key indicating that it is an existing test. If it does have a key then we look up the test with the key
 						    		// and set its status to archived
@@ -190,7 +190,7 @@ public class TestCreationActor extends AbstractActor  {
 				.build();
 	}
 
-	private Domain buildTestPathFromPathJson(JSONArray path, List<String> path_keys, List<PathObject> path_objects, Browser browser) throws JSONException, Exception {
+	private Domain buildTestPathFromPathJson(JSONArray path, List<String> path_keys, List<PathObject> path_objects, Browser browser, String user_id) throws JSONException, Exception {
 		boolean first_page = true;
 		Domain domain = null;
 		for(int idx=0; idx < path.length(); idx++){
@@ -212,7 +212,7 @@ public class TestCreationActor extends AbstractActor  {
     		    	if(dot_idx == last_dot_idx){
     		    		formatted_url = "www."+host;
     		    	}
-    				domain = domain_service.findByHost(formatted_url);
+    				domain = domain_service.findByHost(formatted_url, user_id);
     			}
 
     			PageState page_state = navigateToAndCreatePageState(url, browser);

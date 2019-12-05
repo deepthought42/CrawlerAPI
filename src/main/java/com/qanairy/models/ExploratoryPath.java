@@ -106,55 +106,6 @@ public class ExploratoryPath {
 	 * @param path
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasExistingElementActionSequence(ExploratoryPath path){
-		if(path.size() == 1){
-			return false;
-		}
-		
-		//iterate through path
-		//if path object is of type ElementState
-		//	then load path object
-		//		check if path object leads to an action that exists in the paths possible actions list
-		//		If there exists an action that matches a possible action 
-		//			then get next path object
-		//				if path object is of type ElementState
-		//					then load path object
-		//						check if path object leads to an action that exists in the paths possible actions list
-		/*for(PathObject path_obj : path.getPathObjects()){
-			if(path_obj instanceof ElementState){
-				ElementStateDao page_elem_dao = new ElementStateDaoImpl();
-				OrientConnectionFactory connection = new OrientConnectionFactory();
-				ElementState page_elem = page_elem_dao.find(path_obj.getKey());
-				if(page_elem != null){
-					List<Action> actions = path.getPossibleActions();
-					ElementState ipage_elem = page_elem_dao.save(page_elem);
-					Iterator<PathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
-					while(path_edge_iter.hasNext()){
-						PathEdge edge = path_edge_iter.next();
-						PathObject path_object_out = edge.getPathObjectIn();
-						PathObjectDao path_obj_repo = new PathObjectDaoImpl();
-						PathObject new_path_obj = path_obj_repo.find(path_object_out.getKey());						
-						if(new_path_obj.getType().equals("Action")){
-							for(Action action : actions){
-								if(((Action)new_path_obj).getName().equals(action.getName()) && ((Action)new_path_obj).getValue().equals(action.getValue())){
-									return true;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		*/
-		return false;
-	}
-	
-	/**
-	 * Checks if the path has the same page more than once. 
-	 * 
-	 * @param path
-	 * @return true if sequence appears more than once
-	 */
 	public static boolean hasPageCycle(List<PathObject> path){
 		for(int i = path.size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){

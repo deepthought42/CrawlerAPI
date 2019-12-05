@@ -24,6 +24,7 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
+import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -56,10 +57,13 @@ public class DomainActor extends AbstractActor{
 	private TestService test_service;
 	
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
 	private ActorSystem actor_system;
 	
 	private ActorRef discovery_actor;
-
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -102,7 +106,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(DiscoveryActionRequest.class, message-> {
 					if(discovery_action == null) {
-						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl()).getStatus();
+						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId()).getStatus();
 						if(status == DiscoveryStatus.RUNNING) {
 							discovery_action = DiscoveryAction.START;
 						}
@@ -118,43 +122,46 @@ public class DomainActor extends AbstractActor{
 					
 					Test test_record = test_service.findByKey(test.getKey());
 					if(test_record == null) {
-						test_record = test_service.save(test);
+						test_record = test_service.save(test, test_msg.getDomain().getUrl(), test_msg.getAccount());
+						account_service.addTest(test_record, test_msg.getAccount());
 					}
 					
 					if(domain == null){
 						String url = test_msg.getDomain().getUrl();
-						domain = domain_service.findByUrl(url);
+						domain = domain_service.findByUrl(url, test_msg.getAccount());
 					}
 					
+					log.warn("domain actor account number :: "+test_msg.getAccount());
+					log.warn("domain url :: " +test_msg.getDomain().getUrl());
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
-							domain.addPageState((PageState)obj);
+							domain_service.addPageState(test_msg.getDomain().getUrl(), (PageState)obj, test_msg.getAccount());
 						}
 					}
 					
-					domain = domain_service.save(domain);					
-					domain_service.addPageState(domain.getUrl(), test.getResult());	
+					//domain = domain_service.save(domain);					
+					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());	
 
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}
 					}
           
 					try {
-						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getHost());
+						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getHost(), test_msg.getAccount());
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
-					domain_service.save(domain);
-					domain_service.addTest(domain.getUrl(), test_record);
-					domain_service.addPageState(domain.getUrl(), test.getResult());
+					//domain_service.save(domain);
+					domain_service.addTest(domain.getUrl(), test_record, test_msg.getAccount());
+					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}

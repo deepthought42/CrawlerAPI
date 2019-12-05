@@ -88,7 +88,7 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
 					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccount()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					if(discovery_action == DiscoveryAction.STOP) {
@@ -162,7 +162,7 @@ public class UrlBrowserActor extends AbstractActor {
 					*/
 					log.warn("creating landing page test");
 					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain());
-					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
 					message.getDiscoveryActor().tell(test_message, getSelf());
 					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -173,7 +173,7 @@ public class UrlBrowserActor extends AbstractActor {
 				  	new_path_keys.add(page_state.getKey());
 				  	new_path_objects.add(page_state);
 
-					PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain());
+					PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain(), message.getAccount());
 					
 					//send message to animation detection actor
 					animation_actor.tell(path_message, getSelf() );

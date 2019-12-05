@@ -140,18 +140,15 @@ public class DomainController {
 			domain = null;
 		}
 		
+		//check if domain is on account
+		Domain domain_record = null;
 		if(domain == null) {
-			domain = domain_service.findByUrl(sanitized_url);	
-		}
-		//temporary while url is being phased in
-		if(domain == null) {
-			domain = domain_service.findByHost(url_obj.getHost());
-			domain.setUrl(sanitized_url);
+			domain_record = domain_service.findByUrl(sanitized_url, acct.getUserId());	
 		}
 		
-    	acct.addDomain(domain);
-    	acct.setLastDomain(formatted_url);
-    	account_service.save(acct);
+		if(domain_record == null) {
+			account_service.addDomainToAccount(acct, domain);
+		}
     	
     	return domain;
     }
@@ -184,7 +181,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Domain domain = domain_service.findByKey(key);
+    	Domain domain = domain_service.findByKey(key, acct.getUserId());
     	domain.setDiscoveryBrowserName(browser_name);
     	domain.setLogoUrl(logo_url);
     	domain.setProtocol(protocol);
@@ -534,9 +531,9 @@ public class DomainController {
 	    		Domain domain = optional_domain.get();
 	        		
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
-	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
 	    		//start form test creation actor
-	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page);
+	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page, acct.getUserId());
 		        
 	    		if(domain_actors.get(domain.getUrl()) == null){
 	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -571,7 +568,7 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -614,7 +611,7 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
     		Date now = new Date();
         	long diffInMinutes = 10000;
         	if(last_discovery_record != null){
@@ -630,7 +627,7 @@ public class DomainController {
     				domain_actors.put(domain.getUrl(), domain_actor);
     			}
     		    
-    			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+    			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
     			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
     		}
             else{
@@ -683,7 +680,7 @@ public class DomainController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url);
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -691,7 +688,7 @@ public class DomainController {
 			domain_actors.put(domain.getUrl(), domain_actor);
 		}
     	
-		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}

@@ -33,12 +33,12 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredTest(Test test, String host) throws JsonProcessingException {	
+	public static void broadcastDiscoveredTest(Test test, String host, String user_id) throws JsonProcessingException {	
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String test_json = mapper.writeValueAsString(test);
 
-		pusher.trigger(host, "test-discovered", test_json);
+		pusher.trigger(user_id+host, "test-discovered", test_json);
 	}
 
     /**
@@ -47,14 +47,14 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredForm(Form form, String host) throws JsonProcessingException {	
+	public static void broadcastDiscoveredForm(Form form, String host, String user_id) throws JsonProcessingException {	
 		log.info("Broadcasting discovered form !!!");
 		
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String form_json = mapper.writeValueAsString(form);
         log.info("host ::   "+host);
-		pusher.trigger(host.trim(), "discovered-form", form_json);
+		pusher.trigger(user_id+host.trim(), "discovered-form", form_json);
 		log.info("broadcasted a discovered form");
 	}
 	
@@ -85,12 +85,12 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastPathObject(PathObject path_object, String host) throws JsonProcessingException {	
+	public static void broadcastPathObject(PathObject path_object, String host, String user_id) throws JsonProcessingException {	
         ObjectMapper mapper = new ObjectMapper();
         //Object to JSON in String
         String path_object_json = mapper.writeValueAsString(path_object);
         
-		pusher.trigger(host, "path_object", path_object_json);
+		pusher.trigger(user_id+host, "path_object", path_object_json);
 	}
 	
 	/**
@@ -99,14 +99,13 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestStatus(String host, TestRecord record, Test test) throws JsonProcessingException {
+	public static void broadcastTestStatus(String host, TestRecord record, Test test, String user_id) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        
         String test_json = mapper.writeValueAsString(new TestRecordDto(record, test.getKey()));
         
-		pusher.trigger(host, "test-run", test_json);
+		pusher.trigger(user_id+host, "test-run", test_json);
 	}
 	
 	/**
@@ -115,7 +114,7 @@ public class MessageBroadcaster {
      * @param record {@link DiscoveryRecord} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveryStatus(DiscoveryRecord record) throws JsonProcessingException {
+	public static void broadcastDiscoveryStatus(DiscoveryRecord record, String user_id) throws JsonProcessingException {
 		log.info("broadcasting discovery status");
 		
         ObjectMapper mapper = new ObjectMapper();

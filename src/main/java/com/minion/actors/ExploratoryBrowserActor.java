@@ -111,7 +111,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						    }
 					    }
 					    List<String> path_key_sublist = message.getKeys().subList(last_page_idx, message.getKeys().size());
-						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 						for(Test test : matching_tests) {
 							path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
@@ -121,13 +121,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						//boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(message.getKeys(), path_object_lists);
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
 						if(is_result_matches_other_page_in_path || isResultAnimatedState) {
-							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain());
+							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 							return;
 						}
 						
-						TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain());
+						TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 						parent_path_explorer.tell(msg, getSelf());
 					}
 

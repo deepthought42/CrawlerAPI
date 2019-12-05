@@ -549,7 +549,7 @@ public class Crawler {
 		}
 		
 		if(path.getKeys().size() != path_keys.size()){
-			return new PathMessage(path_keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser(), path.getDomainActor(), path.getDomain());
+			return new PathMessage(path_keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser(), path.getDomainActor(), path.getDomain(), path.getAccountId());
 		}
 		
 		return path;
@@ -612,11 +612,9 @@ public class Crawler {
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
 				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-				if(!browser_url.equals(last_page_state.getUrl())){
-					if(loading_animation != null){
-						path.getPathKeys().add(loading_animation.getKey());
-						path.getPathObjects().add(loading_animation);
-					}
+				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
+					path.getPathKeys().add(loading_animation.getKey());
+					path.getPathObjects().add(loading_animation);
 				}
 						
 				//verify that screenshot does not match previous page
@@ -674,7 +672,7 @@ public class Crawler {
 		
 		do{
 			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain()), timeout);
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
 			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 			
 			if(discovery_action == DiscoveryAction.STOP) {

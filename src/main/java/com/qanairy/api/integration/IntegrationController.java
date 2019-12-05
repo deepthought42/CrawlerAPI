@@ -1,4 +1,4 @@
-package com.minion.api.integration;
+package com.qanairy.api.integration;
 
 import java.util.Date;
 import java.util.List;

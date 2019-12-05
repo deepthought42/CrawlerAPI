@@ -12,13 +12,15 @@ public class UrlMessage {
 	private ActorRef domain_actor;
 	private BrowserType browser;
 	private Domain domain;
+	private String account;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain){
+	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
+		setAccount(account_id);
 	}
 
 	public URL getUrl() {
@@ -59,5 +61,13 @@ public class UrlMessage {
 
 	public void setDomain(Domain domain) {
 		this.domain = domain;
+	}
+
+	public String getAccount() {
+		return account;
+	}
+
+	public void setAccount(String account) {
+		this.account = account;
 	}
 }

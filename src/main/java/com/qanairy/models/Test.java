@@ -47,7 +47,7 @@ public class Test implements Persistable {
 	private Date last_run_time;
 	private long run_time_length;
 	private List<String> path_keys;
-	
+
 	@Properties
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
@@ -167,7 +167,9 @@ public class Test implements Persistable {
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof Test){
+			Test test = (Test)o;
 			
+			return test.getKey().equals(this.getKey());
 		}
 		
 		return false;

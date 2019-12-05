@@ -63,8 +63,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (n:Domain{url:{url}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
 	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("url") String url);
 	
-	@Query("MATCH (n:Domain{url:{url}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) WHERE NOT d.status = 'STOPPED' RETURN d ORDER BY d.started_at DESC LIMIT 1")
-	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("url") String url);
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_DISCOVERY_RECORD]->(dr:DiscoveryRecord) WHERE NOT dr.status = 'STOPPED' RETURN dr ORDER BY dr.started_at DESC LIMIT 1")
+	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("url") String url, @Param("user_id") String user_id);
 	
 	//needs work done still to make it return all test records by month
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")

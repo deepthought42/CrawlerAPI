@@ -111,7 +111,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						    }
 					    }
 					    List<String> path_key_sublist = message.getKeys().subList(last_page_idx, message.getKeys().size());
-						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 						for(Test test : matching_tests) {
 							path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));

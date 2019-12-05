@@ -78,7 +78,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-    	return domain_service.getMostRecentDiscoveryRecord(url);
+    	return domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
     }
 
     /**
@@ -114,7 +114,7 @@ public class DiscoveryController {
     	*/
 
     	//update domain host if not set		
-    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
 
     	Date now = new Date();
     	long diffInMinutes = 10000;

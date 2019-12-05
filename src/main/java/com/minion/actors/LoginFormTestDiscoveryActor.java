@@ -102,7 +102,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 						Set<TestUser> test_users = domain_service.getTestUsers(domain);
 						log.info("generating tests for "+test_users.size()+"   users");
 						for(TestUser user : test_users){
-							ExploratoryPath exploratory_path = initializeFormTest(form);
+							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getUrl(), message.getAccountId());
 
 							//  clone test
 							//  get username element and add it to path
@@ -185,7 +185,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							
 							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L, test.getPathKeys()));
 							//test_service.save(test);
-							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
+							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl(), message.getAccountId());
 
 							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
 							message.getDiscoveryActor().tell(test_message, getSelf());
@@ -208,7 +208,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		
 	}
 
-	private ExploratoryPath initializeFormTest(Form form) {
+	private ExploratoryPath initializeFormTest(Form form, String url, String user_id) {
 		
 		List<String> path_keys = new ArrayList<String>();
 		List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -217,7 +217,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		PageState page = form_service.getPageState(form);
 		
 		//get all tests that contain page state as path object
-		List<Test> tests = test_service.findTestsWithPageState(page.getKey());
+		List<Test> tests = test_service.findTestsWithPageState(page.getKey(), url, user_id);
 		//get test with smallest path
 		int shortest_length = 1000;
 		Test shortest_test = null;
@@ -230,7 +230,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
 		//add test path to path objects and keys
-		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey());
+		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey(), url, user_id);
 		log.warning("path objects size ::   "+test_path_objects.size());
 		for(String key : shortest_test.getPathKeys()){
 			for(PathObject obj : test_path_objects){

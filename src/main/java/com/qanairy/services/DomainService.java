@@ -60,8 +60,8 @@ public class DomainService {
 		return domain_repo.getTestCount(url);
 	}
 
-	public DiscoveryRecord getMostRecentDiscoveryRecord(String url) {
-		return domain_repo.getMostRecentDiscoveryRecord(url);
+	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
+		return domain_repo.getMostRecentDiscoveryRecord(url, user_id);
 	}
 
 	public Set<DiscoveryRecord> getDiscoveryRecords(String url) {

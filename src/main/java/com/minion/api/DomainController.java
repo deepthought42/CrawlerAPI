@@ -531,7 +531,7 @@ public class DomainController {
 	    		Domain domain = optional_domain.get();
 	        		
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
-	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
 	    		//start form test creation actor
 	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page, acct.getUserId());
 		        
@@ -568,7 +568,7 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -611,7 +611,7 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
     		Date now = new Date();
         	long diffInMinutes = 10000;
         	if(last_discovery_record != null){

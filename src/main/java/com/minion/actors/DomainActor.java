@@ -106,7 +106,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(DiscoveryActionRequest.class, message-> {
 					if(discovery_action == null) {
-						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl()).getStatus();
+						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId()).getStatus();
 						if(status == DiscoveryStatus.RUNNING) {
 							discovery_action = DiscoveryAction.START;
 						}
@@ -122,7 +122,7 @@ public class DomainActor extends AbstractActor{
 					
 					Test test_record = test_service.findByKey(test.getKey());
 					if(test_record == null) {
-						test_record = test_service.save(test);
+						test_record = test_service.save(test, test_msg.getDomain().getUrl(), test_msg.getAccount());
 						account_service.addTest(test_record, test_msg.getAccount());
 					}
 					
@@ -144,14 +144,14 @@ public class DomainActor extends AbstractActor{
 
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}
 					}
           
 					try {
-						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getHost());
+						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getHost(), test_msg.getAccount());
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
@@ -161,7 +161,7 @@ public class DomainActor extends AbstractActor{
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}

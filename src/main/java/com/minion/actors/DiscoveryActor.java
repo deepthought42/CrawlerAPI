@@ -67,7 +67,7 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private final int DISCOVERY_ACTOR_COUNT = 100;
+	private final int DISCOVERY_ACTOR_COUNT = 200;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -153,7 +153,7 @@ public class DiscoveryActor extends AbstractActor{
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						if(path_expansion_actor == null){
@@ -171,7 +171,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
@@ -206,7 +206,7 @@ public class DiscoveryActor extends AbstractActor{
 							}
 						}
 					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
 					discovery_service.save(discovery_record);
 				})
@@ -286,12 +286,12 @@ public class DiscoveryActor extends AbstractActor{
 							}
 						}
 					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
 
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
@@ -366,11 +366,11 @@ public class DiscoveryActor extends AbstractActor{
 				.build();
 	}
 
-	private DiscoveryRecord getDiscoveryRecord(String url, String browser) {
+	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
 		DiscoveryRecord discovery_record = null;
 		if(this.discovery_record == null){
 			log.warn("discovery actor is null for instance variable in discovery actor");
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(url, user_id);
 			
 			if(discovery_record == null){
 				log.warn("was unable to find running discovery record in db");
@@ -435,7 +435,7 @@ public class DiscoveryActor extends AbstractActor{
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
 		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl());
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
 		}
 		
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);

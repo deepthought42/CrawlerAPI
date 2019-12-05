@@ -167,7 +167,9 @@ public class Test implements Persistable {
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof Test){
+			Test test = (Test)o;
 			
+			return test.getKey().equals(this.getKey());
 		}
 		
 		return false;

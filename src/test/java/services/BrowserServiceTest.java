@@ -152,8 +152,6 @@ public class BrowserServiceTest {
 						+"</html>";
 
 		//List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html, null);
-		
-		assertTrue(true);	
 	}
 			
 	@Test
@@ -198,8 +196,7 @@ public class BrowserServiceTest {
 						+"</html>";
 
 		//List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html, null);
-		
-		assertTrue(true);
+
 	}
 
 	@Test

@@ -50,10 +50,7 @@ public class ElementNode<T> {
     }
 
     public boolean isLeaf() {
-        if(this.children.size() == 0) 
-            return true;
-        else 
-            return false;
+        return this.children.size() == 0;
     }
 
     public void removeParent() {

@@ -108,7 +108,7 @@ public class TestService {
 		 
 		 do{
 			 try {
-				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.TEST);
 				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getMessage());

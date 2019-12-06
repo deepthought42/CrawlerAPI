@@ -1,6 +1,5 @@
 package com.minion.structs;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,12 +12,6 @@ public class Message<T> {
 	private final String account_key;
 	private final T datum;
 	private final Map<String, Object> options;
-	
-	public Message(String account_key, T data){
-		this.account_key = account_key;
-		this.datum = data;
-		this.options = new HashMap<String, Object>();
-	}
 	
 	public Message(String account_key, T data, Map<String, Object> options){
 		this.account_key = account_key;

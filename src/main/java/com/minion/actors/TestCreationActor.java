@@ -125,7 +125,7 @@ public class TestCreationActor extends AbstractActor  {
 								test = new Test(path_keys, path_objects, result_page, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
 								
-						    	Test test_record = test_repo.findByKey(test.getKey());
+						    	Test test_record = test_repo.findByKey(test.getKey(), domain.getUrl(), acct_message.getAccountKey());
 						    	if(test_record == null){
 						    		TestRecord test_record_record = new TestRecord();
 						    		test_record_record.setBrowser(browser_name);
@@ -148,7 +148,7 @@ public class TestCreationActor extends AbstractActor  {
 						    		//here we check if the test passed in had a key indicating that it is an existing test. If it does have a key then we look up the test with the key
 						    		// and set its status to archived
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
-								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
+								    	Test old_test = test_repo.findByKey(test_json.get("key").toString(), domain.getUrl(), acct_message.getAccountKey());
 							    		old_test.setArchived(true);
 							    		test_repo.save(old_test);
 								    }

@@ -137,7 +137,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		//new_test = test_service.save(new_test);
 						  		
 						  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getDiscovery().getKey());
-								discovery_record.setTestCount(discovery_record.getTestCount()+1);
 								discovery_record = discovery_repo.save(discovery_record);
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());  
 								

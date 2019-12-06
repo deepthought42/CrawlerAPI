@@ -140,7 +140,7 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Test test = test_service.findByKey(key);
+    	Test test = test_service.findByKey(key, url, acct.getUserId());
 		Map<String, String> browser_statuses = test.getBrowserStatuses();
 		TestStatus status = TestStatus.FAILING;
 
@@ -170,7 +170,7 @@ public class TestController {
 		test.setStatus(status);
 		//test.setRecords(records);
 		//update status of last test record
-		test_repo.save(test);
+		test = test_repo.save(test);
 
 		//get last test record
 		TestRecord record = test_repo.getMostRecentRecord(test.getKey(), url, acct.getUserId());
@@ -178,7 +178,6 @@ public class TestController {
 		test_record_repo.save(record);
 
 		record = test_record_repo.updateStatus(record.getKey(), status.toString());
-		test = test_service.findByKey(test.getKey());
 		return test;
     }
 
@@ -288,7 +287,8 @@ public class TestController {
 	public @ResponseBody Test setPassingStatus(HttpServletRequest request,
 													@RequestParam(value="key", required=true) String key,
 													@RequestParam(value="browser", required=true) String browser_name,
-													@RequestParam(value="status", required=true) TestStatus status)
+													@RequestParam(value="status", required=true) TestStatus status,
+													@RequestParam(value="url", required=true) String url)
 															throws UnknownAccountException{
 
     	//make sure domain belongs to user account first
@@ -303,12 +303,12 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
 
-		Test test = test_repo.findByKey(key);
+		Test test = test_repo.findByKey(key, url, acct.getUserId());
 		test.setStatus(status);
 		test.getBrowserStatuses().put(browser_name, status.toString());
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(test);
-		test_repo.save(test);
+		test = test_repo.save(test);
 
 	   	//Fire discovery started event
 	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
@@ -342,12 +342,27 @@ public class TestController {
 	 *
 	 * @param test
 	 * @return
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/archive", method=RequestMethod.PUT)
 	public @ResponseBody void archiveTest(HttpServletRequest request,
-									@RequestParam(value="key", required=true) String key){
-		Test test = test_repo.findByKey(key);
+									@RequestParam(value="key", required=true) String key,
+									@RequestParam(value="url", required=true) String url
+	) throws UnknownAccountException{
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+		Test test = test_repo.findByKey(key, url, acct.getUserId());
 
 		test.setArchived(true);
 		test_repo.save(test);
@@ -361,13 +376,28 @@ public class TestController {
 	 *
 	 * @param test
 	 * @return
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateName", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request,
 										 @RequestParam(value="key", required=true) String key,
-										 @RequestParam(value="name", required=true) String name){
-		Test test = test_repo.findByKey(key);
+										 @RequestParam(value="name", required=true) String name,
+										 @RequestParam(value="url", required=true) String url
+	 ) throws UnknownAccountException{
+    	
+    	//make sure domain belongs to user account first
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+		Test test = test_repo.findByKey(key, url, acct.getUserId() );
 		test.setName(name);
 
 		return test_repo.save(test);
@@ -414,7 +444,7 @@ public class TestController {
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
     	for(String key : test_keys){
-    		Test test = test_repo.findByKey(key);
+    		Test test = test_repo.findByKey(key, host, acct.getUserId());
     		TestStatus last_test_status = test.getStatus();
 
 			test.setStatus(TestStatus.RUNNING);
@@ -443,7 +473,7 @@ public class TestController {
 			record = test_record_repo.save(record);
 
 			SegmentAnalyticsHelper.sendTestFinishedRunningEvent(acct.getUserId(), test);
-			test = test_service.findByKey(test.getKey());
+			test = test_service.findByKey(test.getKey(), host, acct.getUserId());
 
 			test.addRecord(record);
 			test.setStatus(is_passing);
@@ -548,14 +578,27 @@ public class TestController {
 	 *
 	 * @param group_key String key representing group to add to test
 	 * @param test_key key for test that will have group added to it
-	 *
+	 * @param url {@link Domain} url
+	 * 
 	 * @return the updated test
+	 *      
+     * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('delete:groups')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
-	public @ResponseBody void removeGroup(@RequestParam(value="group_key", required=true) String group_key,
-										  @RequestParam(value="test_key", required=true) String test_key){
-		Test test = test_service.findByKey(test_key);
+	public @ResponseBody void removeGroup(HttpServletRequest request,
+										  @RequestParam(value="group_key", required=true) String group_key,
+										  @RequestParam(value="test_key", required=true) String test_key,
+										  @RequestParam(value="url", required=true) String url) throws UnknownAccountException{
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+		Test test = test_service.findByKey(test_key, url, acct.getUserId());
 		Group group = group_repo.findByKey(group_key);
 		test.removeGroup(group);
 		test_repo.save(test);
@@ -598,7 +641,9 @@ public class TestController {
     @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="{test_key}/edit", method = RequestMethod.POST)
 	public @ResponseBody TestDto editTest(HttpServletRequest request,
-			   								   @PathVariable(value="test_key") String test_key) throws UnknownAccountException, JsonProcessingException {
+			   								   @PathVariable(value="test_key") String test_key,
+			   								@RequestParam(value="url", required=true) String url
+    ) throws UnknownAccountException, JsonProcessingException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -606,7 +651,7 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	Test test = test_service.findByKey(test_key);
+    	Test test = test_service.findByKey(test_key, url, acct.getUserId());
     	test.setPathObjects(test_service.getPathObjects(test.getKey(), "", acct.getUserId()));
 		//convert test to ide test
 		/*

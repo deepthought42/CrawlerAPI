@@ -60,7 +60,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation, Domain domain)
+	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation, Domain domain, String user_id)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
@@ -84,7 +84,7 @@ public class TestCreatorService {
 	  	log.warn("domain url :: "+domain.getUrl());
 	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
 	  	
-	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost());
+	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
 
 	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl());
 		
@@ -116,7 +116,8 @@ public class TestCreatorService {
 			PageState result_page, 
 			long crawl_time, 
 			String browser_name, 
-			String domain_host
+			String domain_host,
+			String user_id
 	) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
@@ -125,7 +126,7 @@ public class TestCreatorService {
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 
-		Test test_db = test_service.findByKey(test.getKey());
+		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);
 		if(test_db == null){
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());

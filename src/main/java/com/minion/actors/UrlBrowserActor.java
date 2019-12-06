@@ -161,7 +161,7 @@ public class UrlBrowserActor extends AbstractActor {
 					//send test to discovery actor
 					*/
 					log.warn("creating landing page test");
-					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain());
+					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain(), message.getAccount());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
 					message.getDiscoveryActor().tell(test_message, getSelf());
 					

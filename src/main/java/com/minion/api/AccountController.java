@@ -240,31 +240,34 @@ public class AccountController {
 		int year_now = c.get(Calendar.YEAR);
 
     	int monthly_test_count = 0;
-    	for(TestRecord record : account_service.getTestRecords(acct.getUsername())){
+    	int domain_discovery_count = 0;
+    	int domain_total_discovered_tests = 0;
+    	int domain_tests_ran = 0;
+    	for(TestRecord record : account_service.getTestRecords(acct.getUsername(), domain_host)){
     		Calendar cal = Calendar.getInstance();
     		cal.setTime(record.getRanAt());
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
 
-    		if(month_started == month_now && year_started == year_now){
+    		if(month_started == month_now && year_started == year_now ){
     			monthly_test_count++;
     		}
+    		
+    		domain_tests_ran++;
     	}
 
     	//get count of monthly tests discovered
     	int monthly_discovery_count = 0;
-        int total_discovered_tests = 0;
-        int domain_discovery_count = 0;
-        int domain_total_discovered_tests = 0;
+        int monthly_discovered_tests = 0;
     	for(DiscoveryRecord record :  account_service.getDiscoveryRecordsByMonth(acct.getUsername(), month_now)){
     		Calendar cal = Calendar.getInstance();
     		cal.setTime(record.getStartTime());
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
 
-    		if(month_started == month_now && year_started == year_now){
+    		if(month_started == month_now && year_started == year_now && record.getDomainUrl().equals(domain_host)){
     			monthly_discovery_count++;
-    			total_discovered_tests += record.getTestCount();
+    			monthly_discovered_tests += record.getTestCount();
     		}
 
     		if(record.getDomainUrl().equals(domain_host)){
@@ -274,23 +277,11 @@ public class AccountController {
     	}
 
     	//calculate number of test records for domain
-        int domain_tests_ran = 0;
-    	for(TestRecord record : domain_service.getTestRecords(domain_host)){
-    		Calendar cal = Calendar.getInstance();
-    		cal.setTime(record.getRanAt());
-    		int month_started = cal.get(Calendar.MONTH);
-    		int year_started = cal.get(Calendar.YEAR);
-
-    		if(month_started == month_now && year_started == year_now){
-    			domain_tests_ran++;
-    		}
-    	}
-
     	DiscoveryRecord most_recent_discovery = domain_service.getMostRecentDiscoveryRecord(domain_host, acct.getUserId());
 
     	long discovery_run_time = System.currentTimeMillis() - most_recent_discovery.getStartTime().getTime();
 
-        return new AccountUsage(monthly_discovery_count, monthly_test_count, total_discovered_tests,
+        return new AccountUsage(monthly_discovery_count, (monthly_test_count-monthly_discovered_tests), monthly_discovery_count,
         							domain_discovery_count, domain_tests_ran, domain_total_discovered_tests,
         							most_recent_discovery.getStartTime(), discovery_run_time, most_recent_discovery.getLastPathRanAt());
     }

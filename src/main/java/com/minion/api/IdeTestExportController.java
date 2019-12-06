@@ -100,20 +100,21 @@ public class IdeTestExportController {
     	Account acct = account_repo.findByUserId(id);
 
     	JSONObject test_json = new JSONObject(json_str);
-
-    	if(test_json.has("key")){
-    		String test_key = test_json.getString("key");
-    	
-	    	Test test = test_repo.findByKey(test_key);
-	    	if(test != null){
-	    		test.setArchived(true);
-	    		test_repo.save(test);
-	    	}
-    	}
     	
     	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"));
 		formatted_url = BrowserUtils.sanitizeUrl(formatted_url);
 		URL domain_url = new URL(formatted_url);
+	
+		
+		if(test_json.has("key")){
+			String test_key = test_json.getString("key");
+			
+			Test test = test_repo.findByKey(test_key, formatted_url, acct.getUserId());
+			if(test != null){
+				test.setArchived(true);
+				test_repo.save(test);
+			}
+		}
 		
     	Domain domain = domain_service.findByHost(domain_url.getHost(), acct.getUserId());
     	if(domain == null){

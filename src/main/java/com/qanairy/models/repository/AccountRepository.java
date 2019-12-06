@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 
 
@@ -38,8 +37,8 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{user_id:{user_id}}) DELETE account")
 	public void deleteAccount(@Param("user_id") String user_id);
 
-	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
-	public List<TestRecord> getTestRecords(@Param("username") String username);
+	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
+	public List<TestRecord> getTestRecords(@Param("username") String username, @Param("url") String url);
 
 	@Query("MATCH (account:Account{api_key:{api_key}}) RETURN account")
 	public Account getAccountByApiKey(@Param("api_key") String api_key);
@@ -49,12 +48,6 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (t:Test{key:{test_key}}),(a:Account{user_id:{account_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")
 	public void addTest(@Param("test_key") String test_key, @Param("account_key") String account_key);
-
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
-	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
-
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
-	public Set<Test> getVerifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
 	@Query("MATCH (t:Account{user_id:{user_id}}),(a:Domain{key:{domain_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")
 	public void addDomain(@Param("domain_key") String key, @Param("user_id") String user_id);

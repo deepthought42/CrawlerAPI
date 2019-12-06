@@ -111,11 +111,11 @@ public class TestService {
 				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
-				 log.warn(e.getLocalizedMessage());
+				 log.warn(e.getMessage());
 			 }
 			 catch (Exception e) {
-				 //e.printStackTrace();
-				 log.error("RUN TEST ERROR ::  " + e.getLocalizedMessage());
+				 e.printStackTrace();
+				 log.error("RUN TEST ERROR ::  " + e.getMessage());
 			 }
 			 finally{
 				 if(browser != null){
@@ -137,7 +137,7 @@ public class TestService {
 
 	 public Test save(Test test, String url, String user_id) throws MalformedURLException {
 		 assert test != null;
-		 Test record = test_repo.findByKey(test.getKey());
+		 Test record = test_repo.findByKey(test.getKey(), url, user_id);
 
 		if(record == null){
 			log.warn("test record is null while saving");
@@ -246,8 +246,8 @@ public class TestService {
      this.crawler = crawler;
    }
 
-   public Test findByKey(String key){
-     return test_repo.findByKey(key);
+   public Test findByKey(String key, String url, String user_id){
+     return test_repo.findByKey(key, url, user_id);
    }
 
    public List<Test> findTestsWithPageState(String key, String url, String user_id) {
@@ -262,7 +262,7 @@ public class TestService {
     * @return List of ordered {@link PathObject}s
     */
    public List<PathObject> getPathObjects(String test_key, String url, String user_id) {
-	   Test test = test_repo.findByKey(test_key);
+	   Test test = test_repo.findByKey(test_key, url, user_id);
 	   List<PathObject> path_obj_list = test_repo.getPathObjects(test_key, url, user_id);
 	   //order path objects
 	   List<PathObject> ordered_list = new ArrayList<PathObject>();

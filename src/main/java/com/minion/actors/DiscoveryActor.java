@@ -199,7 +199,6 @@ public class DiscoveryActor extends AbstractActor{
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount() && discovery_record.getTotalPathCount()> 2){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
 							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
-							discovery_service.save(discovery_record);
 							
 							for(Account account: accounts){
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
@@ -212,9 +211,8 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
-					Test existing_record = test_service.findByKey(test.getKey());
+					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
-						
 						try {
 							SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
 						} catch (Exception e) {

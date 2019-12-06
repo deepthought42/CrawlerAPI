@@ -54,8 +54,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,y,z")
-	public Set<Test> getVerifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH x=(t)-->(:TestRecord) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' OPTIONAL MATCH y=(t)-->(:Group) RETURN a,x,y")
+	public Set<Test> getVerifiedTests(@Param("url") String url, @Param("user_id") String user_id);
 
 	@Query("MATCH (n:Domain{url:{url}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("url") String url);

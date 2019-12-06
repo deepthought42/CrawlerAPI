@@ -84,12 +84,4 @@ public class AccountService {
 	public void addTest(Test test_record, String account_key) {
 		account_repo.addTest(test_record.getKey(), account_key);
 	}
-	
-	public Set<Test> getUnverifiedTests(String url, String user_id) {
-		return account_repo.getUnverifiedTests(url, user_id);
-	}
-	
-	public Set<Test> getVerifiedTests(String url, String user_id) {
-		return account_repo.getVerifiedTests(url, user_id);
-	}
 }

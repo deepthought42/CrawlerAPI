@@ -214,7 +214,6 @@ public class DiscoveryActor extends AbstractActor{
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey());
 					if(existing_record == null) {
-						
 						try {
 							SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
 						} catch (Exception e) {

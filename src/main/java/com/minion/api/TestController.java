@@ -641,7 +641,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="{test_key}/edit", method = RequestMethod.POST)
 	public @ResponseBody TestDto editTest(HttpServletRequest request,
-			   								   @PathVariable(value="test_key") String test_key,
+			   								@PathVariable(value="test_key") String test_key,
 			   								@RequestParam(value="url", required=true) String url
     ) throws UnknownAccountException, JsonProcessingException {
     	Principal principal = request.getUserPrincipal();
@@ -652,7 +652,7 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	Test test = test_service.findByKey(test_key, url, acct.getUserId());
-    	test.setPathObjects(test_service.getPathObjects(test.getKey(), "", acct.getUserId()));
+    	test.setPathObjects(test_service.getPathObjects(test.getKey(), url, acct.getUserId()));
 		//convert test to ide test
 		/*
 		 * {

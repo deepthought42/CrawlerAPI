@@ -22,13 +22,13 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account {user_id:{0}})-[:HAS_DOMAIN]->(domain:Domain) RETURN domain")
 	public Set<Domain> getDomains(String user_id);
 		
-	@Query("MATCH (account:Account {username:{username}})-[]->(d:DiscoveryRecord) return d")
+	@Query("MATCH (account:Account {username:{username}})-[]->(d:DiscoveryRecord) WHERE datetime(d.started_at).month={month} return d")
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(@Param("username") String username, @Param("month") int month);
 	
 	@Query("MATCH (account:Account {username:{acct_key}})-[hd:HAS_DOMAIN]->(Domain{key:{domain_key}}) DELETE hd")
 	public void removeDomain(@Param("acct_key") String acct_key, @Param("domain_key") String domain_key);
 
-	@Query("MATCH (account:Account {username:{acct_key}})-[:HAS_TEST_RECORD]->(t:TestRecord) RETURN COUNT(t)")
+	@Query("MATCH (account:Account {username:{acct_key}})-[]->(d:Domain) MATCH (d)-[:HAS_TEST]-(t:Test) MATCH (t)-[:HAS_TEST_RECORD]->(tr:TestRecord) WHERE datetime(tr.ran_at).month={month} RETURN COUNT(tr)")
 	public int getTestCountByMonth(@Param("acct_key") String acct_key, @Param("month") int month);
 
 	@Query("MATCH (account:Account{user_id:{user_id}})-[edge]->() DELETE edge")

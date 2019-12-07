@@ -17,16 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.Transition;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
@@ -60,30 +57,12 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation, Domain domain, String user_id)
+	public Test createLandingPageTest(List<String> path_keys, List<PathObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
-		page_state.setLandable(true);
-		page_state.setLastLandabilityCheck(LocalDateTime.now());
-
-	  	List<String> path_keys = new ArrayList<String>();
-	  	List<PathObject> path_objects = new ArrayList<PathObject>();
-	  	if(transition != null 
-	  			&& ((transition instanceof Redirect && ((Redirect)transition).getUrls().size() > 1))){
-	  		path_keys.add(transition.getKey());
-	  		path_objects.add(transition);
-	  	}
-	  	
-	  	if(animation != null){
-	  		path_keys.add(animation.getKey());
-	  		path_objects.add(animation);
-	  	}
-
-	  	path_keys.add(page_state.getKey());
-	  	path_objects.add(page_state);
 	  	
 	  	log.warn("domain url :: "+domain.getUrl());
 	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
-	  	
+	  	log.warn("total path object added to test :: "+path_objects.size());
 	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
 
 	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl());
@@ -121,9 +100,14 @@ public class TestCreatorService {
 	) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
+		assert result_page != null;
 		
+		String result_url = result_page.getUrl();
 		log.warn("Creating test........");
-		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
+		
+		log.warn("path objects ::  "+path_objects.size());
+		String last_page_state_url = PathUtils.getLastPageState(path_objects).getUrl();
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_url).getHost()) || result_url.contains(new URL(last_page_state_url).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 
 		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);

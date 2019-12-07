@@ -70,10 +70,11 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {					
+				.match(PathMessage.class, message -> {			
+					//get first url
+					String url = PathUtils.getFirstUrl(message.getPathObjects());
 					//get first page in path
-				  	PageState last_page = PathUtils.getFirstPage(message.getPathObjects());
-				  	String host = new URL(last_page.getUrl()).getHost();
+				  	String host = new URL(url).getHost();
 				  	Browser browser = null;
 				  	boolean forms_created = false;
 				  	int count = 0;
@@ -82,9 +83,8 @@ public class FormDiscoveryActor extends AbstractActor{
 				  		try{
 				  			log.warning("form discovery getting browser connection ::   "+message.getBrowser().toString());
 					  		browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
-					  		browser.navigateTo(last_page.getUrl());
-					  		log.warning("browser retrived :: "+browser);
-					  		log.warning("crawling path without building result  ::   "+message.getKeys());
+					  		log.warning("FORM  Navigating to url    ::        "+url);
+					  		browser.navigateTo(url);
 					  		log.warning("total path objects    ::   "+message.getPathObjects());
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 
@@ -118,6 +118,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						} catch(Exception e){
 					  		log.warning("Form discovery exception :: " + e.getMessage());
 					  		forms_created = false;
+					  		e.printStackTrace();
 					  	}
 				  		finally{
 				  			if(browser != null){

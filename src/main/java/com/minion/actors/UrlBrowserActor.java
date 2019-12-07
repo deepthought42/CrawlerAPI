@@ -118,25 +118,23 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							log.warn("successfully navigated to url ");
 							redirect = BrowserUtils.getPageTransition(url, browser, host);
 							log.warn("redirect detected as :: " + redirect.getKey());
+							log.warn("redirect urls :: "+redirect.getUrls().size());
+							log.warn("redirect start url     ::  "+redirect.getStartUrl());
+						  	
 						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
-								path_keys.add(redirect.getKey());
+								log.warn("redirect added to path objects list");
+						  		path_keys.add(redirect.getKey());
 								path_objects.add(redirect);
 							}
 
-						  	log.warn("detecting loading animation...");
 						  	animation = BrowserUtils.getLoadingAnimation(browser, host);
-						  	log.warn("done detecting loading animation");
 							if(animation != null){
 								path_keys.add(animation.getKey());
 								path_objects.add(animation);
 							}
-							log.warn("moving mouse to non interactive element");
 							browser.moveMouseToNonInteractive(new Point(300, 300));
-							log.warn("retrieving page source...");
-							log.warn("getting all elements using jsoup");
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page...");
@@ -160,24 +158,22 @@ public class UrlBrowserActor extends AbstractActor {
 					log.warn("Done building page states ");
 					//send test to discovery actor
 					*/
+					path_keys.add(page_state.getKey());
+					path_objects.add(page_state);
+
 					log.warn("creating landing page test");
-					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain(), message.getAccount());
+					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccount());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
 					message.getDiscoveryActor().tell(test_message, getSelf());
+					
 					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
-					List<String> new_path_keys = new ArrayList<String>(path_keys);
-				  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-				  	new_path_keys.add(page_state.getKey());
-				  	new_path_objects.add(page_state);
-
-					PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain(), message.getAccount());
+					PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain(), message.getAccount());
 					
 					//send message to animation detection actor
 					animation_actor.tell(path_message, getSelf() );
-					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

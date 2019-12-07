@@ -58,10 +58,6 @@ public class PageStateService {
 		do{
 			page_err = false;
 			try{
-				log.warn("Page state checking screenshots before save :: " + page_state);
-				log.warn("Page state checking screenshots before save :: " + page_state.getScreenshots());
-				log.warn("Page state checking screenshots before save :: " + page_state.getScreenshotChecksums());
-				log.warn("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 				for(String checksum : page_state.getScreenshotChecksums()){
 					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(checksum);
 					if(!page_state_records.isEmpty()){
@@ -114,9 +110,6 @@ public class PageStateService {
 					if(page_state_record != null){
 						page_state_record.setForms(page_state.getForms());
 	
-						log.warn("page state elements set");
-						log.warn("COMPLETED saving element to page state :: "+page_state );
-						log.warn("page state forms set");
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
 						}
@@ -159,12 +152,7 @@ public class PageStateService {
 								element_records.add(element);
 							}
 						}
-						/*
-						for(ElementState element : page_state.getElements()){
-							ElementState element_record = element_state_service.save(element);
-							element_records.add(element_record);
-						}
-						*/
+						
 						page_state.setElements(element_records);
 						
 						Set<Form> form_records = new HashSet<>();

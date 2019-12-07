@@ -53,6 +53,7 @@ import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.ArrayUtils;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
+import com.qanairy.utils.TimingUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -489,10 +490,7 @@ public class BrowserService {
 
 		for(WebElement element : web_elements){
 			String tag_name = element.getTagName();
-			if("html".equals(tag_name) || "body".equals(tag_name)
-					|| "link".equals(tag_name) || "script".equals(tag_name)
-					|| "title".equals(tag_name) || "meta".equals(tag_name)
-					|| "head".equals(tag_name) ){
+			if(isStructureTag(tag_name)){
 				continue;
 			}
 			elements.add(element);
@@ -1033,8 +1031,16 @@ public class BrowserService {
 	public List<Form> extractAllForms(PageState page, Browser browser) throws Exception{
 		List<Form> form_list = new ArrayList<Form>();
 		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
+		TimingUtils.pauseThread(10000);
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		log.warn("form elements found using xpath //form    :: "+form_elements.size());
+		
+		List<WebElement> elements = browser.getDriver().findElements(By.xpath("//*"));
+		log.warn("elements found using xpath //form    :: "+elements.size());
+		
+		boolean contains_form = browser.getDriver().getPageSource().contains("form");
+		log.warn("source contains form ??     :    "+contains_form);
+				
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
 			log.warn("scrolling to form element");
@@ -1052,6 +1058,7 @@ public class BrowserService {
 			BufferedImage img = browser.getElementScreenshot(form_elem);
 			String checksum = PageState.getFileChecksum(img);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), "", checksum, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), ElementClassification.ANCESTOR);
+			form_tag = element_service.save(form_tag);
 			String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");
 			form_tag.setScreenshot(screenshot_url);
 			form_tag.setIsLeaf(getChildElements(form_elem).isEmpty());
@@ -1091,6 +1098,7 @@ public class BrowserService {
 				checksum = PageState.getFileChecksum(img);
 				
 				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), checksum );
+				input_tag = element_service.save(input_tag);
 				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
 				input_tag.setScreenshot(screenshot);
 				img.flush();
@@ -1163,6 +1171,7 @@ public class BrowserService {
 		String checksum = PageState.getFileChecksum(img);
 		
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), "", submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), checksum);
+		elem = element_service.save(elem);
 		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
 		elem.setScreenshot(screenshot_url);
 		elem.setIsLeaf(getChildElements(submit_element).isEmpty());

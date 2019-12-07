@@ -23,6 +23,7 @@ import com.minion.api.MessageBroadcaster;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -236,6 +237,8 @@ public class DiscoveryActor extends AbstractActor{
 					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
+					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
+					
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
@@ -275,13 +278,11 @@ public class DiscoveryActor extends AbstractActor{
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 							
-							if(isLandable) {
-								if(form_discoverer == null){
-									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								}
-								form_discoverer.tell(path, getSelf() );
+							if(form_discoverer == null){
+								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 							}
+							form_discoverer.tell(path, getSelf() );
 						}
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
@@ -295,10 +296,11 @@ public class DiscoveryActor extends AbstractActor{
 			        form_msg.setDiscoveryActor(getSelf());
 		    		
 			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain(), account.getUserId()), timeout);
+			        ActorRef domain_actor = form_msg.getDiscoveryActor();
+			        Domain form_domain = form_msg.getDomain();
+			        String user_id = form_msg.getAccountId();
+					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(form_domain, user_id), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
-					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
 
 					if(discovery_action == DiscoveryAction.STOP) {
 						log.warn("ending discovery");
@@ -319,7 +321,7 @@ public class DiscoveryActor extends AbstractActor{
 				.match(FormMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
 					try {
-						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
+						SegmentAnalyticsHelper.formDiscovered(form_msg.getAccountKey(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -328,7 +330,7 @@ public class DiscoveryActor extends AbstractActor{
 					    form = form_service.save(form);
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendFormSaveError(account.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getAccountKey(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -342,7 +344,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendPageStateError(account.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendPageStateError(form_msg.getAccountKey(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -420,7 +422,7 @@ public class DiscoveryActor extends AbstractActor{
 
 		Account account = account_service.findByUserId(message.getAccountId());
 		account.addDiscoveryRecord(discovery_record);
-		account_service.save(account);
+		account = account_service.save(account);
 
 		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
@@ -435,7 +437,7 @@ public class DiscoveryActor extends AbstractActor{
 		if(discovery_record == null){
 			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
 		}
-		
+		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(discovery_record);
 		

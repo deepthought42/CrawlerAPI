@@ -60,6 +60,7 @@ import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.RedirectService;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.utils.BrowserUtils;
 import com.stripe.exception.StripeException;
 
@@ -95,7 +96,10 @@ public class DomainController {
 	    
 	@Autowired
 	private TestUserRepository test_user_repo;
-	   
+	  
+	@Autowired
+	private SubscriptionService subscription_service;
+	
     /**
      * Create a new {@link Domain domain}
      * 
@@ -601,11 +605,11 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
 
-    	/*
+    	
     	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
-    	*/
+    	
 
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
 		log.info("Does the domain exist :: "+optional_domain.isPresent());

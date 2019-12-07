@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Redirect;
 import com.qanairy.services.TestService;
 
 public class PathUtils {
@@ -26,7 +27,7 @@ public class PathUtils {
 	public static PageState getLastPageState(List<PathObject> path_objects) {
 		assert(path_objects != null);
 				
-		for(int idx = path_objects.size()-1; idx >=0; idx--){
+		for(int idx = path_objects.size()-1; idx >= 0; idx--){
 			if(path_objects.get(idx).getKey().contains("pagestate")){
 				return (PageState)path_objects.get(idx);
 			}
@@ -123,5 +124,30 @@ public class PathUtils {
 			}
 		}
 		return reduced_path_keys;
+	}
+
+	/**
+	 * 
+	 * @param pathObjects
+	 * @return
+	 * 
+	 * @pre !pathObjects.isEmpty()
+	 */
+	public static String getFirstUrl(List<PathObject> pathObjects) {
+		assert !pathObjects.isEmpty();
+		
+		PathObject obj = pathObjects.get(0);
+		
+		if(obj.getKey().contains("redirect")) {
+			log.warn("first path object is a redirect");
+			Redirect redirect = (Redirect)obj;
+			return redirect.getStartUrl();
+		}
+		else if(obj.getKey().contains("pagestate")) {
+			log.warn("first path object is a page state");
+			PageState page_state = (PageState)obj;
+			return page_state.getUrl();
+		}
+		return null;
 	}
 }

@@ -107,11 +107,11 @@ public class DiscoveryController {
     		throw new UnknownAccountException();
     	}
 
-    	/*
+    	
     	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
-    	*/
+    	
 
     	//update domain host if not set		
     	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());

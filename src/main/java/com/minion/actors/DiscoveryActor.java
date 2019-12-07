@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -46,6 +47,7 @@ import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -95,6 +97,9 @@ public class DiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private FormService form_service;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -226,16 +231,18 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					//send message to Domain Actor
 					domain_actor.tell(test_msg, getSelf());
-					/*
-					 * TODO: uncomment once ready for pricing again.
-			    	Account acct = account_service.findByUsername(message.getAccountKey());
+					
+					
+					//plan exceeded check
+			    	Account acct = account_service.findByUserId(test_msg.getAccount());
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-			    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
+			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to run a discovery");
 			    	}
-			    	*/
 					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
+					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
+					
 					if(!test.getSpansMultipleDomains()){
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
@@ -275,13 +282,11 @@ public class DiscoveryActor extends AbstractActor{
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 							
-							if(isLandable) {
-								if(form_discoverer == null){
-									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								}
-								form_discoverer.tell(path, getSelf() );
+							if(form_discoverer == null){
+								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 							}
+							form_discoverer.tell(path, getSelf() );
 						}
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
@@ -293,17 +298,6 @@ public class DiscoveryActor extends AbstractActor{
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
-		    		
-			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(form_msg.getDomainActor(), new DiscoveryActionRequest(form_msg.getDomain(), account.getUserId()), timeout);
-					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
-					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
-
-					if(discovery_action == DiscoveryAction.STOP) {
-						log.warn("ending discovery");
-						return;
-					}
 
 					if(form_test_discovery_actor == null){
 			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -319,7 +313,7 @@ public class DiscoveryActor extends AbstractActor{
 				.match(FormMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
 					try {
-						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
+						SegmentAnalyticsHelper.formDiscovered(form_msg.getAccountKey(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -328,7 +322,7 @@ public class DiscoveryActor extends AbstractActor{
 					    form = form_service.save(form);
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendFormSaveError(account.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getAccountKey(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -342,7 +336,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendPageStateError(account.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendPageStateError(form_msg.getAccountKey(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -420,7 +414,7 @@ public class DiscoveryActor extends AbstractActor{
 
 		Account account = account_service.findByUserId(message.getAccountId());
 		account.addDiscoveryRecord(discovery_record);
-		account_service.save(account);
+		account = account_service.save(account);
 
 		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
@@ -435,7 +429,7 @@ public class DiscoveryActor extends AbstractActor{
 		if(discovery_record == null){
 			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
 		}
-		
+		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(discovery_record);
 		

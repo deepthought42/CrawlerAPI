@@ -24,7 +24,6 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
-	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -136,10 +135,6 @@ public class DomainService {
 		assert page_state != null;
 		assert user_id != null;
 		
-		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
-		log.warn("user id :: "+user_id);
-		log.warn("domain url :: " + url);
-		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
 		Domain domain = domain_repo.findByUrl(url, user_id);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);

@@ -59,7 +59,7 @@ public class BrowserUtils {
 				transition_urls.add(new_key);
 				last_key = new_key;
 			}
-		}while((System.currentTimeMillis() - start_ms) < 1500);
+		}while((System.currentTimeMillis() - start_ms) < 3000);
 
 		for(BufferedImage img : images){
 			try{

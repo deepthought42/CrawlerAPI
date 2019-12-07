@@ -12,7 +12,7 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 
 @Service
 public class DiscoveryRecordService {
-	
+
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
 	

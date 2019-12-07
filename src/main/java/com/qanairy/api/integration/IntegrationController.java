@@ -10,13 +10,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.minion.api.exception.InvalidApiKeyException;
+import com.minion.api.exception.PaymentDueException;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.JUnitXmlConversionUtil;
+import com.stripe.exception.StripeException;
 
 /**
  * 
@@ -31,6 +34,9 @@ public class IntegrationController {
 	@Autowired
 	private TestService test_service;
 	
+	@Autowired
+	private SubscriptionService subscription_service;
+	
 	/**
 	 * Runs all tests for a given domain and account using an api key to locate the account
 	 * In the event that the domain is not registered with the {@link Account} then the system throws
@@ -41,22 +47,21 @@ public class IntegrationController {
 	 * 
 	 * @return
 	 * @throws InvalidApiKeyException 
+	 * @throws PaymentDueException 
+	 * @throws StripeException 
 	 */
     @RequestMapping(method = RequestMethod.GET)
 	public String runAllTests(@RequestBody String host,
-						   @RequestBody String api_key) throws InvalidApiKeyException{
+						   @RequestBody String api_key) throws InvalidApiKeyException, PaymentDueException, StripeException{
     	Account acct = account_repo.getAccountByApiKey(api_key);
     	Domain domain = account_repo.getAccountDomainByApiKeyAndHost(api_key, host);
 		if(acct == null){
     		throw new InvalidApiKeyException("Invalid API key");
     	}
     	
-		/* UNCOMMENT WHEN READY TO HANDLE SUBSCRIPTIONS
-		 
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
-        }
-    	*/
+        }    	
 		
 		Date start_date = new Date();
 		long start = System.currentTimeMillis();

@@ -20,10 +20,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -47,6 +47,7 @@ import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -96,6 +97,9 @@ public class DiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private FormService form_service;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -227,13 +231,13 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					//send message to Domain Actor
 					domain_actor.tell(test_msg, getSelf());
-					/*
-					 * TODO: uncomment once ready for pricing again.
-			    	Account acct = account_service.findByUsername(message.getAccountKey());
+					
+					
+					//plan exceeded check
+			    	Account acct = account_service.findByUserId(test_msg.getAccount());
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-			    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
+			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to run a discovery");
 			    	}
-			    	*/
 					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
@@ -294,18 +298,6 @@ public class DiscoveryActor extends AbstractActor{
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
-		    		
-			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-			        ActorRef domain_actor = form_msg.getDiscoveryActor();
-			        Domain form_domain = form_msg.getDomain();
-			        String user_id = form_msg.getAccountId();
-					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(form_domain, user_id), timeout);
-					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-
-					if(discovery_action == DiscoveryAction.STOP) {
-						log.warn("ending discovery");
-						return;
-					}
 
 					if(form_test_discovery_actor == null){
 			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

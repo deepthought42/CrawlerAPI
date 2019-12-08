@@ -117,6 +117,17 @@ public class SubscriptionService {
     	//check if user has exceeded freemium plan
     	Date date = new Date();
     	int test_run_cnt = account_service.getTestCountByMonth(acct.getUsername(), date.getMonth());
+    	//check if user has exceeded freemium plan
+    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
+    	int discovered_test_cnt = 0;
+    	
+    	for(DiscoveryRecord record : discovery_records){
+    		if(record.getStartTime().getMonth() == date.getMonth()){
+    			discovered_test_cnt += record.getTestCount();
+    		}
+    	}
+    	
+    	test_run_cnt -= discovered_test_cnt;
     	
     	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 200){
     		return true;

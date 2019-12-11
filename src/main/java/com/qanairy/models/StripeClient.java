@@ -20,8 +20,8 @@ public class StripeClient {
 
     @Autowired
     StripeClient() {
-        Stripe.apiKey = "sk_live_Gx56wLPtGpq8JXcg9UWaRcv9";
-    	//Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
+        //Stripe.apiKey = "sk_live_Gx56wLPtGpq8JXcg9UWaRcv9";
+    	Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
     }
     
     public void update_subscription(Plan plan, Subscription subscription) 
@@ -66,11 +66,13 @@ public class StripeClient {
     	params.put("customer", customer.getId());
     	params.put("items", items);
     	
+    	/*
 		Calendar c = Calendar.getInstance();
 		c.add(Calendar.MONTH, 3);
 		Date date = c.getTime();
 		date.getTime();
 		params.put("trial_end", date.getTime()/1000);
+		*/
 
 		return Subscription.create(params);
     }

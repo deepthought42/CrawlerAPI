@@ -49,7 +49,7 @@ public class SubscriptionService {
 	 * 
 	 * @throws Exception
 	 */
-	public void changeSubscription(Account acct, SubscriptionPlan plan, String source_token) throws Exception{
+	public void changeSubscription(Account acct, SubscriptionPlan plan) throws Exception{
 		Plan plan_tier = null;
 		if("FREE".equals(plan.toString())){
 			//check if account has a subscription, if so then unsubscribe and remove subscription token
@@ -66,19 +66,11 @@ public class SubscriptionService {
 		}
 		else if("PRO".equals(plan.toString())){
 			//STAGING
-    		//plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+    		plan_tier = Plan.retrieve("plan_GKyHict9ublpsa");
     		//PRODUCTION
-			plan_tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
+			//plan_tier = Plan.retrieve("plan_GJrQYSjKUHpRB1");
 
-			Customer customer = null;
-			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
-				customer = stripe_client.createCustomer(source_token, acct.getUsername());
-	        	acct.setCustomerToken(customer.getId());
-			}
-			else{
-				customer = stripe_client.getCustomer(acct.getCustomerToken());
-			}
-			
+			Customer customer = stripe_client.getCustomer(acct.getCustomerToken());
 	    	Subscription subscription = null;
 	    	
 	    	if(acct.getSubscriptionToken() == null || acct.getSubscriptionToken().isEmpty()){
@@ -197,7 +189,7 @@ public class SubscriptionService {
     		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());        	
         	//check for product
         	Plan plan = subscription.getPlan();
-        	if(plan.getId().equals("plan_Dr1tjSakC3uGXq")){
+        	if(plan.getId().equals("plan_GJrQYSjKUHpRB1")){
         		account_subscription = SubscriptionPlan.PRO;
         	}
         	else{

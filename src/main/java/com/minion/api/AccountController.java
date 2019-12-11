@@ -39,6 +39,7 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.SubscriptionService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 
@@ -59,6 +60,9 @@ public class AccountController {
     @Autowired
     private DomainService domain_service;
 
+    @Autowired
+    private SubscriptionService subscription_service;
+    
     private StripeClient stripeClient;
 
     @Autowired
@@ -78,8 +82,9 @@ public class AccountController {
      */
     @CrossOrigin(origins = "138.91.154.99, 54.183.64.135, 54.67.77.38, 54.67.15.170, 54.183.204.205, 54.173.21.107, 54.85.173.28, 35.167.74.121, 35.160.3.103, 35.166.202.113, 52.14.40.253, 52.14.38.78, 52.14.17.114, 52.71.209.77, 34.195.142.251, 52.200.94.42", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create( @RequestParam(value="user_id", required=true) String user_id,
-    										@RequestParam(value="username", required=true) String username)
+    public ResponseEntity<Account> create( 
+    		@RequestParam(value="user_id", required=true) String user_id,
+    		@RequestParam(value="username", required=true) String username)
     												throws Exception{
     	Account acct = account_service.findByUsername(username);
 
@@ -91,7 +96,7 @@ public class AccountController {
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
-    	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
+    	
     	acct = new Account(user_id, username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());

@@ -28,7 +28,8 @@ public class Account {
 	private String last_domain_url;
 	private List<String> onboarded_steps;
 	private String api_token;
-
+	private String name;
+	
 	@Relationship(type = "HAS_DOMAIN")
 	private Set<Domain> domains = new HashSet<>();
 
@@ -54,8 +55,26 @@ public class Account {
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
+		setName("");
 	}
 
+	/**
+	 *
+	 * @param username
+	 * @param customer_token
+	 * @param subscription_token
+	 *
+	 * @pre users != null
+	 */
+	public Account(String user_id, String username, String customer_token, String subscription_token, String name){
+		setUserId(user_id);
+		setUsername(username);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setOnboardedSteps(new ArrayList<String>());
+		setName(name);
+	}
+	
 	public long getId(){
 		return this.id;
 	}
@@ -186,4 +205,12 @@ public class Account {
   public void setUserId(String user_id) {
     this.user_id = user_id;
 	}
+
+public String getName() {
+	return name;
+}
+
+public void setName(String name) {
+	this.name = name;
+}
 }

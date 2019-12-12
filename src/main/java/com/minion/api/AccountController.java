@@ -39,7 +39,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.SubscriptionService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 
@@ -59,9 +58,6 @@ public class AccountController {
 
     @Autowired
     private DomainService domain_service;
-
-    @Autowired
-    private SubscriptionService subscription_service;
     
     private StripeClient stripeClient;
 

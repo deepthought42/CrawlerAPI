@@ -236,4 +236,8 @@ public class PageStateService {
 	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){
 		return page_state_repo.getElementPageStatesWithSameUrl(url, key);
 	}
+
+	public List<PageState> findPageStatesWithForm(String user_id, String url, String page_key) {
+		return page_state_repo.findPageStatesWithForm(user_id, url, page_key);
+	}
 }

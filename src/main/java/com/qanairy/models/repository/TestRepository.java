@@ -35,7 +35,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	public List<Test> findTestWithElementState(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 
 	@Query("MATCH (a:Account{user_id: {user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[r:HAS_PATH_OBJECT]->(p:PageState{key:{page_state_key}}) RETURN t")
-	public List<Test> findTestWithPageState(@Param("page_state_key") String key, @Param("url") String url, @Param("user_id") String user_id);
+	public List<Test> findTestWithPageState(@Param("page_state_key") String page_state_key, @Param("url") String url, @Param("user_id") String user_id);
 
 	@Query("MATCH (:Test{key:{key}})-[:HAS_GROUP]-(g) RETURN g")
 	public Set<Group> getGroups(@Param("key") String key);

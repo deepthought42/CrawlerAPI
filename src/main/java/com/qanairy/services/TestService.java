@@ -248,8 +248,8 @@ public class TestService {
      return test_repo.findByKey(key, url, user_id);
    }
 
-   public List<Test> findTestsWithPageState(String key, String url, String user_id) {
-     return test_repo.findTestWithPageState(key, url, user_id);
+   public List<Test> findTestsWithPageState(String page_state_key, String url, String user_id) {
+     return test_repo.findTestWithPageState(page_state_key, url, user_id);
    }
 
    /**

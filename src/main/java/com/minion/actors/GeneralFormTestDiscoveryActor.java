@@ -15,6 +15,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -31,6 +32,9 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
+import com.qanairy.services.AccountService;
+import com.qanairy.services.PageStateService;
+import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -57,6 +61,15 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private TestService test_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private ElementRuleExtractor extractor;
 	
 	//subscribe to cluster changes
@@ -78,6 +91,28 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				.match(FormDiscoveryMessage.class, message -> {
 					int cnt = 0;
 				  	Browser browser = null;
+				  	
+				  	//find page states that contains form
+				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), message.getDomain().getUrl(), message.getForm().getKey());
+				  	//find tests that contain page state
+				  	List<Test> tests = new ArrayList<>();
+				  	for(PageState page: page_states) {
+				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), message.getDomain().getUrl(), message.getAccountId()));
+				  	}
+				  	
+				  	int last_path_size = Integer.MAX_VALUE;
+				  	Test test_with_shortest_path = null;
+				  	//find shortest path out of all tests
+				  	for(Test test : tests) {
+				  		int path_size = test.getPathKeys().size();
+				  		
+				  		if(path_size < last_path_size) {
+				  			last_path_size = path_size;
+				  			test_with_shortest_path = test;
+				  		}
+				  	}
+				  	
+				  	List<PathObject> path_objects = test_service.loadPathObjects(test_with_shortest_path.getPathKeys());
 				  	
 				  	while(browser == null && cnt < 10000){
 				  		try{

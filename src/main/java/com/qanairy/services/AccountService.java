@@ -80,8 +80,4 @@ public class AccountService {
 	public Optional<Account> findById(long id) {
 		return account_repo.findById(id);
 	}
-
-	public void addTest(Test test_record, String account_key) {
-		account_repo.addTest(test_record.getKey(), account_key);
-	}
 }

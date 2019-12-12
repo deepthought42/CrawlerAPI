@@ -123,7 +123,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(test_record == null) {
 						test_record = test_service.save(test, test_msg.getDomain().getUrl(), test_msg.getAccount());
-						account_service.addTest(test_record, test_msg.getAccount());
+						domain_service.addTest(test_msg.getDomain().getUrl(), test, test_msg.getAccount());
 					}
 					
 					if(domain == null){

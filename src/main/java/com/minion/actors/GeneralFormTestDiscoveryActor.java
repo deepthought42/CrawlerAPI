@@ -15,7 +15,6 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -32,7 +31,6 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
-import com.qanairy.services.AccountService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
@@ -59,9 +57,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
-	
-	@Autowired
-	private AccountService account_service;
 	
 	@Autowired
 	private TestService test_service;

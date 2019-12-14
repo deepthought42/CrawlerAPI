@@ -1,8 +1,6 @@
 package com.qanairy.services;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
@@ -61,39 +59,8 @@ public class ElementStateService {
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
-			for(Rule rule : element.getRules()){
-				element_record.addRule(rule_service.save(rule));
-			}
 
 			element_record = element_repo.save(element_record);
-			
-			//get rules that exit in element but not in element_record
-			List<Rule> rule_removal_list = new ArrayList<>();
-			Set<Rule> element_record_rules = element_repo.getRules(element_record.getKey());
-			for(Rule rule : element_record_rules ){
-				boolean exists = false;
-				
-				log.warn("checking if rule should be removed :: " + rule.getType());
-				for(Rule elem_rule : element.getRules()){
-					log.warn("element rule type :: "+elem_rule.getType());
-					log.warn("rule type :: " + rule.getType());
-					if(elem_rule.getType() == rule.getType()){
-						exists = true;
-						break;
-					}
-				}
-				
-				if(!exists){
-					log.warn("adding rule to removal list  ::  "+rule);
-					rule_removal_list.add(rule);
-				}
-			}
-			
-			//remove removed rules
-			for(Rule rule : rule_removal_list){
-				log.warn("removing rule :: " + rule);
-				element_repo.removeRule(element.getKey(), rule.generateKey());
-			}
 		}
 		return element_record;
 	}
@@ -106,8 +73,8 @@ public class ElementStateService {
 		return element_repo.findByTextAndName(text, name);
 	}
 
-	public void removeElementState(ElementState element, String rule_key){
-		element_repo.removeRule(element.getKey(), rule_key);
+	public void removeRule(String user_id, String element_key, String rule_key){
+		element_repo.removeRule(user_id, element_key, rule_key);
 	}
 	
 	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(ElementState element){
@@ -122,7 +89,16 @@ public class ElementStateService {
 		return element_repo.findById(id).get();
 	}
 
-	public Set<Rule> getRules(String element_key) {
-		return element_repo.getRules(element_key);
+	public Set<Rule> getRules(String user_id, String element_key) {
+		return element_repo.getRules(user_id, element_key);
+	}
+
+	public void addRuleToFormElement(String user_id, String element_key, Rule rule) {
+		//Check that rule doesn't already exist
+		Rule rule_record = element_repo.getElementRule(user_id, element_key, rule.getKey());
+		if(rule_record == null) {
+			element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
+		}
+		log.warn("rule record found :: "+rule_record.getKey());
 	}
 }

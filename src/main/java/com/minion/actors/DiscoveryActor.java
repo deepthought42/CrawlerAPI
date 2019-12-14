@@ -209,6 +209,12 @@ public class DiscoveryActor extends AbstractActor{
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 							}
 						}
+
+						if(form_discoverer == null){
+							form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						}
+						form_discoverer.tell(message, getSelf() );
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
@@ -254,7 +260,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
-							//if(!explored_pages.containsKey(test.getResult().getUrl())) {
+							if(!explored_pages.containsKey(test.getResult().getUrl())) {
 								explored_pages.put(test.getResult().getUrl(), test.getResult());
 								if(url_browser_actor == null){
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -262,7 +268,7 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
-							//}
+							}
 						}
 						else {
 							List<String> final_key_list = new ArrayList<>(test.getPathKeys());

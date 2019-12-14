@@ -128,12 +128,4 @@ public class TestRecord implements Persistable {
 	public void setPathKeys(List<String> path_keys) {
 		this.path_keys = path_keys;
 	}
-	
-	public long getId() {
-		return this.id;
-	}
-	
-	public void setId(long id) {
-		this.id = id;
-	}
 }

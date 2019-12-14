@@ -1031,12 +1031,11 @@ public class BrowserService {
 	public List<Form> extractAllForms(PageState page, Browser browser) throws Exception{
 		List<Form> form_list = new ArrayList<Form>();
 		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
-		TimingUtils.pauseThread(10000);
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		log.warn("form elements found using xpath //form    :: "+form_elements.size());
 		
 		List<WebElement> elements = browser.getDriver().findElements(By.xpath("//*"));
-		log.warn("elements found using xpath //form    :: "+elements.size());
+		log.warn("elements found using xpath //    :: "+elements.size());
 		
 		boolean contains_form = browser.getDriver().getPageSource().contains("form");
 		log.warn("source contains form ??     :    "+contains_form);

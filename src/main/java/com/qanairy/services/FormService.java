@@ -70,14 +70,14 @@ public class FormService {
 		return form_record;
 	}
 
-	public Form findById(long form_id) {
+	public Form findById(String user_id, long form_id) {
 		Optional<Form> opt_form = form_repo.findById(form_id);
 		
 		if(opt_form.isPresent()){
 			Form form = opt_form.get();
 			form.setFormFields(form_repo.getElementStates(form.getKey()));
 			for(ElementState element : form.getFormFields()){
-				element.setRules(element_service.getRules(element.getKey()));
+				element.setRules(element_service.getRules(user_id, element.getKey()));
 			}
 			form.setFormTag(form_repo.getFormElement(form.getKey()));
 			form.setSubmitField(form_repo.getSubmitElement(form.getKey()));

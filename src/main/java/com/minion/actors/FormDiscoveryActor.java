@@ -85,7 +85,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 					  		log.warning("FORM  Navigating to url    ::        "+url);
 					  		browser.navigateTo(url);
-					  		log.warning("total path objects    ::   "+message.getPathObjects());
+					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 
 					  		PageState page_state = null;

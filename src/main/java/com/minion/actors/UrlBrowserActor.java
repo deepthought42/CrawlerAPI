@@ -123,7 +123,7 @@ public class UrlBrowserActor extends AbstractActor {
 							log.warn("redirect urls :: "+redirect.getUrls().size());
 							log.warn("redirect start url     ::  "+redirect.getStartUrl());
 						  	
-						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
+						  	if(redirect != null && ((redirect.getUrls().size() > 0 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 								log.warn("redirect added to path objects list");
 						  		path_keys.add(redirect.getKey());
 								path_objects.add(redirect);
@@ -152,12 +152,6 @@ public class UrlBrowserActor extends AbstractActor {
 						}
 					}while(page_state == null);
 					
-					/*
-					log.warn("loading animation detection complete");
-					List<PageState> page_states = browser_service.buildPageStates(url, browser_type, host, path_objects, path_keys);
-					log.warn("Done building page states ");
-					//send test to discovery actor
-					*/
 					path_keys.add(page_state.getKey());
 					path_objects.add(page_state);
 
@@ -165,7 +159,6 @@ public class UrlBrowserActor extends AbstractActor {
 					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccount());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
 					message.getDiscoveryActor().tell(test_message, getSelf());
-					
 					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());

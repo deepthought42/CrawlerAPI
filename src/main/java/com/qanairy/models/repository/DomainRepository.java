@@ -33,11 +33,11 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) RETURN d LIMIT 1")
 	public Domain findByUrl(@Param("url") String url, @Param("user_id") String user_id);
 
-	@Query("MATCH (p:PageState) OPTIONAL MATCH a=(p)-->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
+	@Query("MATCH (p:PageState) OPTIONAL MATCH a=(p)-->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN e,b")
-	public Set<ElementState> getElementStates(@Param("domain_host") String host);
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]-(d:Domain{host:{domain_host}}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
+	public Set<ElementState> getElementStates(@Param("domain_host") String host, @Param("user_id") String user_id);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
 	public Set<Action> getActions(@Param("domain_host") String host);

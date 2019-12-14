@@ -3,6 +3,8 @@ package com.minion.api;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -83,7 +85,19 @@ public class ElementController {
     	}
     	
     	Rule rule = rule_service.findRule(type, value);
+    	validateRule(rule);
+
+		Rule rule_record = rule_service.save(rule);
     	
+		log.warn("element key :: "+element_key);
+		log.warn("rule record key :: " + rule_record.getKey());
+		
+    	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
+    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
+    }
+    
+    private void validateRule(Rule rule) {
+
     	Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
@@ -147,17 +161,9 @@ public class ElementController {
 				throw new MinCannotBeGreaterThanMaxException();
 			}
 		}
+	}
 
-		Rule rule_record = rule_service.save(rule);
-    	
-		log.warn("element key :: "+element_key);
-		log.warn("rule record key :: " + rule_record.getKey());
-		
-    	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
-    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
-    }
-    
-    /**
+	/**
      * Adds {@link Rule} to {@link Element element} with a given id
      *
      * @param id element id
@@ -214,12 +220,54 @@ public class ElementController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Rule min_value_rule = null;
+    	validateRules(element_state.getRules());
+    	//check that min/max length rules are valid
+    	log.warn("element update state experienced in element controller");
+      element_state = element_service.save(account.getUserId(), element_state);
+      return element_service.findByKey(account.getUserId(), element_state.getKey());
+    }
+    
+    /**
+     * Adds {@link Rule} to {@link Element element} with a given id
+     *
+     * @param id element id
+     * @return {@link Element element}
+     * @throws UnknownAccountException 
+     */
+    @ApiOperation(value = "updates form element", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rule')")
+    @RequestMapping(path="/forms/{form_key}/elements", method = RequestMethod.PUT)
+    public ElementState updateFormElement(
+    		HttpServletRequest request,
+    		@PathVariable(value="form_key", required=true) String form_key,
+    		@RequestBody ElementState element_state
+		) throws UnknownAccountException
+    {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(account.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	validateRules(element_state.getRules());
+    	//check that min/max length rules are valid
+    	log.warn("element update state experienced in element controller");
+      element_state = element_service.saveFormElement(account.getUserId(), element_state);
+      return element_service.findFormElementByKey(account.getUserId(), element_state.getKey());
+    }
+
+	private void validateRules(Set<Rule> rules) {
+		Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
     	Rule max_length_rule = null;
     	Map<String, Integer> rule_duplicate_map = new HashMap<>();
-    	for(Rule rule : element_state.getRules()){
+    	for(Rule rule : rules){
     		if(!rule_duplicate_map.containsKey(rule.getKey())){
     			rule_duplicate_map.put(rule.getKey(), 0);
     		}
@@ -279,11 +327,7 @@ public class ElementController {
 				throw new MinCannotBeGreaterThanMaxException();
 			}
 		}
-
-    	//check that min/max length rules are valid
-    	log.warn("element update state experienced in element controller");
-      return element_service.save(account.getUserId(), element_state);
-    }
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

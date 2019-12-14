@@ -9,7 +9,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
 
 public interface ElementStateRepository extends Neo4jRepository<ElementState, Long> {
-	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(e:ElementState{key:{key}}) OPTIONAL MATCH (e)-->(x) RETURN e,x")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(e:ElementState{key:{key}}) OPTIONAL MATCH z=(e)-->(x) RETURN z")
 	public ElementState findByKey(@Param("user_id") String user_id, @Param("key") String key);
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH (f)-[]->(e:ElementState{key:{key}}) OPTIONAL MATCH z=(e)-->(x) RETURN z")

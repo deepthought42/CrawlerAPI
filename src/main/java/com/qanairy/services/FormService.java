@@ -47,12 +47,12 @@ public class FormService {
 			
 			List<ElementState> db_records = new ArrayList<ElementState>(form.getFormFields().size());
 			for(ElementState element : form.getFormFields()){
-				db_records.add(element_service.save(element));
+				db_records.add(element_service.saveFormElement(user_id, element));
 			}
 			
 			form.setFormFields(db_records);
-			form.setSubmitField(element_service.save(form.getSubmitField()));
-			form.setFormTag(element_service.save(form.getFormTag()));
+			form.setSubmitField(element_service.saveFormElement(user_id, form.getSubmitField()));
+			form.setFormTag(element_service.saveFormElement(user_id, form.getFormTag()));
 			
 			
 			log.warn("form key   ::  "+ form.getKey());

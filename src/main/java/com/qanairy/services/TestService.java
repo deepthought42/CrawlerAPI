@@ -146,7 +146,7 @@ public class TestService {
 				if(path_obj instanceof PageState){
 					path_objects.add(page_state_service.save(user_id, url, (PageState)path_obj));
 				}
-				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
+				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save(user_id, (ElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
@@ -297,14 +297,14 @@ public class TestService {
     * 
     * @return
     */
-   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists) {
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id) {
 	   assert path_keys != null;
 	   assert !path_keys.isEmpty();
 	   assert test_path_object_lists != null;
 	   assert !test_path_object_lists.isEmpty();
    
 	   //load path objects using path keys
-	   List<PathObject> path_objects = loadPathObjects(path_keys);
+	   List<PathObject> path_objects = loadPathObjects(user_id, path_keys);
 	   
 	   //find all tests with page state at index
 	   for(List<PathObject> test_path_objects : test_path_object_lists) {
@@ -349,7 +349,7 @@ public class TestService {
 	   return false;
    }
 
-	public List<PathObject> loadPathObjects(List<String> path_keys) {
+	public List<PathObject> loadPathObjects(String user_id, List<String> path_keys) {
 		//load path objects using path keys
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {
@@ -357,7 +357,7 @@ public class TestService {
 				path_objects.add(page_state_service.findByKey(key));
 			}
 			else if(key.contains("elementstate")) {
-				path_objects.add(element_state_service.findByKey(key));
+				path_objects.add(element_state_service.findByKey(user_id, key));
 			}
 			else if(key.contains("action")) {
 				path_objects.add(action_service.findByKey(key));

@@ -107,7 +107,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				  		}
 				  	}
 				  	
-				  	List<PathObject> path_objects = test_service.loadPathObjects(test_with_shortest_path.getPathKeys());
+				  	List<PathObject> path_objects = test_service.loadPathObjects(message.getAccountId(), test_with_shortest_path.getPathKeys());
 				  	
 				  	while(browser == null && cnt < 10000){
 				  		try{

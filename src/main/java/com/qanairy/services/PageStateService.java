@@ -139,7 +139,7 @@ public class PageStateService {
 							do{
 								err = false;
 								try{
-									element_records.add(element_state_service.save(element));
+									element_records.add(element_state_service.save(user_id, element));
 								}catch(Exception e){
 									log.warn("error saving element to new page state :  "+e.getMessage());
 									//e.printStackTrace();
@@ -162,7 +162,7 @@ public class PageStateService {
 								List<ElementState> form_element_records = new ArrayList<>();
 								for(ElementState element : page_state.getElements()){
 									log.warn("saving form element to page state");
-									ElementState element_record = element_state_service.save(element);
+									ElementState element_record = element_state_service.saveFormElement(user_id, element);
 									
 									form_element_records.add(element_record);
 								}

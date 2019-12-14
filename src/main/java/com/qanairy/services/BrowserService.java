@@ -497,59 +497,6 @@ public class BrowserService {
 		}
 		return elements;
 	}
-
-	/**
-	 * Retreives all elements on a given page that are visible. In this instance we take
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 * @throws IOException
-	 * @throws GridException
-	 *
-	 * @pre visible_element_map != null
-	 */
-	public List<ElementState> getVisibleElements(Browser browser, List<ElementState> elements)
-															 throws WebDriverException, GridException, IOException{
-		assert elements != null;
-		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
-
-		long start_time = System.currentTimeMillis();
-		List<ElementState> visible_elements = new ArrayList<>();
-		for(ElementState element_state : elements){
-			WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-			Point location = element.getLocation();
-			Dimension element_size = element.getSize();
-			
-			if(element.isDisplayed() && hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element.getLocation())){
-				Map<String, String> css_props = Browser.loadCssProperties(element);
-				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "", ElementClassification.CHILD);
-				
-				ElementState element_state_record = element_service.findByKey(new_element_state.getKey());
-				if(element_state_record == null) {
-					try {
-						BufferedImage element_screenshot = browser.getElementScreenshot(element);
-						String checksum = PageState.getFileChecksum(element_screenshot);
-						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
-						new_element_state.setScreenshot(screenshot_url);
-						new_element_state.setScreenshotChecksum(checksum);
-					}catch(Exception e) {
-						continue;
-					}
-				}
-				else {
-					new_element_state = element_state_record;
-				}
-				
-				visible_elements.add(new_element_state);
-			}
-		}
-
-		log.warn("total time get all visible elements :: " + (System.currentTimeMillis() - start_time));
-		return visible_elements;
-	}
 	
 	private static boolean isElementPartOfForm(Element element) {
 		Element new_element = element;
@@ -1057,7 +1004,7 @@ public class BrowserService {
 			BufferedImage img = browser.getElementScreenshot(form_elem);
 			String checksum = PageState.getFileChecksum(img);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), "", checksum, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), ElementClassification.ANCESTOR);
-			form_tag = element_service.save(form_tag);
+			form_tag = element_service.saveFormElement(user_id, form_tag);
 			String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");
 			form_tag.setScreenshot(screenshot_url);
 			form_tag.setIsLeaf(getChildElements(form_elem).isEmpty());
@@ -1066,7 +1013,7 @@ public class BrowserService {
 			weights[0] = 0.3;
 
 			Set<Form> forms = domain_service.getForms(host);
-			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(form_elem, browser),
+			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
@@ -1097,7 +1044,7 @@ public class BrowserService {
 				checksum = PageState.getFileChecksum(img);
 				
 				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), checksum );
-				input_tag = element_service.save(input_tag);
+				input_tag = element_service.saveFormElement(user_id, input_tag);
 				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
 				input_tag.setScreenshot(screenshot);
 				img.flush();
@@ -1141,7 +1088,7 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
-	private ElementState findFormSubmitButton(WebElement form_elem, Browser browser) throws Exception {
+	private ElementState findFormSubmitButton(String user_id, WebElement form_elem, Browser browser) throws Exception {
 		WebElement submit_element = null;
 
 		boolean submit_elem_found = false;
@@ -1170,7 +1117,7 @@ public class BrowserService {
 		String checksum = PageState.getFileChecksum(img);
 		
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), "", submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), checksum);
-		elem = element_service.save(elem);
+		elem = element_service.saveFormElement(user_id, elem);
 		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
 		elem.setScreenshot(screenshot_url);
 		elem.setIsLeaf(getChildElements(submit_element).isEmpty());

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.minion.api.exception.RuleValueRequiredException;
+import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
@@ -67,7 +68,8 @@ public class ElementController {
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
 			@RequestParam(value="type", required=true) String type,
-			@RequestParam(value="value", required=false) String value) throws RuleValueRequiredException, UnknownAccountException
+			@RequestParam(value="value", required=false) String value
+		) throws RuleValueRequiredException, UnknownAccountException, ExistingRuleException
     {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -152,7 +154,7 @@ public class ElementController {
 		log.warn("rule record key :: " + rule_record.getKey());
 		
     	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
-    	return element_service.findByKey(element_key);
+    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
     }
     
     /**
@@ -183,7 +185,7 @@ public class ElementController {
     	}
     	
     	element_service.removeRule(acct.getUserId(), element_key, rule_key);
-    	return element_service.findByKey(element_key);
+    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
     }
 
     /**
@@ -191,14 +193,27 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link Element element}
+     * @throws UnknownAccountException 
      */
     @ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     public ElementState update(
     		HttpServletRequest request,
-    		@RequestBody ElementState element_state)
+    		@RequestBody ElementState element_state
+		) throws UnknownAccountException
     {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(account.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
     	Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
@@ -267,7 +282,7 @@ public class ElementController {
 
     	//check that min/max length rules are valid
     	log.warn("element update state experienced in element controller");
-      return element_service.save(element_state);
+      return element_service.save(account.getUserId(), element_state);
     }
 }
 

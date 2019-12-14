@@ -224,9 +224,9 @@ public class TestCreationActor extends AbstractActor  {
     		else {
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
-    			ElementState element = createElementState(element_json.getString("xpath"), browser);
+    			ElementState element = createElementState(user_id, element_json.getString("xpath"), browser);
 
-    			ElementState page_elem_record = page_element_service.findByKey(element.getKey());
+    			ElementState page_elem_record = page_element_service.findByKey(user_id, element.getKey());
     			if(page_elem_record == null){
 					path_objects.add(element);
 				}
@@ -277,7 +277,7 @@ public class TestCreationActor extends AbstractActor  {
 		return action;
 	}
 
-	private ElementState createElementState(String temp_xpath, Browser browser) throws Exception {
+	private ElementState createElementState(String user_id, String temp_xpath, Browser browser) throws Exception {
 		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
@@ -289,7 +289,7 @@ public class TestCreationActor extends AbstractActor  {
 		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum);
 		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, browser.getBrowserName()+"-element");
 		elem.setScreenshot(screenshot_url);
-		elem = page_element_service.save(elem);
+		elem = page_element_service.save(user_id, elem);
 		return elem;
 	}
 

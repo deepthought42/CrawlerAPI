@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
@@ -35,9 +36,46 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element) throws ClientException{
+	public ElementState save(String user_id, ElementState element) throws ClientException{
 		assert element != null;
-		ElementState element_record = element_repo.findByKey(element.getKey());
+		ElementState element_record = element_repo.findByKey(user_id, element.getKey());
+		if(element_record == null){
+			//iterate over attributes
+			Set<Attribute> new_attributes = new HashSet<Attribute>();
+			for(Attribute attribute : element.getAttributes()){
+				new_attributes.add(attribute_service.save(attribute));
+			}
+			element.setAttributes(new_attributes);
+			
+			Set<Rule> rule_records = new HashSet<>();
+			for(Rule rule : element.getRules()){
+				log.warn("adding rule to rule records :: " + rule.getType());
+				rule_records.add(rule_service.save(rule));
+			}
+			element.setRules(rule_records);
+
+			element_record = element_repo.save(element);
+		}
+		else{
+			element_record.setScreenshot(element.getScreenshot());
+			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
+			element_record.setXpath(element.getXpath());
+
+			element_record = element_repo.save(element_record);
+		}
+		return element_record;
+	}
+	
+	/**
+	 * 
+	 * @param element
+	 * @return
+	 * 
+	 * @pre element != null
+	 */
+	public ElementState saveFormElement(String user_id, ElementState element) throws ClientException{
+		assert element != null;
+		ElementState element_record = element_repo.findFormElementByKey(user_id, element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -65,10 +103,14 @@ public class ElementStateService {
 		return element_record;
 	}
 
-	public ElementState findByKey(String key){
-		return element_repo.findByKey(key);
+	public ElementState findFormElementByKey(String user_id, String key){
+		return element_repo.findFormElementByKey(user_id, key);
 	}
 
+	public ElementState findByKey(String user_id, String key){
+		return element_repo.findByKey(user_id, key);
+	}
+	
 	public ElementState findByTextAndName(String text, String name){
 		return element_repo.findByTextAndName(text, name);
 	}
@@ -93,12 +135,15 @@ public class ElementStateService {
 		return element_repo.getRules(user_id, element_key);
 	}
 
-	public void addRuleToFormElement(String user_id, String element_key, Rule rule) {
+	public Set<Rule> addRuleToFormElement(String user_id, String element_key, Rule rule) {
 		//Check that rule doesn't already exist
 		Rule rule_record = element_repo.getElementRule(user_id, element_key, rule.getKey());
 		if(rule_record == null) {
 			rule_record = element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
+			return element_repo.getRules(user_id, element_key);
 		}
-		log.warn("rule record found :: "+rule_record.getKey());
+		else {
+			throw new ExistingRuleException(rule.getType().toString());
+		}
 	}
 }

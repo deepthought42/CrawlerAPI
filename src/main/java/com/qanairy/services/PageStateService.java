@@ -48,7 +48,7 @@ public class PageStateService {
 	 * 
 	 * @pre page_state != null
 	 */
-	public PageState save(PageState page_state) {
+	public PageState save(String user_id, String url, PageState page_state) {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
@@ -157,7 +157,7 @@ public class PageStateService {
 						
 						Set<Form> form_records = new HashSet<>();
 						for(Form form : page_state.getForms()){
-							Form form_record = form_repo.findByKey(form.getKey());
+							Form form_record = form_repo.findByKey(user_id, url, form.getKey());
 							if(form_record == null){
 								List<ElementState> form_element_records = new ArrayList<>();
 								for(ElementState element : page_state.getElements()){

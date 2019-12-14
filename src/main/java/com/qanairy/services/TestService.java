@@ -144,7 +144,7 @@ public class TestService {
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			for(PathObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
-					path_objects.add(page_state_service.save((PageState)path_obj));
+					path_objects.add(page_state_service.save(user_id, url, (PageState)path_obj));
 				}
 				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
@@ -163,7 +163,7 @@ public class TestService {
 			}
 			test.setPathObjects(path_objects);
 			if(test.getResult() != null){
-				test.setResult(page_state_service.save(test.getResult()));			}
+				test.setResult(page_state_service.save(user_id, url, test.getResult()));			}
 			
 			Set<Group> groups = new HashSet<>();
 			for(Group group : test.getGroups()){
@@ -179,7 +179,7 @@ public class TestService {
 			record.setPathObjects(path_objects);
 			
 			if(test.getResult() == null){
-				PageState result = page_state_service.save(test.getResult());
+				PageState result = page_state_service.save(user_id, url, test.getResult());
 				log.warn("result of saving result :: " + result);
 				record.setResult(result);
 			}

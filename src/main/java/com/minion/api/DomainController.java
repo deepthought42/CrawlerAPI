@@ -516,7 +516,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Form form_record = form_service.findById(acct.getUserId(), form_id);
+		Form form_record = form_service.findById(acct.getUserId(), domain_id, form_id);
 		
 		if(form_record == null){
 			throw new FormNotFoundException();

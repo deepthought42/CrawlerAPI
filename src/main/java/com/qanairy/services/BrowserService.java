@@ -1028,7 +1028,7 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Form> extractAllForms(PageState page, Browser browser) throws Exception{
+	public List<Form> extractAllForms(String user_id, String url, PageState page, Browser browser) throws Exception{
 		List<Form> form_list = new ArrayList<Form>();
 		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
@@ -1126,7 +1126,7 @@ public class BrowserService {
 			form.setName("Form #1");
 			log.info("name :: "+form.getName());
 
-			Form form_record = form_service.findByKey(form.getKey());
+			Form form_record = form_service.findByKey(user_id, url, form.getKey());
 			if(form_record != null) {
 				continue;
 			}

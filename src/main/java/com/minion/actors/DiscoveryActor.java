@@ -35,8 +35,8 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
+import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
-import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -316,19 +316,19 @@ public class DiscoveryActor extends AbstractActor{
 				.match(AccountRequest.class, account_request_msg -> {
 					getSender().tell(this.getAccount(), getSelf());
 				})
-				.match(FormMessage.class, form_msg -> {
+				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
 					try {
-						SegmentAnalyticsHelper.formDiscovered(form_msg.getAccountKey(), form.getKey());
+						SegmentAnalyticsHelper.formDiscovered(form_msg.getUserId(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					
 					try {
-					    form = form_service.save(form);
+					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), form);
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getAccountKey(), e.getMessage());
+							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -338,11 +338,11 @@ public class DiscoveryActor extends AbstractActor{
 
 					page_state_record.addForm(form);
 					try {
-						page_state_service.save(page_state_record);
+						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);
 						
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendPageStateError(form_msg.getAccountKey(), e.getMessage());
+							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}

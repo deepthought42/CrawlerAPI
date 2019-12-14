@@ -97,7 +97,7 @@ public class ElementStateService {
 		//Check that rule doesn't already exist
 		Rule rule_record = element_repo.getElementRule(user_id, element_key, rule.getKey());
 		if(rule_record == null) {
-			element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
+			rule_record = element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
 		}
 		log.warn("rule record found :: "+rule_record.getKey());
 	}

@@ -82,7 +82,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
+	public PageState crawlPath(String user_id, String domain_url, List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
 								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
 										throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
 		assert browser != null;
@@ -156,7 +156,7 @@ public class Crawler {
 
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-		return browser_service.buildPage(browser);
+		return browser_service.buildPage(user_id, domain_url, browser);
 	}
 
 	/**
@@ -590,7 +590,7 @@ public class Crawler {
 	 * @param host
 	 * @return
 	 */
-	public PageState performPathExploratoryCrawl(String browser_name, ExploratoryPath path, String host) {
+	public PageState performPathExploratoryCrawl(String user_id, String domain_url, String browser_name, ExploratoryPath path, String host) {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -615,7 +615,7 @@ public class Crawler {
 				}
 						
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPage(browser);
+				result_page = browser_service.buildPage(user_id, domain_url, browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -660,7 +660,7 @@ public class Crawler {
 	 * @return
 	 * @throws Exception 
 	 */
-	public PageState performPathExploratoryCrawl(String browser_name, PathMessage path, String host) throws Exception {
+	public PageState performPathExploratoryCrawl(String user_id, String url, String browser_name, PathMessage path, String host) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -696,7 +696,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPage(browser);
+				result_page = browser_service.buildPage(user_id, url, browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}

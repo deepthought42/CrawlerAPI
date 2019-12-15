@@ -334,7 +334,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 
-					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getDomain().getUrl(), form_msg.getPage().getKey());
 
 					page_state_record.addForm(form);
 					try {

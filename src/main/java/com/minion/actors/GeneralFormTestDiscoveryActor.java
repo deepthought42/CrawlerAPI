@@ -107,7 +107,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				  		}
 				  	}
 				  	
-				  	List<PathObject> path_objects = test_service.loadPathObjects(message.getAccountId(), test_with_shortest_path.getPathKeys());
+				  	List<PathObject> path_objects = test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test_with_shortest_path.getPathKeys());
 				  	
 				  	while(browser == null && cnt < 10000){
 				  		try{
@@ -141,7 +141,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		do{
 						  			try{
 								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
-						  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
+						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain().getUrl(), path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
 						  				break;

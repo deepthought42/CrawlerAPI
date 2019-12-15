@@ -189,7 +189,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 							TimingUtils.pauseThread(1500);
-							PageState result = browser_service.buildPage(browser);
+							PageState result = browser_service.buildPage(message.getAccountId(), message.getDomain().getUrl(), browser);
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
@@ -241,7 +241,7 @@ public class ParentPathExplorer extends AbstractActor {
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
-						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
+						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test.getPathKeys()));
 					}
 
 					/*

@@ -109,7 +109,7 @@ public class TestService {
 		 do{
 			 try {
 				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.TEST);
-				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
+				 page = crawler.crawlPath(user_id, url, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getMessage());
 			 }
@@ -297,14 +297,14 @@ public class TestService {
     * 
     * @return
     */
-   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id) {
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id, String url) {
 	   assert path_keys != null;
 	   assert !path_keys.isEmpty();
 	   assert test_path_object_lists != null;
 	   assert !test_path_object_lists.isEmpty();
    
 	   //load path objects using path keys
-	   List<PathObject> path_objects = loadPathObjects(user_id, path_keys);
+	   List<PathObject> path_objects = loadPathObjects(user_id, url, path_keys);
 	   
 	   //find all tests with page state at index
 	   for(List<PathObject> test_path_objects : test_path_object_lists) {
@@ -349,12 +349,12 @@ public class TestService {
 	   return false;
    }
 
-	public List<PathObject> loadPathObjects(String user_id, List<String> path_keys) {
+	public List<PathObject> loadPathObjects(String user_id, String url, List<String> path_keys) {
 		//load path objects using path keys
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
-				path_objects.add(page_state_service.findByKey(key));
+				path_objects.add(page_state_service.findByKey(user_id, url, key));
 			}
 			else if(key.contains("elementstate")) {
 				path_objects.add(element_state_service.findByKey(user_id, key));

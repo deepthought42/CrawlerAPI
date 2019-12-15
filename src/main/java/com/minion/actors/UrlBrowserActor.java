@@ -138,7 +138,7 @@ public class UrlBrowserActor extends AbstractActor {
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page...");
-							page_state = browser_service.buildPage(browser);
+							page_state = browser_service.buildPage(message.getAccount(), message.getDomain().getUrl(), browser);
 
 							break;
 						}

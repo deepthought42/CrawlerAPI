@@ -86,7 +86,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		assert xpath != null;
 		assert name != null;
 		assert screenshot_url != null;
-		assert !screenshot_url.isEmpty();
 		
 		setType("ElementState");
 		setName(name);

@@ -90,7 +90,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 						String host = new URL(PathUtils.getFirstPage(message.getPathObjects()).getUrl()).getHost();
 						try {
-							result_page = crawler.performPathExploratoryCrawl(browser_name, message, host);
+							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), message.getDomain().getUrl(), browser_name, message, host);
 						} catch(DiscoveryStoppedException e) {
 							return;
 						}
@@ -114,7 +114,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 						for(Test test : matching_tests) {
-							path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
+							path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test.getPathKeys()));
 						}
 						
 						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);

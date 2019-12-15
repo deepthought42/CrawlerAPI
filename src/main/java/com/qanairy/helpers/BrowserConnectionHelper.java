@@ -48,8 +48,23 @@ public class BrowserConnectionHelper {
 		return new Browser(browser, hub_url);
 	}
 
-	
+	/**
+	 * Creates a {@linkplain WebDriver} connection
+	 * 
+	 * @param browser
+	 * @param environment
+	 * 
+	 * @return
+	 * 
+	 * @pre browser != null
+	 * @pre environment != null
+	 * 
+	 * @throws MalformedURLException
+	 */
 	public static Browser getConnection(BrowserType browser, BrowserEnvironment environment) throws MalformedURLException{
+		assert browser != null;
+		assert environment != null;
+		
 		URL hub_url = null;
 		if(environment.equals(BrowserEnvironment.TEST)){
 			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );

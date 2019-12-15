@@ -207,18 +207,18 @@ public class BrowserService {
 	 * @pre browser != null
 	 * @post page_state != null
 	 */
-	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
+	public PageState buildPage(String user_id, String url, Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
-		List<PageState> page_states = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+		List<PageState> page_states = page_state_service.findByScreenshotChecksum(user_id, url, screenshot_checksum);
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		
 		if(page_states.isEmpty()) {
-			page_states = page_state_service.findByScreenshotChecksum(full_page_screenshot_checksum);
+			page_states = page_state_service.findByScreenshotChecksum(user_id, url, full_page_screenshot_checksum);
 			
 		}
 		if(page_states.isEmpty()) {
@@ -276,7 +276,7 @@ public class BrowserService {
 		}
 		
 		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStates(page_states.get(0).getKey()));
+		page_state.setElements(page_state_service.getElementStates(user_id, url, page_states.get(0).getKey()));
 		log.warn("loaded page elements from db :: " +page_state.getElements().size());
 		return page_state;
 	}

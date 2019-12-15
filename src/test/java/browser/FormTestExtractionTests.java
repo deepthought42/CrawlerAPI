@@ -10,6 +10,7 @@ import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.NumericRestrictionRule;
 import com.qanairy.models.rules.NumericRule;
@@ -36,8 +37,8 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
@@ -76,8 +77,8 @@ public class FormTestExtractionTests {
 		try {
 			BrowserService browser_service = new BrowserService();
 
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
@@ -121,8 +122,8 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
@@ -167,8 +168,8 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			boolean readonly_restrict_rule = false;
@@ -202,8 +203,8 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
@@ -239,8 +240,8 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
-			PageState page = browser_service.buildPage(browser);
+			browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+			PageState page = browser_service.buildPage("", "", browser);
 			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			boolean max_value_rule = false;

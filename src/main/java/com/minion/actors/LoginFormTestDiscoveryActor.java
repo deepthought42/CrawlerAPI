@@ -175,7 +175,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addPathObject(submit_login);
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
-							PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
+							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain.getUrl(), domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 

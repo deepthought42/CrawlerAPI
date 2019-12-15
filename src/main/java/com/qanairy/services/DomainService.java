@@ -26,8 +26,8 @@ public class DomainService {
 	@Autowired
 	private DomainRepository domain_repo;
 	
-	public Set<TestUser> getTestUsers(Domain domain) {
-		return domain_repo.getTestUsers(domain.getKey());
+	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
+		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
 
 	public Domain findByHost(String host, String user_id) {
@@ -53,44 +53,48 @@ public class DomainService {
 		return domain_repo.save(domain);
 	}
 	
-	public int getTestCount(String url) {
-		return domain_repo.getTestCount(url);
+	public int getTestCount(String user_id, String url) {
+		return domain_repo.getTestCount(user_id, url);
 	}
 
 	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
 		return domain_repo.getMostRecentDiscoveryRecord(url, user_id);
 	}
 
-	public Set<DiscoveryRecord> getDiscoveryRecords(String url) {
-		return domain_repo.getDiscoveryRecords(url);
+	public Set<DiscoveryRecord> getDiscoveryRecords(String user_id, String url) {
+		return domain_repo.getDiscoveryRecords(user_id, url);
 	}
 
 	public Optional<Domain> findById(long domain_id) {
 		return domain_repo.findById(domain_id);
 	}
 
-	public Set<TestUser> getTestUsers(String key) {
-		return domain_repo.getTestUsers(key);
+	public Set<TestUser> getTestUsers(String user_id, String key) {
+		return domain_repo.getTestUsers(user_id, key);
 	}
 
-	public void deleteTestUser(String domain_key, String username) {
-		domain_repo.deleteTestUser(domain_key, username);
+	public void deleteTestUser(String user_id, String domain_key, String username) {
+		domain_repo.deleteTestUser(user_id, domain_key, username);
 	}
 
-	public Set<Form> getForms(String url) {
-		return domain_repo.getForms(url);
+	public Set<Form> getForms(String user_id, String url) {
+		return domain_repo.getForms(user_id, url);
+	}
+	
+	public int getFormCount(String user_id, String url) {
+		return domain_repo.getFormCount(user_id, url);
 	}
 
 	public Set<ElementState> getElementStates(String host, String user_id) {
 		return domain_repo.getElementStates(host, user_id);
 	}
 
-	public Set<Action> getActions(String host) {
-		return domain_repo.getActions(host);
+	public Set<Action> getActions(String user_id, String host) {
+		return domain_repo.getActions(user_id, host);
 	}
 
-	public Set<PageState> getPageStates(String host) {
-		return domain_repo.getPageStates(host);
+	public Set<PageState> getPageStates(String user_id, String host) {
+		return domain_repo.getPageStates(user_id, host);
 	}
 
 	public Domain findByKey(String key, String user_id) {
@@ -105,16 +109,16 @@ public class DomainService {
 		return domain_repo.getVerifiedTests(url, user_id);
 	}
 
-	public Set<Test> getTests(String url) {
-		return domain_repo.getTests(url);
+	public Set<Test> getTests(String user_id, String url) {
+		return domain_repo.getTests(user_id, url);
 	}
 	
-	public Set<TestRecord> getTestRecords(String url) {
-		return domain_repo.getTestRecords(url);
+	public Set<TestRecord> getTestRecords(String user_id, String url) {
+		return domain_repo.getTestRecords(user_id, url);
 	}
 
-	public Set<PageLoadAnimation> getAnimations(String url) {
-		return domain_repo.getAnimations(url);
+	public Set<PageLoadAnimation> getAnimations(String user_id, String url) {
+		return domain_repo.getAnimations(user_id, url);
 	}
 
 	/**

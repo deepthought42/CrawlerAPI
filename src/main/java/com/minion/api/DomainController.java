@@ -276,19 +276,19 @@ public class DomainController {
     public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
-    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
     	
-    	//String username = auth.getUsername(auth_access_token);
-    	
-    	//Account acct = account_service.findByUsername(username);
-    	//if(acct == null){
-    	//	throw new UnknownAccountException();
-    	//}
-    	//else if(acct.getSubscriptionToken() == null){
-    	//	throw new MissingSubscriptionException();
-    	//}
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+		
 
-		Set<PageState> page_states = domain_service.getPageStates(host);
+		Set<PageState> page_states = domain_service.getPageStates(acct.getUserId(), host);
 		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
     	
@@ -312,11 +312,11 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Set<PageState> page_state = domain_service.getPageStates(host);
+		Set<PageState> page_state = domain_service.getPageStates(acct.getUserId(), host);
 		Set<ElementState> page_elem = domain_service.getElementStates(host, acct.getUserId());
-		Set<Action> actions = domain_service.getActions(host);
-		Set<Redirect> redirects = redirect_service.getRedirects(host);
-		Set<PageLoadAnimation> animations = domain_service.getAnimations(host);
+		Set<Action> actions = domain_service.getActions(acct.getUserId(), host);
+		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), host);
+		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
 		//merge(page_state, page_elem, actions);
 
@@ -390,7 +390,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_service.findById(domain_id);
     	if(domain.isPresent()){
-    		return domain_service.getForms(domain.get().getHost());
+    		return domain_service.getForms(acct.getUserId(), domain.get().getHost());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -424,6 +424,14 @@ public class DomainController {
     											throws UnknownUserException, 
 														UnknownAccountException, 
 														MalformedURLException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
     	
 		log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
@@ -431,7 +439,7 @@ public class DomainController {
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
     		log.info("domain : "+domain);
-    		Set<TestUser> test_users = domain_service.getTestUsers(domain.getKey());
+    		Set<TestUser> test_users = domain_service.getTestUsers(account.getUserId(), domain.getKey());
     		
     		log.info("Test users : "+test_users.size());
     		for(TestUser user : test_users){
@@ -461,16 +469,35 @@ public class DomainController {
 	 * 
 	 * @param request
 	 * @param user_id
+	 * @throws UnknownAccountException 
 	 * @throws UnknownUserException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
     @RequestMapping(path="test_users/{user_id}", method = RequestMethod.DELETE)
     public @ResponseBody void delete(HttpServletRequest request,
     									@RequestParam(value="domain_key", required=true) String domain_key,
-    									@RequestParam(value="username", required=true) String username) {
-		domain_service.deleteTestUser(domain_key, username);
+    									@RequestParam(value="username", required=true) String username
+	) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+		domain_service.deleteTestUser(account.getUserId(), domain_key, username);
     }
     
+    /**
+     * 
+     * @param request
+     * @param domain_id
+     * @return
+     * @throws UnknownUserException
+     * @throws UnknownAccountException
+     * @throws MalformedURLException
+     */
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
@@ -478,10 +505,18 @@ public class DomainController {
     											throws UnknownUserException, 
 														UnknownAccountException, 
 														MalformedURLException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		Set<TestUser> users = domain_service.getTestUsers(domain.getKey());
+    		Set<TestUser> users = domain_service.getTestUsers(account.getUserId(), domain.getKey());
 
     		return users;
     	}

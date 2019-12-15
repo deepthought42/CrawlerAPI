@@ -78,10 +78,10 @@ public class Form {
 		List<ElementState> elements = getFormFields().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
-			elements_key += element.getKey();
+			elements_key += element.generateStylelessKey();
 		}
 		
-		return "form::"+elements_key+""+getFormTag().getKey();
+		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elements_key+""+getFormTag().getKey());
 	}
 
 	/**

@@ -99,7 +99,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 						//  generate path leading to current form
 						
 						//get users for current domain
-						Set<TestUser> test_users = domain_service.getTestUsers(domain);
+						Set<TestUser> test_users = domain_service.getTestUsers(message.getAccountId(), domain);
 						log.info("generating tests for "+test_users.size()+"   users");
 						for(TestUser user : test_users){
 							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getUrl(), message.getAccountId());

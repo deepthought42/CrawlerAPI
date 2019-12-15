@@ -609,13 +609,23 @@ public class TestController {
 	 * @param url
 	 *
 	 * @return
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request,
-			   								   @RequestParam(value="url", required=true) String url) {
-		List<Group> groups = new ArrayList<Group>();
-		Set<Test> test_list = domain_service.getTests(url);
+			   								   @RequestParam(value="url", required=true) String url
+	   ) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	List<Group> groups = new ArrayList<Group>();
+		Set<Test> test_list = domain_service.getTests(account.getUserId(), url);
 
 		for(Test test : test_list){
 			if(test.getGroups() != null){

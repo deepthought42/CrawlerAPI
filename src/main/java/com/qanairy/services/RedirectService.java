@@ -37,7 +37,7 @@ public class RedirectService {
 		return record;
 	}
 
-	public Set<Redirect> getRedirects(String url) {
-		return domain_repo.getRedirects(url);
+	public Set<Redirect> getRedirects(String user_id, String url) {
+		return domain_repo.getRedirects(user_id, url);
 	}
 }

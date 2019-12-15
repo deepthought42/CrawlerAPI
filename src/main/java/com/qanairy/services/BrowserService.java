@@ -1009,10 +1009,8 @@ public class BrowserService {
 			form_tag.setScreenshot(screenshot_url);
 			form_tag.setIsLeaf(getChildElements(form_elem).isEmpty());
 			double[] weights = new double[1];
-			
-			weights[0] = 0.3;
-
-			Set<Form> forms = domain_service.getForms(host);
+		
+			Set<Form> forms = domain_service.getForms(user_id, host);
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
@@ -1070,7 +1068,8 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			form.setName("Form #1");
+			int form_count = domain_service.getFormCount(user_id, url);
+			form.setName("Form #"+form_count+1);
 			log.info("name :: "+form.getName());
 
 			Form form_record = form_service.findByKey(user_id, url, form.getKey());

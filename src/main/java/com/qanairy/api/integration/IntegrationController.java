@@ -16,6 +16,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.JUnitXmlConversionUtil;
@@ -30,6 +31,9 @@ public class IntegrationController {
 
 	@Autowired
 	private AccountRepository account_repo;
+	
+	@Autowired
+	private DomainRepository domain_repo;
 	
 	@Autowired
 	private TestService test_service;
@@ -54,11 +58,12 @@ public class IntegrationController {
 	public String runAllTests(@RequestBody String host,
 						   @RequestBody String api_key) throws InvalidApiKeyException, PaymentDueException, StripeException{
     	Account acct = account_repo.getAccountByApiKey(api_key);
-    	Domain domain = account_repo.getAccountDomainByApiKeyAndHost(api_key, host);
 		if(acct == null){
     		throw new InvalidApiKeyException("Invalid API key");
     	}
     	
+    	Domain domain = domain_repo.findByHost(host, acct.getUserId());
+
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }    	

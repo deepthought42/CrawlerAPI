@@ -17,7 +17,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.message.FormMessage;
+import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -85,7 +85,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 					  		log.warning("FORM  Navigating to url    ::        "+url);
 					  		browser.navigateTo(url);
-					  		log.warning("total path objects    ::   "+message.getPathObjects());
+					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 
 					  		PageState page_state = null;
@@ -97,7 +97,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							 
 							log.warning("extracting all forms");
-						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  	List<Form> forms = browser_service.extractAllForms(message.getAccountId(), message.getDomain().getUrl(), page_state, browser);
 						  	log.warning("forms extracted :: "+forms.size());
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
@@ -109,7 +109,7 @@ public class FormDiscoveryActor extends AbstractActor{
 								}
 							    DeepthoughtApi.predict(form);
 							  								  	
-							    FormMessage form_message = new FormMessage(form, page_state, message.getAccountId());
+							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host, message.getAccountId());
 						  	}

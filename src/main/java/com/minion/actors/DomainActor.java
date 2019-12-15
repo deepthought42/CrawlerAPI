@@ -22,11 +22,8 @@ import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
-import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.TestMessage;
-import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -46,19 +43,13 @@ public class DomainActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
 	private DiscoveryAction discovery_action;
-	
-	@Autowired
-	private PageStateService page_state_service;
-	
+
 	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private AccountService account_service;
-	
+
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -123,7 +114,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(test_record == null) {
 						test_record = test_service.save(test, test_msg.getDomain().getUrl(), test_msg.getAccount());
-						account_service.addTest(test_record, test_msg.getAccount());
+						domain_service.addTest(test_msg.getDomain().getUrl(), test, test_msg.getAccount());
 					}
 					
 					if(domain == null){
@@ -177,12 +168,6 @@ public class DomainActor extends AbstractActor{
 								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 					}
 					discovery_actor.tell(form_msg, getSelf());
-					
-				})
-				.match(PageState.class, page_state -> {
-					page_state_service.save(page_state);
-				})
-				.match(FormMessage.class, form_msg -> {
 					
 				})
 				.match(MemberUp.class, mUp -> {

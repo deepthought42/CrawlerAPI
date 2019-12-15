@@ -1,5 +1,6 @@
 package com.qanairy.models.message;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 
@@ -8,18 +9,35 @@ import akka.actor.ActorRef;
 /**
  * Message that transports {@link Form} and {@link PageState}
  */
-public class FormMessage {
+public class FormDiscoveredMessage {
 
 	private Form form;
 	private PageState page;
 	private ActorRef domain_actor;
 	private ActorRef discovery_actor;
-	private String account_key;
+	private Domain domain;
+	private String user_id;
 	
-	public FormMessage(Form form, PageState page, String account_key) {
+	@Deprecated
+	public FormDiscoveredMessage(Form form, PageState page, String user_id) {
 		setForm(form);
 		setPage(page);
-		setAccountKey(account_key);
+		setUserId(user_id);
+	}
+	
+	public FormDiscoveredMessage(Form form, PageState page, String user_id, Domain domain) {
+		setForm(form);
+		setPage(page);
+		setDomain(domain);
+		setUserId(user_id);
+	}
+
+	public Domain getDomain() {
+		return domain;
+	}
+
+	public void setDomain(Domain domain) {
+		this.domain = domain;
 	}
 
 	public Form getForm() {
@@ -54,11 +72,11 @@ public class FormMessage {
 		this.page = page;
 	}
 
-	public String getAccountKey() {
-		return account_key;
+	public String getUserId() {
+		return user_id;
 	}
 
-	public void setAccountKey(String account_key) {
-		this.account_key = account_key;
+	public void setUserId(String user_id) {
+		this.user_id = user_id;
 	}
 }

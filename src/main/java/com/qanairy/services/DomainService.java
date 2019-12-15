@@ -81,8 +81,8 @@ public class DomainService {
 		return domain_repo.getForms(url);
 	}
 
-	public Set<ElementState> getElementStates(String host) {
-		return domain_repo.getElementStates(host);
+	public Set<ElementState> getElementStates(String host, String user_id) {
+		return domain_repo.getElementStates(host, user_id);
 	}
 
 	public Set<Action> getActions(String host) {

@@ -13,6 +13,7 @@ import com.qanairy.models.repository.NumericRuleRepository;
 import com.qanairy.models.repository.PatternRuleRepository;
 import com.qanairy.models.repository.ReadOnlyRuleRepository;
 import com.qanairy.models.repository.RequiredRuleRepository;
+import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.SpecialCharacterRestrictionRuleRepository;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.DisabledRule;
@@ -23,6 +24,7 @@ import com.qanairy.models.rules.PatternRule;
 import com.qanairy.models.rules.ReadOnlyRule;
 import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.models.rules.RuleFactory;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
 import com.minion.api.exception.RuleValueRequiredException;
@@ -61,9 +63,20 @@ public class RuleService {
 	@Autowired
 	private PatternRuleRepository pattern_rule_repo;
 
+	@Autowired
+	private RuleRepository rule_repo;
+
 	public Rule save(Rule rule){
 		assert rule != null;
-
+		
+		Rule rule_record = rule_repo.findByTypeAndValue(rule.getType().toString(), rule.getValue());
+		if(rule_record == null) {
+			return rule_repo.save(rule);
+		}
+		return rule_record;
+		
+		
+		/*
 		Rule rule_record = null;
 
 		log.warn("rule        ::   " + rule);
@@ -123,13 +136,18 @@ public class RuleService {
 				rule_record = special_character_restriction_repo.save((SpecialCharacterRestriction)rule);
 			}
 		}
-
-		return rule_record;
+*/
+		//return rule_record;
 	}
 
-	public Rule findByType(String rule_type, String value) throws RuleValueRequiredException {
-		Rule rule_record = null;
-		log.warn("looking up rule by type :: " + rule_type);
+	public Rule findRule(String rule_type, String value) throws RuleValueRequiredException {
+		
+		Rule rule = rule_repo.findByTypeAndValue(rule_type, value);
+		if(rule == null) {
+			rule = RuleFactory.build(rule_type, value);
+		}
+		return rule;
+		/*
 		if(rule_type.equals(RuleType.REQUIRED.toString())){
 			RequirementRule rule = new RequirementRule();
 			log.warn("finding rule by key" );
@@ -225,7 +243,8 @@ public class RuleService {
 				rule_record = pattern_rule_repo.save(rule);
 			}
 		}
+	*/
 
-		return rule_record;
+		//return rule_record;
 	}
 }

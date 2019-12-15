@@ -39,7 +39,7 @@ public class FormTestExtractionTests {
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
 			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -79,7 +79,7 @@ public class FormTestExtractionTests {
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
 			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -124,7 +124,7 @@ public class FormTestExtractionTests {
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 			
 			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -169,7 +169,7 @@ public class FormTestExtractionTests {
 			BrowserService browser_service = new BrowserService();
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			boolean readonly_restrict_rule = false;
 
@@ -204,7 +204,7 @@ public class FormTestExtractionTests {
 			BrowserService browser_service = new BrowserService();
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
@@ -241,7 +241,7 @@ public class FormTestExtractionTests {
 			BrowserService browser_service = new BrowserService();
 			browser = BrowserConnectionHelper.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
-			List<Form> form = browser_service.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms("", "", page, browser);
 
 			boolean max_value_rule = false;
 

@@ -1,7 +1,10 @@
 package com.minion.api;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +22,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.minion.api.exception.RuleValueRequiredException;
+import com.qanairy.api.exceptions.ExistingRuleException;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
+import com.qanairy.models.Account;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
+import com.qanairy.services.AccountService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.RuleService;
 
@@ -40,6 +48,9 @@ public class ElementController {
 	private ElementStateService element_service;
 
 	@Autowired
+	private AccountService account_service;
+
+	@Autowired
 	private RuleService rule_service;
 
     @Autowired
@@ -50,19 +61,137 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link Element element}
+     * @throws UnknownAccountException 
      */
     @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/{id}/rules", method = RequestMethod.POST)
+    @RequestMapping(path="/elements/{element_key}/rules", method = RequestMethod.POST)
     public ElementState addRule(
     		HttpServletRequest request,
-			@PathVariable(value="id", required=true) long id,
+			@PathVariable(value="element_key", required=true) String element_key,
 			@RequestParam(value="type", required=true) String type,
-			@RequestParam(value="value", required=false) String value) throws RuleValueRequiredException
+			@RequestParam(value="value", required=false) String value
+		) throws RuleValueRequiredException, UnknownAccountException, ExistingRuleException
     {
-        ElementState element = element_service.findById(id);
-        element.addRule(rule_service.findByType(type, value));
-        return element_service.save(element);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Rule rule = rule_service.findRule(type, value);
+    	validateRule(rule);
+
+		Rule rule_record = rule_service.save(rule);
+    	
+		log.warn("element key :: "+element_key);
+		log.warn("rule record key :: " + rule_record.getKey());
+		
+    	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
+    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
+    }
+    
+    private void validateRule(Rule rule) {
+
+    	Rule min_value_rule = null;
+    	Rule max_value_rule = null;
+    	Rule min_length_rule = null;
+    	Rule max_length_rule = null;
+    	Map<String, Integer> rule_duplicate_map = new HashMap<>();
+		if(!rule_duplicate_map.containsKey(rule.getKey())){
+			rule_duplicate_map.put(rule.getKey(), 0);
+		}
+		rule_duplicate_map.put(rule.getKey(), rule_duplicate_map.get(rule.getKey())+1);
+		if(rule.getType().equals(RuleType.MIN_VALUE)){
+			min_value_rule = rule;
+		}
+		else if(rule.getType().equals(RuleType.MAX_VALUE)){
+			max_value_rule = rule;
+		}
+		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
+			min_length_rule = rule;
+		}
+		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
+			max_length_rule = rule;
+		}
+
+    	for(int rule_value : rule_duplicate_map.values()){
+    		if(rule_value > 1){
+    			throw new DuplicatesNotAllowedException();
+    		}
+    	}
+    	//check that min/max rules are valid
+    	if( min_value_rule != null && (min_value_rule.getValue().isEmpty()
+    			|| !StringUtils.isNumeric(min_value_rule.getValue())
+    			|| Integer.parseInt(min_value_rule.getValue()) <= 0)){
+    		throw new MinValueMustBePositiveNumber();
+    	}
+		if( max_value_rule != null && (max_value_rule.getValue().isEmpty()
+				|| !StringUtils.isNumeric(max_value_rule.getValue())
+				|| Integer.parseInt(max_value_rule.getValue()) <= 0)){
+			throw new MaxValueMustBePositiveNumber();
+    	}
+		if( min_length_rule != null && (min_length_rule.getValue().isEmpty()
+				|| !StringUtils.isNumeric(min_length_rule.getValue())
+    			|| Integer.parseInt(min_length_rule.getValue()) <= 0)){
+			throw new MinLengthMustBePositiveNumber();
+		}
+		if( max_length_rule != null && (max_length_rule.getValue().isEmpty()
+				|| !StringUtils.isNumeric(max_length_rule.getValue())
+    			|| Integer.parseInt(max_length_rule.getValue()) <= 0)){
+			throw new MaxLengthMustBePositiveNumber();
+		}
+
+		if(min_value_rule != null && max_value_rule != null){
+			int min_value = Integer.parseInt(min_value_rule.getValue());
+			int max_value = Integer.parseInt(max_value_rule.getValue());
+			if(min_value > max_value){
+				throw new MinCannotBeGreaterThanMaxException();
+			}
+		}
+		if(min_length_rule != null && max_length_rule != null){
+			int min_length = Integer.parseInt(min_length_rule.getValue());
+			int max_length = Integer.parseInt(max_length_rule.getValue());
+			if(min_length > max_length){
+				throw new MinCannotBeGreaterThanMaxException();
+			}
+		}
+	}
+
+	/**
+     * Adds {@link Rule} to {@link Element element} with a given id
+     *
+     * @param id element id
+     * @return {@link Element element}
+     * @throws UnknownAccountException 
+     */
+    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rule')")
+    @RequestMapping(path="/elements/{element_key}/rules/{rule_key}", method = RequestMethod.DELETE)
+    public ElementState removeRule(
+    		HttpServletRequest request,
+			@PathVariable(value="element_key", required=true) String element_key,
+			@PathVariable(value="rule_key", required=true) String rule_key
+    	) throws RuleValueRequiredException, UnknownAccountException
+    {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	element_service.removeRule(acct.getUserId(), element_key, rule_key);
+    	return element_service.findFormElementByKey(acct.getUserId(), element_key);
     }
 
     /**
@@ -70,21 +199,75 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link Element element}
+     * @throws UnknownAccountException 
      */
     @ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     public ElementState update(
     		HttpServletRequest request,
-    		@RequestBody ElementState element_state)
+    		@RequestBody ElementState element_state
+		) throws UnknownAccountException
     {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(account.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	validateRules(element_state.getRules());
+    	//check that min/max length rules are valid
+    	log.warn("element update state experienced in element controller");
+      element_state = element_service.save(account.getUserId(), element_state);
+      return element_service.findByKey(account.getUserId(), element_state.getKey());
+    }
+    
+    /**
+     * Adds {@link Rule} to {@link Element element} with a given id
+     *
+     * @param id element id
+     * @return {@link Element element}
+     * @throws UnknownAccountException 
+     */
+    @ApiOperation(value = "updates form element", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rule')")
+    @RequestMapping(path="/forms/{form_key}/elements", method = RequestMethod.PUT)
+    public ElementState updateFormElement(
+    		HttpServletRequest request,
+    		@PathVariable(value="form_key", required=true) String form_key,
+    		@RequestBody ElementState element_state
+		) throws UnknownAccountException
+    {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(account.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	validateRules(element_state.getRules());
+    	//check that min/max length rules are valid
+    	log.warn("element update state experienced in element controller");
+      element_state = element_service.saveFormElement(account.getUserId(), element_state);
+      return element_service.findFormElementByKey(account.getUserId(), element_state.getKey());
+    }
 
-    	Rule min_value_rule = null;
+	private void validateRules(Set<Rule> rules) {
+		Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
     	Rule max_length_rule = null;
     	Map<String, Integer> rule_duplicate_map = new HashMap<>();
-    	for(Rule rule : element_state.getRules()){
+    	for(Rule rule : rules){
     		if(!rule_duplicate_map.containsKey(rule.getKey())){
     			rule_duplicate_map.put(rule.getKey(), 0);
     		}
@@ -130,7 +313,6 @@ public class ElementController {
 			throw new MaxLengthMustBePositiveNumber();
 		}
 
-
 		if(min_value_rule != null && max_value_rule != null){
 			int min_value = Integer.parseInt(min_value_rule.getValue());
 			int max_value = Integer.parseInt(max_value_rule.getValue());
@@ -145,11 +327,7 @@ public class ElementController {
 				throw new MinCannotBeGreaterThanMaxException();
 			}
 		}
-
-    	//check that min/max length rules are valid
-    	log.warn("element update state experienced in element controller");
-      return element_service.save(element_state);
-    }
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

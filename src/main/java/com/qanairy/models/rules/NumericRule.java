@@ -1,10 +1,6 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 
@@ -12,16 +8,7 @@ import com.qanairy.models.ElementState;
 /**
  * Defines a min/max value or length {@link Rule} on a {@link ElementState}
  */
-@NodeEntity
 public class NumericRule extends Rule{
-	@GeneratedValue
-    @Id
-	private Long id;
-	
-	private String key;
-	private RuleType type;
-	private String value;
-	
 	public NumericRule(){}
 	
 	/**
@@ -34,30 +21,6 @@ public class NumericRule extends Rule{
 		setKey(generateKey());
 	}
 	
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
-	public String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public void setType(RuleType type) {
-		this.type = type;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public RuleType getType() {
-		return this.type;
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -82,20 +45,6 @@ public class NumericRule extends Rule{
 		}
 		return false;
 	}
-
-
-	@Override
-	public void setValue(String value) {
-		this.value = value;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getValue() {
-		return this.value;
-	}	
 	
 	public static String generateRandomAlphabeticString(int str_length){
 		return StringUtils.repeat("a", str_length);

@@ -1,5 +1,9 @@
 package com.qanairy.models.rules;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.ElementState;
@@ -13,20 +17,41 @@ import com.qanairy.models.serializer.RuleDeserializer;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
+@NodeEntity
 @JsonDeserialize(using = RuleDeserializer.class)
 public abstract class Rule implements Persistable {
+	@GeneratedValue
+    @Id
+	private Long id;	
+	private String key;
+	private String value;
+	private String type;
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public String getKey() {
+		return this.key;
+	}
+
+	public RuleType getType() {
+		return RuleType.create(this.type.toLowerCase());
+	};
+
+	public void setType(RuleType type) {
+		this.type = type.getShortName();
+	}
 	
-	public abstract void setKey(String key);
+	public String getValue(){
+		return this.value;
+	}
 
-	public abstract String getKey();
-
-	public abstract RuleType getType();
-
-	public abstract void setType(RuleType type);
+	public void setValue(String value) {
+		this.value = value;
+	}
 	
-	public abstract String getValue();
-
-	public abstract void setValue(String value);
+	
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied
@@ -38,35 +63,6 @@ public abstract class Rule implements Persistable {
 	
 	@Override
 	public String generateKey() {
-		return this.getType()+"::"+this.getValue();
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getType()+"::"+this.getValue());
 	}
-	
-	/**
-	 * Rule types
-	 * 
-	 * 
-	 * --- BOOLEAN RULES ---
-	 * 
-	 * REQUIRED
-	 * ALPHABETIC_RESTRICTION
-	 * SPECIAL_CHARACTER_RESTRICTION
-	 * NUMBER_RESTRICTION
-	 * NUMBERS_ONLY
-	 * IS_ENABLED
-	 * IS_NO_VALIDATE
-	 * IS_READ_ONLY
-	 * 
-	 * 
-	 * --- NUMERIC RULES  ---
-	 * 
-	 * MIN_LENGTH	-- ALL TEXT AND NUMBER
-	 * MAX_LENGTH   -- ALL TEXT AND NUMBER
-	 * 					
-	 * MIN_VALUE   - ALL NUMBER AND DATE
-	 * MAX_VALUE   - ALL NUMBER AND DATE
-	 * 
-	 * --- REGEX RULES ---
-	 * 
-	 * PATTERN - ALL TEXT, NUMBER, DATE INPUTS
-	 */
 }

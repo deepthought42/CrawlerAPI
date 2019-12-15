@@ -183,6 +183,6 @@ public class SubscriptionServiceTests {
 	}
 	
 	public void freePlanWithExistingSubscription() throws Exception{
-		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE, "paymentToken");
+		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE);
 	}
 }

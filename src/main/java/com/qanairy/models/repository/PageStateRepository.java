@@ -39,4 +39,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH a=(p:PageState) WHERE {screenshot_checksum} IN p.animated_image_checksums RETURN p LIMIT 1")
 	public PageState findByAnimationImageChecksum(@Param("screenshot_checksum") String screenshot_checksum);
+
+	@Query("MATCH (a:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(f:Form{key:{form_key}}) RETURN p")
+	public List<PageState> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
 }

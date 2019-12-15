@@ -43,12 +43,6 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{api_key:{api_key}}) RETURN account")
 	public Account getAccountByApiKey(@Param("api_key") String api_key);
 
-	@Query("MATCH (account:Account{api_key:{api_key}})-[:HAS_DOMAIN]->(domain:Domain{host:{host}) RETURN domain")
-	public Domain getAccountDomainByApiKeyAndHost(@Param("api_key") String api_key, @Param("host") String host);
-
-	@Query("MATCH (t:Test{key:{test_key}}),(a:Account{user_id:{account_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")
-	public void addTest(@Param("test_key") String test_key, @Param("account_key") String account_key);
-
 	@Query("MATCH (t:Account{user_id:{user_id}}),(a:Domain{key:{domain_key}}) CREATE (t)-[r:BELONGS_TO]->(a) RETURN r")
 	public void addDomain(@Param("domain_key") String key, @Param("user_id") String user_id);
 }

@@ -35,8 +35,8 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
+import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
-import com.qanairy.models.message.FormMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -209,6 +209,12 @@ public class DiscoveryActor extends AbstractActor{
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 							}
 						}
+
+						if(form_discoverer == null){
+							form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						}
+						form_discoverer.tell(message, getSelf() );
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
@@ -254,7 +260,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
-							//if(!explored_pages.containsKey(test.getResult().getUrl())) {
+							if(!explored_pages.containsKey(test.getResult().getUrl())) {
 								explored_pages.put(test.getResult().getUrl(), test.getResult());
 								if(url_browser_actor == null){
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -262,7 +268,7 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
-							//}
+							}
 						}
 						else {
 							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
@@ -310,19 +316,19 @@ public class DiscoveryActor extends AbstractActor{
 				.match(AccountRequest.class, account_request_msg -> {
 					getSender().tell(this.getAccount(), getSelf());
 				})
-				.match(FormMessage.class, form_msg -> {
+				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
 					try {
-						SegmentAnalyticsHelper.formDiscovered(form_msg.getAccountKey(), form.getKey());
+						SegmentAnalyticsHelper.formDiscovered(form_msg.getUserId(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					
 					try {
-					    form = form_service.save(form);
+					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), form);
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getAccountKey(), e.getMessage());
+							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -332,11 +338,11 @@ public class DiscoveryActor extends AbstractActor{
 
 					page_state_record.addForm(form);
 					try {
-						page_state_service.save(page_state_record);
+						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);
 						
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendPageStateError(form_msg.getAccountKey(), e.getMessage());
+							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}

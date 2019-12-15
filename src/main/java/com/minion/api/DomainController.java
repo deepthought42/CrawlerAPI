@@ -301,8 +301,19 @@ public class DomainController {
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+		
 		Set<PageState> page_state = domain_service.getPageStates(host);
-		Set<ElementState> page_elem = domain_service.getElementStates(host);
+		Set<ElementState> page_elem = domain_service.getElementStates(host, acct.getUserId());
 		Set<Action> actions = domain_service.getActions(host);
 		Set<Redirect> redirects = redirect_service.getRedirects(host);
 		Set<PageLoadAnimation> animations = domain_service.getAnimations(host);
@@ -349,7 +360,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<ElementState> page_elements = domain_service.getElementStates(host);
+		Set<ElementState> page_elements = domain_service.getElementStates(host, acct.getUserId());
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     }
@@ -505,7 +516,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Form form_record = form_service.findById(form_id);
+		Form form_record = form_service.findById(acct.getUserId(), domain_id, form_id);
 		
 		if(form_record == null){
 			throw new FormNotFoundException();

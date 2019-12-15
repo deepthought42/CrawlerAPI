@@ -110,10 +110,6 @@ public class ElementStateService {
 	public ElementState findByKey(String user_id, String key){
 		return element_repo.findByKey(user_id, key);
 	}
-	
-	public ElementState findByTextAndName(String text, String name){
-		return element_repo.findByTextAndName(text, name);
-	}
 
 	public void removeRule(String user_id, String element_key, String rule_key){
 		element_repo.removeRule(user_id, element_key, rule_key);
@@ -121,10 +117,6 @@ public class ElementStateService {
 	
 	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(ElementState element){
 		return false;
-	}
-
-	public ElementState findByScreenshotChecksum(String screenshotChecksum) {
-		return element_repo.findByScreenshotChecksum(screenshotChecksum);
 	}
 
 	public ElementState findById(long id) {

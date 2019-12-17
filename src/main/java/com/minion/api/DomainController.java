@@ -274,7 +274,7 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_states")
     public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
-    													  @RequestParam(value="host", required=true) String host) 
+    													  @RequestParam(value="url", required=true) String url) 
     															throws UnknownAccountException {        
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -288,7 +288,7 @@ public class DomainController {
     	}
 		
 
-		Set<PageState> page_states = domain_service.getPageStates(acct.getUserId(), host);
+		Set<PageState> page_states = domain_service.getPageStates(acct.getUserId(), url);
 		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
     	
@@ -299,7 +299,7 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/path")
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
-    													  @RequestParam(value="host", required=true) String host) 
+    													  @RequestParam(value="url", required=true) String url) 
     															throws UnknownAccountException {        		
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -312,11 +312,11 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Set<PageState> page_state = domain_service.getPageStates(acct.getUserId(), host);
-		Set<ElementState> page_elem = domain_service.getElementStates(host, acct.getUserId());
-		Set<Action> actions = domain_service.getActions(acct.getUserId(), host);
-		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), host);
-		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), host);
+		Set<PageState> page_state = domain_service.getPageStates(acct.getUserId(), url);
+		Set<ElementState> page_elem = domain_service.getElementStates(url, acct.getUserId());
+		Set<Action> actions = domain_service.getActions(acct.getUserId(), url);
+		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), url);
+		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), url);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
 		//merge(page_state, page_elem, actions);
 

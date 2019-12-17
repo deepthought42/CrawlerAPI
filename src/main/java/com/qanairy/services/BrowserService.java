@@ -1071,7 +1071,7 @@ public class BrowserService {
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
 			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
-			form.setName("Form #"+form_count+1);
+			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 
 			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());

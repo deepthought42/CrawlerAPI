@@ -209,6 +209,12 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(TestMessage.class, test_msg -> {
+					//plan exceeded check
+			    	Account acct = account_service.findByUserId(test_msg.getAccount());
+			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
+			    	}
+			    	
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
@@ -227,11 +233,7 @@ public class DiscoveryActor extends AbstractActor{
 					domain_actor.tell(test_msg, getSelf());
 					
 					
-					//plan exceeded check
-			    	Account acct = account_service.findByUserId(test_msg.getAccount());
-			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to run a discovery");
-			    	}
+					
 					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());

@@ -85,16 +85,16 @@ public class DomainService {
 		return domain_repo.getFormCount(user_id, url);
 	}
 
-	public Set<ElementState> getElementStates(String host, String user_id) {
-		return domain_repo.getElementStates(host, user_id);
+	public Set<ElementState> getElementStates(String url, String user_id) {
+		return domain_repo.getElementStates(url, user_id);
 	}
 
-	public Set<Action> getActions(String user_id, String host) {
-		return domain_repo.getActions(user_id, host);
+	public Set<Action> getActions(String user_id, String url) {
+		return domain_repo.getActions(user_id, url);
 	}
 
-	public Set<PageState> getPageStates(String user_id, String host) {
-		return domain_repo.getPageStates(user_id, host);
+	public Set<PageState> getPageStates(String user_id, String url) {
+		return domain_repo.getPageStates(user_id, url);
 	}
 
 	public Domain findByKey(String key, String user_id) {

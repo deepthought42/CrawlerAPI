@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -87,7 +86,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(FormDiscoveryMessage.class, message -> {
-					Form form = form_service.clearBugMessages(message.getForm().getId());
+					Form form = message.getForm();
+					form_service.clearBugMessages(message.getForm().getId());
 					//check that message data is of type Form and that the form type is set to login
 					log.info("login form test discovery actor is up!");
 
@@ -175,7 +175,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addPathObject(submit_login);
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
-							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain.getUrl(), domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
+							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 
@@ -214,8 +214,12 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		
 		//get page state		
-		PageState page = form_service.getPageState(form);
+		PageState page = form_service.getPageState(user_id, url, form);
 		
+		log.warning("page :: " + page);
+		log.warning("form key :: " + form.getKey());
+		log.warning("url :: " + url);
+		log.warning("user id :  " + user_id);
 		//get all tests that contain page state as path object
 		List<Test> tests = test_service.findTestsWithPageState(page.getKey(), url, user_id);
 		//get test with smallest path

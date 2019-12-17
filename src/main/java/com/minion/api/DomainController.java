@@ -390,7 +390,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_service.findById(domain_id);
     	if(domain.isPresent()){
-    		return domain_service.getForms(acct.getUserId(), domain.get().getHost());
+    		return domain_service.getForms(acct.getUserId(), domain.get().getUrl());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -574,12 +574,12 @@ public class DomainController {
 			}
 			
 	    	form_record = form_repo.save(form_record);
-	    	PageState page = form_service.getPageState(form_record);
 			Optional<Domain> optional_domain = domain_service.findById(domain_id);
 			log.info("Does the domain exist :: "+optional_domain.isPresent());
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
-	        		
+		    	PageState page = form_service.getPageState(acct.getUserId(), domain.getUrl(), form_record);
+
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
 	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
 	    		//start form test creation actor
@@ -650,12 +650,10 @@ public class DomainController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-
     	
     	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
-    	
 
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
 		log.info("Does the domain exist :: "+optional_domain.isPresent());

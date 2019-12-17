@@ -189,7 +189,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 							TimingUtils.pauseThread(1500);
-							PageState result = browser_service.buildPage(message.getAccountId(), message.getDomain().getUrl(), browser);
+							PageState result = browser_service.buildPage(message.getAccountId(), message.getDomain(), browser);
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){

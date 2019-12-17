@@ -5,7 +5,6 @@ import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -38,7 +37,9 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Attribute;
+import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -50,10 +51,10 @@ import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
+import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.ArrayUtils;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
-import com.qanairy.utils.TimingUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -198,28 +199,25 @@ public class BrowserService {
 	}
 
 	/**
+	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
 	 *
-	 * @return
-	 * @throws GridException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 *
+	 * @return page {@linkplain PageState}
+	 * @throws Exception 
+	 * 
 	 * @pre browser != null
-	 * @post page_state != null
 	 */
-	public PageState buildPage(String user_id, String url, Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
+	public PageState buildPage(String user_id, Domain domain, Browser browser) throws Exception{
 		assert browser != null;
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
-		List<PageState> page_states = page_state_service.findByScreenshotChecksum(user_id, url, screenshot_checksum);
+		List<PageState> page_states = page_state_service.findByScreenshotChecksum(user_id, domain.getUrl(), screenshot_checksum);
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		
 		if(page_states.isEmpty()) {
-			page_states = page_state_service.findByScreenshotChecksum(user_id, url, full_page_screenshot_checksum);
-			
+			page_states = page_state_service.findByScreenshotChecksum(user_id, domain.getUrl(), full_page_screenshot_checksum);
 		}
 		if(page_states.isEmpty()) {
 			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
@@ -255,6 +253,24 @@ public class BrowserService {
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url_without_params).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			viewport_screenshot.flush();
 			
+			Set<Form> forms = extractAllForms(user_id, domain, browser);
+		  	log.warn("forms extracted :: "+forms.size());
+		  	for(Form form : forms){
+		  		//check if form exists before creating a new one
+		  		
+			  	for(ElementState field : form.getFormFields()){
+					//for each field in the complex field generate a set of tests for all known rules
+			  		List<Rule> rules = extractor.extractInputRules(field);
+					field.getRules().addAll(rules);
+				}
+			    DeepthoughtApi.predict(form);
+				
+			    //These lines need to find a home in order for forms to update in real time on the front end
+			    //
+			    //FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
+			  	//message.getDiscoveryActor().tell(form_message, getSelf());
+		  	}
+		  	
 			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
 					elements,
@@ -263,7 +279,8 @@ public class BrowserService {
 					browser.getYScrollOffset(),
 					browser.getViewportSize().width,
 					browser.getViewportSize().height,
-					browser.getBrowserName());
+					browser.getBrowserName(), 
+					forms);
 
 			page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
 			page_state.setFullPageChecksum(full_page_screenshot_checksum);
@@ -271,12 +288,11 @@ public class BrowserService {
 			page_state.addScreenshotChecksum(full_page_screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-			
 			return page_state;
 		}
 		
 		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStates(user_id, url, page_states.get(0).getKey()));
+		page_state.setElements(page_state_service.getElementStates(user_id, domain.getUrl(), page_states.get(0).getKey()));
 		log.warn("loaded page elements from db :: " +page_state.getElements().size());
 		return page_state;
 	}
@@ -294,8 +310,6 @@ public class BrowserService {
 		Document html_doc = Jsoup.parse(pageSource);
 		Element root = html_doc.getElementsByTag("body").get(0);
 		Map<String, Integer> xpath_cnt = new HashMap<>();
-
-		log.warn("getting expandable elements...");
 		return getExpandableElements(root, html_doc, browser, xpath_cnt);
 	}
 		
@@ -975,22 +989,13 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Form> extractAllForms(String user_id, String url, PageState page, Browser browser) throws Exception{
-		List<Form> form_list = new ArrayList<Form>();
+	public Set<Form> extractAllForms(String user_id, Domain domain, Browser browser) throws Exception {
+		Set<Form> form_list = new HashSet<Form>();
 		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-		log.warn("form elements found using xpath //form    :: "+form_elements.size());
-		
-		List<WebElement> elements = browser.getDriver().findElements(By.xpath("//*"));
-		log.warn("elements found using xpath //    :: "+elements.size());
-		
-		boolean contains_form = browser.getDriver().getPageSource().contains("form");
-		log.warn("source contains form ??     :    "+contains_form);
-				
-		String host = new URL(page.getUrl()).getHost();
+
+		String host = domain.getHost();
 		for(WebElement form_elem : form_elements){
-			log.warn("scrolling to form element");
-			//browser.scrollToElement(form_elem);
 			//BrowserUtils.detectShortAnimation(browser, page.getUrl());
 			if(!form_elem.isDisplayed() || doesElementHaveNegativePosition(form_elem.getLocation())) {
 				continue;
@@ -1010,22 +1015,19 @@ public class BrowserService {
 			form_tag.setIsLeaf(getChildElements(form_elem).isEmpty());
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, host);
+			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
-			log.warn("inputs extracted....fitlering inputs to get baseline for form");
 			input_elements = BrowserService.fitlerNonDisplayedElements(input_elements);
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
 			
-			log.warn("inputs left after filtering...  "+input_elements.size());
 			for(WebElement input_elem : input_elements){
 				boolean submit_elem_found = false;
 
-				log.warn("extracting attributes... ");
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
 				for(Attribute attribute : attributes){
 					if(attribute.contains("submit")){
@@ -1052,8 +1054,8 @@ public class BrowserService {
 					continue;
 				}
 				
-				log.warn("setting screenshots info ");
 				input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
+				log.warn("rules applied to input tag   ::   "+input_tag.getRules().size());
 
 				form.addFormField(input_tag);
 			}
@@ -1068,11 +1070,11 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			int form_count = domain_service.getFormCount(user_id, url);
+			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
 			form.setName("Form #"+form_count+1);
 			log.info("name :: "+form.getName());
 
-			Form form_record = form_service.findByKey(user_id, url, form.getKey());
+			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}

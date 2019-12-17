@@ -88,9 +88,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
 
-						String host = new URL(PathUtils.getFirstPage(message.getPathObjects()).getUrl()).getHost();
 						try {
-							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), message.getDomain().getUrl(), browser_name, message, host);
+							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), message.getDomain(), browser_name, message);
 						} catch(DiscoveryStoppedException e) {
 							return;
 						}

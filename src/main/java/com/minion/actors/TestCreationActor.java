@@ -1,20 +1,15 @@
 package com.minion.actors;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,12 +110,13 @@ public class TestCreationActor extends AbstractActor  {
 				    			browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
-				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser, acct_message.getAccountKey(), domain.getUrl());
+				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser, acct_message.getAccountKey(), domain);
 				    			long end_time = System.currentTimeMillis();
 				    			TimingUtils.pauseThread(1500);
 						
-				    			PageState result_page = browser_service.buildPage(acct_message.getAccountKey(), domain.getUrl(), browser);
-								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
+				    			PageState result_page = browser_service.buildPage(acct_message.getAccountKey(), domain, browser);
+								
+				    			boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 								
 								test = new Test(path_keys, path_objects, result_page, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
@@ -196,19 +192,18 @@ public class TestCreationActor extends AbstractActor  {
 				List<PathObject> path_objects, 
 				Browser browser, 
 				String user_id, 
-				String url
+				Domain domain
 			) throws JSONException, Exception {
 		boolean first_page = true;
-		Domain domain = null;
 		for(int idx=0; idx < path.length(); idx++){
         	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
 
     		if(path_obj_json.has("url")){
     			String path_url = path_obj_json.getString("url");
     			String host = new URL(path_url).getHost();
-
+    			
     			if(!first_page){
-    				PageState page_state = browser_service.buildPage(user_id, url, browser);
+    				PageState page_state = browser_service.buildPage(user_id, domain, browser);
     				path_keys.add(page_state.getKey());
 	    			path_objects.add(page_state);
     			}
@@ -222,7 +217,7 @@ public class TestCreationActor extends AbstractActor  {
     				domain = domain_service.findByHost(formatted_url, user_id);
     			}
 
-    			PageState page_state = navigateToAndCreatePageState(user_id, url, browser);
+    			PageState page_state = navigateToAndCreatePageState(user_id, domain, browser);
 
     			first_page = false;
     			path_keys.add(page_state.getKey());
@@ -264,7 +259,7 @@ public class TestCreationActor extends AbstractActor  {
 
 	    			if(!path_obj_json.has("url")){
 		    			//capture new page state and add it to path
-		    			PageState page_state = browser_service.buildPage(user_id, url, browser);
+		    			PageState page_state = browser_service.buildPage(user_id, domain, browser);
 		    			path_keys.add(page_state.getKey());
 		    			path_objects.add(page_state);
 	    			}
@@ -307,18 +302,13 @@ public class TestCreationActor extends AbstractActor  {
 	 * @param isFirstPage
 	 * @param browser
 	 * @return
-	 * @throws GridException
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
-	 * @throws WebDriverException 
+	 * @throws Exception 
 	 */
-	private PageState navigateToAndCreatePageState(String user_id, String url, Browser browser)
-									throws GridException, NoSuchAlgorithmException, IOException, WebDriverException, InterruptedException, ExecutionException {
-		browser.navigateTo(url);
+	private PageState navigateToAndCreatePageState(String user_id, Domain domain, Browser browser)
+									throws Exception {
+		browser.navigateTo(domain.getUrl());
 		//browser.waitForPageToLoad();
 		//construct a new page
-		return browser_service.buildPage(user_id, url, browser);
+		return browser_service.buildPage(user_id, domain, browser);
 	}
 }

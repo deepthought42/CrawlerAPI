@@ -141,7 +141,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		do{
 						  			try{
 								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
-						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain().getUrl(), path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
+						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
 						  				break;

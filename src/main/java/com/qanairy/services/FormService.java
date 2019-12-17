@@ -33,8 +33,8 @@ public class FormService {
 	@Autowired
 	private BugMessageRepository bug_message_repo;
 	
-	public PageState getPageState(Form form) {
-		return form_repo.getPageState(form.getKey());
+	public PageState getPageState(String user_id, String url, Form form) {
+		return form_repo.getPageState(user_id, url, form.getKey());
 	}
 	
 	public Form findByKey(String user_id, String url, String key){
@@ -88,8 +88,8 @@ public class FormService {
 				for(ElementState element : form.getFormFields()){
 					element.setRules(element_service.getRules(user_id, element.getKey()));
 				}
-				form.setFormTag(form_repo.getFormElement(form.getKey()));
-				form.setSubmitField(form_repo.getSubmitElement(form.getKey()));
+				form.setFormTag(form_repo.getFormElement(user_id, domain.getUrl(), form.getKey()));
+				form.setSubmitField(form_repo.getSubmitElement(user_id, domain.getUrl(), form.getKey()));
 				return form;
 	    	}
 	    	else {

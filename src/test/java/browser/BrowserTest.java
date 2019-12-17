@@ -7,11 +7,11 @@ import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -104,7 +104,8 @@ public class BrowserTest {
 					"",
 					0,0,
 					1288,844,
-					"chrome");
+					"chrome",
+					new HashSet<>());
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());

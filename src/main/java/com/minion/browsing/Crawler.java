@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
@@ -29,6 +28,7 @@ import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
@@ -70,21 +70,16 @@ public class Crawler {
 	 *
 	 * @param browser
 	 * @return {@link Page result_page} state that resulted from crawling path
+	 * @throws Exception 
 	 *
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 * @throws WebDriverException
-	 * @throws GridException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
 	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(String user_id, String domain_url, List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
+	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
 								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
-										throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
+										throws Exception{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -156,7 +151,7 @@ public class Crawler {
 
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-		return browser_service.buildPage(user_id, domain_url, browser);
+		return browser_service.buildPage(user_id, domain, browser);
 	}
 
 	/**
@@ -590,7 +585,7 @@ public class Crawler {
 	 * @param host
 	 * @return
 	 */
-	public PageState performPathExploratoryCrawl(String user_id, String domain_url, String browser_name, ExploratoryPath path, String host) {
+	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, ExploratoryPath path, String host) {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -615,7 +610,7 @@ public class Crawler {
 				}
 						
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPage(user_id, domain_url, browser);
+				result_page = browser_service.buildPage(user_id, domain, browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -660,7 +655,7 @@ public class Crawler {
 	 * @return
 	 * @throws Exception 
 	 */
-	public PageState performPathExploratoryCrawl(String user_id, String url, String browser_name, PathMessage path, String host) throws Exception {
+	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -683,20 +678,20 @@ public class Crawler {
 					browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
-					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
+					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
-				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
+				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, domain.getHost());
 				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
 					new_path.getKeys().add(loading_animation.getKey());
 					new_path.getPathObjects().add(loading_animation);
 				}
 								
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPage(user_id, url, browser);
+				result_page = browser_service.buildPage(user_id, domain, browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}

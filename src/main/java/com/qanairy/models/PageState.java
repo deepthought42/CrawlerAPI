@@ -98,7 +98,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre screenshot_url != null;
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name) throws MalformedURLException, IOException{
+			int viewport_width, int viewport_height, String browser_name, Set<Form> forms) throws MalformedURLException, IOException{
 		assert elements != null;
 		assert screenshot_url != null;
 
@@ -113,7 +113,6 @@ public class PageState implements Persistable, PathObject {
 		setLandable(false);
 		setImageWeight(0);
 		setSrc(src);
-		setForms(new HashSet<Form>());
 		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
@@ -121,46 +120,10 @@ public class PageState implements Persistable, PathObject {
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 	    setLoginRequired(false);
+		setForms(forms);
 		setKey(generateKey());
 	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 *
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 *
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
-	 */
-	public PageState(String url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name){
-		assert elements != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url);
-		setBrowser(browser_name);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setSrc(src);
-		setScreenshotChecksum(new ArrayList<String>());
-		setForms(new HashSet<Form>());
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setScreenshots(new ArrayList<Screenshot>());
-		setAnimatedImageUrls(new ArrayList<String>());
-		setAnimatedImageChecksums(new ArrayList<>());
-		setLoginRequired(false);
-		setKey(generateKey());
-	}
-
+	
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
@@ -179,7 +142,7 @@ public class PageState implements Persistable, PathObject {
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, boolean isLandable,
 			String src, long scroll_x_offset, long scroll_y_offset, int viewport_width, int viewport_height,
-			String browser_name) throws IOException, NoSuchAlgorithmException {
+			String browser_name, Set<Form> forms) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert screenshot_url != null;
 
@@ -197,11 +160,11 @@ public class PageState implements Persistable, PathObject {
 		setViewportHeight(viewport_height);
 		setScreenshotChecksum(new ArrayList<String>());
 		setSrc(src);
-		setForms(new HashSet<Form>());
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 		setLoginRequired(false);
+		setForms(forms);
 		setKey(generateKey());
 	}
 
@@ -298,7 +261,7 @@ public class PageState implements Persistable, PathObject {
 
 		PageState page = null;
 		try {
-			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
+			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getForms());
 			page.setScreenshotChecksum(getScreenshotChecksums());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
@@ -431,6 +394,12 @@ public class PageState implements Persistable, PathObject {
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
 			key += element.getKey();
+		}
+		
+		List<Form> forms = getForms().stream().collect(Collectors.toList());
+		Collections.sort(forms, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
+		for(Form form : forms) {
+			key += form.getKey();
 		}
 		
 		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);

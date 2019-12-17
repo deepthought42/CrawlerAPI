@@ -96,12 +96,9 @@ public class UrlBrowserActor extends AbstractActor {
 						return;
 					}
 					
-					//String discovery_key = message.getOptions().get("discovery_key").toString();
 					String url = message.getUrl().toString();
-					
 					String host = message.getUrl().getHost();
 					String browser_name = message.getDomain().getDiscoveryBrowserName();
-					log.warn("starting transition detection");
 					Redirect redirect = null;
 					PageLoadAnimation animation = null;
 					BrowserType browser_type = BrowserType.create(browser_name);
@@ -138,12 +135,13 @@ public class UrlBrowserActor extends AbstractActor {
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page...");
-							page_state = browser_service.buildPage(message.getAccount(), message.getDomain().getUrl(), browser);
+							page_state = browser_service.buildPage(message.getAccount(), message.getDomain(), browser);
 
 							break;
 						}
 						catch(Exception e){
-							log.warn(e.getMessage());
+							log.warn("URL BROWSER ACTOR EXCEPTION :: "+e.getMessage());
+							e.printStackTrace();
 						}
 						finally {
 							if(browser != null){

@@ -2,12 +2,12 @@ package com.minion.actors;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -97,7 +97,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							 
 							log.warning("extracting all forms");
-						  	List<Form> forms = browser_service.extractAllForms(message.getAccountId(), message.getDomain().getUrl(), page_state, browser);
+						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), message.getDomain(), browser);
 						  	log.warning("forms extracted :: "+forms.size());
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
@@ -111,7 +111,6 @@ public class FormDiscoveryActor extends AbstractActor{
 							  								  	
 							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
-							  	MessageBroadcaster.broadcastDiscoveredForm(form, host, message.getAccountId());
 						  	}
 						  	forms_created = true;
 						  	return;

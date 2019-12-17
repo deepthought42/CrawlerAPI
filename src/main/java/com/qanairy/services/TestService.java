@@ -93,7 +93,7 @@ public class TestService {
 	 * @throws WebDriverException
 	 * @throws GridException
 	 */
-	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status, String url, String user_id) {
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status, Domain domain, String user_id) {
 		 assert test != null;
 
 		 TestStatus passing = null;
@@ -109,7 +109,7 @@ public class TestService {
 		 do{
 			 try {
 				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.TEST);
-				 page = crawler.crawlPath(user_id, url, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
+				 page = crawler.crawlPath(user_id, domain, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getMessage());
 			 }
@@ -129,7 +129,7 @@ public class TestService {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 passing = Test.isTestPassing(getResult(test.getKey(), url, user_id), page, last_test_status );
+		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getUrl(), user_id), page, last_test_status );
  		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 		 return test_record;
@@ -205,7 +205,7 @@ public class TestService {
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 
     	for(Test test : tests){
-			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain.getUrl(), acct.getUserId());
+			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain, acct.getUserId());
 
 			log.warn("run test returned record  ::  "+record);
 			test_results.put(test.getKey(), record);

@@ -114,6 +114,21 @@ public class Form {
 		return FormType.LEAD;
 	}
 	
+	/**
+	 * Checks if {@link ElementState elements} are equal
+	 * 
+	 * @param elem
+	 * @return whether or not elements are equal
+	 */
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof Form)) return false;
+        
+        Form that = (Form)o;
+		return this.getKey().equals(that.getKey());
+	}
+	
 	public String getName() {
 		return name;
 	}

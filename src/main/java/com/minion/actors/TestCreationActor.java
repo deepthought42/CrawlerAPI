@@ -100,7 +100,7 @@ public class TestCreationActor extends AbstractActor  {
 				    	String browser_name = acct_message.getOptions().get("browser").toString();
 				    	int attempts = 0;
 				    	Test test = null;
-				    	Domain domain = null;
+				    	Domain domain = acct_message.getDomain();
 		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -108,7 +108,7 @@ public class TestCreationActor extends AbstractActor  {
 
 				    		try{
 				    			browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-			    				
+				    			
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser, acct_message.getAccountKey(), domain);
 				    			long end_time = System.currentTimeMillis();
@@ -195,31 +195,21 @@ public class TestCreationActor extends AbstractActor  {
 				Domain domain
 			) throws JSONException, Exception {
 		boolean first_page = true;
+		PageState page_state = null;
+
 		for(int idx=0; idx < path.length(); idx++){
         	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
 
     		if(path_obj_json.has("url")){
     			String path_url = path_obj_json.getString("url");
-    			String host = new URL(path_url).getHost();
-    			
-    			if(!first_page){
-    				PageState page_state = browser_service.buildPage(user_id, domain, browser);
-    				path_keys.add(page_state.getKey());
-	    			path_objects.add(page_state);
+    			if(first_page){
+    				browser.navigateTo(path_url);
     			}
-    			else{
-    				int dot_idx = host.indexOf('.');
-    		    	int last_dot_idx = host.lastIndexOf('.');
-    		    	String formatted_url = host;
-    		    	if(dot_idx == last_dot_idx){
-    		    		formatted_url = "www."+host;
-    		    	}
-    				domain = domain_service.findByHost(formatted_url, user_id);
-    			}
-
-    			PageState page_state = navigateToAndCreatePageState(user_id, domain, browser);
-
+    			page_state = browser_service.buildPage(user_id, domain, browser);
+				path_keys.add(page_state.getKey());
+    			path_objects.add(page_state);
     			first_page = false;
+
     			path_keys.add(page_state.getKey());
     			path_objects.add(page_state);
     		}

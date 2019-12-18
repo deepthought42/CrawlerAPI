@@ -1019,46 +1019,13 @@ public class BrowserService {
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
-			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
+			List<WebElement> input_elements =  form_elem.findElements(By.xpath(".//input"));
 			input_elements = BrowserService.fitlerNonDisplayedElements(input_elements);
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
 			
-			for(WebElement input_elem : input_elements){
-				boolean submit_elem_found = false;
-
-				Set<Attribute> attributes = browser.extractAttributes(input_elem);
-				for(Attribute attribute : attributes){
-					if(attribute.contains("submit")){
-						submit_elem_found = true;
-						break;
-					}
-				}
-
-				if(submit_elem_found){
-					continue;
-				}
-				
-				img = browser.getElementScreenshot(input_elem);
-				checksum = PageState.getFileChecksum(img);
-				
-				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), checksum );
-				input_tag = element_service.saveFormElement(user_id, input_tag);
-				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
-				input_tag.setScreenshot(screenshot);
-				img.flush();
-
-				if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
-					log.warn("element location x or y are negative");
-					continue;
-				}
-				
-				input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
-				log.warn("rules applied to input tag   ::   "+input_tag.getRules().size());
-
-				form.addFormField(input_tag);
-			}
+			form.addFormFields(buildFormFields(user_id, input_elements, browser));
 
 			for(double d: form.getPrediction()){
 				log.info("PREDICTION ::: "+d);
@@ -1066,7 +1033,6 @@ public class BrowserService {
 
 			log.info("weights :: "+ form.getPrediction());
 			form.setType(FormType.UNKNOWN);
-
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
@@ -1081,6 +1047,46 @@ public class BrowserService {
 			form_list.add(form);
 		}
 		return form_list;
+	}
+
+	private List<ElementState> buildFormFields(String user_id, List<WebElement> input_elements, Browser browser) throws IOException {
+		List<ElementState> elements = new ArrayList<>();
+		for(WebElement input_elem : input_elements){
+			boolean submit_elem_found = false;
+
+			Set<Attribute> attributes = browser.extractAttributes(input_elem);
+			for(Attribute attribute : attributes){
+				if(attribute.contains("submit")){
+					submit_elem_found = true;
+					break;
+				}
+			}
+
+			if(submit_elem_found){
+				continue;
+			}
+			
+			BufferedImage img = browser.getElementScreenshot(input_elem);
+			String checksum = PageState.getFileChecksum(img);
+			
+			ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), checksum );
+			input_tag = element_service.saveFormElement(user_id, input_tag);
+			String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
+			input_tag.setScreenshot(screenshot);
+			img.flush();
+
+			if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
+				log.warn("element location x or y are negative");
+				continue;
+			}
+			
+			input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
+			log.warn("rules applied to input tag   ::   "+input_tag.getRules().size());
+
+			elements.add(input_tag);
+		}
+		
+		return elements;
 	}
 
 	/**

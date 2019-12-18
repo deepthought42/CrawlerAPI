@@ -24,6 +24,11 @@ public class ElementRuleExtractor {
 	@Autowired
 	private RuleService rule_service;
 
+	/**
+	 * 
+	 * @param elem
+	 * @return
+	 */
 	public List<Rule> extractInputRules(ElementState elem){
 		List<Rule> rules = new ArrayList<Rule>();
 

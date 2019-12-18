@@ -242,14 +242,14 @@ public class TestCreationActor extends AbstractActor  {
 
     			Crawler.performAction(action, element, browser.getDriver());
 
-    			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
+    			// CHECK IF NEXT OBJECT IS A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE
 	        	if(idx+1 < path.length()){
 	    			path_obj_json = new JSONObject(path.get(idx+1).toString());
 
 	    			if(!path_obj_json.has("url")){
 		    			//capture new page state and add it to path
-		    			PageState page_state = browser_service.buildPage(user_id, domain, browser);
+		    			page_state = browser_service.buildPage(user_id, domain, browser);
 		    			path_keys.add(page_state.getKey());
 		    			path_objects.add(page_state);
 	    			}
@@ -283,22 +283,5 @@ public class TestCreationActor extends AbstractActor  {
 		elem.setScreenshot(screenshot_url);
 		elem = page_element_service.save(user_id, elem);
 		return elem;
-	}
-
-	/**
-	 * Navigates to url in the given browser
-	 *
-	 * @param url {@link String} value of {@link URL} object
-	 * @param isFirstPage
-	 * @param browser
-	 * @return
-	 * @throws Exception 
-	 */
-	private PageState navigateToAndCreatePageState(String user_id, Domain domain, Browser browser)
-									throws Exception {
-		browser.navigateTo(domain.getUrl());
-		//browser.waitForPageToLoad();
-		//construct a new page
-		return browser_service.buildPage(user_id, domain, browser);
 	}
 }

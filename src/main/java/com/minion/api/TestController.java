@@ -422,7 +422,7 @@ public class TestController {
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys,
 														  @RequestParam(value="browser", required=true) String browser,
-														  @RequestParam(value="host_url", required=true) String host)
+														  @RequestParam(value="host_url", required=true) String url)
 																  throws UnknownAccountException, PaymentDueException, StripeException, JsonProcessingException{
 
     	Principal principal = request.getUserPrincipal();
@@ -432,7 +432,6 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-
     	
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
@@ -440,17 +439,18 @@ public class TestController {
     	
     	SegmentAnalyticsHelper.testRunStarted(acct.getUserId(), test_keys.size());
 
+    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
     	for(String key : test_keys){
-    		Test test = test_repo.findByKey(key, host, acct.getUserId());
+    		Test test = test_repo.findByKey(key, domain.getUrl(), acct.getUserId());
     		TestStatus last_test_status = test.getStatus();
 
 			test.setStatus(TestStatus.RUNNING);
 			test.setBrowserStatus(browser.trim(), TestStatus.RUNNING.toString());
 			test = test_repo.save(test);
 			
-    		TestRecord record = test_service.runTest(test, browser, last_test_status, host, acct.getUserId());
+    		TestRecord record = test_service.runTest(test, browser, last_test_status, domain, acct.getUserId());
 			test_results.put(test.getKey(), record);
 
 			//set browser status first since we use browser statuses to determine overall test status
@@ -472,7 +472,7 @@ public class TestController {
 			record = test_record_repo.save(record);
 
 			SegmentAnalyticsHelper.sendTestFinishedRunningEvent(acct.getUserId(), test);
-			test = test_service.findByKey(test.getKey(), host, acct.getUserId());
+			test = test_service.findByKey(test.getKey(), domain.getUrl(), acct.getUserId());
 
 			test.addRecord(record);
 			test.setStatus(is_passing);
@@ -481,7 +481,7 @@ public class TestController {
 
 			acct.addTestRecord(record);
 			account_service.save(acct);
-			MessageBroadcaster.broadcastTestStatus(host, record, test, acct.getUserId());
+			MessageBroadcaster.broadcastTestStatus(domain.getHost(), record, test, acct.getUserId());
     	}
 
     	log.warn("returning test results");
@@ -609,13 +609,23 @@ public class TestController {
 	 * @param url
 	 *
 	 * @return
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request,
-			   								   @RequestParam(value="url", required=true) String url) {
-		List<Group> groups = new ArrayList<Group>();
-		Set<Test> test_list = domain_service.getTests(url);
+			   								   @RequestParam(value="url", required=true) String url
+	   ) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+
+    	if(account == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	List<Group> groups = new ArrayList<Group>();
+		Set<Test> test_list = domain_service.getTests(account.getUserId(), url);
 
 		for(Test test : test_list){
 			if(test.getGroups() != null){

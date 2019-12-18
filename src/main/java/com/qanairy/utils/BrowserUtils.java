@@ -44,7 +44,7 @@ public class BrowserUtils {
 
 		String last_key = sanitizeUrl(initial_url);
 		
-		transition_urls.add(last_key);
+		//transition_urls.add(last_key);
 		do{
 			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl());
 
@@ -97,7 +97,6 @@ public class BrowserUtils {
 			String new_checksum = PageState.getFileChecksum(screenshot);
 
 			transition_detected = !new_checksum.equals(last_checksum);
-			log.warn("animation new checksum :: " +new_checksum);
 			if( transition_detected ){
 				if( animated_state_checksum_hash.containsKey(new_checksum)){
 					break;

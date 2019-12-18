@@ -62,6 +62,7 @@ public class PathExpansionActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 			.match(PathMessage.class, message -> {
+				log.warn("STARTING PATH EXPANSION....  "+message.getPathObjects().size());
 				//get sublist of path from beginning to page state index
 				List<ExploratoryPath> exploratory_paths = expandPath(message);
 				log.warn("total path expansions found :: "+exploratory_paths.size());
@@ -92,8 +93,12 @@ public class PathExpansionActor extends AbstractActor {
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * 
+	 * @pre path != null
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
+		assert path != null;
+		
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		//get last page states for page
 	
@@ -161,6 +166,7 @@ public class PathExpansionActor extends AbstractActor {
 		assert(path_objects != null);
 		assert(!path_objects.isEmpty());
 
+		log.warn("getting element states for expansion ....."+path_objects.size());
 		//get last page
 		PageState last_page_state = PathUtils.getLastPageState(path_objects);
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);

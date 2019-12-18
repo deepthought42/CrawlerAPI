@@ -78,10 +78,10 @@ public class Form {
 		List<ElementState> elements = getFormFields().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
-			elements_key += element.getKey();
+			elements_key += element.generateStylelessKey();
 		}
 		
-		return "form::"+elements_key+""+getFormTag().getKey();
+		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elements_key+""+getFormTag().getKey());
 	}
 
 	/**
@@ -112,6 +112,21 @@ public class Form {
 		}
 		
 		return FormType.LEAD;
+	}
+	
+	/**
+	 * Checks if {@link ElementState elements} are equal
+	 * 
+	 * @param elem
+	 * @return whether or not elements are equal
+	 */
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof Form)) return false;
+        
+        Form that = (Form)o;
+		return this.getKey().equals(that.getKey());
 	}
 	
 	public String getName() {

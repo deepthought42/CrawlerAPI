@@ -167,12 +167,6 @@ public class DiscoveryActor extends AbstractActor{
 					    }
 
 						path_expansion_actor.tell(path_message, getSelf() );
-						
-						if(form_discoverer == null){
-							form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						}
-						form_discoverer.tell(path_message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
@@ -209,23 +203,23 @@ public class DiscoveryActor extends AbstractActor{
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 							}
 						}
-
-						if(form_discoverer == null){
-							form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						}
-						form_discoverer.tell(message, getSelf() );
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
 					discovery_service.save(discovery_record);
 				})
 				.match(TestMessage.class, test_msg -> {
+					//plan exceeded check
+			    	Account acct = account_service.findByUserId(test_msg.getAccount());
+			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
+			    	}
+			    	
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
 						try {
-							SegmentAnalyticsHelper.testCreated(account.getUserId(), test.getKey());
+							SegmentAnalyticsHelper.testCreated(test_msg.getAccount(), test.getKey());
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -239,11 +233,7 @@ public class DiscoveryActor extends AbstractActor{
 					domain_actor.tell(test_msg, getSelf());
 					
 					
-					//plan exceeded check
-			    	Account acct = account_service.findByUserId(test_msg.getAccount());
-			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to run a discovery");
-			    	}
+					
 					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
@@ -258,6 +248,17 @@ public class DiscoveryActor extends AbstractActor{
 							return;
 						}
 						
+						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
+						final_key_list.add(test.getResult().getKey());
+						List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+						final_object_list.add(test.getResult());
+						log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
+						//run reducer on key list
+						final_key_list = PathUtils.reducePathKeys(final_key_list);
+						final_object_list = PathUtils.reducePathObjects(final_object_list);
+						
+						PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
+						
 						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
 							if(!explored_pages.containsKey(test.getResult().getUrl())) {
@@ -269,31 +270,33 @@ public class DiscoveryActor extends AbstractActor{
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
 							}
+							
+							/*
+							if(form_discoverer == null){
+								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										.props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+							}
+							
+							form_discoverer.tell(path, getSelf() );
+							*/
 						}
 						else {
-							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
-				  			final_key_list.add(test.getResult().getKey());
-				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
-				  			final_object_list.add(test.getResult());
-				  			log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
-				  			//run reducer on key list
-				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
-				  			final_object_list = PathUtils.reducePathObjects(final_object_list);
-				  			
-				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-				  			if(path_expansion_actor == null){
+							if(path_expansion_actor == null){
 				  				path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  						  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 				  		    }
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 							
+							/*
 							if(form_discoverer == null){
 								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+										.props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 							}
 							form_discoverer.tell(path, getSelf() );
+							*/
 						}
+						
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
 
@@ -334,7 +337,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 
-					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getDomain().getUrl(), form_msg.getPage().getKey());
 
 					page_state_record.addForm(form);
 					try {
@@ -348,6 +351,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 					
+				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getHost(), form_msg.getUserId());					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

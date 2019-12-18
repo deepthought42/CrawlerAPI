@@ -17,28 +17,20 @@ import com.qanairy.models.Screenshot;
  */
 @Repository
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
-	@Query("MATCH a=(p:PageState{key:{key}}) RETURN p LIMIT 1")
-	public PageState findByKey(@Param("key") String key);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{key:{key}}) RETURN p LIMIT 1")
+	public PageState findByKey(@Param("user_id") String user_id, @Param("url") String url, @Param("key") String key);
 
-	//@Query("MATCH a=(p:PageState)-[h:HAS]->() MATCH (p)-[]->(s:Screenshot{checksum: {screenshot_checksum}}) RETURN a LIMIT 1")
-	//public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
-	@Query("MATCH a=(p:PageState)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public List<PageState> findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
+	public List<PageState> findByScreenshotChecksumsContains(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
-	//@Query("MATCH a=(p:PageState{full_page_checksum:{screenshot_checksum}})-[h:HAS]->() RETURN a LIMIT 1")
-	//public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
-	
-	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS]->(e:ElementState) RETURN e")
-	public List<ElementState> getElementStates(@Param("page_key") String key);
-	
-	@Query("MATCH (p:PageState{url:{url}})-[h:HAS]->(e:ElementState{key:{element_key}}) RETURN p")
-	public Set<PageState> getElementPageStatesWithSameUrl(@Param("url") String url, @Param("element_key") String key);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(e:ElementState) RETURN e")
+	public List<ElementState> getElementStates(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String key);
 
-	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS]->(s:Screenshot) RETURN s")
-	public List<Screenshot> getScreenshots(@Param("page_key") String page_key);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(s:Screenshot) RETURN s")
+	public List<Screenshot> getScreenshots(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 
-	@Query("MATCH a=(p:PageState) WHERE {screenshot_checksum} IN p.animated_image_checksums RETURN p LIMIT 1")
-	public PageState findByAnimationImageChecksum(@Param("screenshot_checksum") String screenshot_checksum);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{key:{page_key}}) WHERE {screenshot_checksum} IN p.animated_image_checksums RETURN p LIMIT 1")
+	public PageState findByAnimationImageChecksum(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String screenshot_checksum);
 
 	@Query("MATCH (a:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(f:Form{key:{form_key}}) RETURN p")
 	public List<PageState> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);

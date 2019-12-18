@@ -129,7 +129,7 @@ public class IdeTestExportController {
 		
 		account_service.addDomainToAccount(acct, domain);
 
-		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options);
+		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options, domain);
 
 		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());

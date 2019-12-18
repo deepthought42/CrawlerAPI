@@ -59,7 +59,7 @@ public class PageStateService {
 			page_err = false;
 			try{
 				for(String checksum : page_state.getScreenshotChecksums()){
-					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(checksum);
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(user_id, url, checksum);
 					if(!page_state_records.isEmpty()){
 						page_state_record = page_state_records.get(0);
 						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
@@ -71,13 +71,13 @@ public class PageStateService {
 				if(page_state_record == null){
 					
 					for(Screenshot screenshot : page_state.getScreenshots()){
-						List<PageState> page_state_records = findByScreenshotChecksum(screenshot.getChecksum());
+						List<PageState> page_state_records = findByScreenshotChecksum(user_id, url, screenshot.getChecksum());
 						if(page_state_records.isEmpty()){
 							continue;
 						}
-						page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
+						page_state_record = findByAnimationImageChecksum(user_id, url, screenshot.getChecksum());
 						if(page_state_record != null){
-							page_state_record.setElements(getElementStates(page_state_record.getKey()));
+							page_state_record.setElements(getElementStates(user_id, url, page_state_record.getKey()));
 							break;
 						}
 					}
@@ -90,7 +90,7 @@ public class PageStateService {
 					for(Screenshot screenshot : page_state.getScreenshots()){
 						screenshot_map.put(screenshot.getKey(), screenshot);
 					}
-					for(Screenshot screenshot : getScreenshots(page_state.getKey())){
+					for(Screenshot screenshot : getScreenshots(user_id, url, page_state.getKey())){
 						screenshot_map.remove(screenshot.getKey());
 					}
 					
@@ -100,12 +100,12 @@ public class PageStateService {
 					
 					page_state_record = page_state_repo.save(page_state_record);
 					
-					page_state_record.setElements(getElementStates(page_state_record.getKey()));
-					page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
+					page_state_record.setElements(getElementStates(user_id, url, page_state_record.getKey()));
+					page_state_record.setScreenshots(getScreenshots(user_id, url, page_state_record.getKey()));
 				}
 				else {
 					log.warn("page state wasn't found in database. Saving new page state to neo4j");
-					page_state_record = findByKey(page_state.getKey());
+					page_state_record = findByKey(user_id, url, page_state.getKey());
 		
 					if(page_state_record != null){
 						page_state_record.setForms(page_state.getForms());
@@ -118,7 +118,7 @@ public class PageStateService {
 						for(Screenshot screenshot : page_state.getScreenshots()){
 							screenshot_map.put(screenshot.getKey(), screenshot);
 						}
-						for(Screenshot screenshot : getScreenshots(page_state.getKey())){
+						for(Screenshot screenshot : getScreenshots(user_id, url, page_state.getKey())){
 							screenshot_map.remove(screenshot.getKey());
 						}
 						
@@ -127,8 +127,8 @@ public class PageStateService {
 						}
 						
 						page_state_record = page_state_repo.save(page_state_record);
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
-						page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
+						page_state_record.setElements(getElementStates(user_id, url, page_state_record.getKey()));
+						page_state_record.setScreenshots(getScreenshots(user_id, url, page_state_record.getKey()));
 					}
 					else{
 						//iterate over page elements
@@ -160,7 +160,7 @@ public class PageStateService {
 							Form form_record = form_repo.findByKey(user_id, url, form.getKey());
 							if(form_record == null){
 								List<ElementState> form_element_records = new ArrayList<>();
-								for(ElementState element : page_state.getElements()){
+								for(ElementState element : form.getFormFields()){
 									log.warn("saving form element to page state");
 									ElementState element_record = element_state_service.saveFormElement(user_id, element);
 									
@@ -198,45 +198,41 @@ public class PageStateService {
 		return page_state_record;
 	}
 
-	public void addToForms(String page_key, Form form){
-		PageState page_state = page_state_repo.findByKey(page_key);
+	public void addToForms(String user_id, String url, String page_key, Form form){
+		PageState page_state = page_state_repo.findByKey(user_id, url, page_key);
 		page_state.addForm(form);
 		page_state_repo.save(page_state);
 	}
 	
-	public PageState findByKey(String page_key) {
-		PageState page_state = page_state_repo.findByKey(page_key);
+	public PageState findByKey(String user_id, String url, String page_key) {
+		PageState page_state = page_state_repo.findByKey(user_id, url, page_key);
 		if(page_state != null){
-			page_state.setElements(getElementStates(page_key));
-			page_state.setScreenshots(getScreenshots(page_key));
+			page_state.setElements(getElementStates(user_id, url, page_key));
+			page_state.setScreenshots(getScreenshots(user_id, url, page_key));
 		}
 		return page_state;
 	}
 	
-	public List<PageState> findByScreenshotChecksum(String screenshot_checksum){
-		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
+	public List<PageState> findByScreenshotChecksum(String user_id, String url, String screenshot_checksum){
+		return page_state_repo.findByScreenshotChecksumsContains(user_id, url, screenshot_checksum);		
 	}
 	
-	public PageState findByAnimationImageChecksum(String screenshot_checksum){
-		return page_state_repo.findByAnimationImageChecksum(screenshot_checksum);		
+	public PageState findByAnimationImageChecksum(String user_id, String url, String screenshot_checksum){
+		return page_state_repo.findByAnimationImageChecksum(user_id, url, screenshot_checksum);		
 	}
 	
-	public List<ElementState> getElementStates(String page_key){
-		return page_state_repo.getElementStates(page_key);
+	public List<ElementState> getElementStates(String user_id, String url, String page_key){
+		return page_state_repo.getElementStates(user_id, url, page_key);
 	}
 	
-	public List<Screenshot> getScreenshots(String page_key){
-		List<Screenshot> screenshots = page_state_repo.getScreenshots(page_key);
+	public List<Screenshot> getScreenshots(String user_id, String url, String page_key){
+		List<Screenshot> screenshots = page_state_repo.getScreenshots(user_id, url, page_key);
 		if(screenshots == null){
 			return new ArrayList<Screenshot>();
 		}
 		return screenshots;
 	}
 	
-	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){
-		return page_state_repo.getElementPageStatesWithSameUrl(url, key);
-	}
-
 	public List<PageState> findPageStatesWithForm(String user_id, String url, String page_key) {
 		return page_state_repo.findPageStatesWithForm(user_id, url, page_key);
 	}

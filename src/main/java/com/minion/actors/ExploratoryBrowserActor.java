@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -23,7 +22,6 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -88,9 +86,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
 
-						String host = new URL(PathUtils.getFirstPage(message.getPathObjects()).getUrl()).getHost();
 						try {
-							result_page = crawler.performPathExploratoryCrawl(browser_name, message, host);
+							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), message.getDomain(), browser_name, message);
 						} catch(DiscoveryStoppedException e) {
 							return;
 						}
@@ -114,7 +111,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 						for(Test test : matching_tests) {
-							path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
+							path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test.getPathKeys()));
 						}
 						
 						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);

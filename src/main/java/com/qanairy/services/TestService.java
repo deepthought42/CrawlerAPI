@@ -93,7 +93,7 @@ public class TestService {
 	 * @throws WebDriverException
 	 * @throws GridException
 	 */
-	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status, String url, String user_id) {
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status, Domain domain, String user_id) {
 		 assert test != null;
 
 		 TestStatus passing = null;
@@ -109,7 +109,7 @@ public class TestService {
 		 do{
 			 try {
 				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.TEST);
-				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
+				 page = crawler.crawlPath(user_id, domain, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getMessage());
 			 }
@@ -129,7 +129,7 @@ public class TestService {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 passing = Test.isTestPassing(getResult(test.getKey(), url, user_id), page, last_test_status );
+		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getUrl(), user_id), page, last_test_status );
  		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 		 return test_record;
@@ -205,7 +205,7 @@ public class TestService {
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 
     	for(Test test : tests){
-			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain.getUrl(), acct.getUserId());
+			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain, acct.getUserId());
 
 			log.warn("run test returned record  ::  "+record);
 			test_results.put(test.getKey(), record);
@@ -297,14 +297,14 @@ public class TestService {
     * 
     * @return
     */
-   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id) {
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id, String url) {
 	   assert path_keys != null;
 	   assert !path_keys.isEmpty();
 	   assert test_path_object_lists != null;
 	   assert !test_path_object_lists.isEmpty();
    
 	   //load path objects using path keys
-	   List<PathObject> path_objects = loadPathObjects(user_id, path_keys);
+	   List<PathObject> path_objects = loadPathObjects(user_id, url, path_keys);
 	   
 	   //find all tests with page state at index
 	   for(List<PathObject> test_path_objects : test_path_object_lists) {
@@ -349,12 +349,12 @@ public class TestService {
 	   return false;
    }
 
-	public List<PathObject> loadPathObjects(String user_id, List<String> path_keys) {
+	public List<PathObject> loadPathObjects(String user_id, String url, List<String> path_keys) {
 		//load path objects using path keys
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
-				path_objects.add(page_state_service.findByKey(key));
+				path_objects.add(page_state_service.findByKey(user_id, url, key));
 			}
 			else if(key.contains("elementstate")) {
 				path_objects.add(element_state_service.findByKey(user_id, key));

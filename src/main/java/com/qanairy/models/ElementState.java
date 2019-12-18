@@ -86,7 +86,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		assert xpath != null;
 		assert name != null;
 		assert screenshot_url != null;
-		assert !screenshot_url.isEmpty();
 		
 		setType("ElementState");
 		setName(name);
@@ -326,6 +325,29 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		for(String css_key : css_keys){
 			key += css_key+cssValues.get(css_key);
 		}
+
+		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
+		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+		
+		for(Attribute attribute : attributes){
+			key += attribute.getKey();
+		}
+
+		key += this.getName();
+		key += this.getText();
+		key += this.getXpath();
+		
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	public String generateStylelessKey() {
+		String key = "";
 
 		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
 		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));

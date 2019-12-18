@@ -160,7 +160,7 @@ public class PageStateService {
 							Form form_record = form_repo.findByKey(user_id, url, form.getKey());
 							if(form_record == null){
 								List<ElementState> form_element_records = new ArrayList<>();
-								for(ElementState element : page_state.getElements()){
+								for(ElementState element : form.getFormFields()){
 									log.warn("saving form element to page state");
 									ElementState element_record = element_state_service.saveFormElement(user_id, element);
 									

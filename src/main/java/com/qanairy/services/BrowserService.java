@@ -1024,11 +1024,11 @@ public class BrowserService {
 			input_elements = BrowserService.filterStructureTags(input_elements);
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
-			
-			form.addFormFields(buildFormFields(user_id, input_elements, browser));
+			input_elements = BrowserService.filterAllButInputs(input_elements);
+			form.setFormFields(buildFormFields(user_id, input_elements, browser));
 
 			for(double d: form.getPrediction()){
-				log.info("PREDICTION ::: "+d);
+				log.warn("PREDICTION ::: "+d);
 			}
 
 			log.info("weights :: "+ form.getPrediction());
@@ -1047,6 +1047,16 @@ public class BrowserService {
 			form_list.add(form);
 		}
 		return form_list;
+	}
+
+	private static List<WebElement> filterAllButInputs(List<WebElement> elements) {
+		List<WebElement> filtered_elems = new ArrayList<WebElement>();
+		for(WebElement elem : elements){
+			if(elem.getTagName().equals("input")){
+				filtered_elems.add(elem);
+			}
+		}
+		return filtered_elems;
 	}
 
 	private List<ElementState> buildFormFields(String user_id, List<WebElement> input_elements, Browser browser) throws IOException {

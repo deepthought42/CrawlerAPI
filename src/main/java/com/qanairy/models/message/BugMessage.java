@@ -34,7 +34,7 @@ public class BugMessage {
 	
 	public boolean equals(Object o) {
 		if (this == o) return true;
-        if (!(o instanceof ElementState)) return false;
+        if (!(o instanceof BugMessage)) return false;
         
         BugMessage that = (BugMessage)o;
 		return this.getMessage().equals(that.getMessage());

@@ -27,4 +27,7 @@ public interface FormRepository extends Neo4jRepository<Form, Long> {
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(f:Form{key:{form_key}}) Match (f)-[:DEFINED_BY]->(e) RETURN e")
 	public ElementState getFormElement(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
+
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(f:Form{key:{form_key}}) Match (f)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
+	public Form clearBugMessages(@Param("user_id") String user_id, @Param("form_key") String form_key);
 }

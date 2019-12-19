@@ -31,6 +31,7 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -63,6 +64,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
+	@Autowired
+	private ElementStateService element_state_service;
+	
 	@Autowired 
 	private ActionRepository action_repo;
 	
@@ -87,7 +91,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return receiveBuilder()
 				.match(FormDiscoveryMessage.class, message -> {
 					Form form = message.getForm();
-					form_service.clearBugMessages(message.getForm().getId());
+					form_service.clearBugMessages(message.getAccountId(), message.getForm().getKey());
 					//check that message data is of type Form and that the form type is set to login
 					log.info("login form test discovery actor is up!");
 
@@ -107,11 +111,15 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							//  clone test
 							//  get username element and add it to path
 							List<ElementState> elements = form.getFormFields();
+							log.warning("***************************************************************");
+							log.warning("form input field count  :: " +elements.size());
+							log.warning("***************************************************************");
+							
 							//find username input element
-							ElementState username_elem = findInputElementByAttribute(elements, "username");
+							ElementState username_elem = findInputElementByAttribute(elements, "username", message.getAccountId());
 							
 							if(username_elem == null){
-								username_elem = findInputElementByAttribute(elements, "email");
+								username_elem = findInputElementByAttribute(elements, "email", message.getAccountId());
 								if(username_elem == null){
 									log.info("could not find username !!!!!!!!");
 									BugMessage bug_message = new BugMessage(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new Date());
@@ -135,7 +143,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							}
 							
 							//  get password element and add it to the path
-							ElementState password_elem = findInputElementByAttribute(elements, "password");
+							ElementState password_elem = findInputElementByAttribute(elements, "password", message.getAccountId());
 
 							if(password_elem == null){
 								log.info("could not find password !!!!!!!!");
@@ -249,7 +257,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return new ExploratoryPath(path_keys, path_objects);
 	}
 
-	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val) {
+	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val, String user_id) {
 		for(ElementState element : elements){
 			//check if element is type email
 			log.warning("element get type :: "+element.getType().contains(search_val));
@@ -257,25 +265,20 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 				return element;
 			}
 			
+			List<Attribute> element_attributes = element_state_service.getElementAttributes(user_id, element.getKey());
+			log.warning("--- " + element_attributes.size() + " element attribues to be reviewed for search term   :::   "+search_val);
 			//check if element has value username in any attributes
-			for(Attribute attribute : element.getAttributes()){
+			for(Attribute attribute : element_attributes){
 				for(String val : attribute.getVals()){
 					log.warning("element attribute value  :: "+val.contains(search_val));
 
 					if(val.contains(search_val)){
+						log.warning("Element contains search val :: "+search_val);
 						return element;
 					}
 				}
 			}
-			log.warning("element attribute value  :: "+element.getName().contains(search_val));
 			log.warning("element xpath value  :: "+element.getXpath().contains(search_val));
-
-			if(element.getName().contains(search_val)){
-				return element;
-			}
-			else if(element.getXpath().contains(search_val)){
-				return element;
-			}
 		}
 		
 		return null;

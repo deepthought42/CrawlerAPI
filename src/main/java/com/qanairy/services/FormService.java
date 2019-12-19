@@ -104,11 +104,19 @@ public class FormService {
 		Optional<Form> opt_form = form_repo.findById(form_id);
 		
 		if(opt_form.isPresent()){
+			boolean msg_exists = false;
 			Form form = opt_form.get();
-			BugMessage bug_msg = bug_message_repo.save(msg);
-			form.addBugMessage(bug_msg);
-			log.warn("form :: "+form.getBugMessages());
-
+			//check if form has error message already
+			for(BugMessage bug_msg : form.getBugMessages()) {
+				if( bug_msg.equals(msg)) {
+					msg_exists = true;
+				}
+			}
+			if(!msg_exists) {
+				BugMessage bug_msg = bug_message_repo.save(msg);
+				form.addBugMessage(bug_msg);
+				log.warn("form :: "+form.getBugMessages());
+			}
 			log.warn("form bug message size :: "+form.getBugMessages().size());
 			log.warn("form name :: "+form.getName());
 			log.warn("form memory id :: "+form.getMemoryId());
@@ -141,15 +149,7 @@ public class FormService {
 		return null;
 	}
 
-	public Form clearBugMessages(Long id) {
-		Optional<Form> opt_form = form_repo.findById(id);
-		
-		if(opt_form.isPresent()){
-			Form form = opt_form.get();
-			form.setBugMessages(new ArrayList<>());
-			
-			return form_repo.save(form);
-		}
-		return null;
+	public Form clearBugMessages(String user_id, String form_key) {
+		return form_repo.clearBugMessages(user_id, form_key);
 	}
 }

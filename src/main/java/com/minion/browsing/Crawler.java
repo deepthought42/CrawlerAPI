@@ -592,9 +592,9 @@ public class Crawler {
 		do{
 			try{
 				browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
-				log.warn("expected path url : "+expected_page.getUrl());
-				browser.navigateTo(expected_page.getUrl());
+				String url = PathUtils.getFirstUrl(path.getPathObjects());
+				log.warn("expected path url : "+url);
+				browser.navigateTo(url);
 				browser.moveMouseToNonInteractive(new Point(300,300));
 
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);

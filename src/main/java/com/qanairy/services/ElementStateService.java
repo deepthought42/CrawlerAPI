@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
@@ -137,5 +138,9 @@ public class ElementStateService {
 		else {
 			throw new ExistingRuleException(rule.getType().toString());
 		}
+	}
+
+	public List<Attribute> getElementAttributes(String user_id, String element_key) {
+		return element_repo.getElementAttributes( user_id, element_key);
 	}
 }

@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface FormRepository extends Neo4jRepository<Form, Long> {
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(f:Form{key:{form_key}}) Match form=(f)-[]->() RETURN form")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(f:Form{key:{form_key}}) Match form=(f)-[]->() RETURN form LIMIT 1")
 	public Form findByKey(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(:Form{key:{key}}) RETURN p")

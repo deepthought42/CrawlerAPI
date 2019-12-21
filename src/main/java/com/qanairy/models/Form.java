@@ -22,7 +22,7 @@ import com.qanairy.models.message.BugMessage;
  * Represents a form tag and the encompassed inputs in a web browser
  */
 @NodeEntity
-public class Form {
+public class Form implements Persistable, Comparable<Form>{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Form.class);
 
@@ -73,7 +73,8 @@ public class Form {
 	 * 
 	 * @return
 	 */
-	private String generateKey() {
+	@Override
+	public String generateKey() {
 		String elements_key = "";
 		List<ElementState> elements = getFormFields().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
@@ -81,7 +82,7 @@ public class Form {
 			elements_key += element.generateStylelessKey();
 		}
 		
-		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elements_key+""+getFormTag().getKey());
+		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elements_key+""+getFormTag().generateStylelessKey());
 	}
 
 	/**
@@ -115,7 +116,7 @@ public class Form {
 	}
 	
 	/**
-	 * Checks if {@link ElementState elements} are equal
+	 * Checks if {@link Form forms} are equal
 	 * 
 	 * @param elem
 	 * @return whether or not elements are equal
@@ -127,6 +128,13 @@ public class Form {
         
         Form that = (Form)o;
 		return this.getKey().equals(that.getKey());
+	}
+	
+	@Override
+	public int compareTo(Form o) {
+		 if(this.getId() == o.getId())
+             return 0;
+         return this.getId() < o.getId() ? -1 : 1;
 	}
 	
 	public String getName() {

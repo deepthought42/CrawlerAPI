@@ -108,8 +108,6 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				//browser.scrollToElement(last_element);
-				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -149,8 +147,6 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		//Timing.pauseThread(1000);
-		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		return browser_service.buildPage(user_id, domain, browser);
 	}
 
@@ -182,13 +178,10 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-				//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				//browser.scrollToElement(last_element);
-				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -266,8 +259,6 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
-				//browser.scrollToElement(last_element);
-				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -388,7 +379,7 @@ public class Crawler {
 					log.warn("Alert was encountered!!!");
 					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
-					ordered_path_objects.add(page_alert);
+					path_objects_explored.add(page_alert);
 					current_idx++;
 				}
 				else{
@@ -504,7 +495,7 @@ public class Crawler {
 					log.warn("Alert was encountered!!!");
 					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
-					ordered_path_objects.add(page_alert);
+					path_objects_explored.add(page_alert);
 					current_idx++;
 				}
 				else{

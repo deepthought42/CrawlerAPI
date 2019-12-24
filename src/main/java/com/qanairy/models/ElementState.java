@@ -349,17 +349,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public String generateStylelessKey() {
 		String key = "";
 
-		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
-		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-		
-		for(Attribute attribute : attributes){
-			key += attribute.getKey();
-		}
-
 		key += this.getName();
 		key += this.getText();
 		key += this.getXpath();
-		
+		key += this.getXLocation();
+		key += this.getYLocation();
+		key += this.getScreenshotChecksum();
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
@@ -501,11 +496,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.classification = classification.toString();
 	}
 	
-	public long getId() {
+	public Long getId() {
 		return this.id;
-	}
-	
-	public void setId(long id) {
-		this.id = id;
 	}
 }

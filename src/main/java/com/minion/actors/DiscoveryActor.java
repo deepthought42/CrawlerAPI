@@ -69,7 +69,7 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private final int DISCOVERY_ACTOR_COUNT = 200;
+	private final int DISCOVERY_ACTOR_COUNT = 50;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -232,9 +232,6 @@ public class DiscoveryActor extends AbstractActor{
 					//send message to Domain Actor
 					domain_actor.tell(test_msg, getSelf());
 					
-					
-					
-					
 					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
@@ -270,15 +267,6 @@ public class DiscoveryActor extends AbstractActor{
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
 							}
-							
-							/*
-							if(form_discoverer == null){
-								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										.props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-							}
-							
-							form_discoverer.tell(path, getSelf() );
-							*/
 						}
 						else {
 							if(path_expansion_actor == null){
@@ -287,14 +275,6 @@ public class DiscoveryActor extends AbstractActor{
 				  		    }
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
-							
-							/*
-							if(form_discoverer == null){
-								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										.props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-							}
-							form_discoverer.tell(path, getSelf() );
-							*/
 						}
 						
 					}

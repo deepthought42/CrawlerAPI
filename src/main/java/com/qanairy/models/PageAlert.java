@@ -111,4 +111,8 @@ public class PageAlert implements PathObject, Persistable {
 	public void setType(String type) {
 		this.type = "PageAlert";
 	}
+	
+	public Long getId() {
+		return this.id;
+	}
 }

@@ -386,7 +386,7 @@ public class Crawler {
 				Alert alert = browser.isAlertPresent();
 				if(alert != null){
 					log.warn("Alert was encountered!!!");
-					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
+					PageAlert page_alert = new PageAlert("dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
 					ordered_path_objects.add(page_alert);
 					current_idx++;
@@ -502,7 +502,7 @@ public class Crawler {
 				Alert alert = browser.isAlertPresent();
 				if(alert != null){
 					log.warn("Alert was encountered!!!");
-					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
+					PageAlert page_alert = new PageAlert("dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
 					ordered_path_objects.add(page_alert);
 					current_idx++;
@@ -619,13 +619,13 @@ public class Crawler {
 				log.warn("Null Pointer Exception happened during exploratory crawl ::  "+e.getMessage());
 			}
 			catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
 			}
 			catch (WebDriverException e) {
-				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
+				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
@@ -641,7 +641,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100000);
+		}while(result_page == null && tries < 1000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;

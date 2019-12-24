@@ -13,10 +13,10 @@ import org.openqa.selenium.WebDriver;
 public class PageAlert implements PathObject, Persistable {
 	private static Logger log = LoggerFactory.getLogger(PageAlert.class);
 
-	public PageState page = null;
-	public String choice;
-	public String message;
-	public String type;
+	private PageState page;
+	private String choice;
+	private String message;
+	private String type;
 	
 	private String key;
 	
@@ -86,9 +86,8 @@ public class PageAlert implements PathObject, Persistable {
 	}
 
 	@Override
-	public PathObject clone() {
-		// TODO Auto-generated method stub
-		return null;
+	public PageAlert clone() {
+		return new PageAlert(this.getPage(), this.getChoice(), this.getMessage());
 	}
 
 	@Override
@@ -107,12 +106,12 @@ public class PageAlert implements PathObject, Persistable {
 	}
 
 	@Override
-	public void setType(String type) {
-		this.type = "PageAlert";
+	public String generateKey() {
+		return "alert::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getPage().getKey() + this.getMessage());
 	}
 
 	@Override
-	public String generateKey() {
-		return "alert::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getPage().getKey() + this.getMessage());
+	public void setType(String type) {
+		this.type = "PageAlert";
 	}
 }

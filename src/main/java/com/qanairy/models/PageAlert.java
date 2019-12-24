@@ -113,6 +113,6 @@ public class PageAlert implements PathObject, Persistable {
 
 	@Override
 	public String generateKey() {
-		return "alert::"+this.getPage().getKey()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getMessage());
+		return "alert::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getPage().getKey() + this.getMessage());
 	}
 }

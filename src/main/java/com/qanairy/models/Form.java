@@ -74,15 +74,8 @@ public class Form implements Persistable, Comparable<Form>{
 	 * @return
 	 */
 	@Override
-	public String generateKey() {
-		String elements_key = "";
-		List<ElementState> elements = getFormFields().stream().collect(Collectors.toList());
-		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
-		for(ElementState element : elements){
-			elements_key += element.generateStylelessKey();
-		}
-		
-		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elements_key+""+getFormTag().generateStylelessKey());
+	public String generateKey() {		
+		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getFormTag().getScreenshotChecksum());
 	}
 
 	/**

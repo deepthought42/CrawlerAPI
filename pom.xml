@@ -333,5 +333,14 @@
             <artifactId>java-semver</artifactId>
             <version>0.9.0</version>
         </dependency>
+        
+        <!-- https://mvnrepository.com/artifact/com.browserup/browserup-proxy-core -->
+		<dependency>
+		    <groupId>com.browserup</groupId>
+		    <artifactId>browserup-proxy-core</artifactId>
+		    <version>2.0.1</version>
+		    <scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 </project>

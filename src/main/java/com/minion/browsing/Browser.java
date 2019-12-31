@@ -48,7 +48,6 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
-
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
@@ -76,12 +75,25 @@ public class Browser {
 	 * 			safari = safari
 	 * 
 	 * @throws MalformedURLException
+	 * @throws ApiException 
 	 * 
 	 * @pre url != null
 	 * @pre browser != null
 	 */
 	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
+		
+		//create proxy server connection for handling browserup proxy calls
+		//BrowserUpProxyServer browserup_proxy = new BrowserUpProxyServer();
+		
+		/*
+		DefaultApi browserup_proxy = new DefaultApi();
+		
+		List<HarEntry> har_entries = browserup_proxy.entries(port, urlPattern) //entries(8000, "\"^(http|https)://" + hub_node_url.getHost() + "\\\\.com/.*$\"");
+		for(HarEntry entry: har_entries) {
+			entry.
+		}
+		*/
 		
 		this.setBrowserName(browser);
 		if("chrome".equals(browser)){

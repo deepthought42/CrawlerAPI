@@ -172,4 +172,24 @@ public class DomainService {
 		}
 		return false;
 	}
+
+	/**
+	 * 
+	 * @param user_id
+	 * @param url
+	 * @return
+	 * 
+	 * @pre url != null;
+	 * @pre !url.isEmpty();
+	 * @pre user_id != null;
+	 * @pre !user_id.isEmpty();
+	 */
+	public Set<Page> getPages(String user_id, String url) {
+		assert url != null;
+		assert !url.isEmpty();
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		
+		return domain_repo.getPages(user_id, url);
+	}
 }

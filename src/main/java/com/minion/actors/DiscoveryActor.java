@@ -3,7 +3,6 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
@@ -90,7 +89,6 @@ public class DiscoveryActor extends AbstractActor{
 	
 	private final int DISCOVERY_ACTOR_COUNT = 50;
 
-	
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
 		
@@ -514,7 +512,6 @@ public class DiscoveryActor extends AbstractActor{
 	    	speed_insight.setRuntimeErrorMessage( page_speed_response.getLighthouseResult().getRuntimeError().getMessage() );
 	    }
 	    
-	    //speed_insight = performance_insight_service.save(speed_insight);
 	    log.warn("speed insight object built...");
 	    
 	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
@@ -525,9 +522,9 @@ public class DiscoveryActor extends AbstractActor{
 				   audit_record.getErrorMessage(),
 				   audit_record.getExplanation(),
 				   audit_record.getNumericValue(),
-		   //audit.setScore((Double)audit_record.getScore());
 				   audit_record.getScoreDisplayMode(),
 				   audit_record.getTitle());
+		   audit.setScore(convertScore(audit_record.getScore()));
 		   audit = audit_service.save(audit);
 		   
 		   speed_insight.addAudit(audit);
@@ -536,6 +533,17 @@ public class DiscoveryActor extends AbstractActor{
     	
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
     	return performance_insight_service.save(speed_insight);
+	}
+
+	private Double convertScore(Object score_obj) {
+		Double score = null;
+		try {
+			score = (Double)score_obj;
+		}
+		catch(Exception e) {
+			score = new Double(0);
+		}
+		return score;
 	}
 
 	private void stopDiscovery(DiscoveryActionMessage message) {

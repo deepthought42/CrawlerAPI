@@ -93,4 +93,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}),(p:Page{key:{page_key}}) CREATE (d)-[h:HAS]->(p) RETURN p")
 	public void addPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
+	
+	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
+	public Set<Page> getPages(@Param("user_id") String user_id, @Param("url") String url);
 }

@@ -2,8 +2,10 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,19 +21,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.pagespeedonline.Pagespeedonline;
+import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
+import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
 import com.minion.api.MessageBroadcaster;
 import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.CaptchaResult;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.enums.FormFactor;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.experience.Audit;
+import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
@@ -41,12 +55,15 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
+import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.PerformanceInsightService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -69,8 +86,11 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
+	private static String api_key = "AIzaSyD8jtPtAdC8g6gIEIidZnsDFEANE-2gSRY";
+	
 	private final int DISCOVERY_ACTOR_COUNT = 50;
 
+	
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
 		
@@ -81,10 +101,19 @@ public class DiscoveryActor extends AbstractActor{
 	private AccountService account_service;
 	
 	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private PageService page_service;
+	
+	@Autowired
+	private PerformanceInsightService performance_insight_service;
 	
 	@Autowired
 	private TestService test_service;
@@ -266,7 +295,19 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell(url_message, getSelf() );
-							}
+								
+								//get page insights for page
+								PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(test.getResult().getUrl());
+							    log.warn("page speed response length :: "+page_speed_response.toPrettyString().length());
+							    
+							    Page page = new Page(test.getResult().getUrl());
+							    page = page_service.save(page);
+							    PerformanceInsight performance_insight = extractInsights(test_msg.getAccount(), test_msg.getDomain().getUrl(), page_speed_response);
+							    //performance_insight_service.save(performance_insight);
+							    page_service.addPerformanceInsight(test_msg.getAccount(), test_msg.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
+							    
+							    domain_service.addPage(test_msg.getDomain().getUrl(), page.getKey(), test_msg.getAccount());							
+						    }
 						}
 						else {
 							if(path_expansion_actor == null){
@@ -322,7 +363,6 @@ public class DiscoveryActor extends AbstractActor{
 					page_state_record.addForm(form);
 					try {
 						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);
-						
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
@@ -348,6 +388,31 @@ public class DiscoveryActor extends AbstractActor{
 				.build();
 	}
 
+	/**
+	 * Retrieves Google PageSpeed Insights result from their API
+	 * 
+	 * @param url
+	 * 
+	 * @throws IOException
+	 * @throws GeneralSecurityException
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 */
+	private PagespeedApiPagespeedResponseV5 getPageInsights(String url) throws IOException, GeneralSecurityException {
+	    assert url != null;
+	    assert !url.isEmpty();
+	    
+		JacksonFactory jsonFactory = new JacksonFactory();
+	    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+
+	    HttpRequestInitializer httpRequestInitializer = null; //this can be null here!
+	    Pagespeedonline p = new Pagespeedonline.Builder(transport, jsonFactory, httpRequestInitializer).build();
+
+	    Pagespeedonline.Pagespeedapi.Runpagespeed runpagespeed  = p.pagespeedapi().runpagespeed(url).setKey(api_key);
+	    return runpagespeed.execute();
+	}
+
 	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
 		DiscoveryRecord discovery_record = null;
 		if(this.discovery_record == null){
@@ -366,7 +431,7 @@ public class DiscoveryActor extends AbstractActor{
 		return this.discovery_record;
 	}
 
-	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
+	private void startDiscovery(DiscoveryActionMessage message) throws IOException, GeneralSecurityException {
 		domain_actor = getSender();
 		
 		//create actors for discovery
@@ -411,8 +476,66 @@ public class DiscoveryActor extends AbstractActor{
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
+		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
+		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		url_browser_actor.tell(url_message, getSelf() );
+		PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(url.toString());
+	    log.warn("page speed response length :: "+page_speed_response.toPrettyString().length());
+	    
+	    Page page = new Page(url.toString());
+	    page = page_service.save(page);
+	    PerformanceInsight performance_insight = extractInsights(message.getAccountId(), message.getDomain().getUrl(), page_speed_response);
+	    performance_insight_service.save(performance_insight);
+	    page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
+	    domain_service.addPage(message.getDomain().getUrl(), page.getKey(), message.getAccountId());
+	}
+
+	/**
+	 * Extract page speed insights data and performance audits
+	 * 
+	 * @param page_speed_response
+	 * @return
+	 */
+	private PerformanceInsight extractInsights(String user_id, String domain_url, PagespeedApiPagespeedResponseV5 page_speed_response) {
+		log.warn("captcha result :: "+page_speed_response.getCaptchaResult());
+		log.warn("form factor :: "+page_speed_response.getLighthouseResult().getConfigSettings().getEmulatedFormFactor() );
+		log.warn("date :: "+page_speed_response.getAnalysisUTCTimestamp());
+		PerformanceInsight speed_insight = new PerformanceInsight(
+				new Date(),
+				page_speed_response.getLighthouseResult().getTiming().getTotal(),
+				page_speed_response.getId(),
+				page_speed_response.getLighthouseResult().getConfigSettings().getLocale(),
+				CaptchaResult.create(page_speed_response.getCaptchaResult()),
+				page_speed_response.getLighthouseResult().getRunWarnings(),
+				FormFactor.create(page_speed_response.getLighthouseResult().getConfigSettings().getEmulatedFormFactor() ));
+	    
+	    if(page_speed_response.getLighthouseResult().getRuntimeError() != null) {
+	    	speed_insight.setRuntimeErrorCode( page_speed_response.getLighthouseResult().getRuntimeError().getCode() );
+	    	speed_insight.setRuntimeErrorMessage( page_speed_response.getLighthouseResult().getRuntimeError().getMessage() );
+	    }
+	    
+	    //speed_insight = performance_insight_service.save(speed_insight);
+	    log.warn("speed insight object built...");
+	    
+	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
+    	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
+		   Audit audit = new Audit(
+				   audit_record.getDescription(),
+				   audit_record.getDisplayValue(),
+				   audit_record.getErrorMessage(),
+				   audit_record.getExplanation(),
+				   audit_record.getNumericValue(),
+		   //audit.setScore((Double)audit_record.getScore());
+				   audit_record.getScoreDisplayMode(),
+				   audit_record.getTitle());
+		   audit = audit_service.save(audit);
+		   
+		   speed_insight.addAudit(audit);
+		   //performance_insight_service.addAudit(user_id, domain_url, speed_insight.getKey(), audit.getKey());
+    	}
+    	
+    	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
+    	return performance_insight_service.save(speed_insight);
 	}
 
 	private void stopDiscovery(DiscoveryActionMessage message) {

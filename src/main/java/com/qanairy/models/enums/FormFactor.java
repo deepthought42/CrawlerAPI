@@ -3,14 +3,14 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * 
+ * Enum values for various Captcha results on landable page states
  */
-public enum AnimationType {
-	CAROUSEL("CAROUSEL"), LOADING("LOADING"), CONTINUOUS("CONTINUOUS");
+public enum FormFactor {
+	UNKNOWN_FORM_FACTOR("UNKNOWN_FORM_FACTOR"), DESKTOP("desktop"), MOBILE("mobile"), NONE("none");
 	
 	private String shortName;
 
-    AnimationType (String shortName) {
+	FormFactor (String shortName) {
         this.shortName = shortName;
     }
 
@@ -20,11 +20,11 @@ public enum AnimationType {
     }
 
     @JsonCreator
-    public static AnimationType create (String value) {
+    public static FormFactor create (String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
-        for(AnimationType v : values()) {
+        for(FormFactor v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,6 +11,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -140,5 +140,36 @@ public class DomainService {
 		Domain domain = domain_repo.findByUrl(url, user_id);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
+	}
+
+	/**
+	 * Creates a relationship between existing {@link Page} and {@link Domain} records
+	 * 
+	 * @param url {@link Domain} url
+	 * @param page_key key of {@link Page} object
+	 * @param user_id 
+	 * 
+	 * @return
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 * @pre user_id != null
+	 * 
+	 */
+	public boolean addPage(String url, String page_key, String user_id) {
+		assert url != null;
+		assert !url.isEmpty();
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert user_id != null;
+		
+		Page page_record = domain_repo.getPage(user_id, url, page_key);
+		if(page_record == null) {
+			domain_repo.addPage(user_id, url, page_key);
+			return true;
+		}
+		return false;
 	}
 }

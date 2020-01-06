@@ -39,16 +39,16 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String text;
 	private String xpath;
 	private String type;
+	private String inner_html;
+	private String css_selector;
+	private String outer_html;
+	private String classification;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
-	private String inner_html;
-	private String css_selector;
-	private String outer_html;
 	private boolean part_of_form;
 	private boolean leaf;
-	private String classification;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();

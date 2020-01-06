@@ -1,13 +1,14 @@
 package com.qanairy.models;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+
+import com.qanairy.models.experience.PerformanceInsight;
 
 @NodeEntity
 public class Page implements Persistable{
@@ -21,20 +22,23 @@ public class Page implements Persistable{
 	private String path;
 	
 	@Relationship(type = "HAS")
-	private Set<PageState> page_states;
+	private List<Template> templates;
 
 	@Relationship(type = "HAS")
-	private List<Template> templates;
+	private List<PerformanceInsight> performance_insights;
 
 	@Override
 	public String generateKey() {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
+	public Page() {}
+	
 	public Page(String url){
+		setTemplates(new ArrayList<>());
+		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setKey(generateKey());
-		setPageStates(new HashSet<PageState>());
 	}
 	
 	/**
@@ -77,14 +81,6 @@ public class Page implements Persistable{
 		this.url = url;
 	}
 
-	public Set<PageState> getPageStates() {
-		return page_states;
-	}
-
-	public void setPageStates(Set<PageState> page_states) {
-		this.page_states = page_states;
-	}
-
 	public List<Template> getTemplates() {
 		return templates;
 	}
@@ -99,6 +95,18 @@ public class Page implements Persistable{
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+	
+	public List<PerformanceInsight> getPerformanceInsights() {
+		return performance_insights;
+	}
+
+	public void setPerformanceInsights(List<PerformanceInsight> performance_insights) {
+		this.performance_insights = performance_insights;
+	}
+
+	public void addPerformanceInsight(PerformanceInsight performance_insight) {
+		this.performance_insights.add( performance_insight );
 	}
 	
 	public long getId(){

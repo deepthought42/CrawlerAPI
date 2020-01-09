@@ -35,7 +35,9 @@ public class PerformanceInsight implements Persistable {
 	private String runtime_error_message;
 	private String emulated_form_factor;
 	private List<String> categories;
-	
+	private Double speed_score;
+	private Double accessibility_score;
+
 	@Relationship(type = "HAS")
 	private List<Audit> audits = new ArrayList<>();
 	
@@ -57,7 +59,7 @@ public class PerformanceInsight implements Persistable {
 		setCaptchaResult(captcha_result);
 		setRunWarnings(run_warnings);
 		setEmulatedFormFactor(emulated_form_factor);
-		
+		setSpeedScore(0.0);
 		setKey(generateKey());
 	}
 	
@@ -174,6 +176,22 @@ public class PerformanceInsight implements Persistable {
 	@Override
 	public String generateKey() {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getRequestId() + this.getExecutedAt());
+	}
+
+	public Double getSpeedScore() {
+		return speed_score;
+	}
+
+	public void setSpeedScore(Double score) {
+		this.speed_score = score;
+	}
+
+	public Double getAccessibilityScore() {
+		return accessibility_score;
+	}
+
+	public void setAccessibilityScore(Double accessibility_score) {
+		this.accessibility_score = accessibility_score;
 	}
 
 }

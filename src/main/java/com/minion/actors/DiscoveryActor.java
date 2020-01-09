@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
@@ -26,6 +27,8 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.pagespeedonline.Pagespeedonline;
 import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
+import com.google.api.services.pagespeedonline.model.LighthouseCategoryV5.AuditRefs;
+import com.google.api.services.pagespeedonline.model.LighthouseResultV5.Categories;
 import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
 import com.minion.api.MessageBroadcaster;
 import com.minion.api.exception.PaymentDueException;
@@ -42,6 +45,7 @@ import com.qanairy.models.enums.CaptchaResult;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.FormFactor;
+import com.qanairy.models.enums.InsightType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.PerformanceInsight;
@@ -298,10 +302,12 @@ public class DiscoveryActor extends AbstractActor{
 								PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(test.getResult().getUrl());
 							    log.warn("page speed response length :: "+page_speed_response.toPrettyString().length());
 							    
-							    Page page = new Page(test.getResult().getUrl());
-							    page = page_service.save(page);
 							    PerformanceInsight performance_insight = extractInsights(test_msg.getAccount(), test_msg.getDomain().getUrl(), page_speed_response);
-							    //performance_insight_service.save(performance_insight);
+
+							    Page page = new Page(test.getResult().getUrl());
+							    double page_usability_score = calculatePageScore(performance_insight);
+							    page.setScore(page_usability_score);
+							    page = page_service.save(page);
 							    page_service.addPerformanceInsight(test_msg.getAccount(), test_msg.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
 							    
 							    domain_service.addPage(test_msg.getDomain().getUrl(), page.getKey(), test_msg.getAccount());							
@@ -387,6 +393,33 @@ public class DiscoveryActor extends AbstractActor{
 	}
 
 	/**
+	 * 
+	 * @param performance_insight
+	 * @return
+	 * 
+	 * @pre performance_insight != null
+	 */
+	private double calculatePageScore(PerformanceInsight performance_insight) {
+		assert performance_insight != null;
+		
+		int insight_cnt = 0;
+		double score_total = 0.0;
+		
+		if(performance_insight.getAccessibilityScore() > 0.0) {
+			score_total += performance_insight.getAccessibilityScore();
+			insight_cnt++;
+		}
+		
+		log.warn("accessibility score :: " + performance_insight.getAccessibilityScore());
+		if(performance_insight.getSpeedScore() > 0.0) {
+			score_total += performance_insight.getSpeedScore();
+			insight_cnt++;
+		}
+		log.warn("speed score :: "+performance_insight.getSpeedScore());
+		return score_total/insight_cnt;
+	}
+
+	/**
 	 * Retrieves Google PageSpeed Insights result from their API
 	 * 
 	 * @param url
@@ -406,8 +439,15 @@ public class DiscoveryActor extends AbstractActor{
 
 	    HttpRequestInitializer httpRequestInitializer = null; //this can be null here!
 	    Pagespeedonline p = new Pagespeedonline.Builder(transport, jsonFactory, httpRequestInitializer).build();
-
+	    
 	    Pagespeedonline.Pagespeedapi.Runpagespeed runpagespeed  = p.pagespeedapi().runpagespeed(url).setKey(api_key);
+	    List<String> category = new ArrayList<>();
+	    category.add("performance");
+	    category.add("accessibility");
+	    //category.add("best-practices");
+	    //category.add("pwa");
+	    //category.add("seo");
+	    runpagespeed.setCategory(category);
 	    return runpagespeed.execute();
 	}
 
@@ -479,10 +519,13 @@ public class DiscoveryActor extends AbstractActor{
 		url_browser_actor.tell(url_message, getSelf() );
 		PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(url.toString());
 	    log.warn("page speed response length :: "+page_speed_response.toPrettyString().length());
+
+	    PerformanceInsight performance_insight = extractInsights(message.getAccountId(), message.getDomain().getUrl(), page_speed_response);
 	    
 	    Page page = new Page(url.toString());
+	    double page_usability_score = calculatePageScore(performance_insight);
+	    page.setScore(page_usability_score);
 	    page = page_service.save(page);
-	    PerformanceInsight performance_insight = extractInsights(message.getAccountId(), message.getDomain().getUrl(), page_speed_response);
 	    performance_insight_service.save(performance_insight);
 	    page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
 	    domain_service.addPage(message.getDomain().getUrl(), page.getKey(), message.getAccountId());
@@ -515,6 +558,25 @@ public class DiscoveryActor extends AbstractActor{
 	    log.warn("speed insight object built...");
 	    
 	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
+	    
+	    log.warn("accessiblity exists :: "+page_speed_response.getLighthouseResult().getCategories().getAccessibility().toString());
+	    Map<InsightType, List<String>> audit_ref_map = new HashMap<>();
+	    List<AuditRefs> audit_refs = page_speed_response.getLighthouseResult().getCategories().getPerformance().getAuditRefs();
+	    for(AuditRefs ref : audit_refs) {
+	    	if(!audit_ref_map.containsKey(InsightType.PERFORMANCE)) {
+	    		audit_ref_map.put(InsightType.PERFORMANCE, new ArrayList<String>());
+	    	}
+	    	audit_ref_map.get(InsightType.PERFORMANCE).add(ref.getId());
+	    }
+	    
+	    audit_refs = page_speed_response.getLighthouseResult().getCategories().getAccessibility().getAuditRefs();
+	    for(AuditRefs ref : audit_refs) {
+	    	if(!audit_ref_map.containsKey(InsightType.ACCESSIBILITY)) {
+	    		audit_ref_map.put(InsightType.ACCESSIBILITY, new ArrayList<String>());
+	    	}
+	    	audit_ref_map.get(InsightType.ACCESSIBILITY).add(ref.getId());
+	    }
+	    
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
 		   Audit audit = new Audit(
 				   audit_record.getDescription(),
@@ -524,25 +586,47 @@ public class DiscoveryActor extends AbstractActor{
 				   audit_record.getNumericValue(),
 				   audit_record.getScoreDisplayMode(),
 				   audit_record.getTitle());
-		   audit.setScore(convertScore(audit_record.getScore()));
+		   Double score = convertScore(audit_record.getScore());
+		   audit.setScore(score);  
+		   audit.setType(getAuditType(audit_record, audit_ref_map));
 		   audit = audit_service.save(audit);
 		   
 		   speed_insight.addAudit(audit);
-		   //performance_insight_service.addAudit(user_id, domain_url, speed_insight.getKey(), audit.getKey());
     	}
     	
+    	double speed_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getPerformance().getScore());
+    	double accessibility_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getAccessibility().getScore());
+    	speed_insight.setAccessibilityScore(accessibility_score);
+    	speed_insight.setSpeedScore(speed_score);
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
     	return performance_insight_service.save(speed_insight);
+	}
+
+	private InsightType getAuditType(
+			LighthouseAuditResultV5 audit_record,
+			Map<InsightType, List<String>> audit_ref_map
+	) {
+		for(InsightType type: audit_ref_map.keySet()) {
+			for(String audit_id : audit_ref_map.get(type)) {
+				if(audit_record.getId().equals(audit_id)){
+					return type;
+				}
+			}
+		}
+		
+		return null;
 	}
 
 	private Double convertScore(Object score_obj) {
 		Double score = null;
 		try {
-			score = (Double)score_obj;
+			score = ((BigDecimal)score_obj).doubleValue();
 		}
 		catch(Exception e) {
+			e.printStackTrace();
 			score = new Double(0);
 		}
+		
 		return score;
 	}
 

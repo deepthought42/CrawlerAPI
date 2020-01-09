@@ -29,11 +29,12 @@ public class PageService {
 		assert page != null;
 		
 		Page page_record = findByKey(page.getKey());
-		if(page_record == null){
-			page_record = page_repo.save(page);
+		if(page_record != null){
+			page_record.setScore(page.getScore());
+			return page_repo.save(page_record);
 		}
 		
-		return page_record;
+		return page_repo.save(page);
 	}
 	
 	/**

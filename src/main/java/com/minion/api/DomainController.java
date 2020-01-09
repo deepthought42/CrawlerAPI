@@ -297,8 +297,8 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
     public @ResponseBody Set<Page> getAllPages(HttpServletRequest request, 
-    													  @RequestParam(value="url", required=true) String url) 
-    															throws UnknownAccountException {        
+											   @RequestParam(value="url", required=true) String url
+	) throws UnknownAccountException {        
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -321,8 +321,8 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/path")
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
-    													  @RequestParam(value="url", required=true) String url) 
-    															throws UnknownAccountException {        		
+    													   @RequestParam(value="url", required=true) String url
+    ) throws UnknownAccountException {        		
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);

@@ -1,5 +1,7 @@
 package com.qanairy.models;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class Page implements Persistable{
 	private String key;
 	private String url;
 	private String path;
+	private Double score;
 	
 	@Relationship(type = "HAS")
 	private List<Template> templates;
@@ -34,10 +37,11 @@ public class Page implements Persistable{
 	
 	public Page() {}
 	
-	public Page(String url){
+	public Page(String url) throws MalformedURLException{
 		setTemplates(new ArrayList<>());
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
+		setPath(new URL(url).getPath());
 		setKey(generateKey());
 	}
 	
@@ -111,5 +115,13 @@ public class Page implements Persistable{
 	
 	public long getId(){
 		return this.id;
+	}
+
+	public Double getScore() {
+		return score;
+	}
+
+	public void setScore(Double score) {
+		this.score = score;
 	}
 }

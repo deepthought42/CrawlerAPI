@@ -5,6 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Persistable;
+import com.qanairy.models.enums.InsightType;
 
 /**
  * Represents the audit data for 
@@ -26,6 +27,7 @@ public class Audit implements Persistable {
 	private String explanation;
 	private String error_message;
 	private Double numeric_value;
+	private String type;
 	
 	public Audit() {}
 	
@@ -112,5 +114,13 @@ public class Audit implements Persistable {
 	}
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public InsightType getType() {
+		return InsightType.create(type);
+	}
+
+	public void setType(InsightType type) {
+		this.type = type.getShortName();
 	}	
 }

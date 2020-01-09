@@ -26,7 +26,7 @@ public class PerformanceInsightService {
 	 * 
 	 * @return {@link PerformanceInsight} object reference to database object
 	 * 
-	 * @pre page != null;
+	 * @pre performance_insight != null;
 	 */
 	public PerformanceInsight save(PerformanceInsight performance_insight){
 		assert performance_insight != null;

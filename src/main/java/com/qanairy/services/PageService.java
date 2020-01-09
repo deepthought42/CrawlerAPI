@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +63,15 @@ public class PageService {
 	 * @param performance_insight
 	 */
 	public boolean addPerformanceInsight(String user_id, String domain_url, String page_key, String performance_insight_key) {
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		assert domain_url != null;
+		assert !domain_url.isEmpty();
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert performance_insight_key != null;
+		assert !performance_insight_key.isEmpty();
+		
 		//check if performance insight already exists for page
 		PerformanceInsight performance_insight = page_repo.getPerformanceInsight(user_id, domain_url, page_key, performance_insight_key);
 		if(performance_insight == null) {
@@ -68,5 +79,20 @@ public class PageService {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 
+	 * @param page_key
+	 * @return
+	 * 
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 */
+	public List<PerformanceInsight> findAllInsights(String page_key) {
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		
+		return page_repo.getAllPerformanceInsights(page_key);
 	}
 }

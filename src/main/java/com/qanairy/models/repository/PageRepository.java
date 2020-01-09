@@ -1,5 +1,6 @@
 package com.qanairy.models.repository;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -28,4 +29,7 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 			@Param("url") String url, 
 			@Param("page_key") String page_key, 
 			@Param("insight_key") String insight_key);
+
+	@Query("MATCH (p:Page{key:{page_key}})-[]->(insight:PerformanceInsight) RETURN insight")
+	public List<PerformanceInsight> getAllPerformanceInsights(@Param("page_key") String page_key);
 }

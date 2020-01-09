@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import java.security.Principal;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.models.Action;
+import com.qanairy.models.Account;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
+import com.qanairy.services.AccountService;
 import com.qanairy.services.PageService;
 
 /**
@@ -30,6 +33,9 @@ public class PageController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
 	private PageService page_service;
 	
     @Autowired
@@ -40,12 +46,21 @@ public class PageController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:actions')")
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET, path="/{page_key}/insights")
     public List<PerformanceInsight> getInsights(HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String page_key
-	) {
+	) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
         logger.info("finding all page insights");
         return IterableUtils.toList(page_service.findAllInsights(page_key));
     }

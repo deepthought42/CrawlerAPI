@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.pagespeedonline.Pagespeedonline;
 import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
 import com.google.api.services.pagespeedonline.model.LighthouseCategoryV5.AuditRefs;
-import com.google.api.services.pagespeedonline.model.LighthouseResultV5.Categories;
 import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
 import com.minion.api.MessageBroadcaster;
 import com.minion.api.exception.PaymentDueException;
@@ -579,15 +579,17 @@ public class DiscoveryActor extends AbstractActor{
 	    
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
 		   Audit audit = new Audit(
+				   audit_record.getId(),
 				   audit_record.getDescription(),
 				   audit_record.getDisplayValue(),
 				   audit_record.getErrorMessage(),
 				   audit_record.getExplanation(),
 				   audit_record.getNumericValue(),
 				   audit_record.getScoreDisplayMode(),
-				   audit_record.getTitle());
+				   audit_record.getTitle(),
+				   extractAuditDetails(audit_record.getDetails()));
 		   Double score = convertScore(audit_record.getScore());
-		   audit.setScore(score);  
+		   audit.setScore(score);
 		   audit.setType(getAuditType(audit_record, audit_ref_map));
 		   audit = audit_service.save(audit);
 		   
@@ -600,6 +602,25 @@ public class DiscoveryActor extends AbstractActor{
     	speed_insight.setSpeedScore(speed_score);
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
     	return performance_insight_service.save(speed_insight);
+	}
+
+	/**
+	 * 
+	 * @param details
+	 * @return
+	 * 
+	 * @pre details != null;
+	 */
+	private Map<String, String> extractAuditDetails(Map<String, Object> details) {
+		
+		Map<String, String> audit_details = new HashMap<>();
+		if(details != null) {
+			for(String key : details.keySet()) {
+				audit_details.put(key, JSONObject.valueToString(details.get(key)));
+			}
+		}
+	
+		return audit_details;
 	}
 
 	private InsightType getAuditType(
@@ -623,7 +644,7 @@ public class DiscoveryActor extends AbstractActor{
 			score = ((BigDecimal)score_obj).doubleValue();
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			score = new Double(0);
 		}
 		

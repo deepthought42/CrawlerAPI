@@ -1,8 +1,11 @@
 package com.qanairy.models.experience;
 
+import java.util.Map;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Properties;
 
 import com.qanairy.models.Persistable;
 import com.qanairy.models.enums.InsightType;
@@ -19,6 +22,7 @@ public class Audit implements Persistable {
 	private Long id;
 
 	private String key;
+	private String name;
 	private String title;
 	private String description;
 	private Double score;
@@ -29,17 +33,23 @@ public class Audit implements Persistable {
 	private Double numeric_value;
 	private String type;
 	
+	@Properties
+	private Map<String, String> details;
+	
 	public Audit() {}
 	
 	public Audit(
+			String name,
 			String description,
 			String display_value,
 			String error_message,
 			String explanation,
 			Double numeric_value,
 			String score_display_value,
-			String title
+			String title,
+			Map<String, String> details
 	) {
+		setName(name);
 		setDescription(description);
 		setDisplayValue(display_value);
 		setErrorMessage(error_message);
@@ -47,6 +57,7 @@ public class Audit implements Persistable {
 		setNumericValue(numeric_value);
 		setScoreDisplayMode(score_display_value);
 		setTitle(title);
+		setDetails(details);
 		setKey(generateKey());		
 	}
 	
@@ -122,5 +133,21 @@ public class Audit implements Persistable {
 
 	public void setType(InsightType type) {
 		this.type = type.getShortName();
+	}
+
+	public Map<String, String> getDetails() {
+		return details;
+	}
+
+	public void setDetails(Map<String, String> details) {
+		this.details = details;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}	
 }

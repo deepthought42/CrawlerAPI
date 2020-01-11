@@ -2,21 +2,30 @@ package com.qanairy.services;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Page;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.repository.PageRepository;
+import com.qanairy.models.repository.PerformanceInsightRepository;
 
 /**
  * Methods for interacting with page object
  */
 @Service
 public class PageService {
-
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(PageService.class);
+	
 	@Autowired
 	private PageRepository page_repo;
+	
+	@Autowired
+	private PerformanceInsightRepository performance_insight_repo;
+	
 	
 	/**
 	 * Saves {@link Page} to database
@@ -94,5 +103,25 @@ public class PageService {
 		assert !page_key.isEmpty();
 		
 		return page_repo.getAllPerformanceInsights(page_key);
+	}
+	
+	/**
+	 * 
+	 * @param page_key
+	 * @return
+	 * 
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 */
+	public PerformanceInsight findLatestInsight(String page_key) {
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		PerformanceInsight insight = page_repo.getLatestPerformanceInsight(page_key);
+		
+		log.warn("insight executed at :: " + insight.getExecutedAt().toString());
+		log.warn("page key :: "+page_key);
+		performance_insight_repo.getAllAudits(page_key, insight.getExecutedAt().toString());
+		insight.setAudits(performance_insight_repo.getAllAudits(page_key, insight.getKey()));
+		return insight;
 	}
 }

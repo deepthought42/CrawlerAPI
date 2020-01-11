@@ -29,7 +29,7 @@ public class PerformanceInsight implements Persistable {
 	private Double timing;
 	private String request_id;
 	private String locale;
-	private String captchaResult;
+	private String captcha_result;
 	private List<Object> run_warnings;
 	private String runtime_error_code;
 	private String runtime_error_message;
@@ -98,11 +98,11 @@ public class PerformanceInsight implements Persistable {
 	}
 	
 	public CaptchaResult getCaptchaResult() {
-		return CaptchaResult.create( captchaResult );
+		return CaptchaResult.create( captcha_result );
 	}
 	
 	public void setCaptchaResult(CaptchaResult captchaResult) {
-		this.captchaResult = captchaResult.toString();
+		this.captcha_result = captchaResult.toString();
 	}
 	
 	public List<Object> getRunWarnings() {

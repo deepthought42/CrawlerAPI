@@ -37,6 +37,7 @@ public class PerformanceInsight implements Persistable {
 	private List<String> categories;
 	private Double speed_score;
 	private Double accessibility_score;
+	private Double seo_score;
 
 	@Relationship(type = "HAS")
 	private List<Audit> audits = new ArrayList<>();
@@ -192,6 +193,14 @@ public class PerformanceInsight implements Persistable {
 
 	public void setAccessibilityScore(Double accessibility_score) {
 		this.accessibility_score = accessibility_score;
+	}
+
+	public Double getSeoScore() {
+		return seo_score;
+	}
+
+	public void setSeoScore(Double seo_score) {
+		this.seo_score = seo_score;
 	}
 
 }

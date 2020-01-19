@@ -240,6 +240,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(TestMessage.class, test_msg -> {
+					
 					//plan exceeded check
 			    	Account acct = account_service.findByUserId(test_msg.getAccount());
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
@@ -305,8 +306,9 @@ public class DiscoveryActor extends AbstractActor{
 							    PerformanceInsight performance_insight = extractInsights(test_msg.getAccount(), test_msg.getDomain().getUrl(), page_speed_response);
 
 							    Page page = new Page(test.getResult().getUrl());
-							    double page_usability_score = calculatePageScore(performance_insight);
-							    page.setScore(page_usability_score);
+							    page.setPerformanceScore(performance_insight.getSpeedScore());
+							    page.setAccessibilityScore(performance_insight.getAccessibilityScore());
+							    page.setSeoScore(performance_insight.getSeoScore());
 							    page = page_service.save(page);
 							    page_service.addPerformanceInsight(test_msg.getAccount(), test_msg.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
 							    
@@ -446,7 +448,7 @@ public class DiscoveryActor extends AbstractActor{
 	    category.add("accessibility");
 	    //category.add("best-practices");
 	    //category.add("pwa");
-	    //category.add("seo");
+	    category.add("seo");
 	    runpagespeed.setCategory(category);
 	    return runpagespeed.execute();
 	}
@@ -523,8 +525,9 @@ public class DiscoveryActor extends AbstractActor{
 	    PerformanceInsight performance_insight = extractInsights(message.getAccountId(), message.getDomain().getUrl(), page_speed_response);
 	    
 	    Page page = new Page(url.toString());
-	    double page_usability_score = calculatePageScore(performance_insight);
-	    page.setScore(page_usability_score);
+	    page.setPerformanceScore(performance_insight.getSpeedScore());
+	    page.setAccessibilityScore(performance_insight.getAccessibilityScore());
+	    page.setSeoScore(performance_insight.getSeoScore());
 	    page = page_service.save(page);
 	    performance_insight_service.save(performance_insight);
 	    page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
@@ -598,6 +601,8 @@ public class DiscoveryActor extends AbstractActor{
     	
     	double speed_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getPerformance().getScore());
     	double accessibility_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getAccessibility().getScore());
+    	double seo_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getSeo().getScore());
+    	speed_insight.setSeoScore(seo_score);
     	speed_insight.setAccessibilityScore(accessibility_score);
     	speed_insight.setSpeedScore(speed_score);
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
@@ -635,7 +640,7 @@ public class DiscoveryActor extends AbstractActor{
 			}
 		}
 		
-		return null;
+		return InsightType.UNKNOWN;
 	}
 
 	private Double convertScore(Object score_obj) {

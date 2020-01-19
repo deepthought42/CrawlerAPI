@@ -22,7 +22,9 @@ public class Page implements Persistable{
 	private String key;
 	private String url;
 	private String path;
-	private Double score;
+	private Double performance_score;
+	private Double accessibility_score;
+	private Double seo_score;
 	
 	@Relationship(type = "HAS")
 	private List<Template> templates;
@@ -117,11 +119,27 @@ public class Page implements Persistable{
 		return this.id;
 	}
 
-	public Double getScore() {
-		return score;
+	public Double getPerformanceScore() {
+		return performance_score;
 	}
 
-	public void setScore(Double score) {
-		this.score = score;
+	public void setPerformanceScore(Double score) {
+		this.performance_score = score;
+	}
+
+	public Double getAccessibilityScore() {
+		return accessibility_score;
+	}
+
+	public void setAccessibilityScore(Double accessibility_score) {
+		this.accessibility_score = accessibility_score;
+	}
+
+	public Double getSeoScore() {
+		return seo_score;
+	}
+
+	public void setSeoScore(Double seo_score) {
+		this.seo_score = seo_score;
 	}
 }

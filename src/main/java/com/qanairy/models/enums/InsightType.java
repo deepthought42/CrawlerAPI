@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * 
  */
 public enum InsightType {
-	PERFORMANCE("PERFORMANCE"), ACCESSIBILITY("ACCESSIBILITY"), SEO("SEO"), PWA("PWA"), SECURITY("SECURITY");
+	PERFORMANCE("PERFORMANCE"), ACCESSIBILITY("ACCESSIBILITY"), SEO("SEO"), PWA("PWA"), SECURITY("SECURITY"), UNKNOWN("UNKNOWN");
 	
 	private String shortName;
 

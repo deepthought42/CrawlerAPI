@@ -41,7 +41,9 @@ public class PageService {
 		
 		Page page_record = findByKey(page.getKey());
 		if(page_record != null){
-			page_record.setScore(page.getScore());
+			page_record.setPerformanceScore(page.getPerformanceScore());
+			page_record.setAccessibilityScore(page.getAccessibilityScore());
+			page_record.setSeoScore(page.getSeoScore());
 			return page_repo.save(page_record);
 		}
 		
@@ -116,6 +118,7 @@ public class PageService {
 	public PerformanceInsight findLatestInsight(String page_key) {
 		assert page_key != null;
 		assert !page_key.isEmpty();
+		
 		PerformanceInsight insight = page_repo.getLatestPerformanceInsight(page_key);
 		
 		log.warn("insight executed at :: " + insight.getExecutedAt().toString());

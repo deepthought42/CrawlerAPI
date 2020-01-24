@@ -1,6 +1,5 @@
 package com.qanairy.models.repository;
 
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.neo4j.annotation.Query;

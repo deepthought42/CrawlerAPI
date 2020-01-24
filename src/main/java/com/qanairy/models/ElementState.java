@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
+import com.qanairy.models.message.BugMessage;
 import com.qanairy.models.rules.Rule;
+
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
@@ -58,6 +60,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
+	
+	@Relationship(type = "HAS")
+	private Set<BugMessage> errors = new HashSet<>();
 
 	private String template;
 			
@@ -498,5 +503,24 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public Long getId() {
 		return this.id;
+	}
+
+	public Set<BugMessage> getErrors() {
+		return errors;
+	}
+
+	public void setErrors(Set<BugMessage> errors) {
+		this.errors = errors;
+	}
+	
+	public void addError(BugMessage bug_message) {
+		if(this.errors == null) {
+			this.errors = new HashSet<>();
+		}
+		this.errors.add(bug_message);
+	}
+	
+	public boolean removeError(BugMessage msg) {
+		return this.errors.remove(msg);
 	}
 }

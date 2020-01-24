@@ -2,6 +2,7 @@ package com.qanairy.services;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.repository.BugMessageRepository;
 import com.qanairy.models.repository.ElementStateRepository;
 import com.qanairy.models.rules.Rule;
 
@@ -29,6 +32,9 @@ public class ElementStateService {
 
 	@Autowired
 	private ElementStateRepository element_repo;
+
+	@Autowired
+	private BugMessageRepository bug_message_repo;
 
 	/**
 	 * 
@@ -142,5 +148,51 @@ public class ElementStateService {
 
 	public List<Attribute> getElementAttributes(String user_id, String element_key) {
 		return element_repo.getElementAttributes( user_id, element_key);
+	}
+
+	public ElementState findByOuterHtml(String user_id, String snippet) {
+		return element_repo.findByOuterHtml(user_id, snippet);
+	}
+	
+	public ElementState addBugMessage(Long element_id, BugMessage msg) {
+		Optional<ElementState> opt_element = element_repo.findById(element_id);
+		
+		if(opt_element.isPresent()){
+			boolean msg_exists = false;
+			ElementState element_state = opt_element.get();
+			//check if form has error message already
+			for(BugMessage bug_msg : element_state.getErrors()) {
+				if( bug_msg.equals(msg)) {
+					msg_exists = true;
+				}
+			}
+			if(!msg_exists) {
+				BugMessage bug_msg = bug_message_repo.save(msg);
+				element_state.addError(bug_msg);
+				log.warn("element :: "+element_state.getErrors());
+			}
+			log.warn("element state bug message size :: "+element_state.getErrors().size());
+			log.warn("element state name :: "+element_state.getName());
+			
+			return element_repo.save(element_state);
+			
+		}
+		return null;
+	}
+	
+	public ElementState removeBugMessage(long form_id, BugMessage msg) {
+		Optional<ElementState> opt_element = element_repo.findById(form_id);
+		
+		if(opt_element.isPresent()){
+			ElementState element = opt_element.get();
+			element.removeError(msg);
+			
+			return element_repo.save(element);
+		}
+		return null;
+	}
+
+	public void clearBugMessages(String user_id, String form_key) {
+		element_repo.clearBugMessages(user_id, form_key);
 	}
 }

@@ -6,7 +6,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.ElementState;
 import com.qanairy.models.enums.BugType;
 
 @NodeEntity
@@ -59,5 +58,9 @@ public class BugMessage {
 	}
 	public void setDateIdentified(Date date_identified) {
 		this.date_identified = date_identified;
+	}
+
+	public Long getId() {
+		return id;
 	}
 }

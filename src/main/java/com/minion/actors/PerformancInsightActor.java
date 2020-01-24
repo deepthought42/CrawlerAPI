@@ -53,8 +53,8 @@ import com.qanairy.utils.BrowserUtils;
  */
 @Component
 @Scope("prototype")
-public class UrlBrowserActor extends AbstractActor {
-	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
+public class PerformancInsightActor extends AbstractActor {
+	private static Logger log = LoggerFactory.getLogger(PerformancInsightActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired

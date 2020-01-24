@@ -72,6 +72,15 @@ public class PageService {
 	 * 
 	 * @param page
 	 * @param performance_insight
+	 * 
+	 * @pre user_id != null
+	 * @pre !user_id.isEmpty()
+	 * @pre domain_url != null;
+	 * @pre !domain_url.isEmpty();
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 * @pre performance_insight_key != null
+	 * @pre !performance_insight_key.isEmpty();
 	 */
 	public boolean addPerformanceInsight(String user_id, String domain_url, String page_key, String performance_insight_key) {
 		assert user_id != null;

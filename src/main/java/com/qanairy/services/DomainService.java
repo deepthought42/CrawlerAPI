@@ -26,6 +26,9 @@ public class DomainService {
 	@Autowired
 	private DomainRepository domain_repo;
 	
+	@Autowired
+	private DomainRepository page_service;
+	
 	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
@@ -158,16 +161,18 @@ public class DomainService {
 	 * @pre user_id != null
 	 * 
 	 */
-	public boolean addPage(String url, String page_key, String user_id) {
+	public boolean addPage(String url, Page page, String user_id) {
 		assert url != null;
 		assert !url.isEmpty();
-		assert page_key != null;
-		assert !page_key.isEmpty();
+		assert page != null;
 		assert user_id != null;
 		
-		Page page_record = domain_repo.getPage(user_id, url, page_key);
+		Domain domain = findByUrl(url, user_id);
+		
+		Page page_record = page_service.getPage(user_id, url, page.getKey());
 		if(page_record == null) {
-			domain_repo.addPage(user_id, url, page_key);
+			domain.addPage(page);
+			domain_repo.save(domain);
 			return true;
 		}
 		return false;

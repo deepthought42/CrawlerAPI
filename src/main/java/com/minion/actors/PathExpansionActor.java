@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -42,6 +44,9 @@ public class PathExpansionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	@Autowired
+	private PageStateService page_state_service;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -178,13 +183,14 @@ public class PathExpansionActor extends AbstractActor {
 
 		if( second_to_last_page == null){
 			log.warn("second to last page state is null. returning last page state elements with size :: "+last_page_state.getElements().size());
-			return last_page_state.getElements();
+			return page_state_service.getExpandableElements(last_page_state.getElements());
 		}
 
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
+				//continue if element is not displayed, or element is not child
 				element_xpath_map.put(element.getXpath(), element);
 			}
 

@@ -85,7 +85,7 @@ public class PerformanceInsightService {
 		
 		//check that audit doesn't already exist for insight
 		Audit audit_record = performance_insight_repo.findAuditByKey(user_id, domain_url, performance_insight_key, audit_key);
-		log.warn("audit record returned :: "+audit_record);
+		log.warn("audit record returned :: " + audit_record);
 		if(audit_record == null) {
 			log.warn("adding audit record :: "+audit_key);
 			log.warn("user id :: "+user_id);

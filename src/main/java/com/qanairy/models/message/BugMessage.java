@@ -2,18 +2,13 @@ package com.qanairy.models.message;
 
 import java.util.Date;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.qanairy.models.enums.BugType;
+import com.qanairy.models.experience.AuditDetail;
 
-@NodeEntity
-public class BugMessage {
-
-	@GeneratedValue
-	@Id
-	private Long id;
+/**
+ * 
+ */
+public class BugMessage extends AuditDetail {
 
 	private String message;
 	private BugType bug_type;
@@ -38,6 +33,7 @@ public class BugMessage {
         BugMessage that = (BugMessage)o;
 		return this.getMessage().equals(that.getMessage());
 	}
+	
 	/*******************************
 	 * GETTERS/SETTERS
 	 *******************************/
@@ -58,9 +54,5 @@ public class BugMessage {
 	}
 	public void setDateIdentified(Date date_identified) {
 		this.date_identified = date_identified;
-	}
-
-	public Long getId() {
-		return id;
 	}
 }

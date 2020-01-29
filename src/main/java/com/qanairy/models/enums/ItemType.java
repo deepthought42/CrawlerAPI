@@ -3,14 +3,14 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Defines all types of {@link AuditDetail} that exist in the system
+ * Defines all types of {@link ItemType} that exist in the system
  */
-public enum AuditType {
-	TABLE("table"), FILMSTRIP("filmstrip"), OPPORTUNITY("opportunity"), NODE("node");
+public enum ItemType {
+	TEXT("text"), BYTES("bytes"), NUMERIC("numeric"), MILLISECONDS("ms"), URL("url") ;
 	
 	private String shortName;
 
-    AuditType (String shortName) {
+    ItemType (String shortName) {
         this.shortName = shortName;
     }
 
@@ -20,11 +20,11 @@ public enum AuditType {
     }
 
     @JsonCreator
-    public static AuditType create (String value) {
+    public static ItemType create (String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
-        for(AuditType v : values()) {
+        for(ItemType v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

@@ -10,7 +10,8 @@ import com.qanairy.models.enums.AuditType;
  * 
  */
 @NodeEntity
-public class AuditDetail {
+public abstract class AuditDetail {
+
 	@GeneratedValue
     @Id
 	private Long id;
@@ -18,9 +19,13 @@ public class AuditDetail {
 
 	public AuditType getType() {
 		return AuditType.create(this.type.toLowerCase());
-	};
+	}
 
 	public void setType(AuditType type) {
 		this.type = type.getShortName();
+	}
+	
+	public Long getId() {
+		return this.id;
 	}
 }

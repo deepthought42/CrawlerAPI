@@ -3,7 +3,9 @@ package com.qanairy.models;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -12,6 +14,9 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.experience.PerformanceInsight;
 
+/**
+ * 
+ */
 @NodeEntity
 public class Page implements Persistable{
 
@@ -32,19 +37,40 @@ public class Page implements Persistable{
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
 
+	@Relationship(type = "HAS")
+	private Set<PageState> page_states;
+
 	@Override
 	public String generateKey() {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
-	public Page() {}
+	public Page() {
+		setTemplates(new ArrayList<>());
+		setPerformanceInsights(new ArrayList<>());
+		setPageStates( new HashSet<>() );
+	}
 	
 	public Page(String url) throws MalformedURLException{
 		setTemplates(new ArrayList<>());
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setPath(new URL(url).getPath());
+		setPageStates( new HashSet<>() );
 		setKey(generateKey());
+	}
+	
+	
+	public Set<PageState> getPageStates() {
+		return page_states;
+	}
+	
+	public void setPageStates(Set<PageState> page_states) {
+		this.page_states = page_states;
+	}
+
+	public boolean addPageState(PageState page_state) {
+		return page_states.add(page_state);
 	}
 	
 	/**

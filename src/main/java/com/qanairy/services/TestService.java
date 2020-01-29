@@ -304,7 +304,7 @@ public class TestService {
 	   assert !test_path_object_lists.isEmpty();
    
 	   //load path objects using path keys
-	   List<PathObject> path_objects = loadPathObjects(user_id, url, path_keys);
+	   List<PathObject> path_objects = loadPathObjects(user_id, path_keys);
 	   
 	   //find all tests with page state at index
 	   for(List<PathObject> test_path_objects : test_path_object_lists) {
@@ -349,12 +349,12 @@ public class TestService {
 	   return false;
    }
 
-	public List<PathObject> loadPathObjects(String user_id, String url, List<String> path_keys) {
+	public List<PathObject> loadPathObjects(String user_id, List<String> path_keys) {
 		//load path objects using path keys
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
-				path_objects.add(page_state_service.findByKey(user_id, url, key));
+				path_objects.add(page_state_service.findByKey(user_id, key));
 			}
 			else if(key.contains("elementstate")) {
 				path_objects.add(element_state_service.findByKey(user_id, key));

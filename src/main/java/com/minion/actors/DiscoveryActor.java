@@ -22,39 +22,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.ArrayMap;
-import com.google.api.services.pagespeedonline.Pagespeedonline;
-import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
-import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
-import com.google.api.services.pagespeedonline.model.LighthouseCategoryV5.AuditRefs;
 import com.minion.api.MessageBroadcaster;
 import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.BugType;
-import com.qanairy.models.enums.CaptchaResult;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
-import com.qanairy.models.enums.FormFactor;
-import com.qanairy.models.enums.InsightType;
 import com.qanairy.models.enums.PathStatus;
-import com.qanairy.models.experience.AccessibilityAudit;
-import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.AccountRequest;
-import com.qanairy.models.message.BugMessage;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveredMessage;
@@ -63,17 +45,12 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.BugMessageService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.services.PerformanceInsightService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -100,7 +77,6 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private static String api_key = "AIzaSyD8jtPtAdC8g6gIEIidZnsDFEANE-2gSRY";
 
 	private final int DISCOVERY_ACTOR_COUNT = 50;
 
@@ -134,21 +110,6 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private SubscriptionService subscription_service;
 	
-	@Autowired
-	private PageService page_service;
-	
-	@Autowired
-	private PerformanceInsightService performance_insight_service;
-	
-	@Autowired
-	private AuditService audit_service;
-	
-	@Autowired
-	private ElementStateService element_state_service;
-	
-	@Autowired
-	private BugMessageService bug_message_service;
-	
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -157,6 +118,8 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_discoverer;
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
+	private ActorRef performance_insight_actor;
+
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
 	//subscribe to cluster changes
 	@Override
@@ -315,7 +278,14 @@ public class DiscoveryActor extends AbstractActor{
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-								url_browser_actor.tell( url_message, getSelf() );							
+								//url_browser_actor.tell( url_message, getSelf() );
+								
+								if(performance_insight_actor == null){
+									performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
+								}
+								
+								performance_insight_actor.tell( url_message, getSelf() );
 						    }
 						}
 						else {
@@ -367,7 +337,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 
-					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getDomain().getUrl(), form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getPage().getKey());
 					page_state_record.addForm(form);
 					
 					try {
@@ -489,8 +459,15 @@ public class DiscoveryActor extends AbstractActor{
 		log.info("Sending URL to UrlBrowserActor");
 		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
 		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
-		url_browser_actor.tell(url_message, getSelf() );
 		
+		//url_browser_actor.tell(url_message, getSelf() );
+		
+		if(performance_insight_actor == null){
+			performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
+		}
+		
+		performance_insight_actor.tell( url_message, getSelf() );
 	}
 
 	

@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Page;
+import com.qanairy.models.PageState;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.repository.PageRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.PerformanceInsightRepository;
 
 /**
@@ -24,6 +26,9 @@ public class PageService {
 	private PageRepository page_repo;
 	
 	@Autowired
+	private PageStateRepository page_state_service;
+	
+	@Autowired
 	private PerformanceInsightRepository performance_insight_repo;
 	
 	
@@ -36,17 +41,16 @@ public class PageService {
 	 * 
 	 * @pre page != null;
 	 */
-	public Page save(Page page){
+	public Page save(String user_id, Page page){
 		assert page != null;
-		
-		Page page_record = findByKey(page.getKey());
+
+		Page page_record = findByKey(user_id, page.getKey());
 		if(page_record != null){
 			page_record.setPerformanceScore(page.getPerformanceScore());
 			page_record.setAccessibilityScore(page.getAccessibilityScore());
 			page_record.setSeoScore(page.getSeoScore());
 			return page_repo.save(page_record);
 		}
-		
 		return page_repo.save(page);
 	}
 	
@@ -60,11 +64,13 @@ public class PageService {
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
 	 */
-	public Page findByKey(String key){
+	public Page findByKey(String user_id, String key){
 		assert key != null;
 		assert !key.isEmpty();
+		assert user_id != null;
+		assert !user_id.isEmpty();
 		
-		return page_repo.findByKey(key);
+		return page_repo.findByKey(user_id, key);
 	}
 
 	/**
@@ -132,8 +138,31 @@ public class PageService {
 		
 		log.warn("insight executed at :: " + insight.getExecutedAt().toString());
 		log.warn("page key :: "+page_key);
-		performance_insight_repo.getAllAudits(page_key, insight.getExecutedAt().toString());
 		insight.setAudits(performance_insight_repo.getAllAudits(page_key, insight.getKey()));
 		return insight;
+	}
+	
+	/**
+	 * 
+	 * @param page_key
+	 * @return
+	 * 
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 */
+	public void addPageState(String user_id, String page_key, PageState page_state) {
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert page_state != null;
+		
+		PageState page_state_record = page_state_service.findByKey(user_id, page_state.getKey());
+		if(page_state_record == null) {
+			page_state_record = page_state_service.save(page_state);
+		}
+		Page page = page_repo.findByKey(user_id, page_key);
+		page.addPageState(page_state_record);
+		page_repo.save(page);
 	}
 }

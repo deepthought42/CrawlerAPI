@@ -13,6 +13,6 @@ import com.qanairy.models.message.BugMessage;
 @Repository
 public interface BugMessageRepository extends Neo4jRepository<BugMessage, Long> {
 
-	@Query("MATCH (bm:BugMessage{message:{message}}) RETURN bm")
+	@Query("MATCH (bm:BugMessage{message:{message}}) RETURN bm LIMIT 1")
 	public BugMessage findByMessage(@Param("message") String message);
 }

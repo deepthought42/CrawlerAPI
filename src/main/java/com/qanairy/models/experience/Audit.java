@@ -1,26 +1,24 @@
 package com.qanairy.models.experience;
 
-import java.util.Map;
+import java.util.Date;
+import java.util.List;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Properties;
+import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Persistable;
 import com.qanairy.models.enums.InsightType;
 
 /**
- * Represents the audit data for 
- *
+ * 
  */
 @NodeEntity
 public class Audit implements Persistable {
-
 	@GeneratedValue
 	@Id
 	private Long id;
-
 	private String key;
 	private String name;
 	private String title;
@@ -32,9 +30,10 @@ public class Audit implements Persistable {
 	private String error_message;
 	private Double numeric_value;
 	private String type;
+	private Date date;
 	
-	@Properties
-	private Map<String, String> details;
+	@Relationship(type = "HAS")
+	private List<AuditDetail> details;
 	
 	public Audit() {}
 	
@@ -47,7 +46,7 @@ public class Audit implements Persistable {
 			Double numeric_value,
 			String score_display_value,
 			String title,
-			Map<String, String> details
+			List<AuditDetail> details
 	) {
 		setName(name);
 		setDescription(description);
@@ -58,8 +57,10 @@ public class Audit implements Persistable {
 		setScoreDisplayMode(score_display_value);
 		setTitle(title);
 		setDetails(details);
+		setDate(new Date());
 		setKey(generateKey());		
 	}
+	
 	
 	/* GETTERS AND SETTERS */
 	public Long getId() {
@@ -134,20 +135,28 @@ public class Audit implements Persistable {
 	public void setType(InsightType type) {
 		this.type = type.getShortName();
 	}
-
-	public Map<String, String> getDetails() {
-		return details;
-	}
-
-	public void setDetails(Map<String, String> details) {
-		this.details = details;
-	}
-
+	
 	public String getName() {
 		return name;
 	}
-
+	
 	public void setName(String name) {
 		this.name = name;
-	}	
+	}
+
+	public List<AuditDetail> getDetails() {
+		return details;
+	}
+
+	public void setDetails(List<AuditDetail> details) {
+		this.details = details;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
 }

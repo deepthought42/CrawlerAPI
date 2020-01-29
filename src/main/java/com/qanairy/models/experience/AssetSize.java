@@ -1,0 +1,34 @@
+package com.qanairy.models.experience;
+
+/**
+ * Defines detail item for "total-byte-weight" and  in the Google PageSpeed API 
+ */
+public class AssetSize extends AuditDetail {
+
+	private String url;
+	private Double total_bytes;
+	
+	
+	public AssetSize(String url, double total_bytes) {
+		setUrl(url);
+		setTotalBytes(total_bytes);
+	}
+
+	/** GETTERS AND SETTERS */
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public Double getTotalBytes() {
+		return total_bytes;
+	}
+
+	public void setTotalBytes(Double total_bytes) {
+		this.total_bytes = total_bytes;
+	}
+
+}

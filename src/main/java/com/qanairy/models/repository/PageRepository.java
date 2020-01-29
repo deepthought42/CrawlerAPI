@@ -15,7 +15,9 @@ import com.qanairy.models.experience.PerformanceInsight;
  * 
  */
 public interface PageRepository extends Neo4jRepository<Page, Long> {
-	public Page findByKey(@Param("key") String key);
+	
+	@Query("MATCH(:Account{user_id:{user_id}})-[*]->(p:Page{key:{page_key}}) RETURN p LIMIT 1")
+	public Page findByKey(@Param("user_id") String user_id, @Param("page_key") String key);
 	
 	@Query("MATCH (p:Page{url:{url}})-[h:HAS]->(e:PageState) RETURN e")
 	public Set<PageState> getPageStates(@Param("url") String url);

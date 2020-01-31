@@ -1,23 +1,29 @@
 package com.qanairy.models.experience;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * 
  */
 public class ScreenshotThumbnailDetails extends AuditDetail {
 
-	private Integer timing;
+	private Double timing;
 	private Long timestamp;
 	private String data;
 	
-	public ScreenshotThumbnailDetails(Integer timing, Long timestamp, String data) {
-		
+	public ScreenshotThumbnailDetails() {}
+	
+	public ScreenshotThumbnailDetails(Double timing, Long timestamp, String data) {
+		setTiming(timing);
+		setTimestamp(timestamp);
+		setData(data);
 	}
 
-	public Integer getTiming() {
+	public Double getTiming() {
 		return timing;
 	}
 
-	public void setTiming(Integer timing) {
+	public void setTiming(Double timing) {
 		this.timing = timing;
 	}
 

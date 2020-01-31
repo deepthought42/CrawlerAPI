@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Defines all types of {@link AuditDetail} that exist in the system
  */
 public enum AuditType {
-	TABLE("table"), FILMSTRIP("filmstrip"), OPPORTUNITY("opportunity"), NODE("node");
+	TABLE("table"), FILMSTRIP("filmstrip"), OPPORTUNITY("opportunity"), NODE("node"), DEBUG_DATA("debugdata"), UNKNOWN("unknown");
 	
 	private String shortName;
 
@@ -22,7 +22,7 @@ public enum AuditType {
     @JsonCreator
     public static AuditType create (String value) {
         if(value == null) {
-            throw new IllegalArgumentException();
+            return UNKNOWN;
         }
         for(AuditType v : values()) {
             if(value.equals(v.getShortName())) {

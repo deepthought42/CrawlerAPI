@@ -1,44 +1,48 @@
 package com.qanairy.models.experience;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * 
  */
 public class DiagnosticDetail extends AuditDetail {
 
-	private int num_stylesheets;
-	private double throughput;
-	private int num_tasks_over_10ms;
-	private int num_tasks_over_25ms;
-	private int num_tasks_over_50ms;
-	private int num_tasks_over_100ms;
-	private int num_tasks_over_500ms;
-	private int num_requests;
-	private double total_task_time;
-	private int main_document_transfer_size;
-	private int total_byte_weight;
-	private int num_tasks;
-	private double rtt;
-	private double maxRtt;
-	private int numFonts;
-	private int numScripts;
+	private Integer num_stylesheets;
+	private Double throughput;
+	private Integer num_tasks_over_10ms;
+	private Integer num_tasks_over_25ms;
+	private Integer num_tasks_over_50ms;
+	private Integer num_tasks_over_100ms;
+	private Integer num_tasks_over_500ms;
+	private Integer num_requests;
+	private Double total_task_time;
+	private Integer main_document_transfer_size;
+	private Integer total_byte_weight;
+	private Integer num_tasks;
+	private Double rtt;
+	private Double maxRtt;
+	private Integer numFonts;
+	private Integer numScripts;
+	
+	public DiagnosticDetail() {}
 	
 	public DiagnosticDetail(
-			int num_stylesheets, 
-			double throughput, 
-			int num_tasks_over_10ms,
-			int num_tasks_over_25ms,
-			int num_tasks_over_50ms,
-			int num_tasks_over_100ms,
-			int num_tasks_over_500ms,
-			int num_requests,
-			double total_task_time,
-			int main_document_transfer_size,
-			int total_byte_weight,
-			int num_tasks,
-			double rtt,
-			double max_rtt,
-			int num_fonts,
-			int num_scripts) {
+			Integer num_stylesheets, 
+			Double throughput, 
+			Integer num_tasks_over_10ms,
+			Integer num_tasks_over_25ms,
+			Integer num_tasks_over_50ms,
+			Integer num_tasks_over_100ms,
+			Integer num_tasks_over_500ms,
+			Integer num_requests,
+			Double total_task_time,
+			Integer main_document_transfer_size,
+			Integer total_byte_weight,
+			Integer num_tasks,
+			Double rtt,
+			Double max_rtt,
+			Integer num_fonts,
+			Integer num_scripts) {
 		setNumStylesheets(num_stylesheets);
 		setThroughput(throughput);
 		setNumTasksOver10ms(num_tasks_over_10ms);
@@ -57,131 +61,131 @@ public class DiagnosticDetail extends AuditDetail {
 		setNumScripts(num_scripts);
 	}
 
-	public int getNumStylesheets() {
+	public Integer getNumStylesheets() {
 		return num_stylesheets;
 	}
 
-	public void setNumStylesheets(int num_stylesheets) {
+	public void setNumStylesheets(Integer num_stylesheets) {
 		this.num_stylesheets = num_stylesheets;
 	}
 
-	public double getThroughput() {
+	public Double getThroughput() {
 		return throughput;
 	}
 
-	public void setThroughput(double throughput) {
+	public void setThroughput(Double throughput) {
 		this.throughput = throughput;
 	}
 
-	public int getNumTasksOver10ms() {
+	public Integer getNumTasksOver10ms() {
 		return num_tasks_over_10ms;
 	}
 
-	public void setNumTasksOver10ms(int num_tasks_over_10ms) {
+	public void setNumTasksOver10ms(Integer num_tasks_over_10ms) {
 		this.num_tasks_over_10ms = num_tasks_over_10ms;
 	}
 
-	public int getNumTasksOver25ms() {
+	public Integer getNumTasksOver25ms() {
 		return num_tasks_over_25ms;
 	}
 
-	public void setNumTasksOver25ms(int num_tasks_over_25ms) {
+	public void setNumTasksOver25ms(Integer num_tasks_over_25ms) {
 		this.num_tasks_over_25ms = num_tasks_over_25ms;
 	}
 
-	public int getNumTasksOver50ms() {
+	public Integer getNumTasksOver50ms() {
 		return num_tasks_over_50ms;
 	}
 
-	public void setNumTasksOver50ms(int num_tasks_over_50ms) {
+	public void setNumTasksOver50ms(Integer num_tasks_over_50ms) {
 		this.num_tasks_over_50ms = num_tasks_over_50ms;
 	}
 
-	public int getNumTasksOver100ms() {
+	public Integer getNumTasksOver100ms() {
 		return num_tasks_over_100ms;
 	}
 
-	public void setNumTasksOver100ms(int num_tasks_over_100ms) {
+	public void setNumTasksOver100ms(Integer num_tasks_over_100ms) {
 		this.num_tasks_over_100ms = num_tasks_over_100ms;
 	}
 
-	public int getNumTasksOver500ms() {
+	public Integer getNumTasksOver500ms() {
 		return num_tasks_over_500ms;
 	}
 
-	public void setNumTasksOver500ms(int num_tasks_over_500ms) {
+	public void setNumTasksOver500ms(Integer num_tasks_over_500ms) {
 		this.num_tasks_over_500ms = num_tasks_over_500ms;
 	}
 
-	public int getNumRequests() {
+	public Integer getNumRequests() {
 		return num_requests;
 	}
 
-	public void setNumRequests(int num_requests) {
+	public void setNumRequests(Integer num_requests) {
 		this.num_requests = num_requests;
 	}
 
-	public double getTotalTaskTime() {
+	public Double getTotalTaskTime() {
 		return total_task_time;
 	}
 
-	public void setTotalTaskTime(double total_task_time) {
+	public void setTotalTaskTime(Double total_task_time) {
 		this.total_task_time = total_task_time;
 	}
 
-	public int getMainDocumentTransferSize() {
+	public Integer getMainDocumentTransferSize() {
 		return main_document_transfer_size;
 	}
 
-	public void setMainDocumentTransferSize(int main_document_transfer_size) {
+	public void setMainDocumentTransferSize(Integer main_document_transfer_size) {
 		this.main_document_transfer_size = main_document_transfer_size;
 	}
 
-	public int getTotalByteWeight() {
+	public Integer getTotalByteWeight() {
 		return total_byte_weight;
 	}
 
-	public void setTotalByteWeight(int total_byte_weight) {
+	public void setTotalByteWeight(Integer total_byte_weight) {
 		this.total_byte_weight = total_byte_weight;
 	}
 
-	public int getNumTasks() {
+	public Integer getNumTasks() {
 		return num_tasks;
 	}
 
-	public void setNumTasks(int num_tasks) {
+	public void setNumTasks(Integer num_tasks) {
 		this.num_tasks = num_tasks;
 	}
 
-	public double getRtt() {
+	public Double getRtt() {
 		return rtt;
 	}
 
-	public void setRtt(double rtt) {
+	public void setRtt(Double rtt) {
 		this.rtt = rtt;
 	}
 
-	public double getMaxRtt() {
+	public Double getMaxRtt() {
 		return maxRtt;
 	}
 
-	public void setMaxRtt(double maxRtt) {
+	public void setMaxRtt(Double maxRtt) {
 		this.maxRtt = maxRtt;
 	}
 
-	public int getNumFonts() {
+	public Integer getNumFonts() {
 		return numFonts;
 	}
 
-	public void setNumFonts(int numFonts) {
+	public void setNumFonts(Integer numFonts) {
 		this.numFonts = numFonts;
 	}
 
-	public int getNumScripts() {
+	public Integer getNumScripts() {
 		return numScripts;
 	}
 
-	public void setNumScripts(int numScripts) {
+	public void setNumScripts(Integer numScripts) {
 		this.numScripts = numScripts;
 	}
 }

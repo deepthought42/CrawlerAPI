@@ -1,7 +1,6 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -288,6 +287,7 @@ public class PerformanceInsightActor extends AbstractActor {
  			   	speed_insight.addAudit(accessibility_audit);
     		}
     		else {
+    			log.warn("audit id ::::       "+audit_record.getId());
     			Audit audit = new Audit(
     					   audit_record.getId(),
     					   audit_record.getDescription(),
@@ -386,11 +386,16 @@ public class PerformanceInsightActor extends AbstractActor {
 				ArrayMap<String, Object> detail_obj = (ArrayMap)item;
 
 				if("screenshot-thumbnails".contentEquals(name) || "final-screenshot".contentEquals(name)){
-					AuditDetail audit_detail = new ScreenshotThumbnailDetails((Integer)detail_obj.get("timing"), (Long)detail_obj.get("timestamp"), detail_obj.get("data").toString());
+					AuditDetail audit_detail = new ScreenshotThumbnailDetails(getDoubleValue(detail_obj, "timing"),
+																			  Long.parseLong(detail_obj.get("timestamp").toString()),
+																			  detail_obj.get("data").toString());
 					audit_details.add(audit_detail);
 				}
 				else if("resource-summary".contentEquals(name)) {
-					AuditDetail audit_detail = new ResourceSummary(Integer.parseInt(detail_obj.get("requestCount").toString()), detail_obj.get("resourceType").toString(), detail_obj.get("label").toString(), Long.parseLong(detail_obj.get("size").toString()));
+					AuditDetail audit_detail = new ResourceSummary(Integer.parseInt(detail_obj.get("requestCount").toString()), 
+																   detail_obj.get("resourceType").toString(), 
+																   detail_obj.get("label").toString(), 
+																   Long.parseLong(detail_obj.get("size").toString()));
 					audit_details.add(audit_detail);
 				}
 				else if("render-blocking-resources".contentEquals(name)) {
@@ -429,7 +434,7 @@ public class PerformanceInsightActor extends AbstractActor {
 						|| "label".contentEquals(name)
 				) {
 					JSONObject node = (JSONObject)detail_obj.get("node");
-					AuditDetail audit_detail = new AccessibilityDetailNode(node.get("nodeLabel").toString(), node.get("explanation").toString(), node.get("type").toString(), node.get("selector").toString(), node.get("path").toString(), node.get("snippet").toString());
+					AuditDetail audit_detail = new AccessibilityDetailNode(node.get("nodeLabel").toString(), node.get("explanation").toString(), node.get("selector").toString(), node.get("path").toString(), node.get("snippet").toString());
 					audit_details.add(audit_detail);
 				}
 				else if("dom-size".contentEquals(name)) {
@@ -442,7 +447,15 @@ public class PerformanceInsightActor extends AbstractActor {
 				}
 				else if("uses-long-cache-ttl".contentEquals(name)) {
 					//if debug data is null this might create issues 
-					AuditDetail audit_detail = new CachingDetail(detail_obj.get("url").toString(), Double.parseDouble(detail_obj.get("wastedBytes").toString()), Integer.parseInt(detail_obj.get("totalBytes").toString()), Double.parseDouble(detail_obj.get("cacheHitProbability").toString()), Integer.parseInt(detail_obj.get("cacheLifetimeMs").toString()),  (Map)detail_obj.get("debugData"));
+					log.warn("wasted bytes :: " + getDoubleValue(detail_obj, "wastedBytes"));
+					log.warn("cache hit probaility :: " + getDoubleValue(detail_obj, "cacheHitProbability"));
+					log.warn("cache lifetime ms :: " + getDoubleValue(detail_obj, "cacheLifetimeMs"));
+					
+					AuditDetail audit_detail = new CachingDetail(getStringValue(detail_obj, "url"), 
+																 getDoubleValue(detail_obj, "wastedBytes"),
+																 getIntegerValue(detail_obj, "totalBytes"),
+																 getDoubleValue(detail_obj, "cacheHitProbability"),
+																 getIntegerValue(detail_obj, "cacheLifetimeMs"));
 					audit_details.add(audit_detail);
 				}
 				else if("unminified-css".contentEquals(name) || "unused-css-rules".contentEquals(name) || "offscreen-images".contentEquals(name) || "uses-responsive-images".contentEquals(name)) {
@@ -455,28 +468,31 @@ public class PerformanceInsightActor extends AbstractActor {
 					log.warn("details request main thread time :: " + detail_obj.get("mainThreadTime"));
 					log.warn("details request entity :: " + detail_obj.get("entity"));
 	
-					AuditDetail audit_detail = new ThirdPartySummaryDetail(Integer.parseInt(detail_obj.get("transferSize").toString()), Double.parseDouble(detail_obj.get("blockingTime").toString()), Double.parseDouble(detail_obj.get("mainThreadTime").toString()), (Map)detail_obj.get("entity"));
+					AuditDetail audit_detail = new ThirdPartySummaryDetail(Integer.parseInt(detail_obj.get("transferSize").toString()), 
+																		   Double.parseDouble(detail_obj.get("blockingTime").toString()),
+																		   Double.parseDouble(detail_obj.get("mainThreadTime").toString()),
+																		   (Map)detail_obj.get("entity"));
 					audit_details.add(audit_detail);
 				}
 				else if("network-requests".contentEquals(name)) {
 					log.warn("details object value :: "+detail_obj);
 
-					String resource_type = null;
-					if(detail_obj.get("resourceType") != null) {
-						resource_type = detail_obj.get("resourceType").toString();
-					}
 					AuditDetail audit_detail = new NetworkRequestDetail(Integer.parseInt(detail_obj.get("transferSize").toString()), 
-																		detail_obj.get("url").toString(), 
-																		Integer.parseInt(detail_obj.get("statusCode").toString()), 
-																		resource_type,
-																		detail_obj.get("mimeType").toString(),
-																		Integer.parseInt(detail_obj.get("resourceSize").toString()),
-																		Double.parseDouble(detail_obj.get("endTime").toString()),
-																		Double.parseDouble(detail_obj.get("startTime").toString()));
+																		getStringValue(detail_obj, "url"),
+																		getIntegerValue(detail_obj, "statusCode"), 
+																		getStringValue(detail_obj, "resourceType"),
+																		getStringValue(detail_obj, "mimeType"),
+																		getIntegerValue(detail_obj, "resourceSize"),
+																		getDoubleValue(detail_obj, "endTime"),
+																		getDoubleValue(detail_obj, "startTime"));
 					audit_details.add(audit_detail);
 				}
 				else if("uses-webp-images".contentEquals(name)) {
-					AuditDetail audit_detail = new WebPImageDetail(Integer.parseInt(detail_obj.get("wastedBytes").toString()), detail_obj.get("url").toString(), Boolean.getBoolean(detail_obj.get("fromProtocol").toString()), Boolean.getBoolean(detail_obj.get("isCrossOrigin").toString()), Integer.parseInt(detail_obj.get("totalBytes").toString()));
+					AuditDetail audit_detail = new WebPImageDetail(Integer.parseInt(detail_obj.get("wastedBytes").toString()), 
+																   detail_obj.get("url").toString(), 
+																   Boolean.getBoolean(detail_obj.get("fromProtocol").toString()), 
+																   Boolean.getBoolean(detail_obj.get("isCrossOrigin").toString()), 
+																   Integer.parseInt(detail_obj.get("totalBytes").toString()));
 					audit_details.add(audit_detail);
 				}
 				else if("diagnostics".contentEquals(name)) {
@@ -510,6 +526,37 @@ public class PerformanceInsightActor extends AbstractActor {
 		return audit_details;
 	}
 
+	private Integer getIntegerValue(ArrayMap<String, Object> detail_obj, String object_key) {
+		Integer value = null;
+		if(detail_obj.get(object_key) != null) {
+			value = Integer.parseInt(detail_obj.get(object_key).toString());
+		}
+		else {
+			value = new Integer(-999999999);
+		}
+		return value;
+	}
+	
+	private Double getDoubleValue(ArrayMap<String, Object> detail_obj, String object_key) {
+		Double value = null;
+		if(detail_obj.get(object_key) != null) {
+			value = Double.parseDouble(detail_obj.get(object_key).toString());
+		}
+		else {
+			value = new Double(-1);
+		}
+		return value;
+	}
+
+	private String getStringValue(ArrayMap<String, Object> detail_obj, String object_key) {
+		String mime_type = null;
+		if(detail_obj.get(object_key) != null) {
+			mime_type = detail_obj.get(object_key).toString();
+		}
+		
+		return mime_type;
+	}
+
 	private InsightType getAuditType(
 			LighthouseAuditResultV5 audit_record,
 			Map<InsightType, List<String>> audit_ref_map
@@ -528,7 +575,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	private Double convertScore(Object score_obj) {
 		Double score = null;
 		try {
-			score = ((BigDecimal)score_obj).doubleValue();
+			score = Double.parseDouble(score_obj.toString());
 		}
 		catch(Exception e) {
 			//e.printStackTrace();

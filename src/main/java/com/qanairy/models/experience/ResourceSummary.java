@@ -1,5 +1,7 @@
 package com.qanairy.models.experience;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * Contains {@link AuditDetail}s for the "resource-summary" performance audit in googe pagespeed api
  * 
@@ -10,6 +12,8 @@ public class ResourceSummary extends AuditDetail {
 	private String resource_type;
 	private String label;
 	private Long size;
+	
+	public ResourceSummary() {}
 	
 	public ResourceSummary(Integer resource_count, String resource_type, String label, Long size) {
 		setResourceCount(resource_count);

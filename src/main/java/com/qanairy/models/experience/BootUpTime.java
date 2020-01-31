@@ -1,5 +1,7 @@
 package com.qanairy.models.experience;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * Defines detail item for "bootup-time" in the Google PageSpeed API 
  */
@@ -10,6 +12,7 @@ public class BootUpTime extends AuditDetail {
 	private Double script_load_time;
 	private Double script_parse_time;
 
+	public BootUpTime() {}
 	
 	public BootUpTime(String url, double total_time, double script_load_time, double script_parse_time) {
 		setUrl(url);

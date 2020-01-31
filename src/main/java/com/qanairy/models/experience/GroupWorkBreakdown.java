@@ -1,5 +1,7 @@
 package com.qanairy.models.experience;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * Describes the cumulative time used for different resource groups to load.
  */
@@ -9,7 +11,9 @@ public class GroupWorkBreakdown extends AuditDetail {
 	private String group_label;
 	private Double duration;
 	
-	public GroupWorkBreakdown(String group, double duration, String group_label) {
+	public GroupWorkBreakdown() {}
+	
+	public GroupWorkBreakdown(String group, double duration, String group_label ) {
 		setGroup(group);
 		setGroupLabel(group_label);
 		setDuration(duration);

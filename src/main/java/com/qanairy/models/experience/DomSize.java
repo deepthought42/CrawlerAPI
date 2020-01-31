@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.neo4j.ogm.annotation.Properties;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * Defines detail item for "dom-size"(Document Object Model size) object in the Google PageSpeed API 
  */
@@ -16,6 +18,7 @@ public class DomSize extends AuditDetail {
 	@Properties
 	Map<String, String> element_definition = new HashMap<>();
 	
+	public DomSize() {}
 	
 	public DomSize(String statistic, String value, Map<String, String> element_definition) {
 		setStatistic(statistic);

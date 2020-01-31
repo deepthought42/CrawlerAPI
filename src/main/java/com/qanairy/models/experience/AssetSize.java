@@ -6,10 +6,11 @@ package com.qanairy.models.experience;
 public class AssetSize extends AuditDetail {
 
 	private String url;
-	private Double total_bytes;
+	private Integer total_bytes;
 	
+	public AssetSize() {}
 	
-	public AssetSize(String url, double total_bytes) {
+	public AssetSize(String url, Integer total_bytes) {
 		setUrl(url);
 		setTotalBytes(total_bytes);
 	}
@@ -23,11 +24,11 @@ public class AssetSize extends AuditDetail {
 		this.url = url;
 	}
 
-	public Double getTotalBytes() {
+	public Integer getTotalBytes() {
 		return total_bytes;
 	}
 
-	public void setTotalBytes(Double total_bytes) {
+	public void setTotalBytes(Integer total_bytes) {
 		this.total_bytes = total_bytes;
 	}
 

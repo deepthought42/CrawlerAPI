@@ -13,6 +13,8 @@ public class AccessibilityDetailNode extends AuditDetail {
 	private String path;
 	private String snippet;
 	
+	public AccessibilityDetailNode() {}
+	
 	/**
 	 * 
 	 * @param node_label
@@ -25,13 +27,11 @@ public class AccessibilityDetailNode extends AuditDetail {
 	public AccessibilityDetailNode(
 			String node_label, 
 			String explanation, 
-			String type, 
 			String selector, 
 			String path,
 			String snippet) {
 		setNodeLabel(node_label);
 		setExplanation(explanation);
-		setType(AuditType.create(type));
 		setSelector(selector);
 		setPath(path);
 		setSnippet(snippet);

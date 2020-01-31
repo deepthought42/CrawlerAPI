@@ -1,7 +1,5 @@
 package com.qanairy.models.experience;
 
-import com.qanairy.models.enums.AuditType;
-
 /**
  * 
  */
@@ -12,12 +10,13 @@ public class AssetSizeOpportunityDetail extends AuditDetail {
 	private Double wasted_percent;
 	private Integer total_bytes;
 	
+	public AssetSizeOpportunityDetail() {}
+	
 	public AssetSizeOpportunityDetail(String url, int wasted_bytes, double wasted_percent, int total_bytes) {
 		setUrl(url);
 		setWastedBytes(wasted_bytes);
 		setWastedPercent(wasted_percent);
 		setTotalBytes(total_bytes);
-		setType(AuditType.OPPORTUNITY);
 	}
 
 	/** GETTERS AND SETTERS  */

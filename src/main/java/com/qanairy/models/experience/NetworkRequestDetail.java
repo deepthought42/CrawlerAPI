@@ -1,5 +1,6 @@
 package com.qanairy.models.experience;
 
+
 /**
  * 
  */
@@ -14,8 +15,10 @@ public class NetworkRequestDetail extends AuditDetail {
 	private Double end_time;
 	private Double start_time;
 	
-	public NetworkRequestDetail(Integer transfer_size, String url, Integer status_code, String resource_type, String mime_type,
-			Integer resource_size, Double end_time, Double start_time) {
+	public NetworkRequestDetail() {}
+	
+	public NetworkRequestDetail(Integer transfer_size, String url, Integer status_code, String resource_type, 
+			String mime_type,Integer resource_size, Double end_time, Double start_time) {
 		setTransferSize(transfer_size);
 		setUrl(url);
 		setStatusCode(status_code);

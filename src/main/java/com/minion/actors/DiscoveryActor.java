@@ -278,7 +278,7 @@ public class DiscoveryActor extends AbstractActor{
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-								//url_browser_actor.tell( url_message, getSelf() );
+								url_browser_actor.tell( url_message, getSelf() );
 								
 								if(performance_insight_actor == null){
 									performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -460,7 +460,7 @@ public class DiscoveryActor extends AbstractActor{
 		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
 		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		
-		//url_browser_actor.tell(url_message, getSelf() );
+		url_browser_actor.tell(url_message, getSelf() );
 		
 		if(performance_insight_actor == null){
 			performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

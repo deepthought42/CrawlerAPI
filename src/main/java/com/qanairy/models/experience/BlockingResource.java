@@ -9,6 +9,8 @@ public class BlockingResource extends AuditDetail {
 	private Integer total_bytes;
 	private Double wasted_ms;
 	
+	public BlockingResource() {}
+	
 	public BlockingResource(String url, Integer total_bytes, Double wasted_ms) {
 		setUrl(url);
 		setTotalBytes(total_bytes);
@@ -23,7 +25,7 @@ public class BlockingResource extends AuditDetail {
 		this.url = url;
 	}
 
-	public int getTotalBytes() {
+	public Integer getTotalBytes() {
 		return total_bytes;
 	}
 

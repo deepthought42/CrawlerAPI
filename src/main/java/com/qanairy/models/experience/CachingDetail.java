@@ -14,14 +14,20 @@ public class CachingDetail extends AuditDetail {
 	private Integer cache_lifetime_ms;
 	private Map<String, String> debug_data;
 	
+	public CachingDetail() {}
 
-	public CachingDetail(String url, double wasted_bytes, int total_bytes, double cache_hit_probability, int cache_lifetime_ms, Map<String, String> debug_data) {
+	public CachingDetail(
+			String url, 
+			Double wasted_bytes, 
+			Integer total_bytes, 
+			Double cache_hit_probability, 
+			Integer cache_lifetime_ms
+	) {
 		setUrl(url);
 		setWastedBytes(wasted_bytes);
 		setTotalBytes(total_bytes);
 		setCacheHitProbability(cache_hit_probability);
 		setCacheLifetimeMs(cache_lifetime_ms);
-		setDebugData(debug_data);
 	}
 	
 	public String getUrl() {
@@ -48,7 +54,7 @@ public class CachingDetail extends AuditDetail {
 		this.total_bytes = total_bytes;
 	}
 	
-	public Double getCache_hit_probability() {
+	public Double getCacheHitProbability() {
 		return cache_hit_probability;
 	}
 	

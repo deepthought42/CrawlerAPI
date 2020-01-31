@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.neo4j.ogm.annotation.Properties;
 
+import com.qanairy.models.enums.AuditType;
+
 /**
  * 
  */
@@ -17,7 +19,8 @@ public class ThirdPartySummaryDetail extends AuditDetail {
 	@Properties
 	private Map<String, String> entity = new HashMap<>();
 	
-
+	public ThirdPartySummaryDetail() {}
+	
 	public ThirdPartySummaryDetail(int transfer_size, double blocking_time, double main_thread_time, Map<String, String> entity) {
 		setTransferSize(transfer_size);
 		setBlockingTime(blocking_time);

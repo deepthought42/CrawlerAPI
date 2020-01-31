@@ -1,5 +1,6 @@
 package com.qanairy.models.experience;
 
+
 /**
  * 
  */
@@ -10,6 +11,8 @@ public class WebPImageDetail extends AuditDetail {
 	private boolean from_protocol;
 	private boolean is_cross_origin;
 	private int total_bytes;
+	
+	public WebPImageDetail() {}
 	
 	public WebPImageDetail(int wasted_bytes, String url, boolean from_protocol, boolean is_cross_origin, int total_bytes) {
 		setWastedBytes(wasted_bytes);

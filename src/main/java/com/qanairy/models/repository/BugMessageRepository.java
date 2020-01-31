@@ -5,14 +5,14 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.qanairy.models.experience.AccessibilityDetail;
+import com.qanairy.models.experience.BugMessage;
 
 /**
- * Spring Data interface for interacting with {@link AccessibilityDetail} objects in database
+ * Spring Data interface for interacting with {@link BugMessage} objects in database
  */
 @Repository
-public interface BugMessageRepository extends Neo4jRepository<AccessibilityDetail, Long> {
+public interface BugMessageRepository extends Neo4jRepository<BugMessage, Long> {
 
 	@Query("MATCH (bm:BugMessage{message:{message}}) RETURN bm LIMIT 1")
-	public AccessibilityDetail findByMessage(@Param("message") String message);
+	public BugMessage findByMessage(@Param("message") String message);
 }

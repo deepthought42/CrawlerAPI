@@ -54,7 +54,7 @@ import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.AuditDetail;
 import com.qanairy.models.experience.BlockingResource;
 import com.qanairy.models.experience.BootUpTime;
-import com.qanairy.models.experience.AccessibilityDetail;
+import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.experience.CachingDetail;
 import com.qanairy.models.experience.DiagnosticDetail;
 import com.qanairy.models.experience.DomSize;
@@ -353,7 +353,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					if(err.trim().isEmpty()) {
 						continue;
 					}
-					AccessibilityDetail error = new AccessibilityDetail(err, BugType.ACCESSIBILITY, new Date());
+					BugMessage error = new BugMessage(err, BugType.ACCESSIBILITY, new Date());
 					log.warn("Error :: "+err);
 					audit_details.add(error);
 					error = bug_message_service.save(error);

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.experience.AccessibilityDetail;
+import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.repository.BugMessageRepository;
 import com.qanairy.models.repository.ElementStateRepository;
 import com.qanairy.models.rules.Rule;
@@ -154,20 +154,20 @@ public class ElementStateService {
 		return element_repo.findByOuterHtml(user_id, snippet);
 	}
 	
-	public ElementState addBugMessage(Long element_id, AccessibilityDetail msg) {
+	public ElementState addBugMessage(Long element_id, BugMessage msg) {
 		Optional<ElementState> opt_element = element_repo.findById(element_id);
 		
 		if(opt_element.isPresent()){
 			boolean msg_exists = false;
 			ElementState element_state = opt_element.get();
 			//check if form has error message already
-			for(AccessibilityDetail bug_msg : element_state.getErrors()) {
+			for(BugMessage bug_msg : element_state.getErrors()) {
 				if( bug_msg.equals(msg)) {
 					msg_exists = true;
 				}
 			}
 			if(!msg_exists) {
-				AccessibilityDetail bug_msg = bug_message_repo.save(msg);
+				BugMessage bug_msg = bug_message_repo.save(msg);
 				element_state.addError(bug_msg);
 				log.warn("element :: "+element_state.getErrors());
 			}
@@ -180,7 +180,7 @@ public class ElementStateService {
 		return null;
 	}
 	
-	public ElementState removeBugMessage(long form_id, AccessibilityDetail msg) {
+	public ElementState removeBugMessage(long form_id, BugMessage msg) {
 		Optional<ElementState> opt_element = element_repo.findById(form_id);
 		
 		if(opt_element.isPresent()){

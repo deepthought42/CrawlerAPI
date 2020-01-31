@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.experience.AccessibilityDetail;
+import com.qanairy.models.experience.BugMessage;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
@@ -38,7 +38,7 @@ public class Form implements Persistable, Comparable<Form>{
 	private String type;
 	
 	@Relationship(type = "HAS")
-	private List<AccessibilityDetail> bug_messages;
+	private List<BugMessage> bug_messages;
 	
 	@Relationship(type = "DEFINED_BY")
 	private ElementState form_tag;
@@ -224,18 +224,18 @@ public class Form implements Persistable, Comparable<Form>{
 		return new Form(form_tag, form_fields, submit_field, name, predictions, this.getType(), date_discovered, this.getStatus());
 	}
 
-	public List<AccessibilityDetail> getBugMessages() {
+	public List<BugMessage> getBugMessages() {
 		return bug_messages;
 	}
 
-	public void setBugMessages(List<AccessibilityDetail> bug_messages) {
+	public void setBugMessages(List<BugMessage> bug_messages) {
 		if(this.bug_messages == null) {
 			this.bug_messages = new ArrayList<>();
 		}
 		this.bug_messages = bug_messages;
 	}
 	
-	public void addBugMessage(AccessibilityDetail bug_message) {
+	public void addBugMessage(BugMessage bug_message) {
 		if(this.bug_messages == null) {
 			this.bug_messages = new ArrayList<>();
 		}
@@ -243,7 +243,7 @@ public class Form implements Persistable, Comparable<Form>{
 		this.bug_messages.add(bug_message);
 	}
 
-	public void removeBugMessage(AccessibilityDetail msg) {
+	public void removeBugMessage(BugMessage msg) {
 		int idx = bug_messages.indexOf(msg);
 		this.bug_messages.remove(idx);
 	}

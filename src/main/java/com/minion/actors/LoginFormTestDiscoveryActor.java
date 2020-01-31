@@ -26,7 +26,7 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.BugType;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.experience.AccessibilityDetail;
+import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
@@ -122,7 +122,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								username_elem = findInputElementByAttribute(elements, "email", message.getAccountId());
 								if(username_elem == null){
 									log.info("could not find username !!!!!!!!");
-									AccessibilityDetail bug_message = new AccessibilityDetail(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new Date());
+									BugMessage bug_message = new BugMessage(MISSING_USERNAME_ERROR, BugType.MISSING_FIELD, new Date());
 									form_service.addBugMessage(form.getId(), bug_message);
 									//throw error that cannot find username field
 								}
@@ -148,7 +148,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							if(password_elem == null){
 								log.info("could not find password !!!!!!!!");
 								//throw error that cannot find password field
-								AccessibilityDetail bug_message = new AccessibilityDetail(MISSING_PASSWORD_ERROR, BugType.MISSING_FIELD, new Date());
+								BugMessage bug_message = new BugMessage(MISSING_PASSWORD_ERROR, BugType.MISSING_FIELD, new Date());
 								form_service.addBugMessage(form.getId(), bug_message);
 							}
 							

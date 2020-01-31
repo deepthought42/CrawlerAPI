@@ -7,15 +7,15 @@ import com.qanairy.models.enums.BugType;
 /**
  * 
  */
-public class AccessibilityDetail extends AuditDetail {
+public class BugMessage extends AuditDetail {
 
 	private String message;
 	private BugType bug_type;
 	private Date date_identified;
 	
-	public AccessibilityDetail() {}
+	public BugMessage() {}
 	
-	public AccessibilityDetail(
+	public BugMessage(
 		String message,
 		BugType type,
 		Date date
@@ -27,9 +27,9 @@ public class AccessibilityDetail extends AuditDetail {
 	
 	public boolean equals(Object o) {
 		if (this == o) return true;
-        if (!(o instanceof AccessibilityDetail)) return false;
+        if (!(o instanceof BugMessage)) return false;
         
-        AccessibilityDetail that = (AccessibilityDetail)o;
+        BugMessage that = (BugMessage)o;
 		return this.getMessage().equals(that.getMessage());
 	}
 	

@@ -54,6 +54,7 @@ import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.AuditDetail;
 import com.qanairy.models.experience.BlockingResource;
 import com.qanairy.models.experience.BootUpTime;
+import com.qanairy.models.experience.AccessibilityDetail;
 import com.qanairy.models.experience.CachingDetail;
 import com.qanairy.models.experience.DiagnosticDetail;
 import com.qanairy.models.experience.DomSize;
@@ -65,7 +66,6 @@ import com.qanairy.models.experience.ResourceSummary;
 import com.qanairy.models.experience.ScreenshotThumbnailDetails;
 import com.qanairy.models.experience.ThirdPartySummaryDetail;
 import com.qanairy.models.experience.WebPImageDetail;
-import com.qanairy.models.message.BugMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
@@ -353,7 +353,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					if(err.trim().isEmpty()) {
 						continue;
 					}
-					BugMessage error = new BugMessage(err, BugType.ACCESSIBILITY, new Date());
+					AccessibilityDetail error = new AccessibilityDetail(err, BugType.ACCESSIBILITY, new Date());
 					log.warn("Error :: "+err);
 					audit_details.add(error);
 					error = bug_message_service.save(error);

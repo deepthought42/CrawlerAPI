@@ -1,22 +1,21 @@
-package com.qanairy.models.message;
+package com.qanairy.models.experience;
 
 import java.util.Date;
 
 import com.qanairy.models.enums.BugType;
-import com.qanairy.models.experience.AuditDetail;
 
 /**
  * 
  */
-public class BugMessage extends AuditDetail {
+public class AccessibilityDetail extends AuditDetail {
 
 	private String message;
 	private BugType bug_type;
 	private Date date_identified;
 	
-	public BugMessage() {}
+	public AccessibilityDetail() {}
 	
-	public BugMessage(
+	public AccessibilityDetail(
 		String message,
 		BugType type,
 		Date date
@@ -28,9 +27,9 @@ public class BugMessage extends AuditDetail {
 	
 	public boolean equals(Object o) {
 		if (this == o) return true;
-        if (!(o instanceof BugMessage)) return false;
+        if (!(o instanceof AccessibilityDetail)) return false;
         
-        BugMessage that = (BugMessage)o;
+        AccessibilityDetail that = (AccessibilityDetail)o;
 		return this.getMessage().equals(that.getMessage());
 	}
 	

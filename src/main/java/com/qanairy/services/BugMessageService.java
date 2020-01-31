@@ -3,7 +3,7 @@ package com.qanairy.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.AccessibilityDetail;
 import com.qanairy.models.repository.BugMessageRepository;
 
 @Service
@@ -14,13 +14,13 @@ public class BugMessageService {
 	
 	/**
 	 * Objects are expected to be immutable as of 3/14/19. When this method is ran, if a 
-	 * {@link BugMessage} already exists with a given message then it will be loaded from the database, otherwise it will be saved
+	 * {@link AccessibilityDetail} already exists with a given message then it will be loaded from the database, otherwise it will be saved
 	 * 
-	 * @param bug_message {@link BugMessage} 
+	 * @param bug_message {@link AccessibilityDetail} 
 	 * @return
 	 */
-	public BugMessage save(BugMessage bug_message){
-		BugMessage bug_message_record = bug_message_repo.findByMessage(bug_message.getMessage());
+	public AccessibilityDetail save(AccessibilityDetail bug_message){
+		AccessibilityDetail bug_message_record = bug_message_repo.findByMessage(bug_message.getMessage());
 		if(bug_message_record == null){
 			return bug_message_repo.save(bug_message);
 		}

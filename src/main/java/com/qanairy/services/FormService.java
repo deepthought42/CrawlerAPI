@@ -13,7 +13,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.AccessibilityDetail;
 import com.qanairy.models.repository.BugMessageRepository;
 import com.qanairy.models.repository.FormRepository;
 
@@ -100,20 +100,20 @@ public class FormService {
 	}
 	
 	
-	public Form addBugMessage(long form_id, BugMessage msg) {
+	public Form addBugMessage(long form_id, AccessibilityDetail msg) {
 		Optional<Form> opt_form = form_repo.findById(form_id);
 		
 		if(opt_form.isPresent()){
 			boolean msg_exists = false;
 			Form form = opt_form.get();
 			//check if form has error message already
-			for(BugMessage bug_msg : form.getBugMessages()) {
+			for(AccessibilityDetail bug_msg : form.getBugMessages()) {
 				if( bug_msg.equals(msg)) {
 					msg_exists = true;
 				}
 			}
 			if(!msg_exists) {
-				BugMessage bug_msg = bug_message_repo.save(msg);
+				AccessibilityDetail bug_msg = bug_message_repo.save(msg);
 				form.addBugMessage(bug_msg);
 				log.warn("form :: "+form.getBugMessages());
 			}
@@ -137,7 +137,7 @@ public class FormService {
 		return null;
 	}
 	
-	public Form removeBugMessage(long form_id, BugMessage msg) {
+	public Form removeBugMessage(long form_id, AccessibilityDetail msg) {
 		Optional<Form> opt_form = form_repo.findById(form_id);
 		
 		if(opt_form.isPresent()){

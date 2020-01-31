@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.AccessibilityDetail;
 import com.qanairy.models.rules.Rule;
 
 /**
@@ -65,7 +65,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private Set<Rule> rules = new HashSet<>();
 	
 	@Relationship(type = "HAS")
-	private Set<BugMessage> errors = new HashSet<>();
+	private Set<AccessibilityDetail> errors = new HashSet<>();
 
 	@Relationship(type = "HAS")
 	private List<ElementState> child_elements = new ArrayList<>();
@@ -512,22 +512,22 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		return this.id;
 	}
 
-	public Set<BugMessage> getErrors() {
+	public Set<AccessibilityDetail> getErrors() {
 		return errors;
 	}
 
-	public void setErrors(Set<BugMessage> errors) {
+	public void setErrors(Set<AccessibilityDetail> errors) {
 		this.errors = errors;
 	}
 	
-	public void addError(BugMessage bug_message) {
+	public void addError(AccessibilityDetail bug_message) {
 		if(this.errors == null) {
 			this.errors = new HashSet<>();
 		}
 		this.errors.add(bug_message);
 	}
 	
-	public boolean removeError(BugMessage msg) {
+	public boolean removeError(AccessibilityDetail msg) {
 		return this.errors.remove(msg);
 	}
 	

@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,6 +11,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -25,6 +25,9 @@ public class DomainService {
 
 	@Autowired
 	private DomainRepository domain_repo;
+	
+	@Autowired
+	private DomainRepository page_service;
 	
 	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
@@ -140,5 +143,58 @@ public class DomainService {
 		Domain domain = domain_repo.findByUrl(url, user_id);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
+	}
+
+	/**
+	 * Creates a relationship between existing {@link Page} and {@link Domain} records
+	 * 
+	 * @param url {@link Domain} url
+	 * @param page_key key of {@link Page} object
+	 * @param user_id 
+	 * 
+	 * @return
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 * @pre user_id != null
+	 * 
+	 */
+	public boolean addPage(String url, Page page, String user_id) {
+		assert url != null;
+		assert !url.isEmpty();
+		assert page != null;
+		assert user_id != null;
+		
+		Domain domain = findByUrl(url, user_id);
+		
+		Page page_record = page_service.getPage(user_id, url, page.getKey());
+		if(page_record == null) {
+			domain.addPage(page);
+			domain_repo.save(domain);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param user_id
+	 * @param url
+	 * @return
+	 * 
+	 * @pre url != null;
+	 * @pre !url.isEmpty();
+	 * @pre user_id != null;
+	 * @pre !user_id.isEmpty();
+	 */
+	public Set<Page> getPages(String user_id, String url) {
+		assert url != null;
+		assert !url.isEmpty();
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		
+		return domain_repo.getPages(user_id, url);
 	}
 }

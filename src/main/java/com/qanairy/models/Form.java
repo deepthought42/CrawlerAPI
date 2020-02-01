@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.BugMessage;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser

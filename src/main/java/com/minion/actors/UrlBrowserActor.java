@@ -62,7 +62,7 @@ public class UrlBrowserActor extends AbstractActor {
 
 	@Autowired
 	private TestCreatorService test_creator_service;
-
+	
 	@Autowired
 	private BrowserService browser_service;
 
@@ -135,8 +135,8 @@ public class UrlBrowserActor extends AbstractActor {
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page...");
-							page_state = browser_service.buildPage(message.getAccount(), message.getDomain(), browser);
-
+							page_state = browser_service.buildPageState(message.getAccount(), message.getDomain(), browser);
+							log.warn("page state elements :: " + page_state.getElements().size());
 							break;
 						}
 						catch(Exception e){
@@ -180,4 +180,5 @@ public class UrlBrowserActor extends AbstractActor {
 				})
 				.build();
 	}
+	
 }

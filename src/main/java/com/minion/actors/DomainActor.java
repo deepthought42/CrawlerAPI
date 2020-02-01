@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -169,6 +168,7 @@ public class DomainActor extends AbstractActor{
 								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 					}
 					discovery_actor.tell(form_msg, getSelf());
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

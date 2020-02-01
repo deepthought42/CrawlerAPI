@@ -41,7 +41,6 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -292,27 +291,6 @@ public class DomainController {
 		Set<PageState> page_states = domain_service.getPageStates(acct.getUserId(), url);
 		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
-    }
-	
-	@PreAuthorize("hasAuthority('read:domains')")
-    @RequestMapping(method = RequestMethod.GET, path="/pages")
-    public @ResponseBody Set<Page> getAllPages(HttpServletRequest request, 
-											   @RequestParam(value="url", required=true) String url
-	) throws UnknownAccountException {        
-		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-
-		Set<Page> pages = domain_service.getPages(acct.getUserId(), url);
-		log.info("###### PAGE STATE COUNT :: "+pages.size());
-		return pages;
     	
     			
 	    //return new HashSet<PageState>();
@@ -321,8 +299,8 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/path")
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
-    													   @RequestParam(value="url", required=true) String url
-    ) throws UnknownAccountException {        		
+    													  @RequestParam(value="url", required=true) String url) 
+    															throws UnknownAccountException {        		
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);

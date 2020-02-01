@@ -1,8 +1,6 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -30,22 +28,19 @@ public class Domain implements Persistable{
 	private String discovery_browser;
 	
 	@Relationship(type = "HAS_TEST")
-	private Set<Test> tests;
+	private Set<Test> tests = new HashSet<>();
 
 	@Relationship(type = "HAS")
-	private Set<PageState> page_states;
-
-	@Relationship(type = "HAS")
-	private List<Page> pages;
+	private Set<PageState> page_states = new HashSet<>();
 
 	@Relationship(type = "HAS_TEST_USER")
-	private Set<TestUser> test_users;
+	private Set<TestUser> test_users = new HashSet<>();
 	
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Account account;
 
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
-	private Set<DiscoveryRecord> discovery_records;
+	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
 	
 	/**
 	 * 
@@ -53,13 +48,7 @@ public class Domain implements Persistable{
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(){
-		setTests( new HashSet<>() );
-		setPageStates( new HashSet<>() );
-		setDiscoveryRecords( new HashSet<>() );
-		setTestUsers( new HashSet<>() );
-		setPages( new ArrayList<>() );
-	}
+	public Domain(){}
 	
 	/**
 	 * 
@@ -74,7 +63,6 @@ public class Domain implements Persistable{
 		setProtocol(protocol);
 		setDiscoveryBrowserName(browser);
 		setHost(host);
-		setPages(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -224,24 +212,5 @@ public class Domain implements Persistable{
 		}
 		
 		return this.getPageStates().add(page_state);
-	}
-
-	public boolean addPage(Page page) {
-		//check if page state exists
-		for(Page state : this.getPages()){
-			if(state.getKey().equals(page.getKey())){
-				return false;
-			}
-		}
-		
-		return this.getPages().add(page);
-	}
-
-	private List<Page> getPages() {
-		return this.pages;
-	}
-	
-	private void setPages(List<Page> pages) {
-		this.pages = pages;
 	}
 }

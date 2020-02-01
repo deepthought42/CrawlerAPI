@@ -1,8 +1,5 @@
 package com.qanairy.models;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,11 +9,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.experience.PerformanceInsight;
-
-/**
- * 
- */
 @NodeEntity
 public class Page implements Persistable{
 
@@ -27,50 +19,22 @@ public class Page implements Persistable{
 	private String key;
 	private String url;
 	private String path;
-	private Double performance_score;
-	private Double accessibility_score;
-	private Double seo_score;
 	
 	@Relationship(type = "HAS")
-	private List<Template> templates;
-
-	@Relationship(type = "HAS")
-	private List<PerformanceInsight> performance_insights;
-
-	@Relationship(type = "HAS")
 	private Set<PageState> page_states;
+
+	@Relationship(type = "HAS")
+	private List<Template> templates;
 
 	@Override
 	public String generateKey() {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
-	public Page() {
-		setTemplates(new ArrayList<>());
-		setPerformanceInsights(new ArrayList<>());
-		setPageStates( new HashSet<>() );
-	}
-	
-	public Page(String url) throws MalformedURLException{
-		setTemplates(new ArrayList<>());
-		setPerformanceInsights(new ArrayList<>());
+	public Page(String url){
 		setUrl(url);
-		setPath(new URL(url).getPath());
-		setPageStates( new HashSet<>() );
 		setKey(generateKey());
-	}
-	
-	
-	public Set<PageState> getPageStates() {
-		return page_states;
-	}
-	
-	public void setPageStates(Set<PageState> page_states) {
-		this.page_states = page_states;
-	}
-
-	public boolean addPageState(PageState page_state) {
-		return page_states.add(page_state);
+		setPageStates(new HashSet<PageState>());
 	}
 	
 	/**
@@ -113,6 +77,14 @@ public class Page implements Persistable{
 		this.url = url;
 	}
 
+	public Set<PageState> getPageStates() {
+		return page_states;
+	}
+
+	public void setPageStates(Set<PageState> page_states) {
+		this.page_states = page_states;
+	}
+
 	public List<Template> getTemplates() {
 		return templates;
 	}
@@ -129,43 +101,7 @@ public class Page implements Persistable{
 		this.key = key;
 	}
 	
-	public List<PerformanceInsight> getPerformanceInsights() {
-		return performance_insights;
-	}
-
-	public void setPerformanceInsights(List<PerformanceInsight> performance_insights) {
-		this.performance_insights = performance_insights;
-	}
-
-	public void addPerformanceInsight(PerformanceInsight performance_insight) {
-		this.performance_insights.add( performance_insight );
-	}
-	
 	public long getId(){
 		return this.id;
-	}
-
-	public Double getPerformanceScore() {
-		return performance_score;
-	}
-
-	public void setPerformanceScore(Double score) {
-		this.performance_score = score;
-	}
-
-	public Double getAccessibilityScore() {
-		return accessibility_score;
-	}
-
-	public void setAccessibilityScore(Double accessibility_score) {
-		this.accessibility_score = accessibility_score;
-	}
-
-	public Double getSeoScore() {
-		return seo_score;
-	}
-
-	public void setSeoScore(Double seo_score) {
-		this.seo_score = seo_score;
 	}
 }

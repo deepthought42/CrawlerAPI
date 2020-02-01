@@ -123,16 +123,11 @@ public class BrowserUtils {
 	}	
 	
 	/**
-	 * Watches for an animation that occurs during page load
 	 * 
 	 * @param browser
 	 * @param host
 	 * @return
 	 * @throws IOException
-	 * 
-	 * @pre browser != null
-	 * @pre host != null
-	 * @pre host != empty
 	 */
 	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host) throws IOException {
 		assert browser != null;

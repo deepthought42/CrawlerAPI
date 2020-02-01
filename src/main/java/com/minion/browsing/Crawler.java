@@ -147,7 +147,7 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		return browser_service.buildPageState(user_id, domain, browser);
+		return browser_service.buildPage(user_id, domain, browser);
 	}
 
 	/**
@@ -601,7 +601,7 @@ public class Crawler {
 				}
 						
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageState(user_id, domain, browser);
+				result_page = browser_service.buildPage(user_id, domain, browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -682,7 +682,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageState(user_id, domain, browser);
+				result_page = browser_service.buildPage(user_id, domain, browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}

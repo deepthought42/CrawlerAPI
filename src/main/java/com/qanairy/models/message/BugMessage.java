@@ -1,4 +1,4 @@
-package com.qanairy.models.experience;
+package com.qanairy.models.message;
 
 import java.util.Date;
 
@@ -6,16 +6,16 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+import com.qanairy.models.ElementState;
 import com.qanairy.models.enums.BugType;
 
-/**
- * 
- */
 @NodeEntity
 public class BugMessage {
+
 	@GeneratedValue
 	@Id
 	private Long id;
+
 	private String message;
 	private BugType bug_type;
 	private Date date_identified;
@@ -39,7 +39,6 @@ public class BugMessage {
         BugMessage that = (BugMessage)o;
 		return this.getMessage().equals(that.getMessage());
 	}
-	
 	/*******************************
 	 * GETTERS/SETTERS
 	 *******************************/

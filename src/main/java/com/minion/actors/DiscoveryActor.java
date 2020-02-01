@@ -2,10 +2,8 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.io.IOException;
-import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,7 +13,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +32,6 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.PathStatus;
-import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
@@ -69,15 +65,10 @@ import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
-/**
- * 
- * 
- */
 @Component
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-
 	private final int DISCOVERY_ACTOR_COUNT = 50;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
@@ -110,7 +101,6 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private SubscriptionService subscription_service;
 	
-	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
 	private ActorRef domain_actor;
@@ -118,8 +108,6 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_discoverer;
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
-	private ActorRef performance_insight_actor;
-
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
 	//subscribe to cluster changes
 	@Override
@@ -221,7 +209,6 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(TestMessage.class, test_msg -> {
-					
 					//plan exceeded check
 			    	Account acct = account_service.findByUserId(test_msg.getAccount());
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
@@ -231,12 +218,12 @@ public class DiscoveryActor extends AbstractActor{
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
-						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						try {
 							SegmentAnalyticsHelper.testCreated(test_msg.getAccount(), test.getKey());
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
+						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					}
 					
 					if(domain_actor == null){
@@ -278,15 +265,8 @@ public class DiscoveryActor extends AbstractActor{
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-								url_browser_actor.tell( url_message, getSelf() );
-								
-								if(performance_insight_actor == null){
-									performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
-								}
-								
-								performance_insight_actor.tell( url_message, getSelf() );
-						    }
+								url_browser_actor.tell(url_message, getSelf() );
+							}
 						}
 						else {
 							if(path_expansion_actor == null){
@@ -294,7 +274,7 @@ public class DiscoveryActor extends AbstractActor{
 				  						  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 				  		    }
 					  		//send path message with examined status to discovery actor
-							path_expansion_actor.tell( path, getSelf() );
+							path_expansion_actor.tell(path, getSelf());
 						}
 						
 					}
@@ -337,11 +317,12 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 
-					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getDomain().getUrl(), form_msg.getPage().getKey());
+
 					page_state_record.addForm(form);
-					
 					try {
-						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
+						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);
+						
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
@@ -367,33 +348,6 @@ public class DiscoveryActor extends AbstractActor{
 				.build();
 	}
 
-	/**
-	 * 
-	 * @param performance_insight
-	 * @return
-	 * 
-	 * @pre performance_insight != null
-	 */
-	private double calculatePageScore(PerformanceInsight performance_insight) {
-		assert performance_insight != null;
-		
-		int insight_cnt = 0;
-		double score_total = 0.0;
-		
-		if(performance_insight.getAccessibilityScore() > 0.0) {
-			score_total += performance_insight.getAccessibilityScore();
-			insight_cnt++;
-		}
-		
-		log.warn("accessibility score :: " + performance_insight.getAccessibilityScore());
-		if(performance_insight.getSpeedScore() > 0.0) {
-			score_total += performance_insight.getSpeedScore();
-			insight_cnt++;
-		}
-		log.warn("speed score :: "+performance_insight.getSpeedScore());
-		return score_total/insight_cnt;
-	}
-
 	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
 		DiscoveryRecord discovery_record = null;
 		if(this.discovery_record == null){
@@ -412,7 +366,7 @@ public class DiscoveryActor extends AbstractActor{
 		return this.discovery_record;
 	}
 
-	private void startDiscovery(DiscoveryActionMessage message) throws IOException, GeneralSecurityException {
+	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
 		domain_actor = getSender();
 		
 		//create actors for discovery
@@ -457,20 +411,9 @@ public class DiscoveryActor extends AbstractActor{
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
-		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
-		
+		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		url_browser_actor.tell(url_message, getSelf() );
-		
-		if(performance_insight_actor == null){
-			performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
-		}
-		
-		performance_insight_actor.tell( url_message, getSelf() );
 	}
-
-	
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
 		if(discovery_record == null){
@@ -508,6 +451,4 @@ public class DiscoveryActor extends AbstractActor{
 	public void setAccount(Account account) {
 		this.account = account;
 	}
-	
-	
 }

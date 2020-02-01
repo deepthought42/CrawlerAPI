@@ -1,6 +1,5 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
-
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
@@ -41,18 +39,16 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String text;
 	private String xpath;
 	private String type;
-	private String inner_html;
-	private String css_selector;
-	private String outer_html;
-	private String classification;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
+	private String inner_html;
+	private String css_selector;
+	private String outer_html;
 	private boolean part_of_form;
 	private boolean leaf;
-	private boolean displayed;
-	private String template;
+	private String classification;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -63,10 +59,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
 
-	@Relationship(type = "HAS")
-	private List<ElementState> child_elements = new ArrayList<>();
-	
-
+	private String template;
+			
 	public ElementState(){}
 	
 	/**
@@ -86,7 +80,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String screenshot_checksum, boolean displayed){
+			String inner_html, String screenshot_checksum){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -112,7 +106,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setKey(generateKey());
 		setIsLeaf(false);
 		setClassification(ElementClassification.CHILD);
-		setDisplayed(displayed);
 	}
 	
 	/**
@@ -131,7 +124,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, ElementClassification classification, boolean displayed){
+						String inner_html, ElementClassification classification){
 		assert name != null;
 		assert xpath != null;
 		
@@ -153,7 +146,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setRules(new HashSet<>());
 		setIsLeaf(false);
 		setClassification(classification);
-		setDisplayed(displayed);
 		setKey(generateKey());
 	}
 	
@@ -405,7 +397,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());
 		page_elem.setHeight(this.getHeight());
-		page_elem.setDisplayed(this.isDisplayed());
+		
 		return page_elem;
 	}
 
@@ -506,25 +498,5 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public Long getId() {
 		return this.id;
-	}
-	
-	public List<ElementState> getChildElements() {
-		return child_elements;
-	}
-
-	public void setChildElements(List<ElementState> child_elements) {
-		this.child_elements = child_elements;
-	}
-	
-	public void addChildElement(ElementState child_element) {
-		this.child_elements.add(child_element);
-	}
-	
-	public boolean isDisplayed() {
-		return displayed;
-	}
-
-	public void setDisplayed(boolean displayed) {
-		this.displayed = displayed;
 	}
 }

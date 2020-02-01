@@ -1,18 +1,24 @@
 package com.qanairy.models.experience;
 
-import com.qanairy.models.enums.AuditType;
+import org.neo4j.ogm.annotation.Relationship;
+
+import com.qanairy.models.ElementState;
 
 /**
  * Defines an accessibility audit detail record. 
  */
-public class AccessibilityDetailNode extends AuditDetail {
-
-	private String node_label;
-	private String explanation;
-	private String selector;
-	private String path;
-	private String snippet;
+public class AccessibilityDetailNode extends AuditDetail {	
 	
+	///THE FOLLOWING ARE THE NEW FIELDS
+	private String[] required_change_messages;
+	private String[] optional_change_messages;
+	
+	@Relationship(type = "BELONGS_TO")
+	private ElementState element;
+
+	//END OF NEW FIELDS
+
+
 	public AccessibilityDetailNode() {}
 	
 	/**
@@ -25,48 +31,39 @@ public class AccessibilityDetailNode extends AuditDetail {
 	 * @param snippet
 	 */
 	public AccessibilityDetailNode(
-			String node_label, 
-			String explanation, 
-			String selector, 
-			String path,
-			String snippet) {
-		setNodeLabel(node_label);
-		setExplanation(explanation);
-		setSelector(selector);
-		setPath(path);
-		setSnippet(snippet);
+			String[] required_messages,
+			String[] optional_messages,
+			ElementState element
+	) {
+		setRequiredChangeMessages(required_messages);
+		setOptionalChangeMessages(optional_messages);
+		setElement(element);
 	}
 
 	/** GETTERS AND SETTERS */
-	public String getNodeLabel() {
-		return node_label;
+
+	public ElementState getElement() {
+		return element;
 	}
-	public void setNodeLabel(String node_label) {
-		this.node_label = node_label;
+
+	public void setElement(ElementState element) {
+		this.element = element;
 	}
-	public String getExplanation() {
-		return explanation;
+
+	public String[] getRequiredChangeMessages() {
+		return required_change_messages;
 	}
-	public void setExplanation(String explanation) {
-		this.explanation = explanation;
+
+	public void setRequiredChangeMessages(String[] required_change_messages) {
+		this.required_change_messages = required_change_messages;
 	}
-	public String getSelector() {
-		return selector;
+
+	public String[] getOptionalChangeMessages() {
+		return optional_change_messages;
 	}
-	public void setSelector(String selector) {
-		this.selector = selector;
-	}
-	public String getPath() {
-		return path;
-	}
-	public void setPath(String path) {
-		this.path = path;
-	}
-	public String getSnippet() {
-		return snippet;
-	}
-	public void setSnippet(String snippet) {
-		this.snippet = snippet;
+
+	public void setOptionalChangeMessages(String[] optional_change_messages) {
+		this.optional_change_messages = optional_change_messages;
 	}
 	
 }

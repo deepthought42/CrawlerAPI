@@ -72,6 +72,7 @@ import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.services.AuditDetailService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.BugMessageService;
@@ -113,6 +114,9 @@ public class PerformanceInsightActor extends AbstractActor {
 
 	@Autowired
 	private AuditService audit_service;
+	
+	@Autowired
+	private AuditDetailService audit_detail_service;
 	
 	@Autowired
 	private PerformanceInsightService performance_insight_service;
@@ -270,6 +274,12 @@ public class PerformanceInsightActor extends AbstractActor {
     		InsightType insight_type = getAuditType(audit_record, audit_ref_map);
     		
     		if(InsightType.ACCESSIBILITY.equals(insight_type)) {
+        		List<AuditDetail> accessibility_audit_details = extractAccessibilityAuditDetails(user_id, audit_record.getDetails());
+        		List<AuditDetail> db_records = new ArrayList<>();
+        		for(AuditDetail detail : accessibility_audit_details) {
+        			detail = audit_detail_service.save(detail);
+        			db_records.add(detail);
+        		}
     			Audit accessibility_audit = new Audit( audit_record.getId(),
 								 					   audit_record.getDescription(),
 								 					   audit_record.getDisplayValue(),
@@ -278,7 +288,7 @@ public class PerformanceInsightActor extends AbstractActor {
 								 					   audit_record.getNumericValue(),
 								 					   audit_record.getScoreDisplayMode(),
 								 					   audit_record.getTitle(),
-								 					   extractAccessibilityAuditDetails(user_id, audit_record.getDetails()));
+								 					   db_records);
     			Double score = convertScore(audit_record.getScore());
     			accessibility_audit.setScore(score);
  			   	accessibility_audit.setType(insight_type);
@@ -287,6 +297,13 @@ public class PerformanceInsightActor extends AbstractActor {
  			   	speed_insight.addAudit(accessibility_audit);
     		}
     		else {
+    			List<AuditDetail> performance_details = extractAuditDetails(user_id, audit_record.getId(), audit_record.getDetails());
+    			List<AuditDetail> db_records = new ArrayList<>();
+        		for(AuditDetail detail : performance_details) {
+        			detail = audit_detail_service.save(detail);
+        			db_records.add(detail);
+        		}
+        		
     			log.warn("audit id ::::       "+audit_record.getId());
     			Audit audit = new Audit(
     					   audit_record.getId(),
@@ -297,7 +314,7 @@ public class PerformanceInsightActor extends AbstractActor {
     					   audit_record.getNumericValue(),
     					   audit_record.getScoreDisplayMode(),
     					   audit_record.getTitle(),
-    					   extractAuditDetails(audit_record.getId(), audit_record.getDetails()));
+    					   db_records);
     			   Double score = convertScore(audit_record.getScore());
     			   audit.setScore(score);
     			   audit.setType(insight_type);
@@ -345,22 +362,41 @@ public class PerformanceInsightActor extends AbstractActor {
 				ElementState element_state = element_state_service.findByOuterHtml(user_id, snippet);
 				log.warn("element state found with outer html :: "+element_state);
 
-				explanation = explanation.replace("Fix all of the following:", "");
-				explanation = explanation.replace("Fix any of the following:", "");
-
-				String[] explanations = explanation.split("\\n");
-				for(String err : explanations) {
-					if(err.trim().isEmpty()) {
-						continue;
-					}
-					BugMessage error = new BugMessage(err, BugType.ACCESSIBILITY, new Date());
-					log.warn("Error :: "+err);
-					audit_details.add(error);
-					error = bug_message_service.save(error);
-					log.warn("saved bug message : " + error.getMessage());
-					log.warn("element state :: " + element_state);
-					element_state_service.addBugMessage( element_state.getId(), error );
+				int fix_all_idx = explanation.indexOf("Fix all of the following:");
+				int fix_any_idx = explanation.indexOf("Fix any of the following:");
+				explanation = explanation.trim();
+				
+				String optional_details = null;
+				String required_details = null;
+				if(fix_all_idx > 0 && fix_any_idx == 0) {
+					optional_details = explanation.substring(0, fix_all_idx);
+					required_details = explanation.substring(fix_all_idx);
 				}
+				else if(fix_all_idx == 0 && fix_any_idx > 0) {
+					required_details = explanation.substring(0, fix_all_idx);
+					optional_details = explanation.substring(fix_any_idx);
+				}
+				else {
+					if(fix_all_idx >= 0) {
+						required_details = explanation;
+						optional_details = "";
+					}
+					else if(fix_any_idx >= 0) {
+						optional_details = explanation;
+						required_details = "";
+					}
+				}
+
+				String[] optional_change_messages = optional_details.split("\\n");
+				String[] required_change_messages = optional_details.split("\\n");
+
+				AccessibilityDetailNode detail = new AccessibilityDetailNode();
+				detail.setOptionalChangeMessages(optional_change_messages);
+				detail.setRequiredChangeMessages(required_change_messages);
+				detail = (AccessibilityDetailNode)audit_detail_service.save(detail);
+				detail.setElement(element_state);
+				detail = (AccessibilityDetailNode)audit_detail_service.save(detail);
+				audit_details.add(detail);
 			}
 		}
 		
@@ -374,7 +410,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	 * 
 	 * @pre details != null;
 	 */
-	private List<AuditDetail> extractAuditDetails(String name, Map<String, Object> details) {
+	private List<AuditDetail> extractAuditDetails(String user_id, String name, Map<String, Object> details) {
 		
 		List<AuditDetail> audit_details = new ArrayList<>();
 		if(details != null) {
@@ -434,7 +470,38 @@ public class PerformanceInsightActor extends AbstractActor {
 						|| "label".contentEquals(name)
 				) {
 					JSONObject node = (JSONObject)detail_obj.get("node");
-					AuditDetail audit_detail = new AccessibilityDetailNode(node.get("nodeLabel").toString(), node.get("explanation").toString(), node.get("selector").toString(), node.get("path").toString(), node.get("snippet").toString());
+					ElementState element_state = element_state_service.findByOuterHtml(user_id,  getStringValue(detail_obj, "snippet"));
+					String explanation = getStringValue(detail_obj, "explanation");
+
+					int fix_all_idx = explanation.indexOf("Fix all of the following:");
+					int fix_any_idx = explanation.indexOf("Fix any of the following:");
+					explanation = explanation.trim();
+					
+					String optional_details = null;
+					String required_details = null;
+					if(fix_all_idx > 0 && fix_any_idx == 0) {
+						optional_details = explanation.substring(0, fix_all_idx);
+						required_details = explanation.substring(fix_all_idx);
+					}
+					else if(fix_all_idx == 0 && fix_any_idx > 0) {
+						required_details = explanation.substring(0, fix_all_idx);
+						optional_details = explanation.substring(fix_any_idx);
+					}
+					else {
+						if(fix_all_idx >= 0) {
+							required_details = explanation;
+							optional_details = "";
+						}
+						else if(fix_any_idx >= 0) {
+							optional_details = explanation;
+							required_details = "";
+						}
+					}
+
+					String[] optional_change_messages = optional_details.split("\\n");
+					String[] required_change_messages = optional_details.split("\\n");
+					
+					AuditDetail audit_detail = new AccessibilityDetailNode(required_change_messages, optional_change_messages, element_state);
 					audit_details.add(audit_detail);
 				}
 				else if("dom-size".contentEquals(name)) {

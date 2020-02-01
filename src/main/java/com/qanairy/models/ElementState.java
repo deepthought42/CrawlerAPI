@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
-import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.rules.Rule;
 
 /**
@@ -63,9 +62,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
-	
-	@Relationship(type = "HAS")
-	private Set<BugMessage> errors = new HashSet<>();
 
 	@Relationship(type = "HAS")
 	private List<ElementState> child_elements = new ArrayList<>();
@@ -510,25 +506,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public Long getId() {
 		return this.id;
-	}
-
-	public Set<BugMessage> getErrors() {
-		return errors;
-	}
-
-	public void setErrors(Set<BugMessage> errors) {
-		this.errors = errors;
-	}
-	
-	public void addError(BugMessage bug_message) {
-		if(this.errors == null) {
-			this.errors = new HashSet<>();
-		}
-		this.errors.add(bug_message);
-	}
-	
-	public boolean removeError(BugMessage msg) {
-		return this.errors.remove(msg);
 	}
 	
 	public List<ElementState> getChildElements() {

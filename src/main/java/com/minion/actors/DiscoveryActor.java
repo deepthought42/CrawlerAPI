@@ -33,7 +33,6 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.PathStatus;
-import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;

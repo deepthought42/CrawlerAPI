@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +69,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.services.AuditDetailService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.BugMessageService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageService;
@@ -222,9 +220,6 @@ public class PerformanceInsightActor extends AbstractActor {
 	 * @return
 	 */
 	private PerformanceInsight extractInsights(String user_id, String domain_url, PagespeedApiPagespeedResponseV5 page_speed_response) {
-		log.warn("captcha result :: "+page_speed_response.getCaptchaResult());
-		log.warn("form factor :: "+page_speed_response.getLighthouseResult().getConfigSettings().getEmulatedFormFactor() );
-		log.warn("date :: "+page_speed_response.getAnalysisUTCTimestamp());
 		PerformanceInsight speed_insight = new PerformanceInsight(
 				new Date(),
 				page_speed_response.getLighthouseResult().getTiming().getTotal(),
@@ -240,7 +235,6 @@ public class PerformanceInsightActor extends AbstractActor {
 	    }
 	    
 	    log.warn("speed insight object built...");
-	    
 	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
 	    
 	    log.warn("accessiblity exists :: "+page_speed_response.getLighthouseResult().getCategories().getAccessibility().toString());
@@ -264,55 +258,35 @@ public class PerformanceInsightActor extends AbstractActor {
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
     		InsightType insight_type = getAuditType(audit_record, audit_ref_map);
     		
+    		List<AuditDetail> db_records = new ArrayList<>();
+    		List<AuditDetail> audit_details = new ArrayList<>();
     		if(InsightType.ACCESSIBILITY.equals(insight_type)) {
-        		List<AuditDetail> accessibility_audit_details = extractAccessibilityAuditDetails(user_id, audit_record.getDetails());
-        		List<AuditDetail> db_records = new ArrayList<>();
-        		for(AuditDetail detail : accessibility_audit_details) {
-        			detail = audit_detail_service.save(detail);
-        			db_records.add(detail);
-        		}
-    			Audit accessibility_audit = new Audit( audit_record.getId(),
-								 					   audit_record.getDescription(),
-								 					   audit_record.getDisplayValue(),
-								 					   audit_record.getErrorMessage(),
-								 					   audit_record.getExplanation(),
-								 					   audit_record.getNumericValue(),
-								 					   audit_record.getScoreDisplayMode(),
-								 					   audit_record.getTitle(),
-								 					   db_records);
-    			Double score = convertScore(audit_record.getScore());
-    			accessibility_audit.setScore(score);
- 			   	accessibility_audit.setType(insight_type);
- 			   	accessibility_audit = audit_service.save(accessibility_audit);
- 			   
- 			   	speed_insight.addAudit(accessibility_audit);
-    		}
+        		audit_details = extractAccessibilityAuditDetails(user_id, audit_record.getDetails());
+       		}
     		else {
-    			List<AuditDetail> performance_details = extractAuditDetails(user_id, audit_record.getId(), audit_record.getDetails());
-    			List<AuditDetail> db_records = new ArrayList<>();
-        		for(AuditDetail detail : performance_details) {
-        			detail = audit_detail_service.save(detail);
-        			db_records.add(detail);
-        		}
-        		
-    			log.warn("audit id ::::       "+audit_record.getId());
-    			Audit audit = new Audit(
-    					   audit_record.getId(),
-    					   audit_record.getDescription(),
-    					   audit_record.getDisplayValue(),
-    					   audit_record.getErrorMessage(),
-    					   audit_record.getExplanation(),
-    					   audit_record.getNumericValue(),
-    					   audit_record.getScoreDisplayMode(),
-    					   audit_record.getTitle(),
-    					   db_records);
-    			   Double score = convertScore(audit_record.getScore());
-    			   audit.setScore(score);
-    			   audit.setType(insight_type);
-    			   audit = audit_service.save(audit);
-    			   
-    			   speed_insight.addAudit(audit);
-    		}		   
+    			audit_details = extractAuditDetails(user_id, audit_record.getId(), audit_record.getDetails());        		
+    		}		
+    		for(AuditDetail detail : audit_details) {
+    			detail = audit_detail_service.save(detail);
+    			db_records.add(detail);
+    		}
+    		log.warn("audit id ::::       "+audit_record.getId());
+    		Audit audit = new Audit(
+    				audit_record.getId(),
+    				audit_record.getDescription(),
+    				audit_record.getDisplayValue(),
+    				audit_record.getErrorMessage(),
+    				audit_record.getExplanation(),
+    				audit_record.getNumericValue(),
+    				audit_record.getScoreDisplayMode(),
+    				audit_record.getTitle(),
+    				db_records);
+    		Double score = convertScore(audit_record.getScore());
+    		audit.setScore(score);
+    		audit.setType(insight_type);
+    		audit = audit_service.save(audit);
+    		
+    		speed_insight.addAudit(audit);
     	}
     	
     	double speed_score = convertScore(page_speed_response.getLighthouseResult().getCategories().getPerformance().getScore());

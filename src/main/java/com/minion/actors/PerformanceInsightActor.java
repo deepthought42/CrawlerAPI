@@ -170,7 +170,7 @@ public class PerformanceInsightActor extends AbstractActor {
 							PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
 							log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
 							
-							PerformanceInsight performance_insight = extractInsights(message.getAccount(), message.getDomain().getUrl(), page_speed_response);
+							PerformanceInsight performance_insight = extractInsights(message.getAccount(), page_speed_response);
 							
 							//Page page = new Page(page.getUrl());
 							page.setPerformanceScore(performance_insight.getSpeedScore());
@@ -219,7 +219,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	 * @param page_speed_response
 	 * @return
 	 */
-	private PerformanceInsight extractInsights(String user_id, String domain_url, PagespeedApiPagespeedResponseV5 page_speed_response) {
+	private PerformanceInsight extractInsights(String user_id, PagespeedApiPagespeedResponseV5 page_speed_response) {
 		PerformanceInsight speed_insight = new PerformanceInsight(
 				new Date(),
 				page_speed_response.getLighthouseResult().getTiming().getTotal(),

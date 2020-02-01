@@ -15,7 +15,6 @@ import com.qanairy.models.repository.AuditRepository;
 
 @Service
 public class AuditService {
-	private static Logger log = LoggerFactory.getLogger(AuditService.class.getName());
 
 	@Autowired
 	private AuditRepository audit_repo;

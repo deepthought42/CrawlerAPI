@@ -27,7 +27,7 @@ public enum CaptchaResult {
     @JsonCreator
     public static CaptchaResult create(String value) {
         if(value == null) {
-            value = "CAPTCHA_UNSET";
+            return CAPTCHA_UNSET;
         }
         for(CaptchaResult v : values()) {
             if(value.equals(v.getShortName())) {

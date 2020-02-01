@@ -3,7 +3,6 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
@@ -15,7 +14,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -365,33 +363,6 @@ public class DiscoveryActor extends AbstractActor{
 					log.info("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
-	}
-
-	/**
-	 * 
-	 * @param performance_insight
-	 * @return
-	 * 
-	 * @pre performance_insight != null
-	 */
-	private double calculatePageScore(PerformanceInsight performance_insight) {
-		assert performance_insight != null;
-		
-		int insight_cnt = 0;
-		double score_total = 0.0;
-		
-		if(performance_insight.getAccessibilityScore() > 0.0) {
-			score_total += performance_insight.getAccessibilityScore();
-			insight_cnt++;
-		}
-		
-		log.warn("accessibility score :: " + performance_insight.getAccessibilityScore());
-		if(performance_insight.getSpeedScore() > 0.0) {
-			score_total += performance_insight.getSpeedScore();
-			insight_cnt++;
-		}
-		log.warn("speed score :: "+performance_insight.getSpeedScore());
-		return score_total/insight_cnt;
 	}
 
 	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {

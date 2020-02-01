@@ -61,4 +61,7 @@ public class BugMessage {
 	public void setDateIdentified(Date date_identified) {
 		this.date_identified = date_identified;
 	}
+	public Long getId() {
+		return this.id;
+	}
 }

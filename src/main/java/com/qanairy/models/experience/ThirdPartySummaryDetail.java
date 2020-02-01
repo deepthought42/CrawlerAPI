@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.neo4j.ogm.annotation.Properties;
 
-import com.qanairy.models.enums.AuditType;
-
 /**
  * 
  */

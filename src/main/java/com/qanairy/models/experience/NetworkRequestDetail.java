@@ -46,7 +46,7 @@ public class NetworkRequestDetail extends AuditDetail {
 		this.url = url;
 	}
 	
-	public Integer getStatus_code() {
+	public Integer getStatusCode() {
 		return status_code;
 	}
 	

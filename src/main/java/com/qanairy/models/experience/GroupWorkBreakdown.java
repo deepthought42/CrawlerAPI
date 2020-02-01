@@ -1,7 +1,5 @@
 package com.qanairy.models.experience;
 
-import com.qanairy.models.enums.AuditType;
-
 /**
  * Describes the cumulative time used for different resource groups to load.
  */

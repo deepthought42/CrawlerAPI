@@ -16,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
@@ -92,9 +90,6 @@ public class PerformanceInsightActor extends AbstractActor {
 	private static String api_key = "AIzaSyD8jtPtAdC8g6gIEIidZnsDFEANE-2gSRY";
 
 	@Autowired
-	private ActorSystem actor_system;
-
-	@Autowired
 	private BrowserService browser_service;
 	
 	@Autowired
@@ -117,9 +112,6 @@ public class PerformanceInsightActor extends AbstractActor {
 	
 	@Autowired
 	private PerformanceInsightService performance_insight_service;
-	
-	@Autowired
-	private BugMessageService bug_message_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -186,7 +178,9 @@ public class PerformanceInsightActor extends AbstractActor {
 							page.setPerformanceScore(performance_insight.getSpeedScore());
 							page.setAccessibilityScore(performance_insight.getAccessibilityScore());
 							page.setSeoScore(performance_insight.getSeoScore());
+							page.setOverallScore(performance_insight.getOverallScore());
 							page = page_service.save(message.getAccount(), page);
+							
 							//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
 							performance_insight_service.save(performance_insight);
 							page_service.addPerformanceInsight(message.getAccount(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
@@ -327,10 +321,38 @@ public class PerformanceInsightActor extends AbstractActor {
     	speed_insight.setSeoScore(seo_score);
     	speed_insight.setAccessibilityScore(accessibility_score);
     	speed_insight.setSpeedScore(speed_score);
+    	speed_insight.setOverallScore(calculatePageScore(speed_insight));
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
     	return performance_insight_service.save(speed_insight);
 	}
 
+	/**
+	 * 
+	 * @param performance_insight
+	 * @return
+	 * 
+	 * @pre performance_insight != null
+	 */
+	private double calculatePageScore(PerformanceInsight performance_insight) {
+		assert performance_insight != null;
+		
+		int insight_cnt = 0;
+		double score_total = 0.0;
+		
+		if(performance_insight.getAccessibilityScore() > 0.0) {
+			score_total += performance_insight.getAccessibilityScore();
+			insight_cnt++;
+		}
+		
+		log.warn("accessibility score :: " + performance_insight.getAccessibilityScore());
+		if(performance_insight.getSpeedScore() > 0.0) {
+			score_total += performance_insight.getSpeedScore();
+			insight_cnt++;
+		}
+		log.warn("speed score :: "+performance_insight.getSpeedScore());
+		return score_total/insight_cnt;
+	}
+	
 	/**
 	 * 
 	 * @param details
@@ -466,7 +488,6 @@ public class PerformanceInsightActor extends AbstractActor {
 						|| "meta-viewport".contentEquals(name) 
 						|| "label".contentEquals(name)
 				) {
-					JSONObject node = (JSONObject)detail_obj.get("node");
 					ElementState element_state = element_state_service.findByOuterHtml(user_id,  getStringValue(detail_obj, "snippet"));
 					String explanation = getStringValue(detail_obj, "explanation");
 
@@ -496,7 +517,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					}
 
 					String[] optional_change_messages = optional_details.split("\\n");
-					String[] required_change_messages = optional_details.split("\\n");
+					String[] required_change_messages = required_details.split("\\n");
 					
 					AuditDetail audit_detail = new AccessibilityDetailNode(required_change_messages, optional_change_messages, element_state);
 					audit_details.add(audit_detail);

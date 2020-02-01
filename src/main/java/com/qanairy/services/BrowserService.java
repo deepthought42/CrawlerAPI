@@ -74,9 +74,6 @@ public class BrowserService {
 	private ElementStateService element_service;
 	
 	@Autowired
-	private PageService page_service;
-	
-	@Autowired
 	private PageStateService page_state_service;
 
 	@Autowired

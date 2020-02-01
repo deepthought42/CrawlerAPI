@@ -1,6 +1,5 @@
 package com.qanairy.models.experience;
 
-import com.qanairy.models.enums.AuditType;
 
 /**
  * Defines detail item for "bootup-time" in the Google PageSpeed API 

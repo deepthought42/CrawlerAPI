@@ -30,6 +30,7 @@ public class Page implements Persistable{
 	private Double performance_score;
 	private Double accessibility_score;
 	private Double seo_score;
+	private Double overall_score;
 	
 	@Relationship(type = "HAS")
 	private List<Template> templates;
@@ -167,5 +168,13 @@ public class Page implements Persistable{
 
 	public void setSeoScore(Double seo_score) {
 		this.seo_score = seo_score;
+	}
+
+	public Double getOverallScore() {
+		return overall_score;
+	}
+
+	public void setOverallScore(Double overall_score) {
+		this.overall_score = overall_score;
 	}
 }

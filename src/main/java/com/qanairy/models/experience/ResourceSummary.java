@@ -1,7 +1,5 @@
 package com.qanairy.models.experience;
 
-import com.qanairy.models.enums.AuditType;
-
 /**
  * Contains {@link AuditDetail}s for the "resource-summary" performance audit in googe pagespeed api
  * 

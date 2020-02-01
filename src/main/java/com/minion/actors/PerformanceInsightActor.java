@@ -42,7 +42,6 @@ import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedRespon
 import com.minion.browsing.Browser;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.BugType;
 import com.qanairy.models.enums.CaptchaResult;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.FormFactor;
@@ -54,11 +53,9 @@ import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.AuditDetail;
 import com.qanairy.models.experience.BlockingResource;
 import com.qanairy.models.experience.BootUpTime;
-import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.experience.CachingDetail;
 import com.qanairy.models.experience.DiagnosticDetail;
 import com.qanairy.models.experience.DomSize;
-import com.qanairy.models.experience.FinalScreenshot;
 import com.qanairy.models.experience.GroupWorkBreakdown;
 import com.qanairy.models.experience.NetworkRequestDetail;
 import com.qanairy.models.experience.PerformanceInsight;
@@ -388,7 +385,7 @@ public class PerformanceInsightActor extends AbstractActor {
 				}
 
 				String[] optional_change_messages = optional_details.split("\\n");
-				String[] required_change_messages = optional_details.split("\\n");
+				String[] required_change_messages = required_details.split("\\n");
 
 				AccessibilityDetailNode detail = new AccessibilityDetailNode();
 				detail.setOptionalChangeMessages(optional_change_messages);

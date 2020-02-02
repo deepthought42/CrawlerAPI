@@ -108,6 +108,7 @@ public class PageService {
 	}
 
 	/**
+	 * Retrieves a List of all {@link PerformanceInsight}s associated with a {@link Page} that has a given key
 	 * 
 	 * @param page_key
 	 * @return
@@ -123,6 +124,7 @@ public class PageService {
 	}
 	
 	/**
+	 * Retrieves the latest {@link PerformanceInsight} for a {@link Page} with a given key
 	 * 
 	 * @param page_key
 	 * @return
@@ -137,7 +139,6 @@ public class PageService {
 		PerformanceInsight insight = page_repo.getLatestPerformanceInsight(page_key);
 		
 		log.warn("insight executed at :: " + insight.getExecutedAt().toString());
-		log.warn("page key :: "+page_key);
 		insight.setAudits(performance_insight_repo.getAllAudits(page_key, insight.getKey()));
 		return insight;
 	}

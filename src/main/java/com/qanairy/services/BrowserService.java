@@ -1150,15 +1150,19 @@ public class BrowserService {
 				continue;
 			}
 			
-			BufferedImage img = browser.getElementScreenshot(input_elem);
-			String checksum = PageState.getFileChecksum(img);
+			ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), "", input_elem.isDisplayed());
+			input_tag.setDisplayed(input_elem.isDisplayed());
+			ElementState tag_record = element_service.findByKey(user_id, input_tag.getKey());
+			if(tag_record != null && tag_record.getScreenshot() == null) {
+				BufferedImage img = browser.getElementScreenshot(input_elem);
+				String checksum = PageState.getFileChecksum(img);
+				
+				//input_tag = element_service.saveFormElement(user_id, input_tag);
+				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
+				input_tag.setScreenshot(screenshot);
+				img.flush();
+			}
 			
-			ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), "", input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), checksum, input_elem.isDisplayed());
-			input_tag = element_service.saveFormElement(user_id, input_tag);
-			String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
-			input_tag.setScreenshot(screenshot);
-			img.flush();
-
 			if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 				log.warn("element location x or y are negative");
 				continue;
@@ -1167,7 +1171,7 @@ public class BrowserService {
 			input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
 			log.warn("rules applied to input tag   ::   "+input_tag.getRules().size());
 
-			elements.add(input_tag);
+			elements.add(element_service.saveFormElement(user_id, input_tag));
 		}
 		
 		return elements;

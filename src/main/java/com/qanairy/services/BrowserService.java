@@ -232,6 +232,10 @@ public class BrowserService {
 			String browser_url = browser.getDriver().getCurrentUrl();
 			String host = new URL(browser_url).getHost();
 			for(ElementState element : elements) {
+				//if element screenshot is already set then we can skip for this element
+				if(element.getScreenshot() != null) {
+					continue;
+				}
 				//add element to list as CHILD element
 				try {
 					element_screenshot = browser.getElementScreenshot(element);

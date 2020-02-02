@@ -241,9 +241,6 @@ public class PageStateService {
 	public Collection<ElementState> getExpandableElements(List<ElementState> elements) {
 		List<ElementState> expandable_elements = new ArrayList<>();
 		for(ElementState elem : elements) {
-			log.warn("elem is displayed  ?     "+elem.isDisplayed());
-			//log.warn("elem is a leaf ?     "+ elem.isLeaf());
-			//log.warn("elem is part of form ??    "  + elem.isPartOfForm());
 			if(elem.isDisplayed() && elem.isLeaf() && !elem.isPartOfForm()) {
 				expandable_elements.add(elem);
 			}

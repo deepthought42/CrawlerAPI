@@ -42,7 +42,6 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
-import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;

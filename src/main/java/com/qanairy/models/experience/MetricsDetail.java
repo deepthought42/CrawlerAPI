@@ -76,9 +76,11 @@ public class MetricsDetail extends AuditDetail {
 		setFirstContentfulPaint(observed_first_contentful_paint);
 		setEstimatedInputLatency(estimated_input_latency);
 		setFirstCpuIdle(first_cpu_idle);
-		setFirstMeaningfulPaint(observed_first_meaningful_paint);
+		setFirstMeaningfulPaint(first_meaningful_paint);
 		setInteractive(interactive);
 		setLcpInvalidated(lcp_invalidated);
+		setObservedFirstMeaningfulPaint(observed_first_meaningful_paint);
+		setObservedFirstContentfulPaintTs(observed_first_contentful_paint_ts);
 		setObservedFirstVisualChangeTs(observed_first_visual_change_ts);
 		setObservedDomContentLoaded(observed_dom_content_loaded);
 		setObservedDomContentLoadedTs(observed_dom_content_loaded_ts);
@@ -99,7 +101,7 @@ public class MetricsDetail extends AuditDetail {
 		setObservedSpeedIndexTs(observed_speed_index_ts);
 		setObservedTraceEnd(observed_trace_end);
 		setObservedTraceEndTs(observed_trace_end_ts);
-		setSpeedIndex(observed_speed_index);
+		setSpeedIndex(speed_index);
 		setTotalBlockingTime(total_blocking_time);
 		setCreatedDate(new Date());
 	}
@@ -232,7 +234,7 @@ public class MetricsDetail extends AuditDetail {
 		this.observed_dom_content_loaded = observed_dom_content_loaded;
 	}
 
-	public Long getObservedFirstVisualChange_ts() {
+	public Long getObservedFirstVisualChangeTs() {
 		return observed_first_visual_change_ts;
 	}
 

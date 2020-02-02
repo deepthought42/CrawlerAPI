@@ -112,9 +112,10 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState element : elements){
-			if(element.getClassification().equals(ElementClassification.SLIDER.getShortName()) || 
-				element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) || 
+			if(element.getClassification().equals(ElementClassification.SLIDER) || 
+				element.getClassification().equals(ElementClassification.TEMPLATE) || 
 				element.isPartOfForm()){
+				log.warn("skipping element :: "+element.getXpath());
 				continue;
 			}
 			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
@@ -182,8 +183,11 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		if( second_to_last_page == null){
-			log.warn("second to last page state is null. returning last page state elements with size :: "+last_page_state.getElements().size());
-			return page_state_service.getExpandableElements(last_page_state.getElements());
+			log.warn("second to last page state is null. checking elements for expandability :: "+last_page_state.getElements().size());
+			Collection<ElementState> expandable_elements =  page_state_service.getExpandableElements(last_page_state.getElements());
+			log.warn("eturning last page state elements with # of expandable elements :: "+expandable_elements.size());
+
+			return expandable_elements;
 		}
 
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
@@ -216,8 +220,8 @@ public class PathExpansionActor extends AbstractActor {
 	) {
 		List<ElementState> filtered_elements = new ArrayList<>();
 		for(ElementState element : elements) {
-			if(!element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) 
-				&& !element.getClassification().equals(ElementClassification.SLIDER.getShortName())
+			if(!element.getClassification().equals(ElementClassification.TEMPLATE) 
+				&& !element.getClassification().equals(ElementClassification.SLIDER)
 			){
 				filtered_elements.add(element);
 			}

@@ -35,8 +35,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
     @Id
     private Long id;
     private String key;
-    private String screenshot;
-    private String screenshot_checksum;
 	private String name;
 	private String text;
 	private String xpath;
@@ -45,14 +43,16 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String css_selector;
 	private String outer_html;
 	private String classification;
+	private String template;
+
+	private String screenshot;
+	private String screenshot_checksum;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
 	private boolean part_of_form;
-	private boolean leaf;
 	private boolean displayed;
-	private String template;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -110,7 +110,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setTemplate("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
-		setIsLeaf(false);
 		setClassification(ElementClassification.CHILD);
 		setDisplayed(displayed);
 	}
@@ -151,7 +150,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setCssSelector("");
 		setTemplate("");
 		setRules(new HashSet<>());
-		setIsLeaf(false);
 		setClassification(classification);
 		setDisplayed(displayed);
 		setKey(generateKey());
@@ -189,16 +187,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		return true;
 	}
 	
-	
-	/**
-	 * checks if the current element is a child of the element passed
-	 * 
-	 * @param elem
-	 * @return
-	 */
-	public boolean isChildElement(ElementState elem){
-		return elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath());
-	}
+	/** GETTERS AND SETTERS  **/
 		
 	public String getName() {
 		return name;
@@ -490,15 +479,11 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 	public boolean isLeaf() {
-		return this.leaf;
-	}
-	
-	public void setIsLeaf(boolean is_leaf) {
-		this.leaf = is_leaf;
+		return getClassification().equals(ElementClassification.CHILD);
 	}
 
-	public String getClassification() {
-		return classification;
+	public ElementClassification getClassification() {
+		return ElementClassification.create(classification);
 	}
 
 	public void setClassification(ElementClassification classification) {

@@ -73,14 +73,14 @@ public class MetricsDetail extends AuditDetail {
 			Integer observed_last_visual_change,
 			Boolean lcp_invalidated
 	) {
-		setFirstContentfulPaint(observed_first_contentful_paint);
+		setFirstContentfulPaint(first_contentful_paint);
+		setObservedFirstContentfulPaint(observed_first_contentful_paint);
 		setEstimatedInputLatency(estimated_input_latency);
 		setFirstCpuIdle(first_cpu_idle);
 		setFirstMeaningfulPaint(first_meaningful_paint);
 		setInteractive(interactive);
 		setLcpInvalidated(lcp_invalidated);
 		setObservedFirstMeaningfulPaint(observed_first_meaningful_paint);
-		setObservedFirstContentfulPaintTs(observed_first_contentful_paint_ts);
 		setObservedFirstVisualChangeTs(observed_first_visual_change_ts);
 		setObservedDomContentLoaded(observed_dom_content_loaded);
 		setObservedDomContentLoadedTs(observed_dom_content_loaded_ts);

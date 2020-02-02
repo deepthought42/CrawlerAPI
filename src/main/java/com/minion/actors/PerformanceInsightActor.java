@@ -54,11 +54,13 @@ import com.qanairy.models.experience.CachingDetail;
 import com.qanairy.models.experience.DiagnosticDetail;
 import com.qanairy.models.experience.DomSize;
 import com.qanairy.models.experience.GroupWorkBreakdown;
+import com.qanairy.models.experience.MetricsDetail;
 import com.qanairy.models.experience.NetworkRequestDetail;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.experience.ResourceSummary;
 import com.qanairy.models.experience.ScreenshotThumbnailDetails;
 import com.qanairy.models.experience.ThirdPartySummaryDetail;
+import com.qanairy.models.experience.TimingDetail;
 import com.qanairy.models.experience.WebPImageDetail;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.UrlMessage;
@@ -270,7 +272,7 @@ public class PerformanceInsightActor extends AbstractActor {
     			detail = audit_detail_service.save(detail);
     			db_records.add(detail);
     		}
-    		log.warn("audit id ::::       "+audit_record.getId());
+
     		Audit audit = new Audit(
     				audit_record.getId(),
     				audit_record.getDescription(),
@@ -342,18 +344,13 @@ public class PerformanceInsightActor extends AbstractActor {
 			
 			for(Object item: items) {
 				ArrayMap<String, Object> obj = (ArrayMap)item;
-				log.warn("Object :: " + obj);
-				log.warn("Object node :: " + obj.get("node"));
 				ArrayMap<String, Object> json_obj = (ArrayMap)obj.get("node");
 				String explanation = json_obj.get("explanation").toString();
 				String snippet = json_obj.get("snippet").toString();
 				snippet = snippet.replaceAll(">\\s+<","> <");
 				snippet = snippet.replace("\n", "");
 				snippet = snippet.replace("required=\"\"", "required");
-				log.warn("user id :: "+user_id);
-				log.warn("snippet ::  " + snippet);
 				ElementState element_state = element_state_service.findByOuterHtml(user_id, snippet);
-				log.warn("element state found with outer html :: "+element_state);
 
 				int fix_all_idx = explanation.indexOf("Fix all of the following:");
 				int fix_any_idx = explanation.indexOf("Fix any of the following:");
@@ -397,13 +394,22 @@ public class PerformanceInsightActor extends AbstractActor {
 	}
 	
 	/**
+	 * Extracts the details object list from the JSON object and formats the data into the appropriate details object
 	 * 
+	 * @param user_id
+	 * @param name
 	 * @param details
+	 *
 	 * @return
 	 * 
 	 * @pre details != null;
 	 */
 	private List<AuditDetail> extractAuditDetails(String user_id, String name, Map<String, Object> details) {
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		assert name != null;
+		assert !name.isEmpty();
+		assert details != null;
 		
 		List<AuditDetail> audit_details = new ArrayList<>();
 		if(details != null) {
@@ -421,39 +427,45 @@ public class PerformanceInsightActor extends AbstractActor {
 					audit_details.add(audit_detail);
 				}
 				else if("resource-summary".contentEquals(name)) {
-					AuditDetail audit_detail = new ResourceSummary(Integer.parseInt(detail_obj.get("requestCount").toString()), 
-																   detail_obj.get("resourceType").toString(), 
-																   detail_obj.get("label").toString(), 
-																   Long.parseLong(detail_obj.get("size").toString()));
+					AuditDetail audit_detail = new ResourceSummary(getIntegerValue(detail_obj, "requestCount"), 
+																   getStringValue(detail_obj, "resourceType"), 
+																   getStringValue(detail_obj, "label"), 
+																   getLongValue(detail_obj, "size"));
 					audit_details.add(audit_detail);
 				}
 				else if("render-blocking-resources".contentEquals(name)) {
-					AuditDetail audit_detail = new BlockingResource(detail_obj.get("url").toString(), Integer.parseInt(detail_obj.get("totalBytes").toString()), Double.parseDouble(detail_obj.get("wastedMs").toString()));
+					AuditDetail audit_detail = new BlockingResource(getStringValue(detail_obj, "url"), 
+							 										getIntegerValue(detail_obj, "totalBytes"), 
+							 										getDoubleValue(detail_obj, "wastedMs"));
 					audit_details.add(audit_detail);
 				}
 				else if("font-display".contentEquals(name)) {
-					AuditDetail audit_detail = new BlockingResource(detail_obj.get("url").toString(), null, Double.parseDouble(detail_obj.get("wastedMs").toString()));
+					AuditDetail audit_detail = new BlockingResource(getStringValue(detail_obj, "url"), null, Double.parseDouble(detail_obj.get("wastedMs").toString()));
 					audit_details.add(audit_detail);
 				}
-				else if("user-timings".contentEquals(name)) {
-					
-				}
-				else if("main-thread-tasks".contentEquals(name)) {
-					
+				else if("user-timings".contentEquals(name) || "main-thread-tasks".contentEquals(name)) {
+					AuditDetail audit_detail = new TimingDetail(getStringValue(detail_obj, "name"), 
+																getDoubleValue(detail_obj, "startTime"), 
+															    getDoubleValue(detail_obj, "duration"), 
+															    getStringValue(detail_obj, "timingType"));
+					audit_details.add(audit_detail);
 				}
 				else if("bootup-time".contentEquals(name)) {
 					AuditDetail audit_detail = new BootUpTime(detail_obj.get("url").toString(), 
-															  Double.parseDouble(detail_obj.get("total").toString()),
-															  Double.parseDouble(detail_obj.get("scripting").toString()),
-															  Double.parseDouble(detail_obj.get("scriptParseCompile").toString()));
+															  getDoubleValue(detail_obj, "total"),
+															  getDoubleValue(detail_obj, "scripting"),
+															  getDoubleValue(detail_obj, "scriptParseCompile"));
 					audit_details.add(audit_detail);
 				}
 				else if("total-byte-weight".contentEquals(name)) {
-					AuditDetail audit_detail = new AssetSize(detail_obj.get("url").toString(), Integer.parseInt(detail_obj.get("totalBytes").toString()));
+					AuditDetail audit_detail = new AssetSize(detail_obj.get("url").toString(), 
+															 Integer.parseInt(detail_obj.get("totalBytes").toString()));
 					audit_details.add(audit_detail);
 				}
 				else if("mainthread-work-breakdown".contentEquals(name)) {
-					AuditDetail audit_detail = new GroupWorkBreakdown(detail_obj.get("group").toString(), Double.parseDouble(detail_obj.get("duration").toString()), detail_obj.get("groupLabel").toString());
+					AuditDetail audit_detail = new GroupWorkBreakdown(detail_obj.get("group").toString(), 
+																	  getDoubleValue(detail_obj, "duration"), 
+																	  detail_obj.get("groupLabel").toString());
 					audit_details.add(audit_detail);
 				}
 				else if("color-contract".contentEquals(name) 
@@ -497,19 +509,44 @@ public class PerformanceInsightActor extends AbstractActor {
 					audit_details.add(audit_detail);
 				}
 				else if("dom-size".contentEquals(name)) {
-					AuditDetail audit_detail = new DomSize(detail_obj.get("statistic").toString(), detail_obj.get("value").toString(), (Map)detail_obj.get("element"));
+					AuditDetail audit_detail = new DomSize(getStringValue(detail_obj, "statistic"), getStringValue(detail_obj, "value"), (Map)detail_obj.get("element"));
 					audit_details.add(audit_detail);
 				}
 				else if("metrics".contentEquals(name)) {
-					//AuditDetail audit_detail = new MetricsDetail();
-					//audit_details.add(audit_detail);
+					AuditDetail audit_detail = new MetricsDetail(getIntegerValue(detail_obj, "firstContentfulPaint"),
+																 getLongValue(detail_obj, "observedFirstPaintTs"),
+																 getIntegerValue(detail_obj, "speedIndex"),
+																 getLongValue(detail_obj, "observedSpeedIndexTs"),
+																 getIntegerValue(detail_obj, "observedFirstContentfulPaint"),
+																 getLongValue(detail_obj, "observedNavigationStartTs"),
+																 getLongValue(detail_obj, "observedLargestContentfulPaintTs"),
+																 getIntegerValue(detail_obj, "observedFirstVisualChange"),
+																 getLongValue(detail_obj, "observedLoadTs"),
+																 getIntegerValue(detail_obj, "firstMeaningfulPaint"),
+																 getIntegerValue(detail_obj, "observedTraceEnd"),
+																 getIntegerValue(detail_obj, "observedFirstMeaningfulPaint"),
+																 getIntegerValue(detail_obj, "firstCPUIdle"),
+																 getLongValue(detail_obj, "observedTraceEndTs"),
+																 getLongValue(detail_obj, "observedFirstMeaningfulPaintTs"),
+																 getIntegerValue(detail_obj, "observedDomContentLoaded"),
+																 getLongValue(detail_obj, "observedFirstVisualChangeTs"),
+																 getIntegerValue(detail_obj, "interactive"),
+																 getIntegerValue(detail_obj, "observedNavigationStart"),
+																 getLongValue(detail_obj, "observedFirstContentfulPaintTs"),
+																 getLongValue(detail_obj, "observedLastVisualChangeTs"),
+																 getIntegerValue(detail_obj, "observedLoad"),
+																 getIntegerValue(detail_obj, "observedLargestContentfulPaint"),
+																 getLongValue(detail_obj, "observedDomContentLoadedTs"),
+																 getIntegerValue(detail_obj, "observedSpeedIndex"),
+																 getIntegerValue(detail_obj, "estimatedInputLatency"),
+																 getIntegerValue(detail_obj, "totalBlockingTime"),
+																 getIntegerValue(detail_obj, "observedFirstPaint"),
+																 getIntegerValue(detail_obj, "observedLastVisualChange"),
+																 getBooleanValue(detail_obj, "lcpInvalidated"));
+					audit_details.add(audit_detail);
 				}
 				else if("uses-long-cache-ttl".contentEquals(name)) {
-					//if debug data is null this might create issues 
-					log.warn("wasted bytes :: " + getDoubleValue(detail_obj, "wastedBytes"));
-					log.warn("cache hit probaility :: " + getDoubleValue(detail_obj, "cacheHitProbability"));
-					log.warn("cache lifetime ms :: " + getDoubleValue(detail_obj, "cacheLifetimeMs"));
-					
+					//if debug data is null this might create issues
 					AuditDetail audit_detail = new CachingDetail(getStringValue(detail_obj, "url"), 
 																 getDoubleValue(detail_obj, "wastedBytes"),
 																 getIntegerValue(detail_obj, "totalBytes"),
@@ -522,11 +559,6 @@ public class PerformanceInsightActor extends AbstractActor {
 					audit_details.add(audit_detail);
 				}
 				else if("third-party-summary".contentEquals(name)) {
-					log.warn("details request transfer size :: " + detail_obj.get("transferSize"));
-					log.warn("details request blocking time :: " + detail_obj.get("blockingTime"));
-					log.warn("details request main thread time :: " + detail_obj.get("mainThreadTime"));
-					log.warn("details request entity :: " + detail_obj.get("entity"));
-	
 					AuditDetail audit_detail = new ThirdPartySummaryDetail(Integer.parseInt(detail_obj.get("transferSize").toString()), 
 																		   Double.parseDouble(detail_obj.get("blockingTime").toString()),
 																		   Double.parseDouble(detail_obj.get("mainThreadTime").toString()),
@@ -534,8 +566,6 @@ public class PerformanceInsightActor extends AbstractActor {
 					audit_details.add(audit_detail);
 				}
 				else if("network-requests".contentEquals(name)) {
-					log.warn("details object value :: "+detail_obj);
-
 					AuditDetail audit_detail = new NetworkRequestDetail(Integer.parseInt(detail_obj.get("transferSize").toString()), 
 																		getStringValue(detail_obj, "url"),
 																		getIntegerValue(detail_obj, "statusCode"), 
@@ -573,12 +603,6 @@ public class PerformanceInsightActor extends AbstractActor {
 																	Integer.parseInt(detail_obj.get("numScripts").toString()));
 					audit_details.add(audit_detail);
 				}
-				else if("".contentEquals(name)) {
-					
-				}
-				else if("".contentEquals(name)) {
-					
-				}
 			}
 		}
 	
@@ -591,7 +615,29 @@ public class PerformanceInsightActor extends AbstractActor {
 			value = Integer.parseInt(detail_obj.get(object_key).toString());
 		}
 		else {
-			value = new Integer(-999999999);
+			value = Integer.MIN_VALUE;
+		}
+		return value;
+	}
+	
+	private Boolean getBooleanValue(ArrayMap<String, Object> detail_obj, String object_key) {
+		Boolean value = null;
+		if(detail_obj.get(object_key) != null) {
+			value = Boolean.parseBoolean(detail_obj.get(object_key).toString());
+		}
+		else {
+			value = null;
+		}
+		return value;
+	}
+	
+	private Long getLongValue(ArrayMap<String, Object> detail_obj, String object_key) {
+		Long value = null;
+		if(detail_obj.get(object_key) != null) {
+			value = Long.parseLong(detail_obj.get(object_key).toString());
+		}
+		else {
+			value = Long.MIN_VALUE;
 		}
 		return value;
 	}
@@ -602,7 +648,7 @@ public class PerformanceInsightActor extends AbstractActor {
 			value = Double.parseDouble(detail_obj.get(object_key).toString());
 		}
 		else {
-			value = new Double(-1);
+			value = Double.MIN_VALUE;
 		}
 		return value;
 	}
@@ -663,7 +709,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
 
 	    HttpRequestInitializer httpRequestInitializer = null; //this can be null here!
-	    Pagespeedonline p = new Pagespeedonline.Builder(transport, jsonFactory, httpRequestInitializer).build();
+	    Pagespeedonline p = new Pagespeedonline.Builder(transport, jsonFactory, httpRequestInitializer).setApplicationName("Qanairy-Selenium").build();
 	    
 	    Pagespeedonline.Pagespeedapi.Runpagespeed runpagespeed  = p.pagespeedapi().runpagespeed(url).setKey(api_key);
 	    List<String> category = new ArrayList<>();

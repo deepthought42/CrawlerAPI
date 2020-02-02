@@ -228,32 +228,33 @@ public class BrowserService {
 			log.warn("Expandable elements found :: "+elements.size());
 			BufferedImage element_screenshot = null;
 
-			for(ElementState element : elements) {
-				if("child".equals(element.getClassification())) {
-					//add element to list as CHILD element
-					try {
-						element_screenshot = browser.getElementScreenshot(element);
-					}catch(Exception e) {
-						//e.printStackTrace();
-						//log.warn("child element creation exception :: " +e.getMessage());
-						continue;
-					}
-					
-					String checksum = PageState.getFileChecksum(element_screenshot);
-					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(browser.getDriver().getCurrentUrl()).getHost(), element.getKey());
-					element_screenshot.flush();
-					element_screenshot = null;
-					element.setScreenshot(screenshot_url);
-					element.setScreenshotChecksum(checksum);
-				}
-			}
+			List<ElementState> records = new ArrayList<>();
 			String browser_url = browser.getDriver().getCurrentUrl();
+			String host = new URL(browser_url).getHost();
+			for(ElementState element : elements) {
+				//add element to list as CHILD element
+				try {
+					element_screenshot = browser.getElementScreenshot(element);
+				}
+				catch(Exception e) {
+					continue;
+				}
+				
+				String checksum = PageState.getFileChecksum(element_screenshot);
+				String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, element.getKey());
+				element_screenshot.flush();
+				element_screenshot = null;
+				element.setScreenshot(screenshot_url);
+				element.setScreenshotChecksum(checksum);
+				records.add(element_service.save(user_id, element));
+			}
+			
 			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
+			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, browser.getBrowserName()+"-full");
 			full_page_screenshot.flush();
 
 			//extract visible elements from list of elementstates provided
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url_without_params).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, browser.getBrowserName()+"-viewport");
 			viewport_screenshot.flush();
 			
 			Set<Form> forms = extractAllForms(user_id, domain, browser);
@@ -276,7 +277,7 @@ public class BrowserService {
 		  	
 			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
-					elements,
+					records,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
 					browser.getYScrollOffset(),
@@ -355,23 +356,18 @@ public class BrowserService {
 		for(int idx = 0; idx < child_elements.size(); idx++) {
 			Element element = child_elements.get(idx);
 			
+			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
+			WebElement web_element = browser.findWebElementByXpath(xpath);
+			Set<Attribute> attributes = generateAttributesUsingJsoup(element);
+			Map<String, String> css_values = Browser.loadCssProperties(web_element);
+			
 			if(element.children().size() == 0 ) {
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
-				WebElement web_element = browser.findWebElementByXpath(xpath);
-				
-				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				Map<String, String> css_values = Browser.loadCssProperties(web_element);
 				ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.CHILD, "");
+				element_state.setDisplayed(web_element.isDisplayed());
 				element_state = element_service.save(user_id, element_state);
 				elements.add(element_state);
 			}
-			else {
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
-				WebElement web_element = browser.findWebElementByXpath(xpath);
-				
-				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				Map<String, String> css_values = Browser.loadCssProperties(web_element);
-				
+			else {				
 				ElementClassification classification = null;
 				
 				if(isSliderElement(element)) {
@@ -382,8 +378,10 @@ public class BrowserService {
 				}
 				
 				ElementState element_state = buildElementState(xpath, attributes, css_values, element, classification, "");
-				
+				element_state.setDisplayed(web_element.isDisplayed());
+
 				elements.add(element_state);
+				//get all child element states
 				List<ElementState> element_states = getElements(element, html_doc, browser, xpath_cnt, user_id, domain_url);
 				elements.addAll(element_states);
 				
@@ -441,27 +439,27 @@ public class BrowserService {
 				continue;
 			}
 			
+			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
+			WebElement web_element = browser.findWebElementByXpath(xpath);
+			
 			if(isSliderElement(element)) {
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
-				WebElement web_element = browser.findWebElementByXpath(xpath);
 				
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 				Map<String, String> css_values = Browser.loadCssProperties(web_element);
 				
 				//add element to list as slider element
 				ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.SLIDER, "");
+				element_state.setDisplayed(web_element.isDisplayed());
 				elements.add(element_state);
 			}
 			else if(element.children().size() == 0 ) {
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
-				WebElement web_element = browser.findWebElementByXpath(xpath);
 				
 				Dimension element_size = web_element.getSize();
 				if(web_element.isDisplayed() && hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(web_element.getLocation()) && !isElementLargerThanViewport(browser, element_size)) {
 					Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 					Map<String, String> css_values = Browser.loadCssProperties(web_element);
 					ElementState element_state = buildElementState(xpath, attributes, css_values, element, ElementClassification.CHILD, "");
-					
+					element_state.setDisplayed(web_element.isDisplayed());
 					elements.add(element_state);
 				}
 			}
@@ -649,7 +647,7 @@ public class BrowserService {
 		page_element.setIsPartOfForm(false);
 		page_element.setTemplate(extractTemplate(elem.getAttribute("outerHTML"), elem.getText()));
 		page_element.setIsLeaf(getChildElements(elem).isEmpty());
-
+		page_element.setDisplayed(elem.isDisplayed());
 		//element_state_service.save(page_element);
 		log.debug("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
 

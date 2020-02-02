@@ -713,4 +713,9 @@ public class Browser {
 	        return null; 
 	    }   // catch 
 	}
+
+	public boolean isDisplayed(ElementState element) {
+		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
+		return web_element.isDisplayed();
+	}
 }

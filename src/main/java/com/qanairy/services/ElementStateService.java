@@ -61,7 +61,7 @@ public class ElementStateService {
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
-
+			element_record.setDisplayed(element.isDisplayed());
 			element_record = element_repo.save(element_record);
 		}
 		return element_record;

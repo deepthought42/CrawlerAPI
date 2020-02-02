@@ -197,7 +197,6 @@ public class PathExpansionActor extends AbstractActor {
 			for(ElementState element : second_to_last_page.getElements()){
 				element_xpath_map.remove(element.getXpath());
 			}
-
 			
 			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();

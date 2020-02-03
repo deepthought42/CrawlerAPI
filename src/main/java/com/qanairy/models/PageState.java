@@ -22,28 +22,19 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
- * A reference to a web page
+ * A reference to a web page state. State is considered to be the distinct combination of {@link ElementState}s
  *
  */
-@NodeEntity
-public class PageState implements Persistable, PathObject {
+public class PageState extends Page implements Persistable, PathObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
-	@GeneratedValue
-	@Id
-	private Long id;
-
 	private String src;
-	private String key;
 	private boolean landable;
 	private boolean login_required;
 	private LocalDateTime last_landability_check;
@@ -52,7 +43,6 @@ public class PageState implements Persistable, PathObject {
 	private String full_page_checksum;
 	private String browser;
 
-	private String url;
 	private int total_weight;
 	private int image_weight;
 	private long scrollXOffset;
@@ -65,6 +55,7 @@ public class PageState implements Persistable, PathObject {
 	private List<String> screenshot_checksums;
 	private List<String> animated_image_urls;
 	private List<String> animated_image_checksums;
+	
 
 	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
@@ -271,14 +262,6 @@ public class PageState implements Persistable, PathObject {
 		return page;
 	}
 
-	public String getKey() {
-		return this.key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	@JsonIgnore
 	public List<ElementState> getElements() {
 		return this.elements;
@@ -295,18 +278,6 @@ public class PageState implements Persistable, PathObject {
 
 	public boolean isLandable() {
 		return this.landable;
-	}
-
-	public String getUrl() {
-		return this.url;
-	}
-
-	public void setUrl(String url) {
-		/*
-		 * int param_idx = url.indexOf('?'); if(param_idx >= 0){ url =
-		 * url.substring(0, param_idx); }
-		 */
-		this.url = url;
 	}
 
 	public Integer getTotalWeight() {
@@ -563,9 +534,6 @@ public class PageState implements Persistable, PathObject {
 		this.login_required = login_required;
 	}
 	
-	public Long getId() {
-		return this.id;
-	}
 	public String getFullPageScreenshotUrl() {
 		return full_page_screenshot_url;
 	}

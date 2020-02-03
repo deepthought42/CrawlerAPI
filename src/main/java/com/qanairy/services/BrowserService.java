@@ -210,12 +210,17 @@ public class BrowserService {
 	 */
 	public PageState buildPageState(String user_id, Domain domain, Browser browser) throws Exception{
 		assert browser != null;
+		
+		//retrieve landable page state associated with page with given url
+		String browser_url = browser.getDriver().getCurrentUrl();
+		String host = new URL(browser_url).getHost();
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
+
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
 		List<PageState> page_states = page_state_service.findByScreenshotChecksum(user_id, domain.getUrl(), screenshot_checksum);
-		
-		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		
 		if(page_states.isEmpty()) {
@@ -223,15 +228,12 @@ public class BrowserService {
 		}
 		if(page_states.isEmpty()) {
 			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
-			//List<ElementState> elements = BrowserService.getQualifiedChildElementsUsingJsoup(browser.getDriver().getPageSource(), browser);
 		  	List<ElementState> elements = getDomElementTree( browser.getDriver().getPageSource(), browser, user_id, domain.getUrl() );
-
+		  	
 			log.warn("Expandable elements found :: "+elements.size());
 			BufferedImage element_screenshot = null;
 
 			List<ElementState> records = new ArrayList<>();
-			String browser_url = browser.getDriver().getCurrentUrl();
-			String host = new URL(browser_url).getHost();
 			for(ElementState element : elements) {
 				//if element screenshot is already set then we can skip for this element
 				if(element.getScreenshot() != null) {
@@ -240,21 +242,21 @@ public class BrowserService {
 				//add element to list as CHILD element
 				try {
 					element_screenshot = browser.getElementScreenshot(element);
+
+					String checksum = PageState.getFileChecksum(element_screenshot);
+					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, element.getKey());
+					element_screenshot.flush();
+					element_screenshot = null;
+					element.setScreenshot(screenshot_url);
+					element.setScreenshotChecksum(checksum);
 				}
 				catch(Exception e) {
 					continue;
 				}
 				
-				String checksum = PageState.getFileChecksum(element_screenshot);
-				String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, element.getKey());
-				element_screenshot.flush();
-				element_screenshot = null;
-				element.setScreenshot(screenshot_url);
-				element.setScreenshotChecksum(checksum);
 				records.add(element_service.save(user_id, element));
 			}
 			
-			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, browser.getBrowserName()+"-full");
 			full_page_screenshot.flush();
 

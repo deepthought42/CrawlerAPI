@@ -8,11 +8,12 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Attribute;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
 
 public interface ElementStateRepository extends Neo4jRepository<ElementState, Long> {
-	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{key}}) OPTIONAL MATCH z=(e)-->(x) RETURN e LIMIT 1")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:ElementState{key:{key}}) RETURN e LIMIT 1")
 	public ElementState findByKey(@Param("user_id") String user_id, @Param("key") String key);
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{key}}) OPTIONAL MATCH z=(e)-->(x) RETURN e LIMIT 1")
@@ -38,4 +39,10 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(es:ElementState{key:{element_key}}) Match (es)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
 	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
+
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[:HAS]->(es:ElementState) RETURN es")
+	public List<ElementState> getChildElements(@Param("user_id") String user_id, @Param("element_key") String element_key);
+
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[*]->(p:PageState{key:{page_state_key}}) MATCH (p)-[]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS]->(e:ElementState{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
+	public ElementState getParentElement(@Param("user_id") String user_id, @Param("url") Domain url, @Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 }

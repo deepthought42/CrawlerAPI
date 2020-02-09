@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -278,9 +279,10 @@ public class TestCreationActor extends AbstractActor  {
 		String checksum = PageState.getFileChecksum(img);
 		
 		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed());
-		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, browser.getBrowserName()+"-element");
-		elem.setScreenshot(screenshot_url);
+		//Map<String, String> css_map = Browser.loadCssProperties(element);
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed());
+		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
+		elem.setScreenshotUrl(screenshot_url);
 		elem.setOuterHtml(element.getAttribute("outerHTML"));
 		elem = page_element_service.save(user_id, elem);
 		return elem;

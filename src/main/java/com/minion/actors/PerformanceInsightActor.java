@@ -135,7 +135,7 @@ public class PerformanceInsightActor extends AbstractActor {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
 					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccount()), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					if(discovery_action == DiscoveryAction.STOP) {
@@ -156,35 +156,35 @@ public class PerformanceInsightActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							BrowserUtils.getPageTransition(url, browser, host);
-						  	BrowserUtils.getLoadingAnimation(browser, host);
+							BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
+						  	BrowserUtils.getLoadingAnimation(browser, host, message.getAccountId());
 
-							page = browser_service.buildPage(message.getAccount(), browser.getDriver().getCurrentUrl());
+							page = browser_service.buildPage(message.getAccountId(), browser.getDriver().getCurrentUrl());
 							log.warn("page returned :: "+page);
-							PageState page_state = browser_service.buildPageState(message.getAccount(), message.getDomain(), browser);
-							page_state_service.save(message.getAccount(), message.getDomain().getUrl(), page_state);
+							PageState page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+							page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), page_state);
 							log.warn("page state returned:: " +page_state);
-							page = page_service.save(message.getAccount(), page);
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccount());
-							page_service.addPageState(message.getAccount(), page.getKey(), page_state);
+							page = page_service.save(message.getAccountId(), page);
+							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
 							
 							//log.warn("page states count :: " + page.getPageStates().size());
 							PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
 							log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
 							
-							PerformanceInsight performance_insight = extractInsights(message.getAccount(), page_speed_response);
+							PerformanceInsight performance_insight = extractInsights(message.getAccountId(), page_speed_response);
 							
 							//Page page = new Page(page.getUrl());
 							page.setPerformanceScore(performance_insight.getSpeedScore());
 							page.setAccessibilityScore(performance_insight.getAccessibilityScore());
 							page.setSeoScore(performance_insight.getSeoScore());
 							page.setOverallScore(performance_insight.getOverallScore());
-							page = page_service.save(message.getAccount(), page);
+							page = page_service.save(message.getAccountId(), page);
 							
 							//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
 							performance_insight_service.save(performance_insight);
-							page_service.addPerformanceInsight(message.getAccount(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccount());
+							page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
+							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
 
 							break;
 						}

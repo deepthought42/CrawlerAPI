@@ -26,13 +26,14 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AnimationType;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.ScreenshotUploadService;
 
 
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 
-	public static Redirect getPageTransition(String initial_url, Browser browser, String host) throws GridException, IOException{
+	public static Redirect getPageTransition(String initial_url, Browser browser, String host, String user_id) throws GridException, IOException{
 		List<String> transition_urls = new ArrayList<String>();
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
@@ -65,7 +66,7 @@ public class BrowserUtils {
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
 				image_checksums.add(new_checksum);
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, new_checksum, browser.getBrowserName()));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 			catch(Exception e){
 				e.printStackTrace();
@@ -79,7 +80,7 @@ public class BrowserUtils {
 		return redirect;
 	}
 
-	public static Animation getAnimation(Browser browser, String host) throws IOException {
+	public static Animation getAnimation(Browser browser, String host, String user_id) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
@@ -105,7 +106,7 @@ public class BrowserUtils {
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 		}while((System.currentTimeMillis() - start_ms) < 2000);
 
@@ -127,6 +128,7 @@ public class BrowserUtils {
 	 * 
 	 * @param browser
 	 * @param host
+	 * @param user_id TODO
 	 * @return
 	 * @throws IOException
 	 * 
@@ -134,7 +136,7 @@ public class BrowserUtils {
 	 * @pre host != null
 	 * @pre host != empty
 	 */
-	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host) throws IOException {
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String user_id) throws IOException {
 		assert browser != null;
 		assert host != null;
 		assert !host.isEmpty();
@@ -167,7 +169,7 @@ public class BrowserUtils {
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 10000);
 
@@ -188,7 +190,7 @@ public class BrowserUtils {
 		return null;
 	}
 	
-	public static PageLoadAnimation detectShortAnimation(Browser browser, String host) throws IOException {
+	public static PageLoadAnimation detectShortAnimation(Browser browser, String host, String user_id) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
@@ -217,7 +219,7 @@ public class BrowserUtils {
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 		}while((System.currentTimeMillis() - start_ms) < 500 && System.currentTimeMillis()-total_time < 3000);
 

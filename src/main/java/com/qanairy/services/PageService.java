@@ -137,8 +137,6 @@ public class PageService {
 		assert !page_key.isEmpty();
 		
 		PerformanceInsight insight = page_repo.getLatestPerformanceInsight(page_key);
-		
-		log.warn("insight executed at :: " + insight.getExecutedAt().toString());
 		insight.setAudits(performance_insight_repo.getAllAudits(page_key, insight.getKey()));
 		return insight;
 	}

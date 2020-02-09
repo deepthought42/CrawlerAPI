@@ -26,6 +26,7 @@ import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -47,6 +48,7 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
+import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -75,7 +77,7 @@ import scala.concurrent.Future;
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 
-	private final int DISCOVERY_ACTOR_COUNT = 50;
+	private final int DISCOVERY_ACTOR_COUNT = 100;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -93,6 +95,9 @@ public class DiscoveryActor extends AbstractActor{
 	private PageStateService page_state_service;
 	
 	@Autowired
+	private PageService page_service;
+		
+	@Autowired
 	private TestService test_service;
 	
 	@Autowired
@@ -107,6 +112,8 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private SubscriptionService subscription_service;
 	
+	@Autowired
+	private BrowserService browser_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
@@ -163,6 +170,8 @@ public class DiscoveryActor extends AbstractActor{
 						return;
 					}
 					
+					discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
@@ -224,7 +233,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
 			    	}
-			    	
+					discovery_record = getDiscoveryRecord(test_msg.getDomain().getUrl(), test_msg.getDomain().getDiscoveryBrowserName(), test_msg.getAccount());
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
@@ -276,6 +285,7 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell( url_message, getSelf() );
+								form_discoverer.tell(path, getSelf());
 								
 								if(performance_insight_actor == null){
 									performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -339,6 +349,8 @@ public class DiscoveryActor extends AbstractActor{
 					
 					try {
 						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
+						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
+						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
@@ -393,7 +405,7 @@ public class DiscoveryActor extends AbstractActor{
 		
 		if(form_discoverer == null){
 			form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+					  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
 		}
 		
 		if(path_expansion_actor == null){

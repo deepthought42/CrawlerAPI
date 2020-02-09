@@ -45,14 +45,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String classification;
 	private String template;
 
-	private String screenshot;
+	private String screenshot_url;
 	private String screenshot_checksum;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
 	private boolean part_of_form;
-	private boolean displayed;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -97,7 +96,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
-		setScreenshot(screenshot_url);
+		setScreenshotUrl(screenshot_url);
 		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
 		setCssValues(css_map);
@@ -111,7 +110,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setRules(new HashSet<>());
 		setKey(generateKey());
 		setClassification(ElementClassification.CHILD);
-		setDisplayed(displayed);
 	}
 	
 	/**
@@ -138,7 +136,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
-		setScreenshot(screenshot_url);
+		setScreenshotUrl(screenshot_url);
 		setText(text);
 		setCssValues(css_map);
 		setScreenshotChecksum(checksum);
@@ -151,7 +149,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setTemplate("");
 		setRules(new HashSet<>());
 		setClassification(classification);
-		setDisplayed(displayed);
 		setKey(generateKey());
 	}
 	
@@ -284,12 +281,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.attributes.add(attribute);
 	}
 	
-	public String getScreenshot() {
-		return this.screenshot;
+	public String getScreenshotUrl() {
+		return this.screenshot_url;
 	}
 
-	public void setScreenshot(String screenshot) {
-		this.screenshot = screenshot;
+	public void setScreenshotUrl(String screenshot_url) {
+		this.screenshot_url = screenshot_url;
 	}
 
 	public String getType() {
@@ -316,43 +313,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public String generateKey() {
 		String key = "";
-		
-		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
-		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
-		for(String css_key : css_keys){
-			key += css_key+cssValues.get(css_key);
-		}
 
-		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
-		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+		key += this.getTemplate();
 		
-		for(Attribute attribute : attributes){
-			key += attribute.getKey();
-		}
-
-		key += this.getName();
-		key += this.getText();
-		key += this.getXpath();
-		key += this.isDisplayed();
-		
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
-	}
-	
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateStylelessKey() {
-		String key = "";
-
-		key += this.getName();
-		key += this.getText();
-		key += this.getXpath();
-		key += this.getXLocation();
-		key += this.getYLocation();
-		key += this.getScreenshotChecksum();
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
@@ -376,7 +339,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
         if (!(o instanceof ElementState)) return false;
         
         ElementState that = (ElementState)o;
-		return this.getKey().equals(that.getKey()) || getScreenshotChecksum().equals(that.getScreenshotChecksum());
+		return this.getKey().equals(that.getKey());
 	}
 
 
@@ -386,7 +349,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
-		page_elem.setScreenshot(this.getScreenshot());
+		page_elem.setScreenshotUrl(this.getScreenshotUrl());
 		page_elem.setScreenshotChecksum(this.getScreenshotChecksum());
 		page_elem.setText(this.getText());
 		page_elem.setType(this.getType());
@@ -395,7 +358,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());
 		page_elem.setHeight(this.getHeight());
-		page_elem.setDisplayed(this.isDisplayed());
+
 		return page_elem;
 	}
 
@@ -433,9 +396,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	@Override
 	public int compareTo(ElementState o) {
+        return this.getKey().compareTo(o.getKey());
+		/*
 		 if(this.getYLocation() == o.getYLocation())
              return 0;
          return this.getYLocation() < o.getYLocation() ? -1 : 1;
+         */
 	}
 
 	public String getInnerHtml() {
@@ -504,13 +470,5 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void addChildElement(ElementState child_element) {
 		this.child_elements.add(child_element);
-	}
-	
-	public boolean isDisplayed() {
-		return displayed;
-	}
-
-	public void setDisplayed(boolean displayed) {
-		this.displayed = displayed;
 	}
 }

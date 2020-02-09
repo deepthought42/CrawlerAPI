@@ -68,6 +68,12 @@ public class PathExpansionActor extends AbstractActor {
 		return receiveBuilder()
 			.match(PathMessage.class, message -> {
 				log.warn("STARTING PATH EXPANSION....  "+message.getPathObjects().size());
+				
+				//if last page is an internal link then skip expansion
+				PageState last_page_state = PathUtils.getLastPageState(message.getPathObjects());
+				if(isInternalLink(last_page_state.getUrl())) {
+					return;
+				}
 				//get sublist of path from beginning to page state index
 				List<ExploratoryPath> exploratory_paths = expandPath(message);
 				log.warn("total path expansions found :: "+exploratory_paths.size());
@@ -92,6 +98,15 @@ public class PathExpansionActor extends AbstractActor {
 			.build();
 	}
 
+	/**
+	 * Checks if url contains internal link format at end of url
+	 * 
+	 * @param url
+	 */
+	public static boolean isInternalLink(String url) {
+		return url.matches(".*/#[a-zA-Z0-9]+$");
+	}
+	
 	/**
 	 * Produces all possible element, action combinations that can be produced from the given path
 	 *
@@ -185,7 +200,7 @@ public class PathExpansionActor extends AbstractActor {
 		if( second_to_last_page == null){
 			log.warn("second to last page state is null. checking elements for expandability :: "+last_page_state.getElements().size());
 			Collection<ElementState> expandable_elements =  page_state_service.getExpandableElements(last_page_state.getElements());
-			log.warn("eturning last page state elements with # of expandable elements :: "+expandable_elements.size());
+			log.warn("returning last page state elements with # of expandable elements :: "+expandable_elements.size());
 
 			return expandable_elements;
 		}

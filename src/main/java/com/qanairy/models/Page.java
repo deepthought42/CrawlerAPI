@@ -31,9 +31,6 @@ public class Page implements Persistable{
 	private Double accessibility_score;
 	private Double seo_score;
 	private Double overall_score;
-	
-	@Relationship(type = "HAS")
-	private List<Template> templates;
 
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
@@ -47,13 +44,11 @@ public class Page implements Persistable{
 	}
 	
 	public Page() {
-		setTemplates(new ArrayList<>());
 		setPerformanceInsights(new ArrayList<>());
 		setPageStates( new HashSet<>() );
 	}
 	
 	public Page(String url) throws MalformedURLException{
-		setTemplates(new ArrayList<>());
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setPath(new URL(url).getPath());
@@ -112,14 +107,6 @@ public class Page implements Persistable{
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public List<Template> getTemplates() {
-		return templates;
-	}
-
-	public void setTemplates(List<Template> templates) {
-		this.templates = templates;
 	}
 	
 	public String getKey() {

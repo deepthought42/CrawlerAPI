@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.models.Attribute;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
 import com.qanairy.models.rules.Rule;
@@ -57,13 +58,12 @@ public class ElementStateService {
 
 			element_record = element_repo.save(element);
 		}
-		else{
-			element_record.setScreenshot(element.getScreenshot());
+		else {
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
-			element_record.setXpath(element.getXpath());
-			//element_record.setDisplayed(element.isDisplayed());
-			element_record = element_repo.save(element_record);
+			element_record.setScreenshotUrl(element.getScreenshotUrl());
+			element_repo.save(element_record);
 		}
+
 		return element_record;
 	}
 	
@@ -95,7 +95,7 @@ public class ElementStateService {
 			element_record = element_repo.save(element);
 		}
 		else{
-			element_record.setScreenshot(element.getScreenshot());
+			element_record.setScreenshotUrl(element.getScreenshotUrl());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
 
@@ -150,5 +150,13 @@ public class ElementStateService {
 
 	public void clearBugMessages(String user_id, String form_key) {
 		element_repo.clearBugMessages(user_id, form_key);
+	}
+
+	public List<ElementState> getChildElements(String user_id, String element_key) {
+		return element_repo.getChildElements(user_id, element_key);
+	}
+
+	public ElementState getParentElement(String user_id, Domain domain, String page_key, String element_state_key) {
+		return element_repo.getParentElement(user_id, domain, page_key, element_state_key);
 	}
 }

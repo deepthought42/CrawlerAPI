@@ -57,7 +57,7 @@ public class PageController {
     		throw new UnknownAccountException();
     	}
     	
-        logger.info("finding all page insights");
+        logger.info("finding all page insights :: "+page_key);
         return page_service.findLatestInsight(page_key);
     }
 }

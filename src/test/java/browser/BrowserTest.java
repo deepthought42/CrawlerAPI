@@ -55,23 +55,7 @@ public class BrowserTest {
 		assertTrue("section[contains(@class,\\\"dashboard-content-wrapper col-lg-10 col-lg-offset-1 col-xs-12 col-xs-offset-0 bordered-box\\\")]".equals(clean_src));
 	}
 
-	//@Test
-	public void verifyGenerateXpathUsingJsoup(){
-		try{
-			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
-			browser.navigateTo("https://staging-marketing.qanairy.com");
-			List<String> xpaths = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-			
-			for(String xpath : xpaths){
-				System.err.println("xpath :: "+xpath);
-			}
-			//log.info("clean src: " +clean_src);
-		//	Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));
-		}
-		catch(Exception e){
-			
-		}
-	}
+	
 	
 	//@Test
 	public void verifyGenerateParentXpath(){
@@ -105,7 +89,9 @@ public class BrowserTest {
 					0,0,
 					1288,844,
 					"chrome",
-					new HashSet<>());
+					new HashSet<>(),
+					"url.png",
+					"this_is_a_checksum");
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());

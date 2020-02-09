@@ -319,7 +319,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
-		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 1000).getImage();
+		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 500).getImage();
 	}
 	
 	/**

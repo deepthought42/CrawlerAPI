@@ -138,6 +138,7 @@ public class ParentPathExplorer extends AbstractActor {
 			  		
 					//do while result matches expected result
 					do{
+						/*
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
@@ -146,6 +147,7 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("path message discovery actor returning");
 							return;
 						}
+						*/
 						try{
 							error_occurred = false;
 							browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
@@ -193,8 +195,6 @@ public class ParentPathExplorer extends AbstractActor {
 							//<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(element);
 							//ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum, parent_web_element.isDisplayed());
 							
-	
-
 							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight())
 									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents

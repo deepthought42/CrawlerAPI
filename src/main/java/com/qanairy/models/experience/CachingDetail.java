@@ -11,7 +11,7 @@ public class CachingDetail extends AuditDetail {
 	private Double wasted_bytes;
 	private Integer total_bytes;
 	private Double cache_hit_probability;
-	private Integer cache_lifetime_ms;
+	private Long cache_lifetime_ms;
 	private Map<String, String> debug_data;
 	
 	public CachingDetail() {}
@@ -21,7 +21,7 @@ public class CachingDetail extends AuditDetail {
 			Double wasted_bytes, 
 			Integer total_bytes, 
 			Double cache_hit_probability, 
-			Integer cache_lifetime_ms
+			Long cache_lifetime_ms
 	) {
 		setUrl(url);
 		setWastedBytes(wasted_bytes);
@@ -62,11 +62,11 @@ public class CachingDetail extends AuditDetail {
 		this.cache_hit_probability = cache_hit_probability;
 	}
 	
-	public Integer getCacheLifetimeMs() {
+	public Long getCacheLifetimeMs() {
 		return cache_lifetime_ms;
 	}
 	
-	public void setCacheLifetimeMs(Integer cache_lifetime_ms) {
+	public void setCacheLifetimeMs(Long cache_lifetime_ms) {
 		this.cache_lifetime_ms = cache_lifetime_ms;
 	}
 	

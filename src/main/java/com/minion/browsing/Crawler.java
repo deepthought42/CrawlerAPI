@@ -661,13 +661,16 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		
 		do{
-			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+			/*
+			Timeout timeout = Timeout.create(Duration.ofSeconds(30));
 			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
 			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 			
 			if(discovery_action == DiscoveryAction.STOP) {
 				throw new DiscoveryStoppedException();
 			}
+			*/
+			
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;

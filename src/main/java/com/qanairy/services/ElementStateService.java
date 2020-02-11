@@ -39,6 +39,10 @@ public class ElementStateService {
 	 * @pre element != null
 	 */
 	public ElementState save(String user_id, ElementState element) throws ClientException{
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		assert element != null;
+		
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(user_id, element.getKey());
 		if(element_record == null){
@@ -57,11 +61,6 @@ public class ElementStateService {
 			element.setRules(rule_records);
 
 			element_record = element_repo.save(element);
-		}
-		else {
-			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
-			element_record.setScreenshotUrl(element.getScreenshotUrl());
-			element_repo.save(element_record);
 		}
 
 		return element_record;

@@ -134,6 +134,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
+					/*
 					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
@@ -142,62 +143,30 @@ public class PerformanceInsightActor extends AbstractActor {
 						log.warn("path message discovery actor returning");
 						return;
 					}
+					*/
 					
-					String url = message.getUrl().toString();
-					String host = message.getUrl().getHost();
-					String browser_name = message.getDomain().getDiscoveryBrowserName();
-					BrowserType browser_type = BrowserType.create(browser_name);
-					Page page = null;
+					Page page = browser_service.buildPage(message.getAccountId(), message.getUrl().toString());
+					log.warn("page returned :: "+page);
+					page = page_service.save(message.getAccountId(), page);
 					
-					do{
-						Browser browser = null;
-						
-						try{
-							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to url :: "+url);
-							browser.navigateTo(url);
-							BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
-						  	BrowserUtils.getLoadingAnimation(browser, host, message.getAccountId());
+					//log.warn("page states count :: " + page.getPageStates().size());
+					PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
+					log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
+					
+					PerformanceInsight performance_insight = extractInsights(message.getAccountId(), page_speed_response);
+					
+					//Page page = new Page(page.getUrl());
+					page.setPerformanceScore(performance_insight.getSpeedScore());
+					page.setAccessibilityScore(performance_insight.getAccessibilityScore());
+					page.setSeoScore(performance_insight.getSeoScore());
+					page.setOverallScore(performance_insight.getOverallScore());
+					page = page_service.save(message.getAccountId(), page);
+					
+					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
+					performance_insight_service.save(performance_insight);
+					page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
+					domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
 
-							page = browser_service.buildPage(message.getAccountId(), browser.getDriver().getCurrentUrl());
-							log.warn("page returned :: "+page);
-							PageState page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
-							page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), page_state);
-							log.warn("page state returned:: " +page_state);
-							page = page_service.save(message.getAccountId(), page);
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
-							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
-							
-							//log.warn("page states count :: " + page.getPageStates().size());
-							PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
-							log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
-							
-							PerformanceInsight performance_insight = extractInsights(message.getAccountId(), page_speed_response);
-							
-							//Page page = new Page(page.getUrl());
-							page.setPerformanceScore(performance_insight.getSpeedScore());
-							page.setAccessibilityScore(performance_insight.getAccessibilityScore());
-							page.setSeoScore(performance_insight.getSeoScore());
-							page.setOverallScore(performance_insight.getOverallScore());
-							page = page_service.save(message.getAccountId(), page);
-							
-							//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
-							performance_insight_service.save(performance_insight);
-							page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
-
-							break;
-						}
-						catch(Exception e){
-							log.warn("URL BROWSER ACTOR EXCEPTION :: "+e.getMessage());
-							e.printStackTrace();
-						}
-						finally {
-							if(browser != null){
-								browser.close();
-							}
-						}
-					}while(page == null);			
 					log.warn("creating landing page performance and SEO insights");					
 				})
 				.match(MemberUp.class, mUp -> {
@@ -551,7 +520,7 @@ public class PerformanceInsightActor extends AbstractActor {
 																 getDoubleValue(detail_obj, "wastedBytes"),
 																 getIntegerValue(detail_obj, "totalBytes"),
 																 getDoubleValue(detail_obj, "cacheHitProbability"),
-																 getIntegerValue(detail_obj, "cacheLifetimeMs"));
+																 getLongValue(detail_obj, "cacheLifetimeMs"));
 					audit_details.add(audit_detail);
 				}
 				else if("unminified-css".contentEquals(name) || "unused-css-rules".contentEquals(name) || "offscreen-images".contentEquals(name) || "uses-responsive-images".contentEquals(name)) {

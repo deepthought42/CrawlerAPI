@@ -184,7 +184,8 @@ public class BrowserService {
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String host = new URL(browser_url).getHost();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
-
+		String page_src = browser.getDriver().getPageSource();
+		
 		//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
@@ -196,17 +197,14 @@ public class BrowserService {
 
 		if(page_states.isEmpty()) {
 			log.warn("Retrieving all DOM elements for page  :: "+url_without_params);
-
 			long start_time = System.currentTimeMillis();
 			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
-		  	List<ElementState> elements = getDomElementTreeRecursive( browser.getDriver().getPageSource(), browser, user_id, domain );
-
+		  	//List<ElementState> elements = getDomElementTreeRecursive( page_src, browser, user_id, domain );
+		  	List<ElementState> elements = getDomElementTreeLinear(page_src, browser, user_id, domain);
 		  	long end_time = System.currentTimeMillis();
 			log.warn("element state time to get all elements ::  "+(end_time-start_time));
 
 			log.warn("DOM elements found :: "+elements.size());
-
-			
 			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()),user_id);
 			full_page_screenshot.flush();
 
@@ -218,7 +216,7 @@ public class BrowserService {
 			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
 					elements,
-					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
+					org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_src),
 					browser.getXScrollOffset(),
 					browser.getYScrollOffset(),
 					browser.getViewportSize().width,
@@ -260,6 +258,106 @@ public class BrowserService {
 		log.warn("page :: "+page);
 		return page;
 	}
+	
+	
+	private List<ElementState> getDomElementTreeLinear(String pageSource, Browser browser, String user_id, Domain domain) throws IOException {
+		assert domain != null;
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		assert pageSource != null;
+		assert !pageSource.isEmpty();
+		assert browser != null;
+		
+		List<ElementState> visited_elements = new ArrayList<>();
+		Map<ElementState, List<Element>> frontier = new HashMap<>();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+		
+		//get html doc and get root element
+		Document html_doc = Jsoup.parse(pageSource);
+		Element root = html_doc.getElementsByTag("html").get(0);
+		
+		//create element state from root node
+		WebElement web_element = browser.findWebElementByXpath("//html");
+		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
+		Dimension element_size = web_element.getSize();
+		Point element_location = web_element.getLocation();
+		ElementState root_element_state = buildElementState("//html", attributes, new HashMap<>(), root, ElementClassification.CHILD, element_location, element_size);
+		root_element_state = element_service.save(user_id, root_element_state);
+		
+		//put element on frontier
+		frontier.put(root_element_state, new ArrayList<>(root.children()));
+		while(!frontier.isEmpty()) {
+			ElementState root_element = frontier.keySet().iterator().next();
+			List<Element> child_elements = frontier.remove(root_element);
+			visited_elements.add(root_element);
+
+			for(Element child : child_elements) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
+				String xpath = root_element.getXpath() + "/" + child.tagName();
+				if(!xpath_cnt.containsKey(xpath)) {
+					xpath_cnt.put(xpath, 1);
+				}
+				else {
+					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
+				
+				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+				web_element = browser.findWebElementByXpath(xpath);
+				
+				if(!web_element.isDisplayed()) {
+					continue;
+				}
+				
+				attributes = generateAttributesUsingJsoup(child);
+				element_size = web_element.getSize();
+				element_location = web_element.getLocation();
+				
+				ElementClassification classification = null;
+				List<Element> children = new ArrayList<Element>(child.children());
+				if(children.isEmpty()) {
+					classification = ElementClassification.CHILD;
+				}
+				else if(isSliderElement(child)) {
+					classification = ElementClassification.SLIDER;
+				}
+				else {
+					classification = ElementClassification.ANCESTOR;
+				}
+				ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), child, classification, element_location, element_size);
+				
+				ElementState element_record = element_service.findByKey(user_id, element_state.getKey());
+				
+				if(element_record == null) {
+					if( hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element_location) && !isElementLargerThanViewport(browser, element_size)) {
+						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+						String checksum = PageState.getFileChecksum(element_screenshot);
+						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(domain.getProtocol() + "://"+domain.getUrl()).getHost(), element_state.getKey(), BrowserType.create(browser.getBrowserName()), user_id);
+						element_state.setScreenshotUrl(screenshot_url);
+						element_state.setScreenshotChecksum(checksum);
+					}
+					element_state = element_service.save(user_id, element_state);
+				}
+				else{
+					element_state = element_record;
+				}
+					
+				//put element on frontier
+				if(children.isEmpty()) {
+					visited_elements.add(element_state);
+				}
+				else {
+					frontier.put(element_state, new ArrayList<>(child.children()));
+				}
+				
+				root_element.addChildElement(element_state);
+			}
+			root_element = element_service.save(user_id, root_element);
+		}
+		return visited_elements;
+	}
+	
 	
 	private List<ElementState> getDomElementTreeRecursive(String pageSource, Browser browser, String user_id, Domain domain) throws IOException {
 		assert domain != null;
@@ -305,6 +403,9 @@ public class BrowserService {
 		List<Element> child_elements = new ArrayList<>(root.children());
 		for(int idx = 0; idx < child_elements.size(); idx++) {
 			Element element = child_elements.get(idx);
+			if(isStructureTag(element.tagName())) {
+				continue;
+			}
 			
 			String xpath = root_xpath + "/" + element.tagName();
 			if(!xpath_cnt.containsKey(xpath)) {
@@ -315,7 +416,6 @@ public class BrowserService {
 			}
 			
 			xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
-			//String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt);
 			WebElement web_element = browser.findWebElementByXpath(xpath);
 
 			//Map<String, String> css_values = Browser.loadCssProperties(web_element);
@@ -563,10 +663,7 @@ public class BrowserService {
 	public static boolean isStructureTag(String tag_name) {
 		assert tag_name != null;
 
-		return "html".contentEquals(tag_name) || "body".contentEquals(tag_name)
-				|| "link".contentEquals(tag_name) || "script".contentEquals(tag_name)
-				|| "head".contentEquals(tag_name) || "noscript".contentEquals(tag_name)
-				|| "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
+		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) || "script".contentEquals(tag_name) || "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
 				|| "br".contentEquals(tag_name) || "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) || "use".contentEquals(tag_name)
 				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name);
 	}
@@ -1331,8 +1428,8 @@ public class BrowserService {
 
 		//remove all id attributes
 		template = template.replaceAll("\\bid=\".*\"", "");
-		template = template.replaceAll("\\bhref=\".*\"", "");
-		template = template.replaceAll("\\bsrc=\".*\"", "");
+		//template = template.replaceAll("\\bhref=\".*\"", "");
+		//template = template.replaceAll("\\bsrc=\".*\"", "");
 		template = template.replaceAll("\\s", "");
 
 		return template;

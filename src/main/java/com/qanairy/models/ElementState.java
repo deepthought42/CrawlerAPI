@@ -312,11 +312,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @return
 	 */
 	public String generateKey() {
-		String key = "";
-
-		key += this.getTemplate();
-		
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate());
 	}
 	
 

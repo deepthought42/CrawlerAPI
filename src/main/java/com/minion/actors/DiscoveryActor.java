@@ -5,7 +5,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,7 +35,6 @@ import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.PathMessage;
@@ -63,10 +61,6 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 
 /**
  * 
@@ -77,7 +71,7 @@ import scala.concurrent.Future;
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 
-	private final int DISCOVERY_ACTOR_COUNT = 100;
+	private final int DISCOVERY_ACTOR_COUNT = 50;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -122,7 +116,6 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_discoverer;
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
-	private ActorRef performance_insight_actor;
 
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
 	//subscribe to cluster changes
@@ -161,7 +154,8 @@ public class DiscoveryActor extends AbstractActor{
 					}
 				})
 				.match(PathMessage.class, message -> {
-					Timeout timeout = Timeout.create(Duration.ofSeconds(60));
+					/*
+					Timeout timeout = Timeout.create(Duration.ofSeconds(30));
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
@@ -169,7 +163,7 @@ public class DiscoveryActor extends AbstractActor{
 						log.warn("path message discovery actor returning");
 						return;
 					}
-					
+					*/
 					discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 
 					if(message.getStatus().equals(PathStatus.READY)){
@@ -256,6 +250,7 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
 					
 					if(!test.getSpansMultipleDomains()){
+						/*
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
@@ -263,6 +258,7 @@ public class DiscoveryActor extends AbstractActor{
 						if(discovery_action == DiscoveryAction.STOP) {
 							return;
 						}
+						*/
 						
 						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
 						final_key_list.add(test.getResult().getKey());
@@ -285,14 +281,13 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell( url_message, getSelf() );
+								
+								if(form_discoverer == null){
+									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
+								}
 								form_discoverer.tell(path, getSelf());
 								
-								if(performance_insight_actor == null){
-									performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
-								}
-								
-								performance_insight_actor.tell( url_message, getSelf() );
 						    }
 						}
 						else {
@@ -443,13 +438,6 @@ public class DiscoveryActor extends AbstractActor{
 		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		
 		url_browser_actor.tell(url_message, getSelf() );
-		
-		if(performance_insight_actor == null){
-			performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
-		}
-		
-		performance_insight_actor.tell( url_message, getSelf() );
 	}
 
 	

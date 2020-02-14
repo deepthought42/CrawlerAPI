@@ -20,7 +20,7 @@ public class UrlMessage {
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
-		setAccount(account_id);
+		setAccountId(account_id);
 	}
 
 	public URL getUrl() {
@@ -63,11 +63,11 @@ public class UrlMessage {
 		this.domain = domain;
 	}
 
-	public String getAccount() {
+	public String getAccountId() {
 		return account;
 	}
 
-	public void setAccount(String account) {
+	public void setAccountId(String account) {
 		this.account = account;
 	}
 }

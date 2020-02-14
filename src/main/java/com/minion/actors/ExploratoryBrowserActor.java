@@ -5,7 +5,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
@@ -99,33 +97,21 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								page_states.add(page_state);
 							}
 						}
-
-						int last_page_idx = 0;
-					    for(int idx = message.getKeys().size()-1; idx >= 0; idx--) {
-						    if(message.getKeys().get(idx).contains("pagestate")) {
-						 	    last_page_idx = idx;
-						 	    break;
-						    }
-					    }
-					    List<String> path_key_sublist = message.getKeys().subList(last_page_idx, message.getKeys().size());
-						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
-						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
-						for(Test test : matching_tests) {
-							path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test.getPathKeys()));
-						}
 						
 						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
 						//boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(message.getKeys(), path_object_lists);
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
+						log.warn("does result match path object in path   ??   "+is_result_matches_other_page_in_path);
 						if(is_result_matches_other_page_in_path || isResultAnimatedState) {
 							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 							return;
 						}
-						
-						TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
-						parent_path_explorer.tell(msg, getSelf());
+						else {
+							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
+							parent_path_explorer.tell(msg, getSelf());
+						}
 					}
 
 					//PLACE CALL TO LEARNING SYSTEM HERE

@@ -6,16 +6,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,6 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
@@ -34,15 +31,16 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
-import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -71,6 +69,9 @@ public class ParentPathExplorer extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 
+	@Autowired
+	private ElementStateService element_state_service;
+	
 	@Autowired
 	private Crawler crawler;
 
@@ -131,9 +132,14 @@ public class ParentPathExplorer extends AbstractActor {
 					boolean results_match = false;
 					boolean error_occurred = false;
 			  		Browser browser = null;
-
+			  		
+			  		//check if url changes between last page state and result
+			  		boolean is_page_change = !message.getResultPage().getUrl().equals(last_page.getUrl());
+			  		
+			  		
 					//do while result matches expected result
 					do{
+						/*
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
@@ -142,39 +148,59 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("path message discovery actor returning");
 							return;
 						}
+						*/
 						try{
 							error_occurred = false;
 							browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 							//crawl path using array of preceding elements\
 							browser.navigateTo(first_page.getUrl());
-							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
-							//extract parent element
-							String element_xpath = last_element.getXpath();
-							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
-							WebElement parent_web_element = browser_service.getParentElement(current_element);
-
-							//if parent element does not have width then continue
-							Dimension element_size = parent_web_element.getSize();
-							if(!BrowserService.hasWidthAndHeight(element_size)){
-								break;
-							}
-
-							//if parent element is not visible in pane then break
-
-							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
-							String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
-							BufferedImage element_screenshot = browser.getElementScreenshot(parent_web_element);
-							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
 							
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum);
+							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host, message.getAccountId());
+								
+							//TimingUtils.pauseThread(1000L);
+							//extract parent element
+							//String element_xpath = last_element.getXpath();
+							//WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
+							//WebElement parent_web_element = browser_service.getParentElement(current_element);
+
+							log.warn("Parent path explorer is looking up parent element :: "+last_element.getXpath());
+							ElementState parent_element = element_state_service.getParentElement(message.getAccountId(), message.getDomain(), last_page.getKey(), last_element.getKey());
+							//if parent element does not have width then continue
 							if(parent_element == null){
+								log.warn("PARENT ELEMENT IS NULL!!! ABORTING PARENT PATH EXPANSION!!!!!!");
 								break;
 							}
 
+							Dimension element_size = new Dimension(parent_element.getWidth(), parent_element.getHeight());
+							Point location = new Point(parent_element.getXLocation(), parent_element.getYLocation());
+							if(!BrowserService.hasWidthAndHeight(element_size) && BrowserService.doesElementHaveNegativePosition(location) && BrowserService.isElementLargerThanViewport(browser, element_size)){
+								log.warn("parent element doesn't have width or height");
+								break;
+							}
+
+							
+							//Document html_doc = Jsoup.parse(browser.getDriver().getPageSource());
+							//Element element = Xsoup.compile(element_xpath).evaluate(html_doc).getElements().get(0);
+							//String parent_xpath = BrowserService.generateXpathUsingJsoup(element, html_doc, element.attributes(), new HashMap<>());
+							
+							
+							//Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
+							//String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
+							/*
+							BufferedImage element_screenshot = browser.getElementScreenshot(browser.findWebElementByXpath(parent_element.getXpath()));
+							String checksum = PageState.getFileChecksum(element_screenshot);
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
+							parent_element.setScreenshotChecksum(checksum);
+							parent_element.setScreenshotUrl(screenshot_url);
+							element_state_service.save(message.getAccountId(), parent_element);
+							*/
+							//<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(element);
+							//ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum, parent_web_element.isDisplayed());
+							
 							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight())
 									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents
+								log.warn("Parent element isn't larger than child element?!?!  WTF??");
 								break;
 							}
 
@@ -186,10 +212,20 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 
+							log.warn("finishing path crawl in parent path explorer.....");
 							//finish crawling using array of elements following last page element
-							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-							TimingUtils.pauseThread(1500);
-							PageState result = browser_service.buildPage(message.getAccountId(), message.getDomain(), browser);
+							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element, message.getAccountId());
+							
+							PageState result = null;
+							if(is_page_change) {
+								if(browser.getDriver().getCurrentUrl().equals(message.getResultPage().getUrl())){
+									result = message.getResultPage();
+								}
+							}
+							else{
+								result = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+							}
+
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
@@ -211,11 +247,11 @@ public class ParentPathExplorer extends AbstractActor {
 							error_occurred = true;
 						}
 						catch(WebDriverException e){
-							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());
+							log.warn("Exception occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 						}
 						catch(GridException e){
-							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());
+							log.warn("Exception occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 						}
 						finally{
@@ -229,6 +265,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 					//check if test already exists that contains subset of current test consisting of last set of page-element-action
 					//find last page state
+			  		/*
 				    int last_page_idx = 0;
 				    for(int idx = path_keys.size()-1; idx >= 0; idx--) {
 					    if(path_keys.get(idx).contains("pagestate")) {
@@ -241,10 +278,9 @@ public class ParentPathExplorer extends AbstractActor {
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
-						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), message.getDomain().getUrl(), test.getPathKeys()));
+						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
 					}
 
-					/*
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
 						return;

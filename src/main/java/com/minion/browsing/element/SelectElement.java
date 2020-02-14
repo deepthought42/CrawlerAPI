@@ -92,13 +92,13 @@ public class SelectElement extends ElementState {
 	}
 
 	@Override
-	public String getScreenshot() {
+	public String getScreenshotUrl() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void setScreenshot(String cssMap) {
+	public void setScreenshotUrl(String cssMap) {
 		// TODO Auto-generated method stub
 		
 	}

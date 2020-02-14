@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,27 +22,24 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.PathStatus;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -62,9 +58,15 @@ public class UrlBrowserActor extends AbstractActor {
 
 	@Autowired
 	private TestCreatorService test_creator_service;
-
+	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private PageService page_service;
+	
+	@Autowired
+	private DomainService domain_service;
 
 	//subscribe to cluster changes
 	@Override
@@ -87,14 +89,16 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
+					/*
 					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccount()), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					if(discovery_action == DiscoveryAction.STOP) {
 						log.warn("path message discovery actor returning");
 						return;
 					}
+					*/
 					
 					String url = message.getUrl().toString();
 					String host = message.getUrl().getHost();
@@ -110,12 +114,12 @@ public class UrlBrowserActor extends AbstractActor {
 						path_keys = new ArrayList<>();
 						path_objects = new ArrayList<>();
 						Browser browser = null;
-						
+						log.warn("Trying to retrieve new browser connection");
 						try{
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							redirect = BrowserUtils.getPageTransition(url, browser, host);
+							redirect = BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
 							log.warn("redirect detected as :: " + redirect.getKey());
 							log.warn("redirect urls :: "+redirect.getUrls().size());
 							log.warn("redirect start url     ::  "+redirect.getStartUrl());
@@ -126,17 +130,23 @@ public class UrlBrowserActor extends AbstractActor {
 								path_objects.add(redirect);
 							}
 
-						  	animation = BrowserUtils.getLoadingAnimation(browser, host);
+						  	animation = BrowserUtils.getLoadingAnimation(browser, host, message.getAccountId());
 							if(animation != null){
 								path_keys.add(animation.getKey());
 								path_objects.add(animation);
 							}
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
+							//build page
+							Page page = browser_service.buildPage(message.getAccountId(), url);
+							page = page_service.save(message.getAccountId(), page);
+							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+							
 							//log.warn("parent only list size :: " + all_elements_list.size());
-							log.warn("building page...");
-							page_state = browser_service.buildPage(message.getAccount(), message.getDomain(), browser);
-
+							log.warn("building page state...");
+							page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
+							log.warn("page state elements :: " + page_state.getElements().size());
 							break;
 						}
 						catch(Exception e){
@@ -154,17 +164,22 @@ public class UrlBrowserActor extends AbstractActor {
 					path_objects.add(page_state);
 
 					log.warn("creating landing page test");
-					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccount());
-					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccount());
+					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccountId());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					message.getDiscoveryActor().tell(test_message, getSelf());
 					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
-					PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain(), message.getAccount());
+					PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					
 					//send message to animation detection actor
 					animation_actor.tell(path_message, getSelf() );
+					
+					ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
+					
+					performance_insight_actor.tell( message, getSelf() );
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -180,4 +195,5 @@ public class UrlBrowserActor extends AbstractActor {
 				})
 				.build();
 	}
+	
 }

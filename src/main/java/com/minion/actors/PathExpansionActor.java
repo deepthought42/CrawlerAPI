@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -42,6 +44,9 @@ public class PathExpansionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	@Autowired
+	private PageStateService page_state_service;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -63,6 +68,12 @@ public class PathExpansionActor extends AbstractActor {
 		return receiveBuilder()
 			.match(PathMessage.class, message -> {
 				log.warn("STARTING PATH EXPANSION....  "+message.getPathObjects().size());
+				
+				//if last page is an internal link then skip expansion
+				PageState last_page_state = PathUtils.getLastPageState(message.getPathObjects());
+				if(isInternalLink(last_page_state.getUrl())) {
+					return;
+				}
 				//get sublist of path from beginning to page state index
 				List<ExploratoryPath> exploratory_paths = expandPath(message);
 				log.warn("total path expansions found :: "+exploratory_paths.size());
@@ -88,6 +99,15 @@ public class PathExpansionActor extends AbstractActor {
 	}
 
 	/**
+	 * Checks if url contains internal link format at end of url
+	 * 
+	 * @param url
+	 */
+	public static boolean isInternalLink(String url) {
+		return url.matches(".*/#[a-zA-Z0-9]+$");
+	}
+	
+	/**
 	 * Produces all possible element, action combinations that can be produced from the given path
 	 *
 	 * @throws MalformedURLException
@@ -107,9 +127,10 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState element : elements){
-			if(element.getClassification().equals(ElementClassification.SLIDER.getShortName()) || 
-				element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) || 
+			if(element.getClassification().equals(ElementClassification.SLIDER) || 
+				element.getClassification().equals(ElementClassification.TEMPLATE) || 
 				element.isPartOfForm()){
+				log.warn("skipping element :: "+element.getXpath());
 				continue;
 			}
 			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
@@ -177,21 +198,24 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		if( second_to_last_page == null){
-			log.warn("second to last page state is null. returning last page state elements with size :: "+last_page_state.getElements().size());
-			return last_page_state.getElements();
+			log.warn("second to last page state is null. checking elements for expandability :: "+last_page_state.getElements().size());
+			Collection<ElementState> expandable_elements =  page_state_service.getExpandableElements(last_page_state.getElements());
+			log.warn("returning last page state elements with # of expandable elements :: "+expandable_elements.size());
+
+			return expandable_elements;
 		}
 
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
+				//continue if element is not displayed, or element is not child
 				element_xpath_map.put(element.getXpath(), element);
 			}
 
 			for(ElementState element : second_to_last_page.getElements()){
 				element_xpath_map.remove(element.getXpath());
 			}
-
 			
 			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
@@ -211,8 +235,8 @@ public class PathExpansionActor extends AbstractActor {
 	) {
 		List<ElementState> filtered_elements = new ArrayList<>();
 		for(ElementState element : elements) {
-			if(!element.getClassification().equals(ElementClassification.TEMPLATE.getShortName()) 
-				&& !element.getClassification().equals(ElementClassification.SLIDER.getShortName())
+			if(!element.getClassification().equals(ElementClassification.TEMPLATE) 
+				&& !element.getClassification().equals(ElementClassification.SLIDER)
 			){
 				filtered_elements.add(element);
 			}

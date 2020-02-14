@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
+
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
@@ -33,22 +35,23 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
     @Id
     private Long id;
     private String key;
-    private String screenshot;
-    private String screenshot_checksum;
 	private String name;
 	private String text;
 	private String xpath;
 	private String type;
+	private String inner_html;
+	private String css_selector;
+	private String outer_html;
+	private String classification;
+	private String template;
+
+	private String screenshot_url;
+	private String screenshot_checksum;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
-	private String inner_html;
-	private String css_selector;
-	private String outer_html;
 	private boolean part_of_form;
-	private boolean leaf;
-	private String classification;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -59,8 +62,10 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
 
-	private String template;
-			
+	@Relationship(type = "HAS")
+	private List<ElementState> child_elements = new ArrayList<>();
+	
+
 	public ElementState(){}
 	
 	/**
@@ -80,7 +85,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String screenshot_checksum){
+			String inner_html, String screenshot_checksum, boolean displayed){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -91,7 +96,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
-		setScreenshot(screenshot_url);
+		setScreenshotUrl(screenshot_url);
 		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
 		setCssValues(css_map);
@@ -104,7 +109,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setTemplate("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
-		setIsLeaf(false);
 		setClassification(ElementClassification.CHILD);
 	}
 	
@@ -124,7 +128,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, ElementClassification classification){
+						String inner_html, ElementClassification classification, boolean displayed){
 		assert name != null;
 		assert xpath != null;
 		
@@ -132,7 +136,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
-		setScreenshot(screenshot_url);
+		setScreenshotUrl(screenshot_url);
 		setText(text);
 		setCssValues(css_map);
 		setScreenshotChecksum(checksum);
@@ -144,7 +148,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setCssSelector("");
 		setTemplate("");
 		setRules(new HashSet<>());
-		setIsLeaf(false);
 		setClassification(classification);
 		setKey(generateKey());
 	}
@@ -181,16 +184,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		return true;
 	}
 	
-	
-	/**
-	 * checks if the current element is a child of the element passed
-	 * 
-	 * @param elem
-	 * @return
-	 */
-	public boolean isChildElement(ElementState elem){
-		return elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath());
-	}
+	/** GETTERS AND SETTERS  **/
 		
 	public String getName() {
 		return name;
@@ -287,12 +281,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.attributes.add(attribute);
 	}
 	
-	public String getScreenshot() {
-		return this.screenshot;
+	public String getScreenshotUrl() {
+		return this.screenshot_url;
 	}
 
-	public void setScreenshot(String screenshot) {
-		this.screenshot = screenshot;
+	public void setScreenshotUrl(String screenshot_url) {
+		this.screenshot_url = screenshot_url;
 	}
 
 	public String getType() {
@@ -318,44 +312,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @return
 	 */
 	public String generateKey() {
-		String key = "";
-		
-		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
-		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
-		for(String css_key : css_keys){
-			key += css_key+cssValues.get(css_key);
-		}
-
-		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
-		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-		
-		for(Attribute attribute : attributes){
-			key += attribute.getKey();
-		}
-
-		key += this.getName();
-		key += this.getText();
-		key += this.getXpath();
-		
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
-	}
-	
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateStylelessKey() {
-		String key = "";
-
-		key += this.getName();
-		key += this.getText();
-		key += this.getXpath();
-		key += this.getXLocation();
-		key += this.getYLocation();
-		key += this.getScreenshotChecksum();
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate());
 	}
 	
 
@@ -378,7 +335,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
         if (!(o instanceof ElementState)) return false;
         
         ElementState that = (ElementState)o;
-		return this.getKey().equals(that.getKey()) || getScreenshotChecksum().equals(that.getScreenshotChecksum());
+		return this.getKey().equals(that.getKey());
 	}
 
 
@@ -388,7 +345,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
-		page_elem.setScreenshot(this.getScreenshot());
+		page_elem.setScreenshotUrl(this.getScreenshotUrl());
 		page_elem.setScreenshotChecksum(this.getScreenshotChecksum());
 		page_elem.setText(this.getText());
 		page_elem.setType(this.getType());
@@ -397,7 +354,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());
 		page_elem.setHeight(this.getHeight());
-		
+
 		return page_elem;
 	}
 
@@ -435,9 +392,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	@Override
 	public int compareTo(ElementState o) {
+        return this.getKey().compareTo(o.getKey());
+		/*
 		 if(this.getYLocation() == o.getYLocation())
              return 0;
          return this.getYLocation() < o.getYLocation() ? -1 : 1;
+         */
 	}
 
 	public String getInnerHtml() {
@@ -481,15 +441,11 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 	public boolean isLeaf() {
-		return this.leaf;
-	}
-	
-	public void setIsLeaf(boolean is_leaf) {
-		this.leaf = is_leaf;
+		return getClassification().equals(ElementClassification.CHILD);
 	}
 
-	public String getClassification() {
-		return classification;
+	public ElementClassification getClassification() {
+		return ElementClassification.create(classification);
 	}
 
 	public void setClassification(ElementClassification classification) {
@@ -498,5 +454,17 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public Long getId() {
 		return this.id;
+	}
+	
+	public List<ElementState> getChildElements() {
+		return child_elements;
+	}
+
+	public void setChildElements(List<ElementState> child_elements) {
+		this.child_elements = child_elements;
+	}
+	
+	public void addChildElement(ElementState child_element) {
+		this.child_elements.add(child_element);
 	}
 }

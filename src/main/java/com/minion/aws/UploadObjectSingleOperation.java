@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.qanairy.models.enums.BrowserType;
 
 /**
  * Handles uploading and reading files from Amazon S3
@@ -30,16 +31,14 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(BufferedImage image, String domain, String page_key, String image_type) throws IOException{
-		assert page_key != null;
-		assert !page_key.isEmpty();
-	
+	public static String saveImageToS3(BufferedImage image, String domain, String element_key, BrowserType browser, String user_id) {
+		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-        	if(!s3client.doesObjectExist(bucketName, domain+"/"+page_key+"/"+image_type+".png")){
+        	if(!s3client.doesObjectExist(bucketName, user_id+"/"+host_key+"/"+element_key+".png")){
 	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
 	        	ImageIO.write(image, "png", os);
 	        	byte[] buffer = os.toByteArray();
@@ -49,9 +48,9 @@ public class UploadObjectSingleOperation {
 	        	
 	            log.debug("Uploading a new object to S3 from a file: "+ image);
 	            s3client.putObject(new PutObjectRequest(
-	             		                 bucketName, domain+"/"+page_key+"/"+image_type+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+	             		                 bucketName, user_id+"/"+host_key+"/"+browser+"/"+element_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
         	}
-            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+"/"+image_type+".png";
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+user_id+"/"+host_key+"/"+browser+"/"+element_key+".png";
 
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +
@@ -71,18 +70,20 @@ public class UploadObjectSingleOperation {
                     "communicate with S3, " +
                     "such as not being able to access the network.");
             log.error("Error Message: " + ace.getMessage());
-        } 
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         
         return filepath;
     }
 	
-	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
+	public static String saveImageToS3(String user_id, BufferedImage image, String domain, String page_key, BrowserType browser) {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-        	if(!s3client.doesObjectExist(bucketName, domain+"/"+page_key+".png")){
+        	if(!s3client.doesObjectExist(bucketName, user_id+"/"+domain+"/"+page_key+".png")){
 	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
 	        	ImageIO.write(image, "png", os);
 	        	byte[] buffer = os.toByteArray();
@@ -92,10 +93,10 @@ public class UploadObjectSingleOperation {
 	        	
 	            log.debug("Uploading a new object to S3 from a file: "+ image);
 	            s3client.putObject(new PutObjectRequest(
-	             		                 bucketName, domain+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+	             		                 bucketName, user_id+"/"+domain+"/"+browser+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
 	            
         	}
-            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+".png";
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+user_id+"/"+domain+"/"+browser+"/"+page_key+".png";
 
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +

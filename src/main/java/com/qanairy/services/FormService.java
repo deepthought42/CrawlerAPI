@@ -13,7 +13,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.repository.BugMessageRepository;
 import com.qanairy.models.repository.FormRepository;
 

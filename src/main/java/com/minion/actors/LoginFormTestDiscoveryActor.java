@@ -26,7 +26,7 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.BugType;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.message.BugMessage;
+import com.qanairy.models.experience.BugMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;

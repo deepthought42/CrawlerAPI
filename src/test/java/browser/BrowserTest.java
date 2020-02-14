@@ -35,11 +35,11 @@ public class BrowserTest {
 
 	@Test
 	public void verifyCleanSrc(){
-		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
+		String src_example = "<html><head></head><body><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas><script src=\"assets/plugins/js/jquery.ajaxchimp.min.js\" integrity=\"dfaghafdsvvcafgewarfawfa\">javascript sourc here</script></body></html>";
 		
 		String clean_src = Browser.cleanSrc(src_example);
 		//log.info("clean src: " +clean_src);
-		assertTrue("<html><head></head></html>".equals(clean_src));
+		assertTrue("<html><head></head><body><script src=\"assets/plugins/js/jquery.ajaxchimp.min.js\" >javascript sourc here</script></body></html>".equals(clean_src));
 	}
 	
 	@Test
@@ -55,23 +55,7 @@ public class BrowserTest {
 		assertTrue("section[contains(@class,\\\"dashboard-content-wrapper col-lg-10 col-lg-offset-1 col-xs-12 col-xs-offset-0 bordered-box\\\")]".equals(clean_src));
 	}
 
-	//@Test
-	public void verifyGenerateXpathUsingJsoup(){
-		try{
-			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
-			browser.navigateTo("https://staging-marketing.qanairy.com");
-			List<String> xpaths = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-			
-			for(String xpath : xpaths){
-				System.err.println("xpath :: "+xpath);
-			}
-			//log.info("clean src: " +clean_src);
-		//	Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));
-		}
-		catch(Exception e){
-			
-		}
-	}
+	
 	
 	//@Test
 	public void verifyGenerateParentXpath(){
@@ -105,7 +89,9 @@ public class BrowserTest {
 					0,0,
 					1288,844,
 					"chrome",
-					new HashSet<>());
+					new HashSet<>(),
+					"url.png",
+					"this_is_a_checksum");
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());

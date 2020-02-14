@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -114,7 +115,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			long end_time = System.currentTimeMillis();
 				    			TimingUtils.pauseThread(1500);
 						
-				    			PageState result_page = browser_service.buildPage(acct_message.getAccountKey(), domain, browser);
+				    			PageState result_page = browser_service.buildPageState(acct_message.getAccountKey(), domain, browser);
 								
 				    			boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 								
@@ -205,7 +206,7 @@ public class TestCreationActor extends AbstractActor  {
     			if(first_page){
     				browser.navigateTo(path_url);
     			}
-    			page_state = browser_service.buildPage(user_id, domain, browser);
+    			page_state = browser_service.buildPageState(user_id, domain, browser);
 				path_keys.add(page_state.getKey());
     			path_objects.add(page_state);
     			first_page = false;
@@ -249,7 +250,7 @@ public class TestCreationActor extends AbstractActor  {
 
 	    			if(!path_obj_json.has("url")){
 		    			//capture new page state and add it to path
-		    			page_state = browser_service.buildPage(user_id, domain, browser);
+		    			page_state = browser_service.buildPageState(user_id, domain, browser);
 		    			path_keys.add(page_state.getKey());
 		    			path_objects.add(page_state);
 	    			}
@@ -278,9 +279,11 @@ public class TestCreationActor extends AbstractActor  {
 		String checksum = PageState.getFileChecksum(img);
 		
 		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum);
-		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, browser.getBrowserName()+"-element");
-		elem.setScreenshot(screenshot_url);
+		//Map<String, String> css_map = Browser.loadCssProperties(element);
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed());
+		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
+		elem.setScreenshotUrl(screenshot_url);
+		elem.setOuterHtml(element.getAttribute("outerHTML"));
 		elem = page_element_service.save(user_id, elem);
 		return elem;
 	}

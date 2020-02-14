@@ -165,13 +165,13 @@ public class BrowserUtils {
 				if(animated_state_checksum_hash.containsKey(new_checksum)){
 					return null;
 				}
-				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
+				start_ms = System.currentTimeMillis();
 			}
-		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 1000 && (System.currentTimeMillis() - total_time) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {

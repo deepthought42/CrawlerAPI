@@ -37,7 +37,7 @@ public class ActionHelper {
 	 */
 	static {
 		List<Action> mouse_motion_actions = new ArrayList<Action>();
-		mouse_motion_actions.add(new Action("mouseover"));
+		//mouse_motion_actions.add(new Action("mouseover"));
 		//mouse_motion_actions.add(new Action("scroll","100"));
 		
 		List<Action> click_actions = new ArrayList<Action>();

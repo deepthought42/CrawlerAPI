@@ -184,18 +184,21 @@ public class BrowserService {
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String host = new URL(browser_url).getHost();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
-		String page_src = browser.getDriver().getPageSource();
+		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String src_checksum = BrowserService.calculateSha256(page_src);
+		List<PageState> page_states = page_state_service.findBySourceChecksum(user_id, domain.getUrl(), src_checksum);
 		
-		//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
-		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-
-		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		//List<PageState> page_states = page_state_service.findByScreenshotChecksum(user_id, domain.getUrl(), screenshot_checksum);
-		List<PageState> page_states = page_state_service.findByFullPageScreenshotChecksum(user_id, domain.getUrl(), full_page_screenshot_checksum);
+		//page_states = page_state_service.findByFullPageScreenshotChecksum(user_id, domain.getUrl(), full_page_screenshot_checksum);
 
 		if(page_states.isEmpty()) {
+			log.warn("could not find page by source checksum ::  "+src_checksum);
+			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
+			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+			
+			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
+			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 			log.warn("Retrieving all DOM elements for page  :: "+url_without_params);
 			long start_time = System.currentTimeMillis();
 			//redo this logic generate all child elements that qualify for expansion. This can mean reducing out any undesirable html tags.
@@ -216,7 +219,7 @@ public class BrowserService {
 			PageState page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
 					elements,
-					org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_src),
+					page_src,
 					browser.getXScrollOffset(),
 					browser.getYScrollOffset(),
 					browser.getViewportSize().width,
@@ -237,6 +240,10 @@ public class BrowserService {
 		page_state.setElements(page_state_service.getElementStates(user_id, page_states.get(0).getKey()));
 		log.warn("loaded page elements from db :: " +page_state.getElements().size());
 		return page_state;
+	}
+
+	private static String calculateSha256(String value) {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
 
 	/**
@@ -274,14 +281,14 @@ public class BrowserService {
 		
 		//get html doc and get root element
 		Document html_doc = Jsoup.parse(pageSource);
-		Element root = html_doc.getElementsByTag("html").get(0);
+		Element root = html_doc.getElementsByTag("body").get(0);
 		
 		//create element state from root node
-		WebElement web_element = browser.findWebElementByXpath("//html");
+		WebElement web_element = browser.findWebElementByXpath("//body");
 		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
 		Dimension element_size = web_element.getSize();
 		Point element_location = web_element.getLocation();
-		ElementState root_element_state = buildElementState("//html", attributes, new HashMap<>(), root, ElementClassification.CHILD, element_location, element_size);
+		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<>(), root, ElementClassification.ANCESTOR, element_location, element_size);
 		root_element_state = element_service.save(user_id, root_element_state);
 		
 		//put element on frontier
@@ -292,15 +299,15 @@ public class BrowserService {
 			visited_elements.add(root_element);
 
 			for(Element child : child_elements) {
-				if(isStructureTag(child.tagName())) {
-					continue;
-				}
 				String xpath = root_element.getXpath() + "/" + child.tagName();
 				if(!xpath_cnt.containsKey(xpath)) {
 					xpath_cnt.put(xpath, 1);
 				}
 				else {
 					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
+				if(isStructureTag(child.tagName())) {
+					continue;
 				}
 				
 				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";

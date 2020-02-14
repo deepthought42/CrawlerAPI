@@ -29,6 +29,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.minion.browsing.Browser;
 
 /**
  * A reference to a web page
@@ -44,6 +45,7 @@ public class PageState implements Persistable, PathObject {
 
 	private String url;
 	private String src;
+	private String src_checksum;
 	private String key;
 	private boolean login_required;
 
@@ -107,7 +109,8 @@ public class PageState implements Persistable, PathObject {
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
 		setLandable(false);
-		setSrc(src);
+		setSrc(Browser.cleanSrc(src));
+		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc()) );
 		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
@@ -158,7 +161,8 @@ public class PageState implements Persistable, PathObject {
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
 		setScreenshotChecksum(new ArrayList<String>());
-		setSrc(src);
+		setSrc(Browser.cleanSrc(src));
+		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc()) );
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 		setLoginRequired(false);
@@ -381,7 +385,6 @@ public class PageState implements Persistable, PathObject {
 			key += element.getKey();
 		}
 		
-		
 		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 
@@ -545,5 +548,13 @@ public class PageState implements Persistable, PathObject {
 	}
 	public void setFullPageHeight(long full_page_height) {
 		this.full_page_height = full_page_height;
+	}
+
+	public String getSrcChecksum() {
+		return src_checksum;
+	}
+
+	public void setSrcChecksum(String src_checksum) {
+		this.src_checksum = src_checksum;
 	}
 }

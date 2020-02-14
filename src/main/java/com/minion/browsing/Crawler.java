@@ -3,7 +3,6 @@ package com.minion.browsing;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
@@ -38,19 +36,12 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
-
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -99,12 +90,13 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-
+/*
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
 				}
+				*/
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -255,11 +247,13 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
+				/*
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
 				}
+				*/
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -341,11 +335,13 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
 				
+				/*
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
 				}
+				*/
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -458,11 +454,13 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
 				
+				/**
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
 				}
+				*/
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -693,8 +691,8 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageState(user_id, domain, browser);
-				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
-				result_page.setLoginRequired(last_page.isLoginRequired());
+				result_page.setLoginRequired(last_page_state.isLoginRequired());
+				return result_page;
 			}
 			catch(NullPointerException e){
 				e.printStackTrace();

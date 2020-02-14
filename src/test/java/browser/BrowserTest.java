@@ -35,11 +35,11 @@ public class BrowserTest {
 
 	@Test
 	public void verifyCleanSrc(){
-		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
+		String src_example = "<html><head></head><body><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas><script src=\"assets/plugins/js/jquery.ajaxchimp.min.js\" integrity=\"dfaghafdsvvcafgewarfawfa\">javascript sourc here</script></body></html>";
 		
 		String clean_src = Browser.cleanSrc(src_example);
 		//log.info("clean src: " +clean_src);
-		assertTrue("<html><head></head></html>".equals(clean_src));
+		assertTrue("<html><head></head><body><script src=\"assets/plugins/js/jquery.ajaxchimp.min.js\" >javascript sourc here</script></body></html>".equals(clean_src));
 	}
 	
 	@Test

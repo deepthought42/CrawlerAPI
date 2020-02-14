@@ -145,15 +145,20 @@ public class Browser {
 	 */
 	public static String cleanSrc(String src) throws NullPointerException{
 		assert src != null;
-		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
+		Pattern canvas_pattern = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern link_pattern = Pattern.compile("<link (.*)></link>",
+		Pattern link_pattern = Pattern.compile("<link (.*)>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern script_pattern = Pattern.compile("<script (.*)></script>",
+		Pattern script_pattern = Pattern.compile("<script (.*)>.*</script>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		String src_matcher = script_pattern.matcher(src).replaceAll("");
-		src_matcher = link_pattern.matcher(src_matcher).replaceAll("");
-		return p.matcher(src_matcher).replaceAll("");
+		//String src_matcher = script_pattern.matcher(src).replaceAll("");
+		//src_matcher = link_pattern.matcher(src_matcher).replaceAll("");
+		String src_matcher = canvas_pattern.matcher(src).replaceAll("");
+		src_matcher = src_matcher.replaceAll("\\bid=\".*\"", "");
+		src_matcher = src_matcher.replaceAll("\\bintegrity=\".*\"", "");
+		src_matcher = src_matcher.replaceAll("\\r?\\n", "");
+
+		return src_matcher;
 	}
 	
 	/**

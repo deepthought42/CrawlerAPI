@@ -36,4 +36,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (a:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(f:Form{key:{form_key}}) RETURN p")
 	public List<PageState> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
+
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[*]->(p:PageState{src_checksum:{src_checksum}}) MATCH a=(p)-[h:HAS]->() RETURN a")
+	public List<PageState> findBySourceChecksum(@Param("user_id") String user_id, @Param("url") String url, @Param("src_checksum") String src_checksum);
 }

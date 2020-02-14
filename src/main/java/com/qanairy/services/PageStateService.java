@@ -202,4 +202,8 @@ public class PageStateService {
 		}
 		return expandable_elements;
 	}
+
+	public List<PageState> findBySourceChecksum(String user_id, String url, String src_checksum) {
+		return page_state_repo.findBySourceChecksum(user_id, url, src_checksum);
+	}
 }

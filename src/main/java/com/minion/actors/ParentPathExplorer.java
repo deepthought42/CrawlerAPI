@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,7 +172,8 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 
 							Dimension element_size = new Dimension(parent_element.getWidth(), parent_element.getHeight());
-							if(!BrowserService.hasWidthAndHeight(element_size)){
+							Point location = new Point(parent_element.getXLocation(), parent_element.getYLocation());
+							if(!BrowserService.hasWidthAndHeight(element_size) && BrowserService.doesElementHaveNegativePosition(location) && BrowserService.isElementLargerThanViewport(browser, element_size)){
 								log.warn("parent element doesn't have width or height");
 								break;
 							}
@@ -184,14 +186,14 @@ public class ParentPathExplorer extends AbstractActor {
 							
 							//Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
 							//String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
-							
+							/*
 							BufferedImage element_screenshot = browser.getElementScreenshot(browser.findWebElementByXpath(parent_element.getXpath()));
 							String checksum = PageState.getFileChecksum(element_screenshot);
 							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
 							parent_element.setScreenshotChecksum(checksum);
 							parent_element.setScreenshotUrl(screenshot_url);
 							element_state_service.save(message.getAccountId(), parent_element);
-							
+							*/
 							//<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(element);
 							//ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum, parent_web_element.isDisplayed());
 							

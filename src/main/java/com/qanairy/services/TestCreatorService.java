@@ -15,10 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageLoadTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -55,6 +58,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
+	@Deprecated
 	public Test createLandingPageTest(List<String> path_keys, List<PathObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 	  	
@@ -81,12 +85,54 @@ public class TestCreatorService {
 	}	
 
 	/**
+	 * Generates a landing page test based on a given URL
+	 *
+	 * @param browser
+	 * @param msg
+	 *
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws WebDriverException
+	 * @throws GridException
+	 *
+	 * @pre browser != null
+	 * @pre msg != null
+	 */
+	@Deprecated
+	public Test createLandingPageTest(PageState page_state, String browser_name, Domain domain, String user_id)
+			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
+	  	
+	  	log.warn("domain url :: "+domain.getUrl());
+	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+	  	log.warn("total path object added to test :: "+path_objects.size());
+	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
+
+	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl());
+		
+		String url_path = new URL(url).getPath();
+		url_path = url_path.replace("/", " ").trim();
+		if(url_path.isEmpty()){
+			url_path = "home";
+		}
+		test.setName(url_path + " page loaded");
+
+		//add group "smoke" to test
+		Group group = new Group("smoke");
+		group = group_service.save(group);
+		test.addGroup(group);
+
+		return test;
+	}	
+	
+	/**
 	 * Generates {@link Test Tests} for test
 	 * @param test
 	 * @param result_page
 	 * @throws JsonProcessingException
 	 * @throws MalformedURLException
 	 */
+	@Deprecated
 	public Test createTest(
 			List<String> path_keys, 
 			List<PathObject> path_objects, 
@@ -110,7 +156,6 @@ public class TestCreatorService {
 
 		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);
 		if(test_db == null){
-			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());
 			addFormGroupsToPath(test);
 
@@ -123,6 +168,82 @@ public class TestCreatorService {
 		return test;
 	}
 
+	/**
+	 * Generates {@link Test Tests} for test
+	 * @param test
+	 * @param result_page
+	 * @throws JsonProcessingException
+	 * @throws MalformedURLException
+	 */
+	public Test createPageLoadTest(
+			PageState page, 
+			long crawl_time, 
+			String browser_name, 
+			String domain_host,
+			String user_id
+	) throws JsonProcessingException, MalformedURLException {
+		assert page != null;
+		
+		String result_url = page.getUrl();
+		log.warn("Creating test........");
+		
+		log.warn("path objects ::  "+path_objects.size());
+		String last_page_state_url = PathUtils.getLastPageState(path_objects).getUrl();
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_url).getHost()) || result_url.contains(new URL(last_page_state_url).getHost()));
+		Test test = new PageLoadTest(page);
+
+		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);
+		if(test_db == null){
+			test.setLastRunTimestamp(new Date());
+			addFormGroupsToPath(test);
+
+			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, page, crawl_time, test.getPathKeys());
+			test.addRecord(test_record);
+			
+			return test;
+		}
+
+		return test;
+	}
+
+	/**
+	 * Generates {@link Test Tests} for test
+	 * @param test
+	 * @param result_page
+	 * @throws JsonProcessingException
+	 * @throws MalformedURLException
+	 */
+	public Test createInteractionTest(
+			Page path, 
+			long crawl_time, 
+			String browser_name, 
+			String domain_host,
+			String user_id
+	) throws JsonProcessingException, MalformedURLException {
+		assert path != null;
+		
+		String result_url = page.getUrl();
+		log.warn("Creating test........");
+		
+		log.warn("path objects ::  "+path_objects.size());
+		String last_page_state_url = PathUtils.getLastPageState(path_objects).getUrl();
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_url).getHost()) || result_url.contains(new URL(last_page_state_url).getHost()));
+		Test test = new PageLoadTest(page);
+
+		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);
+		if(test_db == null){
+			test.setLastRunTimestamp(new Date());
+			addFormGroupsToPath(test);
+
+			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, page, crawl_time, test.getPathKeys());
+			test.addRecord(test_record);
+			
+			return test;
+		}
+
+		return test;
+	}
+	
 	/**
 	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
 	 *

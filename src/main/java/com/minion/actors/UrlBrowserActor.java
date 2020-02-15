@@ -164,7 +164,9 @@ public class UrlBrowserActor extends AbstractActor {
 					path_objects.add(page_state);
 
 					log.warn("creating landing page test");
-					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccountId());
+					//Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, message.getDomain(), message.getAccountId());
+					Test test = test_creator_service.createLandingPageTest(path, page_state, browser_name, message.getDomain(), message.getAccountId());
+					
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					message.getDiscoveryActor().tell(test_message, getSelf());
 					

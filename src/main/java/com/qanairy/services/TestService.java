@@ -1,6 +1,5 @@
 package com.qanairy.services;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -228,7 +227,6 @@ public class TestService {
 	    	test.addRecord(record);
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
-			test.setRunTime(record.getRunTime());
 			test_repo.save(test);
 
 			acct.addTestRecord(record);

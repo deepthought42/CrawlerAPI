@@ -1,19 +1,17 @@
 package com.qanairy.models;
 
 import java.util.Date;
-import java.util.List;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.TestStatus;
 
 /**
- * A {@link Test} record for reflecting an execution of a test 
+ * A record for reflecting an execution of a {@link Test}  
  * indicating whether the execution is aligned with the test and therefore status
  * or mis-aligned with the expectations of the test and therefore failing in 
  * which case a {@link PageState} can be saved as a record of what the state of the page
@@ -21,7 +19,7 @@ import com.qanairy.models.enums.TestStatus;
  *
  */
 @NodeEntity
-public class TestRecord implements Persistable {
+public abstract class TestRecord<S extends Persistable> implements Persistable {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestRecord.class);
 
@@ -34,21 +32,15 @@ public class TestRecord implements Persistable {
 	private String browser;
 	private TestStatus status;
 	private long run_time_length;
-	private List<String> path_keys;
-
-	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
-	private PageState result;
 	
 	//Empty constructor for spring
-	public TestRecord(){}
+	public TestRecord() {}
 	
-	public TestRecord(Date ran_at, TestStatus status, String browser_name, PageState result, long run_time, List<String> path_keys){
+	public TestRecord(Date ran_at, TestStatus status, String browser_name, long run_time){
 		setRanAt(ran_at);
-		setResult(result);
 		setRunTime(run_time);
 		setStatus(status);
 		setBrowser(browser_name);
-		setPathKeys(path_keys);
 		setKey(generateKey());
 	}
 	
@@ -66,13 +58,9 @@ public class TestRecord implements Persistable {
 		this.ran_at = date;
 	}
 	
-	public PageState getResult() {
-		return this.result;
-	}
+	public abstract S getResult();
 
-	public void setResult(PageState page) {
-		this.result = page;
-	}
+	public abstract void setResult(S page);
 	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
@@ -119,13 +107,5 @@ public class TestRecord implements Persistable {
 	@Override
 	public String generateKey() {
 		return "testrecord::"+getRanAt().hashCode()+getResult().getKey();
-	}
-
-	public List<String> getPathKeys() {
-		return path_keys;
-	}
-
-	public void setPathKeys(List<String> path_keys) {
-		this.path_keys = path_keys;
 	}
 }

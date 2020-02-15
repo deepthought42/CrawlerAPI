@@ -29,7 +29,7 @@ import org.neo4j.ogm.annotation.Relationship;
  *
  */
 @NodeEntity
-public class Test implements Persistable {
+public abstract class Test implements Persistable {
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Test.class);
 	
@@ -40,13 +40,9 @@ public class Test implements Persistable {
 	private String key; 
 	private String name;
 	private TestStatus status;
-	private boolean isUseful = false;
-	private boolean spansMultipleDomains = false;
 	private boolean is_running;
 	private boolean archived;
 	private Date last_run_time;
-	private long run_time_length;
-	private List<String> path_keys;
 
 	@Properties
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
@@ -56,13 +52,6 @@ public class Test implements Persistable {
 	
 	@Relationship(type = "HAS_GROUP")
 	private Set<Group> groups = new HashSet<>();
-
-	@JsonIgnore
-	@Relationship(type = "HAS_PATH_OBJECT")
-	private List<PathObject> path_objects = new ArrayList<>();
-	
-	@Relationship(type = "HAS_RESULT")
-	private PageState result;
 	
 	public Test(){}
 	
@@ -79,25 +68,21 @@ public class Test implements Persistable {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
+	@Deprecated
 	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
 		assert !path_objects.isEmpty();
 		
-		setPathKeys(path_keys);
-		setPathObjects(path_objects);
-		setResult(result);
 		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
-		setSpansMultipleDomains(spansMultipleDomains);
 		setLastRunTimestamp(new Date());
 		setName(generateTestName());
 		setBrowserStatuses(new HashMap<String, String>());
 		setArchived(false);
 		setIsRunning(false);
 		setKey(generateKey());
-		setRunTime(0L);
 	}
 	
 	/**
@@ -113,25 +98,22 @@ public class Test implements Persistable {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
+	@Deprecated
 	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
 		assert !path_objects.isEmpty();
 		
-		setPathKeys(path_keys);
-		setPathObjects(path_objects);
-		setResult(result);
+		setPath(path_keys);
 		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
-		setSpansMultipleDomains(spansMultipleDomains);
 		setLastRunTimestamp(new Date());
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(is_running);
 		setArchived(false);
 		setKey(generateKey());
-		setRunTime(0L);
 	}
 	
 	/**
@@ -199,18 +181,6 @@ public class Test implements Persistable {
 		this.name = name;
 	}
 	
-	public List<String> getPathKeys(){
-		return this.path_keys;
-	}
-	
-	public void setPathKeys(List<String> path_keys){
-		this.path_keys = path_keys;
-	}
-	
-	public boolean addPathKey(String key) {
-		return this.path_keys.add(key);
-	}
-	
 	public void addRecord(TestRecord record){
 		this.records.add(record);
 	}
@@ -221,36 +191,6 @@ public class Test implements Persistable {
 	
 	public void setRecords(List<TestRecord> records){
 		this.records = records;
-	}
-	
-	/**
-	 * @return result of running the test. Can be either null or have a {@link PageState} set
-	 */
-	public PageState getResult(){
-		return this.result;
-	}
-	
-	/**
-	 * @param result_page expected {@link PageState} state after running through path
-	 */
-	public void setResult(PageState result_page){
-		this.result = result_page;
-	}
-
-	public boolean isUseful() {
-		return isUseful;
-	}
-
-	public void setUseful(boolean isUseful) {
-		this.isUseful = isUseful;
-	}
-
-	public boolean getSpansMultipleDomains() {
-		return spansMultipleDomains;
-	}
-
-	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
-		this.spansMultipleDomains = spansMultipleDomains;
 	}
 
 	public Set<Group> getGroups() {
@@ -286,15 +226,6 @@ public class Test implements Persistable {
 		this.last_run_time = timestamp;
 	}
 
-	public void setRunTime(long pathCrawlRunTime) {
-		this.run_time_length = pathCrawlRunTime;
-		
-	}
-	
-	public long getRunTime() {
-		return this.run_time_length;
-	}
-
 	public boolean isRunning() {
 		return is_running;
 	}
@@ -310,20 +241,6 @@ public class Test implements Persistable {
 	public void setBrowserStatuses(Map<String, String> browser_passing_statuses) {
 		this.browser_passing_statuses = browser_passing_statuses;
 	}
-
-	public void addPathObject(PathObject path_obj) {
-		this.path_objects.add(path_obj);
-	}
-
-	@JsonIgnore
-	public List<PathObject> getPathObjects() {
-		return this.path_objects;
-	}
-
-	@JsonIgnore
-	public void setPathObjects(List<PathObject> path_objects) {
-		this.path_objects = path_objects;
-	}
 	
 	/**
 	 * 
@@ -338,36 +255,6 @@ public class Test implements Persistable {
 	}
 	
 	/**
-	 * 
-	 * @return
-	 */
-	public PageState firstPage() {
-		for(String key : this.getPathKeys()){
-			if(key.contains("pagestate")){
-				for(PathObject path_obj: this.getPathObjects()){
-					if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
-						return (PageState)path_obj;
-					}
-				}
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateKey() {
-		String path_key =  String.join("::", getPathKeys());
-		path_key += getResult().getKey();
-		
-		return "test::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(path_key);
-	}
-	
-	/**
 	 * Clone {@link Test} object
 	 * 
 	 * @param path
@@ -377,14 +264,12 @@ public class Test implements Persistable {
 	public static Test clone(Test test) throws MalformedURLException{
 		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
 									   new ArrayList<PathObject>(test.getPathObjects()),
-									   test.getResult(), 
-									   test.getSpansMultipleDomains());
+									   test.getResult());
 
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
 		clone_test.setGroups(new HashSet<>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		clone_test.setStatus(test.getStatus());
-		clone_test.setRunTime(test.getRunTime());
 		
 		return clone_test;
 	}

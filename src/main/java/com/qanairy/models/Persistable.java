@@ -10,4 +10,7 @@ public interface Persistable {
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
 	public String generateKey();
+	
+	public String getKey();
+	public void setKey(String key);
 }

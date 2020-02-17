@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
@@ -52,7 +51,7 @@ public class PageStateService {
 	 * 
 	 * @pre page_state != null
 	 */
-	public PageState save(String user_id, String url, PageState page_state) throws Exception {
+	public PageState save(String user_id, String domain_url, PageState page_state) throws Exception {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
@@ -63,7 +62,7 @@ public class PageStateService {
 			page_err = false;
 			try{
 				for(String checksum : page_state.getScreenshotChecksums()){
-					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(user_id, url, checksum);
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(user_id, domain_url, checksum);
 					if(!page_state_records.isEmpty()){
 						page_state_record = page_state_records.get(0);
 						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
@@ -121,7 +120,7 @@ public class PageStateService {
 						
 						Set<Form> form_records = new HashSet<>();
 						for(Form form : page_state.getForms()){
-							Form form_record = form_repo.findByKey(user_id, url, form.getKey());
+							Form form_record = form_repo.findByKey(user_id, domain_url, form.getKey());
 							if(form_record == null){
 								List<ElementState> form_element_records = new ArrayList<>();
 								for(ElementState element : form.getFormFields()){

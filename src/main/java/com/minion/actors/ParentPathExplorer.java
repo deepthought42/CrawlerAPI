@@ -4,16 +4,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +31,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
@@ -49,10 +46,6 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 
 @Component
 @Scope("prototype")
@@ -156,54 +149,64 @@ public class ParentPathExplorer extends AbstractActor {
 							browser.navigateTo(first_page.getUrl());
 							
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host, message.getAccountId());
-								
-							//TimingUtils.pauseThread(1000L);
-							//extract parent element
-							//String element_xpath = last_element.getXpath();
-							//WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
-							//WebElement parent_web_element = browser_service.getParentElement(current_element);
 
 							log.warn("Parent path explorer is looking up parent element :: "+last_element.getXpath());
 							ElementState parent_element = element_state_service.getParentElement(message.getAccountId(), message.getDomain(), last_page.getKey(), last_element.getKey());
 							//if parent element does not have width then continue
 							if(parent_element == null){
 								log.warn("PARENT ELEMENT IS NULL!!! ABORTING PARENT PATH EXPANSION!!!!!!");
+								WebElement web_element = browser.findWebElementByXpath(last_element.getXpath());
+								Dimension element_size = web_element.getSize();
+								Point element_location = web_element.getLocation();
+
+								BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+								String checksum = PageState.getFileChecksum(element_screenshot);
+								String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
+								last_element.setScreenshotUrl(screenshot_url);
+								last_element.setScreenshotChecksum(checksum);
+								last_element.setWidth(element_size.getWidth());
+								last_element.setHeight(element_size.getHeight());
+								last_element.setXLocation(element_location.getX());
+								last_element.setYLocation(element_location.getY());
+								element_state_service.save(message.getAccountId(), last_element);
 								break;
 							}
-
-							Dimension element_size = new Dimension(parent_element.getWidth(), parent_element.getHeight());
-							Point location = new Point(parent_element.getXLocation(), parent_element.getYLocation());
-							if(!BrowserService.hasWidthAndHeight(element_size) && BrowserService.doesElementHaveNegativePosition(location) && BrowserService.isElementLargerThanViewport(browser, element_size)){
-								log.warn("parent element doesn't have width or height");
-								break;
-							}
-
 							
 							//Document html_doc = Jsoup.parse(browser.getDriver().getPageSource());
 							//Element element = Xsoup.compile(element_xpath).evaluate(html_doc).getElements().get(0);
 							//String parent_xpath = BrowserService.generateXpathUsingJsoup(element, html_doc, element.attributes(), new HashMap<>());
 							
-							
 							//Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
 							//String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
-							/*
-							BufferedImage element_screenshot = browser.getElementScreenshot(browser.findWebElementByXpath(parent_element.getXpath()));
-							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
-							parent_element.setScreenshotChecksum(checksum);
-							parent_element.setScreenshotUrl(screenshot_url);
-							element_state_service.save(message.getAccountId(), parent_element);
-							*/
+							WebElement web_element = browser.findWebElementByXpath(parent_element.getXpath());
+							Dimension element_size = web_element.getSize();
+							Point element_location = web_element.getLocation();							
+							
+							if(!BrowserService.hasWidthAndHeight(element_size) && BrowserService.doesElementHaveNegativePosition(element_location) && BrowserService.isElementLargerThanViewport(browser, element_size)){
+								log.warn("parent element doesn't have width or height");
+								break;
+							}
 							//<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(element);
 							//ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum, parent_web_element.isDisplayed());
 							
-							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight())
-									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
+							if((parent_element.getWidth() < last_element.getWidth() || parent_element.getHeight() < last_element.getHeight())
+									&& (parent_element.getXLocation() > last_element.getXLocation() || parent_element.getYLocation() > last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents
 								log.warn("Parent element isn't larger than child element?!?!  WTF??");
 								break;
 							}
 
+							BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+							String checksum = PageState.getFileChecksum(element_screenshot);
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
+							parent_element.setScreenshotChecksum(checksum);
+							parent_element.setScreenshotUrl(screenshot_url);
+							parent_element.setWidth(element_size.getWidth());
+							parent_element.setHeight(element_size.getHeight());
+							parent_element.setXLocation(element_location.getX());
+							parent_element.setYLocation(element_location.getY());
+							parent_element = element_state_service.save(message.getAccountId(), parent_element);
+							
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -223,9 +226,9 @@ public class ParentPathExplorer extends AbstractActor {
 								}
 							}
 							else{
+								log.warn("parent exploratory path building page state");
 								result = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
 							}
-
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){

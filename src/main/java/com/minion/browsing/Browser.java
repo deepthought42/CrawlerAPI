@@ -12,13 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -144,21 +145,10 @@ public class Browser {
 	 * @precondition src != null
 	 */
 	public static String cleanSrc(String src) throws NullPointerException{
-		assert src != null;
-		Pattern canvas_pattern = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern link_pattern = Pattern.compile("<link (.*)>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern script_pattern = Pattern.compile("<script (.*)>.*</script>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		//String src_matcher = script_pattern.matcher(src).replaceAll("");
-		//src_matcher = link_pattern.matcher(src_matcher).replaceAll("");
-		String src_matcher = canvas_pattern.matcher(src).replaceAll("");
-		src_matcher = src_matcher.replaceAll("\\bid=\".*\"", "");
-		src_matcher = src_matcher.replaceAll("\\bintegrity=\".*\"", "");
-		src_matcher = src_matcher.replaceAll("\\r?\\n", "");
+		Document html_doc = Jsoup.parse(src);
+		html_doc.select("canvas").remove();
 
-		return src_matcher;
+		return html_doc.html();
 	}
 	
 	/**

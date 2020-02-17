@@ -637,7 +637,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000);
+		}while(result_page == null && tries < 10000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -690,7 +690,89 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
+				log.warn("building page state as part of exploratory crawl");
 				result_page = browser_service.buildPageState(user_id, domain, browser);
+				result_page.setLoginRequired(last_page_state.isLoginRequired());
+				return result_page;
+			}
+			catch(NullPointerException e){
+				e.printStackTrace();
+				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
+			} 
+			catch (GridException e) {
+				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+			}
+			catch (NoSuchElementException e){
+				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
+			}
+			catch (WebDriverException e) {
+				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
+			} 
+			catch (NoSuchAlgorithmException e) {
+				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
+				//e.printStackTrace();
+			} 
+			catch(Exception e) {
+				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
+				e.printStackTrace();
+			}
+			finally{
+				if(browser != null && !no_such_element_exception){
+					browser.close();
+				}
+			}
+			tries++;
+		}while(result_page == null && tries < 1000000);
+		return result_page;
+	}
+	
+	/**
+	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
+	 * @param browser
+	 * @param path
+	 * @param host
+	 * @return
+	 * @throws Exception 
+	 */
+	public PageState performPathExploratoryCrawlAndBuildFullElementTree(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
+		PageState result_page = null;
+		int tries = 0;
+		Browser browser = null;
+		PathMessage new_path = path.clone();
+		boolean no_such_element_exception = false;
+		
+		do{
+			/*
+			Timeout timeout = Timeout.create(Duration.ofSeconds(30));
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
+			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+			
+			if(discovery_action == DiscoveryAction.STOP) {
+				throw new DiscoveryStoppedException();
+			}
+			*/
+			
+			try{
+				if(!no_such_element_exception){
+					no_such_element_exception = false;
+					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					browser.navigateTo(expected_page.getUrl());
+					
+					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path, user_id);
+				}
+				String browser_url = browser.getDriver().getCurrentUrl();
+				browser_url = BrowserUtils.sanitizeUrl(browser_url);
+				//get last page state
+				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
+								
+				//verify that screenshot does not match previous page
+				log.warn("building page state as part of crawl with element state extraction");
+				result_page = browser_service.buildPageState(user_id, domain, browser);
+				List<ElementState> elements = browser_service.extractElementStates(result_page.getSrc(), user_id, browser, domain);
+				result_page.addElements(elements);
 				result_page.setLoginRequired(last_page_state.isLoginRequired());
 				return result_page;
 			}

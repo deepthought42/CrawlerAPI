@@ -62,6 +62,17 @@ public class ElementStateService {
 
 			element_record = element_repo.save(element);
 		}
+		else {
+			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
+				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
+				element_record.setScreenshotUrl(element.getScreenshotUrl());
+				element_record.setXLocation(element.getXLocation());
+				element_record.setYLocation(element.getYLocation());
+				element_record.setWidth(element.getWidth());
+				element_record.setHeight(element.getHeight());
+				element_record = element_repo.save(element_record);
+			}
+		}
 
 		return element_record;
 	}

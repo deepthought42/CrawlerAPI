@@ -1,13 +1,11 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -44,7 +42,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String outer_html;
 	private String classification;
 	private String template;
-
+	
 	private String screenshot_url;
 	private String screenshot_checksum;
 	private int x_location;

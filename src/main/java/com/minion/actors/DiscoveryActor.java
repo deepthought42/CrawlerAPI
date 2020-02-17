@@ -71,7 +71,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 
-	private final int DISCOVERY_ACTOR_COUNT = 50;
+	private final int DISCOVERY_ACTOR_COUNT = 200;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;

@@ -14,11 +14,18 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
+import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
+import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -46,6 +53,18 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 
+	@Autowired
+	private BrowserService browser_service;
+
+	@Autowired
+	private PageService page_service;
+
+	@Autowired
+	private DomainService domain_service;
+
+	@Autowired
+	private PageStateService page_state_service;
+	
 	@Autowired
 	private Crawler crawler;
 
@@ -109,6 +128,20 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							return;
 						}
 						else {
+							Page page = browser_service.buildPage(message.getAccountId(), result_page.getUrl());
+							page = page_service.save(message.getAccountId(), page);
+							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+
+							long start_time = System.currentTimeMillis();
+							List<ElementState> elements = browser_service.extractElementStates(message, BrowserType.create(browser_name));
+							long end_time = System.currentTimeMillis();
+							log.warn("element state time to get all elements ::  "+(end_time-start_time));
+							result_page.addElements(elements);
+							result_page = page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), result_page);
+							page_service.addPageState(message.getAccountId(), page.getKey(), result_page);
+							
+							log.warn("DOM elements found :: "+elements.size());
+							
 							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 							parent_path_explorer.tell(msg, getSelf());
 						}

@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
@@ -123,6 +122,7 @@ public class DomainActor extends AbstractActor{
 						domain = domain_service.findByUrl(url, test_msg.getAccount());
 					}
 					
+					/*
 					log.warn("domain actor account number :: "+test_msg.getAccount());
 					log.warn("domain url :: " +test_msg.getDomain().getUrl());
 					for(PathObject obj : test.getPathObjects()){
@@ -130,9 +130,10 @@ public class DomainActor extends AbstractActor{
 							domain_service.addPageState(test_msg.getDomain().getUrl(), (PageState)obj, test_msg.getAccount());
 						}
 					}
+					*/
 					
 					//domain = domain_service.save(domain);					
-					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());	
+					//domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());	
 
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
@@ -149,7 +150,7 @@ public class DomainActor extends AbstractActor{
 					}
 					//domain_service.save(domain);
 					domain_service.addTest(domain.getUrl(), test_record, test_msg.getAccount());
-					domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
+					//domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {

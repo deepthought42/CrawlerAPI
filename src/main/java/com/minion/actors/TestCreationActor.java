@@ -41,6 +41,7 @@ import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.TimingUtils;
 
@@ -69,6 +70,9 @@ public class TestCreationActor extends AbstractActor  {
 
 	@Autowired
 	private ElementStateService page_element_service;
+
+	@Autowired
+	private PageStateService page_state_service;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -207,6 +211,13 @@ public class TestCreationActor extends AbstractActor  {
     				browser.navigateTo(path_url);
     			}
     			page_state = browser_service.buildPageState(user_id, domain, browser);
+    			long start_time = System.currentTimeMillis();
+			  	List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), user_id, browser, domain);
+			  	long end_time = System.currentTimeMillis();
+				log.warn("element state time to get all elements ::  "+(end_time-start_time));
+				page_state.addElements(elements);
+				page_state = page_state_service.save(user_id, domain.getUrl(), page_state);
+				log.warn("DOM elements found :: "+elements.size());
 				path_keys.add(page_state.getKey());
     			path_objects.add(page_state);
     			first_page = false;

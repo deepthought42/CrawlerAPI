@@ -2,8 +2,12 @@ package com.qanairy.models;
 
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import com.qanairy.models.enums.AlertChoice;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.UnhandledAlertException;
@@ -13,6 +17,7 @@ import org.openqa.selenium.WebDriver;
  * Represents an Alert or Confirmation pop-up that is triggered by javascript within the page
  * 
  */
+@NodeEntity
 public class PageAlert implements PathObject, Persistable {
 	private static Logger log = LoggerFactory.getLogger(PageAlert.class);
 
@@ -20,7 +25,6 @@ public class PageAlert implements PathObject, Persistable {
 	@Id
 	private Long id;
 
-	private String choice;
 	private String message;
 	private String type;
 	private String key;
@@ -34,8 +38,7 @@ public class PageAlert implements PathObject, Persistable {
 	 * @pre {"accept","reject"}.contains(alertChoice)
 	 * @pre message != null;
 	 */
-	public PageAlert(String alertChoice, String message){
-		this.choice = alertChoice;
+	public PageAlert(String message){
 		this.message = message;
 		this.setType("PageAlert");
 		this.setKey(generateKey());
@@ -44,11 +47,12 @@ public class PageAlert implements PathObject, Persistable {
 	/**
 	 * 
 	 * @param driver
+	 * @param choice 
 	 */
-	public void performChoice(WebDriver driver){
+	public void performChoice(WebDriver driver, AlertChoice choice){
 		try{
 			Alert alert = driver.switchTo().alert();
-			if("accept".equals(choice)){
+			if(AlertChoice.ACCEPT.equals(choice)){
 				alert.accept();
 			}
 			else{
@@ -58,10 +62,6 @@ public class PageAlert implements PathObject, Persistable {
 		catch(NoAlertPresentException nae){
 			log.warn( "Alert not present");
 		}
-	}
-
-	public String getChoice(){
-		return this.choice;
 	}
 	
 	public String getMessage() throws UnhandledAlertException{
@@ -84,7 +84,7 @@ public class PageAlert implements PathObject, Persistable {
 
 	@Override
 	public PageAlert clone() {
-		return new PageAlert(this.getChoice(), this.getMessage());
+		return new PageAlert(this.getMessage());
 	}
 
 	@Override

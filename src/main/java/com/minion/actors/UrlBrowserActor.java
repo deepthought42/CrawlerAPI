@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
@@ -32,7 +34,9 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
+import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -40,6 +44,7 @@ import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -64,6 +69,9 @@ public class UrlBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private PageService page_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -119,6 +127,7 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
+								
 							redirect = BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
 							log.warn("redirect detected as :: " + redirect.getKey());
 							log.warn("redirect urls :: "+redirect.getUrls().size());
@@ -145,6 +154,14 @@ public class UrlBrowserActor extends AbstractActor {
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page state...");
 							page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+							
+							long start_time = System.currentTimeMillis();
+						  	List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), message.getAccountId(), browser, message.getDomain());
+						  	long end_time = System.currentTimeMillis();
+							log.warn("element state time to get all elements ::  "+(end_time-start_time));
+							page_state.addElements(elements);
+							page_state = page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), page_state);
+							log.warn("DOM elements found :: "+elements.size());
 							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
 							log.warn("page state elements :: " + page_state.getElements().size());
 							break;
@@ -180,6 +197,10 @@ public class UrlBrowserActor extends AbstractActor {
 								  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
 					
 					performance_insight_actor.tell( message, getSelf() );
+					
+					ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
+					form_discoverer.tell(path_message, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

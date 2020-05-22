@@ -125,27 +125,6 @@ public class DomainService {
 	}
 
 	/**
-	 * 
-	 * @param host
-	 * @param page_state
-	 * @return
-	 * 
-	 * #pre host != null
-	 * @pre !host.isEmpty()
-	 * @pre page_state != null
-	 */
-	public Domain addPageState(String url, PageState page_state, String user_id) {
-		assert url != null;
-		assert !url.isEmpty();
-		assert page_state != null;
-		assert user_id != null;
-		
-		Domain domain = domain_repo.findByUrl(url, user_id);
-		domain.addPageState(page_state);
-		return domain_repo.save(domain);
-	}
-
-	/**
 	 * Creates a relationship between existing {@link Page} and {@link Domain} records
 	 * 
 	 * @param url {@link Domain} url

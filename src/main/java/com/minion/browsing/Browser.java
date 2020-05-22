@@ -12,13 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -45,8 +46,10 @@ import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AlertChoice;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -131,6 +134,19 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
+		
+		try {
+			waitForPageToLoad();
+		}catch(Exception e) {
+			Alert alert = isAlertPresent();
+			if(alert != null){
+				log.debug("Alert was encountered during navigation page load!!!");
+				PageAlert page_alert = new PageAlert(alert.getText());
+				
+				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
+			}
+		}
+		
 		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
@@ -144,21 +160,10 @@ public class Browser {
 	 * @precondition src != null
 	 */
 	public static String cleanSrc(String src) throws NullPointerException{
-		assert src != null;
-		Pattern canvas_pattern = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern link_pattern = Pattern.compile("<link (.*)>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		Pattern script_pattern = Pattern.compile("<script (.*)>.*</script>",
-	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		//String src_matcher = script_pattern.matcher(src).replaceAll("");
-		//src_matcher = link_pattern.matcher(src_matcher).replaceAll("");
-		String src_matcher = canvas_pattern.matcher(src).replaceAll("");
-		src_matcher = src_matcher.replaceAll("\\bid=\".*\"", "");
-		src_matcher = src_matcher.replaceAll("\\bintegrity=\".*\"", "");
-		src_matcher = src_matcher.replaceAll("\\r?\\n", "");
+		Document html_doc = Jsoup.parse(src);
+		html_doc.select("canvas").remove();
 
-		return src_matcher;
+		return html_doc.html();
 	}
 	
 	/**

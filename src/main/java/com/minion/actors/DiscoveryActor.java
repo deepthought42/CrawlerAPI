@@ -71,7 +71,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 
-	private final int DISCOVERY_ACTOR_COUNT = 50;
+	private final int DISCOVERY_ACTOR_COUNT = 200;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
@@ -281,13 +281,6 @@ public class DiscoveryActor extends AbstractActor{
 								}
 								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 								url_browser_actor.tell( url_message, getSelf() );
-								
-								if(form_discoverer == null){
-									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
-								}
-								form_discoverer.tell(path, getSelf());
-								
 						    }
 						}
 						else {
@@ -297,6 +290,13 @@ public class DiscoveryActor extends AbstractActor{
 				  		    }
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell( path, getSelf() );
+							
+
+							if(form_discoverer == null){
+								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
+							}
+							form_discoverer.tell(path, getSelf());
 						}
 						
 					}
@@ -339,7 +339,10 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 
+					log.warn("form message page key :: "+form_msg.getPage().getKey());
 					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getPage().getKey());
+					log.warn("form message page key :: "+page_state_record.getKey());
+
 					page_state_record.addForm(form);
 					
 					try {

@@ -62,6 +62,17 @@ public class ElementStateService {
 
 			element_record = element_repo.save(element);
 		}
+		else {
+			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
+				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
+				element_record.setScreenshotUrl(element.getScreenshotUrl());
+				element_record.setXLocation(element.getXLocation());
+				element_record.setYLocation(element.getYLocation());
+				element_record.setWidth(element.getWidth());
+				element_record.setHeight(element.getHeight());
+				element_record = element_repo.save(element_record);
+			}
+		}
 
 		return element_record;
 	}
@@ -75,7 +86,7 @@ public class ElementStateService {
 	 */
 	public ElementState saveFormElement(String user_id, ElementState element) throws ClientException{
 		assert element != null;
-		ElementState element_record = element_repo.findFormElementByKey(user_id, element.getKey());
+		ElementState element_record = element_repo.findElementByKey(user_id, element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -94,17 +105,19 @@ public class ElementStateService {
 			element_record = element_repo.save(element);
 		}
 		else{
-			element_record.setScreenshotUrl(element.getScreenshotUrl());
-			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
-			element_record.setXpath(element.getXpath());
-
-			element_record = element_repo.save(element_record);
+			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
+				element_record.setScreenshotUrl(element.getScreenshotUrl());
+				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
+				element_record.setXpath(element.getXpath());
+	
+				element_record = element_repo.save(element_record);
+			}
 		}
 		return element_record;
 	}
 
-	public ElementState findFormElementByKey(String user_id, String key){
-		return element_repo.findFormElementByKey(user_id, key);
+	public ElementState findElementByKey(String user_id, String key){
+		return element_repo.findElementByKey(user_id, key);
 	}
 
 	public ElementState findByKey(String user_id, String key){

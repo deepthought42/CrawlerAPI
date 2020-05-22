@@ -11,17 +11,18 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
+import com.qanairy.services.BrowserService;
 
 /**
  * A reference to a web page
@@ -110,7 +112,7 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(false);
 		setSrc(Browser.cleanSrc(src));
-		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc()) );
+		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.generalizeSrc(getSrc())) );
 		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
@@ -123,6 +125,7 @@ public class PageState implements Persistable, PathObject {
 		setKey(generateKey());
 	}
 	
+
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
@@ -162,7 +165,7 @@ public class PageState implements Persistable, PathObject {
 		setViewportHeight(viewport_height);
 		setScreenshotChecksum(new ArrayList<String>());
 		setSrc(Browser.cleanSrc(src));
-		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc()) );
+		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.generalizeSrc(getSrc())) );
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 		setLoginRequired(false);
@@ -376,16 +379,8 @@ public class PageState implements Persistable, PathObject {
 	 *
 	 * @pre page != null
 	 */
-	public String generateKey() {
-		
-		String key = getUrl();
-		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
-		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
-		for(ElementState element : elements){
-			key += element.getKey();
-		}
-		
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+	public String generateKey() {		
+		return "pagestate::" + getSrcChecksum();
 	}
 
 	public void addForm(Form form) {
@@ -556,5 +551,9 @@ public class PageState implements Persistable, PathObject {
 
 	public void setSrcChecksum(String src_checksum) {
 		this.src_checksum = src_checksum;
+	}
+
+	public void addElements(List<ElementState> elements) {
+		this.elements.addAll(elements);
 	}
 }

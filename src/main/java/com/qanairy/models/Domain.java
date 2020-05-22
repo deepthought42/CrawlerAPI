@@ -33,9 +33,6 @@ public class Domain implements Persistable{
 	private Set<Test> tests;
 
 	@Relationship(type = "HAS")
-	private Set<PageState> page_states;
-
-	@Relationship(type = "HAS")
 	private List<Page> pages;
 
 	@Relationship(type = "HAS_TEST_USER")
@@ -55,7 +52,6 @@ public class Domain implements Persistable{
 	 */
 	public Domain(){
 		setTests( new HashSet<>() );
-		setPageStates( new HashSet<>() );
 		setDiscoveryRecords( new HashSet<>() );
 		setTestUsers( new HashSet<>() );
 		setPages( new ArrayList<>() );
@@ -205,25 +201,6 @@ public class Domain implements Persistable{
 	
 	public long getId(){
 		return this.id;
-	}
-
-	public Set<PageState> getPageStates() {
-		return this.page_states;
-	}
-	
-	public void setPageStates(Set<PageState> page_states){
-		this.page_states = page_states;
-	}
-	
-	public boolean addPageState(PageState page_state){
-		//check if page state exists
-		for(PageState state : this.getPageStates()){
-			if(state.getKey().equals(page_state.getKey())){
-				return false;
-			}
-		}
-		
-		return this.getPageStates().add(page_state);
 	}
 
 	public boolean addPage(Page page) {

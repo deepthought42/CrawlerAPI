@@ -34,6 +34,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
+import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
@@ -136,7 +137,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof PageAlert){
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
+				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
 			}
 
 			last_obj = current_obj;
@@ -211,7 +212,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
+				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
 			}
 
 			last_obj = current_obj;
@@ -292,7 +293,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
+				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
 			}
 
 			last_obj = current_obj;
@@ -379,7 +380,7 @@ public class Crawler {
 				Alert alert = browser.isAlertPresent();
 				if(alert != null){
 					log.warn("Alert was encountered!!!");
-					PageAlert page_alert = new PageAlert("dismiss", alert.getText());
+					PageAlert page_alert = new PageAlert(alert.getText());
 					path_keys.add(page_alert.getKey());
 					path_objects_explored.add(page_alert);
 					current_idx++;
@@ -403,7 +404,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
+				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
 			}
 			last_obj = current_obj;
 			current_idx++;
@@ -498,7 +499,7 @@ public class Crawler {
 				Alert alert = browser.isAlertPresent();
 				if(alert != null){
 					log.warn("Alert was encountered!!!");
-					PageAlert page_alert = new PageAlert("dismiss", alert.getText());
+					PageAlert page_alert = new PageAlert(alert.getText());
 					path_keys.add(page_alert.getKey());
 					path_objects_explored.add(page_alert);
 					current_idx++;
@@ -530,7 +531,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
+				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
 			}
 			last_obj = current_obj;
 			current_idx++;

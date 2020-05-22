@@ -19,8 +19,10 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.models.message.UrlMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.FormService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
@@ -48,6 +50,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
+	private FormService form_service;
+	
+	@Autowired
 	private ElementRuleExtractor rule_extractor;
 	
 	public static Props props() {
@@ -70,10 +75,13 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {			
+				.match(PathMessage.class, message -> {		
+					log.warning("-------------------------------------------------------------------------------------------------");
+					log.info("Retrieving first url in path objects");
 					//get first url
 					String url = PathUtils.getFirstUrl(message.getPathObjects());
 					//get first page in path
+					log.info("extracting host from url :: "+url);
 				  	String host = new URL(url).getHost();
 				  	Browser browser = null;
 				  	boolean forms_created = false;
@@ -108,7 +116,8 @@ public class FormDiscoveryActor extends AbstractActor{
 									field.getRules().addAll(rules);
 								}
 							    DeepthoughtApi.predict(form);
-							  								  	
+							  
+							    form = form_service.save(message.getAccountId(), message.getDomain().getUrl(), form);
 							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}
@@ -125,7 +134,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 1000);
+					}while(!forms_created && count < 10000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

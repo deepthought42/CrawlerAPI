@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
@@ -34,6 +36,7 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
+import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -124,6 +127,7 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
+								
 							redirect = BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
 							log.warn("redirect detected as :: " + redirect.getKey());
 							log.warn("redirect urls :: "+redirect.getUrls().size());
@@ -193,6 +197,10 @@ public class UrlBrowserActor extends AbstractActor {
 								  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
 					
 					performance_insight_actor.tell( message, getSelf() );
+					
+					ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
+					form_discoverer.tell(path_message, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

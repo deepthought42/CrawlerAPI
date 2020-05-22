@@ -379,17 +379,7 @@ public class PageState implements Persistable, PathObject {
 	 *
 	 * @pre page != null
 	 */
-	public String generateKey() {
-		
-		/*
-		String key = getUrl();
-		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
-		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
-		for(ElementState element : elements){
-			key += element.getKey();
-		}
-		*/
-		
+	public String generateKey() {		
 		return "pagestate::" + getSrcChecksum();
 	}
 

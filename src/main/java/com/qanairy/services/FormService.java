@@ -53,21 +53,7 @@ public class FormService {
 			form.setFormFields(db_records);
 			form.setSubmitField(element_service.saveFormElement(user_id, form.getSubmitField()));
 			form.setFormTag(element_service.saveFormElement(user_id, form.getFormTag()));
-			
-			
-			log.warn("form key   ::  "+ form.getKey());
-			log.warn("form name  ::  "+form.getName());
-			log.warn("form memory id  :: " + form.getMemoryId());
-			log.warn("form date discovered   ::  " + form.getDateDiscovered());
-			log.warn("form prediction   ::   " + form.getPrediction());
-			log.warn("form status  ::  " + form.getStatus());
-			log.warn("form type ::  " + form.getType());
-			log.warn("FORM FIELDS   :::   " + form.getFormFields());
-			
-			log.warn("form submit field   ::   "+form.getSubmitField());
-			log.warn("form element state tag  :: "+form.getFormTag());
-			
-			log.warn("FORM REPO   :::    "+form_repo);
+
 			form_record = form_repo.save(form);
 		}
 		

@@ -46,8 +46,10 @@ import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AlertChoice;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -132,6 +134,19 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
+		
+		try {
+			waitForPageToLoad();
+		}catch(Exception e) {
+			Alert alert = isAlertPresent();
+			if(alert != null){
+				log.debug("Alert was encountered during navigation page load!!!");
+				PageAlert page_alert = new PageAlert(alert.getText());
+				
+				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
+			}
+		}
+		
 		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}

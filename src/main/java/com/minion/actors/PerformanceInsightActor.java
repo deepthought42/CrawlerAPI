@@ -391,7 +391,7 @@ public class PerformanceInsightActor extends AbstractActor {
 
 				if("screenshot-thumbnails".contentEquals(name) || "final-screenshot".contentEquals(name)){
 					AuditDetail audit_detail = new ScreenshotThumbnailDetails(getDoubleValue(detail_obj, "timing"),
-																			  Long.parseLong(detail_obj.get("timestamp").toString()),
+																			  Long.valueOf(detail_obj.get("timestamp").toString()),
 																			  detail_obj.get("data").toString());
 					audit_details.add(audit_detail);
 				}

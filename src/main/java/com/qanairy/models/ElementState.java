@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.services.BrowserService;
 
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
@@ -83,7 +84,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String screenshot_checksum, boolean displayed){
+			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -103,8 +104,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate("");
+		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
 		setRules(new HashSet<>());
 		setKey(generateKey());
 		setClassification(ElementClassification.CHILD);
@@ -117,18 +119,21 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @param name
 	 * @param attributes
 	 * @param css_map
-	 * 
+	 * @param outer_html TODO
 	 * @pre xpath != null
 	 * @pre name != null
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
-	 *  
+	 * @pre outer_html != null;
+	 * @pre assert !outer_html.isEmpty()
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, ElementClassification classification, boolean displayed){
+						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
 		assert name != null;
 		assert xpath != null;
+		assert outer_html != null;
+		assert !outer_html.isEmpty();
 		
 		setType("ElementState");
 		setName(name);
@@ -143,7 +148,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setOuterHtml(outer_html);
 		setCssSelector("");
+		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
 		setTemplate("");
 		setRules(new HashSet<>());
 		setClassification(classification);
@@ -310,7 +317,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @return
 	 */
 	public String generateKey() {
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate());
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate()+this.getText()+this.getXpath());
 	}
 	
 
@@ -352,7 +359,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());
 		page_elem.setHeight(this.getHeight());
-
+		page_elem.setOuterHtml(this.getOuterHtml());
+		page_elem.setTemplate(this.getTemplate());
+		
 		return page_elem;
 	}
 

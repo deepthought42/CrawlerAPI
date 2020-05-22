@@ -73,7 +73,7 @@ public class Form implements Persistable, Comparable<Form>{
 	 */
 	@Override
 	public String generateKey() {		
-		return "form::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getFormTag().getScreenshotChecksum());
+		return "form::"+getFormTag().getScreenshotChecksum();
 	}
 
 	/**
@@ -143,6 +143,7 @@ public class Form implements Persistable, Comparable<Form>{
 	public void setDateDiscovered(Date date_discovered) {
 		this.date_discovered = date_discovered;
 	}
+	
 	public List<ElementState> getFormFields() {
 		return form_fields;
 	}
@@ -155,8 +156,8 @@ public class Form implements Persistable, Comparable<Form>{
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<ElementState> form_fields2) {
-		this.form_fields = form_fields2;
+	public void setFormFields(List<ElementState> form_fields) {
+		this.form_fields = form_fields;
 	}
 
 	public ElementState getSubmitField() {

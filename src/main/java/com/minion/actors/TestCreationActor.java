@@ -291,10 +291,11 @@ public class TestCreationActor extends AbstractActor  {
 		
 		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
 		//Map<String, String> css_map = Browser.loadCssProperties(element);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed());
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed(), element.getAttribute("outerHTML"));
 		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		elem.setScreenshotUrl(screenshot_url);
 		elem.setOuterHtml(element.getAttribute("outerHTML"));
+		elem.setTemplate(BrowserService.extractTemplate(elem.getOuterHtml(), elem.getText()));
 		elem = page_element_service.save(user_id, elem);
 		return elem;
 	}

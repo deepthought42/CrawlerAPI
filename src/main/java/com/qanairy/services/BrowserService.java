@@ -127,6 +127,7 @@ public class BrowserService {
 	}
 
 	/**
+	 * Constructs an {@link ElementState} from a JSOUP {@link Element element}
 	 * 
 	 * @param xpath
 	 * @param attributes
@@ -1540,7 +1541,7 @@ public class BrowserService {
 	
 	public List<ElementState> extractElementStates(PathMessage path_message, BrowserType browser_type) throws Exception {
 		//crawl path
-		PageState result_page = crawler.performPathExploratoryCrawlAndBuildFullElementTree(path_message.getAccountId(), path_message.getDomain(), browser_type.getShortName(), path_message);
-		return result_page.getElements();
+		//PageState result_page = crawler.performPathExploratoryCrawlAndBuildFullElementTree(path_message.getAccountId(), path_message.getDomain(), browser_type.getShortName(), path_message);
+		return null;// result_page.getElements();
 	}
 }

@@ -1,43 +1,36 @@
 package com.qanairy.models.experience;
 
-import java.util.Date;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.Persistable;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.InsightType;
 
 /**
- * 
+ * Google Page speed audit
  */
-@NodeEntity
-public class Audit implements Persistable {
-	@GeneratedValue
-	@Id
-	private Long id;
-	private String key;
+public class PageSpeedAudit extends LookseeObject {
+
 	private String name;
 	private String title;
-	private String description;
-	private Double score;
+	private String description; //definition
+	private Double score;      //scoring
 	private String score_display_mode;
 	private String display_value;
-	private String explanation;
+	private String explanation; //meaning
 	private String error_message;
 	private Double numeric_value;
 	private String type;
-	private Date date;
 	
 	@Relationship(type = "HAS")
 	private List<AuditDetail> details;
 	
-	public Audit() {}
+	public PageSpeedAudit() {
+		super();
+	}
 	
-	public Audit(
+	public PageSpeedAudit(
 			String name,
 			String description,
 			String display_value,
@@ -45,9 +38,9 @@ public class Audit implements Persistable {
 			String explanation,
 			Double numeric_value,
 			String score_display_value,
-			String title,
-			List<AuditDetail> details
+			String title
 	) {
+		super();
 		setName(name);
 		setDescription(description);
 		setDisplayValue(display_value);
@@ -56,76 +49,79 @@ public class Audit implements Persistable {
 		setNumericValue(numeric_value);
 		setScoreDisplayMode(score_display_value);
 		setTitle(title);
-		setDetails(details);
-		setDate(new Date());
 		setKey(generateKey());		
 	}
 	
 	
-	/* GETTERS AND SETTERS */
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getTitle() {
-		return title;
-	}
-	public void setTitle(String title) {
-		this.title = title;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public Double getScore() {
-		return score;
-	}
-	public void setScore(Double score) {
-		this.score = score;
-	}
-	public String getScoreDisplayMode() {
-		return score_display_mode;
-	}
-	public void setScoreDisplayMode(String score_display_mode) {
-		this.score_display_mode = score_display_mode;
-	}
-	public String getDisplayValue() {
-		return display_value;
-	}
-	public void setDisplayValue(String display_value) {
-		this.display_value = display_value;
-	}
-	public String getExplanation() {
-		return explanation;
-	}
-	public void setExplanation(String explanation) {
-		this.explanation = explanation;
-	}
-	public String getErrorMessage() {
-		return error_message;
-	}
-	public void setErrorMessage(String error_message) {
-		this.error_message = error_message;
-	}
-	public Double getNumericValue() {
-		return numeric_value;
-	}
-	public void setNumericValue(Double numeric_value) {
-		this.numeric_value = numeric_value;
-	}
 	@Override
 	public String generateKey() {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getTitle());
 	}
-	public String getKey() {
-		return key;
+
+	/* GETTERS AND SETTERS */
+
+	public String getTitle() {
+		return title;
 	}
-	public void setKey(String key) {
-		this.key = key;
+	
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
+	
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	public Double getScore() {
+		return score;
+	}
+	
+	public void setScore(Double score) {
+		this.score = score;
+	}
+	
+	public String getScoreDisplayMode() {
+		return score_display_mode;
+	}
+	
+	public void setScoreDisplayMode(String score_display_mode) {
+		this.score_display_mode = score_display_mode;
+	}
+	
+	public String getDisplayValue() {
+		return display_value;
+	}
+	
+	public void setDisplayValue(String display_value) {
+		this.display_value = display_value;
+	}
+	
+	public String getExplanation() {
+		return explanation;
+	}
+	
+	public void setExplanation(String explanation) {
+		this.explanation = explanation;
+	}
+	
+	public String getErrorMessage() {
+		return error_message;
+	}
+	
+	public void setErrorMessage(String error_message) {
+		this.error_message = error_message;
+	}
+	
+	public Double getNumericValue() {
+		return numeric_value;
+	}
+	
+	public void setNumericValue(Double numeric_value) {
+		this.numeric_value = numeric_value;
 	}
 
 	public InsightType getType() {
@@ -143,20 +139,12 @@ public class Audit implements Persistable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
 	public List<AuditDetail> getDetails() {
 		return details;
 	}
 
 	public void setDetails(List<AuditDetail> details) {
 		this.details = details;
-	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	public void setDate(Date date) {
-		this.date = date;
 	}
 }

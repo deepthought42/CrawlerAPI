@@ -23,6 +23,8 @@ public class Domain implements Persistable{
 	private Long id;
 	
 	private String host;
+
+	@Deprecated
 	private String url;
 	private String key;
 	private String protocol;
@@ -89,10 +91,12 @@ public class Domain implements Persistable{
 		return false;
 	}
 
+	@Deprecated
 	public String getUrl() {
 		return url;
 	}
 
+	@Deprecated
 	public void setUrl(String url) {
 		this.url = url;
 	}

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.experience.Audit;
+import com.qanairy.models.experience.PageSpeedAudit;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.repository.PerformanceInsightRepository;
 
@@ -84,7 +84,7 @@ public class PerformanceInsightService {
 		assert !audit_key.isEmpty();
 		
 		//check that audit doesn't already exist for insight
-		Audit audit_record = performance_insight_repo.findAuditByKey(user_id, domain_url, performance_insight_key, audit_key);
+		PageSpeedAudit audit_record = performance_insight_repo.findAuditByKey(user_id, domain_url, performance_insight_key, audit_key);
 		log.warn("audit record returned :: " + audit_record);
 		if(audit_record == null) {
 			log.warn("adding audit record :: "+audit_key);

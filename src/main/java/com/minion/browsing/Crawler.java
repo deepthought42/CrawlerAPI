@@ -1,14 +1,20 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -28,6 +34,7 @@ import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
@@ -40,6 +47,7 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
@@ -57,6 +65,9 @@ public class Crawler {
 	@Autowired
 	private ActionRepository action_repo;
 
+	@Autowired
+	private PageService page_service;
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 *
@@ -318,6 +329,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
+	@Deprecated
 	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
@@ -415,7 +427,7 @@ public class Crawler {
 			path.setPathObjects(path_objects_explored);
 		}
 	}
-
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * @param browser
@@ -531,7 +543,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
+				alert.performChoice(browser.getDriver(), AlertChoice.ACCEPT);
 			}
 			last_obj = current_obj;
 			current_idx++;
@@ -638,7 +650,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 1000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -652,6 +664,7 @@ public class Crawler {
 	 * @return
 	 * @throws Exception 
 	 */
+	@Deprecated
 	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
@@ -691,89 +704,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				log.warn("building page state as part of exploratory crawl");
 				result_page = browser_service.buildPageState(user_id, domain, browser);
-				result_page.setLoginRequired(last_page_state.isLoginRequired());
-				return result_page;
-			}
-			catch(NullPointerException e){
-				e.printStackTrace();
-				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
-			} 
-			catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-			} 
-			catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
-			} 
-			catch(Exception e) {
-				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
-				e.printStackTrace();
-			}
-			finally{
-				if(browser != null && !no_such_element_exception){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 1000000);
-		return result_page;
-	}
-	
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 * @throws Exception 
-	 */
-	public PageState performPathExploratoryCrawlAndBuildFullElementTree(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		PathMessage new_path = path.clone();
-		boolean no_such_element_exception = false;
-		
-		do{
-			/*
-			Timeout timeout = Timeout.create(Duration.ofSeconds(30));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
-			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-			
-			if(discovery_action == DiscoveryAction.STOP) {
-				throw new DiscoveryStoppedException();
-			}
-			*/
-			
-			try{
-				if(!no_such_element_exception){
-					no_such_element_exception = false;
-					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
-					browser.navigateTo(expected_page.getUrl());
-					
-					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path, user_id);
-				}
-				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url);
-				//get last page state
-				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
-								
-				//verify that screenshot does not match previous page
-				log.warn("building page state as part of crawl with element state extraction");
-				result_page = browser_service.buildPageState(user_id, domain, browser);
-				List<ElementState> elements = browser_service.extractElementStates(result_page.getSrc(), user_id, browser, domain);
-				result_page.addElements(elements);
 				result_page.setLoginRequired(last_page_state.isLoginRequired());
 				return result_page;
 			}
@@ -869,5 +800,114 @@ public class Crawler {
 		}
 
 		return new Point(x_coord, y_coord);
+	}
+
+	/**
+	 * Crawl domain by using links to retrieve
+	 * @param domain
+	 * @param account_id
+	 * @return
+	 * @throws Exception
+	 */
+	public Collection<PageState> crawl(Domain domain, String user_id) throws Exception {
+		List<String> frontier = new ArrayList<>();
+		Map<String, PageState> visited = new HashMap<>();
+		
+		//add link to frontier
+		frontier.add(domain.getHost());
+		
+		while(!frontier.isEmpty()) {
+			Page page = null;
+			PageState page_state = null;
+			//remove link from beginning of frontier
+			String page_url = frontier.remove(0);
+			boolean page_state_build_success = false;
+			do {
+				try {
+					Browser browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+					//construct page and add page to list of page states
+					page = new Page(page_url);
+					
+					//navigate to URL
+					browser.navigateTo(page_url);
+					log.warn("building page state...");
+					
+					page_state = browser_service.buildPageState(user_id, domain, browser);
+					page_state_build_success = true;
+				}catch(Exception e) {
+					TimingUtils.pauseThread(60000);
+				}
+			}while(!page_state_build_success);
+			
+			visited.put(page_url, page_state);
+			page.addPageState(page_state);
+			page = page_service.save(user_id, page);
+			
+			//extract links
+			List<String> link_urls = BrowserUtils.extractLinkUrls(page_state.getSrc());
+			List<String> filtered_urls = new ArrayList<>();
+			//filter out all external links
+			for(String link: link_urls) {
+				if(	!BrowserUtils.isExternalLink(domain.getHost(), link) 
+						&& !visited.containsKey(link)) {
+					filtered_urls.add(link);
+				}
+			}
+			
+			//add links to frontier
+			frontier.addAll(filtered_urls);
+		}
+		
+		return visited.values();
+		
+	}
+	
+	/**
+	 * Crawl domain by using links to retrieve
+	 * @param domain
+	 * @param account_id
+	 * @return
+	 * @throws IOException 
+	 * @throws Exception
+	 */
+	public Collection<PageState> crawlLite(Domain domain, String user_id) throws IOException {
+		List<String> frontier = new ArrayList<>();
+		Map<String, PageState> visited = new HashMap<>();
+		
+		//add link to frontier
+		frontier.add(domain.getHost());
+		
+		while(!frontier.isEmpty()) {
+			//remove link from beginning of frontier
+			String page_url = frontier.remove(0);
+			
+			Connection jsoup_connection = Jsoup.connect(page_url);
+			Document document = jsoup_connection.get();
+			String page_src = document.outerHtml();
+
+			Page page = new Page(page_url);
+			PageState page_state = new PageState(page_url, page_src);
+			
+			visited.put(page_url, page_state);
+			page.addPageState(page_state);
+			page = page_service.save(user_id, page);
+			
+			//extract links
+			List<String> link_urls = BrowserUtils.extractLinkUrls(page_state.getSrc());
+			List<String> filtered_urls = new ArrayList<>();
+			//filter out all external links
+			for(String link: link_urls) {
+				if(	!BrowserUtils.isExternalLink(domain.getHost(), link) 
+						&& !visited.containsKey(link)) {
+					filtered_urls.add(link);
+				}
+			}
+			
+			//add links to frontier
+			frontier.addAll(filtered_urls);
+		}
+		
+		return visited.values();
+		
 	}
 }

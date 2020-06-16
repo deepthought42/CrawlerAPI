@@ -41,7 +41,7 @@ public class PerformanceInsight implements Persistable {
 	private Double overall_score;
 	
 	@Relationship(type = "HAS")
-	private List<Audit> audits = new ArrayList<>();
+	private List<PageSpeedAudit> audits = new ArrayList<>();
 	
 	public PerformanceInsight() {}
 	
@@ -155,15 +155,15 @@ public class PerformanceInsight implements Persistable {
 		this.runtime_error_message = runtime_error_message;
 	}
 
-	public List<Audit> getAudits() {
+	public List<PageSpeedAudit> getAudits() {
 		return audits;
 	}
 
-	public void setAudits(List<Audit> audits) {
+	public void setAudits(List<PageSpeedAudit> audits) {
 		this.audits = audits;
 	}
 
-	public void addAudit(Audit audit) {
+	public void addAudit(PageSpeedAudit audit) {
 		this.audits.add(audit);
 	}
 

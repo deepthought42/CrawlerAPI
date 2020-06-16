@@ -4,6 +4,6 @@ FROM ubuntu:18.04
 RUN apt-get update
 RUN apt-get install -y openjdk-8-jdk
 
-COPY . .
+COPY target/Look-see-0.1.0.jar /look-see.jar
 
-CMD["java","-jar", "target/Qanairy-0.4.0.jar"]
+ENTRYPOINT ["java","-jar", "/look-see.jar"]

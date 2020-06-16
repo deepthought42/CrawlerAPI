@@ -2,6 +2,7 @@ package com.qanairy.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,6 +12,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
@@ -315,5 +320,59 @@ public class BrowserUtils {
 	
 	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<PathObject> path_objects) throws MalformedURLException {
 		return !(start_url.trim().contains(new URL(end_url).getHost()) || end_url.contains((new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost())));
+	}
+
+	/**
+	 * Checks if url is part of domain including sub-domains
+	 *  
+	 * @param domain_host host of {@link Domain domain}
+	 * @param url 
+	 * 
+	 * @return true if url is external, otherwise false
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException {
+		return !url.contains(domain_host);
+	}
+	
+	/**
+	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
+	 * 
+	 * @param source valid html source
+	 * @return {@link List list} of link urls
+	 */
+	public static List<String> extractLinkUrls(String source) {
+		List<String> link_urls = new ArrayList<>();
+		Document document = Jsoup.parse(source);
+		Elements elements = document.getElementsByTag("a");
+		
+		for(Element element : elements) {
+			String url = element.absUrl("href");
+			if(!url.isEmpty()) {
+				link_urls.add(url);
+			}
+		}
+		return link_urls;
+	}
+	
+	/**
+	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	public static boolean doesUrlExist(URL url) throws IOException {
+		assert url != null;
+		
+		HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+		huc.setRequestMethod("HEAD");
+		int responseCode = huc.getResponseCode();
+
+		if (responseCode != 404) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

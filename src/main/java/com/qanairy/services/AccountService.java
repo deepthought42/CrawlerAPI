@@ -15,7 +15,6 @@ import com.qanairy.models.repository.AccountRepository;
 
 /**
  * Contains business logic for interacting with and managing accounts
- * @author brand
  *
  */
 @Service

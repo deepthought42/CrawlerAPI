@@ -19,7 +19,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 
 public class CrawlerTest {
-	@Test
+	//@Test
 	public void verifycharacter() {
 		String xpath = "(//div/input[contains(@name,\"FNAME\") and contains(@class,\"form-control\") and contains(@id,\"mce-FNAME\")])[1]";
 		Pattern p = Pattern.compile("\\((\\/.*)\\)");
@@ -35,7 +35,7 @@ public class CrawlerTest {
 	}
 	
 	
-	@Test
+	//@Test
 	public void verifyClickCoordinateGenerationForParentElement() throws MalformedURLException{
 		boolean error = false;
 		do{

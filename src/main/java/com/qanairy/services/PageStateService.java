@@ -180,6 +180,10 @@ public class PageStateService {
 		return page_state_repo.getElementStates(user_id, page_key);
 	}
 	
+	public List<ElementState> getLinkElementStates(String user_id, String page_key){
+		return page_state_repo.getLinkElementStates(user_id, page_key);
+	}
+	
 	public List<Screenshot> getScreenshots(String user_id, String page_key){
 		List<Screenshot> screenshots = page_state_repo.getScreenshots(user_id, page_key);
 		if(screenshots == null){

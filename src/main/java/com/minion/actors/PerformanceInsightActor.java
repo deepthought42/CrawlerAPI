@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,10 +21,6 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -36,17 +31,13 @@ import com.google.api.services.pagespeedonline.Pagespeedonline;
 import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
 import com.google.api.services.pagespeedonline.model.LighthouseCategoryV5.AuditRefs;
 import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
-import com.minion.browsing.Browser;
-import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
+
 import com.qanairy.models.enums.CaptchaResult;
-import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.FormFactor;
 import com.qanairy.models.enums.InsightType;
 import com.qanairy.models.experience.AccessibilityDetailNode;
 import com.qanairy.models.experience.AssetSize;
 import com.qanairy.models.experience.AssetSizeOpportunityDetail;
-import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.AuditDetail;
 import com.qanairy.models.experience.BlockingResource;
 import com.qanairy.models.experience.BootUpTime;
@@ -56,27 +47,24 @@ import com.qanairy.models.experience.DomSize;
 import com.qanairy.models.experience.GroupWorkBreakdown;
 import com.qanairy.models.experience.MetricsDetail;
 import com.qanairy.models.experience.NetworkRequestDetail;
+import com.qanairy.models.experience.PageSpeedAudit;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.experience.ResourceSummary;
 import com.qanairy.models.experience.ScreenshotThumbnailDetails;
 import com.qanairy.models.experience.ThirdPartySummaryDetail;
 import com.qanairy.models.experience.TimingDetail;
 import com.qanairy.models.experience.WebPImageDetail;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
 import com.qanairy.services.AuditDetailService;
-import com.qanairy.services.AuditService;
+import com.qanairy.services.PageSpeedAuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.PerformanceInsightService;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
@@ -99,13 +87,10 @@ public class PerformanceInsightActor extends AbstractActor {
 	private PageService page_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
 	private ElementStateService element_state_service;
 
 	@Autowired
-	private AuditService audit_service;
+	private PageSpeedAuditService audit_service;
 	
 	@Autowired
 	private AuditDetailService audit_detail_service;
@@ -228,21 +213,8 @@ public class PerformanceInsightActor extends AbstractActor {
 	    
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
     		InsightType insight_type = getAuditType(audit_record, audit_ref_map);
-    		
-    		List<AuditDetail> db_records = new ArrayList<>();
-    		List<AuditDetail> audit_details = new ArrayList<>();
-    		if(InsightType.ACCESSIBILITY.equals(insight_type)) {
-        		audit_details = extractAccessibilityAuditDetails(user_id, audit_record.getDetails());
-       		}
-    		else {
-    			audit_details = extractAuditDetails(user_id, audit_record.getId(), audit_record.getDetails());        		
-    		}		
-    		for(AuditDetail detail : audit_details) {
-    			detail = audit_detail_service.save(detail);
-    			db_records.add(detail);
-    		}
 
-    		Audit audit = new Audit(
+    		PageSpeedAudit audit = new PageSpeedAudit(
     				audit_record.getId(),
     				audit_record.getDescription(),
     				audit_record.getDisplayValue(),
@@ -250,8 +222,7 @@ public class PerformanceInsightActor extends AbstractActor {
     				audit_record.getExplanation(),
     				audit_record.getNumericValue(),
     				audit_record.getScoreDisplayMode(),
-    				audit_record.getTitle(),
-    				db_records);
+    				audit_record.getTitle());
     		Double score = convertScore(audit_record.getScore());
     		audit.setScore(score);
     		audit.setType(insight_type);

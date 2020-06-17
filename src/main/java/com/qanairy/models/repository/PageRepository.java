@@ -6,6 +6,7 @@ import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
@@ -14,6 +15,7 @@ import com.qanairy.models.experience.PerformanceInsight;
 /**
  * 
  */
+@Repository
 public interface PageRepository extends Neo4jRepository<Page, Long> {
 	
 	@Query("MATCH(:Account{user_id:{user_id}})-[*]->(p:Page{key:{page_key}}) RETURN p LIMIT 1")

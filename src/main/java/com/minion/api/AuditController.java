@@ -1,16 +1,12 @@
 package com.minion.api;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,19 +15,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
@@ -39,26 +33,19 @@ import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.experience.PerformanceInsight;
-import com.qanairy.models.message.AuditActionMessage;
-import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
-import com.stripe.exception.StripeException;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
+@Controller
 @RequestMapping("/audits")
 public class AuditController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -77,6 +64,9 @@ public class AuditController {
     
     @Autowired
     protected AuditRecordService audit_record_service;
+    
+    @Autowired
+    protected Crawler crawler;
     
     @Autowired
     private ActorSystem actor_system;
@@ -106,10 +96,10 @@ public class AuditController {
     }
     
     
-	@RequestMapping(path="/start", method = RequestMethod.GET)
+	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody List<AuditRecord> startAudit(HttpServletRequest request,
 											   	  		@RequestParam(value="url", required=true) String url,
-											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws IOException, UnknownAccountException {
+											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws Exception {
 	   	/*
 			Principal principal = request.getUserPrincipal();
 		   	String id = principal.getName().replace("auth0|", "");
@@ -127,11 +117,12 @@ public class AuditController {
 	   	if(domain == null) {
 	   		domain = new Domain();
 	   		domain.setHost(sanitized_url.getHost());
+	   		domain.setUrl(sanitized_url.toString());
 	   		domain = domain_service.save(domain);
 	   	}
 	   
 	   	//crawl site and retrieve all page urls/landable pages
-	   	Collection<PageState> page_states = (new Crawler()).crawlLite(domain, "Look-See-admin");
+	   	Collection<PageState> page_states = crawler.crawl(domain, "Look-See-admin");
 	   	List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
 	   	//generate audit report
 	   	List<Audit> audits = new ArrayList<>();

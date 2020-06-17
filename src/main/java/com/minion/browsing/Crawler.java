@@ -875,7 +875,7 @@ public class Crawler {
 		Map<String, PageState> visited = new HashMap<>();
 		
 		//add link to frontier
-		frontier.add(domain.getHost());
+		frontier.add(domain.getUrl());
 		
 		while(!frontier.isEmpty()) {
 			//remove link from beginning of frontier
@@ -890,6 +890,10 @@ public class Crawler {
 			
 			visited.put(page_url, page_state);
 			page.addPageState(page_state);
+			System.out.println("Page :: "+page);
+			System.out.println("user id :: " + user_id);
+			System.out.println("page_service :: "+page_service);
+			System.out.println("browser_service :: " +browser_service);
 			page = page_service.save(user_id, page);
 			
 			//extract links

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -18,8 +19,8 @@ import com.qanairy.utils.BrowserUtils;
  */
 public class LinksAudit extends InformationArchitectureAudit {
 	
-	@Autowired
-	private PageStateService page_state_service;
+	//@Autowired
+	//private PageStateService page_state_service;
 	
 	private List<ElementState> links_without_href =  new ArrayList<>();
 	private List<ElementState> invalid_links = new ArrayList<>();
@@ -53,12 +54,19 @@ public class LinksAudit extends InformationArchitectureAudit {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * Scores links on a page based on if the link is has an href value present, the url format is valid and the 
+	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
 	 */
 	@Override
 	public double execute(PageState page_state, String user_id) {
-		List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
+		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
+		List<ElementState> link_elements = new ArrayList<>();
+		for(ElementState element : page_state.getElements()) {
+			if(element.getName().equalsIgnoreCase("a")) {
+				link_elements.add(element);
+			}
+		}
+		
 		List<String> observations = new ArrayList<>();
 		double overall_score = 0.0;
 		//score each link element

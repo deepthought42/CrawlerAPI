@@ -1,15 +1,30 @@
 package com.qanairy.models.audit;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
-import com.qanairy.models.LookseeObject;
+import org.joda.time.DateTime;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 
 /**
  * Defines the globally required fields for all audits
  */
-public abstract class Audit extends LookseeObject{
+@NodeEntity
+public abstract class Audit {
+	@GeneratedValue
+    @Id
+	private Long id;
+	
+	private String key;
 	private String category;
 	private String name; // name of the audit subcategory
 	private String ada_compliance;
@@ -18,11 +33,14 @@ public abstract class Audit extends LookseeObject{
 	private List<String> best_practices;
 	private List<String> recommendations;
 	private List<String> observations;
+	private LocalDateTime created_at;
 	
 	/**
 	 * Construct empty action object
 	 */
-	public Audit(){}
+	public Audit(){
+		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+	}
 	
 	/**
 	 * 
@@ -38,6 +56,7 @@ public abstract class Audit extends LookseeObject{
 		setDescription(description);
 		setName(name);
 		setCategory(category);
+		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setKey(generateKey());
 	}
 
@@ -48,15 +67,16 @@ public abstract class Audit extends LookseeObject{
 	 * @param user_id 
 	 * 
 	 * @return score calculated for audit on page
+	 * @throws MalformedURLException 
+	 * @throws URISyntaxException 
 	 */
-	public abstract double execute(PageState page_state, String user_id);
+	public abstract double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException;
 	
 	public abstract Audit clone();
 
 	/**
-	 * {@inheritDoc}
+	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
-	@Override
 	public String generateKey() {
 		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getName()+this.getCategory()+this.getCreatedAt().toString()+this.getScore());
 	}
@@ -125,4 +145,27 @@ public abstract class Audit extends LookseeObject{
 		this.name = name;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString(){
+		return this.getKey();
+	}
+	
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return created_at;
+	}
+
+	public void setCreatedAt(LocalDateTime created_at) {
+		this.created_at = created_at;
+	}
 }

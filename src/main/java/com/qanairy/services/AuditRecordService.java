@@ -2,18 +2,13 @@ package com.qanairy.services;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
-import com.qanairy.models.TestRecord;
-import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.repository.AuditRecordRepository;
-import com.qanairy.models.repository.AuditRepository;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -35,5 +30,9 @@ public class AuditRecordService {
 	
 	public AuditRecord findByKey(String key) {
 		return audit_record_repo.findByKey(key);
+	}
+
+	public List<AuditRecord> findAll() {
+		return IterableUtils.toList(audit_record_repo.findAll());
 	}
 }

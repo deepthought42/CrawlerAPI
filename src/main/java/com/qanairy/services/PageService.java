@@ -43,7 +43,8 @@ public class PageService {
 	 */
 	public Page save(String user_id, Page page){
 		assert page != null;
-
+		assert user_id != null;
+		
 		Page page_record = findByKey(user_id, page.getKey());
 		if(page_record != null){
 			page_record.setPerformanceScore(page.getPerformanceScore());
@@ -51,6 +52,9 @@ public class PageService {
 			page_record.setSeoScore(page.getSeoScore());
 			return page_repo.save(page_record);
 		}
+		
+		System.out.println("page repo ::  "+page_repo);
+		System.out.println("Page   ::   "+page);
 		return page_repo.save(page);
 	}
 	

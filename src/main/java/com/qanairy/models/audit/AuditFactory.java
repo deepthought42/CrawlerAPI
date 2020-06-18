@@ -1,5 +1,7 @@
 package com.qanairy.models.audit;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,11 +20,13 @@ public class AuditFactory {
 	 * @param page {@link PageState page} that audit should be executed against
 	 * 
 	 * @return {@linkplain List} of {@link Audit audits} executed 
+	 * @throws URISyntaxException 
+	 * @throws MalformedURLException 
 	 * 
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public static List<Audit> execute(AuditCategory category, PageState page, String user_id) {
+	public static List<Audit> execute(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		

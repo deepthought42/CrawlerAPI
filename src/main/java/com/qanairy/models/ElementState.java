@@ -231,10 +231,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.key = key;
 	}
 	
-	public void setAttributes(Set<Attribute> attribute_persist_list) {
-		this.attributes = attribute_persist_list;
-	}
-	
 	public Set<Rule> getRules(){
 		return this.rules;
 	}
@@ -253,6 +249,10 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		if(!exists){
 			this.rules.add(rule);
 		}
+	}
+
+	public void setAttributes(Set<Attribute> attribute_persist_list) {
+		this.attributes = attribute_persist_list;
 	}
 
 	public Set<Attribute> getAttributes() {

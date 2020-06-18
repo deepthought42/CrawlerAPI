@@ -33,8 +33,12 @@ public class DomainService {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
 
-	public Domain findByHost(String host, String user_id) {
-		return domain_repo.findByHost(host, user_id);
+	public Domain findByHostForUser(String host, String user_id) {
+		return domain_repo.findByHostForUser(host, user_id);
+	}
+	
+	public Domain findByHost(String host) {
+		return domain_repo.findByHost(host);
 	}
 
 	public Domain findByUrl(String url, String user_id) {

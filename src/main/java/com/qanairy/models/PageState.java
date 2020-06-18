@@ -100,6 +100,7 @@ public class PageState implements Persistable, PathObject {
 	 * @param full_page_screenshot_url TODO
 	 * @param full_page_checksum TODO
 	 * @param screenshot
+	 * 
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 *
@@ -107,7 +108,9 @@ public class PageState implements Persistable, PathObject {
 	 * @pre screenshot_url != null;
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum) throws MalformedURLException, IOException{
+			int viewport_width, int viewport_height, String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum)
+					throws MalformedURLException, IOException
+	{
 		assert elements != null;
 		assert screenshot_url != null;
 

@@ -1,13 +1,16 @@
 package com.qanairy.services;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.repository.AuditRepository;
 
 /**
@@ -40,5 +43,10 @@ public class AuditService {
 		}
 		
 		return audits_saved;
+	}
+
+	public List<Audit> findAll() {
+		// TODO Auto-generated method stub
+		return IterableUtils.toList(audit_repo.findAll());
 	}
 }

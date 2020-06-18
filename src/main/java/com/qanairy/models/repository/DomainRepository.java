@@ -29,7 +29,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key, @Param("user_id") String user_id);
 	
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{host}}) RETURN d LIMIT 1")
-	public Domain findByHost(@Param("host") String host, @Param("user_id") String user_id);
+	public Domain findByHostForUser(@Param("host") String host, @Param("user_id") String user_id);
+	
+	@Query("MATCH (d:Domain{host:{host}}) RETURN d LIMIT 1")
+	public Domain findByHost(@Param("host") String host);
 	
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) RETURN d LIMIT 1")
 	public Domain findByUrl(@Param("url") String url, @Param("user_id") String user_id);

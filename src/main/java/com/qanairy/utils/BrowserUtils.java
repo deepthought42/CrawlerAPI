@@ -357,13 +357,31 @@ public class BrowserUtils {
 	}
 	
 	/**
+	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
+	 * 
+	 * @param source valid html source
+	 * @return {@link List list} of link urls
+	 */
+	public static List<ElementState> extractLinks(List<ElementState> elements) {
+		List<ElementState> links = new ArrayList<>();
+		
+		for(ElementState element : elements) {
+			if(element.getName().equalsIgnoreCase("a")) {
+				links.add(element);
+			}
+		}
+		return links;
+	}
+	
+	/**
 	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
 	 * @param url
 	 * @return
 	 * @throws IOException
 	 */
 	public static boolean doesUrlExist(URL url) throws IOException {
-		assert url != null;
+		assert(url != null);
+		System.out.println("url :  "+url);
 		
 		HttpURLConnection huc = (HttpURLConnection) url.openConnection();
 		huc.setRequestMethod("HEAD");

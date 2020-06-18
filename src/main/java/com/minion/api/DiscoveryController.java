@@ -130,7 +130,7 @@ public class DiscoveryController {
     		log.warn("domain is null");
     		URL temp_url = new URL("http://"+url);
     		String host = temp_url.getHost();
-    		domain = domain_service.findByHost(host, acct.getUserId());
+    		domain = domain_service.findByHostForUser(host, acct.getUserId());
     		log.warn("retrieved domain  "+domain+"  for host  : "+host);
     	}
 		if(domain.getUrl() == null || domain.getUrl().isEmpty()) {

@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -41,12 +40,19 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditFactory;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.enums.AlertChoice;
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.services.AuditRecordService;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
@@ -64,9 +70,18 @@ public class Crawler {
 
 	@Autowired
 	private ActionRepository action_repo;
+	
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 
 	@Autowired
 	private PageService page_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -803,18 +818,32 @@ public class Crawler {
 	}
 
 	/**
-	 * Crawl domain by using links to retrieve
+	 * Crawl domain by using links to map site and reach new pages until site is completely covered. Along the way this method also executes
+	 * all desired audits on each page.
+
 	 * @param domain
-	 * @param account_id
+	 * @param user_id
+	 * @param audit_categories
+	 * 
 	 * @return
+	 * 
 	 * @throws Exception
+	 * 
+	 * @pre domain != null
+	 * @pre user_id != null
+	 * @pre audit_categories != null
 	 */
-	public Collection<PageState> crawl(Domain domain, String user_id) throws Exception {
+	public Map<PageState, List<Audit>> crawlAndAudit(Domain domain, String user_id, List<AuditCategory> audit_categories) throws Exception {
+		assert domain != null;
+		assert user_id != null;
+		assert audit_categories != null;
+		
 		List<String> frontier = new ArrayList<>();
 		Map<String, PageState> visited = new HashMap<>();
+		Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>(); //this is filled and returned to calling method
 		
 		//add link to frontier
-		frontier.add(domain.getHost());
+		frontier.add(domain.getUrl());
 		
 		while(!frontier.isEmpty()) {
 			Page page = null;
@@ -822,43 +851,80 @@ public class Crawler {
 			//remove link from beginning of frontier
 			String page_url = frontier.remove(0);
 			boolean page_state_build_success = false;
+			int error_cnt = 0;
 			do {
 				try {
 					Browser browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+					System.err.println("browser connection created...");
 					//construct page and add page to list of page states
 					page = new Page(page_url);
-					
+					page = page_service.save(user_id, page);
+
+					System.out.println("page created with url..."+page_url);
 					//navigate to URL
 					browser.navigateTo(page_url);
+					
 					log.warn("building page state...");
 					
-					page_state = browser_service.buildPageState(user_id, domain, browser);
+					page_state = browser_service.buildPageStateWithElements(user_id, domain, browser);
+					page.addPageState(page_state);
+					page = page_service.save(user_id, page);
+					domain.addPage(page);
+					domain = domain_service.save(domain);
+					
+					System.out.println("page state ::   "+page.getUrl());
+					System.out.println("user id :: "+user_id);
+					visited.put(page_url, page_state);
+
 					page_state_build_success = true;
 				}catch(Exception e) {
-					TimingUtils.pauseThread(60000);
+					e.printStackTrace();
+					error_cnt++;
+					TimingUtils.pauseThread(10000);
 				}
-			}while(!page_state_build_success);
-			
-			visited.put(page_url, page_state);
-			page.addPageState(page_state);
-			page = page_service.save(user_id, page);
-			
-			//extract links
-			List<String> link_urls = BrowserUtils.extractLinkUrls(page_state.getSrc());
-			List<String> filtered_urls = new ArrayList<>();
-			//filter out all external links
-			for(String link: link_urls) {
-				if(	!BrowserUtils.isExternalLink(domain.getHost(), link) 
-						&& !visited.containsKey(link)) {
-					filtered_urls.add(link);
+				finally {
 				}
-			}
+			}while(!page_state_build_success && error_cnt < 3);
 			
-			//add links to frontier
-			frontier.addAll(filtered_urls);
+			List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
+		   	//generate audit report
+		   	List<Audit> audits = new ArrayList<>();
+
+		   	for(AuditCategory audit_category : audit_categories) {
+	   			//perform audit and return audit result
+	   			List<Audit> audits_executed = AuditFactory.execute(audit_category, page_state, "Look-See-admin");
+	   			
+	   			audits_executed = audit_service.saveAll(audits_executed);
+	   			audits.addAll(audits_executed);
+				page_audit_map.put(page_state, audits);
+	   		}
+	   		
+   			AuditRecord audit_record = new AuditRecord(audits);
+   			audit_record = audit_record_service.save(audit_record);
+   			audit_records.add(audit_record);
+   			
+   			page.addAuditRecord(audit_record);
+   			page_service.save(user_id, page);
+   			
+   			List<ElementState> links = BrowserUtils.extractLinks(page_state.getElements());
+   			//filter out links with external urls
+   			List<ElementState> internal_links = new ArrayList<ElementState>();
+   			for(ElementState link_element : links) {
+   				List<String> link_urls = link_element.getAttribute("href").getVals();
+   				if(	link_urls != null 
+   						&& !link_urls.isEmpty() 
+   						&& !BrowserUtils.isExternalLink(domain.getHost(), link_urls.get(0)) 
+						&& !visited.containsKey(link_urls.get(0))
+				) {
+   					internal_links.add(link_element);
+   					
+   					//add link to frontier
+   					frontier.add(link_urls.get(0));
+				}
+			}				
 		}
 		
-		return visited.values();
+		return page_audit_map;
 		
 	}
 	
@@ -890,10 +956,6 @@ public class Crawler {
 			
 			visited.put(page_url, page_state);
 			page.addPageState(page_state);
-			System.out.println("Page :: "+page);
-			System.out.println("user id :: " + user_id);
-			System.out.println("page_service :: "+page_service);
-			System.out.println("browser_service :: " +browser_service);
 			page = page_service.save(user_id, page);
 			
 			//extract links

@@ -142,6 +142,7 @@ public class PageStateService {
 					}
 				}
 			}catch(ClientException e){
+				e.printStackTrace();
 				page_err = true;
 			}
 			page_cnt++;

@@ -1,12 +1,11 @@
 package com.minion.api;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,7 +28,6 @@ import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditCategory;
@@ -95,9 +93,21 @@ public class AuditController {
         return null; //page_service.findLatestInsight(audit_key);
     }
     
+    /**
+     * Retrieves list of {@link PerformanceInsight insights} with a given key
+     * 
+     * @param key account key
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public @ResponseBody List<Audit> getAudits(HttpServletRequest request) {
+        return audit_service.findAll();
+    }
+    
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody List<AuditRecord> startAudit(HttpServletRequest request,
+	public @ResponseBody Map<PageState, List<Audit>> startAudit(HttpServletRequest request,
 											   	  		@RequestParam(value="url", required=true) String url,
 											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws Exception {
 	   	/*
@@ -110,8 +120,8 @@ public class AuditController {
 		   	}
 	   	 */
 	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(url));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost(), "Look-See-admin");
-	   	
+	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
+	   	System.out.println("domain returned from db ...."+domain);
 	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
 	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
 	   	if(domain == null) {
@@ -121,8 +131,14 @@ public class AuditController {
 	   		domain = domain_service.save(domain);
 	   	}
 	   
+	   	List<AuditCategory> audit_categories = new ArrayList<AuditCategory>();
+	   	for(String type : audit_types) {
+	   		audit_categories.add(AuditCategory.create(type));
+	   	}
 	   	//crawl site and retrieve all page urls/landable pages
-	   	Collection<PageState> page_states = crawler.crawl(domain, "Look-See-admin");
+	   	Map<PageState, List<Audit>> page_state_audits = crawler.crawlAndAudit(domain, "Look-see-admin", audit_categories);
+	   	
+	   	/*
 	   	List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
 	   	//generate audit report
 	   	List<Audit> audits = new ArrayList<>();
@@ -142,6 +158,7 @@ public class AuditController {
 	   		//add report to audit reports list
 	   		//save report to DB
 	   	}
+	   	*/
 	   	
 	   	//package reports into pdf document as full report
 	   	//return full report to user
@@ -151,7 +168,7 @@ public class AuditController {
 	   	actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("auditActor"), "audit_actor"+UUID.randomUUID()).tell(audit_action_msg, null);
 	   	*/
-	   	return audit_records;
+	   	return page_state_audits;
 	}
 
 	

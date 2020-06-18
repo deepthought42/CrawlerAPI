@@ -33,7 +33,6 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Attribute;
@@ -79,9 +78,6 @@ public class BrowserService {
 
 	@Autowired
 	private DomainService domain_service;
-
-	@Autowired
-	private Crawler crawler;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
 
@@ -237,6 +233,7 @@ public class BrowserService {
 			page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
+		
 			return page_state_service.save(user_id, domain.getKey(), page_state);
 		}
 		
@@ -246,6 +243,71 @@ public class BrowserService {
 		return page_state;
 	}
 
+	/**
+	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
+	 *
+	 * @return page {@linkplain PageState}
+	 * @throws Exception 
+	 * 
+	 * @pre browser != null
+	 */
+	public PageState buildPageStateWithElements(String user_id, Domain domain, Browser browser) throws Exception{
+		assert browser != null;
+		
+		//retrieve landable page state associated with page with given url
+		String browser_url = browser.getDriver().getCurrentUrl();
+		String host = new URL(browser_url).getHost();
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
+		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
+		List<PageState> page_states = page_state_service.findBySourceChecksum(user_id, domain.getUrl(), src_checksum);
+
+		if(page_states.isEmpty()) {
+			log.warn("could not find page by source checksum ::  "+src_checksum);
+			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
+			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			viewport_screenshot.flush();
+			
+			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
+			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			full_page_screenshot.flush();
+
+			log.warn("creating new page state object with elements");
+			PageState page_state = new PageState( url_without_params,
+					viewport_screenshot_url,
+					new ArrayList<>(),
+					page_src,
+					browser.getXScrollOffset(),
+					browser.getYScrollOffset(),
+					browser.getViewportSize().getWidth(),
+					browser.getViewportSize().getHeight(),
+					browser.getBrowserName(), 
+					new HashSet<Form>(), 
+					full_page_screenshot_url, 
+					full_page_screenshot_checksum);
+
+			page_state.addScreenshotChecksum(screenshot_checksum);
+			page_state.setFullPageWidth(full_page_screenshot.getWidth());
+			page_state.setFullPageHeight(full_page_screenshot.getHeight());
+			long start_time = System.currentTimeMillis();
+			System.out.println("Extracting element states for page :: "+page_state.getUrl());
+		  	List<ElementState> elements = extractElementStates(page_state.getSrc(), user_id, browser, domain);
+		  	long end_time = System.currentTimeMillis();
+			log.warn("element state time to get all elements ::  "+(end_time-start_time));
+			page_state.addElements(elements);
+			
+			return page_state_service.save(user_id, domain.getKey(), page_state);
+		}
+		
+		PageState page_state = page_states.get(0);
+		page_state.setElements(page_state_service.getElementStates(user_id, page_states.get(0).getKey()));
+		log.warn("loaded page elements from db :: " +page_state.getElements().size());
+		return page_state;
+	}
+	
 	private static String calculateSha256(String value) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
@@ -288,11 +350,6 @@ public class BrowserService {
 		Element root = html_doc.getElementsByTag("body").get(0);
 		
 		//create element state from root node
-		/*
-		WebElement web_element = browser.findWebElementByXpath("//body");
-		Dimension element_size = web_element.getSize();
-		Point element_location = web_element.getLocation();
-		*/
 		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
 		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<>(), root, ElementClassification.ANCESTOR);
 		root_element_state = element_service.save(user_id, root_element_state);
@@ -332,6 +389,7 @@ public class BrowserService {
 					classification = ElementClassification.ANCESTOR;
 				}
 				ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), child, classification);
+
 				element_state = element_service.save(user_id, element_state);
 					
 				//put element on frontier
@@ -702,6 +760,15 @@ public class BrowserService {
 		return elements;
 	}
 
+	/**
+	 * Checks if {@link WebElement element} is visible in the current viewport window or not
+	 * 
+	 * @param browser {@link Browser browser} connection to use 
+	 * @param location {@link Point point} where the element top left corner is located
+	 * @param size {@link Dimension size} of the element
+	 * 
+	 * @return true if element is rendered within viewport, otherwise false
+	 */
 	public static boolean isElementVisibleInPane(Browser browser, Point location, Dimension size){
 		assert browser != null;
 		assert location != null;

@@ -2,16 +2,16 @@ package com.qanairy.models.audit;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -56,9 +56,14 @@ public class LinksAudit extends InformationArchitectureAudit {
 	 * 
 	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
+	 * @throws MalformedURLException 
+	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) {
+	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+		assert page_state != null;
+		assert user_id != null;
+		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		for(ElementState element : page_state.getElements()) {
@@ -77,6 +82,12 @@ public class LinksAudit extends InformationArchitectureAudit {
 			String link_href = null;
 			if(link.getAttribute("href") != null) {
 				link_href = link.getAttribute("href").getVals().get(0);
+				URI uri = new URI(link_href);
+				
+				if(!uri.isAbsolute()) {
+					URL url = new URL(page_state.getUrl());
+					link_href = url.getProtocol()+"://"+url.getHost() + link_href;
+				}
 				score++;
 			}
 			else {
@@ -113,7 +124,6 @@ public class LinksAudit extends InformationArchitectureAudit {
 			//TODO : Is link label relevant to destination url or content? yes(1) / No(0)
 				//TODO :does link text exist in url? 
 				//TODO :does target content relate to link?
-			
 			overall_score += score/3.0;
 		}
 		

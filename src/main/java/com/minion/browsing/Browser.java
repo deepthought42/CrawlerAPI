@@ -258,7 +258,7 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions chrome_options = new ChromeOptions();
-		chrome_options.addArguments("user-agent=QanairyBot");
+		chrome_options.addArguments("user-agent=LookseeBot");
 		chrome_options.addArguments("window-size=1920,1080");
 
 		//options.setHeadless(true);

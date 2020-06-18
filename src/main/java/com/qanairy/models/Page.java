@@ -12,6 +12,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.experience.PerformanceInsight;
 
 /**
@@ -34,6 +35,9 @@ public class Page implements Persistable{
 
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
+	
+	@Relationship(type = "HAS")
+	private List<AuditRecord> audit_records;
 
 	@Relationship(type = "HAS")
 	private Set<PageState> page_states;
@@ -127,6 +131,18 @@ public class Page implements Persistable{
 
 	public void addPerformanceInsight(PerformanceInsight performance_insight) {
 		this.performance_insights.add( performance_insight );
+	}
+	
+	public List<AuditRecord> getAuditRecords() {
+		return audit_records;
+	}
+
+	public void setAuditRecords(List<AuditRecord> audit_records) {
+		this.audit_records = audit_records;
+	}
+
+	public void addAuditRecord(AuditRecord audit_record) {
+		this.audit_records.add( audit_record );
 	}
 	
 	public long getId(){

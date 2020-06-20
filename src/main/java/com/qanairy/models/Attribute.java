@@ -2,25 +2,17 @@ package com.qanairy.models;
 
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 /**
- * A pairing of a name and a set of string values
+ * A pairing of a name and a set of string values as a representation of a specific html tag attribute
  */
-@NodeEntity
-public class Attribute implements Persistable {
+public class Attribute extends LookseeObject {
 	
-	@GeneratedValue
-    @Id 
-	private Long id;
-	
-	private String key;
 	private String name;
 	private List<String> vals;
 	
-	public Attribute(){}
+	public Attribute(){
+		super();
+	}
 	
 	/**
 	 * 
@@ -31,6 +23,7 @@ public class Attribute implements Persistable {
 	 * @pre val != null;
 	 */
 	public Attribute(String attrName, List<String> vals){
+		super();
 		assert attrName != null;
 		assert vals != null;
 		
@@ -89,14 +82,6 @@ public class Attribute implements Persistable {
 		return attrString;
 	}
 	
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public String getKey() {
-		return this.key;
-	}
-
 	public String getName(){
 		return this.name;
 	}

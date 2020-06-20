@@ -381,16 +381,23 @@ public class BrowserUtils {
 	 */
 	public static boolean doesUrlExist(URL url) throws IOException {
 		assert(url != null);
-		System.out.println("url :  "+url);
 		
-		HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-		huc.setRequestMethod("HEAD");
-		int responseCode = huc.getResponseCode();
+		//perform check for http clients
+		if("http".equalsIgnoreCase(url.getProtocol()) || "https".equalsIgnoreCase(url.getProtocol())){
+			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			huc.setRequestMethod("HEAD");
+			int responseCode = huc.getResponseCode();
 
-		if (responseCode != 404) {
-			return true;
-		} else {
-			return false;
+			if (responseCode != 404) {
+				return true;
+			} else {
+				return false;
+			}
 		}
+		else if("mailto".equalsIgnoreCase(url.getProtocol())) {
+			//TODO check if mailto address is vailid
+		}
+		
+		return false;
 	}
 }

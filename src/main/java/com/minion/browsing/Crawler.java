@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -838,23 +839,26 @@ public class Crawler {
 		assert user_id != null;
 		assert audit_categories != null;
 		
-		List<String> frontier = new ArrayList<>();
+		Map<String, Boolean> frontier = new HashMap<>();
 		Map<String, PageState> visited = new HashMap<>();
 		Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>(); //this is filled and returned to calling method
 		
 		//add link to frontier
-		frontier.add(domain.getUrl());
+		frontier.put(domain.getUrl(), Boolean.TRUE);
 		
 		while(!frontier.isEmpty()) {
 			Page page = null;
 			PageState page_state = null;
 			//remove link from beginning of frontier
-			String page_url = frontier.remove(0);
+			String page_url = frontier.keySet().iterator().next();
+			frontier.remove(page_url);
+			
 			boolean page_state_build_success = false;
 			int error_cnt = 0;
 			do {
+				Browser browser = null;
 				try {
-					Browser browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+					browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
 					System.err.println("browser connection created...");
 					//construct page and add page to list of page states
 					page = new Page(page_url);
@@ -866,26 +870,31 @@ public class Crawler {
 					
 					log.warn("building page state...");
 					
+					//send message to page data extractor
 					page_state = browser_service.buildPageStateWithElements(user_id, domain, browser);
 					page.addPageState(page_state);
 					page = page_service.save(user_id, page);
 					domain.addPage(page);
 					domain = domain_service.save(domain);
 					
-					System.out.println("page state ::   "+page.getUrl());
-					System.out.println("user id :: "+user_id);
 					visited.put(page_url, page_state);
 
 					page_state_build_success = true;
 				}catch(Exception e) {
 					e.printStackTrace();
 					error_cnt++;
-					TimingUtils.pauseThread(10000);
+					//TimingUtils.pauseThread(10000);
 				}
 				finally {
+					if( browser != null ) {
+						browser.close();
+					}
 				}
 			}while(!page_state_build_success && error_cnt < 3);
 			
+			
+			
+			//Generate Audit for page
 			List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
 		   	//generate audit report
 		   	List<Audit> audits = new ArrayList<>();
@@ -910,70 +919,29 @@ public class Crawler {
    			//filter out links with external urls
    			List<ElementState> internal_links = new ArrayList<ElementState>();
    			for(ElementState link_element : links) {
-   				List<String> link_urls = link_element.getAttribute("href").getVals();
-   				if(	link_urls != null 
-   						&& !link_urls.isEmpty() 
-   						&& !BrowserUtils.isExternalLink(domain.getHost(), link_urls.get(0)) 
-						&& !visited.containsKey(link_urls.get(0))
-				) {
-   					internal_links.add(link_element);
-   					
-   					//add link to frontier
-   					frontier.add(link_urls.get(0));
-				}
-			}				
+   				List<String> urls = BrowserUtils.extractLinkUrls(link_element.getOuterHtml());
+   				
+   				for(String href : urls) {
+   	   				URI uri = new URI(href);
+   	   				if(!uri.isAbsolute()) {
+   	   					href = domain.getUrl()+"/"+href;
+   	   				}
+   	   				
+   					System.out.println("link href :::   "+href);
+   	   				if(	!BrowserUtils.isExternalLink(domain.getHost(), href) 
+   							&& !visited.containsKey(href)
+   					) {
+   	   					System.out.println("adding to frontier and internal links :: "+href);
+   	   					internal_links.add(link_element);
+
+   	   					//add link to frontier
+   	   					frontier.put(href, Boolean.TRUE);
+   					}
+   				}
+			}
+   			System.out.println("frontier size :::  "+frontier.keySet().size());
 		}
 		
 		return page_audit_map;
-		
-	}
-	
-	/**
-	 * Crawl domain by using links to retrieve
-	 * @param domain
-	 * @param account_id
-	 * @return
-	 * @throws IOException 
-	 * @throws Exception
-	 */
-	public Collection<PageState> crawlLite(Domain domain, String user_id) throws IOException {
-		List<String> frontier = new ArrayList<>();
-		Map<String, PageState> visited = new HashMap<>();
-		
-		//add link to frontier
-		frontier.add(domain.getUrl());
-		
-		while(!frontier.isEmpty()) {
-			//remove link from beginning of frontier
-			String page_url = frontier.remove(0);
-			
-			Connection jsoup_connection = Jsoup.connect(page_url);
-			Document document = jsoup_connection.get();
-			String page_src = document.outerHtml();
-
-			Page page = new Page(page_url);
-			PageState page_state = new PageState(page_url, page_src);
-			
-			visited.put(page_url, page_state);
-			page.addPageState(page_state);
-			page = page_service.save(user_id, page);
-			
-			//extract links
-			List<String> link_urls = BrowserUtils.extractLinkUrls(page_state.getSrc());
-			List<String> filtered_urls = new ArrayList<>();
-			//filter out all external links
-			for(String link: link_urls) {
-				if(	!BrowserUtils.isExternalLink(domain.getHost(), link) 
-						&& !visited.containsKey(link)) {
-					filtered_urls.add(link);
-				}
-			}
-			
-			//add links to frontier
-			frontier.addAll(filtered_urls);
-		}
-		
-		return visited.values();
-		
 	}
 }

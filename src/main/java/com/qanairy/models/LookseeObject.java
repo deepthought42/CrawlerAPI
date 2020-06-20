@@ -60,4 +60,8 @@ public abstract class LookseeObject {
 	public void setCreatedAt(LocalDateTime created_at) {
 		this.created_at = created_at;
 	}
+	
+	public Long getId() {
+		return this.id;
+	}
 }

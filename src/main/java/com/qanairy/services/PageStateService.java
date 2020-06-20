@@ -37,12 +37,6 @@ public class PageStateService {
 	@Autowired
 	private FormRepository form_repo;
 	
-	@Autowired
-	private PageService page_service;
-	
-	@Autowired
-	private BrowserService browser_service;
-	
 	/**
 	 * Save a {@link PageState} object and its associated objects
 	 * @param page_state
@@ -76,22 +70,22 @@ public class PageStateService {
 					
 					page_state_record = page_state_repo.save(page_state_record);
 					
-					page_state_record.setElements(getElementStates(user_id, page_state_record.getKey()));
+					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				}
 				else {
 					
 					log.warn("page state wasn't found in database. Saving new page state to neo4j");
-					page_state_record = findByKey(user_id, page_state.getKey());
-		
+					page_state_record = findByKey( page_state.getKey() );
+
 					if(page_state_record != null){
-						page_state_record.setForms(page_state.getForms());
+						page_state_record.setForms( page_state.getForms() );
 	
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
 						}
 						
 						page_state_record = page_state_repo.save(page_state_record);
-						page_state_record.setElements(getElementStates(user_id, page_state_record.getKey()));
+						page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					}
 					else{
 						//iterate over page elements
@@ -102,7 +96,7 @@ public class PageStateService {
 							do{
 								err = false;
 								try{
-									element_records.add(element_state_service.save(user_id, element));
+									element_records.add(element_state_service.save(element));
 								}catch(Exception e){
 									log.warn("error saving element to new page state :  "+e.getMessage());
 									//e.printStackTrace();
@@ -152,15 +146,23 @@ public class PageStateService {
 	}
 
 	public void addToForms(String user_id, String page_key, Form form){
-		PageState page_state = page_state_repo.findByKey(user_id, page_key);
+		PageState page_state = page_state_repo.findByKeyAndUsername(user_id, page_key);
 		page_state.addForm(form);
 		page_state_repo.save(page_state);
 	}
 	
-	public PageState findByKey(String user_id, String page_key) {
-		PageState page_state = page_state_repo.findByKey(user_id, page_key);
+	public PageState findByKeyAndUsername(String user_id, String page_key) {
+		PageState page_state = page_state_repo.findByKeyAndUsername(user_id, page_key);
 		if(page_state != null){
-			page_state.setElements(getElementStates(user_id, page_key));
+			page_state.setElements(getElementStatesForUser(user_id, page_key));
+		}
+		return page_state;
+	}
+	
+	public PageState findByKey(String page_key) {
+		PageState page_state = page_state_repo.findByKey(page_key);
+		if(page_state != null){
+			page_state.setElements(getElementStates(page_key));
 		}
 		return page_state;
 	}
@@ -177,8 +179,12 @@ public class PageStateService {
 		return page_state_repo.findByAnimationImageChecksum(user_id, screenshot_checksum);		
 	}
 	
-	public List<ElementState> getElementStates(String user_id, String page_key){
-		return page_state_repo.getElementStates(user_id, page_key);
+	public List<ElementState> getElementStatesForUser(String user_id, String page_key){
+		return page_state_repo.getElementStatesForUser(user_id, page_key);
+	}
+	
+	public List<ElementState> getElementStates(String page_key){
+		return page_state_repo.getElementStates(page_key);
 	}
 	
 	public List<ElementState> getLinkElementStates(String user_id, String page_key){
@@ -207,7 +213,7 @@ public class PageStateService {
 		return expandable_elements;
 	}
 
-	public List<PageState> findBySourceChecksum(String user_id, String url, String src_checksum) {
-		return page_state_repo.findBySourceChecksum(user_id, url, src_checksum);
+	public List<PageState> findBySourceChecksum(String url, String src_checksum) {
+		return page_state_repo.findBySourceChecksum(url, src_checksum);
 	}
 }

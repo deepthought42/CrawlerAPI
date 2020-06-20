@@ -2,22 +2,15 @@ package com.qanairy.models.experience;
 
 import java.util.Date;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.BugType;
 
 /**
  * 
  */
-@NodeEntity
-public class BugMessage {
-	@GeneratedValue
-	@Id
-	private Long id;
+public class BugMessage extends LookseeObject{
 	private String message;
-	private BugType bug_type;
+	private String bug_type;
 	private Date date_identified;
 	
 	public BugMessage() {}
@@ -50,10 +43,10 @@ public class BugMessage {
 		this.message = message;
 	}
 	public BugType getBugType() {
-		return bug_type;
+		return BugType.create(bug_type);
 	}
 	public void setBugType(BugType bug_type) {
-		this.bug_type = bug_type;
+		this.bug_type = bug_type.toString();
 	}
 	public Date getDateIdentified() {
 		return date_identified;
@@ -61,7 +54,9 @@ public class BugMessage {
 	public void setDateIdentified(Date date_identified) {
 		this.date_identified = date_identified;
 	}
-	public Long getId() {
-		return this.id;
+
+	@Override
+	public String generateKey() {
+		return "bugmessage:"+getBugType()+getMessage();
 	}
 }

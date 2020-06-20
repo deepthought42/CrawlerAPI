@@ -1,6 +1,5 @@
 package com.qanairy.services;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -148,7 +147,7 @@ public class TestService {
 					path_objects.add(page_state_service.save(user_id, url, (PageState)path_obj));
 					
 				}
-				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save(user_id, (ElementState)path_obj));
+				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
@@ -356,10 +355,10 @@ public class TestService {
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
-				path_objects.add(page_state_service.findByKey(user_id, key));
+				path_objects.add(page_state_service.findByKeyAndUsername(user_id, key));
 			}
 			else if(key.contains("elementstate")) {
-				path_objects.add(element_state_service.findByKey(user_id, key));
+				path_objects.add(element_state_service.findByKeyAndUserId(user_id, key));
 			}
 			else if(key.contains("action")) {
 				path_objects.add(action_service.findByKey(key));

@@ -160,7 +160,7 @@ public class PageService {
 		assert !page_key.isEmpty();
 		assert page_state != null;
 		
-		PageState page_state_record = page_state_service.findByKey(user_id, page_state.getKey());
+		PageState page_state_record = page_state_service.findByKeyAndUsername(user_id, page_state.getKey());
 		if(page_state_record == null) {
 			page_state_record = page_state_service.save(page_state);
 		}

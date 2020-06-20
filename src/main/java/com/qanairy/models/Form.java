@@ -5,9 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,16 +16,10 @@ import com.qanairy.models.experience.BugMessage;
 /**
  * Represents a form tag and the encompassed inputs in a web browser
  */
-@NodeEntity
-public class Form implements Persistable, Comparable<Form>{
+public class Form extends LookseeObject implements Comparable<Form>{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Form.class);
 
-	@GeneratedValue
-    @Id
-	private Long id;
-
-	private String key;
 	private Long memory_id;
 	private String name;
     
@@ -49,7 +40,7 @@ public class Form implements Persistable, Comparable<Form>{
 	@Relationship(type = "HAS_SUBMIT")
 	private ElementState submit_field;
 	
-	public Form(){}
+	public Form(){	}
 	
 	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
 				String name, double[] predictions, FormType type, Date date_discovered, 
@@ -183,14 +174,6 @@ public class Form implements Persistable, Comparable<Form>{
 	public void setType(FormType type) {
 		this.type = type.toString();
 	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
 	
 	public FormStatus getStatus() {
 		return FormStatus.valueOf(status.toUpperCase());
@@ -214,10 +197,6 @@ public class Form implements Persistable, Comparable<Form>{
 
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
-	}
-	
-	public Long getId() {
-		return id;
 	}
 	
 	@Override

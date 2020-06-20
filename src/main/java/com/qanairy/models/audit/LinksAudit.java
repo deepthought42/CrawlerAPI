@@ -8,7 +8,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Tag;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -77,27 +80,28 @@ public class LinksAudit extends InformationArchitectureAudit {
 		//score each link element
 		for(ElementState link : link_elements) {
 			int score = 0;
+			URL url = new URL(page_state.getUrl());
+			
+			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), url.getProtocol()+"://"+url.getHost());
+			Element element = jsoup_doc.getElementsByTag("a").first();
+			String href = element.absUrl("href");
 			
 			//does element have an href value?
-			String link_href = null;
-			if(link.getAttribute("href") != null) {
-				link_href = link.getAttribute("href").getVals().get(0);
-				URI uri = new URI(link_href);
-				
-				if(!uri.isAbsolute()) {
-					URL url = new URL(page_state.getUrl());
-					link_href = url.getProtocol()+"://"+url.getHost() + link_href;
-				}
+			if(href != null && !href.isEmpty()) {
 				score++;
+				URI uri = new URI(href);
+				if(!uri.isAbsolute()) {
+					href = url.getProtocol()+"://"+url.getHost() + href;
+				}
 			}
 			else {
-				links_without_href.add(link);
+				continue;
 			}
 			
 			//is element link a valid url?
-			URL url = null;
+			URL url_href = null;
 			try {
-				url = new URL(link_href);
+				url_href = new URL(href);
 				score++;
 			} catch (MalformedURLException e) {
 				invalid_links.add(link);
@@ -107,7 +111,7 @@ public class LinksAudit extends InformationArchitectureAudit {
 			
 			//Does link have a valid URL? yes(1) / No(0)
 			try {
-				if(BrowserUtils.doesUrlExist(url)) {
+				if(BrowserUtils.doesUrlExist(url_href)) {
 					score++;
 				}
 				else {

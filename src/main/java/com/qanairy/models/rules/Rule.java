@@ -1,13 +1,10 @@
 package com.qanairy.models.rules;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Persistable;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.serializer.RuleDeserializer;
 
@@ -17,23 +14,11 @@ import com.qanairy.models.serializer.RuleDeserializer;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-@NodeEntity
 @JsonDeserialize(using = RuleDeserializer.class)
-public abstract class Rule implements Persistable {
-	@GeneratedValue
-    @Id
-	private Long id;	
-	private String key;
+public abstract class Rule extends LookseeObject {
+
 	private String value;
 	private String type;
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public String getKey() {
-		return this.key;
-	}
 
 	public RuleType getType() {
 		return RuleType.create(this.type.toLowerCase());

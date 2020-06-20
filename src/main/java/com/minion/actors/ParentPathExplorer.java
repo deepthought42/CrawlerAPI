@@ -168,7 +168,7 @@ public class ParentPathExplorer extends AbstractActor {
 								last_element.setHeight(element_size.getHeight());
 								last_element.setXLocation(element_location.getX());
 								last_element.setYLocation(element_location.getY());
-								element_state_service.save(message.getAccountId(), last_element);
+								element_state_service.save(last_element);
 								break;
 							}
 							
@@ -205,7 +205,7 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_element.setHeight(element_size.getHeight());
 							parent_element.setXLocation(element_location.getX());
 							parent_element.setYLocation(element_location.getY());
-							parent_element = element_state_service.save(message.getAccountId(), parent_element);
+							parent_element = element_state_service.save(parent_element);
 							
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());

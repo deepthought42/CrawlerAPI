@@ -20,12 +20,6 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,18 +31,15 @@ import com.qanairy.services.BrowserService;
  * A reference to a web page
  *
  */
-@NodeEntity
-public class PageState implements Persistable, PathObject {
+public class PageState extends LookseeObject implements PathObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
-	@GeneratedValue
-	@Id
-	private Long id;
-
+	
+	//Deprecating this value because it should be coming from Page
+	@Deprecated
 	private String url;
 	private String src;
 	private String src_checksum;
-	private String key;
 	private boolean login_required;
 
 	private LocalDateTime last_landability_check;
@@ -75,6 +66,7 @@ public class PageState implements Persistable, PathObject {
 	private Set<Form> forms;
 
 	public PageState() {
+		super();
 		setForms(new HashSet<>());
 		setElements(new ArrayList<>());
 		setScreenshotChecksum(new ArrayList<String>());
@@ -83,6 +75,7 @@ public class PageState implements Persistable, PathObject {
 	}
 	
 	public PageState(String url, String src) {
+		super();
 		setForms(new HashSet<>());
 		setElements(new ArrayList<>());
 		setScreenshotChecksum(new ArrayList<String>());
@@ -91,6 +84,7 @@ public class PageState implements Persistable, PathObject {
 		setUrl(url);
 		setSrc(src);
 	} 
+	
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
@@ -111,6 +105,7 @@ public class PageState implements Persistable, PathObject {
 			int viewport_width, int viewport_height, String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum)
 					throws MalformedURLException, IOException
 	{
+		super();
 		assert elements != null;
 		assert screenshot_url != null;
 
@@ -157,6 +152,7 @@ public class PageState implements Persistable, PathObject {
 	public PageState(String url, String screenshot_url, List<ElementState> elements, boolean isLandable,
 			String src, long scroll_x_offset, long scroll_y_offset, int viewport_width, int viewport_height,
 			String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum) throws IOException, NoSuchAlgorithmException {
+		super();
 		assert elements != null;
 		assert screenshot_url != null;
 		assert full_page_checksum != null;
@@ -288,14 +284,6 @@ public class PageState implements Persistable, PathObject {
 			log.info("Error cloning page : " + this.getKey() + ";  "+e.getMessage());
 		}
 		return page;
-	}
-
-	public String getKey() {
-		return this.key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	@JsonIgnore
@@ -450,7 +438,7 @@ public class PageState implements Persistable, PathObject {
 
 	public void setScreenshotUrl(String screenshot_url) throws MalformedURLException, IOException {
 		this.screenshot_url = screenshot_url;
-		addScreenshotChecksum(getFileChecksum(ImageIO.read(new URL(screenshot_url))));
+		//addScreenshotChecksum(getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 	}
 
 	public String getBrowser() {
@@ -529,9 +517,6 @@ public class PageState implements Persistable, PathObject {
 		this.login_required = login_required;
 	}
 	
-	public Long getId() {
-		return this.id;
-	}
 	public String getFullPageScreenshotUrl() {
 		return full_page_screenshot_url;
 	}

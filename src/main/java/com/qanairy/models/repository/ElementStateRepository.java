@@ -13,11 +13,15 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
 
 public interface ElementStateRepository extends Neo4jRepository<ElementState, Long> {
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:ElementState{key:{key}}) RETURN e LIMIT 1")
-	public ElementState findByKey(@Param("user_id") String user_id, @Param("key") String key);
+	//@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:ElementState{key:{key}}) RETURN e LIMIT 1")
+	//public ElementState findByKeyAndUserId(@Param("user_id") String user_id, @Param("key") String key);
+	
+	@Query("MATCH (e:ElementState{key:{key}}) RETURN e LIMIT 1")
+	public ElementState findByKey(@Param("key") String key);
+	
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{key}}) OPTIONAL MATCH z=(e)-->(x) RETURN e LIMIT 1")
-	public ElementState findElementByKey(@Param("user_id") String user_id, @Param("key") String key);
+	public ElementState findByKeyAndUserId(@Param("user_id") String user_id, @Param("key") String key);
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[hr:HAS]->(:Rule{key:{key}}) DELETE hr")
 	public void removeRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("key") String key);

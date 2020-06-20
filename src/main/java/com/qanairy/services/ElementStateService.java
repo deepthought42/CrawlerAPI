@@ -38,13 +38,11 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(String user_id, ElementState element) throws ClientException{
-		assert user_id != null;
-		assert !user_id.isEmpty();
+	public ElementState save(ElementState element) throws ClientException{
 		assert element != null;
 		
 		assert element != null;
-		ElementState element_record = element_repo.findByKey(user_id, element.getKey());
+		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -86,7 +84,7 @@ public class ElementStateService {
 	 */
 	public ElementState saveFormElement(String user_id, ElementState element) throws ClientException{
 		assert element != null;
-		ElementState element_record = element_repo.findElementByKey(user_id, element.getKey());
+		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -116,12 +114,12 @@ public class ElementStateService {
 		return element_record;
 	}
 
-	public ElementState findElementByKey(String user_id, String key){
-		return element_repo.findElementByKey(user_id, key);
+	public ElementState findByKey(String key){
+		return element_repo.findByKey(key);
 	}
 
-	public ElementState findByKey(String user_id, String key){
-		return element_repo.findByKey(user_id, key);
+	public ElementState findByKeyAndUserId(String user_id, String key){
+		return element_repo.findByKeyAndUserId(user_id, key);
 	}
 
 	public void removeRule(String user_id, String element_key, String rule_key){

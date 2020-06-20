@@ -230,7 +230,7 @@ public class TestCreationActor extends AbstractActor  {
 
     			ElementState element = createElementState(user_id, element_json.getString("xpath"), browser);
 
-    			ElementState page_elem_record = page_element_service.findByKey(user_id, element.getKey());
+    			ElementState page_elem_record = page_element_service.findByKeyAndUserId(user_id, element.getKey());
     			if(page_elem_record == null){
 					path_objects.add(element);
 				}
@@ -296,7 +296,7 @@ public class TestCreationActor extends AbstractActor  {
 		elem.setScreenshotUrl(screenshot_url);
 		elem.setOuterHtml(element.getAttribute("outerHTML"));
 		elem.setTemplate(BrowserService.extractTemplate(elem.getOuterHtml(), elem.getText()));
-		elem = page_element_service.save(user_id, elem);
+		elem = page_element_service.save(elem);
 		return elem;
 	}
 }

@@ -25,15 +25,10 @@ import com.qanairy.services.BrowserService;
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
  *  maintained by ElementState though. 
  */
-@NodeEntity
-public class ElementState implements Persistable, PathObject, Comparable<ElementState> {
+public class ElementState extends LookseeObject implements PathObject, Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
-	@GeneratedValue
-    @Id
-    private Long id;
-    private String key;
 	private String name;
 	private String text;
 	private String xpath;
@@ -65,7 +60,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private List<ElementState> child_elements = new ArrayList<>();
 	
 
-	public ElementState(){}
+	public ElementState(){
+		super();
+	}
 	
 	/**
 	 * 
@@ -85,6 +82,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
 			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
+		super();
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -130,6 +128,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
 						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
+		super();
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;
@@ -222,14 +221,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
 	}
-
-	public String getKey() {
-		return this.key;
-	}
-	
-	public void setKey(String key) {
-		this.key = key;
-	}
 	
 	public Set<Rule> getRules(){
 		return this.rules;
@@ -273,7 +264,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public Attribute getAttribute(String attr_name){
 		//get id for element
 		for(Attribute tag_attr : this.attributes){
-			if(tag_attr.getName().equals(attr_name)){
+			if(tag_attr.getName().equalsIgnoreCase(attr_name)){
 				return tag_attr;
 			}
 		}
@@ -457,10 +448,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setClassification(ElementClassification classification) {
 		this.classification = classification.toString();
-	}
-	
-	public Long getId() {
-		return this.id;
 	}
 	
 	public List<ElementState> getChildElements() {

@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -29,7 +28,7 @@ public abstract class Audit {
 	private String name; // name of the audit subcategory
 	private String ada_compliance;
 	private String description; //definition
-	private Double score;      //scoring
+	private double score;      //scoring
 	private List<String> best_practices;
 	private List<String> recommendations;
 	private List<String> observations;

@@ -296,7 +296,6 @@ public class BrowserService {
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
 			long start_time = System.currentTimeMillis();
-			System.out.println("Extracting element states for page :: "+page_state.getUrl());
 		  	List<ElementState> elements = extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, browser, domain);
 		  	long end_time = System.currentTimeMillis();
 			log.warn("element state time to get all elements ::  "+(end_time-start_time));
@@ -364,7 +363,6 @@ public class BrowserService {
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
 			long start_time = System.currentTimeMillis();
-			System.out.println("Extracting element states for page :: "+page_state.getUrl());
 		  	List<ElementState> elements = extractElementStates(page_state.getSrc(), browser);
 		  	long end_time = System.currentTimeMillis();
 			log.warn("element state time to get all elements ::  "+(end_time-start_time));

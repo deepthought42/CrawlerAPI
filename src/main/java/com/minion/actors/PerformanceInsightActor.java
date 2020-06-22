@@ -132,7 +132,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					
 					Page page = browser_service.buildPage(message.getAccountId(), message.getUrl().toString());
 					log.warn("page returned :: "+page);
-					page = page_service.save(message.getAccountId(), page);
+					page = page_service.saveForUser(message.getAccountId(), page);
 					
 					//log.warn("page states count :: " + page.getPageStates().size());
 					PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
@@ -145,7 +145,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					page.setAccessibilityScore(performance_insight.getAccessibilityScore());
 					page.setSeoScore(performance_insight.getSeoScore());
 					page.setOverallScore(performance_insight.getOverallScore());
-					page = page_service.save(message.getAccountId(), page);
+					page = page_service.saveForUser(message.getAccountId(), page);
 					
 					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
 					performance_insight_service.save(performance_insight);

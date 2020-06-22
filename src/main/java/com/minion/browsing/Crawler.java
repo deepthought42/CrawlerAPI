@@ -1,20 +1,23 @@
 package com.minion.browsing;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.UUID;
 
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -42,22 +45,21 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditFactory;
-import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.enums.AlertChoice;
-import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.message.PageFoundMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
-import com.qanairy.services.AuditRecordService;
-import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -71,18 +73,15 @@ public class Crawler {
 
 	@Autowired
 	private ActionRepository action_repo;
-	
-	@Autowired
-	private AuditService audit_service;
-	
-	@Autowired
-	private AuditRecordService audit_record_service;
 
 	@Autowired
 	private PageService page_service;
 	
 	@Autowired
 	private DomainService domain_service;
+	
+	 @Autowired
+    private ActorSystem actor_system;
 	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -817,7 +816,7 @@ public class Crawler {
 
 		return new Point(x_coord, y_coord);
 	}
-
+	
 	/**
 	 * Crawl domain by using links to map site and reach new pages until site is completely covered. Along the way this method also executes
 	 * all desired audits on each page.
@@ -834,114 +833,59 @@ public class Crawler {
 	 * @pre user_id != null
 	 * @pre audit_categories != null
 	 */
-	public Map<PageState, List<Audit>> crawlAndAudit(Domain domain, String user_id, List<AuditCategory> audit_categories) throws Exception {
+	public Map<String, Page> crawlAndExtractData(Domain domain) throws Exception {
 		assert domain != null;
-		assert user_id != null;
-		assert audit_categories != null;
 		
 		Map<String, Boolean> frontier = new HashMap<>();
-		Map<String, PageState> visited = new HashMap<>();
-		Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>(); //this is filled and returned to calling method
-		
+		Map<String, Page> visited = new HashMap<>();
 		//add link to frontier
 		frontier.put(domain.getUrl(), Boolean.TRUE);
 		
 		while(!frontier.isEmpty()) {
+			List<String> external_links = new ArrayList<>();
 			Page page = null;
-			PageState page_state = null;
 			//remove link from beginning of frontier
 			String page_url = frontier.keySet().iterator().next();
 			frontier.remove(page_url);
 			
-			boolean page_state_build_success = false;
-			int error_cnt = 0;
-			do {
-				Browser browser = null;
-				try {
-					browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
-					System.err.println("browser connection created...");
-					//construct page and add page to list of page states
-					page = new Page(page_url);
-					page = page_service.save(user_id, page);
+			log.debug("browser connection created...");
+			//construct page and add page to list of page states
+			page = new Page(page_url);
+			page = page_service.save( page );
 
-					System.out.println("page created with url..."+page_url);
-					//navigate to URL
-					browser.navigateTo(page_url);
-					
-					log.warn("building page state...");
-					
-					//send message to page data extractor
-					page_state = browser_service.buildPageStateWithElements(user_id, domain, browser);
-					page.addPageState(page_state);
-					page = page_service.save(user_id, page);
-					domain.addPage(page);
-					domain = domain_service.save(domain);
-					
-					visited.put(page_url, page_state);
-
-					page_state_build_success = true;
-				}catch(Exception e) {
-					e.printStackTrace();
-					error_cnt++;
-					//TimingUtils.pauseThread(10000);
+			log.debug("page created with url..."+page_url);			
+			domain.addPage(page);
+			domain = domain_service.save(domain);
+			
+			visited.put(page_url, page);
+			
+			//retrieve html source for page
+			Document doc = Jsoup.connect(page_url).get();
+			log.warn("Document title :: " + doc.title());
+			Elements links = doc.select("a");
+			for (Element link : links) {
+				String href = link.absUrl("href");
+				
+				//check if external link
+				if(	BrowserUtils.isExternalLink(domain.getHost(), href) ) {
+					log.debug("adding to external links :: "+href);
+   					external_links.add(href);
 				}
-				finally {
-					if( browser != null ) {
-						browser.close();
-					}
+				else if( !visited.containsKey(href) ){
+					//add link to frontier
+					frontier.put(href, Boolean.TRUE);
 				}
-			}while(!page_state_build_success && error_cnt < 3);
-			
-			
-			
-			//Generate Audit for page
-			List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
-		   	//generate audit report
-		   	List<Audit> audits = new ArrayList<>();
-
-		   	for(AuditCategory audit_category : audit_categories) {
-	   			//perform audit and return audit result
-	   			List<Audit> audits_executed = AuditFactory.execute(audit_category, page_state, "Look-See-admin");
-	   			
-	   			audits_executed = audit_service.saveAll(audits_executed);
-	   			audits.addAll(audits_executed);
-				page_audit_map.put(page_state, audits);
-	   		}
-	   		
-   			AuditRecord audit_record = new AuditRecord(audits);
-   			audit_record = audit_record_service.save(audit_record);
-   			audit_records.add(audit_record);
-   			
-   			page.addAuditRecord(audit_record);
-   			page_service.save(user_id, page);
-   			
-   			List<ElementState> links = BrowserUtils.extractLinks(page_state.getElements());
-   			//filter out links with external urls
-   			List<ElementState> internal_links = new ArrayList<ElementState>();
-   			for(ElementState link_element : links) {
-   				List<String> urls = BrowserUtils.extractLinkUrls(link_element.getOuterHtml());
-   				
-   				for(String href : urls) {
-   	   				URI uri = new URI(href);
-   	   				if(!uri.isAbsolute()) {
-   	   					href = domain.getUrl()+"/"+href;
-   	   				}
-   	   				
-   					System.out.println("link href :::   "+href);
-   	   				if(	!BrowserUtils.isExternalLink(domain.getHost(), href) 
-   							&& !visited.containsKey(href)
-   					) {
-   	   					System.out.println("adding to frontier and internal links :: "+href);
-   	   					internal_links.add(link_element);
-
-   	   					//add link to frontier
-   	   					frontier.put(href, Boolean.TRUE);
-   					}
-   				}
 			}
-   			System.out.println("frontier size :::  "+frontier.keySet().size());
+			
+			//send message to page data extractor		
+			ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("pageDataExtractor"), "page_data_extractor"+UUID.randomUUID());
+			PageFoundMessage page_found_message = new PageFoundMessage(page);
+			page_data_extractor.tell(page_found_message, null);
+			
 		}
+		System.out.println("total links visited :::  "+visited.keySet().size());
 		
-		return page_audit_map;
+		return visited;
 	}
 }

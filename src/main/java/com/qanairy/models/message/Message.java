@@ -1,13 +1,16 @@
 package com.qanairy.models.message;
 
-import com.qanairy.models.Domain;
-
 /**
  * Core Message object that defines global fields that are to be used by all Message objects
  */
 public abstract class Message {
 	private String domain_host;
 	private String account_id;
+	
+	Message(){
+		setDomainHost("");
+		setAccountId("");
+	}
 	
 	/**
 	 * 

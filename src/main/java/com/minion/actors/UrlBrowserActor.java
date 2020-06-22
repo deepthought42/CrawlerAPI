@@ -148,7 +148,7 @@ public class UrlBrowserActor extends AbstractActor {
 							
 							//build page
 							Page page = browser_service.buildPage(message.getAccountId(), url);
-							page = page_service.save(message.getAccountId(), page);
+							page = page_service.saveForUser(message.getAccountId(), page);
 							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
@@ -156,11 +156,11 @@ public class UrlBrowserActor extends AbstractActor {
 							page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
 							
 							long start_time = System.currentTimeMillis();
-						  	List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), message.getAccountId(), browser, message.getDomain());
+						  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), browser, message.getDomain());
 						  	long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							page_state.addElements(elements);
-							page_state = page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), page_state);
+							page_state = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getUrl(), page_state);
 							log.warn("DOM elements found :: "+elements.size());
 							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
 							log.warn("page state elements :: " + page_state.getElements().size());

@@ -41,21 +41,63 @@ public class PageService {
 	 * 
 	 * @pre page != null;
 	 */
-	public Page save(String user_id, Page page){
+	public Page saveForUser(String user_id, Page page){
 		assert page != null;
 		assert user_id != null;
 		
-		Page page_record = findByKey(user_id, page.getKey());
+		Page page_record = findByKey(page.getKey());
 		if(page_record != null){
-			page_record.setPerformanceScore(page.getPerformanceScore());
-			page_record.setAccessibilityScore(page.getAccessibilityScore());
-			page_record.setSeoScore(page.getSeoScore());
+			page_record.setPageStates(page.getPageStates());
 			return page_repo.save(page_record);
 		}
 		
 		System.out.println("page repo ::  "+page_repo);
 		System.out.println("Page   ::   "+page);
 		return page_repo.save(page);
+	}
+	
+	/**
+	 * Saves {@link Page} to database
+	 * 
+	 * @param page
+	 * 
+	 * @return {@link Page} object reference to database object
+	 * 
+	 * @pre page != null;
+	 */
+	public Page save(Page page){
+		assert page != null;
+		
+		Page page_record = findByKey(page.getKey());
+		if(page_record != null){
+			page_record.setPageStates(page.getPageStates());
+			return page_repo.save(page_record);
+		}
+		
+		return page_repo.save(page);
+	}
+	
+	/**
+	 * Retrieve page from database using key and user ID
+	 * 
+	 * @param user_id
+	 * @param key
+	 * 
+	 * @return {@link Page} record
+	 * 
+	 * @pre key != null;
+	 * @pre !key.isEmpty();
+	 * @pre user_id != null
+	 * @pre !user_id.isEmpty()
+	 */
+	@Deprecated
+	public Page findByKeyAndUser(String user_id, String key){
+		assert key != null;
+		assert !key.isEmpty();
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		
+		return page_repo.findByKeyAndUser(user_id, key);
 	}
 	
 	/**
@@ -68,13 +110,11 @@ public class PageService {
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
 	 */
-	public Page findByKey(String user_id, String key){
+	public Page findByKey( String key ){
 		assert key != null;
 		assert !key.isEmpty();
-		assert user_id != null;
-		assert !user_id.isEmpty();
 		
-		return page_repo.findByKey(user_id, key);
+		return page_repo.findByKey(key);
 	}
 
 	/**
@@ -164,7 +204,7 @@ public class PageService {
 		if(page_state_record == null) {
 			page_state_record = page_state_service.save(page_state);
 		}
-		Page page = page_repo.findByKey(user_id, page_key);
+		Page page = page_repo.findByKeyAndUser(user_id, page_key);
 		page.addPageState(page_state_record);
 		page_repo.save(page);
 	}

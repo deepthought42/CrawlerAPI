@@ -45,7 +45,7 @@ public class PageStateService {
 	 * 
 	 * @pre page_state != null
 	 */
-	public PageState save(String user_id, String domain_url, PageState page_state) throws Exception {
+	public PageState saveUserAndDomain(String user_id, String domain_url, PageState page_state) throws Exception {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
@@ -56,7 +56,7 @@ public class PageStateService {
 			page_err = false;
 			try{
 				for(String checksum : page_state.getScreenshotChecksums()){
-					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContains(user_id, domain_url, checksum);
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContainsForUserAndDomain(user_id, domain_url, checksum);
 					if(!page_state_records.isEmpty()){
 						page_state_record = page_state_records.get(0);
 						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
@@ -67,19 +67,20 @@ public class PageStateService {
 				
 				if(page_state_record != null){
 					page_state_record.setForms(page_state.getForms());
-					
+					page_state_record.setAuditRecords(page_state.getAuditRecords());
+
 					page_state_record = page_state_repo.save(page_state_record);
 					
 					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				}
 				else {
-					
 					log.warn("page state wasn't found in database. Saving new page state to neo4j");
 					page_state_record = findByKey( page_state.getKey() );
 
 					if(page_state_record != null){
 						page_state_record.setForms( page_state.getForms() );
-	
+						page_state_record.setAuditRecords(page_state.getAuditRecords());
+
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
 						}
@@ -114,12 +115,12 @@ public class PageStateService {
 						
 						Set<Form> form_records = new HashSet<>();
 						for(Form form : page_state.getForms()){
-							Form form_record = form_repo.findByKey(user_id, domain_url, form.getKey());
+							Form form_record = form_repo.findByKeyForUserAndDomain(user_id, domain_url, form.getKey());
 							if(form_record == null){
 								List<ElementState> form_element_records = new ArrayList<>();
 								for(ElementState element : form.getFormFields()){
 									log.warn("saving form element to page state");
-									ElementState element_record = element_state_service.saveFormElement(user_id, element);
+									ElementState element_record = element_state_service.saveFormElement(element);
 									
 									form_element_records.add(element_record);
 								}
@@ -132,6 +133,8 @@ public class PageStateService {
 		
 						//reduce screenshots to just unique records
 						page_state.setForms(form_records);
+						page_state.setAuditRecords(page_state.getAuditRecords());
+
 						page_state_record = page_state_repo.save(page_state);
 					}
 				}
@@ -145,6 +148,118 @@ public class PageStateService {
 		return page_state_record;
 	}
 
+	/**
+	 * Save a {@link PageState} object and its associated objects
+	 * @param page_state
+	 * @return
+	 * @throws Exception 
+	 * 
+	 * @pre page_state != null
+	 */
+	public PageState save(PageState page_state) throws Exception {
+		assert page_state != null;
+		
+		PageState page_state_record = null;
+		
+		int page_cnt = 0;
+		boolean page_err = false;
+		do{
+			page_err = false;
+			try{
+				for(String checksum : page_state.getScreenshotChecksums()){
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksum( page_state.getUrl() , checksum);
+					if(!page_state_records.isEmpty()){
+						page_state_record = page_state_records.get(0);
+						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
+						page_state_record = page_state_repo.save(page_state_record);
+						break;
+					}
+				}
+				
+				if(page_state_record != null){
+					page_state_record.setForms(page_state.getForms());
+					page_state_record.setAuditRecords(page_state.getAuditRecords());
+
+					page_state_record = page_state_repo.save(page_state_record);
+					
+					page_state_record.setElements(getElementStates(page_state_record.getKey()));
+				}
+				else {
+					
+					log.warn("page state wasn't found in database. Saving new page state to neo4j");
+					page_state_record = findByKey( page_state.getKey() );
+
+					if(page_state_record != null){
+						page_state_record.setForms( page_state.getForms() );
+						page_state_record.setAuditRecords(page_state.getAuditRecords());
+
+						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
+							page_state_record.addScreenshotChecksum(screenshot_checksum);
+						}
+						
+						page_state_record = page_state_repo.save(page_state_record);
+						page_state_record.setElements(getElementStates(page_state_record.getKey()));
+					}
+					else{
+						//iterate over page elements
+						List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
+						for(ElementState element : page_state.getElements()){
+							boolean err = false;
+							int cnt = 0;
+							do{
+								err = false;
+								try{
+									element_records.add(element_state_service.save(element));
+								}catch(Exception e){
+									log.warn("error saving element to new page state :  "+e.getMessage());
+									//e.printStackTrace();
+									err = true;
+								}
+								cnt++;
+							}while(err && cnt < 5);
+							
+							if(err){
+								element_records.add(element);
+							}
+						}
+						
+						page_state.setElements(element_records);
+						
+						Set<Form> form_records = new HashSet<>();
+						for(Form form : page_state.getForms()){
+							Form form_record = form_repo.findByKey(page_state.getUrl(), form.getKey());
+							if(form_record == null){
+								List<ElementState> form_element_records = new ArrayList<>();
+								for(ElementState element : form.getFormFields()){
+									log.warn("saving form element to page state");
+									ElementState element_record = element_state_service.saveFormElement(element);
+									
+									form_element_records.add(element_record);
+								}
+								
+								form.setFormFields(form_element_records);
+								form_record = form_repo.save(form);
+							}
+							form_records.add(form_record);
+						}
+		
+						//reduce screenshots to just unique records
+						page_state.setForms(form_records);
+						page_state.setAuditRecords(page_state.getAuditRecords());
+
+						page_state_record = page_state_repo.save(page_state);
+					}
+				}
+			}catch(ClientException e){
+				e.printStackTrace();
+				page_err = true;
+			}
+			page_cnt++;
+		}while(page_err && page_cnt < 5);
+		
+		return page_state_record;
+	}
+	
 	public void addToForms(String user_id, String page_key, Form form){
 		PageState page_state = page_state_repo.findByKeyAndUsername(user_id, page_key);
 		page_state.addForm(form);
@@ -168,7 +283,7 @@ public class PageStateService {
 	}
 	
 	public List<PageState> findByScreenshotChecksum(String user_id, String url, String screenshot_checksum){
-		return page_state_repo.findByScreenshotChecksumsContains(user_id, url, screenshot_checksum);		
+		return page_state_repo.findByScreenshotChecksumsContainsForUserAndDomain(user_id, url, screenshot_checksum);		
 	}
 	
 	public List<PageState> findByFullPageScreenshotChecksum(String user_id, String url, String screenshot_checksum){
@@ -213,7 +328,11 @@ public class PageStateService {
 		return expandable_elements;
 	}
 
-	public List<PageState> findBySourceChecksum(String url, String src_checksum) {
-		return page_state_repo.findBySourceChecksum(url, src_checksum);
+	public List<PageState> findBySourceChecksumForPage(String url, String src_checksum) {
+		return page_state_repo.findBySourceChecksumForPage(url, src_checksum);
+	}
+	
+	public List<PageState> findBySourceChecksumForDomain(String url, String src_checksum) {
+		return page_state_repo.findBySourceChecksumForDomain(url, src_checksum);
 	}
 }

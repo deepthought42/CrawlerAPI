@@ -346,7 +346,7 @@ public class DiscoveryActor extends AbstractActor{
 					page_state_record.addForm(form);
 					
 					try {
-						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
+						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
 						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
 						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {

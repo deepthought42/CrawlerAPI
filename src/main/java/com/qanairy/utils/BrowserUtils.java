@@ -71,7 +71,7 @@ public class BrowserUtils {
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
 				image_checksums.add(new_checksum);
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3ForUser(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 			catch(Exception e){
 				e.printStackTrace();

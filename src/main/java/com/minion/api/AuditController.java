@@ -26,7 +26,7 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageState;
+import com.qanairy.models.Page;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -107,7 +107,7 @@ public class AuditController {
     
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody Map<PageState, List<Audit>> startAudit(HttpServletRequest request,
+	public @ResponseBody Map<String, Page> startAudit(HttpServletRequest request,
 											   	  		@RequestParam(value="url", required=true) String url,
 											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws Exception {
 	   	/*
@@ -136,7 +136,7 @@ public class AuditController {
 	   		audit_categories.add(AuditCategory.create(type));
 	   	}
 	   	//crawl site and retrieve all page urls/landable pages
-	   	Map<PageState, List<Audit>> page_state_audits = crawler.crawlAndAudit(domain, "bkindred@qanairy.com", audit_categories);
+	   	Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
 	   	
 	   	/*
 	   	List<AuditRecord> audit_records = new ArrayList<AuditRecord>();

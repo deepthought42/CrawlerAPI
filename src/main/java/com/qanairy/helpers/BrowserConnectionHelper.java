@@ -27,27 +27,6 @@ public class BrowserConnectionHelper {
 	//STAGING HUB ADDRESS
 	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
 
-	@Deprecated
-	public static Browser getConnection(String browser, BrowserEnvironment environment) throws MalformedURLException{
-		log.warn("getting browser connection");
-		URL hub_url = null;
-		if(environment.equals(BrowserEnvironment.TEST)){
-			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );
-		}
-		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "chrome".equalsIgnoreCase(browser)){
-			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
-		}
-		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "firefox".equalsIgnoreCase(browser)){
-			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
-		}
-
-		return new Browser(browser, hub_url);
-	}
-
 	/**
 	 * Creates a {@linkplain WebDriver} connection
 	 * 

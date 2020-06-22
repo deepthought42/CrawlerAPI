@@ -82,7 +82,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState saveFormElement(String user_id, ElementState element) throws ClientException{
+	public ElementState saveFormElement(ElementState element) throws ClientException{
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){

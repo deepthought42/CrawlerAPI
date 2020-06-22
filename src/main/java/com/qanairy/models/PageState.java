@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -64,6 +65,9 @@ public class PageState extends LookseeObject implements PathObject {
 
 	@Relationship(type = "HAS")
 	private Set<Form> forms;
+	
+	@Relationship(type = "HAS")
+	private List<AuditRecord> audit_records;
 
 	public PageState() {
 		super();
@@ -72,6 +76,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setAuditRecords(new ArrayList<>());
 	}
 	
 	public PageState(String url, String src) {
@@ -83,6 +88,8 @@ public class PageState extends LookseeObject implements PathObject {
 		setAnimatedImageChecksums(new ArrayList<>());
 		setUrl(url);
 		setSrc(src);
+		setAuditRecords(new ArrayList<>());
+		setKey(generateKey());
 	} 
 	
 	/**
@@ -129,6 +136,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
+		setAuditRecords(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -180,6 +188,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
+		setAuditRecords(new ArrayList<>());
 		setKey(generateKey());
 	}
 
@@ -552,5 +561,17 @@ public class PageState extends LookseeObject implements PathObject {
 
 	public void addElements(List<ElementState> elements) {
 		this.elements.addAll(elements);
+	}
+	
+	public List<AuditRecord> getAuditRecords() {
+		return audit_records;
+	}
+
+	public void setAuditRecords(List<AuditRecord> audit_records) {
+		this.audit_records = audit_records;
+	}
+
+	public void addAuditRecord(AuditRecord audit_record) {
+		this.audit_records.add( audit_record );
 	}
 }

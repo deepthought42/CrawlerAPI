@@ -161,7 +161,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 								BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 								String checksum = PageState.getFileChecksum(element_screenshot);
-								String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
+								String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
 								last_element.setScreenshotUrl(screenshot_url);
 								last_element.setScreenshotChecksum(checksum);
 								last_element.setWidth(element_size.getWidth());
@@ -198,7 +198,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 							BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
 							parent_element.setScreenshotChecksum(checksum);
 							parent_element.setScreenshotUrl(screenshot_url);
 							parent_element.setWidth(element_size.getWidth());

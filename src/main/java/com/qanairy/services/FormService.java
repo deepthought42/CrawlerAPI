@@ -38,21 +38,21 @@ public class FormService {
 	}
 	
 	public Form findByKey(String user_id, String url, String key){
-		return form_repo.findByKey(user_id, url, key);
+		return form_repo.findByKeyForUserAndDomain(user_id, url, key);
 	}
 
 	public Form save(String user_id, String url, Form form) {
-		Form form_record = form_repo.findByKey(user_id, url, form.getKey());
+		Form form_record = form_repo.findByKeyForUserAndDomain(user_id, url, form.getKey());
 		if(form_record == null){
 			
 			List<ElementState> db_records = new ArrayList<ElementState>(form.getFormFields().size());
 			for(ElementState element : form.getFormFields()){
-				db_records.add(element_service.saveFormElement(user_id, element));
+				db_records.add(element_service.saveFormElement(element));
 			}
 			
 			form.setFormFields(db_records);
-			form.setSubmitField(element_service.saveFormElement(user_id, form.getSubmitField()));
-			form.setFormTag(element_service.saveFormElement(user_id, form.getFormTag()));
+			form.setSubmitField(element_service.saveFormElement(form.getSubmitField()));
+			form.setFormTag(element_service.saveFormElement(form.getFormTag()));
 
 			form_record = form_repo.save(form);
 		}

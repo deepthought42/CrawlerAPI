@@ -174,7 +174,7 @@ public class Browser {
 			driver.quit();
 		}
 		catch(Exception e){
-			log.info("Unknown exception occurred when closing browser" + e.getMessage());
+			log.debug("Unknown exception occurred when closing browser" + e.getMessage());
 		}
 	}
 	
@@ -276,7 +276,7 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-		log.info("Requesting chrome remote driver from hub");
+		log.debug("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, chrome_options);
 		driver.manage().window().maximize();
 

@@ -212,11 +212,11 @@ public class TestCreationActor extends AbstractActor  {
     			}
     			page_state = browser_service.buildPageState(user_id, domain, browser);
     			long start_time = System.currentTimeMillis();
-			  	List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), user_id, browser, domain);
+			  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, browser, domain);
 			  	long end_time = System.currentTimeMillis();
 				log.warn("element state time to get all elements ::  "+(end_time-start_time));
 				page_state.addElements(elements);
-				page_state = page_state_service.save(user_id, domain.getUrl(), page_state);
+				page_state = page_state_service.saveUserAndDomain(user_id, domain.getUrl(), page_state);
 				log.warn("DOM elements found :: "+elements.size());
 				path_keys.add(page_state.getKey());
     			path_objects.add(page_state);
@@ -292,7 +292,7 @@ public class TestCreationActor extends AbstractActor  {
 		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
 		//Map<String, String> css_map = Browser.loadCssProperties(element);
 		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), "", element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), checksum, element.isDisplayed(), element.getAttribute("outerHTML"));
-		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
+		String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		elem.setScreenshotUrl(screenshot_url);
 		elem.setOuterHtml(element.getAttribute("outerHTML"));
 		elem.setTemplate(BrowserService.extractTemplate(elem.getOuterHtml(), elem.getText()));

@@ -22,8 +22,12 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState{key:{key}}) RETURN p LIMIT 1")
 	public PageState findByKey(@Param("key") String key);
 
+	@Deprecated
 	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public List<PageState> findByScreenshotChecksumsContains(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
+	public List<PageState> findByScreenshotChecksumsContainsForUserAndDomain(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
+	
+	@Query("MATCH (d:Page{url})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
+	public List<PageState> findByScreenshotChecksum(@Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS]->() RETURN a")
 	public List<PageState> findByFullPageScreenshotChecksumsContains(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
@@ -47,5 +51,8 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	public List<PageState> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
 
 	@Query("MATCH (d:Domain{url:{url}})-[]->(p:Page) MATCH (p)-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
-	public List<PageState> findBySourceChecksum(@Param("url") String url, @Param("src_checksum") String src_checksum);
+	public List<PageState> findBySourceChecksumForDomain(@Param("url") String url, @Param("src_checksum") String src_checksum);
+	
+	@Query("MATCH (:Page{url:{url}})-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
+	public List<PageState> findBySourceChecksumForPage(@Param("url") String url, @Param("src_checksum") String src_checksum);
 }

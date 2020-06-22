@@ -20,15 +20,17 @@ public class Page extends LookseeObject{
 	private String url;
 	private String path;
 	
+	@Relationship(type = "HAS")
+	private Set<PageState> page_states;
+	
 
+	@Deprecated
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
 	
+	@Deprecated
 	@Relationship(type = "HAS")
 	private List<AuditRecord> audit_records;
-
-	@Relationship(type = "HAS")
-	private Set<PageState> page_states;
 
 	//following are deprecated in favor of the Audit concept being introduced. 6/18/2020
 	@Deprecated
@@ -118,58 +120,72 @@ public class Page extends LookseeObject{
 		this.url = url;
 	}
 	
+	@Deprecated
 	public List<PerformanceInsight> getPerformanceInsights() {
 		return performance_insights;
 	}
-
+	
+	@Deprecated
 	public void setPerformanceInsights(List<PerformanceInsight> performance_insights) {
 		this.performance_insights = performance_insights;
 	}
 
+	@Deprecated
 	public void addPerformanceInsight(PerformanceInsight performance_insight) {
 		this.performance_insights.add( performance_insight );
 	}
 	
+	@Deprecated
 	public List<AuditRecord> getAuditRecords() {
 		return audit_records;
 	}
 
+	@Deprecated
 	public void setAuditRecords(List<AuditRecord> audit_records) {
 		this.audit_records = audit_records;
 	}
 
+	@Deprecated
 	public void addAuditRecord(AuditRecord audit_record) {
 		this.audit_records.add( audit_record );
 	}
 
+	@Deprecated
 	public Double getPerformanceScore() {
 		return performance_score;
 	}
 
+	@Deprecated
 	public void setPerformanceScore(Double score) {
 		this.performance_score = score;
 	}
 
+	@Deprecated
 	public Double getAccessibilityScore() {
 		return accessibility_score;
 	}
 
+	@Deprecated
 	public void setAccessibilityScore(Double accessibility_score) {
 		this.accessibility_score = accessibility_score;
 	}
 
+	@Deprecated
 	public Double getSeoScore() {
 		return seo_score;
 	}
 
+	@Deprecated
 	public void setSeoScore(Double seo_score) {
 		this.seo_score = seo_score;
 	}
 
+	@Deprecated
 	public Double getOverallScore() {
 		return overall_score;
 	}
 
+	@Deprecated
 	public void setOverallScore(Double overall_score) {
 		this.overall_score = overall_score;
 	}

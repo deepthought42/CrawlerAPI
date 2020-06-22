@@ -257,7 +257,7 @@ public class ElementController {
     	validateRules(element_state.getRules());
     	//check that min/max length rules are valid
     	log.warn("element update state experienced in element controller");
-      element_state = element_service.saveFormElement(account.getUserId(), element_state);
+      element_state = element_service.saveFormElement(element_state);
       return element_service.findByKey(element_state.getKey());
     }
 

@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -24,11 +25,16 @@ import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditFactory;
+import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
@@ -37,10 +43,13 @@ import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.PageStateAuditMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.AuditRecordService;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
@@ -50,6 +59,7 @@ import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
+import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -68,8 +78,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
  */
 @Component
 @Scope("prototype")
-public class AuditActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(AuditActor.class.getName());
+public class Auditor extends AbstractActor{
+	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
 
 	private final int DISCOVERY_ACTOR_COUNT = 200;
 
@@ -109,6 +119,12 @@ public class AuditActor extends AbstractActor{
 	@Autowired
 	private BrowserService browser_service;
 	
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
+	
 	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
 	private ActorRef domain_actor;
@@ -143,6 +159,37 @@ public class AuditActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
+				.match(PageStateAuditMessage.class, message-> {
+					log.warn("performing audits on page state...");
+					//retrieve all audits that the customer requested
+					Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>();
+					List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
+					
+					PageState page_state = message.getPageState();
+					
+				   	//generate audit report
+				   	List<Audit> audits = new ArrayList<>();
+				   	
+				   	for(AuditCategory audit_category : AuditCategory.values()) {
+			   			//perform audit and return audit result
+			   			List<Audit> audits_executed = AuditFactory.execute(audit_category, page_state, "Look-See-admin");
+			   			
+			   			audits_executed = audit_service.saveAll(audits_executed);
+			   			audits.addAll(audits_executed);
+						page_audit_map.put(page_state, audits);
+			   		}
+		   			
+					AuditRecord audit_record = new AuditRecord(audits);
+		   			audit_record = audit_record_service.save(audit_record);
+		   			audit_records.add(audit_record);
+		   			
+		   			page_state.addAuditRecord(audit_record);
+		   			//page_state_service.save(page_state);
+		   			
+		   			//send message to either user or page channel containing reference to audits
+		   			log.warn("Completed audits for page state ... "+message.getPageState().getUrl());
+		   			postStop();
+				})
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
 						startDiscovery(message);
@@ -152,6 +199,8 @@ public class AuditActor extends AbstractActor{
 						//look up discovery record if it's null
 						stopDiscovery(message);
 					}
+					
+					postStop();
 				})
 				.match(PathMessage.class, message -> {
 					/*
@@ -219,6 +268,7 @@ public class AuditActor extends AbstractActor{
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
 
 					discovery_service.save(discovery_record);
+					postStop();
 				})
 				.match(TestMessage.class, test_msg -> {
 					
@@ -303,6 +353,7 @@ public class AuditActor extends AbstractActor{
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
 
 					discovery_service.save(discovery_record);
+					postStop();
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
 					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
@@ -317,9 +368,11 @@ public class AuditActor extends AbstractActor{
 		        	form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
 
 			        discovery_service.save(discovery_record);
+			        postStop();
 				})
 				.match(AccountRequest.class, account_request_msg -> {
 					getSender().tell(this.getAccount(), getSelf());
+					postStop();
 				})
 				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
@@ -346,7 +399,7 @@ public class AuditActor extends AbstractActor{
 					page_state_record.addForm(form);
 					
 					try {
-						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
+						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
 						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
 						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {
@@ -357,19 +410,20 @@ public class AuditActor extends AbstractActor{
 						}
 					}
 					
-				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getHost(), form_msg.getUserId());					
+				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getHost(), form_msg.getUserId());
+				  	postStop();
 				})
 				.match(MemberUp.class, mUp -> {
-					log.info("Member is Up: {}", mUp.member());
+					log.debug("Member is Up: {}", mUp.member());
 				})
 				.match(UnreachableMember.class, mUnreachable -> {
-					log.info("Member detected as unreachable: {}", mUnreachable.member());
+					log.debug("Member detected as unreachable: {}", mUnreachable.member());
 				})
 				.match(MemberRemoved.class, mRemoved -> {
-					log.info("Member is Removed: {}", mRemoved.member());
+					log.debug("Member is Removed: {}", mRemoved.member());
 				})
 				.matchAny(o -> {
-					log.info("received unknown message of type :: "+o.getClass().getName());
+					log.debug("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
 	}

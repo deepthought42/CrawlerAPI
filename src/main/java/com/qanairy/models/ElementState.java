@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 import org.openqa.selenium.WebElement;
@@ -48,15 +45,15 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	private boolean part_of_form;
 	
 	@Properties
-	private Map<String, String> cssValues = new HashMap<>();
+	private Map<String, String> css_values = new HashMap<>();
 	
-	@Relationship(type = "HAS_ATTRIBUTE")
+	@Properties
 	private Set<Attribute> attributes = new HashSet<>();
 	
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
 
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS_CHILD")
 	private List<ElementState> child_elements = new ArrayList<>();
 	
 
@@ -177,11 +174,11 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 * @return whether attributes match or not
 	 */
 	public boolean cssMatches(ElementState elem){
-		for(String propertyName : cssValues.keySet()){
+		for(String propertyName : css_values.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
 			}
-			if(!cssValues.get(propertyName).equals(elem.getCssValues().get(propertyName))){
+			if(!css_values.get(propertyName).equals(elem.getCssValues().get(propertyName))){
 				return false;
 			}
 		}
@@ -215,11 +212,11 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	}
 
 	public Map<String, String> getCssValues() {
-		return cssValues;
+		return css_values;
 	}
 
-	public void setCssValues(Map<String, String> cssValues) {
-		this.cssValues = cssValues;
+	public void setCssValues(Map<String, String> css_values) {
+		this.css_values = css_values;
 	}
 	
 	public Set<Rule> getRules(){

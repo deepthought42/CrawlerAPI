@@ -63,6 +63,7 @@ public class PageState extends LookseeObject implements PathObject {
 	@Relationship(type = "HAS")
 	private List<ElementState> elements;
 
+	@Deprecated
 	@Relationship(type = "HAS")
 	private Set<Form> forms;
 	
@@ -125,7 +126,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
 		setLandable(false);
-		setSrc(Browser.cleanSrc(src));
+		setSrc(src);
 		setSrcChecksum(	org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.generalizeSrc(getSrc())) );
 		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
@@ -389,7 +390,7 @@ public class PageState extends LookseeObject implements PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {		
-		return "pagestate::" + getSrcChecksum();
+		return "pagestate::" + getFullPageChecksum();
 	}
 
 	public void addForm(Form form) {
@@ -401,10 +402,12 @@ public class PageState extends LookseeObject implements PathObject {
 		this.forms.add(form);
 	}
 
+	@Deprecated
 	public Set<Form> getForms() {
 		return this.forms;
 	}
 
+	@Deprecated
 	public void setForms(Set<Form> form_set){
 		this.forms = form_set;
 	}

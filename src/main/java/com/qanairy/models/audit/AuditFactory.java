@@ -36,6 +36,11 @@ public class AuditFactory {
 			double link_score = link_audit.execute(page, user_id);
 			audits.add(link_audit);
 		}
+		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
+			ColorPaletteAudit color_palette_audit = new ColorPaletteAudit();
+			double palette_score = color_palette_audit.execute(page, user_id);
+			audits.add(color_palette_audit);
+		}
 		
 		return audits;
 	}

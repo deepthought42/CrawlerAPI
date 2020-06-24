@@ -61,6 +61,7 @@ public class ElementStateService {
 			element_record = element_repo.save(element);
 		}
 		else {
+			element_record.setCssValues(element.getCssValues());
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
 				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setScreenshotUrl(element.getScreenshotUrl());
@@ -162,11 +163,26 @@ public class ElementStateService {
 		element_repo.clearBugMessages(user_id, form_key);
 	}
 
-	public List<ElementState> getChildElements(String user_id, String element_key) {
-		return element_repo.getChildElements(user_id, element_key);
+	public List<ElementState> getChildElementsForUser(String user_id, String element_key) {
+		return element_repo.getChildElementsForUser(user_id, element_key);
+	}
+	
+	public List<ElementState> getChildElements(String element_key) {
+		return element_repo.getChildElements(element_key);
+	}
+	
+	public List<ElementState> getChildElementForParent(String parent_key, String child_element_key) {
+		return element_repo.getChildElementForParent(parent_key, child_element_key);
 	}
 
 	public ElementState getParentElement(String user_id, Domain domain, String page_key, String element_state_key) {
 		return element_repo.getParentElement(user_id, domain, page_key, element_state_key);
+	}
+
+	public void addChildElement(String parent_element_key, String child_element_key) {
+		//check if element has child already
+		if(getChildElementForParent(parent_element_key, child_element_key).isEmpty()) {
+			element_repo.addChildElement(parent_element_key, child_element_key);
+		}
 	}
 }

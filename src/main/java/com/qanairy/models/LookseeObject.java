@@ -1,8 +1,6 @@
 package com.qanairy.models;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -24,12 +22,12 @@ public abstract class LookseeObject {
 	private LocalDateTime created_at;
 	
 	public LookseeObject() {
-		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+		setCreatedAt(LocalDateTime.now());
 	}
 	
 	public LookseeObject(String key) {
 		setKey(key);
-		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+		setCreatedAt(LocalDateTime.now());
 	}
 	
 	/**

@@ -255,8 +255,14 @@ public class BrowserUtils {
 		domain = domain.replace("index.html", "");
 		domain = domain.replace("index.htm", "");
 
-		if(domain.charAt(domain.length()-1) == '/'){
+		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/'){
 			domain = domain.substring(0, domain.length()-1);
+		}
+		
+		//remove any anchor link references
+		int hash_index = domain.indexOf("#");
+		if(hash_index > 0) {
+			domain = domain.substring(0, hash_index);
 		}
 		
 		return domain;
@@ -397,7 +403,25 @@ public class BrowserUtils {
 		else if("mailto".equalsIgnoreCase(url.getProtocol())) {
 			//TODO check if mailto address is vailid
 		}
+		else {
+			// TODO handle image links
+		}
 		
 		return false;
+	}
+
+	/**
+	 * Checks if url string ends with an image suffix indicating that it points to an image file
+	 * 
+	 * @param href url to examine
+	 * 
+	 * @return true if any suffixes match, false otherwise
+	 * 
+	 * @pre href != nuill
+	 */
+	public static boolean isImageUrl(String href) {
+		assert(href != null);
+		
+		return href.endsWith(".jpg") || href.endsWith(".png") || href.endsWith(".gif") || href.endsWith(".bmp") || href.endsWith(".tiff") || href.endsWith(".webp") || href.endsWith(".bpg") || href.endsWith(".heif");
 	}
 }

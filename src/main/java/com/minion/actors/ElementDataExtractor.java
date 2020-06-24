@@ -4,7 +4,9 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -46,8 +48,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
  */
 @Component
 @Scope("prototype")
-public class PageDataExtractor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(PageDataExtractor.class.getName());
+public class ElementDataExtractor extends AbstractActor{
+	private static Logger log = LoggerFactory.getLogger(ElementDataExtractor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
@@ -88,49 +90,9 @@ public class PageDataExtractor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageFoundMessage.class, message-> {
-					log.warn("Page data extractor received PageFoundMessage...");
-					int error_cnt = 0;
-					boolean page_state_build_success = false;
-					Page page = message.getPage();
-					Browser browser = null;
-					do {
-						try {
-							log.warn("retrieving browser connection ... ");
-							browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to url :: "+page.getUrl());
-							browser.navigateTo(page.getUrl());
-		
-							//build page state with element states at the same time
-							log.warn("building page state...");
-							PageState page_state = browser_service.buildPageState( page, browser );
-							page.addPageState(page_state);
-							page = page_service.save(page);
-							page_state_build_success = true;
-							
-							log.warn("sending page state to element data extractor...");
-							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
-							element_data_extractor.tell(page_state, getSelf());
-							break;
-						}catch(Exception e) {
-							if(e instanceof GridException || e instanceof WebDriverException) {
-								log.warn("Exception thrown during page data extractions");
-							}
-							else {
-								e.printStackTrace();
-							}
-							error_cnt++;
-						}
-						finally {
-							if( browser != null ) {
-								browser.close();
-								browser = null;
-							}							
-						}
-						TimingUtils.pauseThread(60000L);
-					}while(!page_state_build_success && error_cnt < 60);
-
+				.match(PageState.class, page_state-> {
+					log.warn("Element data extractor received PageState message...");
+					extractElementDataFromPageState(page_state);
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
@@ -146,5 +108,46 @@ public class PageDataExtractor extends AbstractActor{
 					log.debug("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
+	}
+
+	private void extractElementDataFromPageState(PageState page_state) {
+		int error_cnt = 0;
+		boolean page_state_build_success = false;
+		Browser browser = null;
+		Map<String, ElementState> reviewed_elements = new HashMap<>();
+		error_cnt = 0;
+		page_state_build_success = false;
+		do {
+			try {
+				log.debug("retrieving browser connection ... "+page_state.getUrl());
+				browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(page_state.getUrl());
+				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), browser, reviewed_elements);
+			
+				page_state.addElements(elements);
+				page_state_service.save(page_state);
+				log.warn("Sending page state audit message to auditor");
+				//send page state message to auditor
+				PageStateAuditMessage msg = new PageStateAuditMessage(page_state);
+				ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						.props("auditor"), "auditor"+UUID.randomUUID());
+				auditor.tell(msg, getSelf());
+				break;
+			}catch(Exception e) {
+				//log.warn("exception occurred on page :: "+page_state.getUrl());
+				if(e instanceof GridException || e instanceof WebDriverException) {
+					log.warn("Selenium Grid exception thrown during page data extractions");
+					//e.printStackTrace();
+				}
+				else {
+					e.printStackTrace();
+				}
+			}
+			finally {
+				if( browser != null ) {
+					browser.close();
+				}
+			}
+		}while(!page_state_build_success && error_cnt < 10000);
 	}	
 }

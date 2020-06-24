@@ -3,6 +3,7 @@ package com.minion.browsing;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -14,7 +15,9 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -841,14 +844,17 @@ public class Crawler {
 		//add link to frontier
 		frontier.put(domain.getUrl(), Boolean.TRUE);
 		
+		
 		while(!frontier.isEmpty()) {
-			List<String> external_links = new ArrayList<>();
+			Map<String, Boolean> external_links = new HashMap<>();
 			Page page = null;
 			//remove link from beginning of frontier
 			String page_url = frontier.keySet().iterator().next();
 			frontier.remove(page_url);
-			
-			log.debug("browser connection created...");
+			if(page_url.isEmpty() || page_url.contains("mailto") || page_url.contains(".jpg") || page_url.contains(".png")) {
+				continue;
+			}
+
 			//construct page and add page to list of page states
 			page = new Page(page_url);
 			page = page_service.save( page );
@@ -858,31 +864,44 @@ public class Crawler {
 			domain = domain_service.save(domain);
 			
 			visited.put(page_url, page);
-			
-			//retrieve html source for page
-			Document doc = Jsoup.connect(page_url).get();
-			log.warn("Document title :: " + doc.title());
-			Elements links = doc.select("a");
-			for (Element link : links) {
-				String href = link.absUrl("href");
-				
-				//check if external link
-				if(	BrowserUtils.isExternalLink(domain.getHost(), href) ) {
-					log.debug("adding to external links :: "+href);
-   					external_links.add(href);
-				}
-				else if( !visited.containsKey(href) ){
-					//add link to frontier
-					frontier.put(href, Boolean.TRUE);
-				}
-			}
-			
-			//send message to page data extractor		
+			//send message to page data extractor
 			ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("pageDataExtractor"), "page_data_extractor"+UUID.randomUUID());
+					.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
 			PageFoundMessage page_found_message = new PageFoundMessage(page);
 			page_data_extractor.tell(page_found_message, null);
-			
+
+			//retrieve html source for page
+			try {
+				Document doc = Jsoup.connect(page_url).get();
+				log.debug("Document title :: " + doc.title());
+				Elements links = doc.select("a");
+				for (Element link : links) {
+					String href = BrowserUtils.sanitizeUrl(link.absUrl("href"));
+					
+					//check if external link
+					if( !href.isEmpty() && BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href)) {
+						log.debug("adding to external links :: "+href);
+	   					external_links.put(href, Boolean.TRUE);
+					}
+					else if( !href.isEmpty() && !visited.containsKey(href) && !frontier.containsKey(href) && !BrowserUtils.isImageUrl(href)){
+						log.warn("adding link to frontier :: "+href);
+						//add link to frontier
+						frontier.put(href, Boolean.TRUE);
+					}
+				}
+			}catch(SocketTimeoutException e) {
+				log.warn("Error occurred while navigating to :: "+page_url);
+			}
+			catch(HttpStatusException e) {
+				log.warn("HTTP Status Exception occurred while navigating to :: "+page_url);
+			}
+			catch(IllegalArgumentException e) {
+				log.warn("illegal argument exception occurred when connecting to ::  " + page_url);
+				e.printStackTrace();
+			}
+			catch(UnsupportedMimeTypeException e) {
+				log.warn(e.getMessage() + " : " +e.getUrl());
+			}
 		}
 		System.out.println("total links visited :::  "+visited.keySet().size());
 		

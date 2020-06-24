@@ -38,7 +38,7 @@ public abstract class Audit {
 	 * Construct empty action object
 	 */
 	public Audit(){
-		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+		setCreatedAt(LocalDateTime.now());
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public abstract class Audit {
 		setDescription(description);
 		setName(name);
 		setCategory(category);
-		setCreatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+		setCreatedAt(LocalDateTime.now());
 		setKey(generateKey());
 	}
 

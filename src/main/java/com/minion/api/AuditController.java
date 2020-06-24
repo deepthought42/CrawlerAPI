@@ -3,11 +3,16 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +30,7 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.audit.Audit;
@@ -107,7 +113,7 @@ public class AuditController {
     
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody Map<String, Page> startAudit(HttpServletRequest request,
+	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
 											   	  		@RequestParam(value="url", required=true) String url,
 											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws Exception {
 	   	/*
@@ -119,6 +125,9 @@ public class AuditController {
 		   		throw new UnknownAccountException();
 		   	}
 	   	 */
+		
+		LocalDateTime start_time = LocalDateTime.now();
+		
 	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(url));
 	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
 	   	System.out.println("domain returned from db ...."+domain);
@@ -137,7 +146,10 @@ public class AuditController {
 	   	}
 	   	//crawl site and retrieve all page urls/landable pages
 	   	Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-	   	
+		LocalDateTime end_time = LocalDateTime.now();
+
+		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
+	   	CrawlStats stats = new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/page_state_audits.size());
 	   	/*
 	   	List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
 	   	//generate audit report
@@ -168,7 +180,7 @@ public class AuditController {
 	   	actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("auditActor"), "audit_actor"+UUID.randomUUID()).tell(audit_action_msg, null);
 	   	*/
-	   	return page_state_audits;
+	   	return stats;
 	}
 
 	

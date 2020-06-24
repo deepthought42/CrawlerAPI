@@ -112,7 +112,7 @@ public class PageStateService {
 						}
 						
 						page_state.setElements(element_records);
-						
+						/*
 						Set<Form> form_records = new HashSet<>();
 						for(Form form : page_state.getForms()){
 							Form form_record = form_repo.findByKeyForUserAndDomain(user_id, domain_url, form.getKey());
@@ -133,6 +133,7 @@ public class PageStateService {
 		
 						//reduce screenshots to just unique records
 						page_state.setForms(form_records);
+						*/
 						page_state.setAuditRecords(page_state.getAuditRecords());
 
 						page_state_record = page_state_repo.save(page_state);
@@ -166,8 +167,9 @@ public class PageStateService {
 		do{
 			page_err = false;
 			try{
+				/*
 				for(String checksum : page_state.getScreenshotChecksums()){
-					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksum( page_state.getUrl() , checksum);
+					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumAndPageUrl( page_state.getUrl() , checksum);
 					if(!page_state_records.isEmpty()){
 						page_state_record = page_state_records.get(0);
 						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
@@ -175,14 +177,14 @@ public class PageStateService {
 						break;
 					}
 				}
-				
+				*/
 				if(page_state_record != null){
-					page_state_record.setForms(page_state.getForms());
+					//page_state_record.setForms(page_state.getForms());
 					page_state_record.setAuditRecords(page_state.getAuditRecords());
 
+					page_state_record.setElements(page_state.getElements());
 					page_state_record = page_state_repo.save(page_state_record);
 					
-					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				}
 				else {
 					
@@ -190,15 +192,16 @@ public class PageStateService {
 					page_state_record = findByKey( page_state.getKey() );
 
 					if(page_state_record != null){
-						page_state_record.setForms( page_state.getForms() );
+						//page_state_record.setForms( page_state.getForms() );
 						page_state_record.setAuditRecords(page_state.getAuditRecords());
 
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
 						}
-						
+						page_state_record.setElements(page_state.getElements());
+
 						page_state_record = page_state_repo.save(page_state_record);
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
+						//page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					}
 					else{
 						//iterate over page elements
@@ -224,7 +227,7 @@ public class PageStateService {
 						}
 						
 						page_state.setElements(element_records);
-						
+						/*
 						Set<Form> form_records = new HashSet<>();
 						for(Form form : page_state.getForms()){
 							Form form_record = form_repo.findByKey(page_state.getUrl(), form.getKey());
@@ -245,6 +248,7 @@ public class PageStateService {
 		
 						//reduce screenshots to just unique records
 						page_state.setForms(form_records);
+						*/
 						page_state.setAuditRecords(page_state.getAuditRecords());
 
 						page_state_record = page_state_repo.save(page_state);
@@ -282,12 +286,16 @@ public class PageStateService {
 		return page_state;
 	}
 	
-	public List<PageState> findByScreenshotChecksum(String user_id, String url, String screenshot_checksum){
-		return page_state_repo.findByScreenshotChecksumsContainsForUserAndDomain(user_id, url, screenshot_checksum);		
+	public List<PageState> findByScreenshotChecksumAndPageUrl(String user_id, String url, String screenshot_checksum){
+		return page_state_repo.findByScreenshotChecksumAndPageUrl(url, screenshot_checksum);		
 	}
 	
-	public List<PageState> findByFullPageScreenshotChecksum(String user_id, String url, String screenshot_checksum){
-		return page_state_repo.findByFullPageScreenshotChecksumsContains(user_id, url, screenshot_checksum);		
+	public List<PageState> findByFullPageScreenshotChecksum(String screenshot_checksum){
+		return page_state_repo.findByFullPageScreenshotChecksum(screenshot_checksum);		
+	}
+	
+	public List<PageState> findByFullPageScreenshotChecksumByUserAndUrl(String user_id, String url, String screenshot_checksum){
+		return page_state_repo.findByFullPageScreenshotChecksumForUserAndUrl(user_id, url, screenshot_checksum);		
 	}
 	
 	public PageState findByAnimationImageChecksum(String user_id, String screenshot_checksum){

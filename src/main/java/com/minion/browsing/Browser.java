@@ -465,7 +465,7 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"display", "position", "color", "font-family", "font-size", "background-color"};
+		String[] cssList = {"display", "position", "color", "font-family", "font-size", "background-color", "text-decoration-color", "text-emphasis-color", "caret-color", "outline-color", "border-color", "border-left-color", "border-right-color", "border-top-color", "and border-bottom-color"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){

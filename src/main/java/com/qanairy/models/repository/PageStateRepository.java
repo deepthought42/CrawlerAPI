@@ -26,11 +26,14 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
 	public List<PageState> findByScreenshotChecksumsContainsForUserAndDomain(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
-	@Query("MATCH (d:Page{url})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public List<PageState> findByScreenshotChecksum(@Param("url") String url, @Param("screenshot_checksum") String checksum );
+	@Query("MATCH (d:Page{url:{url}})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
+	public List<PageState> findByScreenshotChecksumAndPageUrl(@Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS]->() RETURN a")
-	public List<PageState> findByFullPageScreenshotChecksumsContains(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
+	public List<PageState> findByFullPageScreenshotChecksumForUserAndUrl(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
+	
+	@Query("MATCH (p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS_CHILD]->() RETURN a")
+	public List<PageState> findByFullPageScreenshotChecksum(@Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(e:ElementState) RETURN e")
 	public List<ElementState> getElementStatesForUser(@Param("user_id") String user_id, @Param("page_key") String key);

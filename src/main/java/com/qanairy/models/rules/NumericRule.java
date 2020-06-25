@@ -1,7 +1,6 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 
 
@@ -26,9 +25,9 @@ public class NumericRule extends Rule{
 	 */
 	@Override
 	public Boolean evaluate(ElementState elem) {
-		for(Attribute attribute: elem.getAttributes()){
-			if(attribute.getName().equals("val")){
-				String field_value = attribute.getVals().toString();
+		for(String attribute: elem.getAttributes().keySet()){
+			if("val".equals(attribute)){
+				String field_value = elem.getAttributes().get(attribute).toString();
 				if(this.getType().equals(RuleType.MAX_LENGTH)){
 					return field_value.length() <= Integer.parseInt(this.getValue());
 				}

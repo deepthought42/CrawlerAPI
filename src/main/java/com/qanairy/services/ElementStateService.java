@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.api.exceptions.ExistingRuleException;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
@@ -21,9 +20,6 @@ import com.qanairy.models.rules.Rule;
 public class ElementStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
-
-	@Autowired
-	private AttributeService attribute_service;
 
 	@Autowired
 	private RuleService rule_service;
@@ -44,13 +40,7 @@ public class ElementStateService {
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			//iterate over attributes
-			Set<Attribute> new_attributes = new HashSet<Attribute>();
-			for(Attribute attribute : element.getAttributes()){
-				new_attributes.add(attribute_service.save(attribute));
-			}
-			element.setAttributes(new_attributes);
-			
+			//iterate over attributes			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
 				log.warn("adding rule to rule records :: " + rule.getType());
@@ -86,14 +76,7 @@ public class ElementStateService {
 	public ElementState saveFormElement(ElementState element) throws ClientException{
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
-		if(element_record == null){
-			//iterate over attributes
-			Set<Attribute> new_attributes = new HashSet<Attribute>();
-			for(Attribute attribute : element.getAttributes()){
-				new_attributes.add(attribute_service.save(attribute));
-			}
-			element.setAttributes(new_attributes);
-			
+		if(element_record == null){			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
 				log.warn("adding rule to rule records :: " + rule.getType());
@@ -149,10 +132,6 @@ public class ElementStateService {
 		else {
 			throw new ExistingRuleException(rule.getType().toString());
 		}
-	}
-
-	public List<Attribute> getElementAttributes(String user_id, String element_key) {
-		return element_repo.getElementAttributes( user_id, element_key);
 	}
 
 	public ElementState findByOuterHtml(String user_id, String snippet) {

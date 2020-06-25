@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -74,9 +73,7 @@ public class TestTests {
 		objects.add(page);
 		
 		ElementState element = new ElementState();
-		List<String> attribute_vals = new ArrayList<>();
-		attribute_vals.add("id-attr-1");
-		element.addAttribute(new Attribute("id", attribute_vals));
+		element.addAttribute("id", "id-attr-1");
 		element.setName("a");
 		
 		Action action = new Action();

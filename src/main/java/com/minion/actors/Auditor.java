@@ -3,7 +3,6 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ import com.minion.api.exception.PaymentDueException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
@@ -59,7 +57,6 @@ import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -184,7 +181,7 @@ public class Auditor extends AbstractActor{
 		   			audit_records.add(audit_record);
 		   			
 		   			page_state.addAuditRecord(audit_record);
-		   			//page_state_service.save(page_state);
+		   			page_state_service.save(page_state);
 		   			
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+message.getPageState().getUrl());

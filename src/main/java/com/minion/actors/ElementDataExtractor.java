@@ -139,15 +139,14 @@ public class ElementDataExtractor extends AbstractActor{
 					log.warn("Selenium Grid exception thrown during page data extractions");
 					//e.printStackTrace();
 				}
-				else {
-					e.printStackTrace();
-				}
+				//e.printStackTrace();
 			}
 			finally {
 				if( browser != null ) {
 					browser.close();
 				}
 			}
-		}while(!page_state_build_success && error_cnt < 10000);
+			TimingUtils.pauseThread(60000L);
+		}while(!page_state_build_success && error_cnt < 120);
 	}	
 }

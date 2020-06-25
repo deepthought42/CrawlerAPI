@@ -17,6 +17,6 @@ public class RequirementRule extends Rule{
 	 */
 	@Override
 	public Boolean evaluate(ElementState elem) {
-		return elem.getAttributes().contains("required");
+		return elem.getAttributes().containsKey("required");
 	}
 }

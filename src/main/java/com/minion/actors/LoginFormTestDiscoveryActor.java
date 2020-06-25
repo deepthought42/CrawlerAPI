@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
@@ -31,7 +30,6 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -63,9 +61,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private ElementStateService element_state_service;
 	
 	@Autowired 
 	private ActionRepository action_repo;
@@ -264,17 +259,13 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 				return element;
 			}
 			
-			List<Attribute> element_attributes = element_state_service.getElementAttributes(user_id, element.getKey());
-			log.warning("--- " + element_attributes.size() + " element attribues to be reviewed for search term   :::   "+search_val);
 			//check if element has value username in any attributes
-			for(Attribute attribute : element_attributes){
-				for(String val : attribute.getVals()){
-					log.warning("element attribute value  :: "+val.contains(search_val));
+			for(String attribute : element.getAttributes().keySet()){
+				log.warning("element attribute value  :: "+element.getAttributes().get(attribute).contains(search_val));
 
-					if(val.contains(search_val)){
-						log.warning("Element contains search val :: "+search_val);
-						return element;
-					}
+				if(element.getAttributes().get(attribute).contains(search_val)){
+					log.warning("Element contains search val :: "+search_val);
+					return element;
 				}
 			}
 			log.warning("element xpath value  :: "+element.getXpath().contains(search_val));

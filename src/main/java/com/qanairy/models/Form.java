@@ -3,8 +3,7 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-
+import java.util.Map;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,24 +72,23 @@ public class Form extends LookseeObject implements Comparable<Form>{
 	 * @return {@link FormType}
 	 */
 	private FormType determineFormType(){
-		Set<Attribute> attributes = this.form_tag.getAttributes();
-		for(Attribute attr: attributes){
-			for(String val : attr.getVals()){
-				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
-					return FormType.REGISTRATION;
-				}
-				else if(val.contains("login") || (val.contains("sign") && val.contains("in"))){
-					return FormType.LOGIN;
-				}
-				else if(val.contains("search")){
-					return FormType.SEARCH;
-				}
-				else if(val.contains("reset") && val.contains("password")){
-					return FormType.PASSWORD_RESET;
-				}
-				else if(val.contains("payment") || val.contains("credit")){
-					return FormType.PAYMENT;
-				}
+		Map<String, String> attributes = this.form_tag.getAttributes();
+		for(String attr: attributes.keySet()){
+			String vals = attributes.get(attr);
+			if(vals.contains("register") || (vals.contains("sign") && vals.contains("up"))){
+				return FormType.REGISTRATION;
+			}
+			else if(vals.contains("login") || (vals.contains("sign") && vals.contains("in"))){
+				return FormType.LOGIN;
+			}
+			else if(vals.contains("search")){
+				return FormType.SEARCH;
+			}
+			else if(vals.contains("reset") && vals.contains("password")){
+				return FormType.PASSWORD_RESET;
+			}
+			else if(vals.contains("payment") || vals.contains("credit")){
+				return FormType.PAYMENT;
 			}
 		}
 		

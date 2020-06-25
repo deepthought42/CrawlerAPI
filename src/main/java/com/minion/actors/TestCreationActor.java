@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,7 +26,6 @@ import com.minion.structs.Message;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -285,7 +284,7 @@ public class TestCreationActor extends AbstractActor  {
 		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
-		Set<Attribute> attributes = browser.extractAttributes(element);
+		Map<String, String> attributes = browser.extractAttributes(element);
 		BufferedImage img = browser.getElementScreenshot(element);
 		String checksum = PageState.getFileChecksum(img);
 		

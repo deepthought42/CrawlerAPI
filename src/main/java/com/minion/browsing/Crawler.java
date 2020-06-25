@@ -4,7 +4,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -47,7 +46,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
-import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;

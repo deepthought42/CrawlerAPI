@@ -16,7 +16,6 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -686,10 +685,10 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
-		for(Attribute attribute: input.getAttributes()){
-			if("type".equals(attribute.getName())){
-				String input_type = attribute.getVals().get(0);
-				if("text".equals( input_type ) ||
+		for(String attribute: input.getAttributes().keySet()){
+			if("type".equals(attribute)){
+				String input_type = input.getAttributes().get(attribute);
+				if(input_type.contains("text") ||
 						"textarea".equals(input_type) ||
 						"email".equals(input_type)){
 					//generate empty string test
@@ -712,7 +711,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					path_obj_list_2.add(new Action("click", ""));
 					tests.add(path_obj_list_2);
 				}
-				else if( "number".equals(input_type)){
+				else if( input_type.contains("number")){
 					//generate empty string test
 					List<PathObject> path_obj_list = new ArrayList<PathObject>();
 					path_obj_list.add(input);

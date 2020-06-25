@@ -22,6 +22,7 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -35,7 +36,6 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
@@ -50,7 +50,6 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
-import com.qanairy.utils.ArrayUtils;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -136,7 +135,7 @@ public class BrowserService {
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
-			Set<Attribute> attributes, 
+			Map<String, String> attributes, 
 			Map<String, String> css_values, 
 			Element element, 
 			ElementClassification classification
@@ -418,7 +417,8 @@ public class BrowserService {
 		Element root = html_doc.getElementsByTag("body").get(0);
 		
 		//create element state from root node
-		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+
 		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<>(), root, ElementClassification.ANCESTOR);
 		
 		root_element_state = element_service.save(root_element_state);
@@ -444,7 +444,7 @@ public class BrowserService {
 				
 				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
 
-				attributes = generateAttributesUsingJsoup(child);
+				attributes = generateAttributesMapUsingJsoup(child);
 				
 				ElementClassification classification = null;
 				List<Element> children = new ArrayList<Element>(child.children());
@@ -491,8 +491,7 @@ public class BrowserService {
 		Element root = html_doc.getElementsByTag("body").get(0);
 		
 		//create element state from root node
-		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
-		
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
 		Map<String, String> css_values = Browser.loadCssProperties(browser.findWebElementByXpath("//body"));
 		ElementState root_element_state = buildElementState("//body", attributes, css_values, root, ElementClassification.ANCESTOR);
 		root_element_state = element_service.save(root_element_state);
@@ -503,8 +502,6 @@ public class BrowserService {
 			ElementState root_element = frontier.keySet().iterator().next();
 			List<Element> child_elements = frontier.get(root_element);
 
-//			visited_elements.add(root_element);
-			
 			for(Element child : child_elements) {
 				String xpath = root_element.getXpath() + "/" + child.tagName();
 				if(!xpath_cnt.containsKey(xpath)) {
@@ -536,22 +533,30 @@ public class BrowserService {
 					element_state = reviewed_xpaths.get(xpath);
 				}
 				else {
-					attributes = generateAttributesUsingJsoup(child);
-					Map<String, String> child_css_values = Browser.loadCssProperties(browser.findWebElementByXpath(xpath));
+					Map<String, String> child_css_values = new HashMap<>();
+					attributes = generateAttributesMapUsingJsoup(child);
+					WebElement web_element = null;
+					try {						
+						web_element = browser.findWebElementByXpath(xpath);
+					}catch(NoSuchElementException e) {
+					}
 					
-					element_state = buildElementState(xpath, attributes, child_css_values, child, classification);
-					element_state = element_service.save(element_state);
-				}
-				//put element on frontier
-				if(children.isEmpty()) {
-					visited_elements.add(element_state);
-					reviewed_xpaths.put(root_element.getXpath(), element_state);
-				}
-				else {
-					frontier.put(element_state, new ArrayList<>(child.children()));
+					if(web_element != null) {
+						child_css_values = Browser.loadCssProperties(web_element);
+						element_state = buildElementState(xpath, attributes, child_css_values, child, classification);
+						element_state = element_service.save(element_state);
+						//put element on frontier
+						if(children.isEmpty()) {
+							visited_elements.add(element_state);
+							reviewed_xpaths.put(root_element.getXpath(), element_state);
+						}
+						else {
+							frontier.put(element_state, new ArrayList<>(child.children()));
+						}
+						element_service.addChildElement(root_element.getKey(), element_state.getKey());
+					}
 				}
 				
-				element_service.addChildElement(root_element.getKey(), element_state.getKey());
 			}
 			reviewed_xpaths.put(root_element.getXpath(), root_element);
 			frontier.remove(root_element);
@@ -612,8 +617,8 @@ public class BrowserService {
 				continue;
 			}
 			
-			Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-		
+			Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+
 			Dimension element_size = web_element.getSize();
 			Point element_location = web_element.getLocation();
 			
@@ -808,48 +813,6 @@ public class BrowserService {
 			new_element = new_element.parent();
 		}
 		return false;
-	}
-	
-	/**
-	 *
-	 * @param browser
-	 * @param elem
-	 * @param page_screenshot
-	 * @param xpath
-	 * @return
-	 * @throws IOException
-	 */
-	public ElementState buildElementState(
-			Browser browser, 
-			WebElement elem, 
-			String xpath, 
-			Set<Attribute> attributes, 
-			Map<String, String> css_props, 
-			Point location, 
-			Dimension element_size, 
-			String screenshot_url, 
-			String checksum, 
-			boolean is_displayed
-	) throws IOException{
-		long start_time = System.currentTimeMillis();
-
-		ElementState page_element = new ElementState(elem.getText(), xpath, 
-										elem.getTagName(), 
-										attributes, 
-										css_props, 
-										screenshot_url, 
-										checksum,
-										location.getX(), 
-										location.getY(), 
-										element_size.getWidth(), 
-										element_size.getHeight(), 
-										elem.getAttribute("innerHTML"), 
-										ElementClassification.ANCESTOR, 
-										elem.isDisplayed(), elem.getAttribute("outerHTML"));
-		page_element.setIsPartOfForm(false);
-		log.debug("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
-
-		return page_element;
 	}
 
 	public static boolean doesElementHaveNegativePosition(Point location) {
@@ -1052,17 +1015,17 @@ public class BrowserService {
 	 *
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public String generateXpath(WebElement element, WebDriver driver, Set<Attribute> attributes){
+	public String generateXpath(WebElement element, WebDriver driver, Map<String, String> attributes){
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
 		String xpath = "/"+element.getTagName();
-		for(Attribute attr : attributes){
-			if(valid_attributes.contains(attr.getName())){
-				String attribute_values = ArrayUtils.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+		for(String attr : attributes.keySet()){
+			if(valid_attributes.contains(attr)){
+				String attribute_values =attributes.get(attr);
 				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
 				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + trimmed_values.split(" ")[0] + "\")");
+					attributeChecks.add("contains(@" + attr + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}
 		}
@@ -1182,14 +1145,13 @@ public class BrowserService {
 	 *
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public static Set<Attribute> generateAttributesUsingJsoup(Element element){
-		Set<Attribute> attribute_list = new HashSet<Attribute>();
+	public static Map<String, String> generateAttributesMapUsingJsoup(Element element){
+		Map<String, String> attributes = new HashMap<>();
 		for(org.jsoup.nodes.Attribute attribute : element.attributes() ){
-			Attribute qanairy_attribute = new Attribute(attribute.getKey(), Arrays.asList(attribute.getValue().split(" ")));
-			attribute_list.add(qanairy_attribute);
+			attributes.put(attribute.getKey(), attribute.getValue());
 		}
 
-		return attribute_list;
+		return attributes;
 	}
 
 	/**
@@ -1331,9 +1293,9 @@ public class BrowserService {
 		for(WebElement input_elem : input_elements){
 			boolean submit_elem_found = false;
 
-			Set<Attribute> attributes = browser.extractAttributes(input_elem);
-			for(Attribute attribute : attributes){
-				if(attribute.contains("submit")){
+			Map<String, String> attributes = browser.extractAttributes(input_elem);
+			for(String attribute : attributes.keySet()){
+				if(attributes.get(attribute).contains("submit")){
 					submit_elem_found = true;
 					break;
 				}
@@ -1409,12 +1371,12 @@ public class BrowserService {
 
 		boolean submit_elem_found = false;
 		List<WebElement> form_elements = getNestedElements(form_elem);
-		Set<Attribute> attributes = null;
 
+		Map<String, String> attributes = new HashMap<>();
 		for(WebElement elem : form_elements){
 			attributes = browser.extractAttributes(elem);
-			for(Attribute attribute : attributes){
-				if(attribute.contains("submit")){
+			for(String attribute : attributes.keySet()){
+				if(attributes.get(attribute).contains("submit")){
 					submit_elem_found = true;
 					break;
 				}
@@ -1536,15 +1498,12 @@ public class BrowserService {
 	 * @pre attributes != null
 	 * @pre !attributes.isEmpty()
 	 */
-	public static boolean doesAttributesContainSliderKeywords(Set<Attribute> attributes) {
+	public static boolean doesAttributesContainSliderKeywords(Map<String, List<String>> attributes) {
 		assert attributes != null;
 		assert !attributes.isEmpty();
-		for(Attribute attr : attributes) {
-			List<String> attr_vals = attr.getVals();
-			for(String val : attr_vals) {
-				if(val.contains("slide")) {
-					return true;
-				}
+		for(String attr : attributes.keySet()) {
+			if(attributes.get(attr).contains("slide")) {
+				return true;
 			}
 		}
 		return false;

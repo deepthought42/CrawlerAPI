@@ -7,7 +7,6 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
@@ -33,9 +32,6 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[:HAS]->(r:Rule{key:{rule_key}}) RETURN r LIMIT 1")
 	public Rule getElementRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
-
-	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[:HAS_ATTRIBUTE]->(r:Attribute) RETURN r")
-	public List<Attribute> getElementAttributes(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(e:ElementState{outer_html:{outer_html}}) RETURN e LIMIT 1")
 	public ElementState findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);

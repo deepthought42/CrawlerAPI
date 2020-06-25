@@ -4,7 +4,6 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -18,13 +17,11 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PageFoundMessage;
-import com.qanairy.models.message.PageStateAuditMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
@@ -56,9 +53,6 @@ public class PageDataExtractor extends AbstractActor{
 	
 	@Autowired
 	private PageService page_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private BrowserService browser_service;

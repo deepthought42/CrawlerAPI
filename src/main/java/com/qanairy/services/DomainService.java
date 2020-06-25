@@ -18,6 +18,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -179,5 +180,9 @@ public class DomainService {
 		assert !user_id.isEmpty();
 		
 		return domain_repo.getPages(user_id, url);
+	}
+
+	public Set<AuditRecord> getMostRecentPageAuditRecords(String url) {
+		return domain_repo.getMostRecentPageAuditRecords(url);
 	}
 }

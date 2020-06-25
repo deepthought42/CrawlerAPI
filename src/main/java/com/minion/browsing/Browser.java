@@ -44,7 +44,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
@@ -385,16 +384,9 @@ public class Browser {
 		for(ElementState elem : elements){
 			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
-				for(Attribute attr : elem.getAttributes()){
-					if(attr.getName().equals("for")){
-						for(String val : attr.getVals()){
-							if(val.equals(for_id)){
-								return elem;
-							}
-						}
-					}
+				if(elem.getAttribute("for").contains(for_id)){
+					return elem;
 				}
-			
 			}
 		}
 		
@@ -412,15 +404,9 @@ public class Browser {
 		for(ElementState elem : elements){
 			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
-				for(Attribute attr : elem.getAttributes()){
-					if(attr.getName().equals("for")){
-						for(String val : attr.getVals()){
-							for(String id : for_ids){
-								if(val.equals(id)){
-									labels.add(elem);
-								}
-							}
-						}
+				for(String id : for_ids){
+					if(elem.getAttributes().get("for").contains(id)){
+						labels.add(elem);
 					}
 				}
 			}
@@ -465,7 +451,7 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"display", "position", "color", "font-family", "font-size", "background-color", "text-decoration-color", "text-emphasis-color", "caret-color", "outline-color", "border-color", "border-left-color", "border-right-color", "border-top-color", "and border-bottom-color"};
+		String[] cssList = {"color", "font-family", "font-size", "background-color", "text-decoration-color", "text-emphasis-color", "caret-color", "outline-color", "border-left-color", "border-right-color", "border-top-color", "border-bottom-color", "margin-left", "margin-top", "margin-right", "margin-bottom", "padding-left", "padding-top", "padding-right", "padding-bottom"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
@@ -539,7 +525,7 @@ public class Browser {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Set<Attribute> extractAttributes(WebElement element) {
+	public Map<String, String> extractAttributes(WebElement element) {
 		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
 	}
@@ -551,10 +537,8 @@ public class Browser {
 	 * 
 	 * @param attributeList
 	 */
-	private Set<Attribute> loadAttributes( List<String> attributeList){
-		Set<Attribute> attr_set = new HashSet<Attribute>();
-		
-		Map<String, Boolean> attributes_seen = new HashMap<String, Boolean>();
+	private Map<String, String> loadAttributes( List<String> attributeList){
+		Map<String, String> attributes_seen = new HashMap<String, String>();
 		
 		for(int i = 0; i < attributeList.size(); i++){
 			String[] attributes = attributeList.get(i).split("::");
@@ -564,14 +548,12 @@ public class Browser {
 				String[] attributeVals = attributes[1].split(" ");
 
 				if(!attributes_seen.containsKey(attribute_name)){
-					attributes_seen.put(attribute_name, true);
-					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
-					attr_set.add(attribute);	
+					attributes_seen.put(attribute_name, Arrays.asList(attributeVals).toString());	
 				}
 			}
 		}
 
-		return attr_set;
+		return attributes_seen;
 	}
 
 	

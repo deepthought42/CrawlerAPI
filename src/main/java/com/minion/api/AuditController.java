@@ -3,13 +3,11 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,16 +33,14 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.DomainAuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 import com.qanairy.utils.BrowserUtils;
-
-import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -71,9 +67,6 @@ public class AuditController {
     
     @Autowired
     protected Crawler crawler;
-    
-    @Autowired
-    private ActorSystem actor_system;
     
     /**
      * Retrieves list of {@link PerformanceInsight insights} with a given key
@@ -114,8 +107,7 @@ public class AuditController {
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
-											   	  		@RequestParam(value="url", required=true) String url,
-											   	  		@RequestParam(value="audits", required=true) List<String> audit_types) throws Exception {
+											   @RequestParam(value="url", required=true) String url) throws Exception {
 	   	/*
 			Principal principal = request.getUserPrincipal();
 		   	String id = principal.getName().replace("auth0|", "");
@@ -139,48 +131,13 @@ public class AuditController {
 	   		domain.setUrl(sanitized_url.toString());
 	   		domain = domain_service.save(domain);
 	   	}
-	   
-	   	List<AuditCategory> audit_categories = new ArrayList<AuditCategory>();
-	   	for(String type : audit_types) {
-	   		audit_categories.add(AuditCategory.create(type));
-	   	}
+
 	   	//crawl site and retrieve all page urls/landable pages
 	   	Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
 		LocalDateTime end_time = LocalDateTime.now();
 
 		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	CrawlStats stats = new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/page_state_audits.size());
-	   	/*
-	   	List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
-	   	//generate audit report
-	   	List<Audit> audits = new ArrayList<>();
-   		for(PageState page_state : page_states) {
-   			for(String audit_type : audit_types) {
-	   			//perform audit and return audit result
-	   			List<Audit> audits_executed = AuditFactory.execute(AuditCategory.create(audit_type), page_state, "Look-See-admin");
-	   			
-	   			audits_executed = audit_service.saveAll(audits_executed);
-	   			audits.addAll(audits_executed);
-	   		}
-	   		
-   			AuditRecord audit_record = new AuditRecord(audits);
-   			audit_records.add(audit_record_service.save(audit_record));
-   			
-	   		//use audit results to generate report
-	   		//add report to audit reports list
-	   		//save report to DB
-	   	}
-	   	*/
-	   	
-	   	//package reports into pdf document as full report
-	   	//return full report to user
-		
-		/*
-	   	AuditActionMessage audit_action_msg = new AuditActionMessage(DiscoveryAction.START, domain, acct.getUserId());
-	   	actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("auditActor"), "audit_actor"+UUID.randomUUID()).tell(audit_action_msg, null);
-	   	*/
-	   	return stats;
+	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/page_state_audits.size());
 	}
 
 	
@@ -200,4 +157,35 @@ public class AuditController {
 	   	}
 	}
 
+	@RequestMapping(path="/color", method = RequestMethod.GET)
+	public @ResponseBody DomainAuditRecord generateColorManagementReport(HttpServletRequest request,
+											   	  		@RequestParam(value="url", required=true) String url) throws Exception {
+	   	/*
+			Principal principal = request.getUserPrincipal();
+		   	String id = principal.getName().replace("auth0|", "");
+		   	Account acct = account_service.findByUserId(id);
+		
+		   	if(acct == null){
+		   		throw new UnknownAccountException();
+		   	}
+	   	*/
+		
+	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(url));
+	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
+	   	System.out.println("domain returned from db ...."+domain);
+	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
+	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
+	   	if(domain == null) {
+	   		//TODO throw DomainNotFoundError();
+	   	}
+	   
+	   	//get all most recent audit records
+	   	Set<AuditRecord> audit_records = domain_service.getMostRecentPageAuditRecords(domain.getUrl());
+	   		   	
+	   	//create new domain audit record with audit categories
+	   	DomainAuditRecord domain_audit = new DomainAuditRecord(audit_records);
+	   	
+	   	//add all domain audits
+	   	return domain_audit;
+	}
 }

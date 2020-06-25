@@ -2,7 +2,6 @@ package com.qanairy.models.rules;
 
 import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import org.slf4j.Logger;
 
@@ -28,10 +27,10 @@ public class DisabledRule extends Rule{
 		 * 
 		 */
 	
-		for(Attribute attribute: elem.getAttributes()){
-			if(attribute.getName().equals("disabled")){
+		for(String attribute: elem.getAttributes().keySet()){
+			if("disabled".contentEquals(attribute)){
 				log.info("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
-				return attribute.getVals().size() == 0;
+				return  elem.getAttributes().get(attribute).length() == 0;
 			}
 		}
 		return null;

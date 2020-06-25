@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Clickable;
 import com.qanairy.models.rules.Rule;
@@ -32,8 +31,8 @@ public class ElementRuleExtractor {
 	public List<Rule> extractInputRules(ElementState elem){
 		List<Rule> rules = new ArrayList<Rule>();
 
-		for(Attribute attr : elem.getAttributes()){
-			Rule rule = RuleFactory.build(attr.getName().toLowerCase(), attr.getVals().get(0));
+		for(String attr : elem.getAttributes().keySet()){
+			Rule rule = RuleFactory.build(attr.toLowerCase(), elem.getAttributes().get(attr));
 			
 			if(rule != null){
 				rules.add(rule_service.save(rule));

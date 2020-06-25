@@ -3,7 +3,6 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 
 public class EmailPatternRule extends Rule {
@@ -16,9 +15,9 @@ public class EmailPatternRule extends Rule {
 
 	@Override
 	public Boolean evaluate(ElementState page_element) {
-		for(Attribute attribute: page_element.getAttributes()){
-			if(attribute.getName().equals("vals")){
-				String pattern = "/^" + attribute.getVals().toString() + " $/";
+		for(String attribute: page_element.getAttributes().keySet()){
+			if("vals".contentEquals(attribute)){
+				String pattern = "/^" + page_element.getAttributes().get(attribute).toString() + " $/";
 				Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
 			    return matcher.matches();
 			}

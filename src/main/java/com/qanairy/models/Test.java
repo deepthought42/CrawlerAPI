@@ -421,7 +421,7 @@ public class Test implements Persistable {
 					String tag_name = element.getName();
 					
 					if(element.getAttribute("id") != null){
-						tag_name = element.getAttribute("id").getVals().get(0);
+						tag_name = element.getAttribute("id");
 					}
 					else{
 						if("a".equals(tag_name)){

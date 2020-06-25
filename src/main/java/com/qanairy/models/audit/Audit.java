@@ -2,9 +2,7 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 import org.neo4j.ogm.annotation.GeneratedValue;

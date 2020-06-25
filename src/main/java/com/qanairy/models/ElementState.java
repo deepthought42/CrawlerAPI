@@ -48,7 +48,7 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	private Map<String, String> css_values = new HashMap<>();
 	
 	@Properties
-	private Set<Attribute> attributes = new HashSet<>();
+	private Map<String, String> attributes = new HashMap<>();
 	
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
@@ -76,7 +76,7 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
+	public ElementState(String text, String xpath, String name, Map<String, String> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
 			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
 		super();
@@ -122,10 +122,9 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 * @pre outer_html != null;
 	 * @pre assert !outer_html.isEmpty()
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
+	public ElementState(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
 						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
-		super();
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;
@@ -158,11 +157,9 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 */
 	public void printAttributes(){
 		System.out.print("+++++++++++++++++++++++++++++++++++++++");
-		for(Attribute attribute : this.attributes){
-			System.out.print(attribute.getName() + " : ");
-			for(int i=0; i < attribute.getVals().size(); i++){
-				System.out.print( attribute.getVals().get(i) + " ");
-			}
+		for(String attribute : this.attributes.keySet()){
+			System.out.print(attribute + " : ");
+			System.out.print( attributes.get(attribute) + " ");
 		}
 		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
 	}
@@ -239,30 +236,19 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 		}
 	}
 
-	public void setAttributes(Set<Attribute> attribute_persist_list) {
+	public void setAttributes(Map<String, String> attribute_persist_list) {
 		this.attributes = attribute_persist_list;
 	}
 
-	public Set<Attribute> getAttributes() {
+	public Map<String, String> getAttributes() {
 		return attributes;
 	}
 	
-	public List<String> getAttributeValues(String attr_name){
+	public String getAttribute(String attr_name){
 		//get id for element
-		for(Attribute tag_attr : this.attributes){
-			if(tag_attr.getName().equals("id")){
-				return tag_attr.getVals();
-			}
-		}
-		
-		return null;
-	}
-	
-	public Attribute getAttribute(String attr_name){
-		//get id for element
-		for(Attribute tag_attr : this.attributes){
-			if(tag_attr.getName().equalsIgnoreCase(attr_name)){
-				return tag_attr;
+		for(String tag_attr : this.attributes.keySet()){
+			if(tag_attr.equalsIgnoreCase(attr_name)){
+				return this.attributes.get(tag_attr);
 			}
 		}
 		
@@ -270,8 +256,8 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	}
 	
 
-	public void addAttribute(Attribute attribute) {
-		this.attributes.add(attribute);
+	public void addAttribute(String attribute, String values) {
+		this.attributes.put(attribute, values);
 	}
 	
 	public String getScreenshotUrl() {

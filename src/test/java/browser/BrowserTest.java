@@ -6,11 +6,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.Test;
 import org.openqa.grid.common.exception.GridException;
@@ -20,7 +18,6 @@ import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -54,7 +51,7 @@ public class BrowserTest {
 			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 			browser.navigateTo("https://staging-marketing.qanairy.com");
 			WebElement element = browser.getDriver().findElement(By.xpath("//li//a[contains(@href,'features.html')]/../../.."));
-			Set<Attribute> attributes = browser.extractAttributes(element);
+			Map<String, String> attributes = browser.extractAttributes(element);
 
 			BrowserService browser_service = new BrowserService();
 			String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
@@ -120,21 +117,16 @@ public class BrowserTest {
 				browser.navigateTo("https://qa-testbed.qanairy.com/elements/index.html");
 				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 				
-				Set<Attribute> attributes = browser.extractAttributes(element);
-		
-				Map<String, List<String>> attribute_map = new HashMap<String, List<String>>();
-				for(Attribute attr : attributes){
-					attribute_map.put(attr.getName(), attr.getVals());
-				}
+				Map<String, String> attributes = browser.extractAttributes(element);
 				
-				assertTrue(attribute_map.containsKey("id"));
-				assertEquals(1, attribute_map.get("id").size());
+				assertTrue(attributes.containsKey("id"));
+				assertEquals(1, attributes.get("id").length());
 				
-				assertTrue(attribute_map.containsKey("class"));
-				assertEquals(3, attribute_map.get("class").size());
+				assertTrue(attributes.containsKey("class"));
+				assertEquals(3, attributes.get("class").length());
 				
-				assertTrue(attribute_map.containsKey("style"));
-				assertEquals(1, attribute_map.get("style").size());
+				assertTrue(attributes.containsKey("style"));
+				assertEquals(1, attributes.get("style").length());
 				break;
 			}catch(GridException e){
 				

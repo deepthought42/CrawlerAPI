@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -49,6 +50,7 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
+import com.qanairy.services.BrowserService;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -158,7 +160,7 @@ public class Browser {
 	 * 
 	 * @precondition src != null
 	 */
-	public static String cleanSrc(String src) throws NullPointerException{
+	public static String cleanSrc(String src) {
 		Document html_doc = Jsoup.parse(src);
 		html_doc.select("canvas").remove();
 

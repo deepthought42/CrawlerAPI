@@ -1,5 +1,6 @@
 package com.qanairy.models.audit;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import com.qanairy.models.LookseeObject;
  */
 public class AuditRecord extends LookseeObject{
 	@Properties
-	private Map<String, Double> category_scores;
+	private Map<String, Double> category_scores = new HashMap<String, Double>();
 	
 	@Relationship(type = "HAS")
 	private List<Audit> audits;

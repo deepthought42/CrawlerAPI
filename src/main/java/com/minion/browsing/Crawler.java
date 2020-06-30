@@ -870,7 +870,7 @@ public class Crawler {
 
 			//retrieve html source for page
 			try {
-				Document doc = Jsoup.connect(page_url).get();
+				Document doc = Jsoup.connect(page_url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 				log.debug("Document title :: " + doc.title());
 				Elements links = doc.select("a");
 				for (Element link : links) {
@@ -892,6 +892,7 @@ public class Crawler {
 			}
 			catch(HttpStatusException e) {
 				log.warn("HTTP Status Exception occurred while navigating to :: "+page_url);
+				e.printStackTrace();
 			}
 			catch(IllegalArgumentException e) {
 				log.warn("illegal argument exception occurred when connecting to ::  " + page_url);

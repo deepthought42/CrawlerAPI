@@ -1,14 +1,10 @@
 package com.minion.actors;
 
-
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -21,20 +17,14 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.message.PageFoundMessage;
-import com.qanairy.models.message.PageStateAuditMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -52,12 +42,6 @@ public class ElementDataExtractor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(ElementDataExtractor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private ActorSystem actor_system;
-	
-	@Autowired
-	private PageService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -119,34 +103,26 @@ public class ElementDataExtractor extends AbstractActor{
 		page_state_build_success = false;
 		do {
 			try {
-				log.debug("retrieving browser connection ... "+page_state.getUrl());
+				log.warn("Element Data Extractor retrieving browser connection ... "+page_state.getUrl());
 				browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_state.getUrl());
 				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), browser, reviewed_elements);
 			
 				page_state.addElements(elements);
 				page_state_service.save(page_state);
-				log.warn("Sending page state audit message to auditor");
 				//send page state message to auditor
-				PageStateAuditMessage msg = new PageStateAuditMessage(page_state);
-				ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						.props("auditor"), "auditor"+UUID.randomUUID());
-				auditor.tell(msg, getSelf());
+				getSender().tell(page_state, getSelf());
 				break;
 			}catch(Exception e) {
-				//log.warn("exception occurred on page :: "+page_state.getUrl());
 				if(e instanceof GridException || e instanceof WebDriverException) {
-					log.warn("Selenium Grid exception thrown during page data extractions");
-					//e.printStackTrace();
+					log.debug("Selenium Grid exception thrown during page data extractions");
 				}
-				//e.printStackTrace();
 			}
 			finally {
 				if( browser != null ) {
 					browser.close();
 				}
 			}
-			TimingUtils.pauseThread(60000L);
-		}while(!page_state_build_success && error_cnt < 120);
+		}while(!page_state_build_success && error_cnt < 1000);
 	}	
 }

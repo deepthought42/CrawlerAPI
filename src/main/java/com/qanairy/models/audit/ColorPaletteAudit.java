@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditSubcategory;
 
 
 /**
@@ -24,7 +25,7 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 	private List<String> colors = new ArrayList<>();
 	
 	public ColorPaletteAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), "color_palette");
+		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.COLOR_PALETTE);
 	}
 	
 	private static String getAuditDescription() {
@@ -59,7 +60,6 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 		assert user_id != null;
 		
 		List<String> observations = new ArrayList<>();
-		double overall_score = 0.0;
 
 		Map<String, Boolean> colors = new HashMap<String, Boolean>();
 		System.out.println("Elements available for color evaluation ...  "+page_state.getElements().size());
@@ -90,14 +90,16 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 		Map<String, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
 		for(String color_str : colors.keySet()) {
-			if(color_str == null) {
+			if(color_str == null || color_str.isEmpty()) {
 				continue;
 			}
 
-			//extract r,g,b,a from color_str		
-			Color color = new Color(color_str);
+			//extract r,g,b,a from color_str
+			ColorData color = new ColorData(color_str);
 			//if gray(all rgb values are equal) put in gray colors map otherwise filtered_colors
 			String rgb_color_str = "rgb("+color.red+","+color.green+","+color.blue+")";
+			//convert rgb to hsl, store all as Color object
+			
 			if(color.red == color.green && color.green == color.blue) {
 				gray_colors.put(rgb_color_str, Boolean.TRUE);
 			}
@@ -110,18 +112,27 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 		log.warn("Total filtered colors found (Includes shades, excludes transparency, and gray) ... "+filtered_colors.size());
 		log.warn("filtered colors :: "+filtered_colors);
 		log.warn("Total grayscale colors ... "+gray_colors.size());
-		log.warn("filtered colors :: "+gray_colors);
+		log.warn("gray colors :: "+gray_colors);
 		
-		//group colors based on which colors are closes to each other in hue? or maybe saturation? to identify primary colors
+		//TEMP SOLUTION score by how many primary colors are used. TODO replace with scoring based on color scheme
 		
-		//Identify color scheme type by how many primary colors are used
+		if(filtered_colors.size() < 3) {
+			setScore(1.0);
+		}
+		else if(filtered_colors.size() > 3) {
+			setScore(2.0);
+		}
+		else if(filtered_colors.size() == 3) {
+			setScore(3.0);
+		}
+		
+		
 		
 		
 		//score colors found against scheme
 		setGrayColors(new ArrayList<>(gray_colors.keySet()));
 		setColors(new ArrayList<>(filtered_colors.keySet()));
 		setObservations(observations);
-		setScore( overall_score/colors.size() );
 		setKey(generateKey());
 		
 		return getScore();
@@ -131,7 +142,7 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Audit clone() {
+	public ColorPaletteAudit clone() {
 		ColorPaletteAudit audit = new ColorPaletteAudit();
 		audit.setScore(getScore());
 		audit.setKey(getKey());
@@ -152,42 +163,5 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 
 	public void setColors(List<String> colors) {
 		this.colors = colors;
-	}
-}
-
-/**
- * Represents an both rgb and hsl setting simulatenously
- *
- */
-class Color{
-	int red;
-	int green;
-	int blue;
-	
-	double transparency;
-	double value;
-	double hue;
-	double saturation;
-	double luminosity;
-	
-	public Color(String rgba_string) {
-		//extract r,g,b,a from color_str
-		String tmp_color_str = rgba_string.replace(")", "");
-		tmp_color_str = tmp_color_str.replace("rgba(", "");
-		tmp_color_str = tmp_color_str.replace("rgb(", "");
-		tmp_color_str = tmp_color_str.replaceAll(" ", "");
-		String[] rgba = tmp_color_str.split(",");
-		
-		this.red = Integer.parseInt(rgba[0]);
-		this.green = Integer.parseInt(rgba[1]);
-		this.blue = Integer.parseInt(rgba[2]);
-		
-		if(rgba.length == 4) {
-			transparency = Double.parseDouble(rgba[3]);
-		}
-		this.hue = 0.0;
-		this.saturation = 0.0;
-		this.value = 0.0;
-		this.luminosity = 0.0;
 	}
 }

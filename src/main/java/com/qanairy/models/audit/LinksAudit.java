@@ -11,10 +11,10 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.Tag;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -30,7 +30,7 @@ public class LinksAudit extends InformationArchitectureAudit {
 	private List<ElementState> dead_links = new ArrayList<>();
 	
 	public LinksAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), "links");
+		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
 	
 	private static String getAuditDescription() {
@@ -155,7 +155,7 @@ public class LinksAudit extends InformationArchitectureAudit {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Audit clone() {
+	public LinksAudit clone() {
 		LinksAudit audit = new LinksAudit();
 		audit.setScore(getScore());
 		audit.setKey(getKey());

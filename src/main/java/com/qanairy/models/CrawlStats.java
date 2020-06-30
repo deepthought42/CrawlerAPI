@@ -10,7 +10,7 @@ public class CrawlStats {
 	private long page_count;
 	private double average_time_per_page;
 	
-	public CrawlStats(LocalDateTime start_time, LocalDateTime end_time, long total_seconds, int size, long avg_time_per_page) {
+	public CrawlStats(LocalDateTime start_time, LocalDateTime end_time, long total_seconds, int size, double avg_time_per_page) {
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setTotalTime(total_seconds);

@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.services.BrowserService;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * A reference to a web page
@@ -389,10 +390,12 @@ public class PageState extends LookseeObject implements PathObject {
 	 *
 	 * @pre page != null
 	 */
-	public String generateKey() {		
-		return "pagestate::" + getFullPageChecksum();
+	public String generateKey() {
+		String src_template = BrowserService.extractTemplate(getSrc());
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(src_template);
 	}
 
+	@Deprecated
 	public void addForm(Form form) {
 		for (Form temp_form : this.forms) {
 			if (temp_form.getKey().equals(form.getKey())) {

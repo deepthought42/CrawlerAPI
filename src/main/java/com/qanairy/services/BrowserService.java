@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -150,10 +151,9 @@ public class BrowserService {
 		element_state.setAttributes(attributes);
 		element_state.setOuterHtml(element.outerHtml());
 		element_state.setInnerHtml(element.html());
-		element_state.setTemplate(extractTemplate(element.outerHtml(), element.text()));
+		element_state.setTemplate(extractTemplate(element.outerHtml()));
 		element_state.setName(element.tagName());
 		element_state.setText(element.text());
-		element_state.setIsPartOfForm(isElementPartOfForm(element));
 		element_state.setClassification(classification);
 		element_state.setCssValues(css_values);
 		element_state.setKey(element_state.generateKey());
@@ -323,7 +323,7 @@ public class BrowserService {
 		//retrieve landable page state associated with page with given url
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String host = new URL(browser_url).getHost();
-		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		String page_src = browser.getDriver().getPageSource();
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
 
@@ -337,42 +337,29 @@ public class BrowserService {
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
-		List<PageState> page_states = page_state_service.findByFullPageScreenshotChecksum(full_page_screenshot_checksum);
-
+		//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
+		// removing the following viewport screenshot because it doesn't appear to be needed for new audit setup 6/19/2020
 		
-		if(page_states.isEmpty()) {
-			log.warn("could not find page by full page screenshot checksum ::  "+full_page_screenshot_checksum);
-			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
-			// removing the following viewport screenshot because it doesn't appear to be needed for new audit setup 6/19/2020
-			
+		PageState page_state = new PageState( url_without_params,
+				"",
+				new ArrayList<>(),
+				page_src,
+				browser.getXScrollOffset(),
+				browser.getYScrollOffset(),
+				browser.getViewportSize().getWidth(),
+				browser.getViewportSize().getHeight(),
+				browser.getBrowserName(),
+				new HashSet<Form>(),
+				full_page_screenshot_url, 
+				full_page_screenshot_checksum);
 
-			log.warn("creating new page state...");
-			PageState page_state = new PageState( url_without_params,
-					"",
-					new ArrayList<>(),
-					page_src,
-					browser.getXScrollOffset(),
-					browser.getYScrollOffset(),
-					browser.getViewportSize().getWidth(),
-					browser.getViewportSize().getHeight(),
-					browser.getBrowserName(),
-					new HashSet<Form>(),
-					full_page_screenshot_url, 
-					full_page_screenshot_checksum);
-
-			page_state.setSrcChecksum(src_checksum);
-			page_state.addScreenshotChecksum(screenshot_checksum);
-			page_state.setScreenshotUrl(viewport_screenshot_url);
-			page_state.setFullPageWidth(full_page_screenshot.getWidth());
-			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-				
-			return page_state_service.save(page_state);
-		}
-		
-		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStates(page_states.get(0).getKey()));
-		log.warn("loaded page elements from db :: " +page_state.getElements().size());
-		return page_state;
+		page_state.setSrcChecksum(src_checksum);
+		page_state.addScreenshotChecksum(screenshot_checksum);
+		page_state.setScreenshotUrl(viewport_screenshot_url);
+		page_state.setFullPageWidth(full_page_screenshot.getWidth());
+		page_state.setFullPageHeight(full_page_screenshot.getHeight());
+		log.warn("built page state with url :: "+page_state.getUrl());
+		return page_state_service.save(page_state);
 	}
 	
 	private static String calculateSha256(String value) {
@@ -492,26 +479,26 @@ public class BrowserService {
 		
 		//create element state from root node
 		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-		Map<String, String> css_values = Browser.loadCssProperties(browser.findWebElementByXpath("//body"));
-		ElementState root_element_state = buildElementState("//body", attributes, css_values, root, ElementClassification.ANCESTOR);
+		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<String, String>(), root, ElementClassification.ANCESTOR);
 		root_element_state = element_service.save(root_element_state);
 
 		//put element on frontier
 		frontier.put(root_element_state, new ArrayList<>(root.children()));
 		while(!frontier.isEmpty()) {
 			ElementState root_element = frontier.keySet().iterator().next();
-			List<Element> child_elements = frontier.get(root_element);
+			List<Element> child_elements = frontier.remove(root_element);
 
 			for(Element child : child_elements) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
 				String xpath = root_element.getXpath() + "/" + child.tagName();
+
 				if(!xpath_cnt.containsKey(xpath)) {
 					xpath_cnt.put(xpath, 1);
 				}
 				else {
 					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
-				}
-				if(isStructureTag(child.tagName())) {
-					continue;
 				}
 				
 				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
@@ -547,8 +534,8 @@ public class BrowserService {
 						element_state = element_service.save(element_state);
 						//put element on frontier
 						if(children.isEmpty()) {
-							visited_elements.add(element_state);
 							reviewed_xpaths.put(root_element.getXpath(), element_state);
+							visited_elements.add(element_state);
 						}
 						else {
 							frontier.put(element_state, new ArrayList<>(child.children()));
@@ -559,7 +546,6 @@ public class BrowserService {
 				
 			}
 			reviewed_xpaths.put(root_element.getXpath(), root_element);
-			frontier.remove(root_element);
 			visited_elements.add(root_element);
 			//root_element = element_service.save(root_element);
 		}
@@ -804,17 +790,6 @@ public class BrowserService {
 		return elements;
 	}
 	
-	private static boolean isElementPartOfForm(Element element) {
-		Element new_element = element;
-		while(new_element != null && !new_element.tagName().equals("body") && !new_element.tagName().equals("html")){
-			if(new_element.tagName().equals("form")){
-				return true;
-			}
-			new_element = new_element.parent();
-		}
-		return false;
-	}
-
 	public static boolean doesElementHaveNegativePosition(Point location) {
 		return location.getX() < 0 || location.getY() < 0;
 	}
@@ -1147,7 +1122,7 @@ public class BrowserService {
 	 */
 	public static Map<String, String> generateAttributesMapUsingJsoup(Element element){
 		Map<String, String> attributes = new HashMap<>();
-		for(org.jsoup.nodes.Attribute attribute : element.attributes() ){
+		for(Attribute attribute : element.attributes() ){
 			attributes.put(attribute.getKey(), attribute.getValue());
 		}
 
@@ -1564,14 +1539,11 @@ public class BrowserService {
 	/**
 	 * Extracts template for element by usin outter tml and removing inner text
 	 * @param element {@link Element}
-	 *
 	 * @return templated version of element html
 	 */
-	public static String extractTemplate(String outerHtml, String innerText){
+	public static String extractTemplate(String outerHtml){
 		assert outerHtml != null;
 		assert !outerHtml.isEmpty();
-		assert innerText != null;
-		assert !innerText.isEmpty();
 		
 		Document html_doc = Jsoup.parseBodyFragment(outerHtml);
 

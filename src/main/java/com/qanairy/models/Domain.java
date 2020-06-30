@@ -10,6 +10,8 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.qanairy.models.audit.AuditRecord;
+
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
@@ -23,7 +25,6 @@ public class Domain implements Persistable{
 	private Long id;
 	
 	private String host;
-
 	private String url;
 	private String key;
 	private String protocol;
@@ -44,6 +45,9 @@ public class Domain implements Persistable{
 
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
 	private Set<DiscoveryRecord> discovery_records;
+	
+	@Relationship(type = "HAS_AUDIT")
+	private Set<AuditRecord> audit_records;
 	
 	/**
 	 * 

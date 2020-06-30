@@ -23,7 +23,6 @@ public class Page extends LookseeObject{
 	@Relationship(type = "HAS")
 	private Set<PageState> page_states;
 	
-
 	@Deprecated
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;

@@ -21,10 +21,8 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.message.PageFoundMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
@@ -82,21 +80,20 @@ public class PageDataExtractor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageFoundMessage.class, message-> {
-					log.warn("Page data extractor received PageFoundMessage...");
+				.match(Page.class, page-> {
+					log.warn("Page data extractor received Page Message...");
 					int error_cnt = 0;
 					boolean page_state_build_success = false;
-					Page page = message.getPage();
 					Browser browser = null;
 					do {
 						try {
-							log.warn("retrieving browser connection ... ");
+							log.debug("retrieving browser connection ... ");
 							browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to url :: "+page.getUrl());
+							log.debug("navigating to url :: "+page.getUrl());
 							browser.navigateTo(page.getUrl());
 		
 							//build page state with element states at the same time
-							log.warn("building page state...");
+							log.debug("building page state...");
 							PageState page_state = browser_service.buildPageState( page, browser );
 							page.addPageState(page_state);
 							page = page_service.save(page);
@@ -105,11 +102,11 @@ public class PageDataExtractor extends AbstractActor{
 							log.warn("sending page state to element data extractor...");
 							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
-							element_data_extractor.tell(page_state, getSelf());
+							element_data_extractor.tell(page_state, getSender());
 							break;
 						}catch(Exception e) {
 							if(e instanceof GridException || e instanceof WebDriverException) {
-								log.warn("Exception thrown during page data extractions");
+								log.debug("Exception thrown during page data extractions");
 							}
 							else {
 								e.printStackTrace();
@@ -122,8 +119,7 @@ public class PageDataExtractor extends AbstractActor{
 								browser = null;
 							}							
 						}
-						TimingUtils.pauseThread(60000L);
-					}while(!page_state_build_success && error_cnt < 60);
+					}while(!page_state_build_success && error_cnt < 1000);
 
 					postStop();
 				})

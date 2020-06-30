@@ -294,7 +294,7 @@ public class TestCreationActor extends AbstractActor  {
 		String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, new URL(browser.getDriver().getCurrentUrl()).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		elem.setScreenshotUrl(screenshot_url);
 		elem.setOuterHtml(element.getAttribute("outerHTML"));
-		elem.setTemplate(BrowserService.extractTemplate(elem.getOuterHtml(), elem.getText()));
+		elem.setTemplate(BrowserService.extractTemplate(elem.getOuterHtml()));
 		elem = page_element_service.save(elem);
 		return elem;
 	}

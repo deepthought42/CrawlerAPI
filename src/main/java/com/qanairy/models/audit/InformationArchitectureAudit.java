@@ -3,10 +3,11 @@ package com.qanairy.models.audit;
 import java.util.List;
 
 import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditSubcategory;
 
-public abstract class InformationArchitectureAudit extends Audit {
+public abstract class InformationArchitectureAudit extends PageStateAudit {
 
-	public InformationArchitectureAudit(List<String> best_practices, String ada_compliance_description, String Description, String name) {
-		super(AuditCategory.INFORMATION_ARCHITECTURE, best_practices, ada_compliance_description, ada_compliance_description, name);
+	public InformationArchitectureAudit(List<String> best_practices, String ada_compliance_description, String Description, AuditSubcategory subcategory) {
+		super(AuditCategory.INFORMATION_ARCHITECTURE, best_practices, ada_compliance_description, ada_compliance_description, subcategory);
 	}
 }

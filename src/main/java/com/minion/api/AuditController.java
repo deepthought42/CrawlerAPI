@@ -1,16 +1,15 @@
 package com.minion.api;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +29,22 @@ import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.audit.DomainAuditRecord;
+import com.qanairy.models.audit.DomainColorPaletteAudit;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.experience.PerformanceInsight;
+import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 import com.qanairy.utils.BrowserUtils;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -67,6 +71,9 @@ public class AuditController {
     
     @Autowired
     protected Crawler crawler;
+    
+    @Autowired
+    private ActorSystem actor_system;
     
     /**
      * Retrieves list of {@link PerformanceInsight insights} with a given key
@@ -118,8 +125,6 @@ public class AuditController {
 		   	}
 	   	 */
 		
-		LocalDateTime start_time = LocalDateTime.now();
-		
 	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(url));
 	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
 	   	System.out.println("domain returned from db ...."+domain);
@@ -132,12 +137,19 @@ public class AuditController {
 	   		domain = domain_service.save(domain);
 	   	}
 
+	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				.props("auditManager"), "auditManager"+UUID.randomUUID());
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account");
+		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
-	   	Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
+	   /*	
+	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
 		LocalDateTime end_time = LocalDateTime.now();
 
 		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/page_state_audits.size());
+	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
+	   	*/
+		return null;
 	}
 
 	
@@ -180,10 +192,14 @@ public class AuditController {
 	   	}
 	   
 	   	//get all most recent audit records
+	   	
 	   	Set<AuditRecord> audit_records = domain_service.getMostRecentPageAuditRecords(domain.getUrl());
-	   		   	
+	   	
 	   	//create new domain audit record with audit categories
 	   	DomainAuditRecord domain_audit = new DomainAuditRecord(audit_records);
+	   	
+	   	DomainColorPaletteAudit domain_palette = new DomainColorPaletteAudit();
+	   	//domain_palette.execute(domain);
 	   	
 	   	//add all domain audits
 	   	return domain_audit;

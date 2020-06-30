@@ -42,6 +42,8 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	private int y_location;
 	private int width;
 	private int height;
+	
+	@Deprecated
 	private boolean part_of_form;
 	
 	@Properties
@@ -101,7 +103,7 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
+		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
 		setRules(new HashSet<>());
 		setKey(generateKey());
 		setClassification(ElementClassification.CHILD);
@@ -145,8 +147,7 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
-		setTemplate("");
+		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
 		setRules(new HashSet<>());
 		setClassification(classification);
 		setKey(generateKey());
@@ -413,10 +414,12 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 		this.template = template;
 	}
 
+	@Deprecated
 	public boolean isPartOfForm() {
 		return part_of_form;
 	}
 
+	@Deprecated
 	public void setIsPartOfForm(boolean is_part_of_form) {
 		this.part_of_form = is_part_of_form;
 	}

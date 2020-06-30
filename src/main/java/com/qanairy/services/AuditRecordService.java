@@ -8,6 +8,7 @@ import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.ColorPaletteAudit;
 import com.qanairy.models.repository.AuditRecordRepository;
 
 /**
@@ -34,5 +35,9 @@ public class AuditRecordService {
 
 	public List<AuditRecord> findAll() {
 		return IterableUtils.toList(audit_record_repo.findAll());
+	}
+	
+	public List<ColorPaletteAudit> findColorPaletteAuditRecords(List<String> audit_record_keys){
+		return audit_record_repo.findColorPaletteByAuditRecords(audit_record_keys);
 	}
 }

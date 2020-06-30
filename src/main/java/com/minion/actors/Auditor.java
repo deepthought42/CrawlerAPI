@@ -1,17 +1,11 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
-import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,49 +13,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.api.MessageBroadcaster;
-import com.minion.api.exception.PaymentDueException;
-import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Form;
-import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.DiscoveryStatus;
-import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.AccountRequest;
-import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.message.FormDiscoveredMessage;
-import com.qanairy.models.message.FormDiscoveryMessage;
-import com.qanairy.models.message.PageStateAuditMessage;
-import com.qanairy.models.message.PathMessage;
-import com.qanairy.models.message.TestMessage;
-import com.qanairy.models.message.UrlMessage;
-import com.qanairy.services.AccountService;
+import com.qanairy.models.message.AuditRecordSet;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
-import com.qanairy.services.BrowserService;
-import com.qanairy.services.DiscoveryRecordService;
-import com.qanairy.services.DomainService;
-import com.qanairy.services.EmailService;
-import com.qanairy.services.FormService;
-import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.services.SubscriptionService;
-import com.qanairy.services.TestService;
-import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -78,43 +42,11 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class Auditor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
 
-	private final int DISCOVERY_ACTOR_COUNT = 200;
-
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	private DiscoveryRecord discovery_record;
-		
-	@Autowired
-	private ActorSystem actor_system;
-	
-	@Autowired
-	private AccountService account_service;
-	
-	@Autowired
-	private DomainService domain_service;
-	
+
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private PageService page_service;
-		
-	@Autowired
-	private TestService test_service;
-	
-	@Autowired
-	private DiscoveryRecordService discovery_service;
-	
-	@Autowired
-	private EmailService email_service;
-	
-	@Autowired
-	private FormService form_service;
-	
-	@Autowired
-	private SubscriptionService subscription_service;
-	
-	@Autowired
-	private BrowserService browser_service;
+
 	
 	@Autowired
 	private AuditService audit_service;
@@ -122,15 +54,8 @@ public class Auditor extends AbstractActor{
 	@Autowired
 	private AuditRecordService audit_record_service;
 	
-	private Map<String, PageState> explored_pages = new HashMap<>();
 	private Account account;
-	private ActorRef domain_actor;
-	private ActorRef url_browser_actor;
-	private ActorRef form_discoverer;
-	private ActorRef form_test_discovery_actor;
-	private ActorRef path_expansion_actor;
 
-	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -156,20 +81,18 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageStateAuditMessage.class, message-> {
+				.match(PageState.class, page_state-> {
 					log.warn("performing audits on page state...");
 					//retrieve all audits that the customer requested
 					Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>();
 					List<AuditRecord> audit_records = new ArrayList<AuditRecord>();
-					
-					PageState page_state = message.getPageState();
 					
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 			   			//perform audit and return audit result
-			   			List<Audit> audits_executed = AuditFactory.execute(audit_category, page_state, "Look-See-admin");
+			   			List<Audit> audits_executed = AuditFactory.executePageAudit(audit_category, page_state, "Look-See-admin");
 			   			
 			   			audits_executed = audit_service.saveAll(audits_executed);
 			   			audits.addAll(audits_executed);
@@ -182,233 +105,23 @@ public class Auditor extends AbstractActor{
 		   			
 		   			page_state.addAuditRecord(audit_record);
 		   			page_state_service.save(page_state);
-		   			
+		   			getSender().tell(audit_record, getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			log.warn("Completed audits for page state ... "+message.getPageState().getUrl());
+		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
 		   			postStop();
 				})
-				.match(DiscoveryActionMessage.class, message-> {
-					if(message.getAction().equals(DiscoveryAction.START)){
-						startDiscovery(message);
-						setAccount(account_service.findByUserId(message.getAccountId()));
-					}
-					else if(message.getAction().equals(DiscoveryAction.STOP)){
-						//look up discovery record if it's null
-						stopDiscovery(message);
-					}
-					
+				.match(AuditRecordSet.class, msg -> {
+					log.warn("audit record set message received...");
+					//TODO Audit record analysis for domain
+				   	for(AuditCategory audit_category : AuditCategory.values()) {
+				   	//perform audit and return audit result
+				   		log.warn("Executing domain audit for "+audit_category);
+			   			List<Audit> audits_executed = AuditFactory.executeDomainAudit(audit_category, msg.getAuditRecords(), "Look-See-admin");
+			   			
+			   			audits_executed = audit_service.saveAll(audits_executed);
+			   			//TODO send message to sender with domain audits result
+				   	}
 					postStop();
-				})
-				.match(PathMessage.class, message -> {
-					/*
-					Timeout timeout = Timeout.create(Duration.ofSeconds(30));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
-					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-					
-					if(discovery_action == DiscoveryAction.STOP) {
-						log.warn("path message discovery actor returning");
-						return;
-					}
-					*/
-					discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
-
-					if(message.getStatus().equals(PathStatus.READY)){
-						PathMessage path_message = message.clone();
-						log.warn("discovery record in discovery actor :: " + discovery_record);
-						
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
-						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-						
-						if(path_expansion_actor == null){
-							path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-					    }
-
-						path_expansion_actor.tell(path_message, getSelf() );
-					}
-					else if(message.getStatus().equals(PathStatus.EXPANDED)){
-						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
-						discovery_record.setLastPathRanAt(new Date());
-						
-						//check if key already exists before adding to prevent duplicates
-						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-													
-						if(exploratory_browser_actors.isEmpty()){
-							//create multiple exploration actors for parallel execution
-							for(int i=0; i < DISCOVERY_ACTOR_COUNT; i++){
-								exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
-							}
-						}
-						exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-					}
-					else if(message.getStatus().equals(PathStatus.EXAMINED)){
-						
-						String path_key = String.join(":::", message.getKeys());
-						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
-							discovery_record.getExpandedPathKeys().add(path_key);
-						}
-						//increment examined count
-						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-						
-						//check if discovery is considered complete, if so then update status and send email to all accounts
-						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount() && discovery_record.getTotalPathCount()> 2){
-							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
-							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
-							
-							for(Account account: accounts){
-								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
-							}
-						}
-					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());
-
-					discovery_service.save(discovery_record);
-					postStop();
-				})
-				.match(TestMessage.class, test_msg -> {
-					
-					//plan exceeded check
-			    	Account acct = account_service.findByUserId(test_msg.getAccount());
-			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
-			    	}
-					discovery_record = getDiscoveryRecord(test_msg.getDomain().getUrl(), test_msg.getDomain().getDiscoveryBrowserName(), test_msg.getAccount());
-					Test test = test_msg.getTest();
-					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
-					if(existing_record == null) {
-						discovery_record.setTestCount(discovery_record.getTestCount()+1);
-						try {
-							SegmentAnalyticsHelper.testCreated(test_msg.getAccount(), test.getKey());
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-					
-					if(domain_actor == null){
-						domain_actor = test_msg.getDomainActor();
-					}
-					//send message to Domain Actor
-					domain_actor.tell(test_msg, getSelf());
-					
-					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
-					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
-					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
-					
-					if(!test.getSpansMultipleDomains()){
-						/*
-						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain(), test_msg.getAccount()), timeout);
-						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-						
-						if(discovery_action == DiscoveryAction.STOP) {
-							return;
-						}
-						*/
-						
-						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
-						final_key_list.add(test.getResult().getKey());
-						List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
-						final_object_list.add(test.getResult());
-						log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
-						//run reducer on key list
-						final_key_list = PathUtils.reducePathKeys(final_key_list);
-						final_object_list = PathUtils.reducePathObjects(final_object_list);
-						
-						PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-						
-						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
-							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
-							if(!explored_pages.containsKey(test.getResult().getUrl())) {
-								explored_pages.put(test.getResult().getUrl(), test.getResult());
-								if(url_browser_actor == null){
-									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-								}
-								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
-								url_browser_actor.tell( url_message, getSelf() );
-						    }
-						}
-						else {
-							if(path_expansion_actor == null){
-				  				path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  						  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-				  		    }
-					  		//send path message with examined status to discovery actor
-							path_expansion_actor.tell( path, getSelf() );
-							
-
-							if(form_discoverer == null){
-								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
-							}
-							form_discoverer.tell(path, getSelf());
-						}
-						
-					}
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, test_msg.getAccount());
-
-					discovery_service.save(discovery_record);
-					postStop();
-				})
-				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
-					//look up discovery for domain and increment
-			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-			        form_msg.setDiscoveryActor(getSelf());
-
-					if(form_test_discovery_actor == null){
-			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-			        }
-		        	form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
-
-			        discovery_service.save(discovery_record);
-			        postStop();
-				})
-				.match(AccountRequest.class, account_request_msg -> {
-					getSender().tell(this.getAccount(), getSelf());
-					postStop();
-				})
-				.match(FormDiscoveredMessage.class, form_msg -> {
-					Form form = form_msg.getForm();
-					try {
-						SegmentAnalyticsHelper.formDiscovered(form_msg.getUserId(), form.getKey());
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-					try {
-					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), form);
-					}catch(Exception e) {
-						try {
-							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
-						} catch (Exception se) {
-							se.printStackTrace();
-						}
-					}
-
-					log.warn("form message page key :: "+form_msg.getPage().getKey());
-					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
-					log.warn("form message page key :: "+page_state_record.getKey());
-
-					page_state_record.addForm(form);
-					
-					try {
-						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
-						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
-						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
-					}catch(Exception e) {
-						try {
-							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
-						} catch (Exception se) {
-							se.printStackTrace();
-						}
-					}
-					
-				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getHost(), form_msg.getUserId());
-				  	postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -425,106 +138,6 @@ public class Auditor extends AbstractActor{
 				.build();
 	}
 
-	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
-		DiscoveryRecord discovery_record = null;
-		if(this.discovery_record == null){
-			log.warn("discovery actor is null for instance variable in discovery actor");
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(url, user_id);
-			
-			if(discovery_record == null){
-				log.warn("was unable to find running discovery record in db");
-				discovery_record = new DiscoveryRecord(new Date(), browser, url,
-						0, 0, 0,
-						DiscoveryStatus.RUNNING);
-			}
-			return discovery_record;
-		}
-		
-		return this.discovery_record;
-	}
-
-	private void startDiscovery(DiscoveryActionMessage message) throws IOException, GeneralSecurityException {
-		domain_actor = getSender();
-		
-		//create actors for discovery
-		if(url_browser_actor == null){
-			url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-		}
-		
-		if(form_discoverer == null){
-			form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
-		}
-		
-		if(path_expansion_actor == null){
-			path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-	    }
-		
-		if(form_test_discovery_actor == null){
-        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-        }
-    
-		if(exploratory_browser_actors.isEmpty()){
-			//create multiple exploration actors for parallel execution
-			for(int i=0; i < DISCOVERY_ACTOR_COUNT; i++){
-				exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
-			}
-		}
-		
-		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
-		//create new discovery
-		discovery_service.save(discovery_record);
-
-		Account account = account_service.findByUserId(message.getAccountId());
-		account.addDiscoveryRecord(discovery_record);
-		account = account_service.save(account);
-
-		message.getDomain().addDiscoveryRecord(discovery_record);
-		domain_service.save(message.getDomain());
-		
-		//start a discovery
-		log.info("Sending URL to UrlBrowserActor");
-		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
-		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
-		
-		url_browser_actor.tell(url_message, getSelf() );
-	}
-
-	
-
-	private void stopDiscovery(DiscoveryActionMessage message) {
-		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
-		}
-		log.warn("stopping discovery...");
-		discovery_record.setStatus(DiscoveryStatus.STOPPED);
-		discovery_service.save(discovery_record);
-		
-		//stop all discovery processes
-		if(url_browser_actor != null){
-			actor_system.stop(url_browser_actor);
-			url_browser_actor = null;
-		}
-		if(path_expansion_actor != null){
-			actor_system.stop(path_expansion_actor);
-			path_expansion_actor = null;
-		}
-		if(form_discoverer != null){
-			actor_system.stop(form_discoverer);
-			form_discoverer = null;
-		}
-		if(!exploratory_browser_actors.isEmpty()){	
-			for(ActorRef actor : exploratory_browser_actors){
-				actor_system.stop(actor);
-			}
-			exploratory_browser_actors = new ArrayList<>();
-		}
-	}
-	
 	public Account getAccount() {
 		return account;
 	}

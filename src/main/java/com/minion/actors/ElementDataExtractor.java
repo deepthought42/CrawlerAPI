@@ -22,7 +22,6 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -75,7 +74,7 @@ public class ElementDataExtractor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageState.class, page_state-> {
-					log.warn("Element data extractor received PageState message...");
+					log.warn("Element data extractor received PageState message..."+page_state.getUrl());
 					extractElementDataFromPageState(page_state);
 					postStop();
 				})
@@ -103,13 +102,13 @@ public class ElementDataExtractor extends AbstractActor{
 		page_state_build_success = false;
 		do {
 			try {
-				log.warn("Element Data Extractor retrieving browser connection ... "+page_state.getUrl());
+				log.debug("Element Data Extractor retrieving browser connection ... "+page_state.getUrl());
 				browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_state.getUrl());
 				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), browser, reviewed_elements);
 			
 				page_state.addElements(elements);
-				page_state_service.save(page_state);
+				page_state = page_state_service.save(page_state);
 				//send page state message to auditor
 				getSender().tell(page_state, getSelf());
 				break;
@@ -123,6 +122,6 @@ public class ElementDataExtractor extends AbstractActor{
 					browser.close();
 				}
 			}
-		}while(!page_state_build_success && error_cnt < 1000);
+		}while(!page_state_build_success && error_cnt < 10000);
 	}	
 }

@@ -1,11 +1,11 @@
 package com.qanairy.models.audit;
 
-import java.awt.Color;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +24,9 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 
 	private double headline_score;
 	private double text_score;
-	private double header_contrast;
-	private double text_contrast;
+	
+	@Relationship(type="FLAGGED")
+	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	public TextColorContrastAudit() {
 		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
@@ -50,7 +51,6 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
 	}
 	
-	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -68,7 +68,7 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 		int total_headlines = 0;
 		int total_text_elems = 0;
 		
-		System.out.println("Elements available for color evaluation ...  "+page_state.getElements().size());
+		log.warn("Elements available for color evaluation ...  "+page_state.getElements().size());
 		//identify all colors used on page. Images are not considered
 		for(ElementState element : page_state.getElements()) {
 			//check element for color css property
@@ -80,81 +80,70 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 				continue;
 			}
 			ColorData color_data = new ColorData(color);
-			//convert rgb to hsl, store all as Color object
-			float[] hsb = Color.RGBtoHSB(color_data.red,color_data.green,color_data.blue, null);
-			color_data.hue = hsb[0];
-			color_data.saturation = hsb[1];
-			color_data.brightness = hsb[2];
 			
 			ColorData background_color_data = null;
 			//extract r,g,b,a from color css		
 			background_color_data = new ColorData(background_color);
-			//convert rgb to hsl, store all as Color object
-			hsb = Color.RGBtoHSB(background_color_data.red,background_color_data.green,background_color_data.blue, null);
-			background_color_data.hue = hsb[0];
-			background_color_data.saturation = hsb[1];
-			background_color_data.brightness = hsb[2];
 			
+			double max_luminosity = 0.0;
+			double min_luminosity = 0.0;
 			
-			double max_brightness = 0.0;
-			double min_brightness = 0.0;
-			
-			if(color_data.brightness > background_color_data.brightness) {
-				min_brightness = background_color_data.brightness;
-				max_brightness = color_data.brightness;
+			if(color_data.getLuminosity() > background_color_data.getLuminosity()) {
+				min_luminosity = background_color_data.getLuminosity();
+				max_luminosity = color_data.getLuminosity();
 			}
 			else {
-				min_brightness = color_data.brightness;
-				max_brightness = background_color_data.brightness;
+				min_luminosity = color_data.getLuminosity();
+				max_luminosity = background_color_data.getLuminosity();
 			}
-			
+			double contrast = 0.0;
 			if(ElementStateUtils.isHeader(element)) {
 				//score header element
 				//calculate contrast between text color and background-color
-				header_contrast = (min_brightness + 0.05) / (max_brightness + 0.05);
+				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
 				total_headlines++;
-			}
-			else if(ElementStateUtils.isTextContainer(element)) {
-				text_contrast = (min_brightness + 0.05) / (max_brightness + 0.05);
-				total_text_elems++;
-			}
-			
-			/*
+				/*
 				headlines < 3; value = 1
 				headlines > 3 and headlines < 4.5; value = 2
 				headlines >= 4.5; value = 3
-			 */
-			if(header_contrast < 3) {
-				headline_score += 1;
+				 */
+				if(contrast < 3) {
+					headline_score += 1;
+					flagged_elements.add(element);
+				}
+				else if(contrast >= 3 && contrast < 4.5) {
+					headline_score += 2;
+					flagged_elements.add(element);
+				}
+				else if(contrast >= 4.5) {
+					headline_score += 3;
+				}
 			}
-			else if(header_contrast >= 3 && header_contrast < 4.5) {
-				headline_score += 2;
-			}
-			else if(header_contrast >= 4.5) {
-				headline_score += 3;
-			}
-			
-			/*
+			else if(ElementStateUtils.isTextContainer(element)) {
+				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
+				total_text_elems++;
+				/*
 				text < 4.5; value = 1
 				text >= 4.5 and text < 7; value = 2
 				text >=7; value = 3
-			*/
-			if(text_contrast < 4.5) {
-				text_score += 1;
+				 */
+				if(contrast < 4.5) {
+					text_score += 1;
+					flagged_elements.add(element);
+				}
+				else if(contrast >= 4.5 && contrast < 7) {
+					text_score += 2;
+					flagged_elements.add(element);
+				}
+				else if(contrast >= 7) {
+					text_score += 3;
+				}
 			}
-			else if(text_contrast >= 4.5 && text_contrast < 7) {
-				text_score += 2;
-			}
-			else if(text_contrast >= 7) {
-				text_score += 3;
-			}
-
 		}
 		
 		setScore((headline_score+text_score)/(total_headlines + total_text_elems));
 		//score colors found against scheme
 		setObservations(observations);
-		setKey(generateKey());
 		
 		return getScore();
 	}

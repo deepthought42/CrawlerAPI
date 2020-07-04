@@ -164,4 +164,8 @@ public class ElementStateService {
 			element_repo.addChildElement(parent_element_key, child_element_key);
 		}
 	}
+
+	public ElementState findByPageStateAndChild(String page_state_key, String child_key) {
+		return element_repo.findByPageStateAndChild(page_state_key, child_key);
+	}
 }

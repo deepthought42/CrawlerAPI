@@ -19,9 +19,9 @@ import com.qanairy.models.enums.AuditSubcategory;
 /**
  * Executes various {@link Audit audits}
  */
-public class AuditFactory {
+public class AuditExecutor {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(AuditFactory.class);
+	private static Logger log = LoggerFactory.getLogger(AuditExecutor.class);
 
 	/**
 	 * Executes all audits for the {@link AuditCategory category} provided

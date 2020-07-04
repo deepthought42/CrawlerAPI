@@ -1,4 +1,4 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +10,10 @@ import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.LookseeObject;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.ColorPaletteAudit;
+import com.qanairy.models.audit.TextColorContrastAudit;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditSubcategory;
 

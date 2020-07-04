@@ -94,4 +94,10 @@ public class ElementStateUtils {
 		Element body = doc.body();
 		return !body.ownText().isEmpty();
 	}
+	
+	public static boolean isTextContainer(WebElement element) {
+		Document doc = Jsoup.parseBodyFragment(element.getAttribute("outerHTML"));
+		Element body = doc.body();
+		return !body.ownText().isEmpty();
+	}
 }

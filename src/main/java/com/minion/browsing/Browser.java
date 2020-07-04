@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -50,7 +49,6 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
-import com.qanairy.services.BrowserService;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -453,7 +451,28 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"color", "font-family", "font-size", "background-color", "text-decoration-color", "text-emphasis-color", "caret-color", "outline-color", "border-left-color", "border-right-color", "border-top-color", "border-bottom-color", "margin-left", "margin-top", "margin-right", "margin-bottom", "padding-left", "padding-top", "padding-right", "padding-bottom"};
+		String[] cssList = {"color", "background-color", "outline-color", "border-color", "border-style", "margin-left", "margin-top", "margin-right", "margin-bottom", "padding-left", "padding-top", "padding-right", "padding-bottom"};
+		Map<String, String> css_map = new HashMap<String, String>();
+		
+		for(String propertyName : cssList){
+			String element_value = element.getCssValue(propertyName);
+			if(element_value != null && !element_value.isEmpty()){
+				css_map.put(propertyName, element_value);
+			}
+		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadTextCssProperties(WebElement element){
+		String[] cssList = {"font-family", "font-size", "text-decoration-color", "text-emphasis-color"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){

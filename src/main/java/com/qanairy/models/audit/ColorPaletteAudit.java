@@ -62,18 +62,22 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 		List<String> observations = new ArrayList<>();
 
 		Map<String, Boolean> colors = new HashMap<String, Boolean>();
-		System.out.println("Elements available for color evaluation ...  "+page_state.getElements().size());
-		//identify all colors used on page. Images are not considered
+
+		log.warn("COLOR PALETTE AUDIT :: Elements available for color evaluation ...  "+page_state.getElements().size());
+		
 		for(ElementState element : page_state.getElements()) {
+			//identify all colors used on page. Images are not considered
+			
 			//check element for color css property
 			colors.put(element.getCssValues().get("color"), Boolean.TRUE);
-			
-			//check element for background-color css property
-			colors.put(element.getCssValues().get("background-color"), Boolean.TRUE);
 			//check element for text-decoration-color css property
 			colors.put(element.getCssValues().get("text-decoration-color"), Boolean.TRUE);
 			//check element for text-emphasis-color
 			colors.put(element.getCssValues().get("text-emphasis-color"), Boolean.TRUE);
+
+			//check element for background-color css property
+			colors.put(element.getCssValues().get("background-color"), Boolean.TRUE);
+			
 			//check element for caret-color
 			colors.put(element.getCssValues().get("caret-color"), Boolean.TRUE);
 			//check element for outline-color css property NB: SPECIFICALLY FOR BOXES
@@ -85,6 +89,8 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 			colors.put(element.getCssValues().get("border-top-color"), Boolean.TRUE);
 			colors.put(element.getCssValues().get("border-bottom-color"), Boolean.TRUE);
 		}
+		colors.remove("null");
+		colors.remove(null);
 		
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> filtered_colors = new HashMap<>();
@@ -100,18 +106,17 @@ public class ColorPaletteAudit extends ColorManagementAudit {
 			String rgb_color_str = "rgb("+color.red+","+color.green+","+color.blue+")";
 			//convert rgb to hsl, store all as Color object
 			
-			if(color.red == color.green && color.green == color.blue) {
+			if( Math.abs(color.red - color.green) < 4
+					&& Math.abs(color.red - color.blue) < 4
+					&& Math.abs(color.blue - color.green) < 4) {
 				gray_colors.put(rgb_color_str, Boolean.TRUE);
 			}
 			else {
 				filtered_colors.put(rgb_color_str, Boolean.TRUE);
 			}
 		}
-		colors.remove("null");
-		System.out.println("colors found :: "+colors);
-		log.warn("Total filtered colors found (Includes shades, excludes transparency, and gray) ... "+filtered_colors.size());
+		log.warn("colors found :: "+colors);
 		log.warn("filtered colors :: "+filtered_colors);
-		log.warn("Total grayscale colors ... "+gray_colors.size());
 		log.warn("gray colors :: "+gray_colors);
 		
 		//TEMP SOLUTION score by how many primary colors are used. TODO replace with scoring based on color scheme

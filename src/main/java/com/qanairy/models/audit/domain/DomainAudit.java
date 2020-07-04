@@ -1,4 +1,4 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.qanairy.models.PageState;
+import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditSubcategory;
 
@@ -30,12 +31,8 @@ public abstract class DomainAudit extends Audit{
 	 * @param description
 	 * @param name
 	 */
-	public DomainAudit(AuditCategory category, String description, AuditSubcategory subcategory) {
-		setDescription(description);
-		setSubcategory(subcategory);
-		setCategory(category);
-		setCreatedAt(LocalDateTime.now());
-		setKey(generateKey());
+	public DomainAudit(AuditCategory category, List<String> best_practices, String ada_compliance, String description, AuditSubcategory subcategory) {
+		super(category, best_practices, ada_compliance, description, subcategory);
 	}
 
 	/**
@@ -51,13 +48,6 @@ public abstract class DomainAudit extends Audit{
 	public abstract double execute(List<Audit> audits);
 	
 	public abstract DomainAudit clone();
-
-	/**
-	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
-	 */
-	public String generateKey() {
-		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSubcategory().toString()+this.getCategory()+this.getCreatedAt().toString()+this.getScore());
-	}
 	
 	public String getDescription() {
 		return description;

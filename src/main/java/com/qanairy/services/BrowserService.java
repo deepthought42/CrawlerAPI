@@ -52,6 +52,7 @@ import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ElementStateUtils;
 import com.qanairy.utils.PathUtils;
 
 import us.codecraft.xsoup.Xsoup;
@@ -217,7 +218,7 @@ public class BrowserService {
 
 			log.debug("creating new page state object ");
 			PageState page_state = new PageState( url_without_params,
-					viewport_screenshot_url,
+					"",
 					new ArrayList<>(),
 					page_src,
 					browser.getXScrollOffset(),
@@ -229,7 +230,7 @@ public class BrowserService {
 					full_page_screenshot_url, 
 					full_page_screenshot_checksum);
 
-			page_state.addScreenshotChecksum(screenshot_checksum);
+			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
 		
@@ -327,11 +328,12 @@ public class BrowserService {
 		String page_src = browser.getDriver().getPageSource();
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
 
+		/*
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
-		
+		*/
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
@@ -354,8 +356,8 @@ public class BrowserService {
 				full_page_screenshot_checksum);
 
 		page_state.setSrcChecksum(src_checksum);
-		page_state.addScreenshotChecksum(screenshot_checksum);
-		page_state.setScreenshotUrl(viewport_screenshot_url);
+		//page_state.addScreenshotChecksum(screenshot_checksum);
+		//page_state.setScreenshotUrl(viewport_screenshot_url);
 		page_state.setFullPageWidth(full_page_screenshot.getWidth());
 		page_state.setFullPageHeight(full_page_screenshot.getHeight());
 		log.warn("built page state with url :: "+page_state.getUrl());
@@ -530,6 +532,10 @@ public class BrowserService {
 					
 					if(web_element != null) {
 						child_css_values = Browser.loadCssProperties(web_element);
+						
+						if(ElementStateUtils.isTextContainer(web_element)){
+							child_css_values.putAll(Browser.loadTextCssProperties(web_element));
+						}
 						element_state = buildElementState(xpath, attributes, child_css_values, child, classification);
 						element_state = element_service.save(element_state);
 						//put element on frontier
@@ -1555,7 +1561,6 @@ public class BrowserService {
 			element.attr("id", "");
 			element.attr("name", "");
 			element.attr("style", "");
-			//element.text("");
 		}
 		
 		return html_doc.html();

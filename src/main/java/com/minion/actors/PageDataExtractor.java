@@ -81,7 +81,7 @@ public class PageDataExtractor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Page.class, page-> {
-					log.warn("Page data extractor received Page Message...");
+					log.warn("Page data extractor received Page Message..."+page.getUrl());
 					int error_cnt = 0;
 					boolean page_state_build_success = false;
 					Browser browser = null;
@@ -99,7 +99,7 @@ public class PageDataExtractor extends AbstractActor{
 							page = page_service.save(page);
 							page_state_build_success = true;
 							
-							log.warn("sending page state to element data extractor...");
+							log.warn("sending page state to element data extractor..."+page_state.getUrl());
 							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
 							element_data_extractor.tell(page_state, getSender());
@@ -119,7 +119,7 @@ public class PageDataExtractor extends AbstractActor{
 								browser = null;
 							}							
 						}
-					}while(!page_state_build_success && error_cnt < 1000);
+					}while(!page_state_build_success && error_cnt < 10000);
 
 					postStop();
 				})

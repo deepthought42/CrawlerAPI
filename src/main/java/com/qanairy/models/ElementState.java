@@ -292,7 +292,12 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 * @return
 	 */
 	public String generateKey() {
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate()+this.getText()+this.getXpath());
+		String key = "";
+		for(String style : getCssValues().keySet()) {
+			key += getCssValues().get(style);
+			
+		}
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate()+this.getXpath());
 	}
 	
 

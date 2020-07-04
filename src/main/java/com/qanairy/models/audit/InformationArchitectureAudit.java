@@ -7,7 +7,7 @@ import com.qanairy.models.enums.AuditSubcategory;
 
 public abstract class InformationArchitectureAudit extends PageStateAudit {
 
-	public InformationArchitectureAudit(List<String> best_practices, String ada_compliance_description, String Description, AuditSubcategory subcategory) {
-		super(AuditCategory.INFORMATION_ARCHITECTURE, best_practices, ada_compliance_description, ada_compliance_description, subcategory);
+	public InformationArchitectureAudit(List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory) {
+		super(AuditCategory.INFORMATION_ARCHITECTURE, best_practices, ada_compliance_description, description, subcategory);
 	}
 }

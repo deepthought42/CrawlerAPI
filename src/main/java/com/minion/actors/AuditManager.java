@@ -58,6 +58,7 @@ public class AuditManager extends AbstractActor{
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
 		page_count = 0;
+		page_state_count = 0;
 		audits = new ArrayList<>();
 	}
 
@@ -97,7 +98,6 @@ public class AuditManager extends AbstractActor{
 				.match(Page.class, page -> {
 					page_count++;
 					System.out.println("Page Count :: "+page_count);
-					System.out.println("Audit manager received Page object. Sending to page data extractor...");
 					ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
 					page_data_extractor.tell(page, getSelf());
@@ -105,15 +105,13 @@ public class AuditManager extends AbstractActor{
 				.match(PageState.class, page_state -> {
 					page_state_count++;
 					log.warn("Page State Count :: "+page_state_count);
-					
-					log.warn("Audit manager received PAGE STATE. Sending to page state auditor...");
 					ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("auditor"), "auditor"+UUID.randomUUID());
 					auditor.tell(page_state, getSelf());	
 				})
 				.match(AuditRecord.class, audit_record -> {
-					log.warn("Audit record received by audit manager.");
 					audits.add(audit_record);
+					log.warn("Audit record received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+audits.size());
 					if(audits.size() == page_count) {
 						log.warn("Audit Manager is now ready to perform a domain audit");
 						AuditRecordSet audit_record_set = new AuditRecordSet(audits);

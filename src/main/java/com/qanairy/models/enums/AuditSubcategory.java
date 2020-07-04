@@ -9,6 +9,7 @@ public enum AuditSubcategory {
 	//color management
 	COLOR_PALETTE("color_palette"),
 	TEXT_BACKGROUND_CONTRAST("text_background_contrast"),
+	NON_TEXT_BACKGROUND_CONTRAST("non_text_background_contrast"),
 	LINKS("link"),
 	UNKNOWN("unknown");
 	

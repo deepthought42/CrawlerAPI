@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.services.BrowserService;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * A reference to a web page
@@ -45,6 +44,7 @@ public class PageState extends LookseeObject implements PathObject {
 	private boolean login_required;
 
 	private LocalDateTime last_landability_check;
+	@Deprecated
 	private String screenshot_url;
 	private String full_page_screenshot_url;
 	private String full_page_checksum;
@@ -57,8 +57,12 @@ public class PageState extends LookseeObject implements PathObject {
 	private long full_page_width;
 	private long full_page_height;
 	private String type;
+	
+	@Deprecated
 	private List<String> screenshot_checksums;
+	@Deprecated
 	private List<String> animated_image_urls;
+	@Deprecated
 	private List<String> animated_image_checksums;
 
 	@Relationship(type = "HAS")
@@ -464,6 +468,7 @@ public class PageState extends LookseeObject implements PathObject {
 		this.browser = browser;
 	}
 
+	@Deprecated
 	public List<String> getScreenshotChecksums() {
 		if(screenshot_checksums == null){
 			return new ArrayList<String>();
@@ -471,10 +476,12 @@ public class PageState extends LookseeObject implements PathObject {
 		return screenshot_checksums;
 	}
 
+	@Deprecated
 	public void setScreenshotChecksum(List<String> screenshot_checksums) {
 		this.screenshot_checksums = screenshot_checksums;
 	}
 
+	@Deprecated
 	public boolean addScreenshotChecksum(String checksum){
 		if(this.screenshot_checksums == null){
 			this.screenshot_checksums = new ArrayList<String>();
@@ -566,7 +573,12 @@ public class PageState extends LookseeObject implements PathObject {
 	}
 
 	public void addElements(List<ElementState> elements) {
-		this.elements.addAll(elements);
+		//check for duplicates before adding
+		for(ElementState element : elements) {
+			if(!this.elements.contains(element)) {				
+				this.elements.add(element);
+			}
+		}
 	}
 	
 	public List<AuditRecord> getAuditRecords() {

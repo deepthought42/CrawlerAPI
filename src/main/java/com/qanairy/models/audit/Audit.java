@@ -1,7 +1,5 @@
 package com.qanairy.models.audit;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,7 +7,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditSubcategory;
 

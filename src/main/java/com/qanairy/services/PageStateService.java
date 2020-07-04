@@ -173,7 +173,6 @@ public class PageStateService {
 		else {
 			
 			log.warn("page state wasn't found in database. Saving new page state to neo4j");
-			page_state_record = findByKey( page_state.getKey() );
 
 			//iterate over page elements
 			List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
@@ -191,10 +190,6 @@ public class PageStateService {
 					}
 					cnt++;
 				}while(err && cnt < 5);
-				
-				if(err){
-					element_records.add(element);
-				}
 			}
 				
 			page_state.setElements(element_records);
@@ -202,7 +197,7 @@ public class PageStateService {
 
 			page_state_record = page_state_repo.save(page_state);
 		}
-
+		page_state_record.setElements(getElementStates(page_state_record.getKey()));
 		return page_state_record;
 	}
 	
@@ -228,10 +223,6 @@ public class PageStateService {
 	
 	public List<PageState> findByFullPageScreenshotChecksum(String screenshot_checksum){
 		return page_state_repo.findByFullPageScreenshotChecksum(screenshot_checksum);		
-	}
-	
-	public List<PageState> findByFullPageScreenshotChecksumByUserAndUrl(String user_id, String url, String screenshot_checksum){
-		return page_state_repo.findByFullPageScreenshotChecksumForUserAndUrl(user_id, url, screenshot_checksum);		
 	}
 	
 	public PageState findByAnimationImageChecksum(String user_id, String screenshot_checksum){

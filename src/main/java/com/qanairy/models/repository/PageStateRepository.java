@@ -19,7 +19,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{key}}) RETURN p LIMIT 1")
 	public PageState findByKeyAndUsername(@Param("user_id") String user_id, @Param("key") String key);
 
-	@Query("MATCH (p:PageState{key:{key}}) RETURN p LIMIT 1")
+	@Query("MATCH (p:PageState{key:{key}})-[*]-(:ElementState) RETURN p LIMIT 1")
 	public PageState findByKey(@Param("key") String key);
 
 	@Deprecated
@@ -29,19 +29,16 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (d:Page{url:{url}})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
 	public List<PageState> findByScreenshotChecksumAndPageUrl(@Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
-	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS]->() RETURN a")
-	public List<PageState> findByFullPageScreenshotChecksumForUserAndUrl(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
-	
 	@Query("MATCH (p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS_CHILD]->() RETURN a")
 	public List<PageState> findByFullPageScreenshotChecksum(@Param("screenshot_checksum") String checksum );
 	
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(e:ElementState) RETURN e")
+	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[*]->(e:ElementState) RETURN e")
 	public List<ElementState> getElementStatesForUser(@Param("user_id") String user_id, @Param("page_key") String key);
 
-	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS]->(e:ElementState) RETURN e")
+	@Query("MATCH (p:PageState{key:{page_key}})-[*]->(e:ElementState) RETURN e")
 	public List<ElementState> getElementStates(@Param("page_key") String key);
 
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(e:ElementState{name:'a'}) RETURN e")
+	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[*]->(e:ElementState{name:'a'}) RETURN e")
 	public List<ElementState> getLinkElementStates(@Param("user_id") String user_id, @Param("page_key") String key);
 
 	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(s:Screenshot) RETURN s")

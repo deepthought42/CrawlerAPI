@@ -17,10 +17,11 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Account;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.CrawlAction;
-import com.qanairy.models.message.AuditRecordSet;
+import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.CrawlActionMessage;
+import com.qanairy.models.message.PageAuditComplete;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -50,7 +51,8 @@ public class AuditManager extends AbstractActor{
 	private Account account;
 	private int page_count;
 	private int page_state_count;
-	private List<AuditRecord> audits;
+	private int page_audits_completed;
+	private List<Audit> audits;
 	
 	//subscribe to cluster changes
 	@Override
@@ -59,6 +61,7 @@ public class AuditManager extends AbstractActor{
 				MemberEvent.class, UnreachableMember.class);
 		page_count = 0;
 		page_state_count = 0;
+		page_audits_completed = 0;
 		audits = new ArrayList<>();
 	}
 
@@ -82,7 +85,7 @@ public class AuditManager extends AbstractActor{
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, message-> {
 					if(message.getAction().equals(CrawlAction.START_LINK_ONLY)){
-						System.out.println("Starting crawler");
+						log.warn("Starting crawler");
 						
 						//send message to page data extractor
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -109,12 +112,13 @@ public class AuditManager extends AbstractActor{
 							.props("auditor"), "auditor"+UUID.randomUUID());
 					auditor.tell(page_state, getSelf());	
 				})
-				.match(AuditRecord.class, audit_record -> {
-					audits.add(audit_record);
-					log.warn("Audit record received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+audits.size());
-					if(audits.size() == page_count) {
+				.match(PageAuditComplete.class, audit_complete -> {
+					audits.addAll(audit_complete.getPageState().getAudits());
+					page_audits_completed++;
+					log.warn("Audit record received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+page_audits_completed);
+					if(page_audits_completed == page_count) {
 						log.warn("Audit Manager is now ready to perform a domain audit");
-						AuditRecordSet audit_record_set = new AuditRecordSet(audits);
+						AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("auditor"), "auditor"+UUID.randomUUID());
 						auditor.tell(audit_record_set, getSelf());
@@ -149,6 +153,14 @@ public class AuditManager extends AbstractActor{
 
 	public void setAccount(Account account) {
 		this.account = account;
+	}
+
+	public int getPageAuditsCompleted() {
+		return page_audits_completed;
+	}
+
+	public void setPageAuditsCompleted(int page_audits_completed) {
+		this.page_audits_completed = page_audits_completed;
 	}
 	
 	

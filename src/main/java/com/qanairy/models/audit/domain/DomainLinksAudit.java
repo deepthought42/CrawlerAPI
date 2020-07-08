@@ -3,21 +3,26 @@ package com.qanairy.models.audit.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 
 /**
  * Responsible for executing an audit on the page audits for hyperlinks
  */
-public class DomainLinksAudit extends DomainInformationArchitectureAudit {
+@Component
+public class DomainLinksAudit implements IExecutableDomainAudit {
 	
 	private List<ElementState> links_without_href =  new ArrayList<>();
 	private List<ElementState> invalid_links = new ArrayList<>();
 	private List<ElementState> dead_links = new ArrayList<>();
 	
 	public DomainLinksAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
 	
 	private static String getAuditDescription() {
@@ -50,24 +55,13 @@ public class DomainLinksAudit extends DomainInformationArchitectureAudit {
 	 * @pre audits != null
 	 */
 	@Override
-	public double execute(List<Audit> audits) {
+	public Audit execute(List<Audit> audits) {
 		assert audits != null;
 		double score = 0;
 		for(Audit audit : audits) {
 			score += audit.getScore();
 		}
-		setScore(score/audits.size());
-		return getScore();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public DomainLinksAudit clone() {
-		DomainLinksAudit audit = new DomainLinksAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
+		score = score/audits.size();
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, score, new ArrayList<>(), AuditLevel.DOMAIN);
 	}
 }

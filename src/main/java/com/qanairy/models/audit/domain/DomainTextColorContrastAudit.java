@@ -8,16 +8,20 @@ import java.util.List;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
-public class DomainTextColorContrastAudit extends DomainColorManagementAudit {
+@Component
+public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DomainTextColorContrastAudit.class);
 	
@@ -25,7 +29,7 @@ public class DomainTextColorContrastAudit extends DomainColorManagementAudit {
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	public DomainTextColorContrastAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
 	
 	private static String getAuditDescription() {
@@ -56,7 +60,7 @@ public class DomainTextColorContrastAudit extends DomainColorManagementAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(List<Audit> audits) {
+	public Audit execute(List<Audit> audits) {
 		assert audits != null;
 
 		double score = 0.0;
@@ -64,19 +68,7 @@ public class DomainTextColorContrastAudit extends DomainColorManagementAudit {
 			score += audit.getScore();
 		}
 		
-		setScore(score/audits.size());
-		return getScore();
+		score = score/audits.size();
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.DOMAIN);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public DomainTextColorContrastAudit clone() {
-		DomainTextColorContrastAudit audit = new DomainTextColorContrastAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
-	}
-
 }

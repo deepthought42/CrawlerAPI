@@ -8,9 +8,12 @@ import java.util.List;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.utils.ElementStateUtils;
 
@@ -18,7 +21,8 @@ import com.qanairy.utils.ElementStateUtils;
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
-public class TextColorContrastAudit extends ColorManagementAudit {
+@Component
+public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TextColorContrastAudit.class);
 
@@ -29,7 +33,7 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	public TextColorContrastAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
 	
 	private static String getAuditDescription() {
@@ -60,9 +64,8 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		assert user_id != null;
 		
 		List<String> observations = new ArrayList<>();
 		int total_headlines = 0;
@@ -141,21 +144,7 @@ public class TextColorContrastAudit extends ColorManagementAudit {
 			}
 		}
 		
-		setScore((headline_score+text_score)/(total_headlines + total_text_elems));
-		//score colors found against scheme
-		setObservations(observations);
-		
-		return getScore();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TextColorContrastAudit clone() {
-		TextColorContrastAudit audit = new TextColorContrastAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
+		double score = (headline_score+text_score)/((total_headlines*3) + (total_text_elems*3));		
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE);
 	}
 }

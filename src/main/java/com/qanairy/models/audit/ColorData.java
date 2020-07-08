@@ -2,17 +2,17 @@ package com.qanairy.models.audit;
 
 import java.awt.Color;
 
-import com.qanairy.utils.ElementStateUtils;
+import com.qanairy.models.LookseeObject;
 
 
 /**
- * Represents an both rgb and hsb setting simulatenously
+ * Represents an both rgb and hsb and luminosity values
  *
  */
-public class ColorData{
-	int red;
-	int green;
-	int blue;
+public class ColorData extends LookseeObject{
+	private int red;
+	private int green;
+	private int blue;
 	
 	private double transparency;
 	private double brightness;
@@ -118,15 +118,15 @@ public class ColorData{
 		return hue+" , "+saturation+" , "+brightness;
 	}
 
-	public double getRed() {
+	public int getRed() {
 		return red;
 	}
 	
-	public double getGreen() {
+	public int getGreen() {
 		return green;
 	}
 	
-	public double getBlue() {
+	public int getBlue() {
 		return blue;
 	}
 	
@@ -186,5 +186,10 @@ public class ColorData{
 			max_luminosity = color_data_2.getLuminosity();
 		}
 		return (max_luminosity + 0.05) / (min_luminosity + 0.05);
+	}
+
+	@Override
+	public String generateKey() {
+		return rgb();
 	}
 }

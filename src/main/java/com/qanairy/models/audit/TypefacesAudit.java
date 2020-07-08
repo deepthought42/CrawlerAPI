@@ -10,16 +10,20 @@ import java.util.Map;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
-public class TypefacesAudit extends TypographyAudit {
+@Component
+public class TypefacesAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TypefacesAudit.class);
 
@@ -28,7 +32,7 @@ public class TypefacesAudit extends TypographyAudit {
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	public TypefacesAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
 	
 	private static String getAuditDescription() {
@@ -59,15 +63,14 @@ public class TypefacesAudit extends TypographyAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		assert user_id != null;
 		
 		Map<String, Integer> family_scores = new HashMap<>();
 		List<String> font_families = new ArrayList<>();
 		
 		for(ElementState element : page_state.getElements()) {
-			String font_family = element.getAttribute("font-family");
+			String font_family = element.getCssValues().get("font-family");
 			font_families.add(font_family);
 			
 			if(family_scores.containsKey(font_family)) {
@@ -80,24 +83,11 @@ public class TypefacesAudit extends TypographyAudit {
 		font_families.remove(null);
 		
 		
-		log.warn("Font families found  :::   "+font_families.size());
-		for(String font : font_families) {
-			log.warn("Font family found   ::    "+font + "  ; with weigth   :::    "+family_scores.get(font));
-		}
+		log.warn("Font families found  :::   "+font_families);
+	
 		
 		//
-		
-		return getScore();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TypefacesAudit clone() {
-		TypefacesAudit audit = new TypefacesAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
+		double score = 3.0;
+		return new Audit(AuditCategory.TYPOGRAPHY, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TYPEFACES, score, new ArrayList<>(), AuditLevel.PAGE);
 	}
 }

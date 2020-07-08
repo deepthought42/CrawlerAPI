@@ -1,41 +1,39 @@
 package com.qanairy.models.audit;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
+import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 
 /**
  * Defines the globally required fields for all audits
  */
-@NodeEntity
-public abstract class Audit {
-	@GeneratedValue
-    @Id
-	private Long id;
-	
-	private String key;
+public class Audit extends LookseeObject {
+
 	private String category;
 	private String subcategory; // name of the audit subcategory
+	private String level;
 	private String ada_compliance;
 	private String description; //definition
 	private double score;      //scoring
 	private List<String> best_practices;
 	private List<String> recommendations;
 	private List<String> observations;
-	private LocalDateTime created_at;
+	
+	@Relationship(type="FLAGGED")
+	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	/**
 	 * Construct empty action object
 	 */
-	public Audit(){
-		setCreatedAt(LocalDateTime.now());
-	}
+	public Audit(){}
 	
 	/**
 	 * 
@@ -45,17 +43,22 @@ public abstract class Audit {
 	 * @param description
 	 * @param name
 	 */
-	public Audit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory) {
+	public Audit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<String> observations, AuditLevel level) {
 		setBestPractices(best_practices);
 		setAdaCompliance(ada_compliance_description);
 		setDescription(description);
 		setSubcategory(subcategory);
 		setCategory(category);
+		setScore(score);
+		setObservations(observations);
 		setCreatedAt(LocalDateTime.now());
+		setLevel(level);
 		setKey(generateKey());
 	}
 
-	public abstract Audit clone();
+	public Audit clone() {
+		return new Audit(getCategory(), getBestPractices(), getAdaCompliance(), getDescription(), getSubcategory(), getScore(), getObservations(), getLevel());
+	}
 
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
@@ -135,20 +138,12 @@ public abstract class Audit {
 	public String toString(){
 		return this.getKey();
 	}
-	
-	public String getKey() {
-		return key;
+
+	public AuditLevel getLevel() {
+		return AuditLevel.create(level);
 	}
 
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public LocalDateTime getCreatedAt() {
-		return created_at;
-	}
-
-	public void setCreatedAt(LocalDateTime created_at) {
-		this.created_at = created_at;
+	public void setLevel(AuditLevel level) {
+		this.level = level.toString();
 	}
 }

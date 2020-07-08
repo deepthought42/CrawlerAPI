@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ElementStateService;
 
@@ -22,20 +23,14 @@ import com.qanairy.services.ElementStateService;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class NonTextColorContrastAudit extends ColorManagementAudit {
+public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(NonTextColorContrastAudit.class);
 
-	
-	@Relationship(type="FLAGGED")
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	@Autowired
 	private ElementStateService element_state_service;
-	
-	public NonTextColorContrastAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST);
-	}
 	
 	private static String getAuditDescription() {
 		return "Color contrast between background and text.";
@@ -65,9 +60,8 @@ public class NonTextColorContrastAudit extends ColorManagementAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		assert user_id != null;
 		
 		double score = 0.0;
 		//get all button elements
@@ -79,8 +73,11 @@ public class NonTextColorContrastAudit extends ColorManagementAudit {
 			//get parent element of button
 			log.warn("element state service :: "+element_state_service);
 			ElementState parent_element = element_state_service.findByPageStateAndChild(page_state.getKey(), button.getKey());
-			String parent_background_color = parent_element.getAttribute("background-color");
-			String button_background_color = button.getAttribute("background-color");
+			if(parent_element == null) {
+				continue;
+			}
+			String parent_background_color = parent_element.getCssValues().get("background-color");
+			String button_background_color = button.getCssValues().get("background-color");
 			
 			double contrast = ColorData.computeContrast(new ColorData(parent_background_color), new ColorData(button_background_color));
 			
@@ -96,10 +93,10 @@ public class NonTextColorContrastAudit extends ColorManagementAudit {
 			}
 		} 
 		
-		
+		score = score/(non_text_elements.size() *3);
 		//setObservations(observations);
-		setScore(score);
-		return score;
+		//setScore(score);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.PAGE);
 	}
 
 	private List<ElementState> getAllIcons(PageState page_state) {
@@ -113,16 +110,5 @@ public class NonTextColorContrastAudit extends ColorManagementAudit {
 
 	private List<ElementState> getAllButtons(PageState page_state) {
 		return page_state.getElements().parallelStream().filter(p ->p.getName().equalsIgnoreCase("button")).distinct().collect(Collectors.toList());  // iterating price 
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NonTextColorContrastAudit clone() {
-		NonTextColorContrastAudit audit = new NonTextColorContrastAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
 	}
 }

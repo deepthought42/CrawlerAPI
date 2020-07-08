@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
@@ -19,10 +21,49 @@ import com.qanairy.models.enums.AuditSubcategory;
 /**
  * Executes various {@link Audit audits}
  */
+@Component
 public class AuditFactory {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditFactory.class);
+	
+	@Autowired
+	private LinksAudit links_auditor;
+	
+	@Autowired
+	private ColorPaletteAuditor color_palette_auditor;
+	
+	@Autowired
+	private TextColorContrastAudit text_contrast_auditor;
+	
+	@Autowired
+	private NonTextColorContrastAudit non_text_contrast_auditor;
+	
+	@Autowired
+	private FontAudit font_auditor;
+	
+	@Autowired
+	private PaddingAudit padding_auditor;
+	
+	@Autowired
+	private MarginAudit margin_auditor;
+	
 
+	//Domain audits
+	@Autowired
+	private DomainLinksAudit domain_links_auditor;
+
+	@Autowired
+	private DomainColorPaletteAudit domain_color_palette_auditor;
+	
+	@Autowired
+	private DomainTextColorContrastAudit domain_text_contrast_auditor;
+	
+	@Autowired
+	private DomainNonTextColorContrastAudit domain_non_text_contrast_auditor;
+	
+	@Autowired
+	private TypefacesAudit typeface_auditor;
+	
 	/**
 	 * Executes all audits for the {@link AuditCategory category} provided
 	 * 
@@ -36,30 +77,36 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public static List<Audit> executePageAudit(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePageAudit(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
-			LinksAudit link_audit = new LinksAudit();
-			link_audit.execute(page, user_id);
+			Audit link_audit = links_auditor.execute(page);
+			Audit padding_audits = padding_auditor.execute(page);
+			Audit margin_audits = margin_auditor.execute(page);
+			
 			audits.add(link_audit);
+			audits.add(padding_audits);
+			audits.add(margin_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
-			ColorPaletteAudit color_palette_audit = new ColorPaletteAudit();
-			color_palette_audit.execute(page, user_id);
-			
-			TextColorContrastAudit text_contrast_audit = new TextColorContrastAudit();
-			text_contrast_audit.execute(page, user_id);
-			
-			NonTextColorContrastAudit non_text_contrast_audit = new NonTextColorContrastAudit();
-			non_text_contrast_audit.execute(page, user_id);
+			Audit color_palette_audit = color_palette_auditor.execute(page);
+			Audit text_contrast_audit = text_contrast_auditor.execute(page);
+			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
 			
 			audits.add(color_palette_audit);
 			audits.add(text_contrast_audit);
 			audits.add(non_text_contrast_audit);
 		}
+		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
+			Audit typeface_audit = typeface_auditor.execute(page);
+			Audit font_audit = font_auditor.execute(page);
+			
+			audits.add(typeface_audit);
+			audits.add(font_audit);
+		}		
 		
 		return audits;
 	}
@@ -77,24 +124,21 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public static List<Audit> executeDomainAudit(AuditCategory category, List<AuditRecord> audit_records, String user_id) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executeDomainAudit(AuditCategory category, List<Audit> audits) throws MalformedURLException, URISyntaxException {
 		assert category != null;
-		assert audit_records != null;
+		assert audits != null;
 		
 		List<Audit> domain_audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			List<Audit> link_audits = new ArrayList<>();
 
-			for(AuditRecord record : audit_records) {
-				for(Audit audit : record.getAudits()) {		
-					if(audit.getSubcategory().equals(AuditSubcategory.LINKS)) {
-						link_audits.add(audit);
-					}
+			for(Audit audit : audits) {		
+				if(audit.getSubcategory().equals(AuditSubcategory.LINKS)) {
+					link_audits.add(audit);
 				}
 			}
 			
-			DomainLinksAudit link_audit = new DomainLinksAudit();
-			link_audit.execute(link_audits);
+			Audit link_audit = domain_links_auditor.execute(link_audits);
 			
 			domain_audits.add(link_audit);
 		}
@@ -105,32 +149,27 @@ public class AuditFactory {
 			List<Audit> text_contrast_audits = new ArrayList<>();
 			List<Audit> non_text_contrast_audits = new ArrayList<>();
 	
-			for(AuditRecord record : audit_records) {
-				for(Audit audit : record.getAudits()) {		
-					if(audit.getSubcategory().equals(AuditSubcategory.COLOR_PALETTE)) {
-						color_palette_audits.add(audit);
-					}
-					else if(audit.getSubcategory().equals(AuditSubcategory.TEXT_BACKGROUND_CONTRAST)) {
-						text_contrast_audits.add(audit);
-					}
-					else if(audit.getSubcategory().equals(AuditSubcategory.TEXT_BACKGROUND_CONTRAST)) {
-						non_text_contrast_audits.add(audit);
-					}					
+			for(Audit audit : audits) {		
+				if(audit.getSubcategory().equals(AuditSubcategory.COLOR_PALETTE)) {
+					color_palette_audits.add(audit);
 				}
+				else if(audit.getSubcategory().equals(AuditSubcategory.TEXT_BACKGROUND_CONTRAST)) {
+					text_contrast_audits.add(audit);
+				}
+				else if(audit.getSubcategory().equals(AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST)) {
+					non_text_contrast_audits.add(audit);
+				}					
 			}
-			DomainColorPaletteAudit color_palette_audit = new DomainColorPaletteAudit();
-			double palette_score = color_palette_audit.execute(color_palette_audits);
-			
-			DomainTextColorContrastAudit text_contrast_audit = new DomainTextColorContrastAudit();
-			text_contrast_audit.execute(text_contrast_audits);
-			
-			DomainNonTextColorContrastAudit non_text_contrast_audit = new DomainNonTextColorContrastAudit();
-			non_text_contrast_audit.execute(non_text_contrast_audits);
-			
+
+			Audit color_palette_audit = domain_color_palette_auditor.execute(color_palette_audits);
+			Audit text_contrast_audit = domain_text_contrast_auditor.execute(text_contrast_audits);
+			Audit non_text_contrast_audit = domain_non_text_contrast_auditor.execute(non_text_contrast_audits);
 			
 			domain_audits.add(color_palette_audit);
+			domain_audits.add(text_contrast_audit);
+			domain_audits.add(non_text_contrast_audit);
 		}
-		
+
 		return domain_audits;
 	}
 }

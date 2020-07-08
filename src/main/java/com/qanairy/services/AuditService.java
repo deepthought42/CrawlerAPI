@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +9,6 @@ import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.repository.AuditRepository;
 
 /**

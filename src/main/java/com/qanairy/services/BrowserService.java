@@ -533,9 +533,9 @@ public class BrowserService {
 					if(web_element != null) {
 						child_css_values = Browser.loadCssProperties(web_element);
 						
-						if(ElementStateUtils.isTextContainer(web_element)){
+						//if(ElementStateUtils.isTextContainer(web_element)){
 							child_css_values.putAll(Browser.loadTextCssProperties(web_element));
-						}
+						//}
 						element_state = buildElementState(xpath, attributes, child_css_values, child, classification);
 						element_state = element_service.save(element_state);
 						//put element on frontier

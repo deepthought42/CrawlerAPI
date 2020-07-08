@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
-import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.Audit;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -73,7 +73,7 @@ public class PageState extends LookseeObject implements PathObject {
 	private Set<Form> forms;
 	
 	@Relationship(type = "HAS")
-	private List<AuditRecord> audit_records;
+	private List<Audit> audits;
 
 	public PageState() {
 		super();
@@ -82,7 +82,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setAuditRecords(new ArrayList<>());
+		setAudits(new ArrayList<>());
 	}
 	
 	public PageState(String url, String src) {
@@ -94,7 +94,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setAnimatedImageChecksums(new ArrayList<>());
 		setUrl(url);
 		setSrc(src);
-		setAuditRecords(new ArrayList<>());
+		setAudits(new ArrayList<>());
 		setKey(generateKey());
 	} 
 	
@@ -142,7 +142,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
-		setAuditRecords(new ArrayList<>());
+		setAudits(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -194,7 +194,7 @@ public class PageState extends LookseeObject implements PathObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
-		setAuditRecords(new ArrayList<>());
+		setAudits(new ArrayList<>());
 		setKey(generateKey());
 	}
 
@@ -581,15 +581,19 @@ public class PageState extends LookseeObject implements PathObject {
 		}
 	}
 	
-	public List<AuditRecord> getAuditRecords() {
-		return audit_records;
+	public List<Audit> getAudits() {
+		return audits;
 	}
 
-	public void setAuditRecords(List<AuditRecord> audit_records) {
-		this.audit_records = audit_records;
+	public void setAudits(List<Audit> audits) {
+		this.audits = audits;
 	}
 
-	public void addAuditRecord(AuditRecord audit_record) {
-		this.audit_records.add( audit_record );
+	public void addAudit(Audit audit) {
+		this.audits.add( audit );
+	}
+	
+	public void addAudits(List<Audit> audits) {
+		this.audits.addAll( audits );
 	}
 }

@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.experience.PerformanceInsight;
 
 /**
@@ -26,10 +25,6 @@ public class Page extends LookseeObject{
 	@Deprecated
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
-	
-	@Deprecated
-	@Relationship(type = "HAS")
-	private List<AuditRecord> audit_records;
 
 	//following are deprecated in favor of the Audit concept being introduced. 6/18/2020
 	@Deprecated
@@ -53,7 +48,6 @@ public class Page extends LookseeObject{
 		super();
 		setPerformanceInsights(new ArrayList<>());
 		setPageStates( new HashSet<>() );
-		setAuditRecords(new ArrayList<>());
 	}
 	
 	public Page(String url) throws MalformedURLException{
@@ -62,7 +56,6 @@ public class Page extends LookseeObject{
 		setUrl(url);
 		setPath(new URL(url).getPath());
 		setPageStates( new HashSet<>() );
-		setAuditRecords(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -132,21 +125,6 @@ public class Page extends LookseeObject{
 	@Deprecated
 	public void addPerformanceInsight(PerformanceInsight performance_insight) {
 		this.performance_insights.add( performance_insight );
-	}
-	
-	@Deprecated
-	public List<AuditRecord> getAuditRecords() {
-		return audit_records;
-	}
-
-	@Deprecated
-	public void setAuditRecords(List<AuditRecord> audit_records) {
-		this.audit_records = audit_records;
-	}
-
-	@Deprecated
-	public void addAuditRecord(AuditRecord audit_record) {
-		this.audit_records.add( audit_record );
 	}
 
 	@Deprecated

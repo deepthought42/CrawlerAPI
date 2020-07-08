@@ -18,7 +18,7 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
-import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.domain.DomainAuditRecord;
 import com.qanairy.models.experience.PerformanceInsight;
 
 /**
@@ -101,6 +101,6 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
 	public Set<Page> getPages(@Param("user_id") String user_id, @Param("url") String url);
 
-	@Query("MATCH (d:Domain{url:{url}})-[]->(p:Page) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(audit:AuditRecord) RETURN audit ORDER BY audit.createdAt DESC")
-	public Set<AuditRecord> getMostRecentPageAuditRecords(@Param("url") String url);
+	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:DomainAuditRecord) RETURN audit ORDER BY audit.createdAt DESC")
+	public Set<DomainAuditRecord> getMostRecentDomainAudits(@Param("url") String url);
 }

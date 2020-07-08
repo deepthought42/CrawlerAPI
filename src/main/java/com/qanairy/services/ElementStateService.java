@@ -165,7 +165,20 @@ public class ElementStateService {
 		}
 	}
 
+	/**
+	 * Fetch element that is the parent of the given child element for a given page
+	 * 
+	 * @param page_state_key
+	 * @param child_key
+	 * 
+	 * @return
+	 * 
+	 * @pre page_state_key != null
+	 * @pre child_key != null
+	 */
 	public ElementState findByPageStateAndChild(String page_state_key, String child_key) {
+		assert page_state_key != null;
+		assert child_key != null;
 		return element_repo.findByPageStateAndChild(page_state_key, child_key);
 	}
 }

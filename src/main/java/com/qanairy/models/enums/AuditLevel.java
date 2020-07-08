@@ -3,23 +3,16 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Defines all types of {@link Audit audits} that exist in the system
+ * Defines all levels of {@link Audit audits} that exist in the system
  */
-public enum AuditSubcategory {
-	//color management
-	COLOR_PALETTE("color_palette"),
-	TEXT_BACKGROUND_CONTRAST("text_background_contrast"),
-	NON_TEXT_BACKGROUND_CONTRAST("non_text_background_contrast"),
-	LINKS("link"),
-	TYPEFACES("typefaces"),
-	FONT("font"),
-	PADDING("padding"),
-	MARGIN("margin"),
+public enum AuditLevel {
+	PAGE("page"),
+	DOMAIN("domain"),
 	UNKNOWN("unknown");
 	
 	private String shortName;
 
-    AuditSubcategory (String shortName) {
+    AuditLevel (String shortName) {
         this.shortName = shortName;
     }
 
@@ -29,11 +22,12 @@ public enum AuditSubcategory {
     }
 
     @JsonCreator
-    public static AuditSubcategory create (String value) {
+    public static AuditLevel create (String value) {
         if(value == null) {
             return UNKNOWN;
         }
-        for(AuditSubcategory v : values()) {
+        
+        for(AuditLevel v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

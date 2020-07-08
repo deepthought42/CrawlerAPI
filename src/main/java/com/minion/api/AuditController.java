@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,15 +29,11 @@ import com.qanairy.models.Account;
 import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.audit.domain.DomainAuditRecord;
-import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 import com.qanairy.utils.BrowserUtils;
@@ -67,9 +62,6 @@ public class AuditController {
     protected AuditService audit_service;
     
     @Autowired
-    protected AuditRecordService audit_record_service;
-    
-    @Autowired
     protected Crawler crawler;
     
     @Autowired
@@ -84,7 +76,7 @@ public class AuditController {
      */
     @PreAuthorize("hasAuthority('read:audits')")
     @RequestMapping(method = RequestMethod.GET, path="/{audit_key}/insights")
-    public AuditRecord getMostRecentAudit(HttpServletRequest request,
+    public Audit getMostRecentAudit(HttpServletRequest request,
 			@PathVariable(value="audit_key", required=true) String audit_key
 	) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
@@ -167,41 +159,5 @@ public class AuditController {
 	   	else if(acct.getSubscriptionToken() == null){
 	   		throw new MissingSubscriptionException();
 	   	}
-	}
-
-	@RequestMapping(path="/color", method = RequestMethod.GET)
-	public @ResponseBody DomainAuditRecord generateColorManagementReport(HttpServletRequest request,
-											   	  		@RequestParam(value="url", required=true) String url) throws Exception {
-	   	/*
-			Principal principal = request.getUserPrincipal();
-		   	String id = principal.getName().replace("auth0|", "");
-		   	Account acct = account_service.findByUserId(id);
-		
-		   	if(acct == null){
-		   		throw new UnknownAccountException();
-		   	}
-	   	*/
-		
-	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(url));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
-	   	System.out.println("domain returned from db ...."+domain);
-	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
-	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
-	   	if(domain == null) {
-	   		//TODO throw DomainNotFoundError();
-	   	}
-	   
-	   	//get all most recent audit records
-	   	
-	   	Set<AuditRecord> audit_records = domain_service.getMostRecentPageAuditRecords(domain.getUrl());
-	   	
-	   	//create new domain audit record with audit categories
-	   	DomainAuditRecord domain_audit = new DomainAuditRecord(audit_records);
-	   	
-	   	DomainColorPaletteAudit domain_palette = new DomainColorPaletteAudit();
-	   	//domain_palette.execute(domain);
-	   	
-	   	//add all domain audits
-	   	return domain_audit;
 	}
 }

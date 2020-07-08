@@ -11,16 +11,20 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.utils.BrowserUtils;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
-public class LinksAudit extends InformationArchitectureAudit {
+@Component
+public class LinksAudit implements IExecutablePageStateAudit {
 	
 	//@Autowired
 	//private PageStateService page_state_service;
@@ -30,7 +34,7 @@ public class LinksAudit extends InformationArchitectureAudit {
 	private List<ElementState> dead_links = new ArrayList<>();
 	
 	public LinksAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
 	
 	private static String getAuditDescription() {
@@ -63,9 +67,8 @@ public class LinksAudit extends InformationArchitectureAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		assert user_id != null;
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
@@ -80,18 +83,24 @@ public class LinksAudit extends InformationArchitectureAudit {
 		//score each link element
 		for(ElementState link : link_elements) {
 			int score = 0;
-			URL url = new URL(page_state.getUrl());
-			
-			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), url.getProtocol()+"://"+url.getHost());
+			URL url;
+	
+			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 			String href = element.absUrl("href");
 			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
 				score++;
-				URI uri = new URI(href);
-				if(!uri.isAbsolute()) {
-					href = url.getProtocol()+"://"+url.getHost() + href;
+				URI uri;
+				try {
+					uri = new URI(href);
+					if(!uri.isAbsolute()) {
+						href = page_state.getUrl() + href;
+					}
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+					continue;
 				}
 			}
 			else {
@@ -143,22 +152,7 @@ public class LinksAudit extends InformationArchitectureAudit {
 			observations.add("We found " + dead_links.size() + " dead links");
 		}
 		
-		observations.add("");
-		setObservations(observations);
-		setScore( overall_score/link_elements.size() );
-		setKey(generateKey());
 		
-		return getScore();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public LinksAudit clone() {
-		LinksAudit audit = new LinksAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, overall_score/link_elements.size(), observations, AuditLevel.PAGE);
 	}
 }

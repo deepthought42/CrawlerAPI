@@ -10,9 +10,12 @@ import java.util.Map;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.utils.ElementStateUtils;
 
@@ -20,7 +23,8 @@ import com.qanairy.utils.ElementStateUtils;
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
-public class FontAudit extends TypographyAudit {
+@Component
+public class FontAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(FontAudit.class);
 
@@ -29,7 +33,7 @@ public class FontAudit extends TypographyAudit {
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	public FontAudit() {
-		super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
+		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
 	
 	private static String getAuditDescription() {
@@ -60,9 +64,8 @@ public class FontAudit extends TypographyAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public double execute(PageState page_state, String user_id) throws MalformedURLException, URISyntaxException {
+	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		assert user_id != null;
 		
 		Map<String, List<ElementState>> header_element_map = new HashMap<>();
 		for(ElementState element : page_state.getElements()) {
@@ -77,18 +80,7 @@ public class FontAudit extends TypographyAudit {
 				}
 			}
 		}
-		
-		return getScore();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public FontAudit clone() {
-		FontAudit audit = new FontAudit();
-		audit.setScore(getScore());
-		audit.setKey(getKey());
-		return audit;
+		double score = 0.0;
+		return new Audit(AuditCategory.TYPOGRAPHY, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.FONT, score, new ArrayList<>(), AuditLevel.PAGE);
 	}
 }

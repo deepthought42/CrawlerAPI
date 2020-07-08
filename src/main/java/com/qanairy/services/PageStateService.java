@@ -60,7 +60,7 @@ public class PageStateService {
 				
 				if(page_state_record != null){
 					page_state_record.setForms(page_state.getForms());
-					page_state_record.setAuditRecords(page_state.getAuditRecords());
+					page_state_record.setAudits(page_state.getAudits());
 
 					page_state_record = page_state_repo.save(page_state_record);
 					
@@ -72,7 +72,7 @@ public class PageStateService {
 
 					if(page_state_record != null){
 						page_state_record.setForms( page_state.getForms() );
-						page_state_record.setAuditRecords(page_state.getAuditRecords());
+						page_state_record.setAudits(page_state.getAudits());
 
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -127,7 +127,7 @@ public class PageStateService {
 						//reduce screenshots to just unique records
 						page_state.setForms(form_records);
 						*/
-						page_state.setAuditRecords(page_state.getAuditRecords());
+						page_state.setAudits(page_state.getAudits());
 
 						page_state_record = page_state_repo.save(page_state);
 					}
@@ -160,7 +160,7 @@ public class PageStateService {
 
 		if(page_state_record != null){
 			//page_state_record.setForms( page_state.getForms() );
-			page_state_record.setAuditRecords(page_state.getAuditRecords());
+			page_state_record.setAudits(page_state.getAudits());
 			page_state_record.setElements(page_state.getElements());
 
 			for(String screenshot_checksum : page_state.getScreenshotChecksums()){
@@ -193,7 +193,7 @@ public class PageStateService {
 			}
 				
 			page_state.setElements(element_records);
-			page_state.setAuditRecords(page_state.getAuditRecords());
+			page_state.setAudits(page_state.getAudits());
 
 			page_state_record = page_state_repo.save(page_state);
 		}

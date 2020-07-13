@@ -47,6 +47,8 @@ public class AuditFactory {
 	@Autowired
 	private MarginAudit margin_auditor;
 	
+	@Autowired
+	private MarginAudit measure_unit_auditor;
 
 	//Domain audits
 	@Autowired
@@ -86,10 +88,12 @@ public class AuditFactory {
 			Audit link_audit = links_auditor.execute(page);
 			Audit padding_audits = padding_auditor.execute(page);
 			Audit margin_audits = margin_auditor.execute(page);
-			
+			Audit measure_unit_audits = measure_unit_auditor.execute(page);
+
 			audits.add(link_audit);
 			audits.add(padding_audits);
 			audits.add(margin_audits);
+			audits.add(measure_unit_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			Audit color_palette_audit = color_palette_auditor.execute(page);

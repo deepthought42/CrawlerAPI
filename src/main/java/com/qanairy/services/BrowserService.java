@@ -531,7 +531,7 @@ public class BrowserService {
 					}
 					
 					if(web_element != null) {
-						child_css_values = Browser.loadCssProperties(web_element);
+						child_css_values = Browser.loadCssProperties(web_element, browser.getDriver());
 						
 						//if(ElementStateUtils.isTextContainer(web_element)){
 							child_css_values.putAll(Browser.loadTextCssProperties(web_element));

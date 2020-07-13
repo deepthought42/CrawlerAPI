@@ -450,15 +450,22 @@ public class Browser {
 	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
-	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"color", "background-color", "outline-color", "border-color", "border-style", "margin-left", "margin-top", "margin-right", "margin-bottom", "padding-left", "padding-top", "padding-right", "padding-bottom"};
-		Map<String, String> css_map = new HashMap<String, String>();
+	public static Map<String, String> loadCssProperties(WebElement element, WebDriver driver){
+		JavascriptExecutor executor = (JavascriptExecutor)driver;
+		String script = "var s = '';" +
+		                "var o = getComputedStyle(arguments[0]);" +
+		                "for(var i = 0; i < o.length; i++){" +
+		                "s+=o[i] + ':' + o.getPropertyValue(o[i])+';';}" + 
+		                "return s;";
+
+		String response = executor.executeScript(script, element).toString();
 		
-		for(String propertyName : cssList){
-			String element_value = element.getCssValue(propertyName);
-			if(element_value != null && !element_value.isEmpty()){
-				css_map.put(propertyName, element_value);
-			}
+		Map<String, String> css_map = new HashMap<String, String>();
+
+		String[] css_prop_vals = response.split(";");
+		for(String prop_val_pair : css_prop_vals) {
+			String[] prop_val = prop_val_pair.split(":");
+			css_map.put(prop_val[0], prop_val[1]);
 		}
 		
 		return css_map;

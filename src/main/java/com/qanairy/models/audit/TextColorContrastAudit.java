@@ -25,9 +25,6 @@ import com.qanairy.utils.ElementStateUtils;
 public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TextColorContrastAudit.class);
-
-	private double headline_score;
-	private double text_score;
 	
 	@Relationship(type="FLAGGED")
 	List<ElementState> flagged_elements = new ArrayList<>();
@@ -70,6 +67,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<String> observations = new ArrayList<>();
 		int total_headlines = 0;
 		int total_text_elems = 0;
+		double headline_score = 0;
+		double text_score = 0;
 		
 		log.warn("Elements available for color evaluation ...  "+page_state.getElements().size());
 		//identify all colors used on page. Images are not considered

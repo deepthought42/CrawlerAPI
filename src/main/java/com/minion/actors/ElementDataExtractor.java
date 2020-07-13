@@ -114,8 +114,10 @@ public class ElementDataExtractor extends AbstractActor{
 				break;
 			}catch(Exception e) {
 				if(e instanceof GridException || e instanceof WebDriverException) {
-					log.debug("Selenium Grid exception thrown during page data extractions");
+					log.warn("Selenium Grid exception thrown during page data extractions");
+					e.printStackTrace();
 				}
+				e.printStackTrace();
 			}
 			finally {
 				if( browser != null ) {

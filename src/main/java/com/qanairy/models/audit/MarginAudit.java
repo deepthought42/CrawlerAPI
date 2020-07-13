@@ -1,23 +1,44 @@
 package com.qanairy.models.audit;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
+import javax.net.ssl.HttpsURLConnection;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+
+import cz.vutbr.web.css.CSSException;
+import cz.vutbr.web.css.CSSFactory;
+import cz.vutbr.web.css.CombinedSelector;
+import cz.vutbr.web.css.Declaration;
+import cz.vutbr.web.css.RuleSet;
+import cz.vutbr.web.css.StyleSheet;
+import cz.vutbr.web.csskit.RuleFontFaceImpl;
+import cz.vutbr.web.csskit.RuleKeyframesImpl;
+import cz.vutbr.web.csskit.RuleMediaImpl;
 
 
 /**
@@ -60,39 +81,203 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<String> margin_tops = new ArrayList<>();
-		List<String> margin_bottoms = new ArrayList<>();
-		List<String> margin_rights = new ArrayList<>();
-		List<String> margin_lefts = new ArrayList<>();
-
-		for(ElementState element : page_state.getElements()) {
-			String margin_top = element.getCssValues().get("margin-top");
-			String margin_left = element.getCssValues().get("margin-left");
-			String margin_right = element.getCssValues().get("margin-right");
-			String margin_bottom = element.getCssValues().get("margin-bottom");
-
-			margin_tops.add(margin_top);
-			margin_lefts.add(margin_left);
-			margin_rights.add(margin_right);
-			margin_bottoms.add(margin_bottom);	
+		Document doc = Jsoup.parse(page_state.getSrc());	
+		List<String> raw_stylesheets = new ArrayList<>();
+		
+		Elements stylesheets = doc.select("link");
+		for(Element stylesheet : stylesheets) {
+			if("text/css".equalsIgnoreCase(stylesheet.attr("type"))) {
+				String stylesheet_url = stylesheet.absUrl("href");
+				//parse the style sheet
+				try {
+					String raw_sheet = URLReader(new URL(stylesheet_url));
+					StyleSheet sheet = CSSFactory.parse(raw_sheet);
+					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (CSSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
-		margin_tops.remove(null);
-		margin_lefts.remove(null);
-		margin_rights.remove(null);
-		margin_bottoms.remove(null);
 		
-		log.warn("Margins found  :::   "+margin_tops.size());
+		List<String> margin_values = new ArrayList<>();
+		
+		for(String raw_stylesheet : raw_stylesheets) {
+			//parse the style sheet
+			try {
+				StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, new URL(page_state.getUrl()));
+				for(int idx = 0; idx < sheet.size(); idx++) {
+					if(sheet.get(idx) instanceof RuleFontFaceImpl 
+							|| sheet.get(idx) instanceof RuleMediaImpl
+							|| sheet.get(idx) instanceof RuleKeyframesImpl) {
+						continue;
+					}
+					
+					//access the rules and declarations
+					RuleSet rule = (RuleSet) sheet.get(idx);       //get the first rule
+					for(CombinedSelector selector : rule.getSelectors()) {
 	
-		double score_top = scoreMarginUsage(margin_tops);
-		double score_bottom = scoreMarginUsage(margin_bottoms);
-		double score_left = scoreMarginUsage(margin_lefts);
-		double score_right = scoreMarginUsage(margin_rights);
+						//if selector name is a class or id then clean selector name 
+						//if selector name is used in the page source then
+						//extract any margin property values
+						
+						//if selector name is a tagname then check if tag name is used in document
+						//if selector is used in document then 
+						//extract any margin property values
 
-		double score = (score_top + score_left + score_bottom + score_right)/4;
+						String selector_str = selector.toString();
+						if(selector_str.startsWith(".")
+							|| selector_str.startsWith("#")) 
+						{
+							selector_str = selector_str.substring(1);
+						}
+
+						if(page_state.getSrc().contains(selector_str)) {
+							//TODO look for margin and add it to the document
+							for(Declaration declaration : rule) {
+								if(declaration.getProperty().contains("margin")) {
+									String raw_property_value = declaration.toString();
+									raw_property_value = raw_property_value.replace("margin:", "");
+									raw_property_value = raw_property_value.replace("margin-top:", "");
+									raw_property_value = raw_property_value.replace("margin-bottom:", "");
+									raw_property_value = raw_property_value.replace("margin-right:", "");
+									raw_property_value = raw_property_value.replace("margin-left:", "");
+									raw_property_value = raw_property_value.replace(";", "");
+									
+									String[] separated_values = raw_property_value.split(" ");
+									for(String value : separated_values) {											
+										margin_values.add(value);
+									}
+								}
+							}
+						}
+					}
+				}
+				//or even print the entire style sheet (formatted)
+			} catch (MalformedURLException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (CSSException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.MARGIN, 3.0, new ArrayList<>(), AuditLevel.PAGE);
+		
+		//calculate score
+		double score = scoreMarginUsage(margin_values);
+		log.warn("MARGIN SCORE  :::   "+score);	
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
+ 
+		
+		
+		
+		/*
+		
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+		Tidy tidy = new Tidy(); // obtain a new Tidy instance
+		tidy.setXHTML(true); // set desired config options using tidy setters 
+		                          // (equivalent to command line options)
+
+		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(doc.outerHtml().getBytes()), null);
+		
+		List<String> margin = new ArrayList<>();
+
+		//count all elements with non 0 px values that aren't decimals
+		MediaSpec media = new MediaSpecAll(); //use styles for all media
+		StyleMap map = null;
+		try {
+			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new URL(page_state.getUrl()), media, true);
+			
+			log.warn("css dom map ::   "+map.size());
+			for(ElementState element : page_state.getElements()) {
+	
+				//create the style map
+	
+				XPath xPath = XPathFactory.newInstance().newXPath();
+				try {
+					Node node = (Node)xPath.compile(element.getXpath()).evaluate(w3c_document, XPathConstants.NODE);
+					NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
+					log.warn("element node ::   "+node);
+					log.warn("Element styling  ::  "+style);
+					if(style != null) {
+						log.warn("Element styling  ::  "+style.getProperty("margin-top"));
+					}
+					
+					//StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, new URL(page_state.getUrl()));
+				} catch (XPathExpressionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				String margin_top = element.getCssValues().get("margin-top");
+				String margin_left = element.getCssValues().get("margin-left");
+				String margin_right = element.getCssValues().get("margin-right");
+				String margin_bottom = element.getCssValues().get("margin-bottom");
+	
+				margin.add(margin_top);
+				margin.add(margin_bottom);			
+				margin.add(margin_left);
+				margin.add(margin_right);
+			}
+			margin.remove(null);
+			double score = scoreMarginUsage(margin);
+			return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return null;
+		}
+		*/
 	}
 
+	public static String URLReader(URL url) throws IOException {
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+        
+        log.warn("Content encoding for URL connection ::  " + con.getContentEncoding());
+        if(con.getContentEncoding() != null && con.getContentEncoding().equalsIgnoreCase("gzip")) {
+        	return readGzipStream(con.getInputStream());
+        }
+        else {
+        	return readStream(con.getInputStream());
+        }
+	}
+	
+	private static String readGzipStream(InputStream inputStream) {
+		 StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream( inputStream )));) {
+            String nextLine = "";
+            while ((nextLine = reader.readLine()) != null) {
+                sb.append(nextLine);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+	}
+
+	private static String readStream(InputStream in) {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in));) {
+            String nextLine = "";
+            while ((nextLine = reader.readLine()) != null) {
+                sb.append(nextLine);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+	
 	/**
 	 * Generate score for margin usage
 	 * 
@@ -103,120 +288,63 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		double score = 0.0;
 		double total_possible_score = 0.0;
 		//sort margin values into em, percent and px measure types
-		Map<String, List<String>> bucketed_units = sortSizeUnits(margin_set);
+		Map<String, List<Double>> converted_unit_buckets = sortSizeUnits(margin_set);
+		//reduce lists in map to unique values;
+		log.warn("converted bucket list  "+converted_unit_buckets);
 		
-		Map<String, List<Double>> converted_unit_buckets = new HashMap<>();
-
-		//reduce margin_sets to unique values and remove 0 values
-		for(String unit : bucketed_units.keySet()) {
-			List<Double> measures = convertList(cleanSizeUnits(bucketed_units.get(unit)), s -> Double.parseDouble(s));
-			measures = removeZeroValues(measures);
-			measures.parallelStream().distinct().sorted().collect(Collectors.toList());
-			log.warn("Total measures found for unit "+unit+"   :    "+measures);
-			converted_unit_buckets.put(unit, measures);
-		}
-		
-		//SCORING 1 - Check if which margin measures are used and assign a score based on type used
-		// (scalable-high) rem, em, percent = 3  ---  (scalable-low)vh=2, vw=2, vmin=2, vmax=2 --  (constant/print)px = 1, ex=1, pt=1, cm=1, mm=1, in=1, pc=1, 
-		// The primary set is defined as the set with the highest precendence(scalable-high, scalable-low, constant/print)
+		//SCORING 1 - Check if all values have a similar multiple
 		for(String unit : converted_unit_buckets.keySet()) {
-			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit)) {
-				score += 3.0;
+			List<Double> margin_values = converted_unit_buckets.get(unit);
+		
+			//sort margin values and make them unique
+			margin_values = sortAndMakeDistinct(margin_values);
+			
+			Double smallest_value = margin_values.get(0);
+			
+			for(int idx = 1; idx < margin_values.size(); idx++) {
+				if(margin_values.get(idx) % smallest_value == 0) {
+					score += 3;
+				}
+				else {
+					score += 1;
+				}
+				total_possible_score+= 3;
 			}
-			else if("vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				score += 2.0;
-			}
-			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				score += 1.0;
-			}
+			
 		}
-		total_possible_score += (converted_unit_buckets.keySet().size() * 3);
+		//SCORING 1a - Check if all values have the same difference
 		
-		
-		// SCORING 2 - score each set present for consistency 
-		// Sets should comply with a predefined pattern. 1 of the following should be true, 
-		//    1.  every number being a multiple of the lowest margin value used
-		//    2.  All margin values are separated by the same value (for example: margins = (10, 15, 20, 25) -> differences(5, 5, 5). What would not qualify: margins = (2, 5, 8, 15) -> differences (3, 3, 7)
-		//get first number. it should be the lowest value in the list
-		for(String unit : converted_unit_buckets.keySet()) {
-			List<Double> margin_sizes = converted_unit_buckets.get(unit);
-			log.warn("margins identified for unit "+unit+"  :  "+margin_sizes);
-			
-			double smallest_margin = margin_sizes.get(0);
-			List<Double> margin_gcd = new ArrayList<>();
-	
-			//Modulo all other numbers in the list of margins by the smallest margin. 
-			for(int idx = 1; idx < margin_sizes.size()-1; idx++) {
-				double gcd = findGCD(smallest_margin, margin_sizes.get(idx));
-				margin_gcd.add(gcd);
-			}
-	
-			margin_gcd = margin_gcd.parallelStream().distinct().sorted().collect(Collectors.toList());
-			
-			//check if gcd is not empty and only has 1 element, then score = 3
-			if(margin_gcd.size() == 1) {
-				score += 3.0;
-			}
-			else {
-				score += 1.0;
-			}
-			
-			log.warn("margin gcd values :: "+margin_gcd);
-			//check if the difference between each consecutive margin size is the same for the entire set 
-			List<Double> margin_diffs = new ArrayList<>();
-			for(int idx = 1; idx < margin_sizes.size()-1; idx++) {
-				double diff = Math.abs(margin_sizes.get(idx) - margin_sizes.get(idx+1));
-				margin_diffs.add(diff);
-			}
-			
-			log.warn("margin diffs :: "+margin_diffs);
 
-		}
-		total_possible_score += (converted_unit_buckets.size() * 3);
-		
-		
-		// SCORING 4 - overall consistency / regret value for  mixing measure types
-		//  if multiple measure type classes(scalable-high, scalable-low, contant/print) were used across site then add a 20% penalty for inconsistency
-		
-		//   group units by general bucket instead of unit
-		Map<String, List<String>> bucketed_sizes = categorizeSizeUnits(converted_unit_buckets);
-		if(bucketed_sizes.size() == 1) {
-			score += 3;
-		}
-		else {
-			score += 1;
-		}
-		total_possible_score += 3;
-		
 		//CALCULATE OVERALL SCORE :: 
 		log.warn("Margin score :: "+(score/total_possible_score));
+		if(score == 0.0) {
+			return score;
+		}
 		return score / total_possible_score;
 	}
-	
-	private Map<String, List<String>> categorizeSizeUnits(Map<String, List<Double>> converted_unit_buckets) {
+
+	private Map<String, List<String>> categorizeSizeUnits(Map<String, List<String>> converted_unit_buckets) {
 		Map<String, List<String>> unit_categories = new HashMap<>();
 		
 		for(String unit : converted_unit_buckets.keySet()) {
+			List<String> units = new ArrayList<String>();
 			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit)) {
-				List<String> units = new ArrayList<String>();
 				if(unit_categories.containsKey("scalable-high")) {
-					units = unit_categories.get(unit);
+					units = unit_categories.get("scalable-high");
 				}
 				units.add(unit);
 				unit_categories.put("scalable-high", units);
 			}
 			else if("vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				List<String> units = new ArrayList<String>();
 				if(unit_categories.containsKey("scalable-low")) {
-					units = unit_categories.get(unit);
+					units = unit_categories.get("scalable-low");
 				}
 				units.add(unit);
 				unit_categories.put("scalable-low", units);
 			}
 			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				List<String> units = new ArrayList<String>();
 				if(unit_categories.containsKey("constant")) {
-					units = unit_categories.get(unit);
+					units = unit_categories.get("constant");
 				}
 				units.add(unit);
 				unit_categories.put("constant", units);
@@ -232,28 +360,41 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @param margin_set
 	 * @return
 	 */
-	private Map<String, List<String>> sortSizeUnits(List<String> margin_set) {
-		Map<String, List<String>> sorted_margins = new HashMap<String, List<String>>();
+	private Map<String, List<Double>> sortSizeUnits(List<String> margin_set) {
+		Map<String, List<Double>> sorted_margins = new HashMap<>();
+		//replace all px values with em for values that contain decimals
+		
 		for(String margin_value : margin_set) {
+			if(margin_value == null 
+					|| "0".equals(margin_value.trim()) 
+					|| margin_value.contains("auto")) {
+				continue;
+			}
+			
 			for(String unit : size_units) {
-				if(margin_value.contains(unit)) {
-					List<String> values = new ArrayList<String>();
+				if(margin_value != null && margin_value.contains(unit)) {
+					List<Double> values = new ArrayList<Double>();
 
 					if(sorted_margins.containsKey(unit)) {
 						values = sorted_margins.get(unit);
 					}
-					values.add(margin_value);
+					
+					String value = cleanSizeUnits(margin_value);
+					
+					//values = cleanSizeUnits(values);
+					//List<Double> converted_values = convertList(values, s -> Double.parseDouble(s));
+					values.add(Double.parseDouble(value));
 					sorted_margins.put(unit, values);
 				}
 			}
 		}
 		return sorted_margins;
 	}
-
-	private List<String> roundDecimals(List<String> size_list) {
-		return size_list.stream().map(line -> Double.parseDouble(line)).map(size -> Math.round(size)+"").collect(Collectors.toList());
+	
+	public static List<Double> sortAndMakeDistinct(List<Double> from){
+		return from.stream().filter(n -> n != 0.0).distinct().sorted().collect(Collectors.toList());
 	}
-
+	
 	public static List<String> cleanSizeUnits(List<String> from){
 		return from.stream()
 				.map(line -> line.replaceAll("px", ""))
@@ -262,16 +403,33 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				.map(line -> line.replaceAll("rem", ""))
 				.map(line -> line.replaceAll("pt", ""))
 				.map(line -> line.replaceAll("ex", ""))
+				.map(line -> line.replaceAll("vm", ""))
+				.map(line -> line.replaceAll("vh", ""))
 				.map(line -> line.replaceAll("cm", ""))
 				.map(line -> line.replaceAll("mm", ""))
 				.map(line -> line.replaceAll("in", ""))
 				.map(line -> line.replaceAll("pc", ""))
-				.map(line -> line.replaceAll("%", ""))
-				.map(line -> line.indexOf(".") > -1 ? line.substring(0, line.indexOf(".")) : line).collect(Collectors.toList());
+				.map(line -> line.indexOf(".") > -1 ? line.substring(0, line.indexOf(".")) : line)
+				.collect(Collectors.toList());
 	}
 	
-	public static List<Double> removeZeroValues(List<Double> from){
-		return from.stream().filter(n -> n != 0.0).collect(Collectors.toList());
+	public static String cleanSizeUnits(String value){
+		return value.replaceAll("px", "")
+					.replaceAll("%", "")
+					.replaceAll("em", "")
+					.replaceAll("rem", "")
+					.replaceAll("pt", "")
+					.replaceAll("ex", "")
+					.replaceAll("vm", "")
+					.replaceAll("vh", "")
+					.replaceAll("cm", "")
+					.replaceAll("mm", "")
+					.replaceAll("in", "")
+					.replaceAll("pc", "");
+	}
+	
+	public static List<Integer> removeZeroValues(List<Integer> from){
+		return from.stream().filter(n -> n != 0).collect(Collectors.toList());
 	}
 	
 	//for lists
@@ -281,15 +439,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	
 	/* * Java method to find GCD of two number using Euclid's method * @return GDC of two numbers in Java */ 
 	private static int findGCD(int number1, int number2) { 
-		//base case 
-		if(number2 == 0){ 
-			return number1; 
-		} 
-		return findGCD(number2, number1%number2);
-	}
-	
-	/* * Java method to find GCD of two number using Euclid's method * @return GDC of two numbers in Java */ 
-	private static double findGCD(double number1, double number2) { 
 		//base case 
 		if(number2 == 0){ 
 			return number1; 

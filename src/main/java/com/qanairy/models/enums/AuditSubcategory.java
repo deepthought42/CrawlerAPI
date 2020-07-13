@@ -15,6 +15,7 @@ public enum AuditSubcategory {
 	FONT("font"),
 	PADDING("padding"),
 	MARGIN("margin"),
+	MEASURE_UNITS("measure_units"),
 	UNKNOWN("unknown");
 	
 	private String shortName;

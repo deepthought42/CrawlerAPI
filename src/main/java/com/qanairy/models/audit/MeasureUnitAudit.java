@@ -45,13 +45,13 @@ import cz.vutbr.web.csskit.RuleMediaImpl;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class PaddingAudit implements IExecutablePageStateAudit {
+public class MeasureUnitAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PaddingAudit.class);
+	private static Logger log = LoggerFactory.getLogger(MeasureUnitAudit.class);
 	
-	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
+	private String[] measure_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
-	public PaddingAudit() {	}
+	public MeasureUnitAudit() {	}
 	
 	private static String getAuditDescription() {
 		return "The space between contents of an element";
@@ -89,8 +89,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet
 				try {
-					String raw_sheet = URLReader(new URL(stylesheet_url));
-					StyleSheet sheet = CSSFactory.parse(raw_sheet);
 					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
@@ -98,14 +96,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				} catch (CSSException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 		}
 		
-		List<String> padding_values = new ArrayList<>();
+		List<String> css_prop_values = new ArrayList<>();
 		
 		for(String raw_stylesheet : raw_stylesheets) {
 			//parse the style sheet
@@ -140,18 +135,15 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						if(page_state.getSrc().contains(selector_str)) {
 							//TODO look for padding and add it to the document
 							for(Declaration declaration : rule) {
-								if(declaration.getProperty().contains("padding")) {
-									String raw_property_value = declaration.toString();
-									raw_property_value = raw_property_value.replace("padding:", "");
-									raw_property_value = raw_property_value.replace("padding-top:", "");
-									raw_property_value = raw_property_value.replace("padding-bottom:", "");
-									raw_property_value = raw_property_value.replace("padding-right:", "");
-									raw_property_value = raw_property_value.replace("padding-left:", "");
-									raw_property_value = raw_property_value.replace(";", "");
+								String property_string = declaration.getProperty();
+								if(containsMeasureUnit(property_string)) {
+									//TODO parse string to remove al but measure value and unit	
+									property_string = property_string.substring(property_string.indexOf(":"));
+									property_string = property_string.replace(";", "").trim();
 									
-									String[] separated_values = raw_property_value.split(" ");
-									for(String value : separated_values) {											
-										padding_values.add(value);
+									String[] property_values = property_string.split(" ");
+									for(String value : property_values) {
+										css_prop_values.add(value);
 									}
 								}
 							}
@@ -173,70 +165,18 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		
 		//calculate score
-		double score = scorePaddingUsage(padding_values);
-		log.warn("PADDING SCORE  :::   "+score);	
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
- 
-		
-		
-		
-		/*
-		
-		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		tidy.setXHTML(true); // set desired config options using tidy setters 
-		                          // (equivalent to command line options)
+		double score = scoreMeasureUnitUsage(css_prop_values);
+		log.warn("Measure Unit Audit score :: "+ score );
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.MEASURE_UNITS, score, new ArrayList<>(), AuditLevel.PAGE);
+	}
 
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(doc.outerHtml().getBytes()), null);
-		
-		List<String> padding = new ArrayList<>();
-
-		//count all elements with non 0 px values that aren't decimals
-		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		StyleMap map = null;
-		try {
-			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new URL(page_state.getUrl()), media, true);
-			
-			log.warn("css dom map ::   "+map.size());
-			for(ElementState element : page_state.getElements()) {
-	
-				//create the style map
-	
-				XPath xPath = XPathFactory.newInstance().newXPath();
-				try {
-					Node node = (Node)xPath.compile(element.getXpath()).evaluate(w3c_document, XPathConstants.NODE);
-					NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
-					log.warn("element node ::   "+node);
-					log.warn("Element styling  ::  "+style);
-					if(style != null) {
-						log.warn("Element styling  ::  "+style.getProperty("padding-top"));
-					}
-					
-					//StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, new URL(page_state.getUrl()));
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				String padding_top = element.getCssValues().get("padding-top");
-				String padding_left = element.getCssValues().get("padding-left");
-				String padding_right = element.getCssValues().get("padding-right");
-				String padding_bottom = element.getCssValues().get("padding-bottom");
-	
-				padding.add(padding_top);
-				padding.add(padding_bottom);			
-				padding.add(padding_left);
-				padding.add(padding_right);
+	private boolean containsMeasureUnit(String property) {
+		for(String unit : measure_units) {
+			if(property.contains(unit)) {
+				return true;
 			}
-			padding.remove(null);
-			double score = scorePaddingUsage(padding);
-			return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			return null;
 		}
-		*/
+		return false;
 	}
 
 	public static String URLReader(URL url) throws IOException {
@@ -283,54 +223,28 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	 * @param padding_set
 	 * @return
 	 */
-	private double scorePaddingUsage(List<String> padding_set) {
+	private double scoreMeasureUnitUsage(List<String> padding_set) {
 		double score = 0.0;
 		double total_possible_score = 0.0;
 		//sort padding values into em, percent and px measure types
-		Map<String, List<Double>> converted_unit_buckets = sortSizeUnits(padding_set);
-		//reduce lists in map to unique values;
+		Map<String, List<String>> converted_unit_buckets = sortSizeUnits(padding_set);
 		
-		//SCORING 1 - Check if all values have a similar multiple
+		//SCORING 1 - Check if which measures are used and assign a score based on type used
+		// (scalable-high) rem, em, percent = 3  ---  (scalable-low)vh=2, vw=2, vmin=2, vmax=2 --  (constant/print)px = 1, ex=1, pt=1, cm=1, mm=1, in=1, pc=1, 
+		// The primary set is defined as the set with the highest precendence(scalable-high, scalable-low, constant/print)
 		for(String unit : converted_unit_buckets.keySet()) {
-			List<Double> padding_values = converted_unit_buckets.get(unit);
-		
-			//sort padding values and make them unique
-			padding_values = sortAndMakeDistinct(padding_values);
-			
-			Double smallest_value = padding_values.get(0);
-			
-			for(int idx = 1; idx < padding_values.size(); idx++) {
-				if(padding_values.get(idx) % smallest_value == 0) {
-					score += 3;
-				}
-				else {
-					score += 1;
-				}
-				total_possible_score+= 3;
+			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit)) {
+				score += (converted_unit_buckets.get(unit).size() * 3);
 			}
-			
-			int score2 = 0;
-			
-			for(int idx = 1; idx < padding_values.size(); idx++) {
-				if(padding_values.get(idx) % smallest_value == 0) {
-					score2 += 3;
-				}
-				else {
-					score2 += 1;
-				}
-				//total_possible_score+= 3;
+			else if("vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
+				score += (converted_unit_buckets.get(unit).size() * 2);
 			}
-			
+			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
+				score += converted_unit_buckets.get(unit).size();
+			}
+			total_possible_score += (converted_unit_buckets.get(unit).size() * 3);
 		}
-		//SCORING 1a - Check if all values have the same difference
 		
-
-		//CALCULATE OVERALL SCORE :: 
-		log.warn("Padding score :: "+(score/total_possible_score));
-		
-		if(score == 0.0) {
-			return score;
-		}
 		return score / total_possible_score;
 	}
 
@@ -371,8 +285,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	 * @param padding_set
 	 * @return
 	 */
-	private Map<String, List<Double>> sortSizeUnits(List<String> padding_set) {
-		Map<String, List<Double>> sorted_paddings = new HashMap<>();
+	private Map<String, List<String>> sortSizeUnits(List<String> padding_set) {
+		Map<String, List<String>> sorted_paddings = new HashMap<String, List<String>>();
 		//replace all px values with em for values that contain decimals
 		
 		for(String padding_value : padding_set) {
@@ -382,30 +296,22 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				continue;
 			}
 			
-			for(String unit : size_units) {
+			for(String unit : measure_units) {
 				if(padding_value != null && padding_value.contains(unit)) {
-					List<Double> values = new ArrayList<Double>();
+
+					List<String> values = new ArrayList<String>();
 
 					if(sorted_paddings.containsKey(unit)) {
 						values = sorted_paddings.get(unit);
 					}
-					
-					String value = cleanSizeUnits(padding_value);
-					
-					//values = cleanSizeUnits(values);
-					//List<Double> converted_values = convertList(values, s -> Double.parseDouble(s));
-					values.add(Double.parseDouble(value));
+					values.add(padding_value);
 					sorted_paddings.put(unit, values);
 				}
 			}
 		}
 		return sorted_paddings;
 	}
-	
-	public static List<Double> sortAndMakeDistinct(List<Double> from){
-		return from.stream().filter(n -> n != 0.0).distinct().sorted().collect(Collectors.toList());
-	}
-	
+
 	public static List<String> cleanSizeUnits(List<String> from){
 		return from.stream()
 				.map(line -> line.replaceAll("px", ""))
@@ -422,21 +328,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				.map(line -> line.replaceAll("pc", ""))
 				.map(line -> line.indexOf(".") > -1 ? line.substring(0, line.indexOf(".")) : line)
 				.collect(Collectors.toList());
-	}
-	
-	public static String cleanSizeUnits(String value){
-		return value.replaceAll("px", "")
-					.replaceAll("%", "")
-					.replaceAll("em", "")
-					.replaceAll("rem", "")
-					.replaceAll("pt", "")
-					.replaceAll("ex", "")
-					.replaceAll("vm", "")
-					.replaceAll("vh", "")
-					.replaceAll("cm", "")
-					.replaceAll("mm", "")
-					.replaceAll("in", "")
-					.replaceAll("pc", "");
 	}
 	
 	public static List<Integer> removeZeroValues(List<Integer> from){

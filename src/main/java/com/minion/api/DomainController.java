@@ -45,7 +45,7 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -320,7 +320,7 @@ public class DomainController {
 
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/path")
-    public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
+    public @ResponseBody Set<LookseeObject> getAllPathObjects(HttpServletRequest request, 
     													   @RequestParam(value="url", required=true) String url
     ) throws UnknownAccountException {        		
 		Principal principal = request.getUserPrincipal();
@@ -339,7 +339,7 @@ public class DomainController {
 		Set<Action> actions = domain_service.getActions(acct.getUserId(), url);
 		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), url);
 		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), url);
-		Set<PathObject> path_objects = new HashSet<PathObject>();
+		Set<LookseeObject> path_objects = new HashSet<LookseeObject>();
 		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(redirects);

@@ -8,7 +8,7 @@ import com.qanairy.dto.TestDto;
 import com.qanairy.dto.TestRecordDto;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import org.slf4j.Logger;
@@ -85,7 +85,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastPathObject(PathObject path_object, String host, String user_id) throws JsonProcessingException {	
+	public static void broadcastPathObject(LookseeObject path_object, String host, String user_id) throws JsonProcessingException {	
         ObjectMapper mapper = new ObjectMapper();
         //Object to JSON in String
         String path_object_json = mapper.writeValueAsString(path_object);

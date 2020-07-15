@@ -321,6 +321,10 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				//total_possible_score+= 3;
 			}
 			
+			if(score2 > score) {
+				score = score2;
+			}
+			
 		}
 		//SCORING 1a - Check if all values have the same difference
 		

@@ -14,6 +14,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteAudit;
 import com.qanairy.models.audit.ColorPaletteUtils;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
@@ -59,7 +60,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	public Audit execute(List<Audit> audits) {
 		assert audits != null;
 		
-		List<String> observations = new ArrayList<>();
+		List<Observation> observations = new ArrayList<>();
 
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> colors = new HashMap<>();

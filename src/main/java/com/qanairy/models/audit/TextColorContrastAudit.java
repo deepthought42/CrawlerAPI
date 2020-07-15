@@ -64,7 +64,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<String> observations = new ArrayList<>();
+		List<Observation> observations = new ArrayList<>();
 		int total_headlines = 0;
 		int total_text_elems = 0;
 		double headline_score = 0;

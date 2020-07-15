@@ -1,23 +1,13 @@
 package com.qanairy.models;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Defines an action in name only
  */
-@NodeEntity
-public class Action implements Persistable, PathObject{
-	
-	@GeneratedValue
-    @Id
-	private Long id;
+public class Action extends LookseeObject implements Persistable{
 	
 	private String name;
-	private String key;
 	private String value;
-	private String type;
 	
 	/**
 	 * Construct empty action object
@@ -29,7 +19,6 @@ public class Action implements Persistable, PathObject{
 	 * @param action_name
 	 */
 	public Action(String action_name) {
-		setType("Action");
 		this.name = action_name;
 		this.value = "";
 		this.setKey(generateKey());
@@ -40,7 +29,6 @@ public class Action implements Persistable, PathObject{
 	 * @param action_name
 	 */
 	public Action(String action_name, String value) {
-		setType("Action");
 		setName(action_name);
 		setValue(value);
 		this.setKey(generateKey());
@@ -72,14 +60,6 @@ public class Action implements Persistable, PathObject{
 	public int hashCode(){
 		return this.name.hashCode();
 	}
-
-	public String getKey() {
-		return this.key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
 	
 	public String getValue() {
 		return value;
@@ -92,21 +72,9 @@ public class Action implements Persistable, PathObject{
 	/**
 	 * {@inheritDoc}
 	 */
-	public PathObject clone() {
+	public Action clone() {
 		Action action_clone = new Action(this.getName(), this.getValue());
 		return action_clone;
-	}
-
-	public String getType() {
-		return this.type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	public Long getId() {
-		return id;
 	}
 
 	/**

@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Form;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import akka.actor.AbstractActor;
@@ -104,10 +104,10 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	
 	
 	@Deprecated
-	public static List<List<PathObject>> generateRequirementChecks(ElementState input, boolean isRequired){
+	public static List<List<LookseeObject>> generateRequirementChecks(ElementState input, boolean isRequired){
 		assert input.getName().equals("input");
 		
-		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
+		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		for(String attribute: input.getAttributes().keySet()){
 			if("type".equals(attribute)){
 				String input_type = input.getAttributes().get(attribute);
@@ -115,7 +115,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 						"textarea".equals(input_type) ||
 						"email".equals(input_type)){
 					//generate empty string test
-					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 					path_obj_list.add(input);
 					path_obj_list.add(new Action("click", ""));
 					path_obj_list.add(input);
@@ -123,7 +123,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 					tests.add(path_obj_list);
 					
 					//generate single character str test
-					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					List<LookseeObject> path_obj_list_2 = new ArrayList<LookseeObject>();
 					path_obj_list_2.add(input);
 					path_obj_list_2.add(new Action("click", ""));
 					path_obj_list_2.add(input);
@@ -133,7 +133,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 				else if( "number".equals(input_type)){
 
 					//generate empty string test
-					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 					path_obj_list.add(input);
 					path_obj_list.add(new Action("click", ""));
 					path_obj_list.add(input);
@@ -141,7 +141,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 					tests.add(path_obj_list);
 					
 					//generate single character str test
-					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					List<LookseeObject> path_obj_list_2 = new ArrayList<LookseeObject>();
 					path_obj_list_2.add(input);
 					path_obj_list_2.add(new Action("click", ""));
 					path_obj_list_2.add(input);

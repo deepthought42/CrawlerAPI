@@ -39,12 +39,13 @@ import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -96,14 +97,14 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
+	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, 
 								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
 										throws Exception{
 		assert browser != null;
 		assert path_keys != null;
 
-		PathObject last_obj = null;
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		LookseeObject last_obj = null;
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
 		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
@@ -115,7 +116,7 @@ public class Crawler {
 		log.warn("expected page url :: " + expected_page.getUrl());
 		browser.navigateTo(expected_page.getUrl());
 
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 /*
@@ -187,18 +188,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, String user_id) 
+	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, String user_id) 
 			throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
@@ -260,18 +261,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element, String user_id)
+	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, ElementState child_element, String user_id)
 							throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException, NullPointerException{
 		assert browser != null;
 		assert path_keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
@@ -346,20 +347,20 @@ public class Crawler {
 	 * @pre path != null
 	 */
 	@Deprecated
-	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
+	public void crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
-		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
+		List<LookseeObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 
 		String last_url = null;
 		int current_idx = 0;
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -461,23 +462,23 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PathMessage crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, PathMessage path, String user_id) 
+	public PathMessage crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, PathMessage path, String user_id) 
 			throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		List<PathObject> path_objects_explored = new ArrayList<>();
+		List<LookseeObject> path_objects_explored = new ArrayList<>();
 
 		String last_url = null;
 		int current_idx = 0;
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			path_objects_explored.add(current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;

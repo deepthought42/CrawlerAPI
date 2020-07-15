@@ -29,7 +29,7 @@ public class ColorPaletteAudit extends Audit {
 	 * @param color_scheme TODO
 	 * @param name
 	 */
-	public ColorPaletteAudit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<String> observations, AuditLevel level, List<String> colors, List<String> gray_colors, ColorScheme color_scheme) {
+	public ColorPaletteAudit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<Observation> observations, AuditLevel level, List<String> colors, List<String> gray_colors, ColorScheme color_scheme) {
 		setBestPractices(best_practices);
 		setAdaCompliance(ada_compliance_description);
 		setDescription(description);

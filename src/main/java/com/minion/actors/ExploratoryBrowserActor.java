@@ -17,7 +17,7 @@ import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
@@ -110,7 +110,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 						//get page states
 						List<PageState> page_states = new ArrayList<PageState>();
-						for(PathObject path_obj : message.getPathObjects()){
+						for(LookseeObject path_obj : message.getPathObjects()){
 							if(path_obj instanceof PageState){
 								PageState page_state = (PageState)path_obj;
 								page_states.add(page_state);

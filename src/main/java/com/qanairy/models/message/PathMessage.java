@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.enums.BrowserType;
 
@@ -13,7 +13,7 @@ import akka.actor.ActorRef;
 public class PathMessage {
 
 	private List<String> keys;
-	private List<PathObject> path_objects;
+	private List<LookseeObject> path_objects;
 	private ActorRef discovery_actor;	
 	private ActorRef domain_actor;
 	private Domain domain;
@@ -21,7 +21,7 @@ public class PathMessage {
 	private BrowserType browser;
 	private String account;
 	
-	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
+	public PathMessage(List<String> keys, List<LookseeObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
 		setKeys(keys);
 		setPathObjects(path_objects);
 		setDiscoveryActor(discovery_actor);
@@ -40,11 +40,11 @@ public class PathMessage {
 		this.keys = keys;
 	}
 
-	public List<PathObject> getPathObjects() {
+	public List<LookseeObject> getPathObjects() {
 		return path_objects;
 	}
 	
-	private void setPathObjects(List<PathObject> path_objects) {
+	private void setPathObjects(List<LookseeObject> path_objects) {
 		this.path_objects = path_objects;
 	}
 	

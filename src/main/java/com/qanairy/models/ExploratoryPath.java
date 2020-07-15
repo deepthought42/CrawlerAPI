@@ -13,7 +13,7 @@ public class ExploratoryPath {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryPath.class);
 	
 	private List<String> path_keys;
-	private List<PathObject> path_objects;
+	private List<LookseeObject> path_objects;
 	private List<Action> possible_actions;
 
 	/**
@@ -22,7 +22,7 @@ public class ExploratoryPath {
 	 * @param current_path
 	 */
 	@Deprecated
-	public ExploratoryPath(List<String> path_keys, List<PathObject> current_path, List<Action> actions){
+	public ExploratoryPath(List<String> path_keys, List<LookseeObject> current_path, List<Action> actions){
 		setPathKeys(path_keys);
 		setPathObjects(current_path);
 		setPossibleActions(actions);
@@ -33,7 +33,7 @@ public class ExploratoryPath {
 	 * 
 	 * @param current_path
 	 */
-	public ExploratoryPath(List<String> path_keys, List<PathObject> current_path){
+	public ExploratoryPath(List<String> path_keys, List<LookseeObject> current_path){
 		setPathKeys(path_keys);
 		setPathObjects(current_path);
 	}
@@ -44,7 +44,7 @@ public class ExploratoryPath {
 	 * @param obj
 	 * @return
 	 */
-	public boolean add(PathObject obj){
+	public boolean add(LookseeObject obj){
 		return getPathObjects().add(obj);
 	}
 	
@@ -58,10 +58,10 @@ public class ExploratoryPath {
 	 * @return
 	 */
 	public PageState findLastPage(){
-		List<PathObject> path_obj_list = getPathObjects();
+		List<LookseeObject> path_obj_list = getPathObjects();
 		PageState page = null;
 
-		for(PathObject obj : path_obj_list){
+		for(LookseeObject obj : path_obj_list){
 			if(obj instanceof PageState){
 				page = (PageState)obj;
 			}
@@ -106,7 +106,7 @@ public class ExploratoryPath {
 	 * @param path
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasPageCycle(List<PathObject> path){
+	public static boolean hasPageCycle(List<LookseeObject> path){
 		for(int i = path.size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
 				if(path.get(i) instanceof PageState 
@@ -122,7 +122,7 @@ public class ExploratoryPath {
 
 	public PageState firstPage() {
 		
-		for(PathObject obj : getPathObjects()){
+		for(LookseeObject obj : getPathObjects()){
 			if(obj instanceof PageState){
 				return (PageState)obj;
 			}
@@ -140,15 +140,15 @@ public class ExploratoryPath {
 		return this.getPathKeys().add(key);
 	}
 	
-	public void addPathObject(PathObject path_obj) {
+	public void addPathObject(LookseeObject path_obj) {
 		this.path_objects.add(path_obj);
 	}
 
-	public List<PathObject> getPathObjects() {
+	public List<LookseeObject> getPathObjects() {
 		return this.path_objects;
 	}
 
-	public void setPathObjects(List<PathObject> path_objects) {
+	public void setPathObjects(List<LookseeObject> path_objects) {
 		this.path_objects = path_objects;
 	}
 	
@@ -175,7 +175,7 @@ public class ExploratoryPath {
 	 * @return
 	 */
 	public static ExploratoryPath clone(ExploratoryPath path){		
-		List<PathObject> path_objects = new ArrayList<PathObject>(path.getPathObjects());
+		List<LookseeObject> path_objects = new ArrayList<LookseeObject>(path.getPathObjects());
 		List<String> path_keys = new ArrayList<String>(path.getPathKeys());
 		
 		return new ExploratoryPath(path_keys, path_objects);
@@ -189,10 +189,10 @@ public class ExploratoryPath {
 	public boolean equals(Object o){
 		if(o instanceof ExploratoryPath){
 			ExploratoryPath path = (ExploratoryPath)o;
-			List<PathObject> comparator_nodes = new ArrayList<PathObject>(path.getPathObjects());
-			for(PathObject obj : getPathObjects()){
+			List<LookseeObject> comparator_nodes = new ArrayList<LookseeObject>(path.getPathObjects());
+			for(LookseeObject obj : getPathObjects()){
 				int idx = 0;
-				for(PathObject comparator_obj : path.getPathObjects()){
+				for(LookseeObject comparator_obj : path.getPathObjects()){
 					if(comparator_obj.equals(obj)){
 						comparator_nodes.remove(idx);
 						break;

@@ -64,7 +64,7 @@ public class ColorPaletteAuditor implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<String> observations = new ArrayList<>();
+		List<Observation> observations = new ArrayList<>();
 
 		Map<String, Boolean> colors = new HashMap<String, Boolean>();
 

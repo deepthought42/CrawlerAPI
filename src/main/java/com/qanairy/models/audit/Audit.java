@@ -25,7 +25,9 @@ public class Audit extends LookseeObject {
 	private double score;      //scoring
 	private List<String> best_practices;
 	private List<String> recommendations;
-	private List<String> observations;
+	
+	@Relationship("OBSERVED")
+	private List<Observation> observations;
 	
 	@Relationship(type="FLAGGED")
 	List<ElementState> flagged_elements = new ArrayList<>();
@@ -43,7 +45,7 @@ public class Audit extends LookseeObject {
 	 * @param description
 	 * @param name
 	 */
-	public Audit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<String> observations, AuditLevel level) {
+	public Audit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<Observation> observations, AuditLevel level) {
 		setBestPractices(best_practices);
 		setAdaCompliance(ada_compliance_description);
 		setDescription(description);
@@ -99,11 +101,11 @@ public class Audit extends LookseeObject {
 		this.ada_compliance = ada_compliance;
 	}
 
-	public List<String> getObservations() {
+	public List<Observation> getObservations() {
 		return observations;
 	}
 
-	public void setObservations(List<String> observations) {
+	public void setObservations(List<Observation> observations) {
 		this.observations = observations;
 	}
 

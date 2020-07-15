@@ -23,7 +23,6 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
-import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;

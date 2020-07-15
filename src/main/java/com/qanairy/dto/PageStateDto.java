@@ -14,7 +14,6 @@ public class PageStateDto {
 	public PageStateDto(PageState page){
 		setKey(page.getKey());
 		setUrl(page.getUrl());
-		setType(page.getType());
 	}
 
 	public String getKey() {

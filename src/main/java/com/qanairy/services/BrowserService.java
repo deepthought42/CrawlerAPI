@@ -323,22 +323,24 @@ public class BrowserService {
 		
 		//retrieve landable page state associated with page with given url
 		String browser_url = browser.getDriver().getCurrentUrl();
-		String host = new URL(browser_url).getHost();
+		//String host = new URL(browser_url).getHost();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		String page_src = browser.getDriver().getPageSource();
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-
+		
+		List<ElementState> elements = extractElementStates(page_src, browser, reviewed_xpaths)();
 		/*
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		*/
-		
+		/*
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
+		*/
 		//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 		// removing the following viewport screenshot because it doesn't appear to be needed for new audit setup 6/19/2020
 		
@@ -352,14 +354,14 @@ public class BrowserService {
 				browser.getViewportSize().getHeight(),
 				browser.getBrowserName(),
 				new HashSet<Form>(),
-				full_page_screenshot_url, 
-				full_page_screenshot_checksum);
+				null, 
+				null);
 
 		page_state.setSrcChecksum(src_checksum);
 		//page_state.addScreenshotChecksum(screenshot_checksum);
 		//page_state.setScreenshotUrl(viewport_screenshot_url);
-		page_state.setFullPageWidth(full_page_screenshot.getWidth());
-		page_state.setFullPageHeight(full_page_screenshot.getHeight());
+		//page_state.setFullPageWidth(full_page_screenshot.getWidth());
+		//page_state.setFullPageHeight(full_page_screenshot.getHeight());
 		log.warn("built page state with url :: "+page_state.getUrl());
 		return page_state_service.save(page_state);
 	}

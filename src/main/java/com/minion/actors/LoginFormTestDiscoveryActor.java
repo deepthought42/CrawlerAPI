@@ -17,7 +17,7 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
@@ -213,7 +213,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private ExploratoryPath initializeFormTest(Form form, String url, String user_id) {
 		
 		List<String> path_keys = new ArrayList<String>();
-		List<PathObject> path_objects = new ArrayList<PathObject>();
+		List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 		
 		//get page state		
 		PageState page = form_service.getPageState(user_id, url, form);
@@ -236,10 +236,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
 		//add test path to path objects and keys
-		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey(), url, user_id);
+		List<LookseeObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey(), url, user_id);
 		log.warning("path objects size ::   "+test_path_objects.size());
 		for(String key : shortest_test.getPathKeys()){
-			for(PathObject obj : test_path_objects){
+			for(LookseeObject obj : test_path_objects){
 				if(key.equals(obj.getKey())){
 					path_objects.add(obj);
 					path_keys.add(key);

@@ -32,7 +32,7 @@ import com.qanairy.services.BrowserService;
  * A reference to a web page
  *
  */
-public class PageState extends LookseeObject implements PathObject {
+public class PageState extends LookseeObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
 	
@@ -56,7 +56,6 @@ public class PageState extends LookseeObject implements PathObject {
 	private int viewport_height;
 	private long full_page_width;
 	private long full_page_height;
-	private String type;
 	
 	@Deprecated
 	private List<String> screenshot_checksums;
@@ -122,7 +121,6 @@ public class PageState extends LookseeObject implements PathObject {
 		assert elements != null;
 		assert screenshot_url != null;
 
-		setType(PageState.class.getSimpleName());
 		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setViewportWidth(viewport_width);
@@ -174,7 +172,6 @@ public class PageState extends LookseeObject implements PathObject {
 		assert full_page_screenshot_url != null;
 		assert !full_page_screenshot_url.isEmpty();
 		
-		setType(PageState.class.getSimpleName());
 		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
@@ -286,7 +283,7 @@ public class PageState extends LookseeObject implements PathObject {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PathObject clone() {
+	public PageState clone() {
 		List<ElementState> elements = new ArrayList<ElementState>(getElements());
 
 		PageState page = null;
@@ -329,16 +326,6 @@ public class PageState extends LookseeObject implements PathObject {
 		 * url.substring(0, param_idx); }
 		 */
 		this.url = url;
-	}
-
-	@Override
-	public String getType() {
-		return this.type;
-	}
-
-	@Override
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public void addElement(ElementState element) {

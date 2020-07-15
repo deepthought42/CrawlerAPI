@@ -27,7 +27,7 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
@@ -262,7 +262,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
 						final_key_list.add(test.getResult().getKey());
-						List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+						List<LookseeObject> final_object_list = new ArrayList<>(test.getPathObjects());
 						final_object_list.add(test.getResult());
 						log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
 						//run reducer on key list

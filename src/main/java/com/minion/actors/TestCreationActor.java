@@ -29,7 +29,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -107,7 +107,7 @@ public class TestCreationActor extends AbstractActor  {
 				    	Domain domain = acct_message.getDomain();
 		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
-				        	List<PathObject> path_objects = new ArrayList<PathObject>();
+				        	List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 					    	Browser browser = null;
 
 				    		try{
@@ -193,7 +193,7 @@ public class TestCreationActor extends AbstractActor  {
 	private Domain buildTestPathFromPathJson(
 				JSONArray path, 
 				List<String> path_keys, 
-				List<PathObject> path_objects, 
+				List<LookseeObject> path_objects, 
 				Browser browser, 
 				String user_id, 
 				Domain domain

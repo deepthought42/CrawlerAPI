@@ -86,16 +86,20 @@ public class AuditFactory {
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			Audit link_audit = links_auditor.execute(page);
+			/*
 			Audit padding_audits = padding_auditor.execute(page);
 			Audit margin_audits = margin_auditor.execute(page);
 			Audit measure_unit_audits = measure_unit_auditor.execute(page);
-
+*/
 			audits.add(link_audit);
+	/*
 			audits.add(padding_audits);
 			audits.add(margin_audits);
 			audits.add(measure_unit_audits);
+			*/
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
+			/*
 			Audit color_palette_audit = color_palette_auditor.execute(page);
 			Audit text_contrast_audit = text_contrast_auditor.execute(page);
 			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
@@ -103,13 +107,16 @@ public class AuditFactory {
 			audits.add(color_palette_audit);
 			audits.add(text_contrast_audit);
 			audits.add(non_text_contrast_audit);
+			*/
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
+			/*
 			Audit typeface_audit = typeface_auditor.execute(page);
 			Audit font_audit = font_auditor.execute(page);
 			
 			audits.add(typeface_audit);
 			audits.add(font_audit);
+			*/
 		}		
 		
 		return audits;

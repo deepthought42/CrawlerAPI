@@ -30,7 +30,7 @@ import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -141,8 +141,8 @@ public class TestService {
 
 		if(record == null){
 			log.warn("test record is null while saving");
-			List<PathObject> path_objects = new ArrayList<PathObject>();
-			for(PathObject path_obj : test.getPathObjects()){
+			List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
+			for(LookseeObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
 					path_objects.add(page_state_service.saveUserAndDomain(user_id, url, (PageState)path_obj));
 					
@@ -175,7 +175,7 @@ public class TestService {
 		}
 		else{
 			log.warn("test record already exists");
-			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey(), url, user_id );
+			List<LookseeObject> path_objects = test_repo.getPathObjects(test.getKey(), url, user_id );
 			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
 			record.setPathObjects(path_objects);
 			
@@ -258,15 +258,15 @@ public class TestService {
     * 
     * @param test_key key of {@link Test} that we want path objects for
     * 
-    * @return List of ordered {@link PathObject}s
+    * @return List of ordered {@link LookseeObject}s
     */
-   public List<PathObject> getPathObjects(String test_key, String url, String user_id) {
+   public List<LookseeObject> getPathObjects(String test_key, String url, String user_id) {
 	   Test test = test_repo.findByKey(test_key, url, user_id);
-	   List<PathObject> path_obj_list = test_repo.getPathObjects(test_key, url, user_id);
+	   List<LookseeObject> path_obj_list = test_repo.getPathObjects(test_key, url, user_id);
 	   //order path objects
-	   List<PathObject> ordered_list = new ArrayList<PathObject>();
+	   List<LookseeObject> ordered_list = new ArrayList<LookseeObject>();
 	   for(String key : test.getPathKeys()) {
-		   for(PathObject path_obj : path_obj_list) {
+		   for(LookseeObject path_obj : path_obj_list) {
 			   if(path_obj.getKey().equals(key)) {
 				   ordered_list.add(path_obj);
 				   break;
@@ -298,22 +298,22 @@ public class TestService {
     * 
     * @return
     */
-   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists, String user_id, String url) {
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<LookseeObject>> test_path_object_lists, String user_id, String url) {
 	   assert path_keys != null;
 	   assert !path_keys.isEmpty();
 	   assert test_path_object_lists != null;
 	   assert !test_path_object_lists.isEmpty();
    
 	   //load path objects using path keys
-	   List<PathObject> path_objects = loadPathObjects(user_id, path_keys);
+	   List<LookseeObject> path_objects = loadPathObjects(user_id, path_keys);
 	   
 	   //find all tests with page state at index
-	   for(List<PathObject> test_path_objects : test_path_object_lists) {
+	   for(List<LookseeObject> test_path_objects : test_path_object_lists) {
 		   //check if any subpath of test matches path_objects based on url, xpath and action
 		   int current_idx = 0;
 		   
 		   log.warn("path object list size when checking if end of path is unique :: "+test_path_objects.size());
-		   for(PathObject path_object : test_path_objects) {
+		   for(LookseeObject path_object : test_path_objects) {
 			   if(path_object != null && path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
 				   current_idx++;
 				   break;
@@ -332,7 +332,7 @@ public class TestService {
 			   if(((ElementState)test_path_objects.get(current_idx)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())) {
 				   current_idx++;
 				   //check if remaining keys in path_objects match following keys in test_path_objects
-				   for(PathObject obj : path_objects.subList(2, path_objects.size())) {
+				   for(LookseeObject obj : path_objects.subList(2, path_objects.size())) {
 					   if(!obj.getKey().equalsIgnoreCase(test_path_objects.get(current_idx).getKey())) {
 						   matching_test_found = false;
 						   break;
@@ -350,9 +350,9 @@ public class TestService {
 	   return false;
    }
 
-	public List<PathObject> loadPathObjects(String user_id, List<String> path_keys) {
+	public List<LookseeObject> loadPathObjects(String user_id, List<String> path_keys) {
 		//load path objects using path keys
-		List<PathObject> path_objects = new ArrayList<PathObject>();
+		List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
 				path_objects.add(page_state_service.findByKeyAndUsername(user_id, key));

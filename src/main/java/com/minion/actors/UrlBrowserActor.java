@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.AlertChoice;
+
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
@@ -36,10 +35,9 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
@@ -115,7 +113,7 @@ public class UrlBrowserActor extends AbstractActor {
 					PageLoadAnimation animation = null;
 					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
-					List<PathObject> path_objects = null;
+					List<LookseeObject> path_objects = null;
 					PageState page_state = null;
 					
 					do{

@@ -11,6 +11,9 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
@@ -18,6 +21,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.ObservationService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -25,9 +29,11 @@ import com.qanairy.utils.BrowserUtils;
  */
 @Component
 public class LinksAudit implements IExecutablePageStateAudit {
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
 	
-	//@Autowired
-	//private PageStateService page_state_service;
+	@Autowired
+	private ObservationService observation_service;
 	
 	private List<ElementState> links_without_href =  new ArrayList<>();
 	private List<ElementState> invalid_links = new ArrayList<>();
@@ -69,7 +75,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		
+		log.warn("---------------------------------------------------------------------------");
+		log.warn("EXECUTING LINKS AUDIT !!!");
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		for(ElementState element : page_state.getElements()) {
@@ -78,23 +85,21 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		List<String> observations = new ArrayList<>();
-		double overall_score = 0.0;
+		List<Observation> observations = new ArrayList<>();
 		//score each link element
+		double score = 0;
 		for(ElementState link : link_elements) {
-			int score = 0;
-			URL url;
 	
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 			String href = element.absUrl("href");
-			
+
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
+				
 				score++;
-				URI uri;
 				try {
-					uri = new URI(href);
+					URI uri = new URI(href);
 					if(!uri.isAbsolute()) {
 						href = page_state.getUrl() + href;
 					}
@@ -104,6 +109,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				}
 			}
 			else {
+				links_without_href.add(link);
+				log.warn("href value was empty or null...");
 				continue;
 			}
 			
@@ -117,7 +124,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				e.printStackTrace();
 			}
 			
-			
 			//Does link have a valid URL? yes(1) / No(0)
 			try {
 				if(BrowserUtils.doesUrlExist(url_href)) {
@@ -128,7 +134,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				}
 			} catch (IOException e) {
 				dead_links.add(link);
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -137,22 +142,31 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			//TODO : Is link label relevant to destination url or content? yes(1) / No(0)
 				//TODO :does link text exist in url? 
 				//TODO :does target content relate to link?
-			overall_score += score/3.0;
+			//overall_score += score/3.0;
 		}
 		
 		if(!links_without_href.isEmpty()) {
-			observations.add("We found " + links_without_href.size() + " links without an 'href' value");
+			Observation observation = new Observation(links_without_href, "Links without an 'href' value will confuse users that expect the link to lead somewhere new.");
+			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			observations.add("We found " + invalid_links.size() + " invalid links");
+			Observation observation = new Observation(invalid_links, "Links without an invalid address create frustraton for users that beleive they will find what they are looking for on the other side of a link.");
+			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			observations.add("We found " + dead_links.size() + " dead links");
+			Observation observation = new Observation(dead_links, "Links that point to pages that no longer exist. When users visit these links they receive a 404 error indicating that the content could not be found.");
+			observations.add(observation_service.save(observation));
 		}
 		
+		if(score > 0.0) {
+			score = score/(link_elements.size()*3);
+		}
+		else {
+			score = 1.0;
+		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, overall_score/link_elements.size(), observations, AuditLevel.PAGE);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE);
 	}
 }

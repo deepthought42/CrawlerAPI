@@ -6,7 +6,7 @@ import java.util.List;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 
 /**
@@ -26,11 +26,11 @@ public class TestDto {
 
 		this.path = new ArrayList<Object>();
 
-		List<PathObject> path_objects = test.getPathObjects();
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
+		List<LookseeObject> path_objects = test.getPathObjects();
+		List<LookseeObject> ordered_path_objects = new ArrayList<LookseeObject>();
 		//order by key
 		for(String key : test.getPathKeys()){
-			for(PathObject obj : path_objects){
+			for(LookseeObject obj : path_objects){
 				if(obj.getKey().equals(key)){
 					ordered_path_objects.add(obj);
 				}
@@ -39,11 +39,11 @@ public class TestDto {
 
 		boolean first_page = true;
 		for(int idx = 0; idx < ordered_path_objects.size(); idx++){
-			if(ordered_path_objects.get(idx).getType().equals("PageState") && first_page){
+			if(ordered_path_objects.get(idx) instanceof PageState && first_page){
 				first_page = false;
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
-			else if(ordered_path_objects.get(idx).getType().equals("ElementState")){
+			else if(ordered_path_objects.get(idx) instanceof ElementState ){
 				this.path.add(new ElementActionDto((ElementState)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
 			}
 		}

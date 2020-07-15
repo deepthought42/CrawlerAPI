@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +23,7 @@ import com.qanairy.services.BrowserService;
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
  *  maintained by ElementState though. 
  */
-public class ElementState extends LookseeObject implements PathObject, Comparable<ElementState> {
+public class ElementState extends LookseeObject implements Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
@@ -105,8 +106,8 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 		setCssSelector("");
 		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
 		setRules(new HashSet<>());
-		setKey(generateKey());
 		setClassification(ElementClassification.CHILD);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -292,12 +293,13 @@ public class ElementState extends LookseeObject implements PathObject, Comparabl
 	 * @return
 	 */
 	public String generateKey() {
-		String key = "";
-		for(String style : getCssValues().keySet()) {
+		String key = getCssValues().toString();
+		List<String> properties = new ArrayList<>(getCssValues().keySet());
+		Collections.sort(properties);
+		for(String style : properties) {
 			key += getCssValues().get(style);
-			
 		}
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate()+this.getXpath());
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
 	}
 	
 

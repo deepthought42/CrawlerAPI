@@ -4,18 +4,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
-@NodeEntity
-public class Redirect implements Transition, Persistable {
-
-	@GeneratedValue
-    @Id
-	private Long id;
-	
-	private String key;
+public class Redirect extends LookseeObject {
 	private String start_url;
 	private List<String> urls;
 	private List<String> image_checksums;
@@ -35,26 +24,6 @@ public class Redirect implements Transition, Persistable {
 		setStartUrl(start_url);
 		setUrls(urls);
 		setKey(generateKey());
-	}
-	
-	@Override
-	public String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
-	public String getType() {
-		return "Redirect";
-	}
-
-	@Override
-	public void setType(String type) {
-		//does nothing
 	}
 
 	@Override
@@ -103,10 +72,6 @@ public class Redirect implements Transition, Persistable {
 		}
 		
 		this.image_urls = deduped_list;
-	}
-
-	public Long getId() {
-		return id;
 	}
 
 	public String getStartUrl() {

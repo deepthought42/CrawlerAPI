@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
@@ -16,7 +16,7 @@ import akka.actor.ActorRef;
 public class TestCandidateMessage {
 
 	private List<String> keys;
-	private List<PathObject> path_objects;
+	private List<LookseeObject> path_objects;
 	private ActorRef discovery_actor;
 	private ActorRef domain_actor;
 	private PageState result_page;
@@ -26,7 +26,7 @@ public class TestCandidateMessage {
 	
 	public TestCandidateMessage(
 			List<String> keys, 
-			List<PathObject> path_objects, 
+			List<LookseeObject> path_objects, 
 			ActorRef discovery_actor, 
 			PageState result_page, 
 			BrowserType browser, 
@@ -48,7 +48,7 @@ public class TestCandidateMessage {
 		return keys;
 	}
 
-	public List<PathObject> getPathObjects() {
+	public List<LookseeObject> getPathObjects() {
 		return path_objects;
 	}
 

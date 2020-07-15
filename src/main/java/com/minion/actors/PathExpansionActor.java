@@ -26,7 +26,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.PathStatus;
@@ -157,7 +157,7 @@ public class PathExpansionActor extends AbstractActor {
 			for(List<Action> action_list : ActionHelper.getActionLists()){
 				for(Action action : action_list){
 					ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
-					ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
+					ArrayList<LookseeObject> path_objects = new ArrayList<LookseeObject>(new_path.getPathObjects());
 
 					keys.add(action.getKey());
 					path_objects.add(action);
@@ -183,7 +183,7 @@ public class PathExpansionActor extends AbstractActor {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	private Collection<ElementState> getElementStatesForExpansion(List<PathObject> path_objects) {
+	private Collection<ElementState> getElementStatesForExpansion(List<LookseeObject> path_objects) {
 		assert(path_objects != null);
 		assert(!path_objects.isEmpty());
 

@@ -27,7 +27,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
@@ -96,20 +96,20 @@ public class ParentPathExplorer extends AbstractActor {
 			  		long start = System.currentTimeMillis();
 
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
-			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
+			  		List<LookseeObject> final_path_objects = new ArrayList<LookseeObject>(message.getPathObjects());
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
-					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
+					List<LookseeObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
 
 					//get index of last page element in path
 			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(path_keys);
 
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
-					List<PathObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);
+					List<LookseeObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);
 
 					//get array of all elements after last page element
 					List<String> end_path_keys = new ArrayList<String>();
-					List<PathObject> end_path_objects = new ArrayList<>();
+					List<LookseeObject> end_path_objects = new ArrayList<>();
 
 					if((last_elem_idx+1) < path_keys.size()){
 						end_path_keys = path_keys.subList(last_elem_idx+1, path_keys.size());
@@ -211,7 +211,7 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
 
-							List<PathObject> parent_end_path_objects = new ArrayList<>();
+							List<LookseeObject> parent_end_path_objects = new ArrayList<>();
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 
@@ -279,7 +279,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
-					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+					List<List<LookseeObject>> path_object_lists = new ArrayList<List<LookseeObject>>();
 					for(Test test : matching_tests) {
 						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
 					}
@@ -326,7 +326,7 @@ public class ParentPathExplorer extends AbstractActor {
 	 */
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
-		for(PathObject path_obj: test.getPathObjects()){
+		for(LookseeObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(ElementState.class)){
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){

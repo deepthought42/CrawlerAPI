@@ -26,9 +26,9 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserType;
@@ -324,7 +324,7 @@ public class BrowserUtils {
 		return false;
 	}
 	
-	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<PathObject> path_objects) throws MalformedURLException {
+	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<LookseeObject> path_objects) throws MalformedURLException {
 		return !(start_url.trim().contains(new URL(end_url).getHost()) || end_url.contains((new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost())));
 	}
 

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
@@ -125,7 +125,7 @@ public class DomainActor extends AbstractActor{
 					/*
 					log.warn("domain actor account number :: "+test_msg.getAccount());
 					log.warn("domain url :: " +test_msg.getDomain().getUrl());
-					for(PathObject obj : test.getPathObjects()){
+					for(LookseeObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
 							domain_service.addPageState(test_msg.getDomain().getUrl(), (PageState)obj, test_msg.getAccount());
 						}
@@ -135,7 +135,7 @@ public class DomainActor extends AbstractActor{
 					//domain = domain_service.save(domain);					
 					//domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());	
 
-					for(PathObject path_obj : test.getPathObjects()){
+					for(LookseeObject path_obj : test.getPathObjects()){
 						try {
 							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {
@@ -152,7 +152,7 @@ public class DomainActor extends AbstractActor{
 					domain_service.addTest(domain.getUrl(), test_record, test_msg.getAccount());
 					//domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
 					
-					for(PathObject path_obj : test.getPathObjects()){
+					for(LookseeObject path_obj : test.getPathObjects()){
 						try {
 							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost(), test_msg.getAccount());
 						} catch (JsonProcessingException e) {

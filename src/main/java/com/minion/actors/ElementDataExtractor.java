@@ -1,6 +1,7 @@
 package com.minion.actors;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class ElementDataExtractor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageState.class, page_state-> {
 					log.warn("Element data extractor received PageState message..."+page_state.getUrl());
-					extractElementDataFromPageState(page_state);
+					extractElementDataFromPageStateUsingBrowser(page_state);
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
@@ -93,7 +94,8 @@ public class ElementDataExtractor extends AbstractActor{
 				.build();
 	}
 
-	private void extractElementDataFromPageState(PageState page_state) {
+	@Deprecated
+	private void extractElementDataFromPageStateUsingBrowser(PageState page_state) {
 		int error_cnt = 0;
 		boolean page_state_build_success = false;
 		Browser browser = null;
@@ -123,6 +125,33 @@ public class ElementDataExtractor extends AbstractActor{
 				if( browser != null ) {
 					browser.close();
 				}
+			}
+		}while(!page_state_build_success && error_cnt < 10000);
+	}
+	
+	
+	private void extractElementDataFromPageState(PageState page_state) {
+		int error_cnt = 0;
+		boolean page_state_build_success = false;
+		Map<String, ElementState> reviewed_elements = new HashMap<>();
+		error_cnt = 0;
+		page_state_build_success = false;
+		do {
+			try {
+				log.debug("Element Data Extractor retrieving browser connection ... "+page_state.getUrl());
+				
+				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), new URL(page_state.getUrl()));
+			
+				page_state.addElements(elements);
+				page_state = page_state_service.save(page_state);
+				//send page state message to auditor
+				getSender().tell(page_state, getSelf());
+				break;
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+			finally {
+				
 			}
 		}while(!page_state_build_success && error_cnt < 10000);
 	}	

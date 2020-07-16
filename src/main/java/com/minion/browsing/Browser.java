@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,10 +15,16 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Node;
+import org.w3c.tidy.Tidy;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openqa.grid.common.exception.GridException;
@@ -49,6 +56,13 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
+import com.qanairy.models.enums.AuditLevel;
+
+import cz.vutbr.web.css.CSSFactory;
+import cz.vutbr.web.css.MediaSpec;
+import cz.vutbr.web.css.MediaSpecAll;
+import cz.vutbr.web.css.NodeData;
+import cz.vutbr.web.domassign.StyleMap;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -443,6 +457,62 @@ public class Browser {
 		return driver.findElement(By.xpath(xpath));
 	}
 	
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 */
+	public static Map<String, String> loadCssPropertiesUsingParser(String page_source, URL url, String xpath) throws XPathExpressionException{
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+		Tidy tidy = new Tidy(); // obtain a new Tidy instance
+		tidy.setXHTML(true); // set desired config options using tidy setters 
+		                          // (equivalent to command line options)
+
+		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
+
+		//count all elements with non 0 px values that aren't decimals
+		MediaSpec media = new MediaSpecAll(); //use styles for all media
+		StyleMap map = null;
+		map = CSSFactory.assignDOM(w3c_document, "UTF-8", url, media, true);
+		
+		log.warn("css dom map ::   "+map.size());
+		//for(ElementState element : page_state.getElements()) {
+		Map<String, String> css_map = new HashMap<>();
+		//create the style map
+
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		Node node = (Node)xPath.compile(xpath).evaluate(w3c_document, XPathConstants.NODE);
+		NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
+		log.warn("element node ::   "+node);
+		log.warn("Element styling  ::  "+style);
+		if(style != null) {
+			style.concretize();
+			for(String property : style.getPropertyNames()) {
+				
+				log.warn("property value :: "+style.getValue(property, false));
+				//log.warn("property value 2 :: "+style.getAsString(property, false));
+				if(style.getValue(property, false) == null) {
+					continue;
+				}
+				String property_value = style.getValue(property, true).toString();
+				//String property_value = CssPropertyFactory.construct(style.getProperty(property));
+				log.warn("Property : value    ->    "+property+  "   :    "+property_value);
+				if(property_value == null || property_value.isEmpty() || "none".equalsIgnoreCase(property_value)) {
+					continue;
+				}
+				css_map.put(property, property_value);
+			}
+		}
+		//}
+		
+		return css_map;
+	}
+	
+	
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
 	 * 
@@ -450,6 +520,7 @@ public class Browser {
 	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
+	@Deprecated
 	public static Map<String, String> loadCssProperties(WebElement element, WebDriver driver){
 		JavascriptExecutor executor = (JavascriptExecutor)driver;
 		String script = "var s = '';" +

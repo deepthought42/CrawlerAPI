@@ -146,17 +146,17 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		}
 		
 		if(!links_without_href.isEmpty()) {
-			Observation observation = new Observation(links_without_href, "Links without an 'href' value will confuse users that expect the link to lead somewhere new.");
+			ElementObservation observation = new ElementObservation(links_without_href, "Links without an 'href' value will confuse users that expect the link to lead somewhere new.");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			Observation observation = new Observation(invalid_links, "Links without an invalid address create frustraton for users that beleive they will find what they are looking for on the other side of a link.");
+			ElementObservation observation = new ElementObservation(invalid_links, "Links without an invalid address create frustraton for users that beleive they will find what they are looking for on the other side of a link.");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			Observation observation = new Observation(dead_links, "Links that point to pages that no longer exist. When users visit these links they receive a 404 error indicating that the content could not be found.");
+			ElementObservation observation = new ElementObservation(dead_links, "Links that point to pages that no longer exist. When users visit these links they receive a 404 error indicating that the content could not be found.");
 			observations.add(observation_service.save(observation));
 		}
 		

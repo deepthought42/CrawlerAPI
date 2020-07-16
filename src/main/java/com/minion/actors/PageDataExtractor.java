@@ -1,11 +1,9 @@
 package com.minion.actors;
 
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -25,8 +23,6 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -45,9 +41,6 @@ public class PageDataExtractor extends AbstractActor{
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	@Autowired
-	private ActorSystem actor_system;
-	
 	@Autowired
 	private PageService page_service;
 	
@@ -99,9 +92,12 @@ public class PageDataExtractor extends AbstractActor{
 							page_state_build_success = true;
 							
 							log.warn("sending page state to element data extractor..."+page_state.getUrl());
+							/**
 							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
 							element_data_extractor.tell(page_state, getSender());
+							*/
+							getSender().tell(page_state, getSelf());
 							break;
 						}catch(Exception e) {
 							if(e instanceof GridException || e instanceof WebDriverException) {

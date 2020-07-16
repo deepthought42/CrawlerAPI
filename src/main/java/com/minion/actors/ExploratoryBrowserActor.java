@@ -133,7 +133,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
 
 							long start_time = System.currentTimeMillis();
-							List<ElementState> elements = browser_service.extractElementStates(message, BrowserType.create(browser_name));
+							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));
 							long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							result_page.addElements(elements);

@@ -89,8 +89,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet
 				try {
-					String raw_sheet = URLReader(new URL(stylesheet_url));
-					StyleSheet sheet = CSSFactory.parse(raw_sheet);
 					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
@@ -98,9 +96,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				} catch (CSSException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 		}

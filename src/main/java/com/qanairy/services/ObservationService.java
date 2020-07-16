@@ -12,7 +12,7 @@ public class ObservationService {
 	@Autowired
 	private ObservationRepository observation_repo;
 	
-	public Observation save(Observation observation) {
+	public Observation<?> save(Observation<?> observation) {
 		return observation_repo.save(observation);
 	}
 

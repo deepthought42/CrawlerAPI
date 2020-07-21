@@ -250,7 +250,7 @@ public class ColorPaletteUtils {
 		List<ColorData> colors = new ArrayList<ColorData>();
 		
 		for(String color : color_strings) {
-			colors.add(new ColorData(color));
+			colors.add(new ColorData(color.trim()));
 		}
 		
 		//identify colors that are a shade/tint of another color in the colors list and group them together in a set

@@ -2,6 +2,9 @@ package com.qanairy.models.audit;
 
 import java.awt.Color;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.qanairy.models.LookseeObject;
 
 
@@ -10,6 +13,8 @@ import com.qanairy.models.LookseeObject;
  *
  */
 public class ColorData extends LookseeObject{
+	private static Logger log = LoggerFactory.getLogger(ColorData.class);
+
 	private int red;
 	private int green;
 	private int blue;
@@ -31,20 +36,28 @@ public class ColorData extends LookseeObject{
 		assert rgba_string != null;
 		assert !rgba_string.isEmpty();
 		
-		//extract r,g,b,a from color_str
-		String tmp_color_str = rgba_string.replace(")", "");
-		tmp_color_str = tmp_color_str.replace("rgba(", "");
-		tmp_color_str = tmp_color_str.replace("rgb(", "");
-		tmp_color_str = tmp_color_str.replaceAll(" ", "");
-		String[] rgba = tmp_color_str.split(",");
-		
-		this.red = Integer.parseInt(rgba[0]);
-		this.green = Integer.parseInt(rgba[1]);
-		this.blue = Integer.parseInt(rgba[2]);
-		
-		if(rgba.length == 4) {
-			setTransparency(Double.parseDouble(rgba[3]));
+		if(rgba_string.startsWith("#")) {
+			Color color = Color.decode(rgba_string);
+			this.red = color.getRed();
+			this.green = color.getGreen();
+			this.blue = color.getBlue();
 		}
+		else {
+			//extract r,g,b,a from color_str
+			String tmp_color_str = rgba_string.replace(")", "");
+			tmp_color_str = tmp_color_str.replace("rgba(", "");
+			tmp_color_str = tmp_color_str.replace("rgb(", "");
+			tmp_color_str = tmp_color_str.replaceAll(" ", "");
+			String[] rgba = tmp_color_str.split(",");
+			
+			this.red = Integer.parseInt(rgba[0]);
+			this.green = Integer.parseInt(rgba[1]);
+			this.blue = Integer.parseInt(rgba[2]);
+			if(rgba.length == 4) {
+				setTransparency(Double.parseDouble(rgba[3]));
+			}
+		}
+		
 		
 		//convert rgb to hsl, store all as Color object
 		float[] hsb = Color.RGBtoHSB(red, green, blue, null);

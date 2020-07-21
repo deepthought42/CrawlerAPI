@@ -30,7 +30,7 @@ public class AuditFactory {
 	private LinksAudit links_auditor;
 	
 	@Autowired
-	private ColorPaletteAuditor color_palette_auditor;
+	private ColorPaletteAudit color_palette_auditor;
 	
 	@Autowired
 	private TextColorContrastAudit text_contrast_auditor;
@@ -47,9 +47,6 @@ public class AuditFactory {
 	@Autowired
 	private MarginAudit margin_auditor;
 	
-	@Autowired
-	private MarginAudit measure_unit_auditor;
-
 	//Domain audits
 	@Autowired
 	private DomainLinksAudit domain_links_auditor;
@@ -86,28 +83,22 @@ public class AuditFactory {
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			Audit link_audit = links_auditor.execute(page);
-			/*
 			Audit padding_audits = padding_auditor.execute(page);
-			Audit margin_audits = margin_auditor.execute(page);
-			Audit measure_unit_audits = measure_unit_auditor.execute(page);
-*/
+			//Audit margin_audits = margin_auditor.execute(page);
+
 			audits.add(link_audit);
-	/*
 			audits.add(padding_audits);
-			audits.add(margin_audits);
-			audits.add(measure_unit_audits);
-			*/
+			//audits.add(margin_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
-			/*
 			Audit color_palette_audit = color_palette_auditor.execute(page);
 			Audit text_contrast_audit = text_contrast_auditor.execute(page);
 			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
-			
+	
 			audits.add(color_palette_audit);
 			audits.add(text_contrast_audit);
 			audits.add(non_text_contrast_audit);
-			*/
+			
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
 			/*

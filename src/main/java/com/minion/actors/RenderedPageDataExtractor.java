@@ -36,8 +36,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
  */
 @Component
 @Scope("prototype")
-public class PageDataExtractor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(PageDataExtractor.class.getName());
+public class RenderedPageDataExtractor extends AbstractActor{
+	private static Logger log = LoggerFactory.getLogger(RenderedPageDataExtractor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
@@ -80,9 +80,9 @@ public class PageDataExtractor extends AbstractActor{
 					do {
 						try {
 							//log.debug("retrieving browser connection ... ");
-							//browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionHelper.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
 							//log.debug("navigating to url :: "+page.getUrl());
-							//browser.navigateTo(page.getUrl());
+							browser.navigateTo(page.getUrl());
 		
 							//build page state with element states at the same time
 							log.debug("building page state...");

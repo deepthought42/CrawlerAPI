@@ -154,7 +154,7 @@ public class UrlBrowserActor extends AbstractActor {
 							page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
 							
 							long start_time = System.currentTimeMillis();
-						  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), browser, message.getDomain());
+						  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), message.getDomain());
 						  	long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							page_state.addElements(elements);

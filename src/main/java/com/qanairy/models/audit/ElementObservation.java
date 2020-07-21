@@ -10,7 +10,7 @@ import com.qanairy.models.ElementState;
 /**
  * A observation of potential error for a given {@link ElementState element} 
  */
-public class ElementObservation extends Observation<ElementObservation>{
+public class ElementObservation extends Observation{
 
 	@Relationship(type = "FOR")
 	private List<ElementState> elements;
@@ -40,10 +40,4 @@ public class ElementObservation extends Observation<ElementObservation>{
 	public void setElement(List<ElementState> element) {
 		this.elements = element;
 	}
-
-
-	@Override
-	public ElementObservation get() {
-		return this;
-	}	
 }

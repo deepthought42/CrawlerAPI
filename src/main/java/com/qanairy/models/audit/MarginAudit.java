@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
@@ -172,11 +173,26 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		List<Observation> observations = new ArrayList<>();
+		observations.add(new Observation("Margin values are not consistent in their differences. It's best to use margin values that have a common multiple") {
+			
+			@Override
+			public String generateKey() {
+				return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDescription());
+			}
+		});
+		//calculate margin size score
+		double margin_size_score = scoreMarginSizes(margin_values);
 		
-		//calculate score
-		double score = scoreMarginUsage(margin_values);
+		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as padding
+		double margin_as_padding_score = scoreMarginAsPadding(page_state.getElements());
+		
+		double score = (margin_size_score + margin_as_padding_score)/2;
+		log.warn("MARGIN SIZE SCORE  :::   "+margin_size_score);	
+		log.warn("MARGIN AS PADDING SCORE  :::   "+margin_as_padding_score);	
 		log.warn("MARGIN SCORE  :::   "+score);	
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
+
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, observations, AuditLevel.PAGE);
  
 		
 		
@@ -240,6 +256,25 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		*/
 	}
 
+	/**
+	 * Identifies elements that are using margin when they should be using padding
+	 * @param elements
+	 * @return
+	 */
+	private double scoreMarginAsPadding(List<ElementState> elements) {
+		for(ElementState element : elements) {
+			//identify situations of margin collapse by finding elements that are 
+				//positioned vertically where 1 is above the other and both have margins
+				//element is empty and has margins set
+				//first and last child margin collapse when their parent has margin set
+			
+			
+		}
+		
+		return 0.0;
+		
+	}
+
 	public static String URLReader(URL url) throws IOException {
         HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         
@@ -284,7 +319,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @param margin_set
 	 * @return
 	 */
-	private double scoreMarginUsage(List<String> margin_set) {
+	private double scoreMarginSizes(List<String> margin_set) {
 		double score = 0.0;
 		double total_possible_score = 0.0;
 		//sort margin values into em, percent and px measure types
@@ -314,7 +349,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		//SCORING 1a - Check if all values have the same difference
 		
-
+		
 		//CALCULATE OVERALL SCORE :: 
 		log.warn("Margin score :: "+(score/total_possible_score));
 		if(score == 0.0) {

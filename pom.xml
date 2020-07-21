@@ -350,11 +350,22 @@
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
+		
 		<dependency>
 		    <groupId>net.sf.cssbox</groupId>
 		    <artifactId>jstyleparser</artifactId>
 		    <version>3.5</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/net.sourceforge.cssparser/cssparser -->
+		<!--  uncomment this when ready to convert to css parser. JSTYLEPARSER swallows errors and that's not cool -->
+		<dependency>
+		    <groupId>net.sourceforge.cssparser</groupId>
+		    <artifactId>cssparser</artifactId>
+		    <version>0.9.27</version>
+		</dependency>
+				
+		
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.jtidy/jtidy -->
 		<dependency>

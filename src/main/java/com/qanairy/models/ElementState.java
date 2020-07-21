@@ -18,6 +18,7 @@ import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 
+
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
@@ -48,15 +49,18 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private boolean part_of_form;
 	
 	@Properties
-	private Map<String, String> css_values = new HashMap<>();
+	private Map<String, String> pre_render_css_values = new HashMap<>();
+	
+	@Properties
+	private Map<String, String> rendered_css_values = new HashMap<>();
 	
 	@Properties
 	private Map<String, String> attributes = new HashMap<>();
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS", direction = Relationship.OUTGOING)
 	private Set<Rule> rules = new HashSet<>();
 
-	@Relationship(type = "HAS_CHILD")
+	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<ElementState> child_elements = new ArrayList<>();
 	
 
@@ -96,7 +100,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setScreenshotUrl(screenshot_url);
 		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
-		setCssValues(css_map);
+		setPreRenderCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
@@ -139,7 +143,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setAttributes(attributes);
 		setScreenshotUrl(screenshot_url);
 		setText(text);
-		setCssValues(css_map);
+		setPreRenderCssValues(css_map);
 		setScreenshotChecksum(checksum);
 		setXLocation(x_location);
 		setYLocation(y_location);
@@ -173,11 +177,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return whether attributes match or not
 	 */
 	public boolean cssMatches(ElementState elem){
-		for(String propertyName : css_values.keySet()){
+		for(String propertyName : pre_render_css_values.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
 			}
-			if(!css_values.get(propertyName).equals(elem.getCssValues().get(propertyName))){
+			if(!pre_render_css_values.get(propertyName).equals(elem.getPreRenderCssValues().get(propertyName))){
 				return false;
 			}
 		}
@@ -210,12 +214,12 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		this.xpath = xpath;
 	}
 
-	public Map<String, String> getCssValues() {
-		return css_values;
+	public Map<String, String> getPreRenderCssValues() {
+		return pre_render_css_values;
 	}
 
-	public void setCssValues(Map<String, String> css_values) {
-		this.css_values = css_values;
+	public void setPreRenderCssValues(Map<String, String> css_values) {
+		this.pre_render_css_values = css_values;
 	}
 	
 	public Set<Rule> getRules(){
@@ -293,11 +297,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return
 	 */
 	public String generateKey() {
-		String key = getCssValues().toString();
-		List<String> properties = new ArrayList<>(getCssValues().keySet());
+		String key = getPreRenderCssValues().toString();
+		List<String> properties = new ArrayList<>(getPreRenderCssValues().keySet());
 		Collections.sort(properties);
 		for(String style : properties) {
-			key += getCssValues().get(style);
+			key += getPreRenderCssValues().get(style);
 		}
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
 	}
@@ -329,7 +333,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
-		page_elem.setCssValues(this.getCssValues());
+		page_elem.setPreRenderCssValues(this.getPreRenderCssValues());
+		page_elem.setRenderedCssValues(this.getRenderedCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshotUrl(this.getScreenshotUrl());
@@ -453,5 +458,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	public void addChildElement(ElementState child_element) {
 		this.child_elements.add(child_element);
+	}
+
+	public Map<String, String> getRenderedCssValues() {
+		return rendered_css_values;
+	}
+
+	public void setRenderedCssValues(Map<String, String> rendered_css_values) {
+		this.rendered_css_values.putAll(rendered_css_values);
 	}
 }

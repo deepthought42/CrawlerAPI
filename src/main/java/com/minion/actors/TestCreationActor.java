@@ -211,7 +211,7 @@ public class TestCreationActor extends AbstractActor  {
     			}
     			page_state = browser_service.buildPageState(user_id, domain, browser);
     			long start_time = System.currentTimeMillis();
-			  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, browser, domain);
+			  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, domain);
 			  	long end_time = System.currentTimeMillis();
 				log.warn("element state time to get all elements ::  "+(end_time-start_time));
 				page_state.addElements(elements);

@@ -70,7 +70,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		List<String> font_families = new ArrayList<>();
 		
 		for(ElementState element : page_state.getElements()) {
-			String font_family = element.getCssValues().get("font-family");
+			String font_family = element.getPreRenderCssValues().get("font-family");
 			font_families.add(font_family);
 			
 			if(family_scores.containsKey(font_family)) {

@@ -19,8 +19,8 @@ import org.openqa.selenium.WebElement;
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
@@ -44,6 +44,10 @@ public class BrowserTest {
 	}
 
 	
+	@Test
+	public void verifyCssRulExtraction() {
+		assertTrue(true);
+	}
 	
 	//@Test
 	public void verifyGenerateParentXpath(){
@@ -84,7 +88,7 @@ public class BrowserTest {
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());
 			
-			List<PathObject> path_objects = new ArrayList<PathObject>();
+			List<LookseeObject> path_objects = new ArrayList<>();
 			path_objects.add(page);
 			
 			com.qanairy.models.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1", false, false);

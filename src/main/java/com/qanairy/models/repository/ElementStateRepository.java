@@ -49,6 +49,9 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[*]->(p:PageState{key:{page_state_key}}) MATCH (p)-[]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS]->(e:ElementState{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
 	public ElementState getParentElement(@Param("user_id") String user_id, @Param("url") Domain url, @Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 
+	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS_CHILD]->(e:ElementState{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
+	public ElementState getParentElement(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
+
 	@Query("MATCH (parent:ElementState{key:{parent_key}}),(child:ElementState{key:{child_key}}) CREATE (parent)-[:HAS_CHILD]->(child) RETURN parent")
 	public void addChildElement(@Param("parent_key") String parent_key, @Param("child_key") String child_key);
 

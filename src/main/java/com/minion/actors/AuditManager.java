@@ -100,7 +100,7 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(Page.class, page -> {
 					page_count++;
-					System.out.println("Page Count :: "+page_count);
+					log.warn("Page Count :: "+page_count);
 					ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
 					page_data_extractor.tell(page, getSelf());

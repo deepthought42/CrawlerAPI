@@ -8,8 +8,9 @@ import java.util.List;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 
 public class TestTests {
@@ -17,7 +18,7 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameTestWithLongPath() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/services/test-service.html");
 		objects.add(page);
@@ -42,7 +43,7 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameWithNoPath() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);
@@ -67,7 +68,7 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameWithElementThatHasIdAttribute() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);

@@ -68,34 +68,77 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> non_text_elements = getAllButtons(page_state);
 		non_text_elements.addAll(getAllInputs(page_state));
 		//non_text_elements.addAll(getAllIcons(page_state));
-			
+		
+		List<ElementState> low_contrast_elements = new ArrayList<>();
+		List<ElementState> mid_contrast_elements = new ArrayList<>();
+		
 		for(ElementState button : non_text_elements) {
 			//get parent element of button
-			log.warn("element state service :: "+element_state_service);
+			
+			String button_background_color = button.getPreRenderCssValues().get("background-color");
+			if("button".contentEquals(button.getName()) && button_background_color == null) {
+				log.warn("BUTTON BACKGROUND IS NULL!!!!!!");
+				//TODO add observation of button without background
+			}
+			if("input".contentEquals(button.getName()) && button_background_color == null){
+				
+				log.warn("element css :: "+button.getPreRenderCssValues());
+			}
+			
 			ElementState parent_element = element_state_service.findByPageStateAndChild(page_state.getKey(), button.getKey());
 			if(parent_element == null) {
 				continue;
 			}
-			String parent_background_color = parent_element.getCssValues().get("background-color");
-			String button_background_color = button.getCssValues().get("background-color");
+
+			String parent_background_color = null;
+			if(parent_background_color == null || parent_background_color.isEmpty()) {
+				do {
+					parent_element = element_state_service.getParentElement(page_state.getKey(), parent_element.getKey());
+					
+					if(parent_element == null) {
+						continue;
+					}
+					parent_background_color = parent_element.getPreRenderCssValues().get("background-color");
+					if(parent_background_color != null) {
+						//extract r,g,b,a from color css		
+						parent_background_color = parent_background_color.replace("transparent", "");
+						parent_background_color = parent_background_color.replace("!important", "");
+						parent_background_color = parent_background_color.trim();
+					}
+				}while((parent_background_color == null || parent_background_color.isEmpty()) && parent_element != null);
+			}
 			
-			double contrast = ColorData.computeContrast(new ColorData(parent_background_color), new ColorData(button_background_color));
+			if((parent_background_color == null  || parent_background_color.isEmpty())) {
+				parent_background_color = "#ffffff";
+			}
+			log.warn("button background color :: "+button_background_color);
+			log.warn("parent background color :: "+parent_background_color);
+
+			double contrast = ColorData.computeContrast(new ColorData(parent_background_color.trim()), new ColorData(button_background_color.trim()));
 			
 			//calculate contrast of button background with background of parent element
 			if(contrast < 3.0){
 				score += 1;
-				//flagged_element.add(button);
+				low_contrast_elements.add(button);
 			}else if(contrast >= 3.0 && contrast < 4.5) {
 				score += 2;
+				mid_contrast_elements.add(button);
 			}
 			else {
 				score += 3;
 			}
 		} 
 		
+		List<Observation> observations = new ArrayList<>();
+		ElementObservation low_contrast_observation = new ElementObservation(low_contrast_elements, "Elements with a contrast below 3.0");
+		ElementObservation mid_contrast_observation = new ElementObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
+		observations.add(low_contrast_observation);
+		observations.add(mid_contrast_observation);
+		
 		score = score/(non_text_elements.size() *3);
 		//setObservations(observations);
-		//setScore(score);
+		
+		log.warn("NON TEXT ELEMENT CONTRAST SCORE  ::   "+score);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.PAGE);
 	}
 

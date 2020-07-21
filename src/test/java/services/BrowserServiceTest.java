@@ -20,7 +20,7 @@ import com.minion.browsing.Browser;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.services.BrowserService;
 
@@ -61,7 +61,7 @@ public class BrowserServiceTest {
 		Set<Action> actions = new HashSet<Action>();
 		actions.add(new Action("Test"));
 		
-		Set<PathObject> path_objects = DomainController.merge(page_state, actions);
+		Set<LookseeObject> path_objects = DomainController.merge(page_state, actions);
 	}
 	
 	public void screenshotFromUrl() throws MalformedURLException, IOException{

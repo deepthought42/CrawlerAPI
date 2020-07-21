@@ -6,7 +6,7 @@ import com.qanairy.models.LookseeObject;
 /**
  * A observation of potential error for a given {@link ElementState element} 
  */
-public abstract class Observation<T> extends LookseeObject{
+public abstract class Observation extends LookseeObject{
 	private String description;
 	
 	public Observation() {}
@@ -15,8 +15,6 @@ public abstract class Observation<T> extends LookseeObject{
 		setDescription(description);
 		setKey(this.generateKey());
 	}
-	
-	public abstract T get();
 	
 	public String getDescription() {
 		return description;

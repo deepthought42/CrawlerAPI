@@ -5,9 +5,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
@@ -15,6 +18,8 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.utils.ElementStateUtils;
 
 
@@ -26,8 +31,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TextColorContrastAudit.class);
 	
-	@Relationship(type="FLAGGED")
-	List<ElementState> flagged_elements = new ArrayList<>();
+	@Autowired
+	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
@@ -70,22 +75,70 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		double headline_score = 0;
 		double text_score = 0;
 		
-		log.warn("Elements available for color evaluation ...  "+page_state.getElements().size());
-		//identify all colors used on page. Images are not considered
+		List<ElementState> mid_header_contrast = new ArrayList<>();
+		List<ElementState> low_header_contrast = new ArrayList<>();
+
+		List<ElementState> mid_text_contrast = new ArrayList<>();
+		List<ElementState> low_text_contrast = new ArrayList<>();
+
+		List<ElementState> element_list = new ArrayList<>();
+		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+page_state.getElements().size());
+		//filter elements that aren't text elements
 		for(ElementState element : page_state.getElements()) {
-			//check element for color css property
-			String color = element.getCssValues().get("color");
-			
-			//check element for background-color css property
-			String background_color = element.getCssValues().get("background-color");
-			if(color == null || background_color == null) {
+			if(element.getText()==null || element.getText().trim().isEmpty()) {
 				continue;
 			}
-			ColorData color_data = new ColorData(color);
+			element_list.add(element);
+		}
+		
+		
+		//identify all colors used on page. Images are not considered
+		for(ElementState element : element_list) {
+			//check element for color css property
+			String color = element.getPreRenderCssValues().get("color");
 			
+			//check element for background-color css property
+			String background_color = element.getPreRenderCssValues().get("background-color");
+			
+			
+			if(color == null) {
+				continue;
+			}
+			
+			color = color.replace("transparent", "");
+			color = color.replace("!important", "");
+			color = color.trim();
+			
+			ColorData color_data = new ColorData(color.trim());
 			ColorData background_color_data = null;
-			//extract r,g,b,a from color css		
-			background_color_data = new ColorData(background_color);
+			ElementState parent = element.clone();
+			background_color = background_color.replace("transparent", "");
+			background_color = background_color.replace("!important", "");
+			background_color = background_color.trim();
+
+			if(background_color == null || background_color.isEmpty()) {
+				do {
+					parent = element_state_service.getParentElement(page_state.getKey(), parent.getKey());
+					
+					if(parent == null) {
+						continue;
+					}
+					background_color = parent.getPreRenderCssValues().get("background-color");
+					if(background_color != null) {
+						//extract r,g,b,a from color css		
+						background_color = background_color.replace("transparent", "");
+						background_color = background_color.replace("!important", "");
+						background_color = background_color.trim();
+					}
+				}while((background_color == null || background_color.isEmpty()) && parent != null);
+			}
+			
+			if((background_color == null  || background_color.isEmpty())) {
+				background_color = "#ffffff";
+			}
+			
+			
+			background_color_data = new ColorData(background_color.trim());
 			
 			double max_luminosity = 0.0;
 			double min_luminosity = 0.0;
@@ -111,11 +164,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				 */
 				if(contrast < 3) {
 					headline_score += 1;
-					flagged_elements.add(element);
+					low_header_contrast.add(element);
 				}
 				else if(contrast >= 3 && contrast < 4.5) {
 					headline_score += 2;
-					flagged_elements.add(element);
+					mid_header_contrast.add(element);
 				}
 				else if(contrast >= 4.5) {
 					headline_score += 3;
@@ -131,11 +184,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				 */
 				if(contrast < 4.5) {
 					text_score += 1;
-					flagged_elements.add(element);
+					low_text_contrast.add(element);
 				}
 				else if(contrast >= 4.5 && contrast < 7) {
 					text_score += 2;
-					flagged_elements.add(element);
+					mid_text_contrast.add(element);
 				}
 				else if(contrast >= 7) {
 					text_score += 3;
@@ -143,7 +196,18 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		ElementObservation mid_header_contrast_observation = new ElementObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
+		ElementObservation low_header_contrast_observation = new ElementObservation(low_header_contrast, "Headers with contrast below 3");
+		ElementObservation mid_header_text_observation = new ElementObservation(mid_text_contrast, "Headers with contrast between 4.5 and 7");
+		ElementObservation low_header_text_observation = new ElementObservation(low_text_contrast, "Headers with contrast below 4.5");
+		
+		observations.add(mid_header_text_observation);
+		observations.add(mid_header_contrast_observation);
+		observations.add(low_header_text_observation);
+		observations.add(low_header_contrast_observation);
+		
 		double score = (headline_score+text_score)/((total_headlines*3) + (total_text_elems*3));		
+		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   "+score);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE);
 	}
 }

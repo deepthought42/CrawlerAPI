@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.audit.ColorPaletteAudit;
+import com.qanairy.models.audit.ColorPaletteObservation;
 import com.qanairy.models.audit.ColorPaletteUtils;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
@@ -67,14 +67,18 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		
 		for(Audit audit : audits) {
 			//retrieve gray colors color of
-			if(audit instanceof ColorPaletteAudit) {
-				ColorPaletteAudit color_palette_audit = (ColorPaletteAudit)audit;
-				for(String color : color_palette_audit.getGrayColors()){
-					gray_colors.put(color, Boolean.TRUE);
-				}
-				
-				for(String color : color_palette_audit.getColors()){
-					colors.put(color, Boolean.TRUE);
+			if(audit.getSubcategory().equals(AuditSubcategory.COLOR_PALETTE)) {
+				for(Observation observation : audit.getObservations() ) {
+					if(observation instanceof ColorPaletteObservation) {
+						ColorPaletteObservation palette_observation = (ColorPaletteObservation)observation;
+						for(String color : palette_observation.getGrayColors()){
+							gray_colors.put(color, Boolean.TRUE);
+						}
+						
+						for(String color : palette_observation.getColors()){
+							colors.put(color, Boolean.TRUE);
+						}
+					}
 				}
 			}
 		}

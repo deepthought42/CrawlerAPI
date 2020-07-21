@@ -51,7 +51,7 @@ public class ElementStateService {
 			element_record = element_repo.save(element);
 		}
 		else {
-			element_record.setCssValues(element.getCssValues());
+			element_record.setPreRenderCssValues(element.getPreRenderCssValues());
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
 				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setScreenshotUrl(element.getScreenshotUrl());
@@ -154,10 +154,22 @@ public class ElementStateService {
 		return element_repo.getChildElementForParent(parent_key, child_element_key);
 	}
 
+	@Deprecated
 	public ElementState getParentElement(String user_id, Domain domain, String page_key, String element_state_key) {
 		return element_repo.getParentElement(user_id, domain, page_key, element_state_key);
 	}
 
+	/**
+	 * gets parent element for given {@link ElementState} within the given {@link PageState}
+	 * 
+	 * @param page_state_key
+	 * @param element_state_key
+	 * @return
+	 */
+	public ElementState getParentElement(String page_state_key, String element_state_key) {
+		return element_repo.getParentElement(page_state_key, element_state_key);
+	}
+	
 	public void addChildElement(String parent_element_key, String child_element_key) {
 		//check if element has child already
 		if(getChildElementForParent(parent_element_key, child_element_key).isEmpty()) {

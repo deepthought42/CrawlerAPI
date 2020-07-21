@@ -1,8 +1,11 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,8 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -23,10 +28,16 @@ import javax.xml.xpath.XPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.w3c.css.sac.InputSource;
 import org.w3c.dom.Node;
-import org.w3c.tidy.Tidy;
+import org.w3c.dom.css.CSSRule;
+import org.w3c.dom.css.CSSRuleList;
+import org.w3c.dom.css.CSSStyleDeclaration;
+import org.w3c.dom.css.CSSStyleSheet;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -56,12 +67,21 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
-import com.qanairy.models.enums.AuditLevel;
+import com.steadystate.css.parser.CSSOMParser;
+import com.steadystate.css.parser.SACParserCSS3;
 
+import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
+import cz.vutbr.web.css.CombinedSelector;
+import cz.vutbr.web.css.Declaration;
 import cz.vutbr.web.css.MediaSpec;
 import cz.vutbr.web.css.MediaSpecAll;
 import cz.vutbr.web.css.NodeData;
+import cz.vutbr.web.css.RuleSet;
+import cz.vutbr.web.css.StyleSheet;
+import cz.vutbr.web.csskit.RuleFontFaceImpl;
+import cz.vutbr.web.csskit.RuleKeyframesImpl;
+import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
 
 /**
@@ -457,6 +477,50 @@ public class Browser {
 		return driver.findElement(By.xpath(xpath));
 	}
 	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 * @throws IOException 
+	 */
+	public static Map<String, String> loadPreRenderCssProperties(Document jsoup_doc, org.w3c.dom.Document w3c_document, Map<String, Map<String, String>> rule_set_list, URL url, String xpath, Element element) throws XPathExpressionException, IOException{
+		assert w3c_document != null;
+		assert url != null;
+		assert xpath != null;
+		
+		log.warn("-----------------------------------------------------------------------------");
+		log.warn("-----------------------------------------------------------------------------");
+		log.warn("loading post render css properties");
+		Map<String, String> css_map = new HashMap<>();
+
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+
+
+		//count all elements with non 0 px values that aren't decimals
+		//extract all rules
+		
+		for(String css_selector : rule_set_list.keySet()) {
+			if(css_selector.startsWith("@")){
+				continue;
+			}
+			String suffixless_selector = css_selector;
+			if(css_selector.contains(":")) {
+				suffixless_selector = css_selector.substring(0, css_selector.indexOf(":"));
+			}
+			Elements selected_elements = jsoup_doc.select(suffixless_selector);
+			for(Element selected_elem : selected_elements) {
+				if(selected_elem.html().equals(element.html())) {
+					//apply rule styling to element css_map
+					css_map.putAll(rule_set_list.get(css_selector));
+				}
+			}
+		}
+		
+		return css_map;
+	}
 	
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
@@ -466,41 +530,43 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 * @throws XPathExpressionException 
 	 */
-	public static Map<String, String> loadCssPropertiesUsingParser(String page_source, URL url, String xpath) throws XPathExpressionException{
-		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		tidy.setXHTML(true); // set desired config options using tidy setters 
-		                          // (equivalent to command line options)
+	public static Map<String, String> loadCssPropertiesUsingParser(org.w3c.dom.Document w3c_document, URL url, String xpath) throws XPathExpressionException{
+		assert w3c_document != null;
+		assert url != null;
+		assert xpath != null;
+		
+		Map<String, String> css_map = new HashMap<>();
 
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+
 
 		//count all elements with non 0 px values that aren't decimals
 		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		StyleMap map = null;
-		map = CSSFactory.assignDOM(w3c_document, "UTF-8", url, media, true);
 		
-		log.warn("css dom map ::   "+map.size());
-		//for(ElementState element : page_state.getElements()) {
-		Map<String, String> css_map = new HashMap<>();
+		StyleMap map = CSSFactory.assignDOM(w3c_document, "UTF-8", url, media, true);
+		
 		//create the style map
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		Node node = (Node)xPath.compile(xpath).evaluate(w3c_document, XPathConstants.NODE);
 		NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
-		log.warn("element node ::   "+node);
-		log.warn("Element styling  ::  "+style);
+		//log.warn("Element styling  ::  "+style);
 		if(style != null) {
-			style.concretize();
 			for(String property : style.getPropertyNames()) {
 				
-				log.warn("property value :: "+style.getValue(property, false));
 				//log.warn("property value 2 :: "+style.getAsString(property, false));
 				if(style.getValue(property, false) == null) {
 					continue;
 				}
 				String property_value = style.getValue(property, true).toString();
 				//String property_value = CssPropertyFactory.construct(style.getProperty(property));
-				log.warn("Property : value    ->    "+property+  "   :    "+property_value);
+				//log.warn("Property : value    ->    "+property+  "   :    "+property_value);
+				if("background-color".contentEquals(property)) {
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("background color property found " + property_value);
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					
+				}
 				if(property_value == null || property_value.isEmpty() || "none".equalsIgnoreCase(property_value)) {
 					continue;
 				}
@@ -508,10 +574,48 @@ public class Browser {
 			}
 		}
 		//}
-		
 		return css_map;
 	}
 	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param root the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 */
+	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, Element element){
+
+		
+		Map<String, String> css_map = new HashMap<>();
+		//map rule set declarations with elements and save element
+		for(RuleSet rule_set : rule_sets) {
+			for(CombinedSelector selector : rule_set.getSelectors()) {
+				
+				String selector_str = selector.toString();
+				if(selector_str.startsWith(".")
+					|| selector_str.startsWith("#")) 
+				{
+					selector_str = selector_str.substring(1);
+				}
+
+				if(element.attr("class").contains(selector_str) || element.attr("id").contains(selector_str) || element.tagName().equals(selector_str)) {
+					
+					//TODO look for padding and add it to the document
+					for(Declaration declaration : rule_set) {
+						String raw_property_value = declaration.toString();
+						raw_property_value = raw_property_value.replace(";", "");
+						String[] property_val = raw_property_value.split(":");
+						
+						css_map.put(property_val[0], property_val[1]);
+					}
+				}
+			}
+		}
+		
+		return css_map;
+	}
 	
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
@@ -809,4 +913,106 @@ public class Browser {
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
 		return web_element.isDisplayed();
 	}
+
+	public static List<RuleSet> extractRuleSetsFromStylesheets(List<String> raw_stylesheets, URL page_state_url) {
+		List<RuleSet> rule_sets = new ArrayList<>();
+		for(String raw_stylesheet : raw_stylesheets) {
+			//parse the style sheet
+			try {
+				StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, page_state_url);
+				for(int idx = 0; idx < sheet.size(); idx++) {
+					if(sheet.get(idx) instanceof RuleFontFaceImpl
+							|| sheet.get(idx) instanceof RuleMediaImpl
+							|| sheet.get(idx) instanceof RuleKeyframesImpl) {
+						continue;
+					}
+					
+					//access the rules and declarations
+					RuleSet rule = (RuleSet) sheet.get(idx);       //get the first rule
+					rule_sets.add(rule);
+				}
+				//or even print the entire style sheet (formatted)
+			} catch (MalformedURLException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (CSSException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+		}
+		return rule_sets;
+	}
+
+	public static List<String> extractStylesheets(String src) {
+		List<String> raw_stylesheets = new ArrayList<>();
+		Document doc = Jsoup.parse(src);	
+		Elements stylesheets = doc.select("link");
+		for(Element stylesheet : stylesheets) {
+			if("text/css".equalsIgnoreCase(stylesheet.attr("type"))) {
+				String stylesheet_url = stylesheet.absUrl("href");
+				//parse the style sheet
+				if(stylesheet_url.trim().isEmpty()) {
+					stylesheet_url = stylesheet.attr("href");
+					if(stylesheet_url.startsWith("//")) {
+						stylesheet_url = "https:"+stylesheet_url;
+					}
+				}
+				try {
+					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					log.warn(e1.getMessage());
+					//e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		}
+		
+		return raw_stylesheets;
+	}
+	
+	
+	public static String URLReader(URL url) throws IOException {
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+        
+        if(con.getContentEncoding() != null && con.getContentEncoding().equalsIgnoreCase("gzip")) {
+        	return readGzipStream(con.getInputStream());
+        }
+        else {
+        	return readStream(con.getInputStream());
+        }
+	}
+	
+
+	
+	private static String readGzipStream(InputStream inputStream) {
+		 StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream( inputStream )));) {
+            String nextLine = "";
+            while ((nextLine = reader.readLine()) != null) {
+                sb.append(nextLine);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+	}
+
+	private static String readStream(InputStream in) {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in));) {
+            String nextLine = "";
+            while ((nextLine = reader.readLine()) != null) {
+                sb.append(nextLine);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
 }

@@ -27,12 +27,12 @@ public class ColorPaletteUtils {
 	 * @pre palette != null
 	 * @pre scheme != null
 	 */
-	public static double getPaletteScore(Map<ColorData, Set<ColorData>> palette, ColorScheme scheme) {
+	public static int getPaletteScore(Map<ColorData, Set<ColorData>> palette, ColorScheme scheme) {
 		assert palette != null;
 		assert scheme != null;
 		
 		//if palette has exactly 1 color set and that color set has more than 1 color, then monochromatic
-		double score = 0;
+		int score = 0;
 		if(ColorScheme.GRAYSCALE.equals(scheme)) {
 			score = 3;
 		}
@@ -186,7 +186,7 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre palette != null
 	 */
-	private static double getComplementaryScore(Map<ColorData, Set<ColorData>> palette) {
+	private static int getComplementaryScore(Map<ColorData, Set<ColorData>> palette) {
 		assert palette != null;
 		
 		//complimentary colors should add up to 255, 255, 255 with a margin of error of 2%

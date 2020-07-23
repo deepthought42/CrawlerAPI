@@ -57,11 +57,10 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 	@Override
 	public Audit execute(List<Audit> audits) {
 		assert audits != null;
-		double score = 0;
+		int score = 0;
 		for(Audit audit : audits) {
 			score += audit.getScore();
 		}
-		score = score/audits.size();
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, score, new ArrayList<>(), AuditLevel.DOMAIN);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, new ArrayList<>(), AuditLevel.DOMAIN, audits.size());
 	}
 }

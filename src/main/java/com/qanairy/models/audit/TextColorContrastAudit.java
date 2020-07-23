@@ -72,8 +72,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<Observation> observations = new ArrayList<>();
 		int total_headlines = 0;
 		int total_text_elems = 0;
-		double headline_score = 0;
-		double text_score = 0;
+		int headline_score = 0;
+		int text_score = 0;
 		
 		List<ElementState> mid_header_contrast = new ArrayList<>();
 		List<ElementState> low_header_contrast = new ArrayList<>();
@@ -206,8 +206,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		observations.add(low_header_text_observation);
 		observations.add(low_header_contrast_observation);
 		
-		double score = (headline_score+text_score)/((total_headlines*3) + (total_text_elems*3));		
-		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   "+score);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE);
+		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
+		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   "+(headline_score+text_score)/total_possible_points);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
 	}
 }

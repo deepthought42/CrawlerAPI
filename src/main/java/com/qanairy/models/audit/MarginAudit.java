@@ -182,17 +182,17 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 		});
 		//calculate margin size score
-		double margin_size_score = scoreMarginSizes(margin_values);
+		int margin_size_score = scoreMarginSizes(margin_values);
 		
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as padding
-		double margin_as_padding_score = scoreMarginAsPadding(page_state.getElements());
+		int margin_as_padding_score = scoreMarginAsPadding(page_state.getElements());
 		
-		double score = (margin_size_score + margin_as_padding_score)/2;
+		int score = (margin_size_score + margin_as_padding_score);
 		log.warn("MARGIN SIZE SCORE  :::   "+margin_size_score);	
 		log.warn("MARGIN AS PADDING SCORE  :::   "+margin_as_padding_score);	
 		log.warn("MARGIN SCORE  :::   "+score);	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, observations, AuditLevel.PAGE);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, score, observations, AuditLevel.PAGE, 2);
  
 		
 		
@@ -261,7 +261,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @param elements
 	 * @return
 	 */
-	private double scoreMarginAsPadding(List<ElementState> elements) {
+	private int scoreMarginAsPadding(List<ElementState> elements) {
 		for(ElementState element : elements) {
 			//identify situations of margin collapse by finding elements that are 
 				//positioned vertically where 1 is above the other and both have margins
@@ -271,7 +271,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			
 		}
 		
-		return 0.0;
+		return 0;
 		
 	}
 
@@ -319,9 +319,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @param margin_set
 	 * @return
 	 */
-	private double scoreMarginSizes(List<String> margin_set) {
-		double score = 0.0;
-		double total_possible_score = 0.0;
+	private int scoreMarginSizes(List<String> margin_set) {
+		int score = 0;
+		int total_possible_score = 0;
 		//sort margin values into em, percent and px measure types
 		Map<String, List<Double>> converted_unit_buckets = sortSizeUnits(margin_set);
 		//reduce lists in map to unique values;

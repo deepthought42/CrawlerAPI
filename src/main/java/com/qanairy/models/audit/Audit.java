@@ -20,11 +20,10 @@ public class Audit extends LookseeObject {
 	private String category;
 	private String subcategory; // name of the audit subcategory
 	private String level;
-	private String ada_compliance;
-	private String description; //definition
-	private double score;      //scoring
-	private List<String> best_practices;
-	private List<String> recommendations;
+	private int points;      //scoring
+	private int total_possible_points;      //scoring
+
+;
 	
 	@Relationship("OBSERVED")
 	private List<Observation> observations;
@@ -40,18 +39,14 @@ public class Audit extends LookseeObject {
 	/**
 	 * 
 	 * @param category
-	 * @param best_practices
-	 * @param ada_compliance_description
-	 * @param description
+	 * @param total_possible_points TODO
 	 * @param name
 	 */
-	public Audit(AuditCategory category, List<String> best_practices, String ada_compliance_description, String description, AuditSubcategory subcategory, double score, List<Observation> observations, AuditLevel level) {
-		setBestPractices(best_practices);
-		setAdaCompliance(ada_compliance_description);
-		setDescription(description);
+	public Audit(AuditCategory category, AuditSubcategory subcategory, int score, List<Observation> observations, AuditLevel level, int total_possible_points) {
 		setSubcategory(subcategory);
 		setCategory(category);
 		setScore(score);
+		setTotalPossiblePoints(total_possible_points);
 		setObservations(observations);
 		setCreatedAt(LocalDateTime.now());
 		setLevel(level);
@@ -59,7 +54,7 @@ public class Audit extends LookseeObject {
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getBestPractices(), getAdaCompliance(), getDescription(), getSubcategory(), getScore(), getObservations(), getLevel());
+		return new Audit(getCategory(), getSubcategory(), getScore(), getObservations(), getLevel(), getTotalPossiblePoints());
 	}
 
 	/**
@@ -77,29 +72,7 @@ public class Audit extends LookseeObject {
 		this.category = category.toString();
 	}
 
-	public List<String> getBestPractices() {
-		return best_practices;
-	}
-
-	public void setBestPractices(List<String> best_practices) {
-		this.best_practices = best_practices;
-	}
-
-	public List<String> getRecommendations() {
-		return recommendations;
-	}
-
-	public void setRecommendations(List<String> recommendations) {
-		this.recommendations = recommendations;
-	}
-
-	public String getAdaCompliance() {
-		return ada_compliance;
-	}
-
-	public void setAdaCompliance(String ada_compliance) {
-		this.ada_compliance = ada_compliance;
-	}
+	
 
 	public List<Observation> getObservations() {
 		return observations;
@@ -109,20 +82,13 @@ public class Audit extends LookseeObject {
 		this.observations = observations;
 	}
 
-	public String getDescription() {
-		return description;
+
+	public int getScore() {
+		return points;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Double getScore() {
-		return score;
-	}
-
-	public void setScore(Double score) {
-		this.score = score;
+	public void setScore(int score) {
+		this.points = score;
 	}
 
 	public AuditSubcategory getSubcategory() {
@@ -147,5 +113,13 @@ public class Audit extends LookseeObject {
 
 	public void setLevel(AuditLevel level) {
 		this.level = level.toString();
+	}
+
+	public int getTotalPossiblePoints() {
+		return total_possible_points;
+	}
+
+	public void setTotalPossiblePoints(int total_possible_points) {
+		this.total_possible_points = total_possible_points;
 	}
 }

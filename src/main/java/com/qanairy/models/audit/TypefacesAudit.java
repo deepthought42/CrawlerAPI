@@ -36,7 +36,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 	}
 	
 	private static String getAuditDescription() {
-		return "Color contrast between background and text.";
+		return "";
 	}
 
 	private static List<String> buildBestPractices() {
@@ -87,7 +87,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 	
 		
 		//
-		double score = 3.0;
-		return new Audit(AuditCategory.TYPOGRAPHY, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TYPEFACES, score, new ArrayList<>(), AuditLevel.PAGE);
+		int score = 3;
+		int total_possible_points = 3;
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.TYPEFACES, score, new ArrayList<>(), AuditLevel.PAGE, total_possible_points);
 	}
 }

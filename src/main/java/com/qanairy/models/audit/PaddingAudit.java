@@ -174,7 +174,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
 		int total_vertical_score = 0;
-		double vertical_score = 0;
+		int vertical_score = 0;
+		
 		Map<String, List<Double>> unit_gcd_lists = new HashMap<>();
 		for(String unit : vertical_gcd_list.keySet()) {
 			List<Double> most_common_gcd_values = new ArrayList<>();
@@ -307,7 +308,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
 		int total_horizontal_score = 0;
-		double horizontal_score = 0;
+		int horizontal_score = 0;
 
 		for(String unit : horizontal_gcd_list.keySet()) {
 			List<Double> most_common_gcd_values = new ArrayList<>();
@@ -565,8 +566,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		//calculate score
 
 		//double score = scorePaddingUsage(padding_values);
-		double score = ((vertical_score/total_vertical_score) + (horizontal_score / total_horizontal_score)) / 2;
-		
+		int score = ((vertical_score/total_vertical_score) + (horizontal_score / total_horizontal_score));
 		//double score = scorePaddingUsage(padding_values);
 		log.warn("PADDING SCORE  :::   "+score);	
 
@@ -575,7 +575,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, observations, AuditLevel.PAGE);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, (vertical_score + horizontal_score), observations, AuditLevel.PAGE, (total_vertical_score + total_horizontal_score));
  
 		
 		

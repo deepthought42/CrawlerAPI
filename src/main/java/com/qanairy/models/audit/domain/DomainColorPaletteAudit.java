@@ -94,14 +94,14 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			log.warn("Primary color :: "+primary_color.rgb() + "   ;   " + primary_color.getLuminosity());
 		}
 		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
-		double score = ColorPaletteUtils.getPaletteScore(palette, scheme);
+		int score = ColorPaletteUtils.getPaletteScore(palette, scheme);
 		
 		//score colors found against scheme
 		setGrayColors(new ArrayList<>(gray_colors.keySet()));
 		setColors(new ArrayList<>(colors.keySet()));
 		 
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.DOMAIN);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.DOMAIN, 3);
 	}
 
 	

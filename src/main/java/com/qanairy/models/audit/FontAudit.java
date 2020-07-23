@@ -37,7 +37,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 	}
 	
 	private static String getAuditDescription() {
-		return "Color contrast between background and text.";
+		return "";
 	}
 
 	private static List<String> buildBestPractices() {
@@ -80,7 +80,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 				}
 			}
 		}
-		double score = 0.0;
-		return new Audit(AuditCategory.TYPOGRAPHY, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.FONT, score, new ArrayList<>(), AuditLevel.PAGE);
+		int score = 0;
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, new ArrayList<>(), AuditLevel.PAGE, 1);
 	}
 }

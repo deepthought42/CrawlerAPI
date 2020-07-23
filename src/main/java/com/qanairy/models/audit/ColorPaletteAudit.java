@@ -138,13 +138,12 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		}
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
 		//score colors found against scheme
-		double score = ColorPaletteUtils.getPaletteScore(palette, color_scheme)/3.0;
 		Map<String, Set<String>> palette_stringified = convertPaletteToStringRepresentation(palette);
 		
 		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
 		observations.add(observation);
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.PAGE); 
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, ColorPaletteUtils.getPaletteScore(palette, color_scheme), observations, AuditLevel.PAGE, 3); 
 	}
 
 	private Map<String, Set<String>> convertPaletteToStringRepresentation(Map<ColorData, Set<ColorData>> palette) {

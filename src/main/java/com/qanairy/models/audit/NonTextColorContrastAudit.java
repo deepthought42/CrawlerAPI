@@ -33,7 +33,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	private ElementStateService element_state_service;
 	
 	private static String getAuditDescription() {
-		return "Color contrast between background and text.";
+		return "Color contrast between background and non text elements such as buttons, inputs, images, etc.";
 	}
 
 	private static List<String> buildBestPractices() {
@@ -63,7 +63,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		double score = 0.0;
+		int score = 0;
 		//get all button elements
 		List<ElementState> non_text_elements = getAllButtons(page_state);
 		non_text_elements.addAll(getAllInputs(page_state));
@@ -135,11 +135,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		observations.add(low_contrast_observation);
 		observations.add(mid_contrast_observation);
 		
-		score = score/(non_text_elements.size() *3);
 		//setObservations(observations);
 		
 		log.warn("NON TEXT ELEMENT CONTRAST SCORE  ::   "+score);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.PAGE);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.PAGE, non_text_elements.size() *3);
 	}
 
 	private List<ElementState> getAllIcons(PageState page_state) {

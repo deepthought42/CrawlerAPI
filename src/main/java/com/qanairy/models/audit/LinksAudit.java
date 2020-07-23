@@ -87,7 +87,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
-		double score = 0;
+		int score = 0;
 		for(ElementState link : link_elements) {
 	
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
@@ -160,13 +160,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(observation));
 		}
 		
-		if(score > 0.0) {
-			score = score/(link_elements.size()*3);
-		}
-		else {
-			score = 1.0;
-		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*3);
 	}
 }

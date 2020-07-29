@@ -580,67 +580,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, (vertical_score + horizontal_score), observations, AuditLevel.PAGE, (total_vertical_score + total_horizontal_score));
- 
-		
-		
-		
-		/*
-		
-		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		tidy.setXHTML(true); // set desired config options using tidy setters 
-		                          // (equivalent to command line options)
-
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(doc.outerHtml().getBytes()), null);
-		
-		List<String> padding = new ArrayList<>();
-
-		//count all elements with non 0 px values that aren't decimals
-		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		StyleMap map = null;
-		try {
-			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new URL(page_state.getUrl()), media, true);
-			
-			log.warn("css dom map ::   "+map.size());
-			for(ElementState element : page_state.getElements()) {
-	
-				//create the style map
-	
-				XPath xPath = XPathFactory.newInstance().newXPath();
-				try {
-					Node node = (Node)xPath.compile(element.getXpath()).evaluate(w3c_document, XPathConstants.NODE);
-					NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
-					log.warn("element node ::   "+node);
-					log.warn("Element styling  ::  "+style);
-					if(style != null) {
-						log.warn("Element styling  ::  "+style.getProperty("padding-top"));
-					}
-					
-					//StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, new URL(page_state.getUrl()));
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				String padding_top = element.getCssValues().get("padding-top");
-				String padding_left = element.getCssValues().get("padding-left");
-				String padding_right = element.getCssValues().get("padding-right");
-				String padding_bottom = element.getCssValues().get("padding-bottom");
-	
-				padding.add(padding_top);
-				padding.add(padding_bottom);			
-				padding.add(padding_left);
-				padding.add(padding_right);
-			}
-			padding.remove(null);
-			double score = scorePaddingUsage(padding);
-			return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			return null;
-		}
-		*/
 	}
 
 	private String extractMeasureUnit(String padding_value) {

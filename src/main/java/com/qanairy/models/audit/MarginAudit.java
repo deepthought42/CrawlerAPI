@@ -553,78 +553,18 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		observations.add(unscalable_margin_observations);
 		
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
-		int margin_as_margin_score = scoreMarginAsPadding(page_state.getElements());
 		double margin_score = (vertical_score + horizontal_score) / (double)(total_vertical_score + total_horizontal_score);
 
+		
+		int margin_as_margin_score = scoreMarginAsPadding(page_state.getElements());
 		int score = ((int)margin_score + margin_as_margin_score);
 		//int score = (margin_size_score + margin_as_margin_score);
 		
 		//log.warn("MARGIN SIZE SCORE  :::   "+margin_size_score);	
 		log.warn("MARGIN AS PADDING SCORE  :::   "+margin_as_margin_score);	
-		log.warn("MARGIN SCORE  :::   "+score);	
+		log.warn("MARGIN SCORE  :::   "+margin_score);	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, score, observations, AuditLevel.PAGE, 2);
- 
-		
-		
-		
-		/*
-		
-		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		tidy.setXHTML(true); // set desired config options using tidy setters 
-		                          // (equivalent to command line options)
-
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(doc.outerHtml().getBytes()), null);
-		
-		List<String> margin = new ArrayList<>();
-
-		//count all elements with non 0 px values that aren't decimals
-		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		StyleMap map = null;
-		try {
-			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new URL(page_state.getUrl()), media, true);
-			
-			log.warn("css dom map ::   "+map.size());
-			for(ElementState element : page_state.getElements()) {
-	
-				//create the style map
-	
-				XPath xPath = XPathFactory.newInstance().newXPath();
-				try {
-					Node node = (Node)xPath.compile(element.getXpath()).evaluate(w3c_document, XPathConstants.NODE);
-					NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
-					log.warn("element node ::   "+node);
-					log.warn("Element styling  ::  "+style);
-					if(style != null) {
-						log.warn("Element styling  ::  "+style.getProperty("margin-top"));
-					}
-					
-					//StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, new URL(page_state.getUrl()));
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				String margin_top = element.getCssValues().get("margin-top");
-				String margin_left = element.getCssValues().get("margin-left");
-				String margin_right = element.getCssValues().get("margin-right");
-				String margin_bottom = element.getCssValues().get("margin-bottom");
-	
-				margin.add(margin_top);
-				margin.add(margin_bottom);			
-				margin.add(margin_left);
-				margin.add(margin_right);
-			}
-			margin.remove(null);
-			double score = scoreMarginUsage(margin);
-			return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.PADDING, score, new ArrayList<>(), AuditLevel.PAGE);
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			return null;
-		}
-		*/
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, (vertical_score + horizontal_score), observations, AuditLevel.PAGE, (total_vertical_score + total_horizontal_score));
 	}
 
 	
@@ -682,6 +622,17 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @return
 	 */
 	private int scoreMarginAsPadding(List<ElementState> elements) {
+		for(ElementState element : elements) {
+			//identify elements that own text and have margin but not padding set
+			
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	private int scoreNonCollapsingMargins(List<ElementState> elements) {
 		for(ElementState element : elements) {
 			//identify situations of margin collapse by finding elements that are 
 				//positioned vertically where 1 is above the other and both have margins

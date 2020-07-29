@@ -10,13 +10,17 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Properties;
 
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.enums.ObservationType;
 
 
 /**
  * A observation of potential error for a given {@link ElementState element} 
  */
-public class ColorPaletteObservation extends Observation{
+public class ColorPaletteObservation extends LookseeObject implements Observation{
+	private String description;
+	
 	@Properties
 	private Map<String, Set<String>> palette = new HashMap<>();
 	private List<String> colors = new ArrayList<>();
@@ -71,5 +75,20 @@ public class ColorPaletteObservation extends Observation{
 
 	public void setPalette(Map<String, Set<String>> palette) {
 		this.palette = palette;
-	}	
+	}
+
+	@Override
+	public String getDescription() {
+		return this.description;
+	}
+
+	@Override
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@Override
+	public ObservationType getType() {
+		return ObservationType.COLOR_PALETTE;
+	}
 }

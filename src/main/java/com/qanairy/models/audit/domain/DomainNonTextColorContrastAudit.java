@@ -65,7 +65,7 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 
 		int score = 0;
 		for(Audit audit : audits) {
-			score += audit.getScore();
+			score += audit.getPoints();
 		}
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.DOMAIN, audits.size());

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.repository.PageStateRepository;
 
 /**
@@ -29,7 +31,8 @@ public class PageStateService {
 	
 	@Autowired
 	private ElementStateService element_state_service;
-		
+	
+	
 	/**
 	 * Save a {@link PageState} object and its associated objects
 	 * @param page_state
@@ -269,5 +272,13 @@ public class PageStateService {
 	
 	public List<PageState> findBySourceChecksumForDomain(String url, String src_checksum) {
 		return page_state_repo.findBySourceChecksumForDomain(url, src_checksum);
+	}
+	
+	public List<Audit> getAudits(String page_state_key){
+		return page_state_repo.getAudits(page_state_key);
+	}
+
+	public Audit findAuditBySubCategory(AuditSubcategory subcategory, String page_state_key) {
+		return page_state_repo.findAuditBySubCategory(subcategory.getShortName(), page_state_key);
 	}
 }

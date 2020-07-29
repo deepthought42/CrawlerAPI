@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,8 +47,17 @@ public class BrowserTest {
 
 	
 	@Test
-	public void verifyCssRulExtraction() {
-		assertTrue(true);
+	public void verifyUrlReaderForHttps() throws MalformedURLException {
+		URL url = new URL("https://misorobotics.com/wp-content/plugins/contact-form-7-style/css/responsive.css?ver=3.1.8");
+		try {
+			String output = Browser.URLReader(url);
+			System.out.println("output           :: "+output);
+			assertTrue(output!= null);
+			assertTrue(!output.isEmpty());
+		} catch (KeyManagementException | NoSuchAlgorithmException | IOException e) {
+			e.printStackTrace();
+			assertTrue(false);
+		}
 	}
 	
 	//@Test

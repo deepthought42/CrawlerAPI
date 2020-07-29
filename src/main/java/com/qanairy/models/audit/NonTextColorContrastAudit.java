@@ -75,14 +75,15 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		for(ElementState button : non_text_elements) {
 			//get parent element of button
 			
-			String button_background_color = button.getPreRenderCssValues().get("background-color");
+			String button_background_color = button.getRenderedCssValues().get("background-color");
+			
 			if("button".contentEquals(button.getName()) && button_background_color == null) {
 				log.warn("BUTTON BACKGROUND IS NULL!!!!!!");
 				//TODO add observation of button without background
 			}
 			if("input".contentEquals(button.getName()) && button_background_color == null){
-				
-				log.warn("element css :: "+button.getPreRenderCssValues());
+				log.warn("element css :: "+button.getRenderedCssValues());
+				button_background_color = "#ffffff";
 			}
 			
 			ElementState parent_element = element_state_service.findByPageStateAndChild(page_state.getKey(), button.getKey());
@@ -98,7 +99,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					if(parent_element == null) {
 						continue;
 					}
-					parent_background_color = parent_element.getPreRenderCssValues().get("background-color");
+					parent_background_color = parent_element.getRenderedCssValues().get("background-color");
 					if(parent_background_color != null) {
 						//extract r,g,b,a from color css		
 						parent_background_color = parent_background_color.replace("transparent", "");

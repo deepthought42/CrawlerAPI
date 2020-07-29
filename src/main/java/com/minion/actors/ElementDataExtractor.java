@@ -31,6 +31,7 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import cz.vutbr.web.css.RuleSet;
 
 /**
  * Handles the collection and extraction of data from pages at a given url
@@ -139,8 +140,13 @@ public class ElementDataExtractor extends AbstractActor{
 		do {
 			try {
 				log.debug("Element Data Extractor retrieving browser connection ... "+page_state.getUrl());
+				//Element root = html_doc.getElementsByTag("body").get(0);
+				List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); //new ArrayList<>();
+				List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_state.getUrl())); 
+				log.warn("Css rules ::   "+rule_sets);
 				
-				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), new URL(page_state.getUrl()));
+			
+				List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), new URL(page_state.getUrl()), rule_sets);
 			
 				page_state.addElements(elements);
 				page_state = page_state_service.save(page_state);

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Account;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.RenderedPageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.message.AuditSet;
@@ -51,6 +52,7 @@ public class AuditManager extends AbstractActor{
 	private Account account;
 	private int page_count;
 	private int page_state_count;
+	private int rendered_page_state_count;
 	private int page_audits_completed;
 	private List<Audit> audits;
 	
@@ -61,6 +63,7 @@ public class AuditManager extends AbstractActor{
 				MemberEvent.class, UnreachableMember.class);
 		page_count = 0;
 		page_state_count = 0;
+		rendered_page_state_count = 0;
 		page_audits_completed = 0;
 		audits = new ArrayList<>();
 	}
@@ -108,9 +111,16 @@ public class AuditManager extends AbstractActor{
 				.match(PageState.class, page_state -> {
 					page_state_count++;
 					log.warn("Page State Count :: "+page_state_count);
+					ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+					web_crawl_actor.tell(page_state, getSelf());
+				})
+				.match(RenderedPageState.class, page_state -> {
+					rendered_page_state_count++;
+					log.warn("Rendered Page State Count :: "+rendered_page_state_count);
 					ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("auditor"), "auditor"+UUID.randomUUID());
-					auditor.tell(page_state, getSelf());	
+					auditor.tell(page_state.getPageState(), getSelf());	
 				})
 				.match(PageAuditComplete.class, audit_complete -> {
 					audits.addAll(audit_complete.getPageState().getAudits());

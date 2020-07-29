@@ -118,14 +118,14 @@ public class TestCreationActor extends AbstractActor  {
 				    			long end_time = System.currentTimeMillis();
 				    			TimingUtils.pauseThread(1500);
 						
-				    			PageState result_page = browser_service.buildPageState(acct_message.getAccountKey(), domain, browser);
+				    			PageState result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(acct_message.getAccountKey(), domain, browser);
 								
-				    			boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
+				    			boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getEntryPath(), result_page.getUrl(), path_objects);
 								
 								test = new Test(path_keys, path_objects, result_page, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
 								
-						    	Test test_record = test_repo.findByKey(test.getKey(), domain.getUrl(), acct_message.getAccountKey());
+						    	Test test_record = test_repo.findByKey(test.getKey(), domain.getEntryPath(), acct_message.getAccountKey());
 						    	if(test_record == null){
 						    		TestRecord test_record_record = new TestRecord();
 						    		test_record_record.setBrowser(browser_name);
@@ -142,13 +142,13 @@ public class TestCreationActor extends AbstractActor  {
 						    		
 						    		SegmentAnalyticsHelper.sendTestCreatedInRecorder(acct_message.getAccountKey(), test.getKey());
 
-						    		log.warn("test creation domain url :: " + domain.getUrl());
-						    		domain_service.addTest(domain.getUrl(), test, acct_message.getAccountKey());
+						    		log.warn("test creation domain url :: " + domain.getEntryPath());
+						    		domain_service.addTest(domain.getEntryPath(), test, acct_message.getAccountKey());
 
 						    		//here we check if the test passed in had a key indicating that it is an existing test. If it does have a key then we look up the test with the key
 						    		// and set its status to archived
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
-								    	Test old_test = test_repo.findByKey(test_json.get("key").toString(), domain.getUrl(), acct_message.getAccountKey());
+								    	Test old_test = test_repo.findByKey(test_json.get("key").toString(), domain.getEntryPath(), acct_message.getAccountKey());
 							    		old_test.setArchived(true);
 							    		test_repo.save(old_test);
 								    }
@@ -209,13 +209,13 @@ public class TestCreationActor extends AbstractActor  {
     			if(first_page){
     				browser.navigateTo(path_url);
     			}
-    			page_state = browser_service.buildPageState(user_id, domain, browser);
+    			page_state = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
     			long start_time = System.currentTimeMillis();
 			  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, domain);
 			  	long end_time = System.currentTimeMillis();
 				log.warn("element state time to get all elements ::  "+(end_time-start_time));
 				page_state.addElements(elements);
-				page_state = page_state_service.saveUserAndDomain(user_id, domain.getUrl(), page_state);
+				page_state = page_state_service.saveUserAndDomain(user_id, domain.getEntryPath(), page_state);
 				log.warn("DOM elements found :: "+elements.size());
 				path_keys.add(page_state.getKey());
     			path_objects.add(page_state);
@@ -260,7 +260,7 @@ public class TestCreationActor extends AbstractActor  {
 
 	    			if(!path_obj_json.has("url")){
 		    			//capture new page state and add it to path
-		    			page_state = browser_service.buildPageState(user_id, domain, browser);
+		    			page_state = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
 		    			path_keys.add(page_state.getKey());
 		    			path_objects.add(page_state);
 	    			}

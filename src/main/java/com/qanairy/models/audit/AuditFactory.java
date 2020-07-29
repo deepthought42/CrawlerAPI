@@ -64,11 +64,10 @@ public class AuditFactory {
 	private TypefacesAudit typeface_auditor;
 	
 	/**
-	 * Executes all audits for the {@link AuditCategory category} provided
+	 * Executes all pre-render audits for the {@link AuditCategory category} provided
 	 * 
 	 * @param category {@link AuditCategory} that we want to run audits for
 	 * @param page {@link PageState page} that audit should be executed against
-	 * 
 	 * @return {@linkplain List} of {@link Audit audits} executed 
 	 * @throws URISyntaxException 
 	 * @throws MalformedURLException 
@@ -76,7 +75,7 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePageAudit(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePrerenderPageAudits(AuditCategory category, PageState page) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		
@@ -84,13 +83,14 @@ public class AuditFactory {
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			Audit link_audit = links_auditor.execute(page);
 			Audit padding_audits = padding_auditor.execute(page);
-			//Audit margin_audits = margin_auditor.execute(page);
+			Audit margin_audits = margin_auditor.execute(page);
 
 			audits.add(link_audit);
 			audits.add(padding_audits);
-			//audits.add(margin_audits);
+			audits.add(margin_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
+			/*works but temp disabled
 			Audit color_palette_audit = color_palette_auditor.execute(page);
 			Audit text_contrast_audit = text_contrast_auditor.execute(page);
 			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
@@ -98,7 +98,7 @@ public class AuditFactory {
 			audits.add(color_palette_audit);
 			audits.add(text_contrast_audit);
 			audits.add(non_text_contrast_audit);
-			
+			*/
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
 			/*
@@ -112,6 +112,52 @@ public class AuditFactory {
 		
 		return audits;
 	}
+	
+	/**
+	 * Executes all pre-render audits for the {@link AuditCategory category} provided
+	 * 
+	 * @param category {@link AuditCategory} that we want to run audits for
+	 * @param page {@link PageState page} that audit should be executed against
+	 * 
+	 * @return {@linkplain List} of {@link Audit audits} executed 
+	 * @throws URISyntaxException 
+	 * @throws MalformedURLException 
+	 * 
+	 * @pre category != null
+	 * @pre page != null
+	 */
+	public List<Audit> executePostRenderPageAudits(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
+		assert category != null;
+		assert page != null;
+		
+		List<Audit> audits = new ArrayList<Audit>();
+		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+
+		}
+		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
+			/*works but temp disabled
+			Audit color_palette_audit = color_palette_auditor.execute(page);
+			Audit text_contrast_audit = text_contrast_auditor.execute(page);
+			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
+	
+			audits.add(color_palette_audit);
+			audits.add(text_contrast_audit);
+			audits.add(non_text_contrast_audit);
+			*/
+		}
+		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
+			/*
+			Audit typeface_audit = typeface_auditor.execute(page);
+			Audit font_audit = font_auditor.execute(page);
+			
+			audits.add(typeface_audit);
+			audits.add(font_audit);
+			*/
+		}		
+		
+		return audits;
+	}
+	
 	
 	/**
 	 * Executes all audits for the {@link AuditCategory category} provided

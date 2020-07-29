@@ -84,19 +84,6 @@ public class PageState extends LookseeObject {
 		setAudits(new ArrayList<>());
 	}
 	
-	public PageState(String url, String src) {
-		super();
-		setForms(new HashSet<>());
-		setElements(new ArrayList<>());
-		setScreenshotChecksum(new ArrayList<String>());
-		setAnimatedImageUrls(new ArrayList<>());
-		setAnimatedImageChecksums(new ArrayList<>());
-		setUrl(url);
-		setSrc(src);
-		setAudits(new ArrayList<>());
-		setKey(generateKey());
-	} 
-	
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage

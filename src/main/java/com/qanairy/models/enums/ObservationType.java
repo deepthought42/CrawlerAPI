@@ -5,22 +5,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Defines all types of {@link Audit audits} that exist in the system
  */
-public enum AuditSubcategory {
-	//color management
-	COLOR_PALETTE("Color Palette"),
-	TEXT_BACKGROUND_CONTRAST("Text Background Contrast"),
-	NON_TEXT_BACKGROUND_CONTRAST("Non Text Background Contrast"),
-	LINKS("Link"),
-	TYPEFACES("Typefaces"),
-	FONT("Font"),
-	PADDING("Padding"),
-	MARGIN("Margin"),
-	MEASURE_UNITS("Measure Units"),
+public enum ObservationType {
+	ELEMENT("Element"), 
+	TYPOGRAPHY("Typography"), 
+	COLOR_PALETTE("Color Palette"), 
+	PROPERTY_MAP("Property Map"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;
 
-    AuditSubcategory (String shortName) {
+    ObservationType (String shortName) {
         this.shortName = shortName;
     }
 
@@ -30,11 +24,11 @@ public enum AuditSubcategory {
     }
 
     @JsonCreator
-    public static AuditSubcategory create (String value) {
+    public static ObservationType create (String value) {
         if(value == null) {
             return UNKNOWN;
         }
-        for(AuditSubcategory v : values()) {
+        for(ObservationType v : values()) {
             if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }

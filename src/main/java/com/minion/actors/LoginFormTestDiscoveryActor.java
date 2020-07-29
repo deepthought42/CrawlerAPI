@@ -101,7 +101,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 						Set<TestUser> test_users = domain_service.getTestUsers(message.getAccountId(), domain);
 						log.info("generating tests for "+test_users.size()+"   users");
 						for(TestUser user : test_users){
-							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getUrl(), message.getAccountId());
+							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getEntryPath(), message.getAccountId());
 
 							//  clone test
 							//  get username element and add it to path
@@ -178,16 +178,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addPathObject(submit_login);
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
-							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
+							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getEntryPath());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 
-							boolean leaves_domain = !(message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
+							boolean leaves_domain = !(message.getDomain().getEntryPath().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
 							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
 							
 							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L, test.getPathKeys()));
-							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl(), message.getAccountId());
+							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getEntryPath(), message.getAccountId());
 
 							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
 							message.getDiscoveryActor().tell(test_message, getSelf());

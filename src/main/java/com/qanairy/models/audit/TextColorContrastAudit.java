@@ -102,9 +102,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			
 			
 			if(color == null) {
+				log.warn("color is null");
 				continue;
 			}
 			
+			color = color.replace("inherit", "");
 			color = color.replace("transparent", "");
 			color = color.replace("!important", "");
 			color = color.trim();
@@ -112,9 +114,12 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			ColorData color_data = new ColorData(color.trim());
 			ColorData background_color_data = null;
 			ElementState parent = element.clone();
-			background_color = background_color.replace("transparent", "");
-			background_color = background_color.replace("!important", "");
-			background_color = background_color.trim();
+			if(background_color != null) {
+				background_color = background_color.replace("inherit", "");
+				background_color = background_color.replace("transparent", "");
+				background_color = background_color.replace("!important", "");
+				background_color = background_color.trim();
+			}
 
 			if(background_color == null || background_color.isEmpty()) {
 				do {
@@ -207,6 +212,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		observations.add(low_header_contrast_observation);
 		
 		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
+		
+		if(total_possible_points == 0 ) {
+			total_possible_points = 1;
+		}
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   "+(headline_score+text_score)/total_possible_points);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
 	}

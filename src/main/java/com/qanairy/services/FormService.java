@@ -70,12 +70,12 @@ public class FormService {
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
 		    	
-				form.setFormFields(form_repo.getElementStates(user_id, domain.getUrl(), form.getKey()));
+				form.setFormFields(form_repo.getElementStates(user_id, domain.getEntryPath(), form.getKey()));
 				for(ElementState element : form.getFormFields()){
 					element.setRules(element_service.getRules(user_id, element.getKey()));
 				}
-				form.setFormTag(form_repo.getFormElement(user_id, domain.getUrl(), form.getKey()));
-				form.setSubmitField(form_repo.getSubmitElement(user_id, domain.getUrl(), form.getKey()));
+				form.setFormTag(form_repo.getFormElement(user_id, domain.getEntryPath(), form.getKey()));
+				form.setSubmitField(form_repo.getSubmitElement(user_id, domain.getEntryPath(), form.getKey()));
 				return form;
 	    	}
 	    	else {

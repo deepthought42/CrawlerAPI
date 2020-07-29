@@ -56,14 +56,14 @@ public class DomainAuditRecord extends LookseeObject{
 		//calculate color palette overall score
 		double overall_palette_score = 0;
 		for(Audit audit : palette_audits) {
-			overall_palette_score += audit.getScore();
+			overall_palette_score += audit.getPoints();
 		}
 		overall_palette_score = overall_palette_score / palette_audits.size();
 		
 		//calculate color palette overall score
 		double overall_text_contrast_score = 0;
 		for(Audit audit : text_contrast_audit) {
-			overall_text_contrast_score += audit.getScore();
+			overall_text_contrast_score += audit.getPoints();
 		}
 		overall_text_contrast_score = overall_text_contrast_score / text_contrast_audit.size();
 		

@@ -43,4 +43,7 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 	
 	@Query("MATCH (p:Page{key:{page_key}})-[]->(insight:PerformanceInsight) RETURN insight ORDER BY insight.executed_at DESC LIMIT 1")
 	public PerformanceInsight getLatestPerformanceInsight(@Param("page_key") String page_key);
+
+	@Query("MATCH (p:Page{key:{page_key}})-[]->(page_state:PageState) RETURN page_state ORDER BY page_state.created_at DESC LIMIT 1")
+	public PageState findMostRecentPageState(@Param("page_key") String page_key);
 }

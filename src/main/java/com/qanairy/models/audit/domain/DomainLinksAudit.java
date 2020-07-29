@@ -59,7 +59,7 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 		assert audits != null;
 		int score = 0;
 		for(Audit audit : audits) {
-			score += audit.getScore();
+			score += audit.getPoints();
 		}
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, new ArrayList<>(), AuditLevel.DOMAIN, audits.size());
 	}

@@ -2,8 +2,11 @@ package com.minion.actors;
 
 
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -23,6 +26,8 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -41,6 +46,9 @@ public class PageDataExtractor extends AbstractActor{
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	@Autowired
+	private ActorSystem actor_system;
+	
 	@Autowired
 	private PageService page_service;
 	
@@ -85,18 +93,14 @@ public class PageDataExtractor extends AbstractActor{
 							//browser.navigateTo(page.getUrl());
 		
 							//build page state with element states at the same time
-							log.debug("building page state...");
+							log.warn("building page state...");
 							PageState page_state = browser_service.buildPageState( page );
 							page.addPageState(page_state);
 							page = page_service.save(page);
 							page_state_build_success = true;
 							
-							log.warn("sending page state to element data extractor..."+page_state.getUrl());
-							/**
-							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
-							element_data_extractor.tell(page_state, getSender());
-							*/
+							log.warn("sending page state to audit manager..."+page_state.getUrl());
+							
 							getSender().tell(page_state, getSelf());
 							break;
 						}catch(Exception e) {
@@ -114,9 +118,7 @@ public class PageDataExtractor extends AbstractActor{
 								browser = null;
 							}							
 						}
-					}while(!page_state_build_success && error_cnt < 10000);
-
-					postStop();
+					}while(!page_state_build_success && error_cnt < 10);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

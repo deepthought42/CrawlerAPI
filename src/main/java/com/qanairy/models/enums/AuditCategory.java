@@ -6,14 +6,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Defines all types of {@link Audit audits} that exist in the system
  */
 public enum AuditCategory {
-	COLOR_MANAGEMENT("color_management"), 
-	TYPOGRAPHY("typography"), 
-	VISUALS("visuals"), 
-	BRANDING("branding"), 
-	WRITTEN_CONTENT("written_content"), 
-	INFORMATION_ARCHITECTURE("information_architecture"),
-	SECURITY("security"),
-	UNKNOWN("unknown");
+	COLOR_MANAGEMENT("Color Management"), 
+	TYPOGRAPHY("Typography"), 
+	VISUALS("Visuals"), 
+	BRANDING("Branding"), 
+	WRITTEN_CONTENT("Written Content"), 
+	INFORMATION_ARCHITECTURE("Information Architecture"),
+	SECURITY("Security"),
+	UNKNOWN("Unknown");
 	
 	private String shortName;
 
@@ -32,7 +32,7 @@ public enum AuditCategory {
             return UNKNOWN;
         }
         for(AuditCategory v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
         }

@@ -58,8 +58,8 @@ public class TestCreatorService {
 	public Test createLandingPageTest(List<String> path_keys, List<LookseeObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 	  	
-	  	log.warn("domain url :: "+domain.getUrl());
-	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+	  	log.warn("domain url :: "+domain.getEntryPath());
+	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getEntryPath());
 	  	log.warn("total path object added to test :: "+path_objects.size());
 	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
 

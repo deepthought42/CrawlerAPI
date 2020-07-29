@@ -174,13 +174,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		List<Observation> observations = new ArrayList<>();
-		observations.add(new Observation("Margin values are not consistent in their differences. It's best to use margin values that have a common multiple") {
-			
-			@Override
-			public String generateKey() {
-				return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDescription());
-			}
-		});
+		observations.add(new ElementObservation(new ArrayList<>(), "Margin values are not consistent in their differences. It's best to use margin values that have a common multiple") );
 		//calculate margin size score
 		int margin_size_score = scoreMarginSizes(margin_values);
 		
@@ -192,7 +186,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		log.warn("MARGIN AS PADDING SCORE  :::   "+margin_as_padding_score);	
 		log.warn("MARGIN SCORE  :::   "+score);	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, score, observations, AuditLevel.PAGE, 2);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, score, observations, AuditLevel.PAGE, 2);
  
 		
 		
@@ -333,7 +327,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 			//sort margin values and make them unique
 			margin_values = sortAndMakeDistinct(margin_values);
-			
+			log.warn("Margin values identified :: " + margin_values);
 			Double smallest_value = margin_values.get(0);
 			
 			for(int idx = 1; idx < margin_values.size(); idx++) {
@@ -349,6 +343,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		//SCORING 1a - Check if all values have the same difference
 		
+		if(total_possible_score == 0){
+			total_possible_score = 3;
+		}
 		
 		//CALCULATE OVERALL SCORE :: 
 		log.warn("Margin score :: "+(score/total_possible_score));

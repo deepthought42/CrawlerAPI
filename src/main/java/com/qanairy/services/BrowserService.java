@@ -22,7 +22,6 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -202,7 +201,7 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState(String user_id, Domain domain, Browser browser) throws Exception{
+	public PageState buildPageStateWithElementsWithUserAndDomain(String user_id, Domain domain, Browser browser) throws Exception{
 		assert browser != null;
 		
 		//retrieve landable page state associated with page with given url
@@ -211,7 +210,7 @@ public class BrowserService {
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);	
 		String page_src = BrowserService.generalizeSrc(Browser.cleanSrc(browser.getDriver().getPageSource()));
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getUrl(), src_checksum);
+		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
 
 		if(page_states.isEmpty()) {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
@@ -252,73 +251,6 @@ public class BrowserService {
 		log.warn("loaded page elements from db :: " +page_state.getElements().size());
 		return page_state;
 	}
-
-	/**
-	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
-	 *
-	 * @return page {@linkplain PageState}
-	 * @throws Exception 
-	 * 
-	 * @pre browser != null
-	 */
-	public PageState buildPageStateWithElementsWithUserAndDomain(String user_id, Domain domain, Browser browser) throws Exception{
-		assert browser != null;
-		
-		//retrieve landable page state associated with page with given url
-		String browser_url = browser.getDriver().getCurrentUrl();
-		String host = new URL(browser_url).getHost();
-		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
-		String page_src = BrowserService.generalizeSrc(Browser.cleanSrc(browser.getDriver().getPageSource()));
-		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getUrl(), src_checksum);
-
-		if(page_states.isEmpty()) {
-			log.warn("could not find page by source checksum ::  "+src_checksum);
-			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
-			// removing the following viewport screenshot because it doesn't appear to be needed for new audit setup 6/19/2020
-			/*
-			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
-			viewport_screenshot.flush();
-			*/
-			
-			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
-			full_page_screenshot.flush();
-
-			log.warn("creating new page state object with elements");
-			PageState page_state = new PageState( url_without_params,
-					"",
-					new ArrayList<>(),
-					page_src,
-					browser.getXScrollOffset(),
-					browser.getYScrollOffset(),
-					browser.getViewportSize().getWidth(),
-					browser.getViewportSize().getHeight(),
-					browser.getBrowserName(),
-					new HashSet<Form>(),
-					full_page_screenshot_url, 
-					full_page_screenshot_checksum);
-
-			//page_state.addScreenshotChecksum(screenshot_checksum);
-			page_state.setFullPageWidth(full_page_screenshot.getWidth());
-			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-			long start_time = System.currentTimeMillis();
-		  	List<ElementState> elements = extractElementStatesWithUserAndDomain(page_state.getSrc(), user_id, domain);
-		  	long end_time = System.currentTimeMillis();
-			log.warn("element state time to get all elements ::  "+(end_time-start_time));
-			page_state.addElements(elements);
-			
-			return page_state_service.saveUserAndDomain(user_id, domain.getKey(), page_state);
-		}
-		
-		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStates(page_states.get(0).getKey()));
-		log.warn("loaded page elements from db :: " +page_state.getElements().size());
-		return page_state;
-	}
 	
 	/**
 	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
@@ -338,7 +270,11 @@ public class BrowserService {
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
 		
-		List<ElementState> elements = extractElementStates(page_src, new URL(url_without_params));
+		//Element root = html_doc.getElementsByTag("body").get(0);
+		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); //new ArrayList<>();
+		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
+		
+		List<ElementState> elements = extractElementStates(page_src, new URL(url_without_params), rule_sets);
 		/*
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
@@ -351,11 +287,7 @@ public class BrowserService {
 		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		*/
-		//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
-		// removing the following viewport screenshot because it doesn't appear to be needed for new audit setup 6/19/2020
 		String clean_page_source = Jsoup.clean(page_src, Whitelist.none());
-		
-		log.warn("page source :::    "+clean_page_source);
 		
 		PageState page_state = new PageState( url_without_params,
 				"",
@@ -376,6 +308,11 @@ public class BrowserService {
 		//page_state.setFullPageWidth(full_page_screenshot.getWidth());
 		//page_state.setFullPageHeight(full_page_screenshot.getHeight());
 		log.warn("built page state with url :: "+page_state.getUrl());
+		
+		PageState record = page_state_service.findByKey(page_state.getKey());
+		if(record != null) {
+			return record;
+		}
 		return page_state_service.save(page_state);
 	}
 	
@@ -482,45 +419,96 @@ public class BrowserService {
 	 * 
 	 * @param page_source
 	 * @param url
+	 * @param rule_sets TODO
 	 * @param reviewed_xpaths
 	 * @return
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private List<ElementState> getDomElements(String page_source, URL url) throws IOException, XPathExpressionException {
+	private List<ElementState> getDomElements(String page_source, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
 		assert page_source != null;
 		assert !page_source.isEmpty();
 		assert url != null;
+		assert rule_sets != null;
 		
 		List<ElementState> visited_elements = new ArrayList<>();
 		Map<ElementState, List<Element>> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
-		
+
 		Tidy tidy = new Tidy(); // obtain a new Tidy instance
 		//tidy.setXHTML(true); // set desired config options using tidy setters 
 		log.debug("tidy  :: "+tidy); //NOTE :: tidy contains the errors for the document. 
+		//extract body element for dom creation
 		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
 		log.warn("1===========================================================================");
 		log.warn("1===========================================================================");
 		log.warn("1===========================================================================");
+		/*
+		MediaSpec media = new MediaSpecAll(); //use styles for all media
+		log.warn("document ::  " + w3c_document);
+		log.warn("URL :: " +url);
+		StyleMap map = null;
+		try {
+			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new NetworkProcessor() {
+				
+				@Override
+				public InputStream fetch(URL url) throws IOException {
+			        
+			        try {
+			        	SSLContext sc = SSLContext.getInstance("TLS");
+						sc.init(null, null, new java.security.SecureRandom());
+						HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+						con.setSSLSocketFactory(sc.getSocketFactory());
+						log.warn("connection 2  :: "+con.toString());
+						// get response code, 200 = Success
+						int responseCode = con.getResponseCode();
+						System.out.println("RESPONSE  2  :: " +responseCode);
+						return con.getInputStream();
+					} catch (KeyManagementException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (NoSuchAlgorithmException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			        return null;
+				}
+			}, url, media, true, null);//assignDOM(w3c_document, "UTF-8", url, media, true);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+*/
 		log.warn("w3c_document  ---   "+ w3c_document);
 		//get html doc and get root element
 		Document html_doc = Jsoup.parse(page_source);
 		
 		Element root = html_doc.getElementsByTag("body").get(0);
 		
-		//Element root = html_doc.getElementsByTag("body").get(0);
-		List<String> raw_stylesheets = Browser.extractStylesheets(page_source); //new ArrayList<>();
-		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, url); 
-		log.warn("Css rules ::   "+rule_sets);
+		
 		//create element state from root node
 		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
 		//ElementState root_element_state = buildElementState("//body", attributes, Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root), root, ElementClassification.ANCESTOR, Browser.loadCssPropertiesUsingParser(page_source, url, "//body"));
 		log.warn("page source 1 :: "+page_source.length());
 		log.warn("url 1  :: "+url);
-		Map<String, String> css_props = Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root);
+		Map<String, String> css_props = new HashMap<>();
+		try{
+			css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root));
+		}
+		catch(Exception e) {
+			log.warn(e.getMessage());
+		}
+		
+		Map<String, String> css_rendered = new HashMap<>();
+		/*
+		try {
+			css_rendered.putAll(Browser.loadCssPropertiesUsingParser(w3c_document, map, url, "//body"));
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		*/
 		log.warn("CSS PROPERTIES      :::::           "+css_props);
-		ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, Browser.loadCssPropertiesUsingParser(w3c_document, url, "//body") );
+		ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
 		
 		root_element_state = element_service.save(root_element_state);
 
@@ -562,8 +550,24 @@ public class BrowserService {
 				attributes = generateAttributesMapUsingJsoup(child);
 
 				//element_state = buildElementState(xpath, attributes, Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, child), child, classification, Browser.loadCssPropertiesUsingParser(page_source, url, xpath));
-				Map<String, String> pre_render_css_props = Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, child);
-				element_state = buildElementState(xpath, attributes, pre_render_css_props, child, classification, Browser.loadCssPropertiesUsingParser(w3c_document, url, xpath));
+				Map<String, String> pre_render_css_props = new HashMap<>();
+				
+				try{
+					pre_render_css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, child));
+				}
+				catch(Exception e) {
+					log.warn(e.getMessage());
+				}
+				Map<String, String> rendered_css_props = new HashMap<>();
+				/*
+				try {
+					rendered_css_props.putAll(Browser.loadCssPropertiesUsingParser(w3c_document, map, url, xpath));
+				}catch(Exception e) {
+					log.warn("xpath exception occurred when loading rendered css for element with xpath :: "+xpath);
+				}
+	*/
+				
+				element_state = buildElementState(xpath, attributes, pre_render_css_props, child, classification, rendered_css_props);
 				element_state = element_service.save(element_state);
 				
 				//put element on frontier
@@ -1240,7 +1244,7 @@ public class BrowserService {
 			
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
+			Set<Form> forms = domain_service.getForms(user_id, domain.getEntryPath());
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
@@ -1254,12 +1258,12 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
+			Form form_record = form_service.findByKey(user_id, domain.getEntryPath(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}
 
-			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
+			int form_count = domain_service.getFormCount(user_id, domain.getEntryPath());
 			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 			
@@ -1685,7 +1689,7 @@ public class BrowserService {
 		return getDomElementTreeLinear(page_src, browser, reviewed_xpaths);
 	}
 	
-	public List<ElementState> extractElementStates(String page_src, URL url) throws IOException, XPathExpressionException {
-		return getDomElements(page_src, url);
+	public List<ElementState> extractElementStates(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		return getDomElements(page_src, url, rule_sets);
 	}
 }

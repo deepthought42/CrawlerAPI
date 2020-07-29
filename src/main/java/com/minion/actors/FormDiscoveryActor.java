@@ -116,7 +116,7 @@ public class FormDiscoveryActor extends AbstractActor{
 								}
 							    DeepthoughtApi.predict(form);
 							  
-							    form = form_service.save(message.getAccountId(), message.getDomain().getUrl(), form);
+							    form = form_service.save(message.getAccountId(), message.getDomain().getEntryPath(), form);
 							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}

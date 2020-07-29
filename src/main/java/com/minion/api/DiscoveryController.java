@@ -122,7 +122,7 @@ public class DiscoveryController {
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
     	log.warn("Starting discovery for url :: " + url);
-    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
+    	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
     	
     	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
     	//Basically backwards compatibility. if they are still here after June 2020 then remove it
@@ -133,12 +133,12 @@ public class DiscoveryController {
     		domain = domain_service.findByHostForUser(host, acct.getUserId());
     		log.warn("retrieved domain  "+domain+"  for host  : "+host);
     	}
-		if(domain.getUrl() == null || domain.getUrl().isEmpty()) {
+		if(domain.getEntryPath() == null || domain.getEntryPath().isEmpty()) {
 			String host = domain.getHost();
-			domain.setUrl(url);
+			domain.setEntryPath(new URL(url).getPath());
 			domain.setHost(host);
 			domain_service.save(domain);
-			log.warn("saved domain :: "+domain + "  with url :: "+domain.getUrl());
+			log.warn("saved domain :: "+domain + "  with url :: "+domain.getEntryPath());
 		}
 
     	log.warn("domain retrieved from host :: " + domain + "   :   "+ url);
@@ -198,12 +198,12 @@ public class DiscoveryController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
+    	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
 
-    	if(!domain_actors.containsKey(domain.getUrl())){
+    	if(!domain_actors.containsKey(domain.getEntryPath())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
-			domain_actors.put(domain.getUrl(), domain_actor);
+			domain_actors.put(domain.getEntryPath(), domain_actor);
 		}
     	
 		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));

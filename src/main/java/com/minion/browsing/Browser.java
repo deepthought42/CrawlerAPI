@@ -5,9 +5,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -28,12 +30,8 @@ import javax.xml.xpath.XPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.w3c.css.sac.InputSource;
 import org.w3c.dom.Node;
-import org.w3c.dom.css.CSSRule;
-import org.w3c.dom.css.CSSRuleList;
-import org.w3c.dom.css.CSSStyleDeclaration;
-import org.w3c.dom.css.CSSStyleSheet;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -67,15 +65,11 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
-import com.steadystate.css.parser.CSSOMParser;
-import com.steadystate.css.parser.SACParserCSS3;
 
 import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
 import cz.vutbr.web.css.Declaration;
-import cz.vutbr.web.css.MediaSpec;
-import cz.vutbr.web.css.MediaSpecAll;
 import cz.vutbr.web.css.NodeData;
 import cz.vutbr.web.css.RuleSet;
 import cz.vutbr.web.css.StyleSheet;
@@ -525,12 +519,11 @@ public class Browser {
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
 	 * 
-	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
-	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 *
 	 * @param element the element to for which css styles should be loaded.
 	 * @throws XPathExpressionException 
 	 */
-	public static Map<String, String> loadCssPropertiesUsingParser(org.w3c.dom.Document w3c_document, URL url, String xpath) throws XPathExpressionException{
+	public static Map<String, String> loadCssPropertiesUsingParser(org.w3c.dom.Document w3c_document, StyleMap map, URL url, String xpath) throws XPathExpressionException{
 		assert w3c_document != null;
 		assert url != null;
 		assert xpath != null;
@@ -541,9 +534,8 @@ public class Browser {
 
 
 		//count all elements with non 0 px values that aren't decimals
-		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		
-		StyleMap map = CSSFactory.assignDOM(w3c_document, "UTF-8", url, media, true);
+		//log.warn("w3c_document :: "+w3c_document);
+		//log.warn("URL :: "+url);
 		
 		//create the style map
 
@@ -624,7 +616,6 @@ public class Browser {
 	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
-	@Deprecated
 	public static Map<String, String> loadCssProperties(WebElement element, WebDriver driver){
 		JavascriptExecutor executor = (JavascriptExecutor)driver;
 		String script = "var s = '';" +
@@ -640,7 +631,16 @@ public class Browser {
 		String[] css_prop_vals = response.split(";");
 		for(String prop_val_pair : css_prop_vals) {
 			String[] prop_val = prop_val_pair.split(":");
-			css_map.put(prop_val[0], prop_val[1]);
+			
+			if(prop_val.length == 1) {
+				log.warn("prop_val :: "+prop_val[0]);
+				log.warn("prop value pair :: "+prop_val_pair);
+			}
+			if(prop_val.length > 0) {
+				String prop1 = prop_val[0];
+				String prop2 = prop_val[1];
+				css_map.put(prop1, prop2);
+			}
 		}
 		
 		return css_map;
@@ -962,6 +962,9 @@ public class Browser {
 				}
 				try {
 					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
+				} catch (KeyManagementException | NoSuchAlgorithmException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					log.warn(e1.getMessage());
@@ -976,31 +979,46 @@ public class Browser {
 		return raw_stylesheets;
 	}
 	
+	/**
+	 * extract body html from source
+	 * 
+	 * @param src - entire html source for a web page
+	 * 
+	 * @return
+	 * 
+	 * @pre src != null;
+	 */
+	public static String extractBody(String src) {
+		assert src != null;
+		
+		Document doc = Jsoup.parse(src);	
+		Elements body_elements = doc.select("body");
+		return body_elements.html();
+	}
 	
-	public static String URLReader(URL url) throws IOException {
-        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+	public static String URLReader(URL url) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+		log.warn("URL : "+url +";");
+       // HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+        SSLContext sc = SSLContext.getDefault();//getInstance("SSLv3");
         
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+
+        con.setSSLSocketFactory(sc.getSocketFactory());
+        log.warn("connection :: "+con.toString());
+        // get response code, 200 = Success
+        int responseCode = con.getResponseCode();
+        
+        log.warn("response message :: " + con.getResponseMessage());
+        log.warn("content encoding :: " + con.getContentEncoding());
+        log.warn("content type :: " + con.getContentType());
         if(con.getContentEncoding() != null && con.getContentEncoding().equalsIgnoreCase("gzip")) {
-        	return readGzipStream(con.getInputStream());
+        	return readStream(new GZIPInputStream( con.getInputStream()));
         }
         else {
         	return readStream(con.getInputStream());
         }
-	}
-	
-
-	
-	private static String readGzipStream(InputStream inputStream) {
-		 StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream( inputStream )));) {
-            String nextLine = "";
-            while ((nextLine = reader.readLine()) != null) {
-                sb.append(nextLine);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return sb.toString();
 	}
 
 	private static String readStream(InputStream in) {

@@ -1,26 +1,14 @@
 package com.qanairy.models.audit;
 
 import com.qanairy.models.ElementState;
-import com.qanairy.models.LookseeObject;
+import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link ElementState element} 
  */
-public abstract class Observation extends LookseeObject{
-	private String description;
+public interface Observation {
+	public String getDescription();
+	public void setDescription(String description);
 	
-	public Observation() {}
-	
-	public Observation(String description) {
-		setDescription(description);
-		setKey(this.generateKey());
-	}
-	
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
+	public ObservationType getType();
 }

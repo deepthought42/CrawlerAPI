@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
@@ -19,6 +20,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.ObservationService;
 
 
 
@@ -31,6 +33,9 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(PaddingAudit.class);
 	
 	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
+	
+	@Autowired
+	private ObservationService observation_service;
 	
 	public PaddingAudit() {	}
 	
@@ -61,32 +66,25 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
+		int vertical_gcd_score = 0;
+		int horizontal_gcd_score = 0;
+		int total_possible_gcd_score = 0;
+		
+		int vertical_unit_score = 0;
+		int horizontal_unit_score = 0;
+		int total_possible_unit_score = 0;
+		
+		
+		
+		
 		List<String> vertical_padding_values = new ArrayList<>();
 		List<String> horizontal_padding_values = new ArrayList<>();
 
 		List<Observation> observations = new ArrayList<>();
 
 
-		//List<String> raw_stylesheets = Browser.extractStylesheetURL(page_state.getSrc()); //new ArrayList<>();
-		//List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_state.getUrl()));
-		
-		//match all rules with elements 
+		//extract vertical and horizontal padding values
 		for(ElementState element : page_state.getElements()) {
-					
-			//if selector name is a class or id then clean selector name 
-			//if selector name is used in the page source then
-			//extract any padding property values
-			
-			//if selector name is a tagname then check if tag name is used in document
-			//if selector is used in document then 
-			//extract any padding property values
-			
-			
-			//identify elements with padding set and add them to a list
-			//analyze padding values for all elements. Find multiple that applies to the most padding values. 
-				//if it applies to all values then nothing to do. 
-				//If it doesn't then add all remaining elements to list of observations
-
 			String padding_value = "";
 			if(element.getPreRenderCssValues().containsKey("padding")) {
 				padding_value = element.getPreRenderCssValues().get("padding");
@@ -241,7 +239,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		
 		//COMPUTE SCORE FOR UNITS BASED ON PREFFERED SCALABILITY
-		/*
 		Map<String, List<String>> vertical_unit_buckets = categorizeSizeUnits(vertical_units.keySet());
 		
 		for(String bucket : vertical_unit_buckets.keySet()) {
@@ -257,9 +254,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			
 			total_vertical_score += (vertical_unit_buckets.get(bucket).size() * 3);
 		}
-		*/
-		
-		/*
+
 		for(String unit : vertical_gcd_list.keySet()) {
 			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit) || "vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
 				vertical_score += 3;
@@ -268,7 +263,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				vertical_score += 1;
 			}
 		}
-		*/
+		
 		
 		
 		
@@ -372,8 +367,9 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		}
 		
 		log.warn("horizontal score value  1   ::   "+total_horizontal_score);
+		
+		
 		//COMPUTE SCORE FOR UNITS BASED ON PREFFERED SCALABILITY
-		/**
 		Map<String, List<String>> horizontal_unit_buckets = categorizeSizeUnits(horizontal_units.keySet());
 		
 		for(String bucket : horizontal_unit_buckets.keySet()) {
@@ -390,10 +386,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			total_horizontal_score += (horizontal_unit_buckets.get(bucket).size() * 3);
 		}
 		log.warn("horizontal score value  2   ::   "+total_horizontal_score);
-		 */
 
 		//generate score based on size units used
-		/*
 		for(String unit : horizontal_gcd_list.keySet()) {
 			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit) || "vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
 				horizontal_score += 3;
@@ -402,7 +396,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				horizontal_score += 1;
 			}
 		}
-		*/
 		
 		
 		
@@ -413,7 +406,10 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		//GENERATE SCORE BASED ON UNITS WITH PADDING EVENLY DIVISIBLE BY UNIT GCD VALUES IDENTIFIED IN PREVIOUS STEPS
 		vertical_padding_values = new ArrayList<>();
 		horizontal_padding_values = new ArrayList<>();
+		
 		List<ElementState> elements_unmatched_gcd = new ArrayList<>();
+		List<ElementState> unscalable_padding_elements = new ArrayList<>();
+		
 		for(ElementState element : page_state.getElements()) {
 			if(element.getPreRenderCssValues().containsKey("padding")) {
 				String padding_value = element.getPreRenderCssValues().get("padding");
@@ -431,6 +427,12 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						else {
 							horizontal_padding_values.add(separated_values[idx]);
 						}
+						
+						String unit = extractMeasureUnit(separated_values[idx]);
+						int unit_score = scoreMeasureUnit(unit);
+						if(unit_score == 1) {
+							unscalable_padding_elements.add(element);
+						}
 					}
 				}
 			}
@@ -441,7 +443,20 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				for(String value : separated_values) {											
 					if(!value.startsWith("0")) {
 						vertical_padding_values.add( value);
-					}					}
+						//calculate score unit. If unit is less than 3, record unit
+						//determine unit measure
+						String unit = extractMeasureUnit(padding_value);
+						int unit_score = scoreMeasureUnit(unit);
+						if(unit_score == 1) {
+							unscalable_padding_elements.add(element);
+						}
+						vertical_score += unit_score;
+						total_vertical_score += 3;
+						
+						//strip unit measure values 
+						padding_value = cleanSizeUnits(padding_value).trim();
+					}					
+				}
 			}
 			else if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
 				String padding_value = element.getPreRenderCssValues().get("padding-bottom");
@@ -450,7 +465,44 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				for(String value : separated_values) {											
 					if(!value.startsWith("0")) {
 						vertical_padding_values.add( value);
-					}				}
+						//calculate score unit. If unit is less than 3, record unit
+						//determine unit measure
+						String unit = extractMeasureUnit(padding_value);
+						int unit_score = scoreMeasureUnit(unit);
+						if(unit_score == 1) {
+							unscalable_padding_elements.add(element);
+						}
+						vertical_score += unit_score;
+						total_vertical_score += 3;
+						
+						//strip unit measure values 
+						padding_value = cleanSizeUnits(padding_value).trim();
+					}					
+				}
+			}
+			else if( element.getPreRenderCssValues().containsKey("padding-left")) {
+				String padding_value = element.getPreRenderCssValues().get("padding-left");
+				String[] separated_values = padding_value.split(" ");
+				//extract vertical and horizontal
+				for(String value : separated_values) {		
+					if(!value.startsWith("0")) {
+						horizontal_padding_values.add( value);
+						//calculate score unit. If unit is less than 3, record unit
+						//determine unit measure
+						String unit = extractMeasureUnit(padding_value);
+						int unit_score = scoreMeasureUnit(unit);
+						if(unit_score == 1) {
+							unscalable_padding_elements.add(element);
+						}
+						
+						horizontal_score += unit_score;
+						total_horizontal_score += 3;
+						
+						//if(
+						//strip unit measure values 
+						padding_value = cleanSizeUnits(padding_value).trim();
+					}
+				}
 			}
 			else if( element.getPreRenderCssValues().containsKey("padding-right")) {
 				String padding_value = element.getPreRenderCssValues().get("padding-right");
@@ -459,16 +511,20 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				for(String value : separated_values) {		
 					if(!value.startsWith("0")) {
 						horizontal_padding_values.add( value);
-					}
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("padding-left")) {
-				String padding_value = element.getPreRenderCssValues().get("padding-left");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					if(!value.startsWith("0")) {
-						horizontal_padding_values.add( value);
+						//calculate score unit. If unit is less than 3, record unit
+						//determine unit measure
+						String unit = extractMeasureUnit(padding_value);
+						int unit_score = scoreMeasureUnit(unit);
+						if(unit_score == 1) {
+							unscalable_padding_elements.add(element);
+						}
+						
+						horizontal_score += unit_score;
+						total_horizontal_score += 3;
+						
+						//if(
+						//strip unit measure values 
+						padding_value = cleanSizeUnits(padding_value).trim();
 					}
 				}
 			}
@@ -476,11 +532,12 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			for(String padding_value : vertical_padding_values) {
 				//determine unit measure
 				String unit = extractMeasureUnit(padding_value);
+				/*
 				vertical_score += scoreMeasureUnit(unit);
 				total_vertical_score += 3;
-				
+				*/
 				//strip unit measure values 
-				padding_value = cleanSizeUnits(padding_value);
+				padding_value = cleanSizeUnits(padding_value).trim();
 				
 				//convert measure to Double
 				if(padding_value == null || padding_value.isEmpty()) {
@@ -515,8 +572,9 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			for(String padding_value : horizontal_padding_values) {
 				//determine unit measure
 				String unit = extractMeasureUnit(padding_value);
-				horizontal_score += scoreMeasureUnit(unit);
-				total_horizontal_score += 3;
+				
+				//horizontal_score += scoreMeasureUnit(unit);
+				//total_horizontal_score += 3;
 				//strip unit measure values 
 				padding_value = cleanSizeUnits(padding_value);
 				
@@ -550,15 +608,17 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				//log.warn("matching gcd found :: " + gcd_found);
 
 			}
-		}
-		
-		
+		}		
 		
 		ElementObservation element_observation = new ElementObservation(elements_unmatched_gcd, "Elements that are not consistently sized relative to other paddings across the site can create an uneven experience");
-		PropertyMapObservation gcd_observation = new PropertyMapObservation(vertical_gcd_list, "gcd description goes here");
+		ElementObservation unscalable_padding_observations = new ElementObservation(unscalable_padding_elements, "Using unscalable units (ie px, in, cm, mm, pt)");
+
+		//PropertyMapObservation gcd_observation = new PropertyMapObservation(vertical_gcd_list, "gcd description goes here");
 		
 		observations.add(element_observation);
-		observations.add(gcd_observation);
+		observations.add(unscalable_padding_observations);
+		
+		//observations.add(gcd_observation);
 		log.warn("vertical score :: "+vertical_score + "/"+total_vertical_score + "      :    "+(vertical_score/total_vertical_score));
 
 		log.warn("horizontal score :: "+horizontal_score + "/"+total_horizontal_score + "      :    "+(horizontal_score/total_horizontal_score));
@@ -691,7 +751,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			return 3;
 		}
 		else if(unit.contains("vh") || unit.contains("vw") || unit.contains("vmin") || unit.contains("vmax")) {
-			return 2;
+			return 3;
 		}
 		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") || unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
 			return 1;
@@ -744,7 +804,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	 */
 	private Map<String, List<Double>> sortSizeUnits(List<String> padding_set) {
 		Map<String, List<Double>> sorted_paddings = new HashMap<>();
-		//replace all px values with em for values that contain decimals
 		
 		for(String padding_value : padding_set) {
 			if(padding_value == null 
@@ -801,12 +860,14 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				.map(line -> line.replaceAll("mm", ""))
 				.map(line -> line.replaceAll("in", ""))
 				.map(line -> line.replaceAll("pc", ""))
+				.map(line -> line.replaceAll("!important", ""))
 				.map(line -> line.indexOf(".") > -1 ? line.substring(0, line.indexOf(".")) : line)
 				.collect(Collectors.toList());
 	}
 	
 	public static String cleanSizeUnits(String value){
-		return value.replaceAll("px", "")
+		return value.replace("!important", "")
+					.replaceAll("px", "")
 					.replaceAll("%", "")
 					.replaceAll("em", "")
 					.replaceAll("rem", "")

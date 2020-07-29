@@ -129,7 +129,7 @@ public class TestService {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getUrl(), user_id), page, last_test_status );
+		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getEntryPath(), user_id), page, last_test_status );
  		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 		 return test_record;
@@ -201,7 +201,7 @@ public class TestService {
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {
 		//Fire discovery started event
-    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl(), acct.getUserId());
+    	Set<Test> tests = domain_service.getVerifiedTests(domain.getEntryPath(), acct.getUserId());
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 

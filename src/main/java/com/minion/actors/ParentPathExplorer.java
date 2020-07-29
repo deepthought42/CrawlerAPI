@@ -161,7 +161,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 								BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 								String checksum = PageState.getFileChecksum(element_screenshot);
-								String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
+								String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getEntryPath()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
 								last_element.setScreenshotUrl(screenshot_url);
 								last_element.setScreenshotChecksum(checksum);
 								last_element.setWidth(element_size.getWidth());
@@ -227,7 +227,7 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							else{
 								log.warn("parent exploratory path building page state");
-								result = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+								result = browser_service.buildPageStateWithElementsWithUserAndDomain(message.getAccountId(), message.getDomain(), browser);
 							}
 
 							//if result matches expected page then build new path using parent element state and break from loop
@@ -295,8 +295,8 @@ public class ParentPathExplorer extends AbstractActor {
 					}
 
 					Domain domain = message.getDomain();
-					log.warn("domain url :: "+domain.getUrl());
-				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+					log.warn("domain url :: "+domain.getEntryPath());
+				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getEntryPath());
 
 			  		Test test = test_creator_service.createTest( final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost(), message.getAccountId());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain, message.getAccountId());

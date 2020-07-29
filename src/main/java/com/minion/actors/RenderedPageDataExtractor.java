@@ -17,6 +17,7 @@ import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.RenderedPageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
@@ -91,13 +92,14 @@ public class RenderedPageDataExtractor extends AbstractActor{
 							page = page_service.save(page);
 							page_state_build_success = true;
 							
-							log.warn("sending page state to element data extractor..."+page_state.getUrl());
+							log.warn("sending rendered page state to element data extractor..."+page_state.getUrl());
 							/**
 							ActorRef element_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									.props("elementDataExtractor"), "elementDataExtractor"+UUID.randomUUID());
 							element_data_extractor.tell(page_state, getSender());
 							*/
-							getSender().tell(page_state, getSelf());
+							RenderedPageState rendered_page_state = new RenderedPageState(page_state);
+							getSender().tell(rendered_page_state, getSelf());
 							break;
 						}catch(Exception e) {
 							if(e instanceof GridException || e instanceof WebDriverException) {

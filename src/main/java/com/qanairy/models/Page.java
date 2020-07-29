@@ -50,8 +50,20 @@ public class Page extends LookseeObject{
 		setPageStates( new HashSet<>() );
 	}
 	
+	/**
+	 * 
+	 * @param url
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * 
+	 * @throws MalformedURLException
+	 */
 	public Page(String url) throws MalformedURLException{
 		super();
+		assert url != null;
+		assert !url.isEmpty();
+				
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setPath(new URL(url).getPath());

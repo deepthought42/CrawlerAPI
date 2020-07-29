@@ -22,30 +22,36 @@ public class Audit extends LookseeObject {
 	private String level;
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
-
-;
 	
-	@Relationship("OBSERVED")
+	@Relationship(type="OBSERVED")
 	private List<Observation> observations;
-	
-	@Relationship(type="FLAGGED")
-	List<ElementState> flagged_elements = new ArrayList<>();
 	
 	/**
 	 * Construct empty action object
 	 */
-	public Audit(){}
+	public Audit(){
+		super();
+		setObservations(new ArrayList<>());
+	}
 	
 	/**
 	 * 
 	 * @param category
-	 * @param total_possible_points TODO
-	 * @param name
+	 * @param subcategory
+	 * @param points
+	 * @param observations
+	 * @param level
+	 * @param total_possible_points
 	 */
-	public Audit(AuditCategory category, AuditSubcategory subcategory, int score, List<Observation> observations, AuditLevel level, int total_possible_points) {
+	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points) {
+		assert category != null;
+		assert subcategory != null;
+		assert observations != null;
+		assert level != null;
+		
 		setSubcategory(subcategory);
 		setCategory(category);
-		setScore(score);
+		setPoints(points);
 		setTotalPossiblePoints(total_possible_points);
 		setObservations(observations);
 		setCreatedAt(LocalDateTime.now());
@@ -54,14 +60,14 @@ public class Audit extends LookseeObject {
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getScore(), getObservations(), getLevel(), getTotalPossiblePoints());
+		return new Audit(getCategory(), getSubcategory(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints());
 	}
 
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
 	public String generateKey() {
-		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSubcategory().toString()+this.getCategory()+this.getCreatedAt().toString()+this.getScore());
+		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSubcategory().toString()+this.getCategory().toString());
 	}
 
 	public AuditCategory getCategory() {
@@ -69,9 +75,8 @@ public class Audit extends LookseeObject {
 	}
 
 	public void setCategory(AuditCategory category) {
-		this.category = category.toString();
+		this.category = category.getShortName();
 	}
-
 	
 
 	public List<Observation> getObservations() {
@@ -83,12 +88,12 @@ public class Audit extends LookseeObject {
 	}
 
 
-	public int getScore() {
+	public int getPoints() {
 		return points;
 	}
 
-	public void setScore(int score) {
-		this.points = score;
+	public void setPoints(int points) {
+		this.points = points;
 	}
 
 	public AuditSubcategory getSubcategory() {
@@ -96,7 +101,7 @@ public class Audit extends LookseeObject {
 	}
 
 	public void setSubcategory(AuditSubcategory subcategory) {
-		this.subcategory = subcategory.toString();
+		this.subcategory = subcategory.getShortName();
 	}
 
 	/**

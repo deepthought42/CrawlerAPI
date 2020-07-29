@@ -22,6 +22,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -31,6 +32,9 @@ import com.qanairy.utils.BrowserUtils;
 public class LinksAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private ObservationService observation_service;
@@ -77,6 +81,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		log.warn("---------------------------------------------------------------------------");
 		log.warn("EXECUTING LINKS AUDIT !!!");
+		//check if page state already has a Link audit
+		Audit audit = page_state_service.findAuditBySubCategory(AuditSubcategory.LINKS, page_state.getKey());
+		if(audit != null) {
+			return audit;
+		}
+		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		for(ElementState element : page_state.getElements()) {

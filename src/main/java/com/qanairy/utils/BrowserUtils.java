@@ -271,9 +271,11 @@ public class BrowserUtils {
 	public static String sanitizeUserUrl(String url) throws MalformedURLException {
 		String domain = url;
 		int param_index = domain.indexOf("?");
-		if(param_index >= 0){
+		if(param_index > 0){
 			domain = domain.substring(0, param_index);
 		}
+		
+		log.warn("domain url ::"+domain);
 
 		URL new_url = new URL(domain);
 

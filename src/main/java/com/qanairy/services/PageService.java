@@ -204,8 +204,12 @@ public class PageService {
 		if(page_state_record == null) {
 			page_state_record = page_state_service.save(page_state);
 		}
-		Page page = page_repo.findByKeyAndUser(user_id, page_key);
+		Page page = page_repo.findByKey(page_key);
 		page.addPageState(page_state_record);
 		page_repo.save(page);
+	}
+
+	public PageState getMostRecentPageState(String key) {
+		return page_repo.findMostRecentPageState(key);
 	}
 }

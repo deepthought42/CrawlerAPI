@@ -80,7 +80,7 @@ public class Auditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageState.class, page_state-> {
-					log.warn("performing audits on page state...");
+					log.warn("performing audits on page state..."+page_state.getUrl());
 					//retrieve all audits that the customer requested
 					Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>();
 					
@@ -88,11 +88,17 @@ public class Auditor extends AbstractActor{
 				   	List<Audit> audits = new ArrayList<>();
 				   	
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
+				   		//check if page state already
 			   			//perform audit and return audit result
-			   			List<Audit> audits_executed = audit_factory.executePageAudit(audit_category, page_state, "Look-See-admin");
-			   			
+			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
+			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state, "Look-See-admin");
+
 			   			audits_executed = audit_service.saveAll(audits_executed);
+			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
+
 			   			audits.addAll(audits_executed);
+			   			audits.addAll(rendered_audits_executed);
+
 						page_audit_map.put(page_state, audits);
 			   		}
 		   			

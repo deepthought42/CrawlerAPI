@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.enums.AuditSubcategory;
 
 /**
  * 
@@ -55,4 +57,10 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	
 	@Query("MATCH (:Page{url:{url}})-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
 	public List<PageState> findBySourceChecksumForPage(@Param("url") String url, @Param("src_checksum") String src_checksum);
+
+	@Query("MATCH (ps:PageState{key:{page_state_key}})-[]->(a:Audit) RETURN a")
+	public List<Audit> getAudits(@Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(a:Audit{subcategory:{subcategory}}) RETURN a")
+	public Audit findAuditBySubCategory(@Param("subcategory") String subcategory, @Param("page_state_key") String page_state_key);
 }

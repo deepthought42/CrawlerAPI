@@ -89,7 +89,7 @@ public class DomainActor extends AbstractActor{
 					discovery_action = message.getAction();
 					
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
+					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getEntryPath() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
 					//pass message along to discovery actor
@@ -97,7 +97,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(DiscoveryActionRequest.class, message-> {
 					if(discovery_action == null) {
-						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId()).getStatus();
+						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getEntryPath(), message.getAccountId()).getStatus();
 						if(status == DiscoveryStatus.RUNNING) {
 							discovery_action = DiscoveryAction.START;
 						}
@@ -111,15 +111,15 @@ public class DomainActor extends AbstractActor{
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
 					
-					Test test_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
+					Test test_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getEntryPath(), test_msg.getAccount());
 					if(test_record == null) {
-						test_record = test_service.save(test, test_msg.getDomain().getUrl(), test_msg.getAccount());
-						domain_service.addTest(test_msg.getDomain().getUrl(), test, test_msg.getAccount());
+						test_record = test_service.save(test, test_msg.getDomain().getEntryPath(), test_msg.getAccount());
+						domain_service.addTest(test_msg.getDomain().getEntryPath(), test, test_msg.getAccount());
 					}
 					
 					if(domain == null){
-						String url = test_msg.getDomain().getUrl();
-						domain = domain_service.findByUrl(url, test_msg.getAccount());
+						String url = test_msg.getDomain().getEntryPath();
+						domain = domain_service.findByUrlAndAccountId(url, test_msg.getAccount());
 					}
 					
 					/*
@@ -149,7 +149,7 @@ public class DomainActor extends AbstractActor{
 						log.error(e.getLocalizedMessage());
 					}
 					//domain_service.save(domain);
-					domain_service.addTest(domain.getUrl(), test_record, test_msg.getAccount());
+					domain_service.addTest(domain.getEntryPath(), test_record, test_msg.getAccount());
 					//domain_service.addPageState(domain.getUrl(), test.getResult(), test_msg.getAccount());
 					
 					for(LookseeObject path_obj : test.getPathObjects()){

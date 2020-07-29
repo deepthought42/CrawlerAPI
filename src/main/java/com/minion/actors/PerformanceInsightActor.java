@@ -149,8 +149,8 @@ public class PerformanceInsightActor extends AbstractActor {
 					
 					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
 					performance_insight_service.save(performance_insight);
-					page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getUrl(), page.getKey(), performance_insight.getKey());
-					domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+					page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getEntryPath(), page.getKey(), performance_insight.getKey());
+					domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 
 					log.warn("creating landing page performance and SEO insights");					
 				})

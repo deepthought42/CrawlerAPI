@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,9 +28,6 @@ public class DomainService {
 	@Autowired
 	private DomainRepository domain_repo;
 	
-	@Autowired
-	private DomainRepository page_service;
-	
 	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
@@ -42,8 +40,12 @@ public class DomainService {
 		return domain_repo.findByHost(host);
 	}
 
-	public Domain findByUrl(String url, String user_id) {
-		return domain_repo.findByUrl(url, user_id);
+	public Domain findByUrlAndAccountId(String url, String user_id) {
+		return domain_repo.findByUrlAndAccountId(url, user_id);
+	}
+	
+	public Domain findByUrl(String url) {
+		return domain_repo.findByUrl(url);
 	}
 	
 	public Domain save(Domain domain) {
@@ -56,7 +58,7 @@ public class DomainService {
 		assert test != null;
 		assert user_id != null;
 
-		Domain domain = domain_repo.findByUrl(url, user_id);
+		Domain domain = domain_repo.findByUrlAndAccountId(url, user_id);
 		domain.addTest(test);
 		return domain_repo.save(domain);
 	}
@@ -65,8 +67,8 @@ public class DomainService {
 		return domain_repo.getTestCount(user_id, url);
 	}
 
-	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
-		return domain_repo.getMostRecentDiscoveryRecord(url, user_id);
+	public DiscoveryRecord getMostRecentDiscoveryRecord(String path, String user_id) {
+		return domain_repo.getMostRecentDiscoveryRecord(path, user_id);
 	}
 
 	public Set<DiscoveryRecord> getDiscoveryRecords(String user_id, String url) {
@@ -151,9 +153,9 @@ public class DomainService {
 		assert page != null;
 		assert user_id != null;
 		
-		Domain domain = findByUrl(url, user_id);
+		Domain domain = findByUrlAndAccountId(url, user_id);
 		
-		Page page_record = page_service.getPage(user_id, url, page.getKey());
+		Page page_record = domain_repo.getPage(user_id, url, page.getKey());
 		if(page_record == null) {
 			domain.addPage(page);
 			domain_repo.save(domain);
@@ -173,16 +175,20 @@ public class DomainService {
 	 * @pre user_id != null;
 	 * @pre !user_id.isEmpty();
 	 */
-	public Set<Page> getPages(String user_id, String url) {
+	public Set<Page> getPagesForUser(String user_id, String url) {
 		assert url != null;
 		assert !url.isEmpty();
 		assert user_id != null;
 		assert !user_id.isEmpty();
 		
-		return domain_repo.getPages(user_id, url);
+		return domain_repo.getPagesForUserId(user_id, url);
 	}
 
 	public Set<DomainAuditRecord> getMostRecentDomainAuditRecords(String url) {
 		return domain_repo.getMostRecentDomainAudits(url);
+	}
+
+	public List<Page> getPages(String domain_host) {
+		return domain_repo.getPages(domain_host);
 	}
 }

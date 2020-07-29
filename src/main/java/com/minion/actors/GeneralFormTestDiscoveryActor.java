@@ -88,11 +88,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				  	Browser browser = null;
 				  	
 				  	//find page states that contains form
-				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), message.getDomain().getUrl(), message.getForm().getKey());
+				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), message.getDomain().getEntryPath(), message.getForm().getKey());
 				  	//find tests that contain page state
 				  	List<Test> tests = new ArrayList<>();
 				  	for(PageState page: page_states) {
-				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), message.getDomain().getUrl(), message.getAccountId()));
+				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), message.getDomain().getEntryPath(), message.getAccountId()));
 				  	}
 				  	
 				  	int last_path_size = Integer.MAX_VALUE;
@@ -141,7 +141,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		do{
 						  			try{
 								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
-						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
+						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getEntryPath(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
 						  				break;
@@ -157,7 +157,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		final long pathCrawlEndTime = System.currentTimeMillis();
 								long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getUrl(), result_page.getUrl(), test_path_objects);
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getEntryPath(), result_page.getUrl(), test_path_objects);
 	
 						  		Test new_test = new Test(path_keys, test_path_objects, result_page, leaves_domain);
 			

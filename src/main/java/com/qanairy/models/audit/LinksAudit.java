@@ -39,10 +39,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<ElementState> links_without_href =  new ArrayList<>();
+	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
+	private List<ElementState> links_without_href_value =  new ArrayList<>();
 	private List<ElementState> invalid_links = new ArrayList<>();
 	private List<ElementState> dead_links = new ArrayList<>();
-	
+	private List<ElementState> non_labeled_links = new ArrayList<>();
+
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
@@ -102,8 +104,22 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
+			
+			if(element.hasAttr("href")) {
+				score++;
+			}
+			else {
+				links_without_href_attribute.add(link);
+				continue;
+			}
 			String href = element.absUrl("href");
 
+			//if href is a mailto link then give score full remaining value and continue
+			if(href.startsWith("mailto:")) {
+				score += 5;
+				continue;
+			}
+			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
 				
@@ -115,12 +131,10 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					}
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
-					continue;
 				}
 			}
 			else {
-				links_without_href.add(link);
-				log.warn("href value was empty or null...");
+				links_without_href_value.add(link);
 				continue;
 			}
 			
@@ -147,30 +161,52 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				e.printStackTrace();
 			}
 			
+			//Does link contain a text label inside it
+			 if(element.hasText()) {
+				score++;
+			 }
+			 else if(!element.hasText() && element.getElementsByTag("img").isEmpty()) {
+				//does element use image as links?
+				non_labeled_links.add(link);
+			}
+			 
 			//TODO : Does link have a hover styling? yes(1) / No(0)
 			
 			//TODO : Is link label relevant to destination url or content? yes(1) / No(0)
-				//TODO :does link text exist in url? 
+				//TODO :does link text exist in url?
+				if(href.contains(element.ownText())) {
+					score++;
+				}
+				
 				//TODO :does target content relate to link?
-			//overall_score += score/3.0;
+			
 		}
 		
-		if(!links_without_href.isEmpty()) {
-			ElementObservation observation = new ElementObservation(links_without_href, "Links without an 'href' value will confuse users that expect the link to lead somewhere new.");
+		if(!links_without_href_attribute.isEmpty()) {
+			ElementObservation observation = new ElementObservation(links_without_href_attribute, "Links without an 'href' attribute present");
+			observations.add(observation_service.save(observation));
+		}
+		
+		if(!links_without_href_value.isEmpty()) {
+			ElementObservation observation = new ElementObservation(links_without_href_value, "Links without emptry 'href' values");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(invalid_links, "Links without an invalid address create frustraton for users that beleive they will find what they are looking for on the other side of a link.");
+			ElementObservation observation = new ElementObservation(invalid_links, "Links with invalid addresses");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(dead_links, "Links that point to pages that no longer exist. When users visit these links they receive a 404 error indicating that the content could not be found.");
+			ElementObservation observation = new ElementObservation(dead_links, "Dead links");
 			observations.add(observation_service.save(observation));
 		}
 		
+		if(!non_labeled_links.isEmpty()) {
+			ElementObservation observation = new ElementObservation(non_labeled_links, "Links without text");
+			observations.add(observation_service.save(observation));
+		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*3);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*6); //the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

@@ -238,36 +238,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		}
 		
 		
-		//COMPUTE SCORE FOR UNITS BASED ON PREFFERED SCALABILITY
-		Map<String, List<String>> vertical_unit_buckets = categorizeSizeUnits(vertical_units.keySet());
-		
-		for(String bucket : vertical_unit_buckets.keySet()) {
-			if("scalable-high".equals(bucket)) {
-				vertical_score += (vertical_unit_buckets.get(bucket).size() * 3);
-			}
-			else if("scalable-low".equals(bucket)) {
-				vertical_score += (vertical_unit_buckets.get(bucket).size() * 2);
-			}
-			else if("constant".equals(bucket)) {
-				vertical_score += vertical_unit_buckets.get(bucket).size();
-			}
 			
-			total_vertical_score += (vertical_unit_buckets.get(bucket).size() * 3);
-		}
-
-		for(String unit : vertical_gcd_list.keySet()) {
-			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit) || "vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				vertical_score += 3;
-			}
-			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				vertical_score += 1;
-			}
-		}
-		
-		
-		
-		
-		
 		
 		
 		
@@ -369,33 +340,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		log.warn("horizontal score value  1   ::   "+total_horizontal_score);
 		
 		
-		//COMPUTE SCORE FOR UNITS BASED ON PREFFERED SCALABILITY
-		Map<String, List<String>> horizontal_unit_buckets = categorizeSizeUnits(horizontal_units.keySet());
-		
-		for(String bucket : horizontal_unit_buckets.keySet()) {
-			if("scalable-high".equals(bucket)) {
-				horizontal_score += (horizontal_unit_buckets.get(bucket).size() * 3);
-			}
-			else if("scalable-low".equals(bucket)) {
-				horizontal_score += (horizontal_unit_buckets.get(bucket).size() * 2);
-			}
-			else if("constant".equals(bucket)) {
-				horizontal_score += horizontal_unit_buckets.get(bucket).size();
-			}
-			
-			total_horizontal_score += (horizontal_unit_buckets.get(bucket).size() * 3);
-		}
-		log.warn("horizontal score value  2   ::   "+total_horizontal_score);
-
-		//generate score based on size units used
-		for(String unit : horizontal_gcd_list.keySet()) {
-			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit) || "vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				horizontal_score += 3;
-			}
-			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				horizontal_score += 1;
-			}
-		}
 		
 		
 		
@@ -619,14 +563,14 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		observations.add(unscalable_padding_observations);
 		
 		//observations.add(gcd_observation);
-		log.warn("vertical score :: "+vertical_score + "/"+total_vertical_score + "      :    "+(vertical_score/total_vertical_score));
+		log.warn("vertical score :: "+vertical_score + "/"+total_vertical_score + "      :    "+(vertical_score/(double)total_vertical_score));
 
-		log.warn("horizontal score :: "+horizontal_score + "/"+total_horizontal_score + "      :    "+(horizontal_score/total_horizontal_score));
+		log.warn("horizontal score :: "+horizontal_score + "/"+total_horizontal_score + "      :    "+(horizontal_score/(double)total_horizontal_score));
 		
 		//calculate score
 
 		//double score = scorePaddingUsage(padding_values);
-		int score = ((vertical_score/total_vertical_score) + (horizontal_score / total_horizontal_score));
+		double score = (vertical_score + horizontal_score) / (double)(total_vertical_score + total_horizontal_score);
 		//double score = scorePaddingUsage(padding_values);
 		log.warn("PADDING SCORE  :::   "+score);	
 
@@ -751,7 +695,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			return 3;
 		}
 		else if(unit.contains("vh") || unit.contains("vw") || unit.contains("vmin") || unit.contains("vmax")) {
-			return 3;
+			return 2;
 		}
 		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") || unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
 			return 1;

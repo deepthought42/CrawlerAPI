@@ -36,8 +36,7 @@ public class ElementStateService {
 	 */
 	public ElementState save(ElementState element) throws ClientException{
 		assert element != null;
-		
-		assert element != null;
+
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes			

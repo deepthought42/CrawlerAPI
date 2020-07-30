@@ -155,9 +155,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			gcd_list.remove(new Double(1));
 			vertical_gcd_list.put(unit, gcd_list);
 		}
-		log.warn("----------------------------------------------------------");
-		log.warn("----------------------------------------------------------");
-		log.warn("vertical gcd list ::   "+vertical_gcd_list);
 		
 		
 		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
@@ -257,9 +254,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			gcd_list.remove(new Double(1));
 			horizontal_gcd_list.put(unit, gcd_list);
 		}
-		log.warn("----------------------------------------------------------");
-		log.warn("----------------------------------------------------------");
-		log.warn("horizontal gcd list ::   "+horizontal_gcd_list);
 		
 		
 		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
@@ -310,7 +304,12 @@ public class MarginAudit implements IExecutablePageStateAudit {
 					}
 					
 					//remove gcd matches from horizontal margin list
-					horizontal_margin_list.removeAll(gcd_match_lists.get(largest_gcd));
+					List<Double> gcd_match_list = gcd_match_lists.get(largest_gcd);
+					if(gcd_match_list != null) {
+						log.warn("gcd match list :: "+gcd_match_list);
+						log.warn("horizontal margin list :: "+horizontal_margin_list);
+						horizontal_margin_list.removeAll(gcd_match_list);
+					}
 					
 				}while(!horizontal_margin_list.isEmpty() && !horizontal_gcd_values.isEmpty());
 
@@ -326,10 +325,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			horizontal_unit_gcd_lists.put(unit, most_common_gcd_values);
 			total_horizontal_score += 3;
 		}
-		
-		log.warn("horizontal score value  1   ::   "+total_horizontal_score);
-		
-		
 		
 		
 		
@@ -834,7 +829,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 					.replaceAll("cm", "")
 					.replaceAll("mm", "")
 					.replaceAll("in", "")
-					.replaceAll("pc", "");
+					.replaceAll("pc", "")
+					.replaceAll("auto", "")
+					.replaceAll("!important", "")
+					.trim();
 	}
 	
 	public static List<Integer> removeZeroValues(List<Integer> from){

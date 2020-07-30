@@ -255,11 +255,13 @@ public class BrowserService {
 	/**
 	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
 	 * @return page {@linkplain PageState}
+	 * @throws IOException 
+	 * @throws XPathExpressionException 
 	 * @throws Exception 
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( Page page ) throws Exception{
+	public PageState buildPageState( Page page ) throws IOException, XPathExpressionException{
 		assert page != null;
 		
 		Document doc = Jsoup.connect(page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
@@ -313,7 +315,8 @@ public class BrowserService {
 		if(record != null) {
 			return record;
 		}
-		return page_state_service.save(page_state);
+		log.warn("built page...now saving page state...");
+		return page_state;
 	}
 	
 	private static String calculateSha256(String value) {
@@ -443,41 +446,7 @@ public class BrowserService {
 		log.warn("1===========================================================================");
 		log.warn("1===========================================================================");
 		log.warn("1===========================================================================");
-		/*
-		MediaSpec media = new MediaSpecAll(); //use styles for all media
-		log.warn("document ::  " + w3c_document);
-		log.warn("URL :: " +url);
-		StyleMap map = null;
-		try {
-			map = CSSFactory.assignDOM(w3c_document, "UTF-8", new NetworkProcessor() {
-				
-				@Override
-				public InputStream fetch(URL url) throws IOException {
-			        
-			        try {
-			        	SSLContext sc = SSLContext.getInstance("TLS");
-						sc.init(null, null, new java.security.SecureRandom());
-						HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-						con.setSSLSocketFactory(sc.getSocketFactory());
-						log.warn("connection 2  :: "+con.toString());
-						// get response code, 200 = Success
-						int responseCode = con.getResponseCode();
-						System.out.println("RESPONSE  2  :: " +responseCode);
-						return con.getInputStream();
-					} catch (KeyManagementException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (NoSuchAlgorithmException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			        return null;
-				}
-			}, url, media, true, null);//assignDOM(w3c_document, "UTF-8", url, media, true);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-*/
+		
 		log.warn("w3c_document  ---   "+ w3c_document);
 		//get html doc and get root element
 		Document html_doc = Jsoup.parse(page_source);
@@ -487,7 +456,6 @@ public class BrowserService {
 		
 		//create element state from root node
 		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-		//ElementState root_element_state = buildElementState("//body", attributes, Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root), root, ElementClassification.ANCESTOR, Browser.loadCssPropertiesUsingParser(page_source, url, "//body"));
 		log.warn("page source 1 :: "+page_source.length());
 		log.warn("url 1  :: "+url);
 		Map<String, String> css_props = new HashMap<>();
@@ -499,14 +467,7 @@ public class BrowserService {
 		}
 		
 		Map<String, String> css_rendered = new HashMap<>();
-		/*
-		try {
-			css_rendered.putAll(Browser.loadCssPropertiesUsingParser(w3c_document, map, url, "//body"));
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		*/
+
 		log.warn("CSS PROPERTIES      :::::           "+css_props);
 		ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
 		
@@ -549,7 +510,6 @@ public class BrowserService {
 
 				attributes = generateAttributesMapUsingJsoup(child);
 
-				//element_state = buildElementState(xpath, attributes, Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, child), child, classification, Browser.loadCssPropertiesUsingParser(page_source, url, xpath));
 				Map<String, String> pre_render_css_props = new HashMap<>();
 				
 				try{
@@ -559,13 +519,7 @@ public class BrowserService {
 					log.warn(e.getMessage());
 				}
 				Map<String, String> rendered_css_props = new HashMap<>();
-				/*
-				try {
-					rendered_css_props.putAll(Browser.loadCssPropertiesUsingParser(w3c_document, map, url, xpath));
-				}catch(Exception e) {
-					log.warn("xpath exception occurred when loading rendered css for element with xpath :: "+xpath);
-				}
-	*/
+
 				
 				element_state = buildElementState(xpath, attributes, pre_render_css_props, child, classification, rendered_css_props);
 				element_state = element_service.save(element_state);
@@ -581,9 +535,7 @@ public class BrowserService {
 				element_service.addChildElement(root_element.getKey(), element_state.getKey());
 				
 			}
-			//reviewed_xpaths.put(root_element.getXpath(), root_element);
 			visited_elements.add(root_element);
-			//root_element = element_service.save(root_element);
 		}
 		return visited_elements;
 	}

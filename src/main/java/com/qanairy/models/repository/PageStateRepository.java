@@ -1,6 +1,7 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -21,7 +22,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{key}}) RETURN p LIMIT 1")
 	public PageState findByKeyAndUsername(@Param("user_id") String user_id, @Param("key") String key);
 
-	@Query("MATCH (p:PageState{key:{key}})-[*]-(:ElementState) RETURN p LIMIT 1")
+	@Query("MATCH (p:PageState{key:{key}}) RETURN p LIMIT 1")
 	public PageState findByKey(@Param("key") String key);
 
 	@Deprecated
@@ -63,4 +64,10 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(a:Audit{subcategory:{subcategory}}) RETURN a")
 	public Audit findAuditBySubCategory(@Param("subcategory") String subcategory, @Param("page_state_key") String page_state_key);
+
+	@Query("MATCH(ps:PageState{key:{page_state_key}}),(a:Audit{key:{audit_key}}) CREATE (ps)-[h:HAS]->(a) RETURN ps")
+	public void addAudit(@Param("page_state_key") String page_state_key, @Param("audit_key") String audit_key);
+
+	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(a:Audit{key:{audit_key}}) RETURN a")
+	public Optional<Audit> getAuditForPageState(@Param("page_state_key") String page_state_key, @Param("audit_key") String audit_key);
 }

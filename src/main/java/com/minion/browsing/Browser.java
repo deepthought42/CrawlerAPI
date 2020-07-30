@@ -635,6 +635,7 @@ public class Browser {
 			if(prop_val.length == 1) {
 				log.warn("prop_val :: "+prop_val[0]);
 				log.warn("prop value pair :: "+prop_val_pair);
+				continue;
 			}
 			if(prop_val.length > 0) {
 				String prop1 = prop_val[0];
@@ -1006,13 +1007,8 @@ public class Browser {
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
 
         con.setSSLSocketFactory(sc.getSocketFactory());
-        log.warn("connection :: "+con.toString());
         // get response code, 200 = Success
         int responseCode = con.getResponseCode();
-        
-        log.warn("response message :: " + con.getResponseMessage());
-        log.warn("content encoding :: " + con.getContentEncoding());
-        log.warn("content type :: " + con.getContentType());
         if(con.getContentEncoding() != null && con.getContentEncoding().equalsIgnoreCase("gzip")) {
         	return readStream(new GZIPInputStream( con.getInputStream()));
         }

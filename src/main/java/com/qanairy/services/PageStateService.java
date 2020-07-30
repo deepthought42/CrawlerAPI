@@ -3,6 +3,7 @@ package com.qanairy.services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
@@ -108,28 +109,7 @@ public class PageStateService {
 						}
 						
 						page_state.setElements(element_records);
-						/*
-						Set<Form> form_records = new HashSet<>();
-						for(Form form : page_state.getForms()){
-							Form form_record = form_repo.findByKeyForUserAndDomain(user_id, domain_url, form.getKey());
-							if(form_record == null){
-								List<ElementState> form_element_records = new ArrayList<>();
-								for(ElementState element : form.getFormFields()){
-									log.warn("saving form element to page state");
-									ElementState element_record = element_state_service.saveFormElement(element);
-									
-									form_element_records.add(element_record);
-								}
-								
-								form.setFormFields(form_element_records);
-								form_record = form_repo.save(form);
-							}
-							form_records.add(form_record);
-						}
-		
-						//reduce screenshots to just unique records
-						page_state.setForms(form_records);
-						*/
+						
 						page_state.setAudits(page_state.getAudits());
 
 						page_state_record = page_state_repo.save(page_state);
@@ -155,44 +135,22 @@ public class PageStateService {
 	 */
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
-		
+
+		log.warn("----------------------------------------------------------------------------");
+		log.warn("Saving page state...");
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
-		
-		int page_cnt = 0;
-		boolean page_err = false;
 
-		if(page_state_record != null){
-			//page_state_record.setForms( page_state.getForms() );
-			page_state_record.setAudits(page_state.getAudits());
-			page_state_record.setElements(page_state.getElements());
-
-			for(String screenshot_checksum : page_state.getScreenshotChecksums()){
-				page_state_record.addScreenshotChecksum(screenshot_checksum);
-			}
-
-			page_state_record = page_state_repo.save(page_state_record);
-			
-		}
-		else {
-			
+		if(page_state_record == null) {
 			log.warn("page state wasn't found in database. Saving new page state to neo4j");
 
 			//iterate over page elements
 			List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 			for(ElementState element : page_state.getElements()){
-				boolean err = false;
-				int cnt = 0;
-				do{
-					err = false;
-					try{
-						element_records.add(element_state_service.save(element));
-					}catch(Exception e){
-						log.warn("error saving element to new page state :  "+e.getMessage());
-						//e.printStackTrace();
-						err = true;
-					}
-					cnt++;
-				}while(err && cnt < 5);
+				try{
+					element_records.add(element_state_service.save(element));
+				}catch(Exception e){
+					log.warn("error saving element to new page state :  "+e.getMessage());
+				}
 			}
 				
 			page_state.setElements(element_records);
@@ -200,7 +158,9 @@ public class PageStateService {
 
 			page_state_record = page_state_repo.save(page_state);
 		}
-		page_state_record.setElements(getElementStates(page_state_record.getKey()));
+		else {
+			page_state_record.setElements(getElementStates(page_state_record.getKey()));
+		}
 		return page_state_record;
 	}
 	
@@ -280,5 +240,13 @@ public class PageStateService {
 
 	public Audit findAuditBySubCategory(AuditSubcategory subcategory, String page_state_key) {
 		return page_state_repo.findAuditBySubCategory(subcategory.getShortName(), page_state_key);
+	}
+
+	public void addAudit(String page_state_key, String audit_key) {
+		//check if audit already exists for page state
+		Optional<Audit> audit = page_state_repo.getAuditForPageState(page_state_key, audit_key);
+		if(!audit.isPresent()) {
+			page_state_repo.addAudit(page_state_key, audit_key);
+		}
 	}
 }

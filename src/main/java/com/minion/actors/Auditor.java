@@ -91,9 +91,12 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
+			   			log.warn("performing post render page audits...");
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state, "Look-See-admin");
 
+			   			log.warn("saving audits ... ");
 			   			audits_executed = audit_service.saveAll(audits_executed);
+			   			log.warn("saving rendered audits");
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(audits_executed);
@@ -102,9 +105,14 @@ public class Auditor extends AbstractActor{
 						page_audit_map.put(page_state, audits);
 			   		}
 		   			
-					page_state.addAudits(audits);
-		   			page_state_service.save(page_state);
-		   			PageAuditComplete audit_complete = new PageAuditComplete(page_state);
+				   	//add audits to page_state
+				   	
+				   	for(Audit audit : audits) {
+				   		page_state_service.addAudit(page_state.getKey(), audit.getKey());
+				   		page_state.addAudits(audits);
+				   	}
+				   	
+					PageAuditComplete audit_complete = new PageAuditComplete(page_state);
 		   			getSender().tell(audit_complete, getSelf());
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());

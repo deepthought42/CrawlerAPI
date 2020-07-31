@@ -205,7 +205,6 @@ public class WebCrawlerActor extends AbstractActor{
 									element_state_service.save(element);
 								}catch(WebDriverException e) {
 									log.warn("no such element exception thrown for element with xpath :: "+element.getXpath()+"    :   on page     :    "+page_state.getUrl());
-									//log.warn(e.getMessage());
 									//e.printStackTrace();
 								}
 //								long end_time = System.currentTimeMillis();

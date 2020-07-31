@@ -1,6 +1,7 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -46,4 +47,10 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 
 	@Query("MATCH (p:Page{key:{page_key}})-[]->(page_state:PageState) RETURN page_state ORDER BY page_state.created_at DESC LIMIT 1")
 	public PageState findMostRecentPageState(@Param("page_key") String page_key);
+
+	@Query("MATCH (p:Page{key:{page_key}})-[]->(page_state:PageState{key:{page_state_key}}) RETURN page_state LIMIT 1")
+	public Optional<PageState> findPageStateForPage(@Param("page_key") String page_key, @Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:Page{key:{page_key}}),(ps:PageState{key:{page_state_key}}) CREATE (p)-[h:HAS]->(ps) RETURN ps")
+	public void addPageState(@Param("page_key") String page_key, @Param("page_state_key") String page_state_key);
 }

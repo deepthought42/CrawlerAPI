@@ -633,8 +633,6 @@ public class Browser {
 			String[] prop_val = prop_val_pair.split(":");
 			
 			if(prop_val.length == 1) {
-				log.warn("prop_val :: "+prop_val[0]);
-				log.warn("prop value pair :: "+prop_val_pair);
 				continue;
 			}
 			if(prop_val.length > 0) {

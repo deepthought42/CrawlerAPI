@@ -76,8 +76,7 @@ public class PageDataExtractor extends AbstractActor{
 						PageState page_state = browser_service.buildPageState( page );
 						log.warn("saving page state to database");
 						page_state = page_state_service.save(page_state);
-						page.addPageState(page_state);
-						page = page_service.save(page);
+						page_service.addPageState(page.getKey(), page_state.getKey());
 						
 						log.warn("sending page state to audit manager..."+page_state.getUrl());
 						

@@ -8,9 +8,12 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -32,7 +35,6 @@ import com.qanairy.models.enums.AuditSubcategory;
  */
 @Component
 public class MarginAudit implements IExecutablePageStateAudit {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(MarginAudit.class);
 
 	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
@@ -66,81 +68,92 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		
-		List<String> vertical_margin_values = new ArrayList<>();
-		List<String> horizontal_margin_values = new ArrayList<>();
 
 		List<Observation> observations = new ArrayList<>();
 
-
+		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
+		
 		//extract vertical and horizontal margin values
 		for(ElementState element : page_state.getElements()) {
 			String margin_value = "";
+			List<String> margins = new ArrayList<>();
 			if(element.getPreRenderCssValues().containsKey("margin")) {
 				margin_value = element.getPreRenderCssValues().get("margin");
-				String[] separated_values = margin_value.split(" ");
-				
-				if(separated_values.length == 1) {
-					vertical_margin_values.add(separated_values[0]);
-					horizontal_margin_values.add(separated_values[0]);
-				}
-				else {
-					for(int idx = 0; idx < separated_values.length; idx++) {
-						if(idx % 2 == 0) {
-							vertical_margin_values.add(separated_values[idx]);
-						}
-						else {
-							horizontal_margin_values.add(separated_values[idx]);
-						}
-					}
-				}
+				margins.addAll(Arrays.asList(margin_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("margin-top")) {
+
+			if( element.getPreRenderCssValues().containsKey("margin-top")) {
 				margin_value = element.getPreRenderCssValues().get("margin-top");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					vertical_margin_values.add( value);
-				}
+				margins.addAll(Arrays.asList(margin_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("margin-bottom")) {
+
+			if( element.getPreRenderCssValues().containsKey("margin-bottom")) {
 				margin_value = element.getPreRenderCssValues().get("margin-bottom");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					vertical_margin_values.add( value);
-				}
+				margins.addAll(Arrays.asList(margin_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("margin-right")) {
+			
+			if( element.getPreRenderCssValues().containsKey("margin-right")) {
 				margin_value = element.getPreRenderCssValues().get("margin-right");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					horizontal_margin_values.add( value);
-				}
+				margins.addAll(Arrays.asList(margin_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("margin-left")) {
+			
+			if( element.getPreRenderCssValues().containsKey("margin-left")) {
 				margin_value = element.getPreRenderCssValues().get("margin-left");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					horizontal_margin_values.add( value);
-				}
-			}	
+				margins.addAll(Arrays.asList(margin_value.split(" ")));
+			}
+			
+			elements_margin_map.put(element, margins);
 		}
 		
-		
-		
-		Map<String, List<Double>> vertical_units = sortSizeUnits(vertical_margin_values);
-		Map<String, List<Double>> vertical_gcd_list = new HashMap<>();
-		//extract multiples for vertical margins
-		//most common multiples, the highest multiples that can be found to satisfy the list of unique margin values
-		for(String unit : vertical_units.keySet()) {
-			//scale units values by 100 and make unique
-			List<Double> distinct_list =  sortAndMakeDistinct(vertical_units.get(unit));
+		Score spacing_score = evaluateSpacingConsistency(elements_margin_map);
+		Score unit_score = evaluateUnits(elements_margin_map);
+		Score margin_as_padding_score = scoreMarginAsPadding(page_state.getElements());
 
+		observations.addAll(unit_score.getObservations());
+		observations.addAll(margin_as_padding_score.getObservations());
+		
+		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
+						+ (unit_score.getPointsAchieved()/(double)unit_score.getMaxPossiblePoints())
+						+ (margin_as_padding_score.getPointsAchieved()/(double)margin_as_padding_score.getMaxPossiblePoints()))/3;
+		
+		int points = (int)(score * 100);
+		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
+		log.warn("MARGIN SCORE  :::   "+points + " / 100" );	
+
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100);
+	}
+
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_margin_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_margin_map != null
+	 */
+	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_margin_map) {
+		assert elements_margin_map != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		
+		Map<String, List<Double>> gcd_map = new HashMap<>();
+		Map<String, List<Double>> units = new HashMap<>();
+		for(ElementState element : elements_margin_map.keySet()) {
+			//START UNIT SCORE HERE
+			units.putAll(sortSizeUnits(elements_margin_map.get(element)));
+		}
+		
+		//extract multiples for margins
+		//most common multiples, the highest multiples that can be found to satisfy the list of unique margin values
+		for(String unit : units.keySet()) {
+			//scale units values by 100 and make unique
+			List<Double> distinct_list =  sortAndMakeDistinct(units.get(unit));
+			
 			if(distinct_list.size() == 1) {
-				vertical_gcd_list.put(unit, deflateGCD(distinct_list));
+				gcd_map.put(unit, distinct_list);
 				continue;
 			}
 			
@@ -151,34 +164,34 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				}
 			}
 			
-			gcd_list = deflateGCD(gcd_list);
 			gcd_list.remove(new Double(1));
-			vertical_gcd_list.put(unit, gcd_list);
-		}
+			//reduce gcd again.
+			gcd_map.put(unit, gcd_list);
+		}			
 		
+		//reduce gcd_list until no value is divisible by any other
+		//rank gcd list based on frequency values that are multiples of gcd
+		//generate score for each element margin based on gcd divisibility
 		
-		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
-		int total_vertical_score = 0;
-		int vertical_score = 0;
-		
+		//COMPUTE SCORE FOR MARGIN BASED ON GCD VALUES
 		Map<String, List<Double>> unit_gcd_lists = new HashMap<>();
-		for(String unit : vertical_gcd_list.keySet()) {
+		for(String unit : gcd_map.keySet()) {
 			List<Double> most_common_gcd_values = new ArrayList<>();
-			if(vertical_gcd_list.get(unit).size() == 1) {
+			if(gcd_map.get(unit).size() == 1) {
 				log.warn("unit : "+unit+"  has only 1 gcd!!");
-				vertical_score += 3;
-				most_common_gcd_values.addAll(vertical_gcd_list.get(unit));
+				points_earned += 3;
+				most_common_gcd_values.addAll(gcd_map.get(unit));
 			}
 			else {
-				List<Double> vertical_margin_list = vertical_units.get(unit);
-				List<Double> vertical_gcd_values = vertical_gcd_list.get(unit);
+				List<Double> margin_list = units.get(unit);
+				List<Double> gcd_values = gcd_map.get(unit);
 				do {
 					Map<Double, List<Double>> gcd_match_lists = new HashMap<>();
-
+					
 					//find highest gcd values that define the set
-					for(double gcd : vertical_gcd_values) {
+					for(double gcd : gcd_values) {
 						gcd_match_lists.put(gcd, new ArrayList<Double>());
-						for(double value : vertical_margin_list) {
+						for(double value : margin_list) {
 							if(value % gcd == 0 && gcd != 1){
 								gcd_match_lists.get(gcd).add(value);
 							}
@@ -199,7 +212,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 					}
 					
 					//remove gcd value from input gcd list
-					vertical_gcd_values.remove(largest_gcd);
+					gcd_values.remove(largest_gcd);
 					
 					if(largest_gcd_count > 0) {						
 						//add the largest gcd to the list of most applicable gcd values
@@ -207,362 +220,62 @@ public class MarginAudit implements IExecutablePageStateAudit {
 					}
 					
 					//remove gcd matches from vertical margin list
-					vertical_margin_list.removeAll(gcd_match_lists.get(largest_gcd));
+					List<Double> largest_gcd_matches = gcd_match_lists.get(largest_gcd);
+					if(largest_gcd_matches != null) {
+						margin_list.removeAll(largest_gcd_matches);
+					}
 					
-				}while(!vertical_margin_list.isEmpty() && !vertical_gcd_values.isEmpty());
-
+				}while(!margin_list.isEmpty() && !gcd_values.isEmpty());
+				
 				
 				if(most_common_gcd_values.size() == 2) {
-					vertical_score += 2;
+					points_earned += 2;
 				}
 				else {
-					vertical_score += 1;
+					points_earned += 1;
 				}
-				
 			}
 			unit_gcd_lists.put(unit, most_common_gcd_values);
-			total_vertical_score += 3;
+			max_points += 3;
 		}
 		
-		
-			
-		
-		
-		
-		Map<String, List<Double>> horizontal_unit_gcd_lists = new HashMap<>();
-		Map<String, List<Double>> horizontal_units = sortSizeUnits(horizontal_margin_values);
-		Map<String, List<Double>> horizontal_gcd_list = new HashMap<>();
-		//extract multiples for horizontal margins
-		//most common multiples, the highest multiples that can be found to satisfy the list of unique margin values
-		for(String unit : horizontal_units.keySet()) {
-			//scale units values by 100 and make unique
-			List<Double> distinct_list =  sortAndMakeDistinct(horizontal_units.get(unit));
-
-			if(distinct_list.size() == 1) {
-				horizontal_gcd_list.put(unit, deflateGCD(distinct_list));
-				continue;
-			}
-			
-			List<Double> gcd_list = new ArrayList<>();
-			for(int idx = 0; idx < distinct_list.size()-1; idx++) {
-				for(int idx2 = idx+1; idx2 < distinct_list.size(); idx2++) {
-					gcd_list.add(findGCD(distinct_list.get(idx), distinct_list.get(idx2)));
-				}
-			}
-			
-			gcd_list = deflateGCD(gcd_list);
-			gcd_list.remove(new Double(1));
-			horizontal_gcd_list.put(unit, gcd_list);
-		}
-		
-		
-		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
-		int total_horizontal_score = 0;
-		int horizontal_score = 0;
-
-		for(String unit : horizontal_gcd_list.keySet()) {
-			List<Double> most_common_gcd_values = new ArrayList<>();
-			if(horizontal_gcd_list.get(unit).size() == 1) {
-				log.warn("unit : "+unit+"  has only 1 gcd!!");
-				horizontal_score += 3;
-				most_common_gcd_values.addAll(horizontal_gcd_list.get(unit));
-			}
-			else {
-				List<Double> horizontal_margin_list = horizontal_units.get(unit);
-				List<Double> horizontal_gcd_values = horizontal_gcd_list.get(unit);
-				do {
-					Map<Double, List<Double>> gcd_match_lists = new HashMap<>();
-					//find highest gcd values that define the set
-					for(double gcd : horizontal_gcd_values) {
-						gcd_match_lists.put(gcd, new ArrayList<Double>());
-						for(double value : horizontal_margin_list) {
-							if(value % gcd == 0 && gcd != 1){
-								gcd_match_lists.get(gcd).add(value);
-							}
-						}
-					}
-					
-					//identify gcd with most matches
-					int largest_gcd_count = 0;
-					double largest_gcd = 0;
-					for(Double gcd : gcd_match_lists.keySet()) {
-						if(gcd_match_lists.get(gcd).size() >= largest_gcd_count ) {
-							largest_gcd_count = gcd_match_lists.get(gcd).size();
-							
-							if(gcd > largest_gcd) {
-								largest_gcd = gcd;
-							}
-						}
-					}
-					
-					//remove gcd value from input gcd list
-					horizontal_gcd_values.remove(largest_gcd);
-					
-					if(largest_gcd_count > 0) {						
-						//add the largest gcd to the list of most applicable gcd values
-						most_common_gcd_values.add(largest_gcd);
-					}
-					
-					//remove gcd matches from horizontal margin list
-					List<Double> gcd_match_list = gcd_match_lists.get(largest_gcd);
-					if(gcd_match_list != null) {
-						log.warn("gcd match list :: "+gcd_match_list);
-						log.warn("horizontal margin list :: "+horizontal_margin_list);
-						horizontal_margin_list.removeAll(gcd_match_list);
-					}
-					
-				}while(!horizontal_margin_list.isEmpty() && !horizontal_gcd_values.isEmpty());
-
-				
-				if(most_common_gcd_values.size() == 2) {
-					horizontal_score += 2;
-				}
-				else {
-					horizontal_score += 1;
-				}
-				
-			}
-			horizontal_unit_gcd_lists.put(unit, most_common_gcd_values);
-			total_horizontal_score += 3;
-		}
-		
-		
-		
-		
-		
-		//extract differences
-		//check if a unique list of differences has only 1 element
-		//GENERATE SCORE BASED ON UNITS WITH PADDING EVENLY DIVISIBLE BY UNIT GCD VALUES IDENTIFIED IN PREVIOUS STEPS
-		vertical_margin_values = new ArrayList<>();
-		horizontal_margin_values = new ArrayList<>();
-		
-		List<ElementState> elements_unmatched_gcd = new ArrayList<>();
-		List<ElementState> unscalable_margin_elements = new ArrayList<>();
-		
-		for(ElementState element : page_state.getElements()) {
-			if(element.getPreRenderCssValues().containsKey("margin")) {
-				String margin_value = element.getPreRenderCssValues().get("margin");
-				String[] separated_values = margin_value.split(" ");
-				
-				if(separated_values.length == 1) {
-					vertical_margin_values.add(separated_values[0]);
-					horizontal_margin_values.add(separated_values[0]);
-				}
-				else {
-					for(int idx = 0; idx < separated_values.length; idx++) {
-						if(idx % 2 == 0) {
-							vertical_margin_values.add(separated_values[idx]);
-						}
-						else {
-							horizontal_margin_values.add(separated_values[idx]);
-						}
-						
-						String unit = extractMeasureUnit(separated_values[idx]);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_margin_elements.add(element);
-						}
-					}
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("margin-top")) {
-				String margin_value = element.getPreRenderCssValues().get("margin-top");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					if(!value.startsWith("0")) {
-						vertical_margin_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(margin_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_margin_elements.add(element);
-						}
-						vertical_score += unit_score;
-						total_vertical_score += 3;
-						
-						//strip unit measure values 
-						margin_value = cleanSizeUnits(margin_value).trim();
-					}					
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("margin-bottom")) {
-				String margin_value = element.getPreRenderCssValues().get("margin-bottom");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					if(!value.startsWith("0")) {
-						vertical_margin_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(margin_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_margin_elements.add(element);
-						}
-						vertical_score += unit_score;
-						total_vertical_score += 3;
-						
-						//strip unit measure values 
-						margin_value = cleanSizeUnits(margin_value).trim();
-					}					
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("margin-left")) {
-				String margin_value = element.getPreRenderCssValues().get("margin-left");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {		
-					if(!value.startsWith("0")) {
-						horizontal_margin_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(margin_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_margin_elements.add(element);
-						}
-						
-						horizontal_score += unit_score;
-						total_horizontal_score += 3;
-						
-						//if(
-						//strip unit measure values 
-						margin_value = cleanSizeUnits(margin_value).trim();
-					}
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("margin-right")) {
-				String margin_value = element.getPreRenderCssValues().get("margin-right");
-				String[] separated_values = margin_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {		
-					if(!value.startsWith("0")) {
-						horizontal_margin_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(margin_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_margin_elements.add(element);
-						}
-						
-						horizontal_score += unit_score;
-						total_horizontal_score += 3;
-						
-						//if(
-						//strip unit measure values 
-						margin_value = cleanSizeUnits(margin_value).trim();
-					}
-				}
-			}
-			
-			for(String margin_value : vertical_margin_values) {
-				//determine unit measure
-				String unit = extractMeasureUnit(margin_value);
-				/*
-				vertical_score += scoreMeasureUnit(unit);
-				total_vertical_score += 3;
-				*/
-				//strip unit measure values 
-				margin_value = cleanSizeUnits(margin_value).trim();
-				
-				//convert measure to Double
-				if(margin_value == null || margin_value.isEmpty()) {
-					continue;
-				}
-				double margin_number = Double.parseDouble(margin_value);
-				
-				//compute converted measure modulo gcd value
-				boolean gcd_found = false;
-				//log.warn("evaluating unit :: "+unit+"  unit gcd list value ::    "+unit_gcd_lists);
-				if(unit_gcd_lists.containsKey(unit)) {
-					for(double gcd : unit_gcd_lists.get(unit)) {
-						if(margin_number % gcd == 0) {
-							gcd_found = true;
-							break;
-						}
-					}
-				}
-				
-				if(gcd_found) {
-					vertical_score += 3;
-				}
-				else {
-					vertical_score += 1;
-				}
-				
-				total_vertical_score += 3;
-				//log.warn("matching gcd found :: " + gcd_found);
-
-			}
-			
-			for(String margin_value : horizontal_margin_values) {
-				//determine unit measure
-				String unit = extractMeasureUnit(margin_value);
-				
-				//horizontal_score += scoreMeasureUnit(unit);
-				//total_horizontal_score += 3;
-				//strip unit measure values 
-				margin_value = cleanSizeUnits(margin_value);
-				
-				//convert measure to Double
-				if(margin_value == null || margin_value.isEmpty()) {
-					continue;
-				}
-				double margin_number = Double.parseDouble(margin_value);
-				
-				//compute converted measure modulo gcd value
-				boolean gcd_found = false;
-				//log.warn("evaluating unit :: "+unit+"  unit gcd list value ::    "+horizontal_unit_gcd_lists);
-				if(horizontal_unit_gcd_lists.containsKey(unit)) {
-					for(double gcd : horizontal_unit_gcd_lists.get(unit)) {
-						if(margin_number % gcd == 0) {
-							gcd_found = true;
-							break;
-						}
-					}
-				}
-				
-				if(gcd_found) {
-					horizontal_score += 3;
-				}
-				else {
-					elements_unmatched_gcd.add(element);
-					horizontal_score += 1;
-				}
-				
-				total_horizontal_score += 3;
-				//log.warn("matching gcd found :: " + gcd_found);
-
-			}
-		}		
-		
-		ElementObservation element_observation = new ElementObservation(elements_unmatched_gcd, "Elements that are not consistently sized relative to other margins across the site can create an uneven experience");
-		ElementObservation unscalable_margin_observations = new ElementObservation(unscalable_margin_elements, "Using unscalable units (ie px, in, cm, mm, pt)");
-
-		//PropertyMapObservation gcd_observation = new PropertyMapObservation(vertical_gcd_list, "gcd description goes here");
-		
-		observations.add(element_observation);
-		observations.add(unscalable_margin_observations);
-		
-		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
-		double margin_score = (vertical_score + horizontal_score) / (double)(total_vertical_score + total_horizontal_score);
-
-		
-		int margin_as_margin_score = scoreMarginAsPadding(page_state.getElements());
-		int score = ((int)margin_score + margin_as_margin_score);
-		//int score = (margin_size_score + margin_as_margin_score);
-		
-		//log.warn("MARGIN SIZE SCORE  :::   "+margin_size_score);	
-		log.warn("MARGIN AS PADDING SCORE  :::   "+margin_as_margin_score);	
-		log.warn("MARGIN SCORE  :::   "+margin_score);	
-
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, (vertical_score + horizontal_score), observations, AuditLevel.PAGE, (total_vertical_score + total_horizontal_score));
+		return new Score(points_earned, max_points, observations);
 	}
 
-	
+	/**
+	 * Generates {@link Score score} based on which units (ie, %, em, rem, px, pt, etc.) are used for vertical(top,bottom) padding
+	 * 
+	 * @param vertical_margin_values
+	 * 
+	 * @return
+	 */
+	private Score evaluateUnits(Map<ElementState, List<String>> element_margin_map) {
+		assert element_margin_map != null;
+		
+		int vertical_score = 0;
+		int max_vertical_score = 0;
+		Set<Observation> observations = new HashSet<>();
+		List<ElementState> unscalable_margin_elements = new ArrayList<>();
+
+		for(ElementState element : element_margin_map.keySet()) {
+			for(String margin_value : element_margin_map.get(element)) {
+				//determine unit measure
+				String unit = extractMeasureUnit(margin_value);
+				
+				vertical_score += scoreMeasureUnit(unit);
+				max_vertical_score += 3;
+				
+				if(vertical_score == 1) {
+					unscalable_margin_elements.add(element);
+				}
+			}
+		}
+		observations.add(new ElementObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
+		
+		return new Score(vertical_score, max_vertical_score, observations);
+	}
+
+
 	private String extractMeasureUnit(String padding_value) {
 		if(padding_value.contains("rem")) {
 			return "rem";
@@ -613,18 +326,50 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	
 	/**
 	 * Identifies elements that are using margin when they should be using margin
+	 * 
 	 * @param elements
-	 * @return
+	 * 
+	 * @return 
+	 * 
+	 * @pre elements != null
 	 */
-	private int scoreMarginAsPadding(List<ElementState> elements) {
+	private Score scoreMarginAsPadding(List<ElementState> elements) {
+		assert elements != null;
+		
+		int score = 0;
+		int max_score = 0;
+		Set<Observation> observations = new HashSet<>();
+		List<ElementState> flagged_elements = new ArrayList<>();
 		for(ElementState element : elements) {
 			//identify elements that own text and have margin but not padding set
-			
-			
+			if(!element.getText().trim().isEmpty()) {
+				//check if element has margin but not padding set for any direction(top, bottom, left, right)
+				boolean margin_used_as_padding = false;
+				if(element.getPreRenderCssValues().get("margin-top") != null && element.getPreRenderCssValues().get("padding-top") == null) {
+					margin_used_as_padding = true;
+				}
+				else if(element.getPreRenderCssValues().get("margin-right") != null && element.getPreRenderCssValues().get("padding-right") == null) {
+					margin_used_as_padding = true;
+				}
+				else if(element.getPreRenderCssValues().get("margin-bottom") != null && element.getPreRenderCssValues().get("padding-bottom") == null) {
+					margin_used_as_padding = true;
+				}
+				else if(element.getPreRenderCssValues().get("margin-left") != null && element.getPreRenderCssValues().get("padding-left") == null) {
+					margin_used_as_padding = true;
+				}
+				else {
+					score += 3;
+				}
+				
+				if(margin_used_as_padding) {
+					score += 1;
+					flagged_elements.add(element);
+				}
+				max_score += 3;
+			}
 		}
-		
-		return 0;
-		
+		observations.add(new ElementObservation(flagged_elements, "Elements that appear to use margin as padding"));
+		return new Score(score, max_score, observations);
 	}
 	
 	private int scoreNonCollapsingMargins(List<ElementState> elements) {
@@ -678,85 +423,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
         }
         return sb.toString();
     }
-	
-	/**
-	 * Generate score for margin usage
-	 * 
-	 * @param margin_set
-	 * @return
-	 */
-	private int scoreMarginSizes(List<String> margin_set) {
-		int score = 0;
-		int total_possible_score = 0;
-		//sort margin values into em, percent and px measure types
-		Map<String, List<Double>> converted_unit_buckets = sortSizeUnits(margin_set);
-		//reduce lists in map to unique values;
-		log.warn("converted bucket list  "+converted_unit_buckets);
-		
-		//SCORING 1 - Check if all values have a similar multiple
-		for(String unit : converted_unit_buckets.keySet()) {
-			List<Double> margin_values = converted_unit_buckets.get(unit);
-		
-			//sort margin values and make them unique
-			margin_values = sortAndMakeDistinct(margin_values);
-			log.warn("Margin values identified :: " + margin_values);
-			Double smallest_value = margin_values.get(0);
-			
-			for(int idx = 1; idx < margin_values.size(); idx++) {
-				if(margin_values.get(idx) % smallest_value == 0) {
-					score += 3;
-				}
-				else {
-					score += 1;
-				}
-				total_possible_score+= 3;
-			}
-			
-		}
-		//SCORING 1a - Check if all values have the same difference
-		
-		if(total_possible_score == 0){
-			total_possible_score = 3;
-		}
-		
-		//CALCULATE OVERALL SCORE :: 
-		log.warn("Margin score :: "+(score/total_possible_score));
-		if(score == 0.0) {
-			return score;
-		}
-		return score / total_possible_score;
-	}
 
-	private Map<String, List<String>> categorizeSizeUnits(Map<String, List<String>> converted_unit_buckets) {
-		Map<String, List<String>> unit_categories = new HashMap<>();
-		
-		for(String unit : converted_unit_buckets.keySet()) {
-			List<String> units = new ArrayList<String>();
-			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit)) {
-				if(unit_categories.containsKey("scalable-high")) {
-					units = unit_categories.get("scalable-high");
-				}
-				units.add(unit);
-				unit_categories.put("scalable-high", units);
-			}
-			else if("vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				if(unit_categories.containsKey("scalable-low")) {
-					units = unit_categories.get("scalable-low");
-				}
-				units.add(unit);
-				unit_categories.put("scalable-low", units);
-			}
-			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				if(unit_categories.containsKey("constant")) {
-					units = unit_categories.get("constant");
-				}
-				units.add(unit);
-				unit_categories.put("constant", units);
-			}
-		}
-		
-		return unit_categories;
-	}
 
 	/**
 	 * Sort units into buckets by mapping unit type to margin sizes

@@ -370,7 +370,7 @@ public class PageState extends LookseeObject {
 	 */
 	public String generateKey() {
 		String src_template = BrowserService.extractTemplate(getSrc());
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(src_template);
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl()+src_template);
 	}
 
 	@Deprecated

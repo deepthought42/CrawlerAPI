@@ -3,7 +3,9 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +47,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 
 	private static List<String> buildBestPractices() {
 		List<String> best_practices = new ArrayList<>();
-		best_practices.add("When applying margins and padding, you should avoid using absolute units . This is because these units won’t adapt to the changes in font size or screen width.");
+		best_practices.add("When applying padding, you should avoid using absolute units . This is because these units won’t adapt to the changes in font size or screen width.");
 		
 		return best_practices;
 	}
@@ -65,92 +67,92 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		
-		int vertical_gcd_score = 0;
-		int horizontal_gcd_score = 0;
-		int total_possible_gcd_score = 0;
-		
-		int vertical_unit_score = 0;
-		int horizontal_unit_score = 0;
-		int total_possible_unit_score = 0;
-		
-		
-		
-		
-		List<String> vertical_padding_values = new ArrayList<>();
-		List<String> horizontal_padding_values = new ArrayList<>();
 
 		List<Observation> observations = new ArrayList<>();
-
+		Map<ElementState, List<String>> elements_padding_map = new HashMap<>(); 
 
 		//extract vertical and horizontal padding values
 		for(ElementState element : page_state.getElements()) {
 			String padding_value = "";
+			List<String> paddings = new ArrayList<>();
+
 			if(element.getPreRenderCssValues().containsKey("padding")) {
 				padding_value = element.getPreRenderCssValues().get("padding");
-				String[] separated_values = padding_value.split(" ");
-				
-				if(separated_values.length == 1) {
-					vertical_padding_values.add(separated_values[0]);
-					horizontal_padding_values.add(separated_values[0]);
-				}
-				else {
-					for(int idx = 0; idx < separated_values.length; idx++) {
-						if(idx % 2 == 0) {
-							vertical_padding_values.add(separated_values[idx]);
-						}
-						else {
-							horizontal_padding_values.add(separated_values[idx]);
-						}
-					}
-				}
+				paddings.addAll(Arrays.asList(padding_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("padding-top")) {
+			
+			if( element.getPreRenderCssValues().containsKey("padding-top")) {
 				padding_value = element.getPreRenderCssValues().get("padding-top");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					vertical_padding_values.add( value);
-				}
+				paddings.addAll(Arrays.asList(padding_value.split(" ")));
+
 			}
-			else if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
+			
+			if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
 				padding_value = element.getPreRenderCssValues().get("padding-bottom");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					vertical_padding_values.add( value);
-				}
+				paddings.addAll(Arrays.asList(padding_value.split(" ")));
+
 			}
-			else if( element.getPreRenderCssValues().containsKey("padding-right")) {
+			
+			if( element.getPreRenderCssValues().containsKey("padding-right")) {
 				padding_value = element.getPreRenderCssValues().get("padding-right");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					horizontal_padding_values.add( value);
-				}
+				paddings.addAll(Arrays.asList(padding_value.split(" ")));
 			}
-			else if( element.getPreRenderCssValues().containsKey("padding-left")) {
+			
+			if( element.getPreRenderCssValues().containsKey("padding-left")) {
 				padding_value = element.getPreRenderCssValues().get("padding-left");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					horizontal_padding_values.add( value);
-				}
+				paddings.addAll(Arrays.asList(padding_value.split(" ")));
 			}	
+			
+			elements_padding_map.put(element, paddings);
+
 		}
 		
-		
-		
-		Map<String, List<Double>> vertical_units = sortSizeUnits(vertical_padding_values);
-		Map<String, List<Double>> vertical_gcd_list = new HashMap<>();
-		//extract multiples for vertical paddings
-		//most common multiples, the highest multiples that can be found to satisfy the list of unique padding values
-		for(String unit : vertical_units.keySet()) {
-			//scale units values by 100 and make unique
-			List<Double> distinct_list =  sortAndMakeDistinct(vertical_units.get(unit));
+		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
+		Score unit_score = evaluateUnits(elements_padding_map);
 
+		observations.addAll(unit_score.getObservations());
+		
+		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
+						+ (unit_score.getPointsAchieved()/(double)unit_score.getMaxPossiblePoints()))/2;
+		
+		int points = (int)(score * 100);
+		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
+		log.warn("PADDING SCORE  :::   "+points + " / 100" );	
+
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100);
+	}
+
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_padding_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_padding_map != null
+	 */
+	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_padding_map) {
+		assert elements_padding_map != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		
+		Map<String, List<Double>> gcd_map = new HashMap<>();
+		Map<String, List<Double>> units = new HashMap<>();
+		for(ElementState element : elements_padding_map.keySet()) {
+			//START UNIT SCORE HERE
+			units.putAll(sortSizeUnits(elements_padding_map.get(element)));
+		}
+		
+		//extract multiples for paddings
+		//most common multiples, the highest multiples that can be found to satisfy the list of unique padding values
+		for(String unit : units.keySet()) {
+			//scale units values by 100 and make unique
+			List<Double> distinct_list =  sortAndMakeDistinct(units.get(unit));
+			
 			if(distinct_list.size() == 1) {
-				vertical_gcd_list.put(unit, deflateGCD(distinct_list));
+				gcd_map.put(unit, distinct_list);
 				continue;
 			}
 			
@@ -161,37 +163,34 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				}
 			}
 			
-			gcd_list = deflateGCD(gcd_list);
 			gcd_list.remove(new Double(1));
-			vertical_gcd_list.put(unit, gcd_list);
-		}
-		log.warn("----------------------------------------------------------");
-		log.warn("----------------------------------------------------------");
-		log.warn("vertical gcd list ::   "+vertical_gcd_list);
+			//reduce gcd again.
+			gcd_map.put(unit, gcd_list);
+		}			
 		
+		//reduce gcd_list until no value is divisible by any other
+		//rank gcd list based on frequency values that are multiples of gcd
+		//generate score for each element padding based on gcd divisibility
 		
-		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
-		int total_vertical_score = 0;
-		int vertical_score = 0;
-		
+		//COMPUTE SCORE FOR PADDING BASED ON GCD VALUES
 		Map<String, List<Double>> unit_gcd_lists = new HashMap<>();
-		for(String unit : vertical_gcd_list.keySet()) {
+		for(String unit : gcd_map.keySet()) {
 			List<Double> most_common_gcd_values = new ArrayList<>();
-			if(vertical_gcd_list.get(unit).size() == 1) {
+			if(gcd_map.get(unit).size() == 1) {
 				log.warn("unit : "+unit+"  has only 1 gcd!!");
-				vertical_score += 3;
-				most_common_gcd_values.addAll(vertical_gcd_list.get(unit));
+				points_earned += 3;
+				most_common_gcd_values.addAll(gcd_map.get(unit));
 			}
 			else {
-				List<Double> vertical_padding_list = vertical_units.get(unit);
-				List<Double> vertical_gcd_values = vertical_gcd_list.get(unit);
+				List<Double> padding_list = units.get(unit);
+				List<Double> gcd_values = gcd_map.get(unit);
 				do {
 					Map<Double, List<Double>> gcd_match_lists = new HashMap<>();
-
+					
 					//find highest gcd values that define the set
-					for(double gcd : vertical_gcd_values) {
+					for(double gcd : gcd_values) {
 						gcd_match_lists.put(gcd, new ArrayList<Double>());
-						for(double value : vertical_padding_list) {
+						for(double value : padding_list) {
 							if(value % gcd == 0 && gcd != 1){
 								gcd_match_lists.get(gcd).add(value);
 							}
@@ -212,7 +211,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 					}
 					
 					//remove gcd value from input gcd list
-					vertical_gcd_values.remove(largest_gcd);
+					gcd_values.remove(largest_gcd);
 					
 					if(largest_gcd_count > 0) {						
 						//add the largest gcd to the list of most applicable gcd values
@@ -220,368 +219,61 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 					}
 					
 					//remove gcd matches from vertical padding list
-					vertical_padding_list.removeAll(gcd_match_lists.get(largest_gcd));
+					List<Double> largest_gcd_matches = gcd_match_lists.get(largest_gcd);
+					if(largest_gcd_matches != null) {
+						padding_list.removeAll(largest_gcd_matches);
+					}
 					
-				}while(!vertical_padding_list.isEmpty() && !vertical_gcd_values.isEmpty());
-
+				}while(!padding_list.isEmpty() && !gcd_values.isEmpty());
+				
 				
 				if(most_common_gcd_values.size() == 2) {
-					vertical_score += 2;
+					points_earned += 2;
 				}
 				else {
-					vertical_score += 1;
+					points_earned += 1;
 				}
-				
 			}
 			unit_gcd_lists.put(unit, most_common_gcd_values);
-			total_vertical_score += 3;
+			max_points += 3;
 		}
 		
-		
-			
-		
-		
-		
-		Map<String, List<Double>> horizontal_unit_gcd_lists = new HashMap<>();
-		Map<String, List<Double>> horizontal_units = sortSizeUnits(horizontal_padding_values);
-		Map<String, List<Double>> horizontal_gcd_list = new HashMap<>();
-		//extract multiples for horizontal paddings
-		//most common multiples, the highest multiples that can be found to satisfy the list of unique padding values
-		for(String unit : horizontal_units.keySet()) {
-			//scale units values by 100 and make unique
-			List<Double> distinct_list =  sortAndMakeDistinct(horizontal_units.get(unit));
-
-			if(distinct_list.size() == 1) {
-				horizontal_gcd_list.put(unit, deflateGCD(distinct_list));
-				continue;
-			}
-			
-			List<Double> gcd_list = new ArrayList<>();
-			for(int idx = 0; idx < distinct_list.size()-1; idx++) {
-				for(int idx2 = idx+1; idx2 < distinct_list.size(); idx2++) {
-					gcd_list.add(findGCD(distinct_list.get(idx), distinct_list.get(idx2)));
-				}
-			}
-			
-			gcd_list = deflateGCD(gcd_list);
-			gcd_list.remove(new Double(1));
-			horizontal_gcd_list.put(unit, gcd_list);
-		}
-		log.warn("----------------------------------------------------------");
-		log.warn("----------------------------------------------------------");
-		log.warn("horizontal gcd list ::   "+horizontal_gcd_list);
-		
-		
-		//COMPUTE SCORE FOR VERTICAL PADDING BASED ON GCD VALUES
-		int total_horizontal_score = 0;
-		int horizontal_score = 0;
-
-		for(String unit : horizontal_gcd_list.keySet()) {
-			List<Double> most_common_gcd_values = new ArrayList<>();
-			if(horizontal_gcd_list.get(unit).size() == 1) {
-				log.warn("unit : "+unit+"  has only 1 gcd!!");
-				horizontal_score += 3;
-				most_common_gcd_values.addAll(horizontal_gcd_list.get(unit));
-			}
-			else {
-				List<Double> horizontal_padding_list = horizontal_units.get(unit);
-				List<Double> horizontal_gcd_values = horizontal_gcd_list.get(unit);
-				do {
-					Map<Double, List<Double>> gcd_match_lists = new HashMap<>();
-					//find highest gcd values that define the set
-					for(double gcd : horizontal_gcd_values) {
-						gcd_match_lists.put(gcd, new ArrayList<Double>());
-						for(double value : horizontal_padding_list) {
-							if(value % gcd == 0 && gcd != 1){
-								gcd_match_lists.get(gcd).add(value);
-							}
-						}
-					}
-					
-					//identify gcd with most matches
-					int largest_gcd_count = 0;
-					double largest_gcd = 0;
-					for(Double gcd : gcd_match_lists.keySet()) {
-						if(gcd_match_lists.get(gcd).size() >= largest_gcd_count ) {
-							largest_gcd_count = gcd_match_lists.get(gcd).size();
-							
-							if(gcd > largest_gcd) {
-								largest_gcd = gcd;
-							}
-						}
-					}
-					
-					//remove gcd value from input gcd list
-					horizontal_gcd_values.remove(largest_gcd);
-					
-					if(largest_gcd_count > 0) {						
-						//add the largest gcd to the list of most applicable gcd values
-						most_common_gcd_values.add(largest_gcd);
-					}
-					
-					//remove gcd matches from horizontal padding list
-					horizontal_padding_list.removeAll(gcd_match_lists.get(largest_gcd));
-					
-				}while(!horizontal_padding_list.isEmpty() && !horizontal_gcd_values.isEmpty());
-
-				
-				if(most_common_gcd_values.size() == 2) {
-					horizontal_score += 2;
-				}
-				else {
-					horizontal_score += 1;
-				}
-				
-			}
-			horizontal_unit_gcd_lists.put(unit, most_common_gcd_values);
-			total_horizontal_score += 3;
-		}
-		
-		log.warn("horizontal score value  1   ::   "+total_horizontal_score);
-		
-		
-		
-		
-		
-		
-		
-		//extract differences
-		//check if a unique list of differences has only 1 element
-		//GENERATE SCORE BASED ON UNITS WITH PADDING EVENLY DIVISIBLE BY UNIT GCD VALUES IDENTIFIED IN PREVIOUS STEPS
-		vertical_padding_values = new ArrayList<>();
-		horizontal_padding_values = new ArrayList<>();
-		
-		List<ElementState> elements_unmatched_gcd = new ArrayList<>();
-		List<ElementState> unscalable_padding_elements = new ArrayList<>();
-		
-		for(ElementState element : page_state.getElements()) {
-			if(element.getPreRenderCssValues().containsKey("padding")) {
-				String padding_value = element.getPreRenderCssValues().get("padding");
-				String[] separated_values = padding_value.split(" ");
-				
-				if(separated_values.length == 1) {
-					vertical_padding_values.add(separated_values[0]);
-					horizontal_padding_values.add(separated_values[0]);
-				}
-				else {
-					for(int idx = 0; idx < separated_values.length; idx++) {
-						if(idx % 2 == 0) {
-							vertical_padding_values.add(separated_values[idx]);
-						}
-						else {
-							horizontal_padding_values.add(separated_values[idx]);
-						}
-						
-						String unit = extractMeasureUnit(separated_values[idx]);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_padding_elements.add(element);
-						}
-					}
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("padding-top")) {
-				String padding_value = element.getPreRenderCssValues().get("padding-top");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					if(!value.startsWith("0")) {
-						vertical_padding_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(padding_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_padding_elements.add(element);
-						}
-						vertical_score += unit_score;
-						total_vertical_score += 3;
-						
-						//strip unit measure values 
-						padding_value = cleanSizeUnits(padding_value).trim();
-					}					
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
-				String padding_value = element.getPreRenderCssValues().get("padding-bottom");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {											
-					if(!value.startsWith("0")) {
-						vertical_padding_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(padding_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_padding_elements.add(element);
-						}
-						vertical_score += unit_score;
-						total_vertical_score += 3;
-						
-						//strip unit measure values 
-						padding_value = cleanSizeUnits(padding_value).trim();
-					}					
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("padding-left")) {
-				String padding_value = element.getPreRenderCssValues().get("padding-left");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {		
-					if(!value.startsWith("0")) {
-						horizontal_padding_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(padding_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_padding_elements.add(element);
-						}
-						
-						horizontal_score += unit_score;
-						total_horizontal_score += 3;
-						
-						//if(
-						//strip unit measure values 
-						padding_value = cleanSizeUnits(padding_value).trim();
-					}
-				}
-			}
-			else if( element.getPreRenderCssValues().containsKey("padding-right")) {
-				String padding_value = element.getPreRenderCssValues().get("padding-right");
-				String[] separated_values = padding_value.split(" ");
-				//extract vertical and horizontal
-				for(String value : separated_values) {		
-					if(!value.startsWith("0")) {
-						horizontal_padding_values.add( value);
-						//calculate score unit. If unit is less than 3, record unit
-						//determine unit measure
-						String unit = extractMeasureUnit(padding_value);
-						int unit_score = scoreMeasureUnit(unit);
-						if(unit_score == 1) {
-							unscalable_padding_elements.add(element);
-						}
-						
-						horizontal_score += unit_score;
-						total_horizontal_score += 3;
-						
-						//if(
-						//strip unit measure values 
-						padding_value = cleanSizeUnits(padding_value).trim();
-					}
-				}
-			}
-			
-			for(String padding_value : vertical_padding_values) {
-				//determine unit measure
-				String unit = extractMeasureUnit(padding_value);
-				/*
-				vertical_score += scoreMeasureUnit(unit);
-				total_vertical_score += 3;
-				*/
-				//strip unit measure values 
-				padding_value = cleanSizeUnits(padding_value).trim();
-				
-				//convert measure to Double
-				if(padding_value == null || padding_value.isEmpty()) {
-					continue;
-				}
-				double padding_number = Double.parseDouble(padding_value);
-				
-				//compute converted measure modulo gcd value
-				boolean gcd_found = false;
-				//log.warn("evaluating unit :: "+unit+"  unit gcd list value ::    "+unit_gcd_lists);
-				if(unit_gcd_lists.containsKey(unit)) {
-					for(double gcd : unit_gcd_lists.get(unit)) {
-						if(padding_number % gcd == 0) {
-							gcd_found = true;
-							break;
-						}
-					}
-				}
-				
-				if(gcd_found) {
-					vertical_score += 3;
-				}
-				else {
-					vertical_score += 1;
-				}
-				
-				total_vertical_score += 3;
-				//log.warn("matching gcd found :: " + gcd_found);
-
-			}
-			
-			for(String padding_value : horizontal_padding_values) {
-				//determine unit measure
-				String unit = extractMeasureUnit(padding_value);
-				
-				//horizontal_score += scoreMeasureUnit(unit);
-				//total_horizontal_score += 3;
-				//strip unit measure values 
-				padding_value = cleanSizeUnits(padding_value);
-				
-				//convert measure to Double
-				if(padding_value == null || padding_value.isEmpty()) {
-					continue;
-				}
-				double padding_number = Double.parseDouble(padding_value);
-				
-				//compute converted measure modulo gcd value
-				boolean gcd_found = false;
-				//log.warn("evaluating unit :: "+unit+"  unit gcd list value ::    "+horizontal_unit_gcd_lists);
-				if(horizontal_unit_gcd_lists.containsKey(unit)) {
-					for(double gcd : horizontal_unit_gcd_lists.get(unit)) {
-						if(padding_number % gcd == 0) {
-							gcd_found = true;
-							break;
-						}
-					}
-				}
-				
-				if(gcd_found) {
-					horizontal_score += 3;
-				}
-				else {
-					elements_unmatched_gcd.add(element);
-					horizontal_score += 1;
-				}
-				
-				total_horizontal_score += 3;
-				//log.warn("matching gcd found :: " + gcd_found);
-
-			}
-		}		
-		
-		ElementObservation element_observation = new ElementObservation(elements_unmatched_gcd, "Elements that are not consistently sized relative to other paddings across the site can create an uneven experience");
-		ElementObservation unscalable_padding_observations = new ElementObservation(unscalable_padding_elements, "Using unscalable units (ie px, in, cm, mm, pt)");
-
-		//PropertyMapObservation gcd_observation = new PropertyMapObservation(vertical_gcd_list, "gcd description goes here");
-		
-		observations.add(element_observation);
-		observations.add(unscalable_padding_observations);
-		
-		//observations.add(gcd_observation);
-		log.warn("vertical score :: "+vertical_score + "/"+total_vertical_score + "      :    "+(vertical_score/(double)total_vertical_score));
-
-		log.warn("horizontal score :: "+horizontal_score + "/"+total_horizontal_score + "      :    "+(horizontal_score/(double)total_horizontal_score));
-		
-		//calculate score
-
-		//double score = scorePaddingUsage(padding_values);
-		double score = (vertical_score + horizontal_score) / (double)(total_vertical_score + total_horizontal_score);
-		//double score = scorePaddingUsage(padding_values);
-		log.warn("PADDING SCORE  :::   "+score);	
-
-		
-		//		What sort of observations can exist for padding?		
-		
-		
-		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, (vertical_score + horizontal_score), observations, AuditLevel.PAGE, (total_vertical_score + total_horizontal_score));
+		return new Score(points_earned, max_points, observations);
 	}
 
+	/**
+	 * Generates {@link Score score} based on which units (ie, %, em, rem, px, pt, etc.) are used for vertical(top,bottom) padding
+	 * 
+	 * @param vertical_padding_values
+	 * 
+	 * @return
+	 */
+	private Score evaluateUnits(Map<ElementState, List<String>> element_padding_map) {
+		assert element_padding_map != null;
+		
+		int vertical_score = 0;
+		int max_vertical_score = 0;
+		Set<Observation> observations = new HashSet<>();
+		List<ElementState> unscalable_padding_elements = new ArrayList<>();
+
+		for(ElementState element : element_padding_map.keySet()) {
+			for(String padding_value : element_padding_map.get(element)) {
+				//determine unit measure
+				String unit = extractMeasureUnit(padding_value);
+				
+				vertical_score += scoreMeasureUnit(unit);
+				max_vertical_score += 3;
+				
+				if(vertical_score == 1) {
+					unscalable_padding_elements.add(element);
+				}
+			}
+		}
+		observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+		
+		return new Score(vertical_score, max_vertical_score, observations);
+	}
+	
 	private String extractMeasureUnit(String padding_value) {
 		if(padding_value.contains("rem")) {
 			return "rem";

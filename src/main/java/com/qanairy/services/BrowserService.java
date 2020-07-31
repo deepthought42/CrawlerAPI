@@ -23,6 +23,7 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -185,9 +186,9 @@ public class BrowserService {
 		html_doc.select("style").remove();
 		//html_doc.attr("id","");
 		for(Element element : html_doc.getAllElements()) {
-			element.attr("id", "");
-			element.attr("name", "");
-			element.attr("style", "");
+			element.removeAttr("id")
+				   .removeAttr("name")
+				   .removeAttr("style");
 		}
 		
 		return html_doc.html();
@@ -266,6 +267,8 @@ public class BrowserService {
 		
 		Document doc = Jsoup.connect(page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 		String page_src = doc.outerHtml();
+		
+		//page_src = Jsoup.clean(page_src, Whitelist.relaxed());
 		//retrieve landable page state associated with page with given url
 		String page_url = page.getUrl();
 		//String host = new URL(browser_url).getHost();
@@ -289,12 +292,11 @@ public class BrowserService {
 		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		*/
-		String clean_page_source = Jsoup.clean(page_src, Whitelist.none());
-		
+				
 		PageState page_state = new PageState( url_without_params,
 				"",
 				elements,
-				clean_page_source,
+				page_src,
 				0,
 				0,
 				0,
@@ -438,6 +440,7 @@ public class BrowserService {
 		Map<ElementState, List<Element>> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
 
+		/*
 		Tidy tidy = new Tidy(); // obtain a new Tidy instance
 		//tidy.setXHTML(true); // set desired config options using tidy setters 
 		log.debug("tidy  :: "+tidy); //NOTE :: tidy contains the errors for the document. 
@@ -448,6 +451,7 @@ public class BrowserService {
 		log.warn("1===========================================================================");
 		
 		log.warn("w3c_document  ---   "+ w3c_document);
+		*/
 		//get html doc and get root element
 		Document html_doc = Jsoup.parse(page_source);
 		
@@ -468,7 +472,6 @@ public class BrowserService {
 		
 		Map<String, String> css_rendered = new HashMap<>();
 
-		log.warn("CSS PROPERTIES      :::::           "+css_props);
 		ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
 		
 		root_element_state = element_service.save(root_element_state);
@@ -478,13 +481,9 @@ public class BrowserService {
 		while(!frontier.isEmpty()) {
 			ElementState root_element = frontier.keySet().iterator().next();
 			List<Element> child_elements = frontier.remove(root_element);
-
 			for(Element child : child_elements) {
-				if(isStructureTag(child.tagName())) {
-					continue;
-				}
 				String xpath = root_element.getXpath() + "/" + child.tagName();
-
+				
 				if(!xpath_cnt.containsKey(xpath)) {
 					xpath_cnt.put(xpath, 1);
 				}
@@ -518,21 +517,18 @@ public class BrowserService {
 				catch(Exception e) {
 					log.warn(e.getMessage());
 				}
-				Map<String, String> rendered_css_props = new HashMap<>();
-
 				
-				element_state = buildElementState(xpath, attributes, pre_render_css_props, child, classification, rendered_css_props);
+				element_state = buildElementState(xpath, attributes, pre_render_css_props, child, classification, new HashMap<>());
 				element_state = element_service.save(element_state);
+				element_service.addChildElement(root_element.getKey(), element_state.getKey());
 				
 				//put element on frontier
 				if(children.isEmpty()) {
-					//reviewed_xpaths.put(root_element.getXpath(), element_state);
 					visited_elements.add(element_state);
 				}
 				else {
-					frontier.put(element_state, new ArrayList<>(child.children()));
+					frontier.put(element_state, children);
 				}
-				element_service.addChildElement(root_element.getKey(), element_state.getKey());
 				
 			}
 			visited_elements.add(root_element);
@@ -731,25 +727,6 @@ public class BrowserService {
 
 		return elements;
 	}
-
-	/**
-	 * Filters out html, body, script and link tags
-	 *
-	 * @param web_elements
-	 * @return
-	 */
-	public static List<WebElement> filterStructureTags(List<WebElement> web_elements) {
-		List<WebElement> elements = new ArrayList<>();
-
-		for(WebElement element : web_elements){
-			String tag_name = element.getTagName();
-			if(isStructureTag(tag_name)){
-				continue;
-			}
-			elements.add(element);
-		}
-		return elements;
-	}
 	
 	public static boolean doesElementHaveNegativePosition(Point location) {
 		return location.getX() < 0 || location.getY() < 0;
@@ -898,47 +875,6 @@ public class BrowserService {
 		return elem.findElement(By.xpath(".."));
 	}
 
-	/**
-	 *
-	 * @param a_xPathQueryString
-	 * @return
-	 */
-	public static String generateConcatForXPath(String a_xPathQueryString)
-	{
-	    String returnString = "";
-	    String searchString = a_xPathQueryString;
-
-	    int quotePos = searchString.indexOf("\"");
-	    if (quotePos == -1)
-	    {
-	        returnString = "'" + searchString + "'";
-	    }
-	    else
-	    {
-	        //returnString = "concat(";
-	        while (quotePos != -1)
-	        {
-
-	            String substring = searchString.substring(0, quotePos);
-	            if(quotePos <= 0 || searchString.length() == 0){
-	        		continue;
-	        	}
-	            returnString += "'" + substring + "', ";
-	            String tail_string = searchString.substring(quotePos + 1, searchString.length());
-	            if(tail_string.length() == 0){
-	            	continue;
-	            }
-                //must be a double quote
-                returnString += "'\"', ";
-                searchString = tail_string;
-	            quotePos = searchString.indexOf("\"");
-	        }
-	        returnString += "'" + searchString;
-	    }
-
-	    return returnString;
-	}
-
 	public static String cleanAttributeValues(String attribute_values_string) {
 		String escaped = attribute_values_string.replaceAll("[\\t\\n\\r]+"," ");
 		escaped = escaped.trim().replaceAll("\\s+", " ");
@@ -954,6 +890,7 @@ public class BrowserService {
 	public String generateXpath(WebElement element, WebDriver driver, Map<String, String> attributes){
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
+		
 		String xpath = "/"+element.getTagName();
 		for(String attr : attributes.keySet()){
 			if(valid_attributes.contains(attr)){
@@ -966,15 +903,12 @@ public class BrowserService {
 			}
 		}
 		if(attributeChecks.size()>0){
-			xpath += "[";
-			xpath += attributeChecks.get(0).toString();
-			xpath += "]";
+			xpath += "["+attributeChecks.get(0).toString() + "]";
 		}
 
 	    WebElement parent = element;
 	    String parent_tag_name = parent.getTagName();
-	    int count = 0;
-	    while(!"html".equals(parent_tag_name) && !"body".equals(parent_tag_name) && count < 3){
+	    while(!"html".equals(parent_tag_name) && !"body".equals(parent_tag_name)){
 	    	try{
 	    		parent = getParentElement(parent);
 	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){
@@ -988,7 +922,6 @@ public class BrowserService {
 	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
-	    	count++;
 	    }
 	    xpath = "/"+xpath;
 		return uniqifyXpath(element, xpath, driver);
@@ -1017,32 +950,32 @@ public class BrowserService {
 		}
 
 		if(attributeChecks.size()>0){
-			xpath += "[";
-			xpath += attributeChecks.get(0).toString();
-			xpath += "]";
+			xpath += "["+ attributeChecks.get(0).toString()+"]";
 		}
 
 		Element last_element = element;
 		Element parent = null;
 		String last_element_tagname = last_element.tagName();
-	    int count = 0;
-	    while(!"html".equals(last_element_tagname) && !"body".equals(last_element_tagname) && count < 3){
+	    while(!"html".equals(last_element_tagname) && !"body".equals(last_element_tagname)){
 	    	try{
 	    		parent = last_element.parent();
 
 	    		if(!isStructureTag(parent.tagName())){
-		    		if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().isEmpty()){
+	    			Elements elements = Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements();
+		    		if( elements.isEmpty()){
 		    			break;
 		    		}
-	    			else if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().size() == 1){
+	    			else if( elements.size() == 1){
 		    			return "//"+parent.tagName() + xpath;
 		    		}
 		    		else{
 			    		xpath = "/" + parent.tagName() + xpath;
 		    		}
 		    		last_element = parent;
+		    		last_element_tagname = last_element.tagName();
 	    		}
 	    		else{
+	    			log.warn("Encountered structure tag. Aborting element xpath extraction..");
 	    			break;
 	    		}
 	    	}catch(InvalidSelectorException e){
@@ -1050,7 +983,6 @@ public class BrowserService {
 	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
-	    	count++;
 	    }
 	    if(!xpath.startsWith("//")){
 			xpath = "/"+xpath;

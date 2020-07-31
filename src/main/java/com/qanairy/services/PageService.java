@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,6 +194,7 @@ public class PageService {
 	 * @pre page_key != null
 	 * @pre !page_key.isEmpty()
 	 */
+	@Deprecated
 	public void addPageState(String user_id, String page_key, PageState page_state) {
 		assert user_id != null;
 		assert !user_id.isEmpty();
@@ -207,6 +209,28 @@ public class PageService {
 		Page page = page_repo.findByKey(page_key);
 		page.addPageState(page_state_record);
 		page_repo.save(page);
+	}
+	
+	/**
+	 * 
+	 * @param page_key
+	 * @return
+	 * 
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 * @pre page_state_key != null
+	 * @pre !page_state_key.isEmpty()
+	 */
+	public void addPageState(String page_key, String page_state_key) {
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert page_state_key != null;
+		assert !page_state_key.isEmpty();
+		
+		Optional<PageState> page_state_record = page_repo.findPageStateForPage(page_key, page_state_key);
+		if(!page_state_record.isPresent()) {
+			page_repo.addPageState(page_key, page_state_key);
+		}
 	}
 
 	public PageState getMostRecentPageState(String key) {

@@ -34,7 +34,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PaddingAudit.class);
 	
-	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
+	private static final String[] SIZE_UNITS = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
 	@Autowired
 	private ObservationService observation_service;
@@ -340,42 +340,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		return 3;
 	}
 
-	private List<Integer> amplifyAndConvertToInt(List<Double> values) {
-		return values.stream().map(s -> s*100).map(s -> s.intValue()).distinct().collect(Collectors.toList());
-	}
-
-
-	private Map<String, List<String>> categorizeSizeUnits(Set<String> set) {
-		Map<String, List<String>> unit_categories = new HashMap<>();
-		
-		for(String unit : set) {
-			List<String> units = new ArrayList<>();
-			if("rem".equals(unit) || "em".equals(unit) || "%".equals(unit)) {
-				if(unit_categories.containsKey("scalable-high")) {
-					units = unit_categories.get("scalable-high");
-				}
-				units.add(unit);
-				unit_categories.put("scalable-high", units);
-			}
-			else if("vh".equals(unit) || "vw".equals(unit) || "vmin".equals(unit) || "vmax".equals(unit)) {
-				if(unit_categories.containsKey("scalable-low")) {
-					units = unit_categories.get("scalable-low");
-				}
-				units.add(unit);
-				unit_categories.put("scalable-low", units);
-			}
-			else if("px".equals(unit) || "ex".equals(unit) || "pt".equals(unit) || "cm".equals(unit) || "mm".equals(unit) || "in".equals(unit) || "pc".equals(unit)) {
-				if(unit_categories.containsKey("constant")) {
-					units = unit_categories.get("constant");
-				}
-				units.add(unit);
-				unit_categories.put("constant", units);
-			}
-		}
-		
-		return unit_categories;
-	}
-
 	/**
 	 * Sort units into buckets by mapping unit type to padding sizes
 	 * 
@@ -392,7 +356,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				continue;
 			}
 			
-			for(String unit : size_units) {
+			for(String unit : SIZE_UNITS) {
 				if(padding_value != null && padding_value.contains(unit)) {
 					List<Double> values = new ArrayList<>();
 

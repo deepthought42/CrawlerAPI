@@ -268,38 +268,42 @@ public class BrowserUtils {
 		return domain;
 	}
 	
-	public static String sanitizeUserUrl(String url) throws MalformedURLException {
-		String domain = url;
-		int param_index = domain.indexOf("?");
-		if(param_index > 0){
-			domain = domain.substring(0, param_index);
-		}
+	/**
+	 * Reformats url so that it matches the Look-see requirements
+	 * 
+	 * @param url 
+	 * 
+	 * @return sanitized url string
+	 * 
+	 * @throws MalformedURLException
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 */
+	public static String sanitizeUserUrl(String url) throws MalformedURLException  {
+		assert url != null;
+		assert !url.isEmpty();
 		
-		log.warn("domain url ::"+domain);
-
-		URL new_url = new URL(domain);
-
+		URL new_url = new URL(url);
 		//check if host is subdomain
-		
 		String new_host = new_url.getHost();
 		
-		int count = new_host.split("\\.").length;
-		if(count <= 2 && !new_host.startsWith("www.")){
+		if(!new_host.startsWith("www.")){
 			new_host = "www."+new_host;
 		}
 		String new_key = new_host+new_url.getPath();
-		if(new_key.charAt(new_key.length()-1) == '/'){
+		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
 		
 		new_key = new_key.replace("index.html", "");
 		new_key = new_key.replace("index.htm", "");
 		
-		if(new_key.charAt(new_key.length()-1) == '/') {
+		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
-		
-		return new_url.getProtocol()+"://"+new_key;
+				
+		return "http://"+new_key;
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {
@@ -422,7 +426,7 @@ public class BrowserUtils {
 	 * @pre href != nuill
 	 */
 	public static boolean isImageUrl(String href) {
-		assert(href != null);
+		assert href != null;
 		
 		return href.endsWith(".jpg") || href.endsWith(".png") || href.endsWith(".gif") || href.endsWith(".bmp") || href.endsWith(".tiff") || href.endsWith(".webp") || href.endsWith(".bpg") || href.endsWith(".heif");
 	}

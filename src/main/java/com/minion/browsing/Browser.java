@@ -996,10 +996,7 @@ public class Browser {
 	}
 	
 	public static String URLReader(URL url) throws IOException, NoSuchAlgorithmException, KeyManagementException {
-		log.warn("URL : "+url +";");
-       // HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-
-        SSLContext sc = SSLContext.getDefault();//getInstance("SSLv3");
+        SSLContext sc = SSLContext.getDefault();
         
         HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");

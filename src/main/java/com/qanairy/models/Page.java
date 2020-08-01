@@ -41,7 +41,7 @@ public class Page extends LookseeObject{
 	 */
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
+		return "page::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
 	public Page() {
@@ -59,6 +59,7 @@ public class Page extends LookseeObject{
 	 * 
 	 * @throws MalformedURLException
 	 */
+	@Deprecated
 	public Page(String url) throws MalformedURLException{
 		super();
 		assert url != null;
@@ -67,6 +68,28 @@ public class Page extends LookseeObject{
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setPath(new URL(url).getPath());
+		setPageStates( new HashSet<>() );
+		setKey(generateKey());
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public Page(String url, String path){
+		super();
+		assert url != null;
+		assert !url.isEmpty();
+		assert path != null;
+				
+		setPerformanceInsights(new ArrayList<>());
+		setUrl(url);
+		setPath(path);
 		setPageStates( new HashSet<>() );
 		setKey(generateKey());
 	}

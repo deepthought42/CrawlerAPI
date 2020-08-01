@@ -7,7 +7,6 @@ import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,9 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -146,7 +143,7 @@ public class AuditController {
 		   	}
 	   	 */
 		
-	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(page.getUrl()));
+	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
 	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
 	   	System.out.println("domain returned from db ...."+domain);
 	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 

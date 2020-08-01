@@ -91,12 +91,9 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
-			   			log.warn("performing post render page audits...");
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state, "Look-See-admin");
 
-			   			log.warn("saving audits ... ");
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			log.warn("saving rendered audits");
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(audits_executed);

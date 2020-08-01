@@ -119,6 +119,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
 		log.warn("PADDING SCORE  :::   "+points + " / 100" );	
 
+		if(points == 0) {
+			//add observation that no elements were found with padding
+			observations.add(new StylingMissingObservation("Padding was not used")); 
+		}
+		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100);
 	}
 
@@ -237,7 +242,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			unit_gcd_lists.put(unit, most_common_gcd_values);
 			max_points += 3;
 		}
-		
+
 		return new Score(points_earned, max_points, observations);
 	}
 
@@ -251,7 +256,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	private Score evaluateUnits(Map<ElementState, List<String>> element_padding_map) {
 		assert element_padding_map != null;
 		
-		int vertical_score = 0;
+		int points_earned = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
 		List<ElementState> unscalable_padding_elements = new ArrayList<>();
@@ -261,17 +266,17 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				//determine unit measure
 				String unit = extractMeasureUnit(padding_value);
 				
-				vertical_score += scoreMeasureUnit(unit);
+				points_earned += scoreMeasureUnit(unit);
 				max_vertical_score += 3;
 				
-				if(vertical_score == 1) {
+				if(points_earned == 1) {
 					unscalable_padding_elements.add(element);
 				}
 			}
 		}
 		observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
 		
-		return new Score(vertical_score, max_vertical_score, observations);
+		return new Score(points_earned, max_vertical_score, observations);
 	}
 	
 	private String extractMeasureUnit(String padding_value) {
@@ -396,11 +401,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 					}
 					
 					String value = cleanSizeUnits(padding_value);
-					//amplify padding values by multipying by 100. Doing this moves the decimal place and makes truncation without data loss possible. 
-					//We can perform the gcd functions then reduce all values by a factor of 100
-					//int amplified_value = amplifyDecimal(value);
-					//values = cleanSizeUnits(values);
-					//List<Double> converted_values = convertList(values, s -> Double.parseDouble(s));
 					values.add(Double.parseDouble(value));
 					sorted_paddings.put(unit, values);
 				}

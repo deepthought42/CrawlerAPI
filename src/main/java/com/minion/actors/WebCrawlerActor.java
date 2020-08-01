@@ -3,6 +3,7 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class WebCrawlerActor extends AbstractActor{
 					Map<String, Page> visited = new HashMap<>();
 					Domain domain = crawl_action.getDomain();
 					
-					String initial_url = domain.getProtocol()+"://"+domain.getHost()+"/"+domain.getEntryPath();
+					String initial_url = "http://"+domain.getHost()+"/"+domain.getEntryPath();
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
 					
@@ -110,57 +111,72 @@ public class WebCrawlerActor extends AbstractActor{
 					while(!frontier.isEmpty()) {
 						
 						Map<String, Boolean> external_links = new HashMap<>();
-						Page page = null;
 						//remove link from beginning of frontier
-						String page_url = frontier.keySet().iterator().next();
-						frontier.remove(page_url);
-						if(page_url.isEmpty() || page_url.contains("mailto:") || page_url.contains(".jpg") || page_url.contains(".png")) {
+						String page_url_str = frontier.keySet().iterator().next();
+						log.warn("page url string :: "+page_url_str);
+						log.warn("frontier size before remove : :  "+frontier.size());
+						//page_url_str = BrowserUtils.sanitizeUserUrl(page_url_str);
+						//log.warn("page url string after sanitize  ::  "+page_url_str);
+						frontier.remove(page_url_str);
+						log.warn("frontier size after remove ::  "+frontier.size());
+						if( BrowserUtils.isImageUrl(page_url_str) || page_url_str.endsWith(".pdf")){
 							continue;
-						}
+						}		
+						
+						URL page_url = new URL(page_url_str);
+						String path = page_url.getPath();
+						
 
-						if(page_url.endsWith(".pdf")){
-							continue;
-						}
-		
 						//construct page and add page to list of page states
-						page = new Page(page_url);
+						Page page = new Page((page_url.getHost()+path), path);
 						page = page_service.save( page );
 
 						domain.addPage(page);
 						domain = domain_service.save(domain);
 						
-						visited.put(page_url, page);
+						visited.put(page_url_str, page);
 						//send message to page data extractor
 						log.debug("sending page to an audit manager...");
 						getSender().tell(page, getSelf());
+						log.warn("page url :: "+page_url);
+						log.warn("page host :: "+page_url.getHost());
+						log.warn("page path :: "+page_url.getPath());
+						log.warn("----------------------------------------------------------------");
+						log.warn("----------------------------------------------------------------");
 
 						//retrieve html source for page
 						try {
-							Document doc = Jsoup.connect(page_url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 							Elements links = doc.select("a");
 							for (Element link : links) {
-								String href = BrowserUtils.sanitizeUrl(link.absUrl("href"));
 								
-								//check if external link
-								if( !href.isEmpty() && (BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href) || href.startsWith("mailto:"))) {
-									log.debug("adding to external links :: "+href);
-				   					external_links.put(href, Boolean.TRUE);
+								String href_str = link.absUrl("href");
+								if(href_str == null || href_str.isEmpty()) {
+									continue;
 								}
-								else if( !href.isEmpty() && !visited.containsKey(href) && !frontier.containsKey(href) && !BrowserUtils.isImageUrl(href)){
+								
+								String href = BrowserUtils.sanitizeUserUrl(href_str);
+								//check if external link
+								if( BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href_str) || href_str.startsWith("mailto:")) {
+									log.debug("adding to external links :: "+href_str);
+				   					external_links.put(href_str, Boolean.TRUE);
+								}
+								else if( !visited.containsKey(href) && !frontier.containsKey(href)){
+									log.warn("href after sanitize :: "+href_str);
 									log.warn("adding link to frontier :: "+href);
 									//add link to frontier
 									frontier.put(href, Boolean.TRUE);
 								}
 							}
 						}catch(SocketTimeoutException e) {
-							log.warn("Error occurred while navigating to :: "+page_url);
+							log.warn("Error occurred while navigating to :: "+page_url_str);
 						}
 						catch(HttpStatusException e) {
-							log.warn("HTTP Status Exception occurred while navigating to :: "+page_url);
+							log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
 							e.printStackTrace();
 						}
 						catch(IllegalArgumentException e) {
-							log.warn("illegal argument exception occurred when connecting to ::  " + page_url);
+							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
 							e.printStackTrace();
 						}
 						catch(UnsupportedMimeTypeException e) {

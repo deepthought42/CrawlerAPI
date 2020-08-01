@@ -10,6 +10,7 @@ public enum ObservationType {
 	TYPOGRAPHY("Typography"), 
 	COLOR_PALETTE("Color Palette"), 
 	PROPERTY_MAP("Property Map"),
+	STYLE_MISSING("Style Missing"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

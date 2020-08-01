@@ -265,12 +265,12 @@ public class BrowserService {
 	public PageState buildPageState( Page page ) throws IOException, XPathExpressionException{
 		assert page != null;
 		
-		Document doc = Jsoup.connect(page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+		Document doc = Jsoup.connect("http://"+page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 		String page_src = doc.outerHtml();
 		
 		//page_src = Jsoup.clean(page_src, Whitelist.relaxed());
 		//retrieve landable page state associated with page with given url
-		String page_url = page.getUrl();
+		String page_url = "http://"+page.getUrl();
 		//String host = new URL(browser_url).getHost();
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));

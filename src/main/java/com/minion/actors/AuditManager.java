@@ -4,7 +4,9 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -55,7 +57,7 @@ public class AuditManager extends AbstractActor{
 	private int rendered_page_state_count;
 	private int page_audits_completed;
 	private List<Audit> audits;
-	
+	Map<String, Page> pages_experienced = new HashMap<>();
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -102,11 +104,15 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(Page.class, page -> {
-					page_count++;
-					log.warn("Page Count :: "+page_count);
-					ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
-					page_data_extractor.tell(page, getSelf());
+					log.warn("recieved page :: "+page.getUrl());
+				//	if(!pages_experienced.containsKey(page.getKey())) {
+						page_count++;
+						pages_experienced.put(page.getKey(), page);
+						log.warn("Page Count :: "+page_count);
+						ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
+						page_data_extractor.tell(page, getSelf());						
+					//}
 				})
 				.match(PageState.class, page_state -> {
 					page_state_count++;

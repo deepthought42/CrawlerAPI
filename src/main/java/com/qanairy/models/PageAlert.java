@@ -5,9 +5,6 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.AlertChoice;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.UnhandledAlertException;
@@ -17,17 +14,10 @@ import org.openqa.selenium.WebDriver;
  * Represents an Alert or Confirmation pop-up that is triggered by javascript within the page
  * 
  */
-@NodeEntity
-public class PageAlert implements PathObject, Persistable {
+public class PageAlert extends LookseeObject {
 	private static Logger log = LoggerFactory.getLogger(PageAlert.class);
 
-	@GeneratedValue
-	@Id
-	private Long id;
-
 	private String message;
-	private String type;
-	private String key;
 	
 	/**
 	 * 
@@ -40,7 +30,6 @@ public class PageAlert implements PathObject, Persistable {
 	 */
 	public PageAlert(String message){
 		this.message = message;
-		this.setType("PageAlert");
 		this.setKey(generateKey());
 	}
 	
@@ -88,31 +77,7 @@ public class PageAlert implements PathObject, Persistable {
 	}
 
 	@Override
-	public String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
-	public String getType() {
-		return this.type;
-	}
-
-	@Override
 	public String generateKey() {
 		return "alert::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getMessage());
-	}
-
-	@Override
-	public void setType(String type) {
-		this.type = "PageAlert";
-	}
-	
-	public Long getId() {
-		return this.id;
 	}
 }

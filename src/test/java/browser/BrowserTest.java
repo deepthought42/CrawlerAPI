@@ -4,13 +4,13 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.Test;
 import org.openqa.grid.common.exception.GridException;
@@ -20,10 +20,9 @@ import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
@@ -47,6 +46,19 @@ public class BrowserTest {
 	}
 
 	
+	@Test
+	public void verifyUrlReaderForHttps() throws MalformedURLException {
+		URL url = new URL("https://misorobotics.com/wp-content/plugins/contact-form-7-style/css/responsive.css?ver=3.1.8");
+		try {
+			String output = Browser.URLReader(url);
+			System.out.println("output           :: "+output);
+			assertTrue(output!= null);
+			assertTrue(!output.isEmpty());
+		} catch (KeyManagementException | NoSuchAlgorithmException | IOException e) {
+			e.printStackTrace();
+			assertTrue(false);
+		}
+	}
 	
 	//@Test
 	public void verifyGenerateParentXpath(){
@@ -54,7 +66,7 @@ public class BrowserTest {
 			Browser browser = BrowserConnectionHelper.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 			browser.navigateTo("https://staging-marketing.qanairy.com");
 			WebElement element = browser.getDriver().findElement(By.xpath("//li//a[contains(@href,'features.html')]/../../.."));
-			Set<Attribute> attributes = browser.extractAttributes(element);
+			Map<String, String> attributes = browser.extractAttributes(element);
 
 			BrowserService browser_service = new BrowserService();
 			String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
@@ -87,7 +99,7 @@ public class BrowserTest {
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());
 			
-			List<PathObject> path_objects = new ArrayList<PathObject>();
+			List<LookseeObject> path_objects = new ArrayList<>();
 			path_objects.add(page);
 			
 			com.qanairy.models.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1", false, false);
@@ -120,21 +132,16 @@ public class BrowserTest {
 				browser.navigateTo("https://qa-testbed.qanairy.com/elements/index.html");
 				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 				
-				Set<Attribute> attributes = browser.extractAttributes(element);
-		
-				Map<String, List<String>> attribute_map = new HashMap<String, List<String>>();
-				for(Attribute attr : attributes){
-					attribute_map.put(attr.getName(), attr.getVals());
-				}
+				Map<String, String> attributes = browser.extractAttributes(element);
 				
-				assertTrue(attribute_map.containsKey("id"));
-				assertEquals(1, attribute_map.get("id").size());
+				assertTrue(attributes.containsKey("id"));
+				assertEquals(1, attributes.get("id").length());
 				
-				assertTrue(attribute_map.containsKey("class"));
-				assertEquals(3, attribute_map.get("class").size());
+				assertTrue(attributes.containsKey("class"));
+				assertEquals(3, attributes.get("class").length());
 				
-				assertTrue(attribute_map.containsKey("style"));
-				assertEquals(1, attribute_map.get("style").size());
+				assertTrue(attributes.containsKey("style"));
+				assertEquals(1, attributes.get("style").length());
 				break;
 			}catch(GridException e){
 				

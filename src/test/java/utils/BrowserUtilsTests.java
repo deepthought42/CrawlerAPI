@@ -1,8 +1,11 @@
 package utils;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.junit.Test;
 
@@ -48,5 +51,17 @@ public class BrowserUtilsTests {
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		
 		assertTrue("http://zaelab.com/services".equals(sanitized_url));
+	}
+	
+	@Test
+	public void verifyLinkExtraction() {
+		
+	}
+	
+	@Test
+	public void verifyUrlExists() throws IOException {
+		URL valid_url = new URL("https://www.google.com");
+		boolean does_exist = BrowserUtils.doesUrlExist(valid_url);
+		assertTrue(does_exist);
 	}
 }

@@ -19,7 +19,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.FormDiscoveredMessage;
 import com.qanairy.models.message.PathMessage;
-import com.qanairy.models.message.UrlMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.FormService;
@@ -117,7 +116,7 @@ public class FormDiscoveryActor extends AbstractActor{
 								}
 							    DeepthoughtApi.predict(form);
 							  
-							    form = form_service.save(message.getAccountId(), message.getDomain().getUrl(), form);
+							    form = form_service.save(message.getAccountId(), message.getDomain().getEntryPath(), form);
 							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}

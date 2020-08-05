@@ -45,7 +45,7 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -131,14 +131,15 @@ public class DomainController {
     	String lowercase_url = url.toLowerCase();
     	String formatted_url = BrowserUtils.sanitizeUserUrl(protocol+"://"+lowercase_url );
     	URL url_obj = new URL(formatted_url);
-		String sanitized_url = url_obj.getHost()+url_obj.getPath();
+		/*
+    	String sanitized_url = url_obj.getHost()+url_obj.getPath();
 		
 		//check if qanairy domain. prevent creating if user email isn't a qanairy.com email
 		if(sanitized_url.contains("qanairy.com") && !acct.getUsername().contains("qanairy.com")) {
 			throw new QanairyEmployeesOnlyException();
 		}
-		
-    	Domain domain = new Domain(protocol, sanitized_url, browser_name, logo_url, url_obj.getHost());
+		*/
+    	Domain domain = new Domain(protocol, url_obj.getHost(), url_obj.getPath(), browser_name, logo_url);
 		try{
 			domain = domain_service.save(domain);
 		}catch(Exception e){
@@ -148,7 +149,7 @@ public class DomainController {
 		//check if domain is on account
 		Domain domain_record = null;
 		if(domain == null) {
-			domain_record = domain_service.findByUrl(sanitized_url, acct.getUserId());	
+			domain_record = domain_service.findByHostForUser(url_obj.getHost(), acct.getUserId());
 		}
 		
 		if(domain_record == null) {
@@ -220,7 +221,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	acct.setLastDomain(domain.getUrl());
+    	acct.setLastDomain(domain.getEntryPath());
     	account_service.save(acct);
     }
 
@@ -310,7 +311,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<Page> pages = domain_service.getPages(acct.getUserId(), url);
+		Set<Page> pages = domain_service.getPagesForUser(acct.getUserId(), url);
 		log.info("###### PAGE STATE COUNT :: "+pages.size());
 		return pages;
     	
@@ -320,7 +321,7 @@ public class DomainController {
 
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/path")
-    public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
+    public @ResponseBody Set<LookseeObject> getAllPathObjects(HttpServletRequest request, 
     													   @RequestParam(value="url", required=true) String url
     ) throws UnknownAccountException {        		
 		Principal principal = request.getUserPrincipal();
@@ -339,7 +340,7 @@ public class DomainController {
 		Set<Action> actions = domain_service.getActions(acct.getUserId(), url);
 		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), url);
 		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), url);
-		Set<PathObject> path_objects = new HashSet<PathObject>();
+		Set<LookseeObject> path_objects = new HashSet<LookseeObject>();
 		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(redirects);
@@ -412,7 +413,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_service.findById(domain_id);
     	if(domain.isPresent()){
-    		return domain_service.getForms(acct.getUserId(), domain.get().getUrl());
+    		return domain_service.getForms(acct.getUserId(), domain.get().getEntryPath());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -600,19 +601,19 @@ public class DomainController {
 			log.info("Does the domain exist :: "+optional_domain.isPresent());
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
-		    	PageState page = form_service.getPageState(acct.getUserId(), domain.getUrl(), form_record);
+		    	PageState page = form_service.getPageState(acct.getUserId(), domain.getEntryPath(), form_record);
 
-	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
-	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
+	    		log.info("domain exists with domain :: "+domain.getEntryPath()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
 	    		//start form test creation actor
 	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page, acct.getUserId());
 		        
-	    		if(domain_actors.get(domain.getUrl()) == null){
+	    		if(domain_actors.get(domain.getEntryPath()) == null){
 	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-  						  .props("domainActor"), "domain_actor"+domain.getUrl());
-	    			domain_actors.put(domain.getUrl(), domain_actor);
+  						  .props("domainActor"), "domain_actor"+domain.getEntryPath());
+	    			domain_actors.put(domain.getEntryPath(), domain_actor);
 	    		}
-	    		domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
+	    		domain_actors.get(domain.getEntryPath()).tell(form_discovery_msg, ActorRef.noSender());
 	    	}
 	    	else{
 	    		throw new DomainNotFoundException();
@@ -640,7 +641,7 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
+        	return domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -681,24 +682,24 @@ public class DomainController {
 		log.info("Does the domain exist :: "+optional_domain.isPresent());
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), acct.getUserId());
+    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
     		Date now = new Date();
         	long diffInMinutes = 10000;
         	if(last_discovery_record != null){
         		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
         	}
-        	log.warn("domain retrieved from host :: " + domain + "   :   "+ domain.getUrl());
+        	log.warn("domain retrieved from host :: " + domain + "   :   "+ domain.getEntryPath());
         	
     		if(diffInMinutes > 1440){
     			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-    			if(!domain_actors.containsKey(domain.getUrl())){
+    			if(!domain_actors.containsKey(domain.getEntryPath())){
     				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-    						  .props("domainActor"), "domain_actor"+domain.getUrl());
-    				domain_actors.put(domain.getUrl(), domain_actor);
+    						  .props("domainActor"), "domain_actor"+domain.getEntryPath());
+    				domain_actors.put(domain.getEntryPath(), domain_actor);
     			}
     		    
     			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
-    			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
+    			domain_actors.get(domain.getEntryPath()).tell(discovery_action_msg, null);
     		}
             else{
             	throw new ExistingDiscoveryFoundException();
@@ -750,12 +751,12 @@ public class DomainController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
+    	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
 
-    	if(!domain_actors.containsKey(domain.getUrl())){
+    	if(!domain_actors.containsKey(domain.getEntryPath())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
-			domain_actors.put(domain.getUrl(), domain_actor);
+			domain_actors.put(domain.getEntryPath(), domain_actor);
 		}
     	
 		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));

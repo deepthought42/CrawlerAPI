@@ -206,7 +206,7 @@ public class TestController {
     	}
     	
     	int failed_tests = 0;
-		Domain domain = domain_service.findByUrl(url, acct.getUserId());
+		Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
 		try{
 			Iterator<Test> tests = domain.getTests().iterator();
 
@@ -439,11 +439,11 @@ public class TestController {
     	
     	SegmentAnalyticsHelper.testRunStarted(acct.getUserId(), test_keys.size());
 
-    	Domain domain = domain_service.findByUrl(url, acct.getUserId());
+    	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
     	for(String key : test_keys){
-    		Test test = test_repo.findByKey(key, domain.getUrl(), acct.getUserId());
+    		Test test = test_repo.findByKey(key, domain.getEntryPath(), acct.getUserId());
     		TestStatus last_test_status = test.getStatus();
 
 			test.setStatus(TestStatus.RUNNING);
@@ -472,7 +472,7 @@ public class TestController {
 			record = test_record_repo.save(record);
 
 			SegmentAnalyticsHelper.sendTestFinishedRunningEvent(acct.getUserId(), test);
-			test = test_service.findByKey(test.getKey(), domain.getUrl(), acct.getUserId());
+			test = test_service.findByKey(test.getKey(), domain.getEntryPath(), acct.getUserId());
 
 			test.addRecord(record);
 			test.setStatus(is_passing);

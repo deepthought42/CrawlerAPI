@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.experience.PerformanceInsight;
@@ -17,41 +14,82 @@ import com.qanairy.models.experience.PerformanceInsight;
 /**
  * 
  */
-@NodeEntity
-public class Page implements Persistable{
+public class Page extends LookseeObject{
 
-	@GeneratedValue
-    @Id
-	private Long id;
-	
-	private String key;
 	private String url;
 	private String path;
-	private Double performance_score;
-	private Double accessibility_score;
-	private Double seo_score;
-	private Double overall_score;
-
+	
+	@Relationship(type = "HAS")
+	private Set<PageState> page_states;
+	
+	@Deprecated
 	@Relationship(type = "HAS")
 	private List<PerformanceInsight> performance_insights;
 
-	@Relationship(type = "HAS")
-	private Set<PageState> page_states;
-
+	//following are deprecated in favor of the Audit concept being introduced. 6/18/2020
+	@Deprecated
+	private Double performance_score;
+	@Deprecated
+	private Double accessibility_score;
+	@Deprecated
+	private Double seo_score;
+	@Deprecated
+	private Double overall_score;
+	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
+		return "page::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
 	public Page() {
+		super();
 		setPerformanceInsights(new ArrayList<>());
 		setPageStates( new HashSet<>() );
 	}
 	
+	/**
+	 * 
+	 * @param url
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * 
+	 * @throws MalformedURLException
+	 */
+	@Deprecated
 	public Page(String url) throws MalformedURLException{
+		super();
+		assert url != null;
+		assert !url.isEmpty();
+				
 		setPerformanceInsights(new ArrayList<>());
 		setUrl(url);
 		setPath(new URL(url).getPath());
+		setPageStates( new HashSet<>() );
+		setKey(generateKey());
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public Page(String url, String path){
+		super();
+		assert url != null;
+		assert !url.isEmpty();
+		assert path != null;
+				
+		setPerformanceInsights(new ArrayList<>());
+		setUrl(url);
+		setPath(path);
 		setPageStates( new HashSet<>() );
 		setKey(generateKey());
 	}
@@ -109,58 +147,57 @@ public class Page implements Persistable{
 		this.url = url;
 	}
 	
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-	
+	@Deprecated
 	public List<PerformanceInsight> getPerformanceInsights() {
 		return performance_insights;
 	}
-
+	
+	@Deprecated
 	public void setPerformanceInsights(List<PerformanceInsight> performance_insights) {
 		this.performance_insights = performance_insights;
 	}
 
+	@Deprecated
 	public void addPerformanceInsight(PerformanceInsight performance_insight) {
 		this.performance_insights.add( performance_insight );
 	}
-	
-	public long getId(){
-		return this.id;
-	}
 
+	@Deprecated
 	public Double getPerformanceScore() {
 		return performance_score;
 	}
 
+	@Deprecated
 	public void setPerformanceScore(Double score) {
 		this.performance_score = score;
 	}
 
+	@Deprecated
 	public Double getAccessibilityScore() {
 		return accessibility_score;
 	}
 
+	@Deprecated
 	public void setAccessibilityScore(Double accessibility_score) {
 		this.accessibility_score = accessibility_score;
 	}
 
+	@Deprecated
 	public Double getSeoScore() {
 		return seo_score;
 	}
 
+	@Deprecated
 	public void setSeoScore(Double seo_score) {
 		this.seo_score = seo_score;
 	}
 
+	@Deprecated
 	public Double getOverallScore() {
 		return overall_score;
 	}
 
+	@Deprecated
 	public void setOverallScore(Double overall_score) {
 		this.overall_score = overall_score;
 	}

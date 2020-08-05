@@ -10,6 +10,9 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.qanairy.models.audit.Audit;
+
+
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
@@ -23,7 +26,7 @@ public class Domain implements Persistable{
 	private Long id;
 	
 	private String host;
-	private String url;
+	private String entry_path;
 	private String key;
 	private String protocol;
 	private String logo_url;
@@ -44,6 +47,9 @@ public class Domain implements Persistable{
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
 	private Set<DiscoveryRecord> discovery_records;
 	
+	@Relationship(type = "HAS_AUDIT")
+	private Set<Audit> audits;
+	
 	/**
 	 * 
 	 * 
@@ -60,12 +66,12 @@ public class Domain implements Persistable{
 	/**
 	 * 
 	 * @param protocol web protocol ("http", "https", "file", etc.)
-	 * @param url landable url
+	 * @param path landable url
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
-	public Domain( String protocol, String url, String browser, String logo_url, String host){
-		setUrl(url);
+	public Domain( String protocol, String host, String path, String browser, String logo_url){
+		setEntryPath(path);
 		setLogoUrl(logo_url);
 		setProtocol(protocol);
 		setDiscoveryBrowserName(browser);
@@ -81,7 +87,7 @@ public class Domain implements Persistable{
 	public boolean equals(Object o){
 		if(o instanceof Domain){
 			Domain domain = (Domain)o;
-			if(domain.getUrl().equals(this.getUrl())){
+			if(domain.getEntryPath().equals(this.getEntryPath())){
 				return true;
 			}
 		}
@@ -89,12 +95,12 @@ public class Domain implements Persistable{
 		return false;
 	}
 
-	public String getUrl() {
-		return url;
+	public String getEntryPath() {
+		return entry_path;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+	public void setEntryPath(String url) {
+		this.entry_path = url;
 	}
 	
 	public String getHost() {
@@ -188,7 +194,7 @@ public class Domain implements Persistable{
 	 */
 	@Override
 	public String generateKey() {
-		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl().toString());
+		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getEntryPath().toString());
 	}
 	
 	public Account getAccount() {
@@ -214,11 +220,11 @@ public class Domain implements Persistable{
 		return this.getPages().add(page);
 	}
 
-	private List<Page> getPages() {
+	public List<Page> getPages() {
 		return this.pages;
 	}
 	
-	private void setPages(List<Page> pages) {
+	public void setPages(List<Page> pages) {
 		this.pages = pages;
 	}
 }

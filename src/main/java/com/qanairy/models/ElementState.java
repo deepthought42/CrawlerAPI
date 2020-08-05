@@ -1,15 +1,13 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 import org.openqa.selenium.WebElement;
@@ -20,20 +18,16 @@ import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 
+
 /**
  * Contains all the pertinent information for an element on a page. A ElementState
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
  *  maintained by ElementState though. 
  */
-@NodeEntity
-public class ElementState implements Persistable, PathObject, Comparable<ElementState> {
+public class ElementState extends LookseeObject implements Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
-	@GeneratedValue
-    @Id
-    private Long id;
-    private String key;
 	private String name;
 	private String text;
 	private String xpath;
@@ -50,22 +44,29 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private int y_location;
 	private int width;
 	private int height;
+	
+	@Deprecated
 	private boolean part_of_form;
 	
 	@Properties
-	private Map<String, String> cssValues = new HashMap<>();
+	private Map<String, String> pre_render_css_values = new HashMap<>();
 	
-	@Relationship(type = "HAS_ATTRIBUTE")
-	private Set<Attribute> attributes = new HashSet<>();
+	@Properties
+	private Map<String, String> rendered_css_values = new HashMap<>();
 	
-	@Relationship(type = "HAS")
+	@Properties
+	private Map<String, String> attributes = new HashMap<>();
+	
+	@Relationship(type = "HAS", direction = Relationship.OUTGOING)
 	private Set<Rule> rules = new HashSet<>();
 
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<ElementState> child_elements = new ArrayList<>();
 	
 
-	public ElementState(){}
+	public ElementState(){
+		super();
+	}
 	
 	/**
 	 * 
@@ -82,9 +83,10 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
+	public ElementState(String text, String xpath, String name, Map<String, String> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
 			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
+		super();
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -98,18 +100,17 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setScreenshotUrl(screenshot_url);
 		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
-		setCssValues(css_map);
+		setPreRenderCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
-		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
+		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
 		setRules(new HashSet<>());
-		setKey(generateKey());
 		setClassification(ElementClassification.CHILD);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -127,7 +128,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @pre outer_html != null;
 	 * @pre assert !outer_html.isEmpty()
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
+	public ElementState(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
 						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
 		assert name != null;
@@ -141,17 +142,15 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setAttributes(attributes);
 		setScreenshotUrl(screenshot_url);
 		setText(text);
-		setCssValues(css_map);
+		setPreRenderCssValues(css_map);
 		setScreenshotChecksum(checksum);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
-		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml(), getText()));
-		setTemplate("");
+		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
 		setRules(new HashSet<>());
 		setClassification(classification);
 		setKey(generateKey());
@@ -162,11 +161,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public void printAttributes(){
 		System.out.print("+++++++++++++++++++++++++++++++++++++++");
-		for(Attribute attribute : this.attributes){
-			System.out.print(attribute.getName() + " : ");
-			for(int i=0; i < attribute.getVals().size(); i++){
-				System.out.print( attribute.getVals().get(i) + " ");
-			}
+		for(String attribute : this.attributes.keySet()){
+			System.out.print(attribute + " : ");
+			System.out.print( attributes.get(attribute) + " ");
 		}
 		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
 	}
@@ -178,11 +175,11 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @return whether attributes match or not
 	 */
 	public boolean cssMatches(ElementState elem){
-		for(String propertyName : cssValues.keySet()){
+		for(String propertyName : pre_render_css_values.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
 			}
-			if(!cssValues.get(propertyName).equals(elem.getCssValues().get(propertyName))){
+			if(!pre_render_css_values.get(propertyName).equals(elem.getPreRenderCssValues().get(propertyName))){
 				return false;
 			}
 		}
@@ -215,24 +212,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.xpath = xpath;
 	}
 
-	public Map<String, String> getCssValues() {
-		return cssValues;
+	public Map<String, String> getPreRenderCssValues() {
+		return pre_render_css_values;
 	}
 
-	public void setCssValues(Map<String, String> cssValues) {
-		this.cssValues = cssValues;
-	}
-
-	public String getKey() {
-		return this.key;
-	}
-	
-	public void setKey(String key) {
-		this.key = key;
-	}
-	
-	public void setAttributes(Set<Attribute> attribute_persist_list) {
-		this.attributes = attribute_persist_list;
+	public void setPreRenderCssValues(Map<String, String> css_values) {
+		this.pre_render_css_values = css_values;
 	}
 	
 	public Set<Rule> getRules(){
@@ -255,26 +240,19 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		}
 	}
 
-	public Set<Attribute> getAttributes() {
+	public void setAttributes(Map<String, String> attribute_persist_list) {
+		this.attributes = attribute_persist_list;
+	}
+
+	public Map<String, String> getAttributes() {
 		return attributes;
 	}
 	
-	public List<String> getAttributeValues(String attr_name){
+	public String getAttribute(String attr_name){
 		//get id for element
-		for(Attribute tag_attr : this.attributes){
-			if(tag_attr.getName().equals("id")){
-				return tag_attr.getVals();
-			}
-		}
-		
-		return null;
-	}
-	
-	public Attribute getAttribute(String attr_name){
-		//get id for element
-		for(Attribute tag_attr : this.attributes){
-			if(tag_attr.getName().equals(attr_name)){
-				return tag_attr;
+		for(String tag_attr : this.attributes.keySet()){
+			if(tag_attr.equalsIgnoreCase(attr_name)){
+				return this.attributes.get(tag_attr);
 			}
 		}
 		
@@ -282,8 +260,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 	
 
-	public void addAttribute(Attribute attribute) {
-		this.attributes.add(attribute);
+	public void addAttribute(String attribute, String values) {
+		this.attributes.put(attribute, values);
 	}
 	
 	public String getScreenshotUrl() {
@@ -317,7 +295,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @return
 	 */
 	public String generateKey() {
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getTemplate()+this.getText()+this.getXpath());
+		String key = "";
+		List<String> properties = new ArrayList<>(getPreRenderCssValues().keySet());
+		Collections.sort(properties);
+		for(String style : properties) {
+			key += getPreRenderCssValues().get(style);
+		}
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
 	}
 	
 
@@ -347,7 +331,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
-		page_elem.setCssValues(this.getCssValues());
+		page_elem.setPreRenderCssValues(this.getPreRenderCssValues());
+		page_elem.setRenderedCssValues(this.getRenderedCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshotUrl(this.getScreenshotUrl());
@@ -407,14 +392,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
          */
 	}
 
-	public String getInnerHtml() {
-		return inner_html;
-	}
-
-	public void setInnerHtml(String inner_html) {
-		this.inner_html = inner_html;
-	}
-
 	public String getCssSelector() {
 		return css_selector;
 	}
@@ -439,10 +416,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.template = template;
 	}
 
+	@Deprecated
 	public boolean isPartOfForm() {
 		return part_of_form;
 	}
 
+	@Deprecated
 	public void setIsPartOfForm(boolean is_part_of_form) {
 		this.part_of_form = is_part_of_form;
 	}
@@ -459,10 +438,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		this.classification = classification.toString();
 	}
 	
-	public Long getId() {
-		return this.id;
-	}
-	
 	public List<ElementState> getChildElements() {
 		return child_elements;
 	}
@@ -473,5 +448,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void addChildElement(ElementState child_element) {
 		this.child_elements.add(child_element);
+	}
+
+	public Map<String, String> getRenderedCssValues() {
+		return rendered_css_values;
+	}
+
+	public void setRenderedCssValues(Map<String, String> rendered_css_values) {
+		this.rendered_css_values.putAll(rendered_css_values);
 	}
 }

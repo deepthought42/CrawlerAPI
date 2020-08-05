@@ -59,7 +59,7 @@ public class Test implements Persistable {
 
 	@JsonIgnore
 	@Relationship(type = "HAS_PATH_OBJECT")
-	private List<PathObject> path_objects = new ArrayList<>();
+	private List<LookseeObject> path_objects = new ArrayList<>();
 	
 	@Relationship(type = "HAS_RESULT")
 	private PageState result;
@@ -79,7 +79,7 @@ public class Test implements Persistable {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, boolean spansMultipleDomains) throws MalformedURLException{
+	public Test(List<String> path_keys, List<LookseeObject> path_objects, PageState result, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -113,7 +113,7 @@ public class Test implements Persistable {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
+	public Test(List<String> path_keys, List<LookseeObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -311,17 +311,17 @@ public class Test implements Persistable {
 		this.browser_passing_statuses = browser_passing_statuses;
 	}
 
-	public void addPathObject(PathObject path_obj) {
+	public void addPathObject(LookseeObject path_obj) {
 		this.path_objects.add(path_obj);
 	}
 
 	@JsonIgnore
-	public List<PathObject> getPathObjects() {
+	public List<LookseeObject> getPathObjects() {
 		return this.path_objects;
 	}
 
 	@JsonIgnore
-	public void setPathObjects(List<PathObject> path_objects) {
+	public void setPathObjects(List<LookseeObject> path_objects) {
 		this.path_objects = path_objects;
 	}
 	
@@ -344,8 +344,8 @@ public class Test implements Persistable {
 	public PageState firstPage() {
 		for(String key : this.getPathKeys()){
 			if(key.contains("pagestate")){
-				for(PathObject path_obj: this.getPathObjects()){
-					if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
+				for(LookseeObject path_obj: this.getPathObjects()){
+					if(path_obj.getKey().equals(key) && path_obj instanceof PageState){
 						return (PageState)path_obj;
 					}
 				}
@@ -376,7 +376,7 @@ public class Test implements Persistable {
 	 */
 	public static Test clone(Test test) throws MalformedURLException{
 		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
-									   new ArrayList<PathObject>(test.getPathObjects()),
+									   new ArrayList<LookseeObject>(test.getPathObjects()),
 									   test.getResult(), 
 									   test.getSpansMultipleDomains());
 
@@ -401,7 +401,7 @@ public class Test implements Persistable {
 		 String test_name = "";
 			int page_state_idx = 0;
 			int element_action_cnt = 0;
-			for(PathObject obj : this.path_objects){
+			for(LookseeObject obj : this.path_objects){
 				if(obj instanceof PageState && page_state_idx < 1){
 					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
 					path = path.replace("/", " ");
@@ -421,7 +421,7 @@ public class Test implements Persistable {
 					String tag_name = element.getName();
 					
 					if(element.getAttribute("id") != null){
-						tag_name = element.getAttribute("id").getVals().get(0);
+						tag_name = element.getAttribute("id");
 					}
 					else{
 						if("a".equals(tag_name)){

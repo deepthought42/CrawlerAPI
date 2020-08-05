@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.api.exceptions.ExistingRuleException;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
@@ -21,9 +20,6 @@ import com.qanairy.models.rules.Rule;
 public class ElementStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
-
-	@Autowired
-	private AttributeService attribute_service;
 
 	@Autowired
 	private RuleService rule_service;
@@ -38,21 +34,12 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(String user_id, ElementState element) throws ClientException{
-		assert user_id != null;
-		assert !user_id.isEmpty();
+	public ElementState save(ElementState element) throws ClientException{
 		assert element != null;
-		
-		assert element != null;
-		ElementState element_record = element_repo.findByKey(user_id, element.getKey());
+
+		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			//iterate over attributes
-			Set<Attribute> new_attributes = new HashSet<Attribute>();
-			for(Attribute attribute : element.getAttributes()){
-				new_attributes.add(attribute_service.save(attribute));
-			}
-			element.setAttributes(new_attributes);
-			
+			//iterate over attributes			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
 				log.warn("adding rule to rule records :: " + rule.getType());
@@ -63,6 +50,7 @@ public class ElementStateService {
 			element_record = element_repo.save(element);
 		}
 		else {
+			element_record.setPreRenderCssValues(element.getPreRenderCssValues());
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
 				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setScreenshotUrl(element.getScreenshotUrl());
@@ -84,17 +72,10 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState saveFormElement(String user_id, ElementState element) throws ClientException{
+	public ElementState saveFormElement(ElementState element) throws ClientException{
 		assert element != null;
-		ElementState element_record = element_repo.findElementByKey(user_id, element.getKey());
-		if(element_record == null){
-			//iterate over attributes
-			Set<Attribute> new_attributes = new HashSet<Attribute>();
-			for(Attribute attribute : element.getAttributes()){
-				new_attributes.add(attribute_service.save(attribute));
-			}
-			element.setAttributes(new_attributes);
-			
+		ElementState element_record = element_repo.findByKey(element.getKey());
+		if(element_record == null){			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
 				log.warn("adding rule to rule records :: " + rule.getType());
@@ -116,12 +97,12 @@ public class ElementStateService {
 		return element_record;
 	}
 
-	public ElementState findElementByKey(String user_id, String key){
-		return element_repo.findElementByKey(user_id, key);
+	public ElementState findByKey(String key){
+		return element_repo.findByKey(key);
 	}
 
-	public ElementState findByKey(String user_id, String key){
-		return element_repo.findByKey(user_id, key);
+	public ElementState findByKeyAndUserId(String user_id, String key){
+		return element_repo.findByKeyAndUserId(user_id, key);
 	}
 
 	public void removeRule(String user_id, String element_key, String rule_key){
@@ -152,10 +133,6 @@ public class ElementStateService {
 		}
 	}
 
-	public List<Attribute> getElementAttributes(String user_id, String element_key) {
-		return element_repo.getElementAttributes( user_id, element_key);
-	}
-
 	public ElementState findByOuterHtml(String user_id, String snippet) {
 		return element_repo.findByOuterHtml(user_id, snippet);
 	}
@@ -164,11 +141,55 @@ public class ElementStateService {
 		element_repo.clearBugMessages(user_id, form_key);
 	}
 
-	public List<ElementState> getChildElements(String user_id, String element_key) {
-		return element_repo.getChildElements(user_id, element_key);
+	public List<ElementState> getChildElementsForUser(String user_id, String element_key) {
+		return element_repo.getChildElementsForUser(user_id, element_key);
+	}
+	
+	public List<ElementState> getChildElements(String element_key) {
+		return element_repo.getChildElements(element_key);
+	}
+	
+	public List<ElementState> getChildElementForParent(String parent_key, String child_element_key) {
+		return element_repo.getChildElementForParent(parent_key, child_element_key);
 	}
 
+	@Deprecated
 	public ElementState getParentElement(String user_id, Domain domain, String page_key, String element_state_key) {
 		return element_repo.getParentElement(user_id, domain, page_key, element_state_key);
+	}
+
+	/**
+	 * gets parent element for given {@link ElementState} within the given {@link PageState}
+	 * 
+	 * @param page_state_key
+	 * @param element_state_key
+	 * @return
+	 */
+	public ElementState getParentElement(String page_state_key, String element_state_key) {
+		return element_repo.getParentElement(page_state_key, element_state_key);
+	}
+	
+	public void addChildElement(String parent_element_key, String child_element_key) {
+		//check if element has child already
+		if(getChildElementForParent(parent_element_key, child_element_key).isEmpty()) {
+			element_repo.addChildElement(parent_element_key, child_element_key);
+		}
+	}
+
+	/**
+	 * Fetch element that is the parent of the given child element for a given page
+	 * 
+	 * @param page_state_key
+	 * @param child_key
+	 * 
+	 * @return
+	 * 
+	 * @pre page_state_key != null
+	 * @pre child_key != null
+	 */
+	public ElementState findByPageStateAndChild(String page_state_key, String child_key) {
+		assert page_state_key != null;
+		assert child_key != null;
+		return element_repo.findByPageStateAndChild(page_state_key, child_key);
 	}
 }

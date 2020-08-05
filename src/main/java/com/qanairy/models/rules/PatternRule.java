@@ -2,7 +2,6 @@ package com.qanairy.models.rules;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 
 /**
@@ -22,9 +21,9 @@ public class PatternRule extends Rule {
 	 */
 	@Override
 	public Boolean evaluate(ElementState elem) {
-		for(Attribute attribute: elem.getAttributes()){
-			if(attribute.getName().equals("vals")){
-				String pattern = "/^" + attribute.getVals().toString() + " $/";
+		for(String attribute: elem.getAttributes().keySet()){
+			if("vals".contentEquals(attribute)){
+				String pattern = "/^" + elem.getAttributes().get(attribute).toString() + " $/";
 				Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
 			    return matcher.matches();
 			}

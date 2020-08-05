@@ -1,5 +1,6 @@
 package com.qanairy.models.repository;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -18,6 +19,7 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
+import com.qanairy.models.audit.Audit;
 import com.qanairy.models.experience.PerformanceInsight;
 
 /**
@@ -29,10 +31,19 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key, @Param("user_id") String user_id);
 	
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{host}}) RETURN d LIMIT 1")
-	public Domain findByHost(@Param("host") String host, @Param("user_id") String user_id);
+	public Domain findByHostForUser(@Param("host") String host, @Param("user_id") String user_id);
+	
+	@Query("MATCH (d:Domain{host:{host}}) RETURN d LIMIT 1")
+	public Domain findByHost(@Param("host") String host);
+	
+	@Query("MATCH (d:Domain{host:{host}})-[:HAS]->(p:Page) RETURN p")
+	public List<Page> getPages(@Param("host") String host);
 	
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) RETURN d LIMIT 1")
-	public Domain findByUrl(@Param("url") String url, @Param("user_id") String user_id);
+	public Domain findByUrlAndAccountId(@Param("url") String url, @Param("user_id") String user_id);
+
+	@Query("MATCH (d:Domain{url:{url}}) RETURN d LIMIT 1")
+	public Domain findByUrl(@Param("url") String url);
 
 	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]->(p:Page) MATCH (p)-[]-(ps:PageState) RETURN ps")
 	public Set<PageState> getPageStates(@Param("user_id") String user_id, @Param("url") String url);
@@ -95,5 +106,11 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public void addPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 	
 	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
-	public Set<Page> getPages(@Param("user_id") String user_id, @Param("url") String url);
+	public Set<Page> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
+
+	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:Audit) RETURN audit ORDER BY audit.createdAt DESC")
+	public Set<Audit> getMostRecentDomainAudits(@Param("url") String url);
+
+	@Query("MATCH (d:Domain)-[*]->(:PageState{key:{page_state_key}}) RETURN d LIMIT 1")
+	public Domain findByPageState(@Param("page_state_key") String page_state_key);
 }

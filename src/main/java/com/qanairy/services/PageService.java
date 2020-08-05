@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,17 +42,63 @@ public class PageService {
 	 * 
 	 * @pre page != null;
 	 */
-	public Page save(String user_id, Page page){
+	public Page saveForUser(String user_id, Page page){
 		assert page != null;
-
-		Page page_record = findByKey(user_id, page.getKey());
+		assert user_id != null;
+		
+		Page page_record = findByKey(page.getKey());
 		if(page_record != null){
-			page_record.setPerformanceScore(page.getPerformanceScore());
-			page_record.setAccessibilityScore(page.getAccessibilityScore());
-			page_record.setSeoScore(page.getSeoScore());
+			page_record.setPageStates(page.getPageStates());
 			return page_repo.save(page_record);
 		}
+		
+		System.out.println("page repo ::  "+page_repo);
+		System.out.println("Page   ::   "+page);
 		return page_repo.save(page);
+	}
+	
+	/**
+	 * Saves {@link Page} to database
+	 * 
+	 * @param page
+	 * 
+	 * @return {@link Page} object reference to database object
+	 * 
+	 * @pre page != null;
+	 */
+	public Page save(Page page){
+		assert page != null;
+		
+		Page page_record = findByKey(page.getKey());
+		if(page_record != null){
+			page_record.setPageStates(page.getPageStates());
+			return page_repo.save(page_record);
+		}
+		
+		return page_repo.save(page);
+	}
+	
+	/**
+	 * Retrieve page from database using key and user ID
+	 * 
+	 * @param user_id
+	 * @param key
+	 * 
+	 * @return {@link Page} record
+	 * 
+	 * @pre key != null;
+	 * @pre !key.isEmpty();
+	 * @pre user_id != null
+	 * @pre !user_id.isEmpty()
+	 */
+	@Deprecated
+	public Page findByKeyAndUser(String user_id, String key){
+		assert key != null;
+		assert !key.isEmpty();
+		assert user_id != null;
+		assert !user_id.isEmpty();
+		
+		return page_repo.findByKeyAndUser(user_id, key);
 	}
 	
 	/**
@@ -64,13 +111,11 @@ public class PageService {
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
 	 */
-	public Page findByKey(String user_id, String key){
+	public Page findByKey( String key ){
 		assert key != null;
 		assert !key.isEmpty();
-		assert user_id != null;
-		assert !user_id.isEmpty();
 		
-		return page_repo.findByKey(user_id, key);
+		return page_repo.findByKey(key);
 	}
 
 	/**
@@ -149,6 +194,7 @@ public class PageService {
 	 * @pre page_key != null
 	 * @pre !page_key.isEmpty()
 	 */
+	@Deprecated
 	public void addPageState(String user_id, String page_key, PageState page_state) {
 		assert user_id != null;
 		assert !user_id.isEmpty();
@@ -156,12 +202,38 @@ public class PageService {
 		assert !page_key.isEmpty();
 		assert page_state != null;
 		
-		PageState page_state_record = page_state_service.findByKey(user_id, page_state.getKey());
+		PageState page_state_record = page_state_service.findByKeyAndUsername(user_id, page_state.getKey());
 		if(page_state_record == null) {
 			page_state_record = page_state_service.save(page_state);
 		}
-		Page page = page_repo.findByKey(user_id, page_key);
+		Page page = page_repo.findByKey(page_key);
 		page.addPageState(page_state_record);
 		page_repo.save(page);
+	}
+	
+	/**
+	 * 
+	 * @param page_key
+	 * @return
+	 * 
+	 * @pre page_key != null
+	 * @pre !page_key.isEmpty()
+	 * @pre page_state_key != null
+	 * @pre !page_state_key.isEmpty()
+	 */
+	public void addPageState(String page_key, String page_state_key) {
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert page_state_key != null;
+		assert !page_state_key.isEmpty();
+		
+		Optional<PageState> page_state_record = page_repo.findPageStateForPage(page_key, page_state_key);
+		if(!page_state_record.isPresent()) {
+			page_repo.addPageState(page_key, page_state_key);
+		}
+	}
+
+	public PageState getMostRecentPageState(String key) {
+		return page_repo.findMostRecentPageState(key);
 	}
 }

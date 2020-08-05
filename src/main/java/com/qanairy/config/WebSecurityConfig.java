@@ -48,7 +48,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
          .antMatchers(HttpMethod.GET, "/actuator/info").permitAll()
          .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
          .antMatchers(HttpMethod.POST, "/accounts").permitAll()
-         .anyRequest().authenticated();
+         .antMatchers(HttpMethod.GET, "/audits/all").permitAll()
+         .antMatchers(HttpMethod.POST, "/audits/start").permitAll()
+         .antMatchers(HttpMethod.PUT, "/audits/stop").permitAll()
+         .anyRequest().permitAll();
+         //.anyRequest().authenticated();
     }
     
     @Bean

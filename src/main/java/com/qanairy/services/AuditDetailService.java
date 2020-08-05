@@ -3,7 +3,6 @@ package com.qanairy.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.experience.Audit;
 import com.qanairy.models.experience.AuditDetail;
 import com.qanairy.models.repository.AuditDetailRepository;
 

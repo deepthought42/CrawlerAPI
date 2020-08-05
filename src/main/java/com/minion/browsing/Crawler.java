@@ -1,14 +1,25 @@
 package com.minion.browsing;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.UUID;
 
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -28,21 +39,29 @@ import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.LookseeObject;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.message.PageFoundMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -57,6 +76,15 @@ public class Crawler {
 	@Autowired
 	private ActionRepository action_repo;
 
+	@Autowired
+	private PageService page_service;
+	
+	@Autowired
+	private DomainService domain_service;
+	
+	 @Autowired
+    private ActorSystem actor_system;
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 *
@@ -69,14 +97,14 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
+	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, 
 								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
 										throws Exception{
 		assert browser != null;
 		assert path_keys != null;
 
-		PathObject last_obj = null;
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		LookseeObject last_obj = null;
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
 		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
@@ -88,7 +116,7 @@ public class Crawler {
 		log.warn("expected page url :: " + expected_page.getUrl());
 		browser.navigateTo(expected_page.getUrl());
 
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 /*
@@ -143,7 +171,7 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		return browser_service.buildPageState(user_id, domain, browser);
+		return browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
 	}
 
 	/**
@@ -160,18 +188,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, String user_id) 
+	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, String user_id) 
 			throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
@@ -233,18 +261,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element, String user_id)
+	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, ElementState child_element, String user_id)
 							throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException, NullPointerException{
 		assert browser != null;
 		assert path_keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
@@ -318,20 +346,21 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
+	@Deprecated
+	public void crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
-		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
+		List<LookseeObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 
 		String last_url = null;
 		int current_idx = 0;
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -415,7 +444,7 @@ public class Crawler {
 			path.setPathObjects(path_objects_explored);
 		}
 	}
-
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * @param browser
@@ -433,23 +462,23 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PathMessage crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, PathMessage path, String user_id) 
+	public PathMessage crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, PathMessage path, String user_id) 
 			throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
-		PathObject last_obj = null;
+		LookseeObject last_obj = null;
 		PageState expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
+		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		List<PathObject> path_objects_explored = new ArrayList<>();
+		List<LookseeObject> path_objects_explored = new ArrayList<>();
 
 		String last_url = null;
 		int current_idx = 0;
-		for(PathObject current_obj: ordered_path_objects){
+		for(LookseeObject current_obj: ordered_path_objects){
 			path_objects_explored.add(current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
@@ -531,7 +560,7 @@ public class Crawler {
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
+				alert.performChoice(browser.getDriver(), AlertChoice.ACCEPT);
 			}
 			last_obj = current_obj;
 			current_idx++;
@@ -607,7 +636,7 @@ public class Crawler {
 				}
 						
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageState(user_id, domain, browser);
+				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -638,7 +667,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 1000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -652,6 +681,7 @@ public class Crawler {
 	 * @return
 	 * @throws Exception 
 	 */
+	@Deprecated
 	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
@@ -691,89 +721,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				log.warn("building page state as part of exploratory crawl");
-				result_page = browser_service.buildPageState(user_id, domain, browser);
-				result_page.setLoginRequired(last_page_state.isLoginRequired());
-				return result_page;
-			}
-			catch(NullPointerException e){
-				e.printStackTrace();
-				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
-			} 
-			catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-			} 
-			catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
-			} 
-			catch(Exception e) {
-				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
-				e.printStackTrace();
-			}
-			finally{
-				if(browser != null && !no_such_element_exception){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 1000000);
-		return result_page;
-	}
-	
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 * @throws Exception 
-	 */
-	public PageState performPathExploratoryCrawlAndBuildFullElementTree(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		PathMessage new_path = path.clone();
-		boolean no_such_element_exception = false;
-		
-		do{
-			/*
-			Timeout timeout = Timeout.create(Duration.ofSeconds(30));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
-			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-			
-			if(discovery_action == DiscoveryAction.STOP) {
-				throw new DiscoveryStoppedException();
-			}
-			*/
-			
-			try{
-				if(!no_such_element_exception){
-					no_such_element_exception = false;
-					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
-					browser.navigateTo(expected_page.getUrl());
-					
-					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path, user_id);
-				}
-				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url);
-				//get last page state
-				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
-								
-				//verify that screenshot does not match previous page
-				log.warn("building page state as part of crawl with element state extraction");
-				result_page = browser_service.buildPageState(user_id, domain, browser);
-				List<ElementState> elements = browser_service.extractElementStates(result_page.getSrc(), user_id, browser, domain);
-				result_page.addElements(elements);
+				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
 				result_page.setLoginRequired(last_page_state.isLoginRequired());
 				return result_page;
 			}
@@ -869,5 +817,94 @@ public class Crawler {
 		}
 
 		return new Point(x_coord, y_coord);
+	}
+	
+	/**
+	 * Crawl domain by using links to map site and reach new pages until site is completely covered. Along the way this method also executes
+	 * all desired audits on each page.
+
+	 * @param domain
+	 * @param user_id
+	 * @param audit_categories
+	 * 
+	 * @return
+	 * 
+	 * @throws Exception
+	 * 
+	 * @pre domain != null
+	 * @pre user_id != null
+	 * @pre audit_categories != null
+	 */
+	public Map<String, Page> crawlAndExtractData(Domain domain) throws Exception {
+		assert domain != null;
+		
+		Map<String, Boolean> frontier = new HashMap<>();
+		Map<String, Page> visited = new HashMap<>();
+		//add link to frontier
+		frontier.put(domain.getEntryPath(), Boolean.TRUE);
+		
+		
+		while(!frontier.isEmpty()) {
+			Map<String, Boolean> external_links = new HashMap<>();
+			Page page = null;
+			//remove link from beginning of frontier
+			String page_url = frontier.keySet().iterator().next();
+			frontier.remove(page_url);
+			if(page_url.isEmpty() || page_url.contains("mailto") || page_url.contains(".jpg") || page_url.contains(".png")) {
+				continue;
+			}
+
+			//construct page and add page to list of page states
+			page = new Page(page_url);
+			page = page_service.save( page );
+
+			log.debug("page created with url..."+page_url);			
+			domain.addPage(page);
+			domain = domain_service.save(domain);
+			
+			visited.put(page_url, page);
+			//send message to page data extractor
+			ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
+			PageFoundMessage page_found_message = new PageFoundMessage(page);
+			page_data_extractor.tell(page_found_message, null);
+
+			//retrieve html source for page
+			try {
+				Document doc = Jsoup.connect(page_url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+				log.debug("Document title :: " + doc.title());
+				Elements links = doc.select("a");
+				for (Element link : links) {
+					String href = BrowserUtils.sanitizeUrl(link.absUrl("href"));
+					
+					//check if external link
+					if( !href.isEmpty() && BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href)) {
+						log.debug("adding to external links :: "+href);
+	   					external_links.put(href, Boolean.TRUE);
+					}
+					else if( !href.isEmpty() && !visited.containsKey(href) && !frontier.containsKey(href) && !BrowserUtils.isImageUrl(href)){
+						log.warn("adding link to frontier :: "+href);
+						//add link to frontier
+						frontier.put(href, Boolean.TRUE);
+					}
+				}
+			}catch(SocketTimeoutException e) {
+				log.warn("Error occurred while navigating to :: "+page_url);
+			}
+			catch(HttpStatusException e) {
+				log.warn("HTTP Status Exception occurred while navigating to :: "+page_url);
+				e.printStackTrace();
+			}
+			catch(IllegalArgumentException e) {
+				log.warn("illegal argument exception occurred when connecting to ::  " + page_url);
+				e.printStackTrace();
+			}
+			catch(UnsupportedMimeTypeException e) {
+				log.warn(e.getMessage() + " : " +e.getUrl());
+			}
+		}
+		System.out.println("total links visited :::  "+visited.keySet().size());
+		
+		return visited;
 	}
 }

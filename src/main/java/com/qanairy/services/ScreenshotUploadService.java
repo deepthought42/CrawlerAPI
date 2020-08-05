@@ -13,6 +13,6 @@ import com.qanairy.models.enums.BrowserType;
 public class ScreenshotUploadService {
 
 	public static Future<String> uploadPageStateScreenshot(BufferedImage image, String host, String checksum, BrowserType browser, String user_id) {
-		return CompletableFuture.supplyAsync(() -> UploadObjectSingleOperation.saveImageToS3(image, host, checksum, browser, user_id));
+		return CompletableFuture.supplyAsync(() -> UploadObjectSingleOperation.saveImageToS3ForUser(image, host, checksum, browser, user_id));
 	}
 }

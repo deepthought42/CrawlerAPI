@@ -1,9 +1,9 @@
-FROM ubuntu:18.04
+FROM openjdk:8-jdk-alpine
 
-#install some required basics and jdk
-RUN apt-get update
-RUN apt-get install -y openjdk-8-jdk
+COPY target/Look-see-0.1.0.jar /look-see.jar
 
-COPY . .
-
-CMD["java","-jar", "target/Qanairy-0.4.0.jar"]
+EXPOSE 443
+EXPOSE 80
+EXPOSE 8080
+EXPOSE 9687
+ENTRYPOINT ["java","-jar", "/look-see.jar"]

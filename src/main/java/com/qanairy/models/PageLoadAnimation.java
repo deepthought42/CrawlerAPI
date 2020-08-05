@@ -2,19 +2,12 @@ package com.qanairy.models;
 
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 
-@NodeEntity
-public class PageLoadAnimation implements Transition, Persistable {
-
-	@GeneratedValue
-    @Id
-	private Long id;
+/**
+ * 
+ */
+public class PageLoadAnimation extends LookseeObject {
 	
-	private String type;
-	private String key;
 	private List<String> image_urls;
 	private List<String> image_checksums;
 	private String page_url;
@@ -29,40 +22,15 @@ public class PageLoadAnimation implements Transition, Persistable {
 	 */
 	public PageLoadAnimation(List<String> image_urls, List<String> image_checksums, String page_url) {
 		assert image_urls != null;
-		setType("PageLoadAnimation");
 		setImageUrls(image_urls);
 		setImageChecksums(image_checksums);
 		setPageUrl(page_url);
 		setKey(generateKey());
 	}
 
-	public Long getId(){
-		return this.id;
-	}
-	
-	@Override
-	public String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
-	public String getType() {
-		return this.type;
-	}
-
-	@Override
-	public void setType(String type) {
-		this.type = "PageLoadAnimation";
-	}
-
 	@Override
 	public String generateKey() {
-		return getType()+getPageUrl();
+		return "pageloadanimation:"+getPageUrl();
 	}
 
 	public List<String> getImageChecksums() {

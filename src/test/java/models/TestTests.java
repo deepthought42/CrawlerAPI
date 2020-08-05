@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 
 public class TestTests {
@@ -18,7 +18,7 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameTestWithLongPath() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/services/test-service.html");
 		objects.add(page);
@@ -43,7 +43,7 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameWithNoPath() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);
@@ -68,15 +68,13 @@ public class TestTests {
 	@org.junit.Test
 	public void generateTestNameWithElementThatHasIdAttribute() throws MalformedURLException{
 		
-		List<PathObject> objects = new ArrayList<>();
+		List<LookseeObject> objects = new ArrayList<>();
 		PageState page = new PageState();
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);
 		
 		ElementState element = new ElementState();
-		List<String> attribute_vals = new ArrayList<>();
-		attribute_vals.add("id-attr-1");
-		element.addAttribute(new Attribute("id", attribute_vals));
+		element.addAttribute("id", "id-attr-1");
 		element.setName("a");
 		
 		Action action = new Action();

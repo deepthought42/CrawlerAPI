@@ -348,6 +348,48 @@
 		    <artifactId>google-api-services-pagespeedonline</artifactId>
 		    <version>v5-rev13-1.25.0</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
+		
+		<dependency>
+		    <groupId>net.sf.cssbox</groupId>
+		    <artifactId>jstyleparser</artifactId>
+		    <version>3.5</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/net.sourceforge.cssparser/cssparser -->
+		<!--  uncomment this when ready to convert to css parser. JSTYLEPARSER swallows errors and that's not cool -->
+		<dependency>
+		    <groupId>net.sourceforge.cssparser</groupId>
+		    <artifactId>cssparser</artifactId>
+		    <version>0.9.27</version>
+		</dependency>
 				
+		
+		
+		<!-- https://mvnrepository.com/artifact/net.sf.jtidy/jtidy -->
+		<dependency>
+		    <groupId>net.sf.jtidy</groupId>
+		    <artifactId>jtidy</artifactId>
+		    <version>r938</version>
+		</dependency>
+				
+
 	</dependencies>
+	
+	<repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
 </project>

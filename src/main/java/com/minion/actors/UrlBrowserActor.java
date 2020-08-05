@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.AlertChoice;
+
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
@@ -36,10 +35,9 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
@@ -115,7 +113,7 @@ public class UrlBrowserActor extends AbstractActor {
 					PageLoadAnimation animation = null;
 					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
-					List<PathObject> path_objects = null;
+					List<LookseeObject> path_objects = null;
 					PageState page_state = null;
 					
 					do{
@@ -148,19 +146,19 @@ public class UrlBrowserActor extends AbstractActor {
 							
 							//build page
 							Page page = browser_service.buildPage(message.getAccountId(), url);
-							page = page_service.save(message.getAccountId(), page);
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+							page = page_service.saveForUser(message.getAccountId(), page);
+							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page state...");
-							page_state = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+							page_state = browser_service.buildPageStateWithElementsWithUserAndDomain(message.getAccountId(), message.getDomain(), browser);
 							
 							long start_time = System.currentTimeMillis();
-						  	List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), message.getAccountId(), browser, message.getDomain());
+						  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), message.getDomain());
 						  	long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							page_state.addElements(elements);
-							page_state = page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), page_state);
+							page_state = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getEntryPath(), page_state);
 							log.warn("DOM elements found :: "+elements.size());
 							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
 							log.warn("page state elements :: " + page_state.getElements().size());

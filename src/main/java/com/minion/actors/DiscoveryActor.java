@@ -27,7 +27,7 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
@@ -164,13 +164,13 @@ public class DiscoveryActor extends AbstractActor{
 						return;
 					}
 					*/
-					discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+					discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						if(path_expansion_actor == null){
@@ -182,7 +182,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
@@ -227,9 +227,9 @@ public class DiscoveryActor extends AbstractActor{
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
 			    	}
-					discovery_record = getDiscoveryRecord(test_msg.getDomain().getUrl(), test_msg.getDomain().getDiscoveryBrowserName(), test_msg.getAccount());
+					discovery_record = getDiscoveryRecord(test_msg.getDomain().getEntryPath(), test_msg.getDomain().getDiscoveryBrowserName(), test_msg.getAccount());
 					Test test = test_msg.getTest();
-					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
+					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getEntryPath(), test_msg.getAccount());
 					if(existing_record == null) {
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						try {
@@ -262,7 +262,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
 						final_key_list.add(test.getResult().getKey());
-						List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+						List<LookseeObject> final_object_list = new ArrayList<>(test.getPathObjects());
 						final_object_list.add(test.getResult());
 						log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
 						//run reducer on key list
@@ -305,7 +305,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getEntryPath(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
@@ -330,7 +330,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					
 					try {
-					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), form);
+					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), form);
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
@@ -340,13 +340,13 @@ public class DiscoveryActor extends AbstractActor{
 					}
 
 					log.warn("form message page key :: "+form_msg.getPage().getKey());
-					PageState page_state_record = page_state_service.findByKey(form_msg.getUserId(), form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKeyAndUsername(form_msg.getUserId(), form_msg.getPage().getKey());
 					log.warn("form message page key :: "+page_state_record.getKey());
 
 					page_state_record.addForm(form);
 					
 					try {
-						page_state_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
+						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), page_state_record);					    
 						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
 						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {
@@ -437,7 +437,7 @@ public class DiscoveryActor extends AbstractActor{
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl());
+		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getEntryPath());
 		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		
 		url_browser_actor.tell(url_message, getSelf() );
@@ -447,7 +447,7 @@ public class DiscoveryActor extends AbstractActor{
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
 		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl(), message.getAccountId());
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getEntryPath(), message.getAccountId());
 		}
 		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);

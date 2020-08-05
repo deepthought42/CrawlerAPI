@@ -29,7 +29,6 @@ public class RedirectService {
 		Redirect record = findByKey(redirect.getKey());
 		if(record == null){
 			log.warn("redirect key   :: "+redirect.getKey());
-			log.warn("redirect type  :: " + redirect.getType());
 			log.warn("redirect urls  ::  " + redirect.getUrls());
 			log.warn("redirect repo :: " + redirect_repo);
 			record = redirect_repo.save(redirect);

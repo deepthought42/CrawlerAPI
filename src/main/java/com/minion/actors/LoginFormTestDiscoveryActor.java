@@ -12,13 +12,12 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
@@ -31,7 +30,6 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -63,9 +61,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private ElementStateService element_state_service;
 	
 	@Autowired 
 	private ActionRepository action_repo;
@@ -106,7 +101,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 						Set<TestUser> test_users = domain_service.getTestUsers(message.getAccountId(), domain);
 						log.info("generating tests for "+test_users.size()+"   users");
 						for(TestUser user : test_users){
-							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getUrl(), message.getAccountId());
+							ExploratoryPath exploratory_path = initializeFormTest(form, domain.getEntryPath(), message.getAccountId());
 
 							//  clone test
 							//  get username element and add it to path
@@ -183,16 +178,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addPathObject(submit_login);
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
-							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
+							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getEntryPath());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 
-							boolean leaves_domain = !(message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
+							boolean leaves_domain = !(message.getDomain().getEntryPath().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
 							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
 							
 							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L, test.getPathKeys()));
-							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl(), message.getAccountId());
+							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getEntryPath(), message.getAccountId());
 
 							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
 							message.getDiscoveryActor().tell(test_message, getSelf());
@@ -218,7 +213,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private ExploratoryPath initializeFormTest(Form form, String url, String user_id) {
 		
 		List<String> path_keys = new ArrayList<String>();
-		List<PathObject> path_objects = new ArrayList<PathObject>();
+		List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 		
 		//get page state		
 		PageState page = form_service.getPageState(user_id, url, form);
@@ -241,10 +236,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
 		//add test path to path objects and keys
-		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey(), url, user_id);
+		List<LookseeObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey(), url, user_id);
 		log.warning("path objects size ::   "+test_path_objects.size());
 		for(String key : shortest_test.getPathKeys()){
-			for(PathObject obj : test_path_objects){
+			for(LookseeObject obj : test_path_objects){
 				if(key.equals(obj.getKey())){
 					path_objects.add(obj);
 					path_keys.add(key);
@@ -264,17 +259,13 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 				return element;
 			}
 			
-			List<Attribute> element_attributes = element_state_service.getElementAttributes(user_id, element.getKey());
-			log.warning("--- " + element_attributes.size() + " element attribues to be reviewed for search term   :::   "+search_val);
 			//check if element has value username in any attributes
-			for(Attribute attribute : element_attributes){
-				for(String val : attribute.getVals()){
-					log.warning("element attribute value  :: "+val.contains(search_val));
+			for(String attribute : element.getAttributes().keySet()){
+				log.warning("element attribute value  :: "+element.getAttributes().get(attribute).contains(search_val));
 
-					if(val.contains(search_val)){
-						log.warning("Element contains search val :: "+search_val);
-						return element;
-					}
+				if(element.getAttributes().get(attribute).contains(search_val)){
+					log.warning("Element contains search val :: "+search_val);
+					return element;
 				}
 			}
 			log.warning("element xpath value  :: "+element.getXpath().contains(search_val));

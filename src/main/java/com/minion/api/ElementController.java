@@ -93,7 +93,7 @@ public class ElementController {
 		log.warn("rule record key :: " + rule_record.getKey());
 		
     	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
-    	return element_service.findElementByKey(acct.getUserId(), element_key);
+    	return element_service.findByKey(element_key);
     }
     
     private void validateRule(Rule rule) {
@@ -191,7 +191,7 @@ public class ElementController {
     	}
     	
     	element_service.removeRule(acct.getUserId(), element_key, rule_key);
-    	return element_service.findElementByKey(acct.getUserId(), element_key);
+    	return element_service.findByKey(element_key);
     }
 
     /**
@@ -223,8 +223,8 @@ public class ElementController {
     	validateRules(element_state.getRules());
     	//check that min/max length rules are valid
     	log.warn("element update state experienced in element controller");
-      element_state = element_service.save(account.getUserId(), element_state);
-      return element_service.findByKey(account.getUserId(), element_state.getKey());
+      element_state = element_service.save(element_state);
+      return element_service.findByKey(element_state.getKey());
     }
     
     /**
@@ -257,8 +257,8 @@ public class ElementController {
     	validateRules(element_state.getRules());
     	//check that min/max length rules are valid
     	log.warn("element update state experienced in element controller");
-      element_state = element_service.saveFormElement(account.getUserId(), element_state);
-      return element_service.findElementByKey(account.getUserId(), element_state.getKey());
+      element_state = element_service.saveFormElement(element_state);
+      return element_service.findByKey(element_state.getKey());
     }
 
 	private void validateRules(Set<Rule> rules) {

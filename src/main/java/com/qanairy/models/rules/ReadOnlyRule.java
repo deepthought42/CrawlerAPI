@@ -16,6 +16,6 @@ public class ReadOnlyRule extends Rule {
 	@Override
 	public Boolean evaluate(ElementState elem) {
 		//Check if field is read-only
-		return elem.getAttributes().contains("readonly");
+		return elem.getAttributes().containsKey("readonly");
 	}
 }

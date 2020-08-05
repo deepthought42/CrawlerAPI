@@ -1,9 +1,14 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,14 +17,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Node;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -44,12 +60,23 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AlertChoice;
+
+import cz.vutbr.web.css.CSSException;
+import cz.vutbr.web.css.CSSFactory;
+import cz.vutbr.web.css.CombinedSelector;
+import cz.vutbr.web.css.Declaration;
+import cz.vutbr.web.css.NodeData;
+import cz.vutbr.web.css.RuleSet;
+import cz.vutbr.web.css.StyleSheet;
+import cz.vutbr.web.csskit.RuleFontFaceImpl;
+import cz.vutbr.web.csskit.RuleKeyframesImpl;
+import cz.vutbr.web.csskit.RuleMediaImpl;
+import cz.vutbr.web.domassign.StyleMap;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -132,9 +159,10 @@ public class Browser {
 	 * @param url
 	 * @throws MalformedURLException 
 	 */
-	public void navigateTo(String url) throws MalformedURLException{
+	public void navigateTo(String url) {
 		getDriver().get(url);
 		
+		/*
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
@@ -146,7 +174,7 @@ public class Browser {
 				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
 			}
 		}
-		
+		*/
 		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
@@ -159,7 +187,7 @@ public class Browser {
 	 * 
 	 * @precondition src != null
 	 */
-	public static String cleanSrc(String src) throws NullPointerException{
+	public static String cleanSrc(String src) {
 		Document html_doc = Jsoup.parse(src);
 		html_doc.select("canvas").remove();
 
@@ -174,7 +202,7 @@ public class Browser {
 			driver.quit();
 		}
 		catch(Exception e){
-			log.info("Unknown exception occurred when closing browser" + e.getMessage());
+			log.debug("Unknown exception occurred when closing browser" + e.getMessage());
 		}
 	}
 	
@@ -258,7 +286,7 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions chrome_options = new ChromeOptions();
-		chrome_options.addArguments("user-agent=QanairyBot");
+		chrome_options.addArguments("user-agent=LookseeBot");
 		chrome_options.addArguments("window-size=1920,1080");
 
 		//options.setHeadless(true);
@@ -276,7 +304,7 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-		log.info("Requesting chrome remote driver from hub");
+		log.debug("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, chrome_options);
 		driver.manage().window().maximize();
 
@@ -385,16 +413,9 @@ public class Browser {
 		for(ElementState elem : elements){
 			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
-				for(Attribute attr : elem.getAttributes()){
-					if(attr.getName().equals("for")){
-						for(String val : attr.getVals()){
-							if(val.equals(for_id)){
-								return elem;
-							}
-						}
-					}
+				if(elem.getAttribute("for").contains(for_id)){
+					return elem;
 				}
-			
 			}
 		}
 		
@@ -412,15 +433,9 @@ public class Browser {
 		for(ElementState elem : elements){
 			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
-				for(Attribute attr : elem.getAttributes()){
-					if(attr.getName().equals("for")){
-						for(String val : attr.getVals()){
-							for(String id : for_ids){
-								if(val.equals(id)){
-									labels.add(elem);
-								}
-							}
-						}
+				for(String id : for_ids){
+					if(elem.getAttributes().get("for").contains(id)){
+						labels.add(elem);
 					}
 				}
 			}
@@ -463,9 +478,183 @@ public class Browser {
 	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
 	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 * @throws IOException 
 	 */
-	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"display", "position", "color", "font-family", "font-size", "background-color"};
+	public static Map<String, String> loadPreRenderCssProperties(Document jsoup_doc, org.w3c.dom.Document w3c_document, Map<String, Map<String, String>> rule_set_list, URL url, String xpath, Element element) throws XPathExpressionException, IOException{
+		assert w3c_document != null;
+		assert url != null;
+		assert xpath != null;
+		
+		log.warn("-----------------------------------------------------------------------------");
+		log.warn("-----------------------------------------------------------------------------");
+		log.warn("loading post render css properties");
+		Map<String, String> css_map = new HashMap<>();
+
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+
+
+		//count all elements with non 0 px values that aren't decimals
+		//extract all rules
+		
+		for(String css_selector : rule_set_list.keySet()) {
+			if(css_selector.startsWith("@")){
+				continue;
+			}
+			String suffixless_selector = css_selector;
+			if(css_selector.contains(":")) {
+				suffixless_selector = css_selector.substring(0, css_selector.indexOf(":"));
+			}
+			Elements selected_elements = jsoup_doc.select(suffixless_selector);
+			for(Element selected_elem : selected_elements) {
+				if(selected_elem.html().equals(element.html())) {
+					//apply rule styling to element css_map
+					css_map.putAll(rule_set_list.get(css_selector));
+				}
+			}
+		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 *
+	 * @param element the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 */
+	public static Map<String, String> loadCssPropertiesUsingParser(org.w3c.dom.Document w3c_document, StyleMap map, URL url, String xpath) throws XPathExpressionException{
+		assert w3c_document != null;
+		assert url != null;
+		assert xpath != null;
+		
+		Map<String, String> css_map = new HashMap<>();
+
+		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
+
+
+		//count all elements with non 0 px values that aren't decimals
+		//log.warn("w3c_document :: "+w3c_document);
+		//log.warn("URL :: "+url);
+		
+		//create the style map
+
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		Node node = (Node)xPath.compile(xpath).evaluate(w3c_document, XPathConstants.NODE);
+		NodeData style = map.get((org.w3c.dom.Element)node); //get the style map for the element
+		//log.warn("Element styling  ::  "+style);
+		if(style != null) {
+			for(String property : style.getPropertyNames()) {
+				
+				//log.warn("property value 2 :: "+style.getAsString(property, false));
+				if(style.getValue(property, false) == null) {
+					continue;
+				}
+				String property_value = style.getValue(property, true).toString();
+				//String property_value = CssPropertyFactory.construct(style.getProperty(property));
+				//log.warn("Property : value    ->    "+property+  "   :    "+property_value);
+				if("background-color".contentEquals(property)) {
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("background color property found " + property_value);
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					
+				}
+				if(property_value == null || property_value.isEmpty() || "none".equalsIgnoreCase(property_value)) {
+					continue;
+				}
+				css_map.put(property, property_value);
+			}
+		}
+		//}
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param root the element to for which css styles should be loaded.
+	 * @throws XPathExpressionException 
+	 */
+	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
+
+		
+		Map<String, String> css_map = new HashMap<>();
+		//map rule set declarations with elements and save element
+		for(RuleSet rule_set : rule_sets) {
+			for(CombinedSelector selector : rule_set.getSelectors()) {
+				
+				String selector_str = selector.toString();
+				if(selector_str.startsWith(".")
+					|| selector_str.startsWith("#")) 
+				{
+					selector_str = selector_str.substring(1);
+				}
+
+				if(element.attr("class").contains(selector_str) || element.attr("id").contains(selector_str) || element.nodeName().equals(selector_str)) {
+					
+					//TODO look for padding and add it to the document
+					for(Declaration declaration : rule_set) {
+						String raw_property_value = declaration.toString();
+						raw_property_value = raw_property_value.replace(";", "");
+						String[] property_val = raw_property_value.split(":");
+						
+						css_map.put(property_val[0], property_val[1]);
+					}
+				}
+			}
+		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadCssProperties(WebElement element, WebDriver driver){
+		JavascriptExecutor executor = (JavascriptExecutor)driver;
+		String script = "var s = '';" +
+		                "var o = getComputedStyle(arguments[0]);" +
+		                "for(var i = 0; i < o.length; i++){" +
+		                "s+=o[i] + ':' + o.getPropertyValue(o[i])+';';}" + 
+		                "return s;";
+
+		String response = executor.executeScript(script, element).toString();
+		
+		Map<String, String> css_map = new HashMap<String, String>();
+
+		String[] css_prop_vals = response.split(";");
+		for(String prop_val_pair : css_prop_vals) {
+			String[] prop_val = prop_val_pair.split(":");
+			
+			if(prop_val.length == 1) {
+				continue;
+			}
+			if(prop_val.length > 0) {
+				String prop1 = prop_val[0];
+				String prop2 = prop_val[1];
+				css_map.put(prop1, prop2);
+			}
+		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadTextCssProperties(WebElement element){
+		String[] cssList = {"font-family", "font-size", "text-decoration-color", "text-emphasis-color"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
@@ -539,7 +728,7 @@ public class Browser {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Set<Attribute> extractAttributes(WebElement element) {
+	public Map<String, String> extractAttributes(WebElement element) {
 		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
 	}
@@ -551,10 +740,8 @@ public class Browser {
 	 * 
 	 * @param attributeList
 	 */
-	private Set<Attribute> loadAttributes( List<String> attributeList){
-		Set<Attribute> attr_set = new HashSet<Attribute>();
-		
-		Map<String, Boolean> attributes_seen = new HashMap<String, Boolean>();
+	private Map<String, String> loadAttributes( List<String> attributeList){
+		Map<String, String> attributes_seen = new HashMap<String, String>();
 		
 		for(int i = 0; i < attributeList.size(); i++){
 			String[] attributes = attributeList.get(i).split("::");
@@ -564,14 +751,12 @@ public class Browser {
 				String[] attributeVals = attributes[1].split(" ");
 
 				if(!attributes_seen.containsKey(attribute_name)){
-					attributes_seen.put(attribute_name, true);
-					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
-					attr_set.add(attribute);	
+					attributes_seen.put(attribute_name, Arrays.asList(attributeVals).toString());	
 				}
 			}
 		}
 
-		return attr_set;
+		return attributes_seen;
 	}
 
 	
@@ -649,7 +834,7 @@ public class Browser {
 	/**
 	 * Waits for the document ready state to be complete, then observes page transition if it exists
 	 */
-	public void waitForPageToLoad() throws MalformedURLException {
+	public void waitForPageToLoad() {
 		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver)
 					.executeScript("return document.readyState")
@@ -728,4 +913,116 @@ public class Browser {
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
 		return web_element.isDisplayed();
 	}
+
+	public static List<RuleSet> extractRuleSetsFromStylesheets(List<String> raw_stylesheets, URL page_state_url) {
+		List<RuleSet> rule_sets = new ArrayList<>();
+		for(String raw_stylesheet : raw_stylesheets) {
+			//parse the style sheet
+			try {
+				StyleSheet sheet = CSSFactory.parseString(raw_stylesheet, page_state_url);
+				for(int idx = 0; idx < sheet.size(); idx++) {
+					if(sheet.get(idx) instanceof RuleFontFaceImpl
+							|| sheet.get(idx) instanceof RuleMediaImpl
+							|| sheet.get(idx) instanceof RuleKeyframesImpl) {
+						continue;
+					}
+					
+					//access the rules and declarations
+					RuleSet rule = (RuleSet) sheet.get(idx);       //get the first rule
+					rule_sets.add(rule);
+				}
+				//or even print the entire style sheet (formatted)
+			} catch (MalformedURLException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (CSSException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+		}
+		return rule_sets;
+	}
+
+	public static List<String> extractStylesheets(String src) {
+		List<String> raw_stylesheets = new ArrayList<>();
+		Document doc = Jsoup.parse(src);	
+		Elements stylesheets = doc.select("link");
+		for(Element stylesheet : stylesheets) {
+			if("text/css".equalsIgnoreCase(stylesheet.attr("type"))) {
+				String stylesheet_url = stylesheet.absUrl("href");
+				//parse the style sheet
+				if(stylesheet_url.trim().isEmpty()) {
+					stylesheet_url = stylesheet.attr("href");
+					if(stylesheet_url.startsWith("//")) {
+						stylesheet_url = "https:"+stylesheet_url;
+					}
+				}
+				try {
+					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
+				} catch (KeyManagementException | NoSuchAlgorithmException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					log.warn(e1.getMessage());
+					//e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		}
+		
+		return raw_stylesheets;
+	}
+	
+	/**
+	 * extract body html from source
+	 * 
+	 * @param src - entire html source for a web page
+	 * 
+	 * @return
+	 * 
+	 * @pre src != null;
+	 */
+	public static String extractBody(String src) {
+		assert src != null;
+		
+		Document doc = Jsoup.parse(src);	
+		Elements body_elements = doc.select("body");
+		return body_elements.html();
+	}
+	
+	public static String URLReader(URL url) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+        SSLContext sc = SSLContext.getDefault();
+        
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+
+        con.setSSLSocketFactory(sc.getSocketFactory());
+        // get response code, 200 = Success
+        int responseCode = con.getResponseCode();
+        if(con.getContentEncoding() != null && con.getContentEncoding().equalsIgnoreCase("gzip")) {
+        	return readStream(new GZIPInputStream( con.getInputStream()));
+        }
+        else {
+        	return readStream(con.getInputStream());
+        }
+	}
+
+	private static String readStream(InputStream in) {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in));) {
+            String nextLine = "";
+            while ((nextLine = reader.readLine()) != null) {
+                sb.append(nextLine);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
 }

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
@@ -55,11 +55,11 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(List<String> path_keys, List<PathObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
+	public Test createLandingPageTest(List<String> path_keys, List<LookseeObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 	  	
-	  	log.warn("domain url :: "+domain.getUrl());
-	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+	  	log.warn("domain url :: "+domain.getEntryPath());
+	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getEntryPath());
 	  	log.warn("total path object added to test :: "+path_objects.size());
 	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
 
@@ -89,7 +89,7 @@ public class TestCreatorService {
 	 */
 	public Test createTest(
 			List<String> path_keys, 
-			List<PathObject> path_objects, 
+			List<LookseeObject> path_objects, 
 			PageState result_page, 
 			long crawl_time, 
 			String browser_name, 
@@ -131,7 +131,7 @@ public class TestCreatorService {
 	 */
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
-		for(PathObject path_obj: test.getPathObjects()){
+		for(LookseeObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(ElementState.class)){
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){

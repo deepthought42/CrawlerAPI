@@ -18,7 +18,7 @@ public class BrowserConnectionHelper {
 	//private static final String[] CHROME_DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
 	//private static final String[] FIREFOX_DISCOVERY_HUB_IP_ADDRESS = {"35.239.245.6:4444", "173.255.118.118:4444"};
 
-    private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"34.74.90.172:4444", "35.239.245.6:4444", "173.255.118.118:4444"};
+    private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"34.70.14.249:4444", "34.70.14.249:4444" , "34.70.14.249:4444"};
 	private static final String TEST_HUB_IP_ADDRESS = "34.73.96.186:4444";
 
 	// PRODUCTION HUB ADDRESS
@@ -26,27 +26,6 @@ public class BrowserConnectionHelper {
 
 	//STAGING HUB ADDRESS
 	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
-
-	@Deprecated
-	public static Browser getConnection(String browser, BrowserEnvironment environment) throws MalformedURLException{
-		log.warn("getting browser connection");
-		URL hub_url = null;
-		if(environment.equals(BrowserEnvironment.TEST)){
-			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );
-		}
-		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "chrome".equalsIgnoreCase(browser)){
-			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
-		}
-		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "firefox".equalsIgnoreCase(browser)){
-			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
-		}
-
-		return new Browser(browser, hub_url);
-	}
 
 	/**
 	 * Creates a {@linkplain WebDriver} connection

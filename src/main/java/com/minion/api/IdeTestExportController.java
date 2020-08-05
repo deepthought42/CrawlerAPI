@@ -116,9 +116,9 @@ public class IdeTestExportController {
 			}
 		}
 		
-    	Domain domain = domain_service.findByHost(domain_url.getHost(), acct.getUserId());
+    	Domain domain = domain_service.findByHostForUser(domain_url.getHost(), acct.getUserId());
     	if(domain == null){
-    		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","", domain_url.getHost());
+    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),formatted_url,"chrome", "");
     		domain = domain_service.save(domain);
     		SegmentAnalyticsHelper.sendDomainCreatedInRecorder(acct.getUserId(), domain.getKey());
     	}

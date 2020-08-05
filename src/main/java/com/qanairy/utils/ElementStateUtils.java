@@ -3,6 +3,9 @@ package com.qanairy.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebElement;
 
@@ -75,5 +78,26 @@ public class ElementStateUtils {
 
 		return x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
 				&& (y+height) <= (viewport_size.getHeight()+y_offset);
+	}
+
+	public static boolean isHeader(ElementState element) {
+		return "h1".equalsIgnoreCase(element.getName()) 
+				|| "h2".equalsIgnoreCase(element.getName())
+				|| "h3".equalsIgnoreCase(element.getName())
+				|| "h4".equalsIgnoreCase(element.getName())
+				|| "h5".equalsIgnoreCase(element.getName())
+				|| "h6".equalsIgnoreCase(element.getName());
+	}
+
+	public static boolean isTextContainer(ElementState element_state) {
+		Document doc = Jsoup.parseBodyFragment(element_state.getOuterHtml());
+		Element body = doc.body();
+		return !body.ownText().isEmpty();
+	}
+	
+	public static boolean isTextContainer(WebElement element) {
+		Document doc = Jsoup.parseBodyFragment(element.getAttribute("outerHTML"));
+		Element body = doc.body();
+		return !body.ownText().isEmpty();
 	}
 }

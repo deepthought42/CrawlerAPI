@@ -27,7 +27,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
@@ -96,20 +96,20 @@ public class ParentPathExplorer extends AbstractActor {
 			  		long start = System.currentTimeMillis();
 
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
-			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
+			  		List<LookseeObject> final_path_objects = new ArrayList<LookseeObject>(message.getPathObjects());
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
-					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
+					List<LookseeObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
 
 					//get index of last page element in path
 			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(path_keys);
 
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
-					List<PathObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);
+					List<LookseeObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);
 
 					//get array of all elements after last page element
 					List<String> end_path_keys = new ArrayList<String>();
-					List<PathObject> end_path_objects = new ArrayList<>();
+					List<LookseeObject> end_path_objects = new ArrayList<>();
 
 					if((last_elem_idx+1) < path_keys.size()){
 						end_path_keys = path_keys.subList(last_elem_idx+1, path_keys.size());
@@ -161,14 +161,14 @@ public class ParentPathExplorer extends AbstractActor {
 
 								BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 								String checksum = PageState.getFileChecksum(element_screenshot);
-								String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
+								String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getEntryPath()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
 								last_element.setScreenshotUrl(screenshot_url);
 								last_element.setScreenshotChecksum(checksum);
 								last_element.setWidth(element_size.getWidth());
 								last_element.setHeight(element_size.getHeight());
 								last_element.setXLocation(element_location.getX());
 								last_element.setYLocation(element_location.getY());
-								element_state_service.save(message.getAccountId(), last_element);
+								element_state_service.save(last_element);
 								break;
 							}
 							
@@ -198,20 +198,20 @@ public class ParentPathExplorer extends AbstractActor {
 
 							BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
 							parent_element.setScreenshotChecksum(checksum);
 							parent_element.setScreenshotUrl(screenshot_url);
 							parent_element.setWidth(element_size.getWidth());
 							parent_element.setHeight(element_size.getHeight());
 							parent_element.setXLocation(element_location.getX());
 							parent_element.setYLocation(element_location.getY());
-							parent_element = element_state_service.save(message.getAccountId(), parent_element);
+							parent_element = element_state_service.save(parent_element);
 							
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
 
-							List<PathObject> parent_end_path_objects = new ArrayList<>();
+							List<LookseeObject> parent_end_path_objects = new ArrayList<>();
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 
@@ -227,7 +227,7 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							else{
 								log.warn("parent exploratory path building page state");
-								result = browser_service.buildPageState(message.getAccountId(), message.getDomain(), browser);
+								result = browser_service.buildPageStateWithElementsWithUserAndDomain(message.getAccountId(), message.getDomain(), browser);
 							}
 
 							//if result matches expected page then build new path using parent element state and break from loop
@@ -279,7 +279,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
-					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+					List<List<LookseeObject>> path_object_lists = new ArrayList<List<LookseeObject>>();
 					for(Test test : matching_tests) {
 						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
 					}
@@ -295,8 +295,8 @@ public class ParentPathExplorer extends AbstractActor {
 					}
 
 					Domain domain = message.getDomain();
-					log.warn("domain url :: "+domain.getUrl());
-				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+					log.warn("domain url :: "+domain.getEntryPath());
+				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getEntryPath());
 
 			  		Test test = test_creator_service.createTest( final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost(), message.getAccountId());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain, message.getAccountId());
@@ -326,7 +326,7 @@ public class ParentPathExplorer extends AbstractActor {
 	 */
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
-		for(PathObject path_obj: test.getPathObjects()){
+		for(LookseeObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(ElementState.class)){
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){

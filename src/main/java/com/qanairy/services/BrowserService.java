@@ -13,15 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.xpath.XPathExpressionException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -33,10 +38,8 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
@@ -50,11 +53,10 @@ import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
-import com.qanairy.models.message.PathMessage;
-import com.qanairy.utils.ArrayUtils;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
+import cz.vutbr.web.css.RuleSet;
 import us.codecraft.xsoup.Xsoup;
 
 /**
@@ -79,9 +81,6 @@ public class BrowserService {
 
 	@Autowired
 	private DomainService domain_service;
-
-	@Autowired
-	private Crawler crawler;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
 
@@ -127,39 +126,43 @@ public class BrowserService {
 	}
 
 	/**
+	 * Constructs an {@link ElementState} from a JSOUP {@link Element element}
 	 * 
 	 * @param xpath
 	 * @param attributes
 	 * @param css_values
 	 * @param element
 	 * @param classification
+	 * @param rendered_css_values TODO
 	 * @param checksum
 	 * @param dimension TODO
 	 * @return
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
-			Set<Attribute> attributes, 
+			Map<String, String> attributes, 
 			Map<String, String> css_values, 
 			Element element, 
-			ElementClassification classification
+			ElementClassification classification, 
+			Map<String, String> rendered_css_values
 	) {
 		assert xpath != null && !xpath.isEmpty();
 		assert attributes != null;
 		assert element != null;
 		assert classification != null;
+		assert rendered_css_values != null;
+		assert css_values != null;
 		
 		ElementState element_state = new ElementState();
 		element_state.setXpath(xpath);
 		element_state.setAttributes(attributes);
 		element_state.setOuterHtml(element.outerHtml());
-		element_state.setInnerHtml(element.html());
-		element_state.setTemplate(extractTemplate(element.outerHtml(), element.text()));
+		element_state.setTemplate(extractTemplate(element.outerHtml()));
 		element_state.setName(element.tagName());
-		element_state.setText(element.text());
-		element_state.setIsPartOfForm(isElementPartOfForm(element));
+		element_state.setText(element.ownText().trim());
 		element_state.setClassification(classification);
-		element_state.setCssValues(css_values);
+		element_state.setPreRenderCssValues(css_values);
+		element_state.setRenderedCssValues(rendered_css_values);
 		element_state.setKey(element_state.generateKey());
 		element_state.setType("ElementState");
 		element_state.setXLocation(0);
@@ -179,9 +182,9 @@ public class BrowserService {
 		html_doc.select("style").remove();
 		//html_doc.attr("id","");
 		for(Element element : html_doc.getAllElements()) {
-			element.attr("id", "");
-			element.attr("name", "");
-			element.attr("style", "");
+			element.removeAttr("id")
+				   .removeAttr("name")
+				   .removeAttr("style");
 		}
 		
 		return html_doc.html();
@@ -195,33 +198,33 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState(String user_id, Domain domain, Browser browser) throws Exception{
+	public PageState buildPageStateWithElementsWithUserAndDomain(String user_id, Domain domain, Browser browser) throws Exception{
 		assert browser != null;
 		
 		//retrieve landable page state associated with page with given url
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String host = new URL(browser_url).getHost();
-		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);		
-		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);	
+		String page_src = BrowserService.generalizeSrc(Browser.cleanSrc(browser.getDriver().getPageSource()));
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksum(user_id, domain.getUrl(), src_checksum);
+		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
 
 		if(page_states.isEmpty()) {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
 			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
 			viewport_screenshot.flush();
 			
 			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
 			full_page_screenshot.flush();
 
-			log.warn("creating new page state object ");
+			log.debug("creating new page state object ");
 			PageState page_state = new PageState( url_without_params,
-					viewport_screenshot_url,
+					"",
 					new ArrayList<>(),
 					page_src,
 					browser.getXScrollOffset(),
@@ -233,18 +236,87 @@ public class BrowserService {
 					full_page_screenshot_url, 
 					full_page_screenshot_checksum);
 
-			page_state.addScreenshotChecksum(screenshot_checksum);
+			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
 			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-			return page_state_service.save(user_id, domain.getKey(), page_state);
+		
+			return page_state_service.saveUserAndDomain(user_id, domain.getKey(), page_state);
 		}
 		
 		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStates(user_id, page_states.get(0).getKey()));
+		page_state.setElements(page_state_service.getElementStatesForUser(user_id, page_states.get(0).getKey()));
 		log.warn("loaded page elements from db :: " +page_state.getElements().size());
 		return page_state;
 	}
+	
+	/**
+	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
+	 * @return page {@linkplain PageState}
+	 * @throws IOException 
+	 * @throws XPathExpressionException 
+	 * @throws Exception 
+	 * 
+	 * @pre browser != null
+	 */
+	public PageState buildPageState( Page page, String page_src, String page_url ) throws IOException, XPathExpressionException{
+		assert page != null;
+		
+		//Document doc = Jsoup.connect("http://"+page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(30000).get();
+		//String page_src = doc.outerHtml();
+		
+		//page_src = Jsoup.clean(page_src, Whitelist.relaxed());
+		//retrieve landable page state associated with page with given url
+		//String page_url = "http://"+page.getUrl();
+		//String host = new URL(browser_url).getHost();
+		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
+		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
+		
+		//Element root = html_doc.getElementsByTag("body").get(0);
+		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); //new ArrayList<>();
+		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
+		
+		List<ElementState> elements = extractElementStates(page_src, new URL(url_without_params), rule_sets);
+		/*
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		viewport_screenshot.flush();
+		*/
+		/*
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
+		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		full_page_screenshot.flush();
+		*/
+				
+		PageState page_state = new PageState( url_without_params,
+				"",
+				elements,
+				page_src,
+				0,
+				0,
+				0,
+				0,
+				BrowserType.CHROME.toString(),
+				new HashSet<Form>(),
+				null, 
+				null);
 
+		page_state.setSrcChecksum(src_checksum);
+		//page_state.addScreenshotChecksum(screenshot_checksum);
+		//page_state.setScreenshotUrl(viewport_screenshot_url);
+		//page_state.setFullPageWidth(full_page_screenshot.getWidth());
+		//page_state.setFullPageHeight(full_page_screenshot.getHeight());
+		log.warn("built page state with url :: "+page_state.getUrl());
+		
+		PageState record = page_state_service.findByKey(page_state.getKey());
+		if(record != null) {
+			return record;
+		}
+		log.warn("built page...now saving page state...");
+		return page_state;
+	}
+	
 	private static String calculateSha256(String value) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
@@ -269,32 +341,27 @@ public class BrowserService {
 		return page;
 	}
 	
-	
-	private List<ElementState> getDomElementTreeLinear(String pageSource, Browser browser, String user_id, Domain domain) throws IOException {
+	@Deprecated
+	private List<ElementState> getDomElementTreeLinearWithUserAndDomain(String page_source, String user_id, Domain domain) throws IOException, XPathExpressionException {
 		assert domain != null;
 		assert user_id != null;
 		assert !user_id.isEmpty();
-		assert pageSource != null;
-		assert !pageSource.isEmpty();
-		assert browser != null;
+		assert page_source != null;
+		assert !page_source.isEmpty();
 		
 		List<ElementState> visited_elements = new ArrayList<>();
 		Map<ElementState, List<Element>> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
 		
 		//get html doc and get root element
-		Document html_doc = Jsoup.parse(pageSource);
+		Document html_doc = Jsoup.parse(page_source);
 		Element root = html_doc.getElementsByTag("body").get(0);
 		
 		//create element state from root node
-		/*
-		WebElement web_element = browser.findWebElementByXpath("//body");
-		Dimension element_size = web_element.getSize();
-		Point element_location = web_element.getLocation();
-		*/
-		Set<Attribute> attributes = generateAttributesUsingJsoup(root);
-		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<>(), root, ElementClassification.ANCESTOR);
-		root_element_state = element_service.save(user_id, root_element_state);
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+
+		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<>(), root, ElementClassification.ANCESTOR,  new HashMap<>());
+		root_element_state = element_service.save(root_element_state);
 		
 		//put element on frontier
 		frontier.put(root_element_state, new ArrayList<>(root.children()));
@@ -317,7 +384,7 @@ public class BrowserService {
 				
 				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
 
-				attributes = generateAttributesUsingJsoup(child);
+				attributes = generateAttributesMapUsingJsoup(child);
 				
 				ElementClassification classification = null;
 				List<Element> children = new ArrayList<Element>(child.children());
@@ -330,8 +397,9 @@ public class BrowserService {
 				else {
 					classification = ElementClassification.ANCESTOR;
 				}
-				ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), child, classification);
-				element_state = element_service.save(user_id, element_state);
+				ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), child, classification, null);
+
+				element_state = element_service.save(element_state);
 					
 				//put element on frontier
 				if(children.isEmpty()) {
@@ -343,144 +411,223 @@ public class BrowserService {
 				
 				root_element.addChildElement(element_state);
 			}
-			root_element = element_service.save(user_id, root_element);
+			root_element = element_service.save(root_element);
+		}
+		return visited_elements;
+	}
+	
+	/**
+	 * 
+	 * @param page_source
+	 * @param url
+	 * @param rule_sets TODO
+	 * @param reviewed_xpaths
+	 * @return
+	 * @throws IOException
+	 * @throws XPathExpressionException 
+	 */
+	private synchronized List<ElementState> getDomElements(String page_source, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		assert page_source != null;
+		assert !page_source.isEmpty();
+		assert url != null;
+		assert rule_sets != null;
+		
+		List<ElementState> visited_elements = new ArrayList<>();
+		List<String> frontier = new ArrayList<>();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+
+		/*
+		Tidy tidy = new Tidy(); // obtain a new Tidy instance
+		//tidy.setXHTML(true); // set desired config options using tidy setters 
+		log.debug("tidy  :: "+tidy); //NOTE :: tidy contains the errors for the document. 
+		//extract body element for dom creation
+		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
+		log.warn("1===========================================================================");
+		log.warn("1===========================================================================");
+		log.warn("1===========================================================================");
+		
+		log.warn("w3c_document  ---   "+ w3c_document);
+		*/
+		//get html doc and get root element
+		Document html_doc = Jsoup.parse(page_source);
+		
+		Element root = html_doc.getElementsByTag("body").get(0);
+		
+		
+		//create element state from root node
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+		log.warn("page source 1 :: "+page_source.length());
+		log.warn("url 1  :: "+url);
+		Map<String, String> css_props = new HashMap<>();
+		try{
+			css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root));
+		}
+		catch(Exception e) {
+			log.warn(e.getMessage());
+		}
+		
+	//	Map<String, String> css_rendered = new HashMap<>();
+
+	//	ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
+		
+	//	root_element_state = element_service.save(root_element_state);
+
+		//put element on frontier
+		frontier.add("//body");
+		while(!frontier.isEmpty()) {
+			String next_xpath = frontier.remove(0);
+			//ElementState root_element = frontier.remove(next_xpath);
+			//visited_elements.add(root_element);
+			//get Element by xpath
+			
+			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
+			if(elements.size() == 0) {
+				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath + "   :     url :   "  + url.toString());
+			}
+			Element element = elements.first();
+			//get child elements for element
+			attributes = generateAttributesMapUsingJsoup(element);
+			
+			Map<String, String> pre_render_css_props = new HashMap<>();
+			
+			try{
+				pre_render_css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, element));
+			}
+			catch(Exception e) {
+				log.warn(e.getMessage());
+			}
+			
+			ElementClassification classification = null;
+			List<Element> children = new ArrayList<Element>(element.children());
+			if(children.isEmpty()) {
+				classification = ElementClassification.CHILD;
+			}
+			else if(isSliderElement(element)) {
+				classification = ElementClassification.SLIDER;
+			}
+			else {
+				classification = ElementClassification.ANCESTOR;
+			}
+			
+			ElementState element_state = buildElementState(next_xpath, attributes, pre_render_css_props, element, classification, new HashMap<>());
+			element_state = element_service.save(element_state);
+			visited_elements.add(element_state);
+			element_service.addChildElement(element_state.getKey(), element_state.getKey());
+			
+			
+			for(Element child : children) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
+				String xpath = element_state.getXpath() + "/" + child.tagName();
+				
+				if(xpath_cnt.containsKey(xpath)) {
+					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
+				else {
+					xpath_cnt.put(xpath, 1);
+				}
+				
+				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+
+				frontier.add(xpath);
+			}
 		}
 		return visited_elements;
 	}
 	
 	
-	private List<ElementState> getDomElementTreeRecursive(String pageSource, Browser browser, String user_id, Domain domain) throws IOException {
-		assert domain != null;
-		assert user_id != null;
-		assert !user_id.isEmpty();
-		assert pageSource != null;
-		assert !pageSource.isEmpty();
+	@Deprecated
+	private List<ElementState> getDomElementTreeLinear(String page_source, Browser browser, Map<String, ElementState> reviewed_xpaths) throws IOException {
+		assert page_source != null;
+		assert !page_source.isEmpty();
 		assert browser != null;
 		
-		Document html_doc = Jsoup.parse(pageSource);
-		Element root = html_doc.getElementsByTag("html").get(0);
+		List<ElementState> visited_elements = new ArrayList<>();
+		Map<ElementState, List<Element>> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
-		return getElements(root, html_doc, browser, xpath_cnt, user_id, domain, "//html");
-	}
-
-	/**
-	 * Builds a tree of elements and establishes connections between {@link ElementState} objects in the database
-	 * 
-	 * @param root
-	 * @param html_doc
-	 * @param browser
-	 * @param xpath_cnt
-	 * @param user_id
-	 * @param root_xpath TODO
-	 * @param root_web_elem TODO
-	 * @param domain_url
-	 * @return set of {@link ElementState} objects
-	 * @throws IOException 
-	 * 
-	 * @pre root != null
-	 * @pre assert html_doc != null
-	 * @pre assert browser != null
-	 */
-	private List<ElementState> getElements(Element root, Document html_doc, Browser browser,
-			Map<String, Integer> xpath_cnt, String user_id, Domain domain, String root_xpath) throws IOException {
-		assert root != null;
-		assert html_doc != null;
-		assert browser != null;
-		assert root_xpath != null;
-		assert !root_xpath.isEmpty();
 		
-		List<ElementState> elements = new ArrayList<>();
-		List<Element> child_elements = new ArrayList<>(root.children());
-		for(int idx = 0; idx < child_elements.size(); idx++) {
-			Element element = child_elements.get(idx);
-			if(isStructureTag(element.tagName())) {
-				continue;
-			}
-			
-			String xpath = root_xpath + "/" + element.tagName();
-			if(!xpath_cnt.containsKey(xpath)) {
-				xpath_cnt.put(xpath, 1);
-			}
-			else {
-				xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
-			}
-			
-			xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
-			WebElement web_element = browser.findWebElementByXpath(xpath);
-
-			//Map<String, String> css_values = Browser.loadCssProperties(web_element);
-			if(!web_element.isDisplayed()) {
-				continue;
-			}
-			
-			Set<Attribute> attributes = generateAttributesUsingJsoup(element);
+		//get html doc and get root element
+		Document html_doc = Jsoup.parse(page_source);
+		Element root = html_doc.getElementsByTag("body").get(0);
 		
-			Dimension element_size = web_element.getSize();
-			Point element_location = web_element.getLocation();
-			
-			if(element.children().size() == 0 ) {
-					ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), element, ElementClassification.CHILD);
-					ElementState element_record = element_service.findByKey(user_id, element_state.getKey());
-					
-					if(element_record != null) {
-						elements.add(element_record);
-					}
-					else{
-						if(hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element_location) && !isElementLargerThanViewport(browser, element_size)) {
-							BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(domain.getProtocol() + "://"+domain.getUrl()).getHost(), element_state.getKey(), BrowserType.create(browser.getBrowserName()), user_id);
-							element_state.setScreenshotUrl(screenshot_url);
-							element_state.setScreenshotChecksum(checksum);
-							element_state = element_service.save(user_id, element_state);
-							elements.add(element_state);
-						}
-						elements.add(element_state);
-					}
-			}
-			else {
-				ElementClassification classification = null;
+		//create element state from root node
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+		ElementState root_element_state = buildElementState("//body", attributes, new HashMap<String, String>(), root, ElementClassification.ANCESTOR,  new HashMap<>());
+		root_element_state = element_service.save(root_element_state);
+
+		//put element on frontier
+		frontier.put(root_element_state, new ArrayList<>(root.children()));
+		while(!frontier.isEmpty()) {
+			ElementState root_element = frontier.keySet().iterator().next();
+			List<Element> child_elements = frontier.remove(root_element);
+
+			for(Element child : child_elements) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
+				String xpath = root_element.getXpath() + "/" + child.tagName();
+
+				if(!xpath_cnt.containsKey(xpath)) {
+					xpath_cnt.put(xpath, 1);
+				}
+				else {
+					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
 				
-				if(isSliderElement(element)) {
+				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+
+				ElementClassification classification = null;
+				List<Element> children = new ArrayList<Element>(child.children());
+				if(children.isEmpty()) {
+					classification = ElementClassification.CHILD;
+				}
+				else if(isSliderElement(child)) {
 					classification = ElementClassification.SLIDER;
 				}
 				else {
 					classification = ElementClassification.ANCESTOR;
 				}
 				
-				//Map<String, String> css_map = loadCssAttriutes();
-				
-				ElementState element_state = buildElementState(xpath, attributes, new HashMap<>(), element, classification);
-				ElementState element_record = element_service.findByKey(user_id, element_state.getKey());
-				//get all child element states
-				List<ElementState> element_states = new ArrayList<>();
-				
-				if(element_record != null) {
-					element_states = element_service.getChildElements(user_id, element_record.getKey());
-					element_state = element_record;
+				ElementState element_state = null;
+				if(reviewed_xpaths.containsKey(xpath)){	
+					element_state = reviewed_xpaths.get(xpath);
 				}
-				else{
-					/*
-					if(hasWidthAndHeight(element_size) && !doesElementHaveNegativePosition(element_location) && !isElementLargerThanViewport(browser, element_size)) {
-						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-						String checksum = PageState.getFileChecksum(element_screenshot);
-						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, new URL(domain.getProtocol() + "://"+domain.getUrl()).getHost(), element_state.getKey(), BrowserType.create(browser.getBrowserName()), user_id);
-						element_state.setScreenshotUrl(screenshot_url);
-						element_state.setScreenshotChecksum(checksum);
+				else {
+					Map<String, String> child_css_values = new HashMap<>();
+					attributes = generateAttributesMapUsingJsoup(child);
+					WebElement web_element = null;
+					try {						
+						web_element = browser.findWebElementByXpath(xpath);
+					}catch(NoSuchElementException e) {
 					}
-					*/
-					element_states = getElements(element, html_doc, browser, xpath_cnt, user_id, domain, xpath);
 					
-					element_state.setChildElements(element_states);
-					element_state = element_service.save(user_id, element_state);
-					elements.add(element_state);
+					if(web_element != null) {
+						child_css_values = Browser.loadCssProperties(web_element, browser.getDriver());
+						
+						//if(ElementStateUtils.isTextContainer(web_element)){
+							child_css_values.putAll(Browser.loadTextCssProperties(web_element));
+						//}
+						element_state = buildElementState(xpath, attributes, child_css_values, child, classification, null);
+						element_state = element_service.save(element_state);
+						//put element on frontier
+						if(children.isEmpty()) {
+							reviewed_xpaths.put(root_element.getXpath(), element_state);
+							visited_elements.add(element_state);
+						}
+						else {
+							frontier.put(element_state, new ArrayList<>(child.children()));
+						}
+						element_service.addChildElement(root_element.getKey(), element_state.getKey());
+					}
 				}
 				
-				elements.addAll(element_states);
 			}
-		}		
-		
-		return elements;
+			reviewed_xpaths.put(root_element.getXpath(), root_element);
+			visited_elements.add(root_element);
+			//root_element = element_service.save(root_element);
+		}
+		return visited_elements;
 	}
 
 	/**
@@ -580,79 +727,7 @@ public class BrowserService {
 
 		return elements;
 	}
-
-	/**
-	 * Filters out html, body, script and link tags
-	 *
-	 * @param web_elements
-	 * @return
-	 */
-	public static List<WebElement> filterStructureTags(List<WebElement> web_elements) {
-		List<WebElement> elements = new ArrayList<>();
-
-		for(WebElement element : web_elements){
-			String tag_name = element.getTagName();
-			if(isStructureTag(tag_name)){
-				continue;
-			}
-			elements.add(element);
-		}
-		return elements;
-	}
 	
-	private static boolean isElementPartOfForm(Element element) {
-		Element new_element = element;
-		while(new_element != null && !new_element.tagName().equals("body") && !new_element.tagName().equals("html")){
-			if(new_element.tagName().equals("form")){
-				return true;
-			}
-			new_element = new_element.parent();
-		}
-		return false;
-	}
-	
-	/**
-	 *
-	 * @param browser
-	 * @param elem
-	 * @param page_screenshot
-	 * @param xpath
-	 * @return
-	 * @throws IOException
-	 */
-	public ElementState buildElementState(
-			Browser browser, 
-			WebElement elem, 
-			String xpath, 
-			Set<Attribute> attributes, 
-			Map<String, String> css_props, 
-			Point location, 
-			Dimension element_size, 
-			String screenshot_url, 
-			String checksum, 
-			boolean is_displayed
-	) throws IOException{
-		long start_time = System.currentTimeMillis();
-
-		ElementState page_element = new ElementState(elem.getText(), xpath, 
-										elem.getTagName(), 
-										attributes, 
-										css_props, 
-										screenshot_url, 
-										checksum,
-										location.getX(), 
-										location.getY(), 
-										element_size.getWidth(), 
-										element_size.getHeight(), 
-										elem.getAttribute("innerHTML"), 
-										ElementClassification.ANCESTOR, 
-										elem.isDisplayed(), elem.getAttribute("outerHTML"));
-		page_element.setIsPartOfForm(false);
-		log.debug("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
-
-		return page_element;
-	}
-
 	public static boolean doesElementHaveNegativePosition(Point location) {
 		return location.getX() < 0 || location.getY() < 0;
 	}
@@ -675,7 +750,7 @@ public class BrowserService {
 
 		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) || "script".contentEquals(tag_name) || "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
 				|| "br".contentEquals(tag_name) || "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) || "use".contentEquals(tag_name)
-				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name);
+				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
@@ -701,6 +776,15 @@ public class BrowserService {
 		return elements;
 	}
 
+	/**
+	 * Checks if {@link WebElement element} is visible in the current viewport window or not
+	 * 
+	 * @param browser {@link Browser browser} connection to use 
+	 * @param location {@link Point point} where the element top left corner is located
+	 * @param size {@link Dimension size} of the element
+	 * 
+	 * @return true if element is rendered within viewport, otherwise false
+	 */
 	public static boolean isElementVisibleInPane(Browser browser, Point location, Dimension size){
 		assert browser != null;
 		assert location != null;
@@ -791,47 +875,6 @@ public class BrowserService {
 		return elem.findElement(By.xpath(".."));
 	}
 
-	/**
-	 *
-	 * @param a_xPathQueryString
-	 * @return
-	 */
-	public static String generateConcatForXPath(String a_xPathQueryString)
-	{
-	    String returnString = "";
-	    String searchString = a_xPathQueryString;
-
-	    int quotePos = searchString.indexOf("\"");
-	    if (quotePos == -1)
-	    {
-	        returnString = "'" + searchString + "'";
-	    }
-	    else
-	    {
-	        //returnString = "concat(";
-	        while (quotePos != -1)
-	        {
-
-	            String substring = searchString.substring(0, quotePos);
-	            if(quotePos <= 0 || searchString.length() == 0){
-	        		continue;
-	        	}
-	            returnString += "'" + substring + "', ";
-	            String tail_string = searchString.substring(quotePos + 1, searchString.length());
-	            if(tail_string.length() == 0){
-	            	continue;
-	            }
-                //must be a double quote
-                returnString += "'\"', ";
-                searchString = tail_string;
-	            quotePos = searchString.indexOf("\"");
-	        }
-	        returnString += "'" + searchString;
-	    }
-
-	    return returnString;
-	}
-
 	public static String cleanAttributeValues(String attribute_values_string) {
 		String escaped = attribute_values_string.replaceAll("[\\t\\n\\r]+"," ");
 		escaped = escaped.trim().replaceAll("\\s+", " ");
@@ -844,30 +887,28 @@ public class BrowserService {
 	 *
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public String generateXpath(WebElement element, WebDriver driver, Set<Attribute> attributes){
+	public String generateXpath(WebElement element, WebDriver driver, Map<String, String> attributes){
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
+		
 		String xpath = "/"+element.getTagName();
-		for(Attribute attr : attributes){
-			if(valid_attributes.contains(attr.getName())){
-				String attribute_values = ArrayUtils.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+		for(String attr : attributes.keySet()){
+			if(valid_attributes.contains(attr)){
+				String attribute_values =attributes.get(attr);
 				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
 				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + trimmed_values.split(" ")[0] + "\")");
+					attributeChecks.add("contains(@" + attr + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}
 		}
 		if(attributeChecks.size()>0){
-			xpath += "[";
-			xpath += attributeChecks.get(0).toString();
-			xpath += "]";
+			xpath += "["+attributeChecks.get(0).toString() + "]";
 		}
 
 	    WebElement parent = element;
 	    String parent_tag_name = parent.getTagName();
-	    int count = 0;
-	    while(!"html".equals(parent_tag_name) && !"body".equals(parent_tag_name) && count < 3){
+	    while(!"html".equals(parent_tag_name) && !"body".equals(parent_tag_name)){
 	    	try{
 	    		parent = getParentElement(parent);
 	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){
@@ -881,7 +922,6 @@ public class BrowserService {
 	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
-	    	count++;
 	    }
 	    xpath = "/"+xpath;
 		return uniqifyXpath(element, xpath, driver);
@@ -910,32 +950,32 @@ public class BrowserService {
 		}
 
 		if(attributeChecks.size()>0){
-			xpath += "[";
-			xpath += attributeChecks.get(0).toString();
-			xpath += "]";
+			xpath += "["+ attributeChecks.get(0).toString()+"]";
 		}
 
 		Element last_element = element;
 		Element parent = null;
 		String last_element_tagname = last_element.tagName();
-	    int count = 0;
-	    while(!"html".equals(last_element_tagname) && !"body".equals(last_element_tagname) && count < 3){
+	    while(!"html".equals(last_element_tagname) && !"body".equals(last_element_tagname)){
 	    	try{
 	    		parent = last_element.parent();
 
 	    		if(!isStructureTag(parent.tagName())){
-		    		if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().isEmpty()){
+	    			Elements elements = Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements();
+		    		if( elements.isEmpty()){
 		    			break;
 		    		}
-	    			else if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().size() == 1){
+	    			else if( elements.size() == 1){
 		    			return "//"+parent.tagName() + xpath;
 		    		}
 		    		else{
 			    		xpath = "/" + parent.tagName() + xpath;
 		    		}
 		    		last_element = parent;
+		    		last_element_tagname = last_element.tagName();
 	    		}
 	    		else{
+	    			log.warn("Encountered structure tag. Aborting element xpath extraction..");
 	    			break;
 	    		}
 	    	}catch(InvalidSelectorException e){
@@ -943,7 +983,6 @@ public class BrowserService {
 	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
-	    	count++;
 	    }
 	    if(!xpath.startsWith("//")){
 			xpath = "/"+xpath;
@@ -956,7 +995,6 @@ public class BrowserService {
 		String[] values = trimmed_values.split(" ");
 		List<String> reduced_vals = new ArrayList<>();
 		for(String val : values){
-
 			//check if value is auto-generated
 			if(!isAutoGenerated(val)){
 				reduced_vals.add(val);
@@ -975,14 +1013,13 @@ public class BrowserService {
 	 *
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public static Set<Attribute> generateAttributesUsingJsoup(Element element){
-		Set<Attribute> attribute_list = new HashSet<Attribute>();
-		for(org.jsoup.nodes.Attribute attribute : element.attributes() ){
-			Attribute qanairy_attribute = new Attribute(attribute.getKey(), Arrays.asList(attribute.getValue().split(" ")));
-			attribute_list.add(qanairy_attribute);
+	public static Map<String, String> generateAttributesMapUsingJsoup(Element element){
+		Map<String, String> attributes = new HashMap<>();
+		for(Attribute attribute : element.attributes() ){
+			attributes.put(attribute.getKey(), attribute.getValue());
 		}
 
-		return attribute_list;
+		return attributes;
 	}
 
 	/**
@@ -1085,13 +1122,13 @@ public class BrowserService {
 					ElementClassification.ANCESTOR, 
 					form_elem.isDisplayed(), 
 					form_elem.getAttribute("outerHTML"));
-			String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, host, checksum, BrowserType.create(browser.getBrowserName()), user_id);
 			form_tag.setScreenshotUrl(screenshot_url);
-			form_tag = element_service.saveFormElement(user_id, form_tag);
+			form_tag = element_service.saveFormElement(form_tag);
 			
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
+			Set<Form> forms = domain_service.getForms(user_id, domain.getEntryPath());
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
@@ -1105,12 +1142,12 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
+			Form form_record = form_service.findByKey(user_id, domain.getEntryPath(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}
 
-			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
+			int form_count = domain_service.getFormCount(user_id, domain.getEntryPath());
 			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 			
@@ -1124,9 +1161,9 @@ public class BrowserService {
 		for(WebElement input_elem : input_elements){
 			boolean submit_elem_found = false;
 
-			Set<Attribute> attributes = browser.extractAttributes(input_elem);
-			for(Attribute attribute : attributes){
-				if(attribute.contains("submit")){
+			Map<String, String> attributes = browser.extractAttributes(input_elem);
+			for(String attribute : attributes.keySet()){
+				if(attributes.get(attribute).contains("submit")){
 					submit_elem_found = true;
 					break;
 				}
@@ -1155,7 +1192,7 @@ public class BrowserService {
 					"",
 					input_elem.isDisplayed(),
 					input_elem.getAttribute("outerHTML"));
-			ElementState tag_record = element_service.findByKey(user_id, input_tag.getKey());
+			ElementState tag_record = element_service.findByKeyAndUserId(user_id, input_tag.getKey());
 			if( tag_record != null ) {
 				input_tag = tag_record;
 			}
@@ -1164,14 +1201,14 @@ public class BrowserService {
 				BufferedImage img = browser.getElementScreenshot(input_elem);
 				String checksum = PageState.getFileChecksum(img);
 				
-				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
+				String screenshot = UploadObjectSingleOperation.saveImageToS3ForUser(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 				input_tag.setScreenshotUrl(screenshot);
 				input_tag.setScreenshotChecksum(checksum);
 				img.flush();
 			}
 			
 			input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
-			input_tag = element_service.saveFormElement(user_id, input_tag);
+			input_tag = element_service.saveFormElement(input_tag);
 			log.warn("rules applied to input tag   ::   "+input_tag.getRules().size());
 
 			elements.add(input_tag);
@@ -1202,12 +1239,12 @@ public class BrowserService {
 
 		boolean submit_elem_found = false;
 		List<WebElement> form_elements = getNestedElements(form_elem);
-		Set<Attribute> attributes = null;
 
+		Map<String, String> attributes = new HashMap<>();
 		for(WebElement elem : form_elements){
 			attributes = browser.extractAttributes(elem);
-			for(Attribute attribute : attributes){
-				if(attribute.contains("submit")){
+			for(String attribute : attributes.keySet()){
+				if(attributes.get(attribute).contains("submit")){
 					submit_elem_found = true;
 					break;
 				}
@@ -1227,9 +1264,9 @@ public class BrowserService {
 		
 		//Map<String, String> css_map = Browser.loadCssProperties(submit_element);
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), "", submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), checksum, submit_element.isDisplayed(), submit_element.getAttribute("outerHTML"));
-		String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
+		String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		elem.setScreenshotUrl(screenshot_url);
-		elem = element_service.saveFormElement(user_id, elem);
+		elem = element_service.saveFormElement(elem);
 
 		return elem;
 	}
@@ -1329,15 +1366,12 @@ public class BrowserService {
 	 * @pre attributes != null
 	 * @pre !attributes.isEmpty()
 	 */
-	public static boolean doesAttributesContainSliderKeywords(Set<Attribute> attributes) {
+	public static boolean doesAttributesContainSliderKeywords(Map<String, List<String>> attributes) {
 		assert attributes != null;
 		assert !attributes.isEmpty();
-		for(Attribute attr : attributes) {
-			List<String> attr_vals = attr.getVals();
-			for(String val : attr_vals) {
-				if(val.contains("slide")) {
-					return true;
-				}
+		for(String attr : attributes.keySet()) {
+			if(attributes.get(attr).contains("slide")) {
+				return true;
 			}
 		}
 		return false;
@@ -1398,14 +1432,11 @@ public class BrowserService {
 	/**
 	 * Extracts template for element by usin outter tml and removing inner text
 	 * @param element {@link Element}
-	 *
 	 * @return templated version of element html
 	 */
-	public static String extractTemplate(String outerHtml, String innerText){
+	public static String extractTemplate(String outerHtml){
 		assert outerHtml != null;
 		assert !outerHtml.isEmpty();
-		assert innerText != null;
-		assert !innerText.isEmpty();
 		
 		Document html_doc = Jsoup.parseBodyFragment(outerHtml);
 
@@ -1417,7 +1448,6 @@ public class BrowserService {
 			element.attr("id", "");
 			element.attr("name", "");
 			element.attr("style", "");
-			//element.text("");
 		}
 		
 		return html_doc.html();
@@ -1534,13 +1564,16 @@ public class BrowserService {
 		return false;
 	}
 
-	public List<ElementState> extractElementStates(String page_src, String user_id, Browser browser, Domain domain) throws IOException {
-		return getDomElementTreeLinear(page_src, browser, user_id, domain);
+	public List<ElementState> extractElementStatesWithUserAndDomain(String page_src, String user_id, Domain domain) throws IOException, XPathExpressionException {
+		return getDomElementTreeLinearWithUserAndDomain(page_src, user_id, domain);
 	}
 	
-	public List<ElementState> extractElementStates(PathMessage path_message, BrowserType browser_type) throws Exception {
-		//crawl path
-		PageState result_page = crawler.performPathExploratoryCrawlAndBuildFullElementTree(path_message.getAccountId(), path_message.getDomain(), browser_type.getShortName(), path_message);
-		return result_page.getElements();
+	@Deprecated
+	public List<ElementState> extractElementStates(String page_src, Browser browser, Map<String, ElementState> reviewed_xpaths) throws IOException {
+		return getDomElementTreeLinear(page_src, browser, reviewed_xpaths);
+	}
+	
+	public List<ElementState> extractElementStates(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		return getDomElements(page_src, url, rule_sets);
 	}
 }

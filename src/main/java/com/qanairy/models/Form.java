@@ -3,11 +3,7 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import java.util.Map;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,16 +15,10 @@ import com.qanairy.models.experience.BugMessage;
 /**
  * Represents a form tag and the encompassed inputs in a web browser
  */
-@NodeEntity
-public class Form implements Persistable, Comparable<Form>{
+public class Form extends LookseeObject implements Comparable<Form>{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Form.class);
 
-	@GeneratedValue
-    @Id
-	private Long id;
-
-	private String key;
 	private Long memory_id;
 	private String name;
     
@@ -49,7 +39,7 @@ public class Form implements Persistable, Comparable<Form>{
 	@Relationship(type = "HAS_SUBMIT")
 	private ElementState submit_field;
 	
-	public Form(){}
+	public Form(){	}
 	
 	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
 				String name, double[] predictions, FormType type, Date date_discovered, 
@@ -82,24 +72,23 @@ public class Form implements Persistable, Comparable<Form>{
 	 * @return {@link FormType}
 	 */
 	private FormType determineFormType(){
-		Set<Attribute> attributes = this.form_tag.getAttributes();
-		for(Attribute attr: attributes){
-			for(String val : attr.getVals()){
-				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
-					return FormType.REGISTRATION;
-				}
-				else if(val.contains("login") || (val.contains("sign") && val.contains("in"))){
-					return FormType.LOGIN;
-				}
-				else if(val.contains("search")){
-					return FormType.SEARCH;
-				}
-				else if(val.contains("reset") && val.contains("password")){
-					return FormType.PASSWORD_RESET;
-				}
-				else if(val.contains("payment") || val.contains("credit")){
-					return FormType.PAYMENT;
-				}
+		Map<String, String> attributes = this.form_tag.getAttributes();
+		for(String attr: attributes.keySet()){
+			String vals = attributes.get(attr);
+			if(vals.contains("register") || (vals.contains("sign") && vals.contains("up"))){
+				return FormType.REGISTRATION;
+			}
+			else if(vals.contains("login") || (vals.contains("sign") && vals.contains("in"))){
+				return FormType.LOGIN;
+			}
+			else if(vals.contains("search")){
+				return FormType.SEARCH;
+			}
+			else if(vals.contains("reset") && vals.contains("password")){
+				return FormType.PASSWORD_RESET;
+			}
+			else if(vals.contains("payment") || vals.contains("credit")){
+				return FormType.PAYMENT;
 			}
 		}
 		
@@ -183,14 +172,6 @@ public class Form implements Persistable, Comparable<Form>{
 	public void setType(FormType type) {
 		this.type = type.toString();
 	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
 	
 	public FormStatus getStatus() {
 		return FormStatus.valueOf(status.toUpperCase());
@@ -214,10 +195,6 @@ public class Form implements Persistable, Comparable<Form>{
 
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
-	}
-	
-	public Long getId() {
-		return id;
 	}
 	
 	@Override

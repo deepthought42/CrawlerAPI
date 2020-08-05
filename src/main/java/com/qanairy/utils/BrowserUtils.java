@@ -2,6 +2,7 @@ package com.qanairy.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,6 +12,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
@@ -21,9 +26,9 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserType;
@@ -66,7 +71,7 @@ public class BrowserUtils {
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
 				image_checksums.add(new_checksum);
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3ForUser(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
 			}
 			catch(Exception e){
 				e.printStackTrace();
@@ -250,43 +255,55 @@ public class BrowserUtils {
 		domain = domain.replace("index.html", "");
 		domain = domain.replace("index.htm", "");
 
-		if(domain.charAt(domain.length()-1) == '/'){
+		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/'){
 			domain = domain.substring(0, domain.length()-1);
+		}
+		
+		//remove any anchor link references
+		int hash_index = domain.indexOf("#");
+		if(hash_index > 0) {
+			domain = domain.substring(0, hash_index);
 		}
 		
 		return domain;
 	}
 	
-	public static String sanitizeUserUrl(String url) throws MalformedURLException {
-		String domain = url;
-		int param_index = domain.indexOf("?");
-		if(param_index >= 0){
-			domain = domain.substring(0, param_index);
-		}
-
-		URL new_url = new URL(domain);
-
-		//check if host is subdomain
+	/**
+	 * Reformats url so that it matches the Look-see requirements
+	 * 
+	 * @param url 
+	 * 
+	 * @return sanitized url string
+	 * 
+	 * @throws MalformedURLException
+	 * 
+	 * @pre url != null
+	 * @pre !url.isEmpty()
+	 */
+	public static String sanitizeUserUrl(String url) throws MalformedURLException  {
+		assert url != null;
+		assert !url.isEmpty();
 		
+		URL new_url = new URL(url);
+		//check if host is subdomain
 		String new_host = new_url.getHost();
 		
-		int count = new_host.split("\\.").length;
-		if(count <= 2 && !new_host.startsWith("www.")){
+		if(!new_host.startsWith("www.")){
 			new_host = "www."+new_host;
 		}
 		String new_key = new_host+new_url.getPath();
-		if(new_key.charAt(new_key.length()-1) == '/'){
+		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
 		
 		new_key = new_key.replace("index.html", "");
 		new_key = new_key.replace("index.htm", "");
 		
-		if(new_key.charAt(new_key.length()-1) == '/') {
+		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
-		
-		return new_url.getProtocol()+"://"+new_key;
+				
+		return "http://"+new_key;
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {
@@ -313,7 +330,104 @@ public class BrowserUtils {
 		return false;
 	}
 	
-	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<PathObject> path_objects) throws MalformedURLException {
+	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<LookseeObject> path_objects) throws MalformedURLException {
 		return !(start_url.trim().contains(new URL(end_url).getHost()) || end_url.contains((new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost())));
+	}
+
+	/**
+	 * Checks if url is part of domain including sub-domains
+	 *  
+	 * @param domain_host host of {@link Domain domain}
+	 * @param url 
+	 * 
+	 * @return true if url is external, otherwise false
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException {
+		return !url.contains(domain_host);
+	}
+	
+	/**
+	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
+	 * 
+	 * @param source valid html source
+	 * @return {@link List list} of link urls
+	 */
+	public static List<String> extractLinkUrls(String source) {
+		List<String> link_urls = new ArrayList<>();
+		Document document = Jsoup.parse(source);
+		Elements elements = document.getElementsByTag("a");
+		
+		for(Element element : elements) {
+			String url = element.absUrl("href");
+			if(!url.isEmpty()) {
+				link_urls.add(url);
+			}
+		}
+		return link_urls;
+	}
+	
+	/**
+	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
+	 * 
+	 * @param source valid html source
+	 * @return {@link List list} of link urls
+	 */
+	public static List<ElementState> extractLinks(List<ElementState> elements) {
+		List<ElementState> links = new ArrayList<>();
+		
+		for(ElementState element : elements) {
+			if(element.getName().equalsIgnoreCase("a")) {
+				links.add(element);
+			}
+		}
+		return links;
+	}
+	
+	/**
+	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	public static boolean doesUrlExist(URL url) throws IOException {
+		assert(url != null);
+		
+		//perform check for http clients
+		if("http".equalsIgnoreCase(url.getProtocol()) || "https".equalsIgnoreCase(url.getProtocol())){
+			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			huc.setRequestMethod("HEAD");
+			int responseCode = huc.getResponseCode();
+
+			if (responseCode != 404) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		else if("mailto".equalsIgnoreCase(url.getProtocol())) {
+			//TODO check if mailto address is vailid
+		}
+		else {
+			// TODO handle image links
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Checks if url string ends with an image suffix indicating that it points to an image file
+	 * 
+	 * @param href url to examine
+	 * 
+	 * @return true if any suffixes match, false otherwise
+	 * 
+	 * @pre href != nuill
+	 */
+	public static boolean isImageUrl(String href) {
+		assert href != null;
+		
+		return href.endsWith(".jpg") || href.endsWith(".png") || href.endsWith(".gif") || href.endsWith(".bmp") || href.endsWith(".tiff") || href.endsWith(".webp") || href.endsWith(".bpg") || href.endsWith(".heif");
 	}
 }

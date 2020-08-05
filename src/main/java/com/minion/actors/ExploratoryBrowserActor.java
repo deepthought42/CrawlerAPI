@@ -17,7 +17,7 @@ import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
@@ -110,7 +110,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 						//get page states
 						List<PageState> page_states = new ArrayList<PageState>();
-						for(PathObject path_obj : message.getPathObjects()){
+						for(LookseeObject path_obj : message.getPathObjects()){
 							if(path_obj instanceof PageState){
 								PageState page_state = (PageState)path_obj;
 								page_states.add(page_state);
@@ -129,15 +129,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 						else {
 							Page page = browser_service.buildPage(message.getAccountId(), result_page.getUrl());
-							page = page_service.save(message.getAccountId(), page);
-							domain_service.addPage(message.getDomain().getUrl(), page, message.getAccountId());
+							page = page_service.saveForUser(message.getAccountId(), page);
+							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 
 							long start_time = System.currentTimeMillis();
-							List<ElementState> elements = browser_service.extractElementStates(message, BrowserType.create(browser_name));
+							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));
 							long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							result_page.addElements(elements);
-							result_page = page_state_service.save(message.getAccountId(), message.getDomain().getUrl(), result_page);
+							result_page = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getEntryPath(), result_page);
 							page_service.addPageState(message.getAccountId(), page.getKey(), result_page);
 							
 							log.warn("DOM elements found :: "+elements.size());

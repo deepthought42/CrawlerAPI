@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 
@@ -26,7 +26,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	public TestRecord getMostRecentRecord(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
 
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test{key:{key}}) MATCH (t)-[r:HAS_PATH_OBJECT]->(p) OPTIONAL MATCH b=(p)-[:HAS]->() RETURN p,b")
-	public List<PathObject> getPathObjects(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
+	public List<LookseeObject> getPathObjects(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
 	
 	@Query("MATCH (a:Account{user_id: {user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test{key:{key}}) MATCH (t)-[r:HAS_TEST_RECORD]->(tr:TestRecord) MATCH ps=(tr)-[:HAS_PAGE_STATE]->(p) RETURN ps ORDER BY tr.ran_at DESC")
 	public List<TestRecord> findAllTestRecords(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);

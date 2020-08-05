@@ -6,8 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.TestService;
 
@@ -16,15 +16,15 @@ public class PathUtils {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	/**
-	 * Retrieves the last {@link PageState} in the given list of {@link PathObject}s
+	 * Retrieves the last {@link PageState} in the given list of {@link LookseeObject}s
 	 * 
-	 * @param pathObjects list of {@link PathObject}s in sequential order
+	 * @param pathObjects list of {@link LookseeObject}s in sequential order
 	 * 
 	 * @return last page state in list
 	 * 
 	 * @pre pathObjects != null
 	 */
-	public static PageState getLastPageState(List<PathObject> path_objects) {
+	public static PageState getLastPageState(List<LookseeObject> path_objects) {
 		assert(path_objects != null);
 				
 		for(int idx = path_objects.size()-1; idx >= 0; idx--){
@@ -46,22 +46,22 @@ public class PathUtils {
 		return -1;
 	}
 
-	public static List<PathObject> orderPathObjects(List<String> path_keys, List<PathObject> path_objects) {
-		List<PathObject> ordered_path_objects = new ArrayList<>();
+	public static List<LookseeObject> orderPathObjects(List<String> path_keys, List<LookseeObject> path_objects) {
+		List<LookseeObject> ordered_path_objects = new ArrayList<>();
 		List<String> temp_path_keys = new ArrayList<>(path_keys);
 		//Ensure Order path objects
 		for(String path_obj_key : temp_path_keys){
-			for(PathObject obj : path_objects){
+			for(LookseeObject obj : path_objects){
 				if(obj.getKey().equals(path_obj_key)){
 					ordered_path_objects.add(obj);
 				}
 			}
 		}
 
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<>();
+		LookseeObject last_path_obj = null;
+		List<LookseeObject> reduced_path_obj = new ArrayList<>();
 		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
+		for(LookseeObject obj : ordered_path_objects){
 			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
 				last_path_obj = obj;
 				reduced_path_obj.add(obj);
@@ -71,11 +71,11 @@ public class PathUtils {
 		return reduced_path_obj;
 	}
 
-	public static List<PathObject> reducePathObjects(List<PathObject> ordered_path_objects) {
+	public static List<LookseeObject> reducePathObjects(List<LookseeObject> ordered_path_objects) {
 		//scrub path objects for duplicates
-		List<PathObject> reduced_path_objs = new ArrayList<>();
-		PathObject last_path_obj = null;
-		for(PathObject obj : ordered_path_objects){
+		List<LookseeObject> reduced_path_objs = new ArrayList<>();
+		LookseeObject last_path_obj = null;
+		for(LookseeObject obj : ordered_path_objects){
 			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
 				last_path_obj = obj;
 				reduced_path_objs.add(obj);
@@ -85,10 +85,10 @@ public class PathUtils {
 		return reduced_path_objs;
 	}
 
-	public static PageState getFirstPage(List<PathObject> ordered_path_objects) {
+	public static PageState getFirstPage(List<LookseeObject> ordered_path_objects) {
 		//find first page
-		for(PathObject obj : ordered_path_objects){
-			if(obj.getType().equals("PageState")){
+		for(LookseeObject obj : ordered_path_objects){
+			if(obj instanceof PageState){
 				return ((PageState)obj);
 			}
 		}
@@ -96,7 +96,7 @@ public class PathUtils {
 		return null;
 	}
 
-	public static PageState getSecondToLastPageState(List<PathObject> path_objects) {
+	public static PageState getSecondToLastPageState(List<LookseeObject> path_objects) {
 		assert(path_objects != null);
 		
 		int page_states_seen = 0;
@@ -133,10 +133,10 @@ public class PathUtils {
 	 * 
 	 * @pre !pathObjects.isEmpty()
 	 */
-	public static String getFirstUrl(List<PathObject> pathObjects) {
+	public static String getFirstUrl(List<LookseeObject> pathObjects) {
 		assert !pathObjects.isEmpty();
 		
-		PathObject obj = pathObjects.get(0);
+		LookseeObject obj = pathObjects.get(0);
 		
 		if(obj.getKey().contains("redirect")) {
 			log.warn("first path object is a redirect");

@@ -4,6 +4,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -190,7 +191,7 @@ public class WebCrawlerActor extends AbstractActor{
 					
 					boolean rendering_not_complete = true;
 					int cnt = 0;
-					
+					List<String> element_xpaths_reviewed = new ArrayList<>();
 					do {
 						try {
 							log.warn("getting browser for rendered page state extraction...");
@@ -208,23 +209,23 @@ public class WebCrawlerActor extends AbstractActor{
 					String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 					full_page_screenshot.flush();
 							 */
-							
+
 							//extract Element screenshots
 							List<ElementState> elements = page_state.getElements();// browser_service.extractElementStates(page_state.getSrc(), url);
 							log.warn("elements loaded for page state :: " +page_state.getElements().size());
 							for(ElementState element : elements) {
-//								long start_time = System.currentTimeMillis();
-								try {
-									WebElement web_element = browser.getDriver().findElement(By.xpath(element.getXpath()));
-									Map<String, String> css_props = Browser.loadCssProperties(web_element, browser.getDriver());
-									element.setRenderedCssValues(css_props);
-									element_state_service.save(element);
-								}catch(WebDriverException e) {
-									log.warn("no such element exception thrown for element with xpath :: "+element.getXpath()+"    :   on page     :    "+page_state.getUrl());
-									//e.printStackTrace();
+								if(element_xpaths_reviewed.contains(element.getXpath())) {
+									continue;
 								}
+//								long start_time = System.currentTimeMillis();
+								WebElement web_element = browser.getDriver().findElement(By.xpath(element.getXpath()));
+								Map<String, String> css_props = Browser.loadCssProperties(web_element, browser.getDriver());
+								element.setRenderedCssValues(css_props);
+								element_state_service.save(element);
+								element_xpaths_reviewed.add(element.getXpath());
+								break;
+					
 //								long end_time = System.currentTimeMillis();
-//								log.warn("total time to load rendered css properties ::   "+((end_time-start_time)));
 							}
 							
 							//get rendered css values for element
@@ -244,7 +245,7 @@ public class WebCrawlerActor extends AbstractActor{
 							rendering_not_complete = false;
 							break;
 						}catch(WebDriverException e) {
-							log.warn("Webdriver exception thrown...");
+							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
 						catch(GridException e) {

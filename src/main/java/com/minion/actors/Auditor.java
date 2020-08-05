@@ -18,7 +18,8 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.message.AuditSet;
+import com.qanairy.models.enums.AuditStage;
+import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageAuditComplete;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.PageStateService;
@@ -80,7 +81,6 @@ public class Auditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageState.class, page_state-> {
-					log.warn("performing audits on page state..."+page_state.getUrl());
 					//retrieve all audits that the customer requested
 					Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>();
 					
@@ -91,7 +91,7 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
-			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state, "Look-See-admin");
+			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
 
 			   			audits_executed = audit_service.saveAll(audits_executed);
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
@@ -103,7 +103,6 @@ public class Auditor extends AbstractActor{
 			   		}
 		   			
 				   	//add audits to page_state
-				   	
 				   	for(Audit audit : audits) {
 				   		page_state_service.addAudit(page_state.getKey(), audit.getKey());
 				   		page_state.addAudits(audits);
@@ -115,16 +114,22 @@ public class Auditor extends AbstractActor{
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
 		   			postStop();
 				})
-				.match(AuditSet.class, msg -> {
+				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
 					//TODO Audit record analysis for domain
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   	//perform audit and return audit result
 				   		log.warn("Executing domain audit for "+audit_category);
-			   			List<Audit> audits_executed = audit_factory.executeDomainAudit(audit_category, msg.getAudits());
-			   			
+				   		List<Audit> audits_executed = new ArrayList<>();
+				   		log.warn(domain_msg.getStage() + "   ----   equals PRERENDER?? ----  "+domain_msg.getStage().equals(AuditStage.PRERENDER) );
+				   		if(domain_msg.getStage().equals(AuditStage.PRERENDER)) {
+				   			audits_executed.addAll(audit_factory.executePrerenderDomainAudit(audit_category, domain_msg.getDomain()));
+				   		}
+				   		else if(domain_msg.getStage().equals(AuditStage.RENDERED)) {
+				   			audits_executed = audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain());
+				   		}
+				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			//TODO send message to sender with domain audits result
 				   	}
 					postStop();
 				})

@@ -10,13 +10,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
+import com.qanairy.models.audit.domain.DomainFontAudit;
 import com.qanairy.models.audit.domain.DomainLinksAudit;
+import com.qanairy.models.audit.domain.DomainMarginAudit;
 import com.qanairy.models.audit.domain.DomainNonTextColorContrastAudit;
+import com.qanairy.models.audit.domain.DomainPaddingAudit;
 import com.qanairy.models.audit.domain.DomainTextColorContrastAudit;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditSubcategory;
 
 /**
  * Executes various {@link Audit audits}
@@ -39,13 +42,16 @@ public class AuditFactory {
 	private NonTextColorContrastAudit non_text_contrast_auditor;
 	
 	@Autowired
+	private DomainFontAudit domain_font_auditor;
+
+	@Autowired
 	private FontAudit font_auditor;
 	
 	@Autowired
-	private PaddingAudit padding_auditor;
+	private DomainPaddingAudit domain_padding_auditor;
 	
 	@Autowired
-	private MarginAudit margin_auditor;
+	private DomainMarginAudit domain_margin_auditor;
 	
 	//Domain audits
 	@Autowired
@@ -82,12 +88,7 @@ public class AuditFactory {
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			Audit link_audit = links_auditor.execute(page);
-			Audit padding_audits = padding_auditor.execute(page);
-			Audit margin_audits = margin_auditor.execute(page);
-
 			audits.add(link_audit);
-			audits.add(padding_audits);
-			audits.add(margin_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			/*works but temp disabled
@@ -126,13 +127,13 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePostRenderPageAudits(AuditCategory category, PageState page, String user_id) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePostRenderPageAudits(AuditCategory category, PageState page) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
-
+			
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			/*works but temp disabled
@@ -146,13 +147,13 @@ public class AuditFactory {
 			*/
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
-			/*
-			Audit typeface_audit = typeface_auditor.execute(page);
-			Audit font_audit = font_auditor.execute(page);
 			
-			audits.add(typeface_audit);
-			audits.add(font_audit);
-			*/
+			//Audit typeface_audit = typeface_auditor.execute(page);
+			//audits.add(typeface_audit);
+
+			//Audit font_audit = font_auditor.execute(page);
+			//audits.add(font_audit);
+			
 		}		
 		
 		return audits;
@@ -172,52 +173,72 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executeDomainAudit(AuditCategory category, List<Audit> audits) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePrerenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException {
 		assert category != null;
-		assert audits != null;
 		
 		List<Audit> domain_audits = new ArrayList<Audit>();
-		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
-			List<Audit> link_audits = new ArrayList<>();
-
-			for(Audit audit : audits) {		
-				if(audit.getSubcategory().equals(AuditSubcategory.LINKS)) {
-					link_audits.add(audit);
-				}
-			}
-			
-			Audit link_audit = domain_links_auditor.execute(link_audits);
+		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {			
+			Audit link_audit = domain_links_auditor.execute(domain);
 			
 			domain_audits.add(link_audit);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			log.warn("runing color manageent domain audit...");
-			//TODO collect color pallete audits from audit records
-			List<Audit> color_palette_audits = new ArrayList<>();
-			List<Audit> text_contrast_audits = new ArrayList<>();
-			List<Audit> non_text_contrast_audits = new ArrayList<>();
-	
-			for(Audit audit : audits) {		
-				if(audit.getSubcategory().equals(AuditSubcategory.COLOR_PALETTE)) {
-					color_palette_audits.add(audit);
-				}
-				else if(audit.getSubcategory().equals(AuditSubcategory.TEXT_BACKGROUND_CONTRAST)) {
-					text_contrast_audits.add(audit);
-				}
-				else if(audit.getSubcategory().equals(AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST)) {
-					non_text_contrast_audits.add(audit);
-				}					
-			}
 
-			Audit color_palette_audit = domain_color_palette_auditor.execute(color_palette_audits);
-			Audit text_contrast_audit = domain_text_contrast_auditor.execute(text_contrast_audits);
-			Audit non_text_contrast_audit = domain_non_text_contrast_auditor.execute(non_text_contrast_audits);
+			Audit color_palette_audit = domain_color_palette_auditor.execute(domain);
+			
+			domain_audits.add(color_palette_audit);
+		}
+		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
+			
+		}
+		return domain_audits;
+	}
+	
+	/**
+	 * Executes all audits for the {@link AuditCategory category} provided
+	 * 
+	 * @param category {@link AuditCategory} that we want to run audits for
+	 * @param page {@link PageState page} that audit should be executed against
+	 * 
+	 * @return {@linkplain List} of {@link Audit audits} executed 
+	 * @throws URISyntaxException 
+	 * @throws MalformedURLException 
+	 * 
+	 * @pre category != null
+	 * @pre page != null
+	 */
+	public List<Audit> executePostRenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException {
+		assert category != null;
+		
+		List<Audit> domain_audits = new ArrayList<Audit>();
+		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+			Audit padding_audits = domain_padding_auditor.execute(domain);
+			domain_audits.add(padding_audits);
+
+			Audit margin_audits = domain_margin_auditor.execute(domain);
+			domain_audits.add(margin_audits);
+		}
+		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
+			log.warn("running color manageent domain audit...");
+
+			Audit color_palette_audit = domain_color_palette_auditor.execute(domain);
+			Audit text_contrast_audit = domain_text_contrast_auditor.execute(domain);
+			Audit non_text_contrast_audit = domain_non_text_contrast_auditor.execute(domain);
 			
 			domain_audits.add(color_palette_audit);
 			domain_audits.add(text_contrast_audit);
 			domain_audits.add(non_text_contrast_audit);
 		}
-
+		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
+			
+			//Audit typeface_audit = typeface_auditor.execute(page);
+			//audits.add(typeface_audit);
+			
+			Audit font_audit = domain_font_auditor.execute(domain);
+			domain_audits.add(font_audit);
+			
+		}
 		return domain_audits;
 	}
 }

@@ -19,7 +19,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
-import com.qanairy.models.audit.domain.DomainAuditRecord;
+import com.qanairy.models.audit.Audit;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -184,11 +184,15 @@ public class DomainService {
 		return domain_repo.getPagesForUserId(user_id, url);
 	}
 
-	public Set<DomainAuditRecord> getMostRecentDomainAuditRecords(String url) {
+	public Set<Audit> getMostRecentDomainAuditRecords(String url) {
 		return domain_repo.getMostRecentDomainAudits(url);
 	}
 
 	public List<Page> getPages(String domain_host) {
 		return domain_repo.getPages(domain_host);
+	}
+
+	public Domain findByPageState(String page_state_key) {
+		return domain_repo.findByPageState(page_state_key);
 	}
 }

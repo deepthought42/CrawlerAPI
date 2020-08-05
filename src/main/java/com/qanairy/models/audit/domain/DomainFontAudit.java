@@ -1,8 +1,9 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,13 +12,21 @@ import java.util.stream.Collectors;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.ElementStateUtils;
 
 
@@ -25,37 +34,26 @@ import com.qanairy.utils.ElementStateUtils;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class FontAudit implements IExecutablePageStateAudit {
+public class DomainFontAudit implements IExecutableDomainAudit {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(FontAudit.class);
+	private static Logger log = LoggerFactory.getLogger(DomainFontAudit.class);
 
+	@Autowired
+	private PageService page_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Relationship(type="FLAGGED")
-	List<ElementState> flagged_elements = new ArrayList<>();
+	private List<ElementState> flagged_elements = new ArrayList<>();
 	
-	public FontAudit() {
+	public DomainFontAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
-	
-	private static String getAuditDescription() {
-		return "";
-	}
 
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("According to the WCAG, \r\n" + 
-				"Text: Contrast of 4.5 - 7 with the background. \r\n" + 
-				"Large text/ Headlines: Contrast of 3 - 4.5 with the background. \r\n" + 
-				"Black on white or vice versa is not recommended.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "1.4.1 - Use of Color \r\n" + 
-				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -65,19 +63,34 @@ public class FontAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
-		assert page_state != null;
+	public Audit execute(Domain domain) {
+		assert domain != null;
 		
+		//get all pages
+		List<Page> pages = domain_service.getPages(domain.getHost());
 		Map<String, List<ElementState>> header_element_map = new HashMap<>();
-		for(ElementState element : page_state.getElements()) {
-			if(ElementStateUtils.isHeader(element)) {
-				if(header_element_map.containsKey(element.getName())) {
-					header_element_map.get(element.getName()).add(element);
-				}
-				else {
-					List<ElementState> element_states = new ArrayList<>();
-					element_states.add(element);
-					header_element_map.put(element.getName(), element_states);
+		
+		log.warn("Domain pages :: "+pages.size());
+		//get most recent page state for each page
+		for(Page page : pages) {
+			
+			//for each page state get elements
+			PageState page_state = page_service.getMostRecentPageState(page.getKey());
+			log.warn("Domain Font Page State :: "+page_state);
+			log.warn("Domain Font Page key :: "+page.getKey());
+			
+			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+			log.warn("page state elements for domain audit :: "+elements.size());
+			for(ElementState element : elements) {
+				if(ElementStateUtils.isHeader(element)) {
+					if(header_element_map.containsKey(element.getName())) {
+						header_element_map.get(element.getName()).add(element);
+					}
+					else {
+						List<ElementState> element_states = new ArrayList<>();
+						element_states.add(element);
+						header_element_map.put(element.getName(), element_states);
+					}
 				}
 			}
 		}
@@ -109,7 +122,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 				//log.warn("font weight :: "+element.getRenderedCssValues().get("font-weight"));
 				//log.warn("font variant :: "+element.getRenderedCssValues().get("font-variant"));
 				//log.warn("font family :: "+element.getRenderedCssValues().get("font-family"));
-				
 			}
 			
 			font_sizes = makeDistinct(font_sizes);
@@ -128,7 +140,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 			
 			if(line_heights.size() > 1) {
 				log.warn("font sizes :: "+line_heights);
-				
 				score += 1;
 			}
 			else {
@@ -158,13 +169,16 @@ public class FontAudit implements IExecutablePageStateAudit {
 		}
 		
 		
-		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
+		log.warn("DOMAIN FONT AUDIT SCORE   ::   "+score +" / " +max_score);
 		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score);
 	}
 	
 
 	public static List<String> makeDistinct(List<String> from){
-		return from.stream().distinct().sorted().collect(Collectors.toList());
+		assert from != null;
+	    from.removeAll(Collections.singleton(null));
+
+		return from.stream().distinct().collect(Collectors.toList());
 	}
 	
 }

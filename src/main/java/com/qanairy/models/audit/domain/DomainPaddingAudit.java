@@ -1,4 +1,4 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -17,12 +17,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.Score;
+import com.qanairy.models.audit.StylingMissingObservation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.services.ObservationService;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 
 
 
@@ -30,31 +39,22 @@ import com.qanairy.services.ObservationService;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class PaddingAudit implements IExecutablePageStateAudit {
+public class DomainPaddingAudit implements IExecutableDomainAudit {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PaddingAudit.class);
+	private static Logger log = LoggerFactory.getLogger(DomainPaddingAudit.class);
 	
 	private static final String[] SIZE_UNITS = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
 	@Autowired
-	private ObservationService observation_service;
+	private PageService page_service;
 	
-	public PaddingAudit() {	}
+	@Autowired
+	private DomainService domain_service;
 	
-	private static String getAuditDescription() {
-		return "The space between contents of an element";
-	}
-
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("When applying padding, you should avoid using absolute units . This is because these units won’t adapt to the changes in font size or screen width.");
-		
-		return best_practices;
-	}
+	@Autowired
+	private PageStateService page_state_service;
 	
-	private static String getAdaDescription() {
-		return "None";
-	}
+	public DomainPaddingAudit() {	}
 	
 	/**
 	 * {@inheritDoc}
@@ -65,14 +65,68 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
-		assert page_state != null;
+	public Audit execute(Domain domain) {
+		assert domain != null;
 
+		
 		List<Observation> observations = new ArrayList<>();
 		Map<ElementState, List<String>> elements_padding_map = new HashMap<>(); 
+		//get all pages
+		List<Page> pages = domain_service.getPages(domain.getHost());
+		
+		log.warn("Domain pages :: "+pages.size());
+		//get most recent page state for each page
+		for(Page page : pages) {
+			
+			//for each page state get elements
+			PageState page_state = page_service.getMostRecentPageState(page.getKey());
+			log.warn("Domain Font Page State :: "+page_state);
+			log.warn("Domain Font Page key :: "+page.getKey());
+			
+			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+			log.warn("page state elements for domain audit :: "+elements.size());
+			for(ElementState element : elements) {
+				//TODO put element padding evaluation logic here
+				String padding_value = "";
+				List<String> paddings = new ArrayList<>();
+
+				if(element.getPreRenderCssValues().containsKey("padding")) {
+					padding_value = element.getPreRenderCssValues().get("padding");
+					paddings.addAll(Arrays.asList(padding_value.split(" ")));
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("padding-top")) {
+					padding_value = element.getPreRenderCssValues().get("padding-top");
+					paddings.addAll(Arrays.asList(padding_value.split(" ")));
+
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
+					padding_value = element.getPreRenderCssValues().get("padding-bottom");
+					paddings.addAll(Arrays.asList(padding_value.split(" ")));
+
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("padding-right")) {
+					padding_value = element.getPreRenderCssValues().get("padding-right");
+					paddings.addAll(Arrays.asList(padding_value.split(" ")));
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("padding-left")) {
+					padding_value = element.getPreRenderCssValues().get("padding-left");
+					paddings.addAll(Arrays.asList(padding_value.split(" ")));
+				}	
+				
+				elements_padding_map.put(element, paddings);
+			}
+		}
+		
+		
+		
+		
 
 		//extract vertical and horizontal padding values
-		for(ElementState element : page_state.getElements()) {
+		/*for(ElementState element : page_state.getElements()) {
 			String padding_value = "";
 			List<String> paddings = new ArrayList<>();
 
@@ -106,6 +160,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			elements_padding_map.put(element, paddings);
 
 		}
+		*/
 		
 		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score unit_score = evaluateUnits(elements_padding_map);

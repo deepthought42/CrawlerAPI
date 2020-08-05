@@ -159,9 +159,10 @@ public class Browser {
 	 * @param url
 	 * @throws MalformedURLException 
 	 */
-	public void navigateTo(String url) throws MalformedURLException{
+	public void navigateTo(String url) {
 		getDriver().get(url);
 		
+		/*
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
@@ -173,7 +174,7 @@ public class Browser {
 				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
 			}
 		}
-		
+		*/
 		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
@@ -577,7 +578,7 @@ public class Browser {
 	 * @param root the element to for which css styles should be loaded.
 	 * @throws XPathExpressionException 
 	 */
-	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, Element element){
+	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
 
 		
 		Map<String, String> css_map = new HashMap<>();
@@ -592,7 +593,7 @@ public class Browser {
 					selector_str = selector_str.substring(1);
 				}
 
-				if(element.attr("class").contains(selector_str) || element.attr("id").contains(selector_str) || element.tagName().equals(selector_str)) {
+				if(element.attr("class").contains(selector_str) || element.attr("id").contains(selector_str) || element.nodeName().equals(selector_str)) {
 					
 					//TODO look for padding and add it to the document
 					for(Declaration declaration : rule_set) {
@@ -833,7 +834,7 @@ public class Browser {
 	/**
 	 * Waits for the document ready state to be complete, then observes page transition if it exists
 	 */
-	public void waitForPageToLoad() throws MalformedURLException {
+	public void waitForPageToLoad() {
 		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver)
 					.executeScript("return document.readyState")

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteObservation;
@@ -57,13 +58,14 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
 	 */
 	@Override
-	public Audit execute(List<Audit> audits) {
-		assert audits != null;
+	public Audit execute(Domain domain) {
+		assert domain != null;
 		
 		List<Observation> observations = new ArrayList<>();
 
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> colors = new HashMap<>();
+		List<Audit> audits = new ArrayList<>();
 		
 		for(Audit audit : audits) {
 			//retrieve gray colors color of

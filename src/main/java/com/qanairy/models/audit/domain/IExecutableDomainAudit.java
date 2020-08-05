@@ -2,6 +2,7 @@ package com.qanairy.models.audit.domain;
 
 import java.util.List;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.audit.Audit;
 
 public interface IExecutableDomainAudit {
@@ -12,5 +13,5 @@ public interface IExecutableDomainAudit {
 	 * 
  	 * @return {@link Audit audit}
 	 */
-	public Audit execute(List<Audit> audits);
+	public Audit execute(Domain domain);
 }

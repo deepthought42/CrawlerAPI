@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
@@ -17,12 +19,14 @@ import com.qanairy.models.repository.AuditRepository;
  */
 @Service
 public class AuditService {
+	private static Logger log = LoggerFactory.getLogger(AuditService.class);
 
 	@Autowired
 	private AuditRepository audit_repo;
 
-	public Audit save(Audit acct) {
-		return audit_repo.save(acct);
+	public Audit save(Audit audit) {
+		assert audit != null;
+		return audit_repo.save(audit);
 	}
 
 	public Optional<Audit> findById(long id) {
@@ -34,10 +38,22 @@ public class AuditService {
 	}
 
 	public List<Audit> saveAll(List<Audit> audits) {
+		assert audits != null;
+		
 		List<Audit> audits_saved = new ArrayList<Audit>();
 		
 		for(Audit audit : audits) {
-			audits_saved.add(audit_repo.save(audit));
+			if(audit == null) {
+				continue;
+			}
+			log.warn("saving audit ;;: "+audit);
+			log.warn("saving using audit repo :: " + audit_repo);
+			try {
+				Audit saved_audit = audit_repo.save(audit);
+				audits_saved.add(saved_audit);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return audits_saved;

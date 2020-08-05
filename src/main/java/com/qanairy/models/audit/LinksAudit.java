@@ -207,6 +207,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(observation));
 		}
 		
+		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*6));
+		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*6); //the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

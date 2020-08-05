@@ -105,7 +105,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
-		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
 		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
@@ -149,7 +148,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
-		setInnerHtml(inner_html);
 		setOuterHtml(outer_html);
 		setCssSelector("");
 		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
@@ -297,7 +295,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return
 	 */
 	public String generateKey() {
-		String key = getPreRenderCssValues().toString();
+		String key = "";
 		List<String> properties = new ArrayList<>(getPreRenderCssValues().keySet());
 		Collections.sort(properties);
 		for(String style : properties) {
@@ -392,14 +390,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
              return 0;
          return this.getYLocation() < o.getYLocation() ? -1 : 1;
          */
-	}
-
-	public String getInnerHtml() {
-		return inner_html;
-	}
-
-	public void setInnerHtml(String inner_html) {
-		this.inner_html = inner_html;
 	}
 
 	public String getCssSelector() {

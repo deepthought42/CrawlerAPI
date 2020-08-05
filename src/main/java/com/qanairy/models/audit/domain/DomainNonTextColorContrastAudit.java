@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditCategory;
@@ -60,10 +61,13 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(List<Audit> audits) {
-		assert audits != null;
+	public Audit execute(Domain domain) {
+		assert domain != null;
 
 		int score = 0;
+		List<Audit> audits = new ArrayList<>();
+		
+		
 		for(Audit audit : audits) {
 			score += audit.getPoints();
 		}

@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.minion.browsing.Browser;
+import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
@@ -70,21 +74,33 @@ public class PageDataExtractor extends AbstractActor{
 		return receiveBuilder()
 				.match(Page.class, page-> {
 					log.warn("Page data extractor received Page Message..."+page.getUrl());
-					try {
-						//build page state with element states at the same time
-						log.warn("building page state...");
-						PageState page_state = browser_service.buildPageState( page );
-						log.warn("saving page state to database");
-						page_state = page_state_service.save(page_state);
-						page_service.addPageState(page.getKey(), page_state.getKey());
-						
-						log.warn("sending page state to audit manager..."+page_state.getUrl());
-						
-						getSender().tell(page_state, getSelf());
-					}catch(Exception e) {
-						log.warn("problem saving page state during data extraction...."+e.getMessage());
-						e.printStackTrace();
-					}
+					int cnt = 0;
+					do {
+						try {
+							//build page state with element states at the same time
+							log.warn("building page state...");
+							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+							browser.navigateTo("http://"+page.getUrl());
+							String page_src = browser.getDriver().getPageSource();
+							String current_url = browser.getDriver().getCurrentUrl();
+							browser.close();
+							
+							PageState page_state = browser_service.buildPageState( page, page_src, current_url);
+							log.warn("saving page state to database");
+							page_state = page_state_service.save(page_state);
+							page_service.addPageState(page.getKey(), page_state.getKey());
+							
+							log.warn("sending page state to audit manager..."+page_state.getUrl());
+							
+							getSender().tell(page_state, getSelf());
+							cnt = 100;
+							break;
+						}catch(Exception e) {
+							log.warn("problem saving page state during data extraction...."+e.getMessage());
+							e.printStackTrace();
+						}
+						cnt++;
+					}while(cnt < 5);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

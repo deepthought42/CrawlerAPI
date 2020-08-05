@@ -1,4 +1,4 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,40 +22,44 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
+import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class MarginAudit implements IExecutablePageStateAudit {
-	private static Logger log = LoggerFactory.getLogger(MarginAudit.class);
+public class DomainMarginAudit implements IExecutableDomainAudit {
+	private static Logger log = LoggerFactory.getLogger(DomainMarginAudit.class);
 
 	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
+	@Autowired
+	private PageService page_service;
 	
-	public MarginAudit() {	}
+	@Autowired
+	private DomainService domain_service;
 	
-	private static String getAuditDescription() {
-		return "";
-	}
-
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("");
-		
-		return best_practices;
-	}
+	@Autowired
+	private PageStateService page_state_service;
 	
-	private static String getAdaDescription() {
-		return "None";
-	}
+	
+	public DomainMarginAudit() {	}
 	
 	/**
 	 * {@inheritDoc}
@@ -66,9 +70,59 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
-		assert page_state != null;
+	public Audit execute(Domain domain) {
+		assert domain != null;
 
+		List<Observation> observations = new ArrayList<>();
+		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
+
+		//get all pages
+		List<Page> pages = domain_service.getPages(domain.getHost());
+		
+		log.warn("Domain pages :: "+pages.size());
+		//get most recent page state for each page
+		for(Page page : pages) {
+			
+			//for each page state get elements
+			PageState page_state = page_service.getMostRecentPageState(page.getKey());
+			log.warn("Domain Font Page State :: "+page_state);
+			log.warn("Domain Font Page key :: "+page.getKey());
+			
+			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+			log.warn("page state elements for domain audit :: "+elements.size());
+			for(ElementState element : elements) {
+				String margin_value = "";
+				List<String> margins = new ArrayList<>();
+				if(element.getPreRenderCssValues().containsKey("margin")) {
+					margin_value = element.getPreRenderCssValues().get("margin");
+					margins.addAll(Arrays.asList(margin_value.split(" ")));
+				}
+
+				if( element.getPreRenderCssValues().containsKey("margin-top")) {
+					margin_value = element.getPreRenderCssValues().get("margin-top");
+					margins.addAll(Arrays.asList(margin_value.split(" ")));
+				}
+
+				if( element.getPreRenderCssValues().containsKey("margin-bottom")) {
+					margin_value = element.getPreRenderCssValues().get("margin-bottom");
+					margins.addAll(Arrays.asList(margin_value.split(" ")));
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("margin-right")) {
+					margin_value = element.getPreRenderCssValues().get("margin-right");
+					margins.addAll(Arrays.asList(margin_value.split(" ")));
+				}
+				
+				if( element.getPreRenderCssValues().containsKey("margin-left")) {
+					margin_value = element.getPreRenderCssValues().get("margin-left");
+					margins.addAll(Arrays.asList(margin_value.split(" ")));
+				}
+				
+				elements_margin_map.put(element, margins);
+			}
+		}
+		
+		/*
 		List<Observation> observations = new ArrayList<>();
 
 		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
@@ -104,10 +158,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			
 			elements_margin_map.put(element, margins);
 		}
-		
+		*/
 		Score spacing_score = evaluateSpacingConsistency(elements_margin_map);
 		Score unit_score = evaluateUnits(elements_margin_map);
-		Score margin_as_padding_score = scoreMarginAsPadding(page_state.getElements());
+		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
 
 		observations.addAll(unit_score.getObservations());
 		observations.addAll(margin_as_padding_score.getObservations());
@@ -333,7 +387,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * 
 	 * @pre elements != null
 	 */
-	private Score scoreMarginAsPadding(List<ElementState> elements) {
+	private Score scoreMarginAsPadding(Set<ElementState> elements) {
 		assert elements != null;
 		
 		int score = 0;
@@ -372,6 +426,12 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		return new Score(score, max_score, observations);
 	}
 	
+	/**
+	 * TODO
+	 * 
+	 * @param elements
+	 * @return
+	 */
 	private int scoreNonCollapsingMargins(List<ElementState> elements) {
 		for(ElementState element : elements) {
 			//identify situations of margin collapse by finding elements that are 

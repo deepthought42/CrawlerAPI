@@ -10,7 +10,8 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.audit.domain.DomainAuditRecord;
+import com.qanairy.models.audit.Audit;
+
 
 
 /**
@@ -47,7 +48,7 @@ public class Domain implements Persistable{
 	private Set<DiscoveryRecord> discovery_records;
 	
 	@Relationship(type = "HAS_AUDIT")
-	private Set<DomainAuditRecord> audits;
+	private Set<Audit> audits;
 	
 	/**
 	 * 

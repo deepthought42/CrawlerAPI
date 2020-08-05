@@ -36,7 +36,7 @@ import com.qanairy.services.PageStateService;
 
 
 /**
- * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
+ * Responsible for executing an audit on the padding consistency across a {@link Domain} as part of the information architecture audit category
  */
 @Component
 public class DomainPaddingAudit implements IExecutableDomainAudit {

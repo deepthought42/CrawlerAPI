@@ -19,7 +19,7 @@ import com.qanairy.models.enums.AuditSubcategory;
 
 
 /**
- * Responsible for executing an audit on the color constrast of non text elements against their parent element's background
+ * Compiles average score across domain using audits on the color constrast of non text elements against their parent element's background
  */
 @Component
 public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
@@ -29,29 +29,8 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 	@Relationship(type="FLAGGED")
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
-	public DomainNonTextColorContrastAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
-	}
-	
-	private static String getAuditDescription() {
-		return "Color contrast between background and text.";
-	}
+	public DomainNonTextColorContrastAudit() {}
 
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("According to the WCAG, \r\n" + 
-				"Text: Contrast of 4.5 - 7 with the background. \r\n" + 
-				"Large text/ Headlines: Contrast of 3 - 4.5 with the background. \r\n" + 
-				"Black on white or vice versa is not recommended.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "1.4.1 - Use of Color \r\n" + 
-				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 * 

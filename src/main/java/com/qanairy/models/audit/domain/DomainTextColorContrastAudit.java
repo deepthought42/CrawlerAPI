@@ -29,9 +29,7 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 	@Relationship(type="FLAGGED")
 	List<ElementState> flagged_elements = new ArrayList<>();
 	
-	public DomainTextColorContrastAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
-	}
+	public DomainTextColorContrastAudit() {}
 	
 	/**
 	 * {@inheritDoc}

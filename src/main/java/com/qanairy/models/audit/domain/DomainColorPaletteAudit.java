@@ -32,25 +32,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	private List<String> gray_colors = new ArrayList<>();
 	private List<String> colors = new ArrayList<>();
 	
-	public DomainColorPaletteAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
-	}
-	
-	private static String getAuditDescription() {
-		return "The colors that make up the style guide of your website.";
-	}
-
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("A brand guide typically should have 3 colours. You may use different shades of your brand colours to diversify the visual aesthetics of the website but be sure to remain consistent.");
-		best_practices.add("This can be further divided into primary, secondary, tertiary colors.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "";
-	}
+	public DomainColorPaletteAudit() {}
 	
 	/**
 	 * {@inheritDoc}

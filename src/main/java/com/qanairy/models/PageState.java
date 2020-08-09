@@ -55,6 +55,7 @@ public class PageState extends LookseeObject {
 	private int viewport_height;
 	private long full_page_width;
 	private long full_page_height;
+	private String title;
 	
 	@Deprecated
 	private List<String> screenshot_checksums;
@@ -87,8 +88,8 @@ public class PageState extends LookseeObject {
 	 * @param elements
 	 * @param full_page_screenshot_url TODO
 	 * @param full_page_checksum TODO
+	 * @param title TODO
 	 * @param screenshot
-	 * 
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 *
@@ -96,7 +97,7 @@ public class PageState extends LookseeObject {
 	 * @pre screenshot_url != null;
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum)
+			int viewport_width, int viewport_height, String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum, String title)
 					throws MalformedURLException, IOException
 	{
 		super();
@@ -122,6 +123,7 @@ public class PageState extends LookseeObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
+		setTitle(title);
 		setKey(generateKey());
 	}
 	
@@ -129,12 +131,12 @@ public class PageState extends LookseeObject {
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
-	 *
-	 * @param html
 	 * @param url
-	 * @param browsers_screenshots
 	 * @param elements
 	 * @param isLandable
+	 * @param title TODO
+	 * @param html
+	 * @param browsers_screenshots
 	 *
 	 * @pre elements != null;
 	 * @pre screenshot_url != null;
@@ -144,7 +146,7 @@ public class PageState extends LookseeObject {
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, boolean isLandable,
 			String src, long scroll_x_offset, long scroll_y_offset, int viewport_width, int viewport_height,
-			String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum) throws IOException, NoSuchAlgorithmException {
+			String browser_name, Set<Form> forms, String full_page_screenshot_url, String full_page_checksum, String title) throws IOException, NoSuchAlgorithmException {
 		super();
 		assert elements != null;
 		assert screenshot_url != null;
@@ -170,6 +172,7 @@ public class PageState extends LookseeObject {
 		setAnimatedImageChecksums(new ArrayList<>());
 		setLoginRequired(false);
 		setForms(forms);
+		setTitle(title);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
 		setKey(generateKey());
@@ -268,7 +271,7 @@ public class PageState extends LookseeObject {
 
 		PageState page = null;
 		try {
-			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getForms(), getFullPageScreenshotUrl(), getFullPageChecksum());
+			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getForms(), getFullPageScreenshotUrl(), getFullPageChecksum(), null);
 			page.setScreenshotChecksum(getScreenshotChecksums());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
@@ -546,5 +549,13 @@ public class PageState extends LookseeObject {
 				this.elements.add(element);
 			}
 		}
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }

@@ -20,6 +20,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.experience.PerformanceInsight;
 
 /**
@@ -99,13 +100,13 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{url:{page_url}}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) ORDER BY pi.executed_at DESC LIMIT 1")
 	public PerformanceInsight getMostRecentPerformanceInsight(@Param("user_id") String user_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page{key:{page_key}}) OPTIONAL MATCH a=(p)-->(z) RETURN p LIMIT 1")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page{key:{page_key}}) OPTIONAL MATCH a=(p)-->(z) RETURN p LIMIT 1")
 	public Page getPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}),(p:Page{key:{page_key}}) CREATE (d)-[h:HAS]->(p) RETURN p")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}),(p:Page{key:{page_key}}) CREATE (d)-[:HAS]->(p) RETURN p")
 	public void addPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 	
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
 	public Set<Page> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
 
 	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:Audit) RETURN audit ORDER BY audit.createdAt DESC")
@@ -113,4 +114,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:{page_state_key}}) RETURN d LIMIT 1")
 	public Domain findByPageState(@Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (d:Domain{key:{domain_key}}),(audit:AuditRecord{key:{audit_record_key}}) CREATE (d)-[:HAS]->(audit) RETURN audit")
+	public void addAuditRecord(@Param("domain_key") String domain_key, @Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (d:Domain{key:{domain_key}})-[]->(audit:AuditRecord) RETURN audit")
+	public Set<AuditRecord> getAuditRecords(@Param("domain_key") String domain_key);
 }

@@ -122,43 +122,6 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			}
 		}
 		
-		/*
-		List<Observation> observations = new ArrayList<>();
-
-		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
-		
-		//extract vertical and horizontal margin values
-		for(ElementState element : page_state.getElements()) {
-			String margin_value = "";
-			List<String> margins = new ArrayList<>();
-			if(element.getPreRenderCssValues().containsKey("margin")) {
-				margin_value = element.getPreRenderCssValues().get("margin");
-				margins.addAll(Arrays.asList(margin_value.split(" ")));
-			}
-
-			if( element.getPreRenderCssValues().containsKey("margin-top")) {
-				margin_value = element.getPreRenderCssValues().get("margin-top");
-				margins.addAll(Arrays.asList(margin_value.split(" ")));
-			}
-
-			if( element.getPreRenderCssValues().containsKey("margin-bottom")) {
-				margin_value = element.getPreRenderCssValues().get("margin-bottom");
-				margins.addAll(Arrays.asList(margin_value.split(" ")));
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("margin-right")) {
-				margin_value = element.getPreRenderCssValues().get("margin-right");
-				margins.addAll(Arrays.asList(margin_value.split(" ")));
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("margin-left")) {
-				margin_value = element.getPreRenderCssValues().get("margin-left");
-				margins.addAll(Arrays.asList(margin_value.split(" ")));
-			}
-			
-			elements_margin_map.put(element, margins);
-		}
-		*/
 		Score spacing_score = evaluateSpacingConsistency(elements_margin_map);
 		Score unit_score = evaluateUnits(elements_margin_map);
 		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
@@ -324,8 +287,10 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 				}
 			}
 		}
-		observations.add(new ElementObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
 		
+		if(!unscalable_margin_elements.isEmpty()) {
+			observations.add(new ElementObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
+		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
 
@@ -399,16 +364,24 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			if(!element.getText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
 				boolean margin_used_as_padding = false;
-				if(element.getPreRenderCssValues().get("margin-top") != null && element.getPreRenderCssValues().get("padding-top") == null) {
+				String margin_top = element.getPreRenderCssValues().get("margin-top");
+				if(!isSpacingValueZero(margin_top) && isSpacingValueZero(element.getPreRenderCssValues().get("padding-top"))) {
+					log.warn("margin top : "+margin_top+";      padding-top  :  "+element.getPreRenderCssValues().get("padding-top"));
 					margin_used_as_padding = true;
 				}
-				else if(element.getPreRenderCssValues().get("margin-right") != null && element.getPreRenderCssValues().get("padding-right") == null) {
+				else if(!isSpacingValueZero(element.getPreRenderCssValues().get("margin-right")) && isSpacingValueZero(element.getPreRenderCssValues().get("padding-right"))) {
+					log.warn("margin right : "+element.getPreRenderCssValues().get("margin-right")+";      padding-right  :  "+element.getPreRenderCssValues().get("padding-right"));
+
 					margin_used_as_padding = true;
 				}
-				else if(element.getPreRenderCssValues().get("margin-bottom") != null && element.getPreRenderCssValues().get("padding-bottom") == null) {
+				else if(!isSpacingValueZero(element.getPreRenderCssValues().get("margin-bottom")) && isSpacingValueZero(element.getPreRenderCssValues().get("padding-bottom"))) {
+					log.warn("margin bottom : "+element.getPreRenderCssValues().get("margin-bottom")+";      padding-bottom  :  "+element.getPreRenderCssValues().get("padding-bottom"));
+
 					margin_used_as_padding = true;
 				}
-				else if(element.getPreRenderCssValues().get("margin-left") != null && element.getPreRenderCssValues().get("padding-left") == null) {
+				else if(!isSpacingValueZero(element.getPreRenderCssValues().get("margin-left")) && isSpacingValueZero(element.getPreRenderCssValues().get("padding-left"))) {
+					log.warn("margin left : "+element.getPreRenderCssValues().get("margin-left")+";      padding-left  :  "+element.getPreRenderCssValues().get("padding-left"));
+
 					margin_used_as_padding = true;
 				}
 				else {
@@ -422,10 +395,16 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 				max_score += 3;
 			}
 		}
-		observations.add(new ElementObservation(flagged_elements, "Elements that appear to use margin as padding"));
+		if(!flagged_elements.isEmpty()) {
+			observations.add(new ElementObservation(flagged_elements, "Elements that appear to use margin as padding"));
+		}
 		return new Score(score, max_score, observations);
 	}
 	
+	private boolean isSpacingValueZero(String spacing) {
+		return spacing == null || ( !spacing.isEmpty() || !spacing.equals("0") || !spacing.equals("auto"));
+	}
+
 	/**
 	 * TODO
 	 * 

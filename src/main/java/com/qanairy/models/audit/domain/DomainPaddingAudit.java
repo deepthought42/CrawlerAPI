@@ -121,47 +121,6 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			}
 		}
 		
-		
-		
-		
-
-		//extract vertical and horizontal padding values
-		/*for(ElementState element : page_state.getElements()) {
-			String padding_value = "";
-			List<String> paddings = new ArrayList<>();
-
-			if(element.getPreRenderCssValues().containsKey("padding")) {
-				padding_value = element.getPreRenderCssValues().get("padding");
-				paddings.addAll(Arrays.asList(padding_value.split(" ")));
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("padding-top")) {
-				padding_value = element.getPreRenderCssValues().get("padding-top");
-				paddings.addAll(Arrays.asList(padding_value.split(" ")));
-
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("padding-bottom")) {
-				padding_value = element.getPreRenderCssValues().get("padding-bottom");
-				paddings.addAll(Arrays.asList(padding_value.split(" ")));
-
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("padding-right")) {
-				padding_value = element.getPreRenderCssValues().get("padding-right");
-				paddings.addAll(Arrays.asList(padding_value.split(" ")));
-			}
-			
-			if( element.getPreRenderCssValues().containsKey("padding-left")) {
-				padding_value = element.getPreRenderCssValues().get("padding-left");
-				paddings.addAll(Arrays.asList(padding_value.split(" ")));
-			}	
-			
-			elements_padding_map.put(element, paddings);
-
-		}
-		*/
-		
 		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score unit_score = evaluateUnits(elements_padding_map);
 
@@ -329,7 +288,9 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 				}
 			}
 		}
-		observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+		if(!unscalable_padding_elements.isEmpty()) {
+			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+		}
 		
 		return new Score(points_earned, max_vertical_score, observations);
 	}

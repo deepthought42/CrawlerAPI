@@ -2,9 +2,7 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
@@ -19,10 +17,10 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditStage;
+import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageAuditComplete;
 import com.qanairy.services.AuditService;
-import com.qanairy.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -33,7 +31,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 /**
- * 
+ * Responsible for performing audits for {@link Page}s and {@link Domain}s
  * 
  */
 @Component
@@ -42,10 +40,6 @@ public class Auditor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
-
 	
 	@Autowired
 	private AuditService audit_service;
@@ -81,9 +75,6 @@ public class Auditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageState.class, page_state-> {
-					//retrieve all audits that the customer requested
-					Map<PageState, List<Audit>> page_audit_map = new HashMap<PageState, List<Audit>>();
-					
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	
@@ -98,38 +89,28 @@ public class Auditor extends AbstractActor{
 
 			   			audits.addAll(audits_executed);
 			   			audits.addAll(rendered_audits_executed);
-
-						page_audit_map.put(page_state, audits);
 			   		}
 		   			
-				   	//add audits to page_state
-				   	for(Audit audit : audits) {
-				   		page_state_service.addAudit(page_state.getKey(), audit.getKey());
-				   		page_state.addAudits(audits);
-				   	}
-				   	
 					PageAuditComplete audit_complete = new PageAuditComplete(page_state);
 		   			getSender().tell(audit_complete, getSelf());
+		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
 		   			postStop();
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
-					//TODO Audit record analysis for domain
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   	//perform audit and return audit result
 				   		log.warn("Executing domain audit for "+audit_category);
 				   		List<Audit> audits_executed = new ArrayList<>();
 				   		log.warn(domain_msg.getStage() + "   ----   equals PRERENDER?? ----  "+domain_msg.getStage().equals(AuditStage.PRERENDER) );
-				   		if(domain_msg.getStage().equals(AuditStage.PRERENDER)) {
-				   			audits_executed.addAll(audit_factory.executePrerenderDomainAudit(audit_category, domain_msg.getDomain()));
-				   		}
-				   		else if(domain_msg.getStage().equals(AuditStage.RENDERED)) {
-				   			audits_executed = audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain());
-				   		}
+			   			audits_executed.addAll(audit_factory.executePrerenderDomainAudit(audit_category, domain_msg.getDomain()));
+			   			audits_executed = audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain());
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
+			   			getSender().tell(new AuditSet(audits_executed), getSelf());
+
 				   	}
 					postStop();
 				})

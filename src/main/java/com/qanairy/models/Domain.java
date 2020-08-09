@@ -5,29 +5,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.audit.Audit;
-
+import com.qanairy.models.audit.AuditRecord;
 
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
  * belong to this domain
  */
-@NodeEntity
-public class Domain implements Persistable{
-	
-	@GeneratedValue
-    @Id
-	private Long id;
+public class Domain extends LookseeObject{
 	
 	private String host;
 	private String entry_path;
-	private String key;
 	private String protocol;
 	private String logo_url;
 	private String discovery_browser;
@@ -47,8 +37,8 @@ public class Domain implements Persistable{
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
 	private Set<DiscoveryRecord> discovery_records;
 	
-	@Relationship(type = "HAS_AUDIT")
-	private Set<Audit> audits;
+	@Relationship(type = "HAS")
+	private Set<AuditRecord> audit_records;
 	
 	/**
 	 * 
@@ -61,6 +51,7 @@ public class Domain implements Persistable{
 		setDiscoveryRecords( new HashSet<>() );
 		setTestUsers( new HashSet<>() );
 		setPages( new ArrayList<>() );
+		setAuditRecords(new HashSet<>());
 	}
 	
 	/**
@@ -77,6 +68,7 @@ public class Domain implements Persistable{
 		setDiscoveryBrowserName(browser);
 		setHost(host);
 		setPages(new ArrayList<>());
+		setAuditRecords(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -125,20 +117,6 @@ public class Domain implements Persistable{
 
 	public String getProtocol() {
 		return this.protocol;
-	}
-
-	/**
-	 * @return the key
-	 */
-	public String getKey() {
-		return this.key;
-	}
-
-	/**
-	 * @param key the key to set
-	 */
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	public String getLogoUrl() {
@@ -204,10 +182,6 @@ public class Domain implements Persistable{
 	public void setAccount(Account account) {
 		this.account = account;
 	}
-	
-	public long getId(){
-		return this.id;
-	}
 
 	public boolean addPage(Page page) {
 		//check if page state exists
@@ -226,5 +200,13 @@ public class Domain implements Persistable{
 	
 	public void setPages(List<Page> pages) {
 		this.pages = pages;
+	}
+
+	public Set<AuditRecord> getAuditRecords() {
+		return audit_records;
+	}
+
+	public void setAuditRecords(Set<AuditRecord> audit_records) {
+		this.audit_records = audit_records;
 	}
 }

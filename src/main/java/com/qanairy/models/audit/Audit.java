@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.ElementState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;

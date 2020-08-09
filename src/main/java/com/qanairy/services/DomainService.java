@@ -20,6 +20,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -194,5 +195,13 @@ public class DomainService {
 
 	public Domain findByPageState(String page_state_key) {
 		return domain_repo.findByPageState(page_state_key);
+	}
+
+	public void addAuditRecord(String domain_key, String audit_record_key) {
+		domain_repo.addAuditRecord(domain_key, audit_record_key);
+	}
+
+	public Set<AuditRecord> getAuditRecords(String domain_key) {
+		return domain_repo.getAuditRecords(domain_key);
 	}
 }

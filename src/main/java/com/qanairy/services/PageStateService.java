@@ -3,7 +3,6 @@ package com.qanairy.services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
@@ -17,6 +16,7 @@ import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.repository.PageStateRepository;
+
 
 /**
  * Service layer object for interacting with {@link PageState} database layer
@@ -64,7 +64,6 @@ public class PageStateService {
 				
 				if(page_state_record != null){
 					page_state_record.setForms(page_state.getForms());
-					page_state_record.setAudits(page_state.getAudits());
 
 					page_state_record = page_state_repo.save(page_state_record);
 					
@@ -76,7 +75,6 @@ public class PageStateService {
 
 					if(page_state_record != null){
 						page_state_record.setForms( page_state.getForms() );
-						page_state_record.setAudits(page_state.getAudits());
 
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -110,8 +108,6 @@ public class PageStateService {
 						
 						page_state.setElements(element_records);
 						
-						page_state.setAudits(page_state.getAudits());
-
 						page_state_record = page_state_repo.save(page_state);
 					}
 				}
@@ -154,7 +150,6 @@ public class PageStateService {
 			}
 				
 			page_state.setElements(element_records);
-			page_state.setAudits(page_state.getAudits());
 
 			page_state_record = page_state_repo.save(page_state);
 		}
@@ -240,13 +235,5 @@ public class PageStateService {
 
 	public Audit findAuditBySubCategory(AuditSubcategory subcategory, String page_state_key) {
 		return page_state_repo.findAuditBySubCategory(subcategory.getShortName(), page_state_key);
-	}
-
-	public void addAudit(String page_state_key, String audit_key) {
-		//check if audit already exists for page state
-		Optional<Audit> audit = page_state_repo.getAuditForPageState(page_state_key, audit_key);
-		if(!audit.isPresent()) {
-			page_state_repo.addAudit(page_state_key, audit_key);
-		}
 	}
 }

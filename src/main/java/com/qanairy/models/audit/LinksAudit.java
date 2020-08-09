@@ -22,7 +22,6 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -32,9 +31,6 @@ import com.qanairy.utils.BrowserUtils;
 public class LinksAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private ObservationService observation_service;
@@ -48,27 +44,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
-	
-	private static String getAuditDescription() {
-		return "A hyperlink that takes you to a new location should be reactive and result in the user navigating to an existing webpage";
-	}
 
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("Label should describe what the link is. \"Click here\" should not be used.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "\r\n" + 
-				"2.4.4 - Descriptive Links\r\n" + 
-				"The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context.\r\n" + 
-				"\r\n" + 
-				"2.4.7 - Visible Focus\r\n" + 
-				"When an interactive element (link, button, form field, selectable element, etc.) receives focus, a visual indicator shows so a user can see what element they are currently on.";
-	}
-	
 	
 	/**
 	 * {@inheritDoc}
@@ -81,13 +57,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		log.warn("---------------------------------------------------------------------------");
-		log.warn("EXECUTING LINKS AUDIT !!!");
-		//check if page state already has a Link audit
-		Audit audit = page_state_service.findAuditBySubCategory(AuditSubcategory.LINKS, page_state.getKey());
-		if(audit != null) {
-			return audit;
-		}
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();

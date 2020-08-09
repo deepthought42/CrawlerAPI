@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
-import com.qanairy.models.audit.Audit;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -70,9 +69,6 @@ public class PageState extends LookseeObject {
 	@Deprecated
 	@Relationship(type = "HAS")
 	private Set<Form> forms;
-	
-	@Relationship(type = "HAS")
-	private List<Audit> audits;
 
 	public PageState() {
 		super();
@@ -81,7 +77,6 @@ public class PageState extends LookseeObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setAudits(new ArrayList<>());
 	}
 	
 	/**
@@ -127,7 +122,6 @@ public class PageState extends LookseeObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
-		setAudits(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -178,7 +172,6 @@ public class PageState extends LookseeObject {
 		setForms(forms);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setFullPageChecksum(full_page_checksum);
-		setAudits(new ArrayList<>());
 		setKey(generateKey());
 	}
 
@@ -553,21 +546,5 @@ public class PageState extends LookseeObject {
 				this.elements.add(element);
 			}
 		}
-	}
-	
-	public List<Audit> getAudits() {
-		return audits;
-	}
-
-	public void setAudits(List<Audit> audits) {
-		this.audits = audits;
-	}
-
-	public void addAudit(Audit audit) {
-		this.audits.add( audit );
-	}
-	
-	public void addAudits(List<Audit> audits) {
-		this.audits.addAll( audits );
 	}
 }

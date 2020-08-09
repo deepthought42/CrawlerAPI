@@ -433,7 +433,7 @@ public class BrowserService {
 		assert rule_sets != null;
 		
 		List<ElementState> visited_elements = new ArrayList<>();
-		List<String> frontier = new ArrayList<>();
+		Map<String, String> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
 
 		/*
@@ -473,9 +473,10 @@ public class BrowserService {
 	//	root_element_state = element_service.save(root_element_state);
 
 		//put element on frontier
-		frontier.add("//body");
+		frontier.put("//body","");
 		while(!frontier.isEmpty()) {
-			String next_xpath = frontier.remove(0);
+			String next_xpath = frontier.keySet().iterator().next();
+			String parent_element_key = frontier.remove(next_xpath);
 			//ElementState root_element = frontier.remove(next_xpath);
 			//visited_elements.add(root_element);
 			//get Element by xpath
@@ -512,7 +513,7 @@ public class BrowserService {
 			ElementState element_state = buildElementState(next_xpath, attributes, pre_render_css_props, element, classification, new HashMap<>());
 			element_state = element_service.save(element_state);
 			visited_elements.add(element_state);
-			element_service.addChildElement(element_state.getKey(), element_state.getKey());
+			element_service.addChildElement(parent_element_key, element_state.getKey());
 			
 			
 			for(Element child : children) {
@@ -530,7 +531,7 @@ public class BrowserService {
 				
 				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
 
-				frontier.add(xpath);
+				frontier.put(xpath, element_state.getKey());
 			}
 		}
 		return visited_elements;

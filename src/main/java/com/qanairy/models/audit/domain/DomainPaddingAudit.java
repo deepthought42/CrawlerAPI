@@ -389,38 +389,11 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		return sorted_paddings;
 	}
 	
-	public static List<Double> sortAndMakeDistinct(List<Double> from){
+	private static List<Double> sortAndMakeDistinct(List<Double> from){
 		return from.stream().filter(n -> n != 0).map(s -> s*100).distinct().sorted().collect(Collectors.toList());
 	}
 	
-	public static List<Double> makeDistinct(List<Double> from){
-		return from.stream().distinct().sorted().collect(Collectors.toList());
-	}
-	
-	public static List<Double> deflateGCD(List<Double> gcd_list){
-		return gcd_list.stream().map(s -> s/100.0).distinct().sorted().collect(Collectors.toList());
-	}
-	
-	public static List<String> cleanSizeUnits(List<String> from){
-		return from.stream()
-				.map(line -> line.replaceAll("px", ""))
-				.map(line -> line.replaceAll("%", ""))
-				.map(line -> line.replaceAll("em", ""))
-				.map(line -> line.replaceAll("rem", ""))
-				.map(line -> line.replaceAll("pt", ""))
-				.map(line -> line.replaceAll("ex", ""))
-				.map(line -> line.replaceAll("vw", ""))
-				.map(line -> line.replaceAll("vh", ""))
-				.map(line -> line.replaceAll("cm", ""))
-				.map(line -> line.replaceAll("mm", ""))
-				.map(line -> line.replaceAll("in", ""))
-				.map(line -> line.replaceAll("pc", ""))
-				.map(line -> line.replaceAll("!important", ""))
-				.map(line -> line.indexOf(".") > -1 ? line.substring(0, line.indexOf(".")) : line)
-				.collect(Collectors.toList());
-	}
-	
-	public static String cleanSizeUnits(String value){
+	private static String cleanSizeUnits(String value){
 		return value.replace("!important", "")
 					.replaceAll("px", "")
 					.replaceAll("%", "")
@@ -435,15 +408,6 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 					.replaceAll("in", "")
 					.replaceAll("pc", "");
 					
-	}
-	
-	public static List<Integer> removeZeroValues(List<Integer> from){
-		return from.stream().filter(n -> n != 0).collect(Collectors.toList());
-	}
-	
-	//for lists
-	public static <T, U> List<U> convertList(List<T> from, Function<T, U> func) {
-	    return from.stream().map(func).collect(Collectors.toList());
 	}
 	
 	/* * Java method to find GCD of two number using Euclid's method * @return GDC of two numbers in Java */ 

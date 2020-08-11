@@ -22,6 +22,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}}),(a:Audit{key:{audit_key}}) CREATE (ar)-[h:HAS]->(a) RETURN ar")
 	public void addAudit(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 
-	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit) OPTIONAL MATCH z=(audit)-->(e) OPTIONAL MATCH y=(e)-->() RETURN z,y")
+	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) RETURN audit,y,z")
 	public Set<Audit> getAllAudits(@Param("audit_record_key") String audit_record_key);
 }

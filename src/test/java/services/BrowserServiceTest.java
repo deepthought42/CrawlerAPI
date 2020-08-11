@@ -57,7 +57,7 @@ public class BrowserServiceTest {
 				"chrome", 
 				new HashSet<>(),
 				"url.png",
-				"this_is_a_checksum"));
+				"this_is_a_checksum", null));
 		Set<Action> actions = new HashSet<Action>();
 		actions.add(new Action("Test"));
 		

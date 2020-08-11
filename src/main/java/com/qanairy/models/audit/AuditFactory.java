@@ -19,6 +19,7 @@ import com.qanairy.models.audit.domain.DomainMarginAudit;
 import com.qanairy.models.audit.domain.DomainNonTextColorContrastAudit;
 import com.qanairy.models.audit.domain.DomainPaddingAudit;
 import com.qanairy.models.audit.domain.DomainTextColorContrastAudit;
+import com.qanairy.models.audit.domain.DomainTitleAndHeaderAudit;
 import com.qanairy.models.enums.AuditCategory;
 
 /**
@@ -62,6 +63,9 @@ public class AuditFactory {
 	
 	@Autowired
 	private DomainNonTextColorContrastAudit domain_non_text_contrast_auditor;
+	
+	@Autowired
+	private DomainTitleAndHeaderAudit domain_title_and_header_auditor;
 	
 	@Autowired
 	private TypefacesAudit typeface_auditor;
@@ -176,8 +180,10 @@ public class AuditFactory {
 		List<Audit> domain_audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {			
 			Audit link_audit = domain_links_auditor.execute(domain);
-			
 			domain_audits.add(link_audit);
+			
+			Audit title_and_headers = domain_title_and_header_auditor.execute(domain);
+			domain_audits.add(title_and_headers);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			log.warn("runing color manageent domain audit...");

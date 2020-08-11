@@ -94,7 +94,7 @@ public class BrowserTest {
 					"chrome",
 					new HashSet<>(),
 					"url.png",
-					"this_is_a_checksum");
+					"this_is_a_checksum", null);
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());

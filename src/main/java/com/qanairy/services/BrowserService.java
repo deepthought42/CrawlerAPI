@@ -125,18 +125,25 @@ public class BrowserService {
 				 || height >= browser.getViewportSize().getHeight();
 	}
 
+
 	/**
-	 * Constructs an {@link ElementState} from a JSOUP {@link Element element}
-	 * 
+ 	 * Constructs an {@link ElementState} from a JSOUP {@link Element element}
+ 	 * 
 	 * @param xpath
 	 * @param attributes
 	 * @param css_values
 	 * @param element
 	 * @param classification
-	 * @param rendered_css_values TODO
-	 * @param checksum
-	 * @param dimension TODO
+	 * @param rendered_css_values
+	 * 
 	 * @return
+	 * 
+	 * @pre xpath != null && !xpath.isEmpty();
+	 * @pre attributes != null;
+	 * @pre element != null;
+	 * @pre classification != null
+	 * @pre rendered_css_values != null
+	 * @pre css_values != null;
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
@@ -234,7 +241,7 @@ public class BrowserService {
 					browser.getBrowserName(), 
 					new HashSet<Form>(), 
 					full_page_screenshot_url, 
-					full_page_screenshot_checksum);
+					full_page_screenshot_checksum, null);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -251,6 +258,7 @@ public class BrowserService {
 	
 	/**
 	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
+	 * @param title TODO
 	 * @return page {@linkplain PageState}
 	 * @throws IOException 
 	 * @throws XPathExpressionException 
@@ -258,7 +266,7 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( Page page, String page_src, String page_url ) throws IOException, XPathExpressionException{
+	public PageState buildPageState( Page page, String page_src, String page_url, String title ) throws IOException, XPathExpressionException{
 		assert page != null;
 		
 		//Document doc = Jsoup.connect("http://"+page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(30000).get();
@@ -300,7 +308,8 @@ public class BrowserService {
 				BrowserType.CHROME.toString(),
 				new HashSet<Form>(),
 				null, 
-				null);
+				null, 
+				title);
 
 		page_state.setSrcChecksum(src_checksum);
 		//page_state.addScreenshotChecksum(screenshot_checksum);

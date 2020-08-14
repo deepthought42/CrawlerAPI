@@ -1,10 +1,10 @@
 package com.qanairy.dto;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
- * Data Transfer object that describes an object composed of both {@link ElementState} and {@link Action}
+ * Data Transfer object that describes an object composed of both {@link Element} and {@link Action}
  * 
  */
 public class ElementActionDto{
@@ -12,7 +12,7 @@ public class ElementActionDto{
 	private ElementStateDto element;
 	private ActionDto action;
 	
-	public ElementActionDto(ElementState elem, Action action){
+	public ElementActionDto(Element elem, Action action){
 		setElement(new ElementStateDto(elem));
 		setAction(new ActionDto(action));
 	}

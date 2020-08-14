@@ -1,6 +1,8 @@
 package com.minion.actors;
 
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -9,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -40,9 +43,12 @@ import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -64,12 +70,17 @@ public class WebCrawlerActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(WebCrawlerActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	@Autowired
+	private ActorSystem actor_system;
 
 	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private PageService page_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private ElementStateService element_state_service;
@@ -105,6 +116,7 @@ public class WebCrawlerActor extends AbstractActor{
 					Domain domain = crawl_action.getDomain();
 					
 					String initial_url = "http://"+domain.getHost()+"/"+domain.getEntryPath();
+					
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
 					
@@ -129,25 +141,28 @@ public class WebCrawlerActor extends AbstractActor{
 						
 
 						//construct page and add page to list of page states
-						Page page = new Page((page_url.getHost()+path), path);
-						page = page_service.save( page );
-
-						domain.addPage(page);
-						domain = domain_service.save(domain);
 						
-						visited.put(page_url_str, page);
-						//send message to page data extractor
-						log.debug("sending page to an audit manager...");
-						getSender().tell(page, getSelf());
-						log.warn("page url :: "+page_url);
-						log.warn("page host :: "+page_url.getHost());
-						log.warn("page path :: "+page_url.getPath());
-						log.warn("----------------------------------------------------------------");
-						log.warn("----------------------------------------------------------------");
 
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							
+							Page page = new Page(new ArrayList<>(), Browser.cleanSrc(doc.outerHtml()), doc.title(), (page_url.getHost()+path), path);
+							page = page_service.save( page );
+
+							domain.addPage(page);
+							domain = domain_service.save(domain);
+							
+							visited.put(page_url_str, page);
+							//send message to page data extractor
+							log.debug("sending page to an audit manager...");
+							getSender().tell(page, getSelf());
+							log.warn("page url :: "+page_url);
+							log.warn("page host :: "+page_url.getHost());
+							log.warn("page path :: "+page_url.getPath());
+							log.warn("----------------------------------------------------------------");
+							log.warn("----------------------------------------------------------------");
+							
 							Elements links = doc.select("a");
 							for (Element link : links) {
 								
@@ -188,6 +203,12 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.match(PageState.class, page_state -> {
 					log.warn("Web crawler received page state");
+					Page page = page_state_service.getParentPage(page_state.getKey());
+					
+					//send Journey to JourneyExplorer actor
+					ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
+					journeyMapper.tell(new URL(page.getUrl()), getSelf());
 					
 					boolean rendering_not_complete = true;
 					int cnt = 0;
@@ -197,8 +218,8 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("getting browser for rendered page state extraction...");
 							//navigate to page url
 							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to page state url ::   "+page_state.getUrl());
-							browser.navigateTo(page_state.getUrl());
+							log.warn("navigating to page state url ::   "+page.getUrl());
+							browser.navigateTo(page.getUrl());
 							
 							//URL url = new URL(page_state.getUrl());
 							
@@ -213,16 +234,17 @@ public class WebCrawlerActor extends AbstractActor{
 							//extract Element screenshots
 							List<ElementState> elements = page_state.getElements();// browser_service.extractElementStates(page_state.getSrc(), url);
 							log.warn("elements loaded for page state :: " +page_state.getElements().size());
-							for(ElementState element : elements) {
-								if(element_xpaths_reviewed.contains(element.getXpath())) {
+							for(ElementState element_state : elements) {
+								if(element_xpaths_reviewed.contains(element_state.getXpath())) {
 									continue;
 								}
 //								long start_time = System.currentTimeMillis();
-								WebElement web_element = browser.getDriver().findElement(By.xpath(element.getXpath()));
+								WebElement web_element = browser.getDriver().findElement(By.xpath(element_state.getXpath()));
 								Map<String, String> css_props = Browser.loadCssProperties(web_element, browser.getDriver());
-								element.setRenderedCssValues(css_props);
-								element_state_service.save(element);
-								element_xpaths_reviewed.add(element.getXpath());
+								element_state.setRenderedCssValues(css_props);
+								element_state.setVisible(web_element.isDisplayed());
+								element_state_service.save(element_state);
+								element_xpaths_reviewed.add(element_state.getXpath());
 								break;
 					
 //								long end_time = System.currentTimeMillis();

@@ -2,25 +2,25 @@ package com.minion.browsing.table;
 
 import java.util.List;
 import com.minion.browsing.ElementNode;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
  *	Contains the {@link ElementNode}s that make up a row in a [@link Table} within a {@link Page}. 
  */
 public class Row {
-	private List<ElementNode<ElementState>> row_cells;
+	private List<ElementNode<Element>> row_cells;
 	
 	public Row(){}
 	
-	public Row(List<ElementNode<ElementState>> table_row){
+	public Row(List<ElementNode<Element>> table_row){
 		this.setRowCells(table_row);
 	}
 
-	public List<ElementNode<ElementState>> getRowCells() {
+	public List<ElementNode<Element>> getRowCells() {
 		return row_cells;
 	}
 
-	public void setRowCells(List<ElementNode<ElementState>> row_cells) {
+	public void setRowCells(List<ElementNode<Element>> row_cells) {
 		this.row_cells = row_cells;
 	}
 }

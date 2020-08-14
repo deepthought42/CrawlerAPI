@@ -1,10 +1,10 @@
 package com.qanairy.models.audit;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.enums.ObservationType;
 
 /**
- * A observation of potential error for a given {@link ElementState element} 
+ * A observation of potential error for a given {@link Element element} 
  */
 public interface Observation {
 	public String getDescription();

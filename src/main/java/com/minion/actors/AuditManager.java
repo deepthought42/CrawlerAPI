@@ -26,7 +26,7 @@ import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.models.message.DomainAuditMessage;
-import com.qanairy.models.message.PageAuditComplete;
+import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -127,7 +127,12 @@ public class AuditManager extends AbstractActor{
 						log.warn("Page Count :: "+page_count);
 						ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
-						page_data_extractor.tell(page, getSelf());						
+						page_data_extractor.tell(page, getSelf());
+						
+						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+						web_crawl_actor.tell(page, getSelf());
+						log.warn("page state received by audit manager ::      "+page);
 					}
 				})
 				.match(PageState.class, page_state -> {
@@ -152,7 +157,7 @@ public class AuditManager extends AbstractActor{
 					log.warn("Rendered Page State Count :: "+rendered_page_state_count);
 					auditor.tell(page_state.getPageState(), getSelf());	
 				})
-				.match(PageAuditComplete.class, audit_complete -> {
+				.match(PageStateAuditComplete.class, audit_complete -> {
 					page_audits_completed++;
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+page_audits_completed);
 

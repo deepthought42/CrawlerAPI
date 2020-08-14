@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
@@ -48,7 +49,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	private DomainService domain_service;
 	
 	@Relationship(type="FLAGGED")
-	private List<ElementState> flagged_elements = new ArrayList<>();
+	private List<Element> flagged_elements = new ArrayList<>();
 	
 	public DomainFontAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);

@@ -38,14 +38,13 @@ import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -84,95 +83,6 @@ public class Crawler {
 	
 	 @Autowired
     private ActorSystem actor_system;
-	
-	/**
-	 * Crawls the path using the provided {@link Browser browser}
-	 *
-	 * @param browser
-	 * @return {@link Page result_page} state that resulted from crawling path
-	 * @throws Exception 
-	 *
-	 * @throws URISyntaxException 
-	 *
-	 * @pre path != null
-	 * @pre path != null
-	 */
-	public PageState crawlPath(String user_id, Domain domain, List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, 
-								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
-										throws Exception{
-		assert browser != null;
-		assert path_keys != null;
-
-		LookseeObject last_obj = null;
-		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-		
-		log.warn("path keys :: " + path_keys.size());
-		ElementState last_element = null;
-
-		//boolean screenshot_matches = false;
-		//check if page is the same as expected.
-		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
-		log.warn("expected page returned :: "+expected_page);
-		log.warn("expected page url :: " + expected_page.getUrl());
-		browser.navigateTo(expected_page.getUrl());
-
-		for(LookseeObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				expected_page = (PageState)current_obj;
-/*
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
-				}
-				*/
-			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
-				
-				//scroll element to middle of screen
-				browser.scrollToElement(last_element);
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				Action action = (Action)current_obj;
-				Action action_record = action_repo.findByKey(action.getKey());
-				if(action_record==null){
-					action = action_repo.save(action);
-				}
-				else{
-					action = action_record;
-				}
-
-				performAction(action, last_element, browser.getDriver());
-
-				Point p = browser.getViewportScrollOffset();
-				browser.setXScrollOffset(p.getX());
-				browser.setYScrollOffset(p.getY());
-			}
-			else if(current_obj instanceof Redirect){
-				Redirect redirect = (Redirect)current_obj;
-
-				//if redirect is preceded by a page state or nothing then initiate navigation
-				if(last_obj == null || last_obj instanceof PageState){
-					browser.navigateTo(redirect.getStartUrl());
-				}
-				//if redirect follows an action then watch page transition
-				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel, user_id);
-			}
-			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
-			}
-			else if(current_obj instanceof PageAlert){
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
-			}
-
-			last_obj = current_obj;
-		}
-
-		return browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
-	}
 
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -188,12 +98,13 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
+	 /*
 	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, String user_id) 
 			throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
-		ElementState last_element = null;
+		Element last_element = null;
 		LookseeObject last_obj = null;
 		PageState expected_page = null;
 		
@@ -204,8 +115,8 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
 			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
+			else if(current_obj instanceof Element){
+				last_element = (Element) current_obj;
 				browser.scrollToElement(last_element);
 			}
 			//String is action in this context
@@ -246,87 +157,7 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 	}
-
-	/**
-	 * Crawls the path using the provided {@link Browser browser}
-	 * @param browser
-	 * @param user_id TODO
-	 *
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 * @throws WebDriverException
-	 * @throws GridException
-	 * @throws URISyntaxException 
-	 *
-	 * @pre path != null
-	 * @pre path != null
-	 */
-	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<LookseeObject> path_objects, Browser browser, String host_channel, ElementState child_element, String user_id)
-							throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException, NullPointerException{
-		assert browser != null;
-		assert path_keys != null;
-
-		ElementState last_element = null;
-		LookseeObject last_obj = null;
-		PageState expected_page = null;
-		
-		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-		
-		for(LookseeObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				expected_page = (PageState)current_obj;
-				
-				/*
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
-				}
-				*/
-			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
-				browser.scrollToElement(last_element);
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				
-				//perform action outside bounds of child elements
-				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
-				//compile child element coordinates and sizes
-				
-				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
-				
-				Action action = (Action)current_obj;
-				
-				performAction(action, last_element, browser.getDriver(), click_location);
-				
-				Point p = browser.getViewportScrollOffset();
-				browser.setXScrollOffset(p.getX());
-				browser.setYScrollOffset(p.getY());
-			}
-			else if(current_obj instanceof Redirect){
-				Redirect redirect = (Redirect)current_obj;
-
-				//if redirect is preceded by a page state or nothing then initiate navigation
-				if(last_obj == null || last_obj instanceof PageState){
-					browser.navigateTo(redirect.getStartUrl());
-				}
-				//if redirect follows an action then watch page transition
-				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel, user_id);
-			}
-			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
-			}
-			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver(), AlertChoice.DISMISS);
-			}
-
-			last_obj = current_obj;
-		}
-	}
+*/
 
 	
 	/**
@@ -351,9 +182,9 @@ public class Crawler {
 		assert browser != null;
 		assert keys != null;
 
-		ElementState last_element = null;
+		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		PageState expected_page = null;
+		Page expected_page = null;
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 		List<LookseeObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
@@ -361,8 +192,8 @@ public class Crawler {
 		String last_url = null;
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				expected_page = (PageState)current_obj;
+			if(current_obj instanceof Page){
+				expected_page = (Page)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/*
@@ -387,8 +218,8 @@ public class Crawler {
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
 			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
+			else if(current_obj instanceof com.qanairy.models.Element){
+				last_element = (com.qanairy.models.Element) current_obj;
 				browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
@@ -467,9 +298,9 @@ public class Crawler {
 		assert browser != null;
 		assert keys != null;
 
-		ElementState last_element = null;
+		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		PageState expected_page = null;
+		Page expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
@@ -480,8 +311,8 @@ public class Crawler {
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
 			path_objects_explored.add(current_obj);
-			if(current_obj instanceof PageState){
-				expected_page = (PageState)current_obj;
+			if(current_obj instanceof Page){
+				expected_page = (Page)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/**
@@ -506,8 +337,8 @@ public class Crawler {
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
 			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
+			else if(current_obj instanceof com.qanairy.models.Element){
+				last_element = (com.qanairy.models.Element) current_obj;
 				browser.scrollToElement(last_element);
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
@@ -579,7 +410,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, ElementState elem, WebDriver driver) throws NoSuchElementException{
+	public static void performAction(Action action, com.qanairy.models.Element elem, WebDriver driver) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -592,7 +423,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, ElementState elem, WebDriver driver, Point location) throws NoSuchElementException{
+	public static void performAction(Action action, com.qanairy.models.Element elem, WebDriver driver, Point location) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -639,7 +470,7 @@ public class Crawler {
 				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
-				result_page.setLoginRequired(last_page.isLoginRequired());
+				//result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(NullPointerException e){
 				log.warn("Null Pointer Exception happened during exploratory crawl ::  "+e.getMessage());
@@ -705,7 +536,7 @@ public class Crawler {
 					no_such_element_exception = false;
 					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
-					browser.navigateTo(expected_page.getUrl());
+					//browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path, user_id);
@@ -722,7 +553,7 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
-				result_page.setLoginRequired(last_page_state.isLoginRequired());
+				//result_page.setLoginRequired(last_page_state.isLoginRequired());
 				return result_page;
 			}
 			catch(NullPointerException e){
@@ -817,94 +648,5 @@ public class Crawler {
 		}
 
 		return new Point(x_coord, y_coord);
-	}
-	
-	/**
-	 * Crawl domain by using links to map site and reach new pages until site is completely covered. Along the way this method also executes
-	 * all desired audits on each page.
-
-	 * @param domain
-	 * @param user_id
-	 * @param audit_categories
-	 * 
-	 * @return
-	 * 
-	 * @throws Exception
-	 * 
-	 * @pre domain != null
-	 * @pre user_id != null
-	 * @pre audit_categories != null
-	 */
-	public Map<String, Page> crawlAndExtractData(Domain domain) throws Exception {
-		assert domain != null;
-		
-		Map<String, Boolean> frontier = new HashMap<>();
-		Map<String, Page> visited = new HashMap<>();
-		//add link to frontier
-		frontier.put(domain.getEntryPath(), Boolean.TRUE);
-		
-		
-		while(!frontier.isEmpty()) {
-			Map<String, Boolean> external_links = new HashMap<>();
-			Page page = null;
-			//remove link from beginning of frontier
-			String page_url = frontier.keySet().iterator().next();
-			frontier.remove(page_url);
-			if(page_url.isEmpty() || page_url.contains("mailto") || page_url.contains(".jpg") || page_url.contains(".png")) {
-				continue;
-			}
-
-			//construct page and add page to list of page states
-			page = new Page(page_url);
-			page = page_service.save( page );
-
-			log.debug("page created with url..."+page_url);			
-			domain.addPage(page);
-			domain = domain_service.save(domain);
-			
-			visited.put(page_url, page);
-			//send message to page data extractor
-			ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
-			PageFoundMessage page_found_message = new PageFoundMessage(page);
-			page_data_extractor.tell(page_found_message, null);
-
-			//retrieve html source for page
-			try {
-				Document doc = Jsoup.connect(page_url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
-				log.debug("Document title :: " + doc.title());
-				Elements links = doc.select("a");
-				for (Element link : links) {
-					String href = BrowserUtils.sanitizeUrl(link.absUrl("href"));
-					
-					//check if external link
-					if( !href.isEmpty() && BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href)) {
-						log.debug("adding to external links :: "+href);
-	   					external_links.put(href, Boolean.TRUE);
-					}
-					else if( !href.isEmpty() && !visited.containsKey(href) && !frontier.containsKey(href) && !BrowserUtils.isImageUrl(href)){
-						log.warn("adding link to frontier :: "+href);
-						//add link to frontier
-						frontier.put(href, Boolean.TRUE);
-					}
-				}
-			}catch(SocketTimeoutException e) {
-				log.warn("Error occurred while navigating to :: "+page_url);
-			}
-			catch(HttpStatusException e) {
-				log.warn("HTTP Status Exception occurred while navigating to :: "+page_url);
-				e.printStackTrace();
-			}
-			catch(IllegalArgumentException e) {
-				log.warn("illegal argument exception occurred when connecting to ::  " + page_url);
-				e.printStackTrace();
-			}
-			catch(UnsupportedMimeTypeException e) {
-				log.warn(e.getMessage() + " : " +e.getUrl());
-			}
-		}
-		System.out.println("total links visited :::  "+visited.keySet().size());
-		
-		return visited;
 	}
 }

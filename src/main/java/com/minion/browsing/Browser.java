@@ -61,10 +61,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.enums.AlertChoice;
 
 import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
@@ -367,7 +365,7 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */	
-	public BufferedImage getElementScreenshot(ElementState element) throws IOException{
+	public BufferedImage getElementScreenshot(com.qanairy.models.Element element) throws IOException{
 		//calculate element position within screen
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
 		return Shutterbug.shootElementVerticallyCentered(driver, web_element).getImage();
@@ -700,7 +698,7 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollToElement(ElementState element_state) 
+	public void scrollToElement(com.qanairy.models.Element element_state) 
     { 
 		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);

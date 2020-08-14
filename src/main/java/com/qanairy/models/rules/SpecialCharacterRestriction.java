@@ -2,7 +2,7 @@ package com.qanairy.models.rules;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
  * Verifies that an element doesn't have any special characters in its value
@@ -16,7 +16,7 @@ public class SpecialCharacterRestriction extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		Pattern pattern = Pattern.compile(getValue());
         Matcher matcher = pattern.matcher(elem.getText());
 		return !matcher.matches();

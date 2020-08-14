@@ -84,9 +84,10 @@ public class PageDataExtractor extends AbstractActor{
 							String page_src = browser.getDriver().getPageSource();
 							String current_url = browser.getDriver().getCurrentUrl();
 							String title = browser.getDriver().getTitle();
-							browser.close();
 							
-							PageState page_state = browser_service.buildPageState( page, page_src, current_url, title);
+							PageState page_state = browser_service.buildPageState( page, page_src, current_url, title, browser);
+							browser.close();
+
 							log.warn("saving page state to database");
 							page_state = page_state_service.save(page_state);
 							page_service.addPageState(page.getKey(), page_state.getKey());

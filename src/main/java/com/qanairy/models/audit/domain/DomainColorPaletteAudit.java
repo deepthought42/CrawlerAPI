@@ -83,24 +83,24 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				//identify all colors used on page. Images are not considered
 				
 				//check element for color css property
-				colors.put(element.getPreRenderCssValues().get("color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("color"), Boolean.TRUE);
 				//check element for text-decoration-color css property
-				colors.put(element.getPreRenderCssValues().get("text-decoration-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("text-decoration-color"), Boolean.TRUE);
 				//check element for text-emphasis-color
-				colors.put(element.getPreRenderCssValues().get("text-emphasis-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("text-emphasis-color"), Boolean.TRUE);
 	
 				//check element for background-color css property
-				colors.put(element.getPreRenderCssValues().get("background-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("background-color"), Boolean.TRUE);
 				//check element for caret-color
-				colors.put(element.getPreRenderCssValues().get("caret-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("caret-color"), Boolean.TRUE);
 				//check element for outline-color css property NB: SPECIFICALLY FOR BOXES
-				colors.put(element.getPreRenderCssValues().get("outline-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("outline-color"), Boolean.TRUE);
 				//check element for border-color, border-left-color, border-right-color, border-top-color, and border-bottom-color css properties NB: SPecifically for borders
-				colors.put(element.getPreRenderCssValues().get("border-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-left-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-right-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-top-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-bottom-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-left-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-right-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-top-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-bottom-color"), Boolean.TRUE);
 			}
 			colors.remove("null");
 			colors.remove(null);

@@ -3,7 +3,7 @@ package com.qanairy.models.rules;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.minion.browsing.form.FormField;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.serializer.RuleDeserializer;
@@ -43,7 +43,7 @@ public abstract class Rule extends LookseeObject {
 	 * 
 	 * @return boolean value indicating the rule is satisfied or not
 	 */
-	abstract Boolean evaluate(ElementState val);	
+	abstract Boolean evaluate(Element val);	
 
 	
 	@Override

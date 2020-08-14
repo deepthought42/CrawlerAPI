@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -27,29 +28,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(NonTextColorContrastAudit.class);
 
-	List<ElementState> flagged_elements = new ArrayList<>();
+	List<Element> flagged_elements = new ArrayList<>();
 	
 	@Autowired
 	private ElementStateService element_state_service;
-	
-	private static String getAuditDescription() {
-		return "Color contrast between background and non text elements such as buttons, inputs, images, etc.";
-	}
-
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("According to the WCAG, \r\n" + 
-				"Text: Contrast of 4.5 - 7 with the background. \r\n" + 
-				"Large text/ Headlines: Contrast of 3 - 4.5 with the background. \r\n" + 
-				"Black on white or vice versa is not recommended.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "1.4.1 - Use of Color \r\n" + 
-				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
-	}
 	
 	/**
 	 * {@inheritDoc}
@@ -131,8 +113,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		} 
 		
 		List<Observation> observations = new ArrayList<>();
-		ElementObservation low_contrast_observation = new ElementObservation(low_contrast_elements, "Elements with a contrast below 3.0");
-		ElementObservation mid_contrast_observation = new ElementObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
+		ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0");
+		ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
 		observations.add(low_contrast_observation);
 		observations.add(mid_contrast_observation);
 		

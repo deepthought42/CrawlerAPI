@@ -2,7 +2,7 @@ package com.qanairy.models.rules;
 
 import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import org.slf4j.Logger;
 
 public class DisabledRule extends Rule{
@@ -18,7 +18,7 @@ public class DisabledRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		/* 
 		 * Also check for 
 		 * 

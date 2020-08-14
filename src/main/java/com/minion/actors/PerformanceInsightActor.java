@@ -55,6 +55,7 @@ import com.qanairy.models.experience.ThirdPartySummaryDetail;
 import com.qanairy.models.experience.TimingDetail;
 import com.qanairy.models.experience.WebPImageDetail;
 import com.qanairy.models.message.UrlMessage;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.services.AuditDetailService;
@@ -141,10 +142,10 @@ public class PerformanceInsightActor extends AbstractActor {
 					PerformanceInsight performance_insight = extractInsights(message.getAccountId(), page_speed_response);
 					
 					//Page page = new Page(page.getUrl());
-					page.setPerformanceScore(performance_insight.getSpeedScore());
-					page.setAccessibilityScore(performance_insight.getAccessibilityScore());
-					page.setSeoScore(performance_insight.getSeoScore());
-					page.setOverallScore(performance_insight.getOverallScore());
+					//page.setPerformanceScore(performance_insight.getSpeedScore());
+					//page.setAccessibilityScore(performance_insight.getAccessibilityScore());
+					//page.setSeoScore(performance_insight.getSeoScore());
+					//page.setOverallScore(performance_insight.getOverallScore());
 					page = page_service.saveForUser(message.getAccountId(), page);
 					
 					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());

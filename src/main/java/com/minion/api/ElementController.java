@@ -26,6 +26,7 @@ import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.rules.Rule;
@@ -209,20 +210,20 @@ public class ElementController {
     		@RequestBody ElementState element_state
 		) throws UnknownAccountException
     {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account account = account_service.findByUserId(id);
-    	
-    	if(account == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(account.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	
-    	validateRules(element_state.getRules());
-    	//check that min/max length rules are valid
-    	log.warn("element update state experienced in element controller");
+		Principal principal = request.getUserPrincipal();
+		String id = principal.getName().replace("auth0|", "");
+		Account account = account_service.findByUserId(id);
+		
+		if(account == null){
+			throw new UnknownAccountException();
+		}
+		else if(account.getSubscriptionToken() == null){
+			throw new MissingSubscriptionException();
+		}
+		
+		//validateRules(element_state.getRules());
+		//check that min/max length rules are valid
+		log.warn("element update state experienced in element controller");
       element_state = element_service.save(element_state);
       return element_service.findByKey(element_state.getKey());
     }
@@ -254,7 +255,7 @@ public class ElementController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	validateRules(element_state.getRules());
+    	//validateRules(element_state.getRules());
     	//check that min/max length rules are valid
     	log.warn("element update state experienced in element controller");
       element_state = element_service.saveFormElement(element_state);

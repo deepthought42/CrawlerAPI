@@ -13,7 +13,7 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.integrations.DeepthoughtApi;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -93,7 +93,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		log.warning("FORM  Navigating to url    ::        "+url);
 					  		browser.navigateTo(url);
 					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
-					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host, message.getAccountId());
+					  		//crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host, message.getAccountId());
 
 					  		PageState page_state = null;
 							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
@@ -109,7 +109,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
 						  		
-							  	for(ElementState field : form.getFormFields()){
+							  	for(Element field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									field.getRules().addAll(rules);

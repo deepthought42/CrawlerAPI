@@ -11,7 +11,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import com.qanairy.models.enums.TemplateType;
 
 /**
- * 		A Template is defined as a semi-generic string that matches a set of {@link ElementState}s
+ * 		A Template is defined as a semi-generic string that matches a set of {@link Element}s
  */
 @NodeEntity
 public class Template implements Persistable{
@@ -23,7 +23,7 @@ public class Template implements Persistable{
 	private String template;
 	
 	@Relationship(type = "MATCHES")
-	private List<ElementState> elements;
+	private List<Element> elements;
 	
 	public Template(){
 		setType(TemplateType.UNKNOWN);
@@ -68,11 +68,11 @@ public class Template implements Persistable{
 		this.template = template;
 	}
 
-	public List<ElementState> getElements() {
+	public List<Element> getElements() {
 		return elements;
 	}
 
-	public void setElements(List<ElementState> elements) {
+	public void setElements(List<Element> elements) {
 		this.elements = elements;
 	}
 	

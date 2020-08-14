@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.http.client.utils.URIUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
@@ -30,7 +28,6 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
 
 
 /**
@@ -42,14 +39,12 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	private static Logger log = LoggerFactory.getLogger(DomainTitleAndHeaderAudit.class);
 
 	@Relationship(type="FLAGGED")
-	private List<ElementState> flagged_elements = new ArrayList<>();
+	private List<Element> flagged_elements = new ArrayList<>();
 	
 	
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private PageService page_service;
+
 	
 	public DomainTitleAndHeaderAudit() {}
 
@@ -88,13 +83,12 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		//find all pages for domain
 		for(Page page : pages) {
 			//find most recent page state
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
 			//score title of page state
-			if(hasFavicon(page_state)) {
+			if(hasFavicon(page)) {
 				points += 1;
 			}
 			else {
-				observations.add(new PageObservation(page_state, "pages without titles"));
+				observations.add(new PageObservation(page, "pages without titles"));
 				points += 0;				
 			}
 		}
@@ -107,7 +101,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	 * @param page_state
 	 * @return
 	 */
-	private boolean hasFavicon(PageState page_state) {
+	private boolean hasFavicon(Page page_state) {
 		assert page_state != null;
 		
 		Document doc = Jsoup.parse(page_state.getSrc());
@@ -133,14 +127,12 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		
 		//find all pages for domain
 		for(Page page : pages) {
-			//find most recent page state
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
 			//score title of page state
-			if(page_state.getTitle() != null && !page_state.getTitle().isEmpty()) {
+			if(page.getTitle() != null && !page.getTitle().isEmpty()) {
 				points += 1;
 			}
 			else {
-				observations.add(new PageObservation(page_state, "pages without titles"));
+				observations.add(new PageObservation(page, "pages without titles"));
 				points += 0;				
 			}
 		}

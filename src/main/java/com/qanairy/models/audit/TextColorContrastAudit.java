@@ -5,9 +5,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +15,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.utils.ElementStateUtils;
 
@@ -34,29 +30,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private ElementStateService element_state_service;
 	
-	public TextColorContrastAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
-	}
-	
-	private static String getAuditDescription() {
-		return "Color contrast between background and text.";
-	}
+	public TextColorContrastAudit() {}
 
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("According to the WCAG, \r\n" + 
-				"Text: Contrast of 4.5 - 7 with the background. \r\n" + 
-				"Large text/ Headlines: Contrast of 3 - 4.5 with the background. \r\n" + 
-				"Black on white or vice versa is not recommended.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "1.4.1 - Use of Color \r\n" + 
-				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -95,10 +70,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		//identify all colors used on page. Images are not considered
 		for(ElementState element : element_list) {
 			//check element for color css property
-			String color = element.getPreRenderCssValues().get("color");
+			String color = element.getRenderedCssValues().get("color");
 			
 			//check element for background-color css property
-			String background_color = element.getPreRenderCssValues().get("background-color");
+			String background_color = element.getRenderedCssValues().get("background-color");
 			
 			
 			if(color == null) {
@@ -128,7 +103,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					if(parent == null) {
 						continue;
 					}
-					background_color = parent.getPreRenderCssValues().get("background-color");
+					background_color = parent.getRenderedCssValues().get("background-color");
 					if(background_color != null) {
 						//extract r,g,b,a from color css		
 						background_color = background_color.replace("transparent", "");
@@ -201,10 +176,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		ElementObservation mid_header_contrast_observation = new ElementObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
-		ElementObservation low_header_contrast_observation = new ElementObservation(low_header_contrast, "Headers with contrast below 3");
-		ElementObservation mid_header_text_observation = new ElementObservation(mid_text_contrast, "Headers with contrast between 4.5 and 7");
-		ElementObservation low_header_text_observation = new ElementObservation(low_text_contrast, "Headers with contrast below 4.5");
+		ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
+		ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
+		ElementStateObservation mid_header_text_observation = new ElementStateObservation(mid_text_contrast, "Headers with contrast between 4.5 and 7");
+		ElementStateObservation low_header_text_observation = new ElementStateObservation(low_text_contrast, "Headers with contrast below 4.5");
 		
 		observations.add(mid_header_text_observation);
 		observations.add(mid_header_contrast_observation);

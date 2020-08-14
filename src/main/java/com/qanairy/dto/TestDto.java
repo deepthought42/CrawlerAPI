@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
@@ -43,8 +43,8 @@ public class TestDto {
 				first_page = false;
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
-			else if(ordered_path_objects.get(idx) instanceof ElementState ){
-				this.path.add(new ElementActionDto((ElementState)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
+			else if(ordered_path_objects.get(idx) instanceof Element ){
+				this.path.add(new ElementActionDto((Element)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
 			}
 		}
 	}

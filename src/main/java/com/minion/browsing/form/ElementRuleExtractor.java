@@ -6,14 +6,14 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.rules.Clickable;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleFactory;
 import com.qanairy.services.RuleService;
 
 /**
- * Extracts rules for input {@link ElementState}s
+ * Extracts rules for input {@link Element}s
  * @author brand
  *
  */
@@ -28,7 +28,7 @@ public class ElementRuleExtractor {
 	 * @param elem
 	 * @return
 	 */
-	public List<Rule> extractInputRules(ElementState elem){
+	public List<Rule> extractInputRules(Element elem){
 		List<Rule> rules = new ArrayList<Rule>();
 
 		for(String attr : elem.getAttributes().keySet()){
@@ -42,7 +42,7 @@ public class ElementRuleExtractor {
 		return rules;
 	}
 
-	public List<Rule> extractMouseRules(ElementState page_element) {
+	public List<Rule> extractMouseRules(Element page_element) {
 		List<Rule> rules = new ArrayList<Rule>();
 
 		//iterate over possible mouse actions.

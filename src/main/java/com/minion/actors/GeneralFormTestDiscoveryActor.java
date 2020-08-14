@@ -19,9 +19,8 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
@@ -135,13 +134,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		cnt = 0;
 						  		PageState result_page = null;
-						  		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-						  		List<ElementState> visible_elements = new ArrayList<>();
+						  		Map<Integer, Element> visible_element_map = new HashMap<>();
+						  		List<Element> visible_elements = new ArrayList<>();
 						  		
 						  		do{
 						  			try{
 								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
-						  				result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getEntryPath(), visible_element_map, visible_elements);
+						  				//result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getEntryPath(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
 						  				break;
@@ -212,14 +211,14 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> form_tests = new ArrayList<List<LookseeObject>>();
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(ElementState input_elem : form.getFormFields()){
+		for(Element input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
 			for(LookseeObject path_obj : test.getPathObjects()){
-				if(path_obj instanceof ElementState){
-					ElementState page_elem = (ElementState)path_obj;
+				if(path_obj instanceof Element){
+					Element page_elem = (Element)path_obj;
 					if(page_elem.equals(input_elem)){
 						field_exists = true;
 						break;
@@ -253,7 +252,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		
 		//for each field in the complex field generate a set of tests for all known rules
-		for(ElementState input_elem : form.getFormFields()){			
+		for(Element input_elem : form.getFormFields()){			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
 			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
@@ -267,7 +266,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 	
-	public static List<List<LookseeObject>> generateLengthBoundaryTests(ElementState input, Rule rule){
+	public static List<List<LookseeObject>> generateLengthBoundaryTests(Element input, Rule rule){
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -371,7 +370,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 * @param input_elem
 	 * @return
 	 */
-	private static List<List<LookseeObject>> generateAlphabeticRestrictionTests(ElementState input_elem) {
+	private static List<List<LookseeObject>> generateAlphabeticRestrictionTests(Element input_elem) {
 		//generate single character str test		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -383,7 +382,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateNumericRestrictionTests(ElementState input_elem) {
+	private static List<List<LookseeObject>> generateNumericRestrictionTests(Element input_elem) {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -396,7 +395,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem) {
+	private static List<List<LookseeObject>> generateSpecialCharacterRestrictionTests(Element input_elem) {
 		//generate single character str test
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -409,22 +408,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateEnabledTests(ElementState input_elem, Rule rule) {
+	private static List<List<LookseeObject>> generateEnabledTests(Element input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<LookseeObject>> generateReadOnlyTests(ElementState input_elem, Rule rule) {
+	private static List<List<LookseeObject>> generateReadOnlyTests(Element input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<LookseeObject>> generatePatternTests(ElementState input_elem, Rule rule) {
+	private static List<List<LookseeObject>> generatePatternTests(Element input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<LookseeObject>> generateEmailTests(ElementState input_elem) {
+	private static List<List<LookseeObject>> generateEmailTests(Element input_elem) {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -467,13 +466,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 
 	/**
-	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link Element} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<LookseeObject>> generateFormRuleTests(ElementState input_elem, Rule rule, ElementState submitField){
+	public static List<List<LookseeObject>> generateFormRuleTests(Element input_elem, Rule rule, Element submitField){
 		assert rule != null;
 		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
@@ -518,13 +517,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 	/**
-	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link Element} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<LookseeObject>> generateInputRuleTests(ElementState input_elem, Rule rule){
+	public static List<List<LookseeObject>> generateInputRuleTests(Element input_elem, Rule rule){
 		assert rule != null;
 		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
@@ -558,13 +557,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 	
-	public static List<List<LookseeObject>> generateBoundaryTests(ElementState input){
+	public static List<List<LookseeObject>> generateBoundaryTests(Element input){
 		
 		return null;
 		
 	}
 	
-	public static List<List<LookseeObject>> generateLengthBoundaryTests(ElementState input, Rule rule, ElementState submit){
+	public static List<List<LookseeObject>> generateLengthBoundaryTests(Element input, Rule rule, Element submit){
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -678,11 +677,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 	}
 	
-	public static List<List<LookseeObject>> generateValueBoundaryTests(ElementState input){
+	public static List<List<LookseeObject>> generateValueBoundaryTests(Element input){
 		return null;	
 	}
 	
-	public static List<List<LookseeObject>> generateRequirementChecks(ElementState input, boolean isRequired, ElementState submit){
+	public static List<List<LookseeObject>> generateRequirementChecks(Element input, boolean isRequired, Element submit){
 		assert input.getName().equals("input");
 		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
@@ -745,7 +744,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<List<LookseeObject>> generateAlphabeticRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateAlphabeticRestrictionTests(Element input_elem, Rule rule, Element submit) {
 		//generate single character str test		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -759,7 +758,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateNumericRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateNumericRestrictionTests(Element input_elem, Rule rule, Element submit) {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -774,7 +773,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateSpecialCharacterRestrictionTests(Element input_elem, Rule rule, Element submit) {
 		//generate single character str test
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
@@ -789,22 +788,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<LookseeObject>> generateEnabledTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateEnabledTests(Element input_elem, Rule rule, Element submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<LookseeObject>> generateReadOnlyTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateReadOnlyTests(Element input_elem, Rule rule, Element submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<LookseeObject>> generatePatternTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generatePatternTests(Element input_elem, Rule rule, Element submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<LookseeObject>> generateEmailTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<LookseeObject>> generateEmailTests(Element input_elem, Rule rule, Element submit) {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();

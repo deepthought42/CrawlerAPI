@@ -3,10 +3,8 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
@@ -15,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
-import com.qanairy.models.rules.Rule;
-import com.qanairy.services.BrowserService;
 
 
 /**
@@ -30,36 +26,24 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 
 	private String name;
 	private String text;
-	private String xpath;
-	private String type;
-	private String inner_html;
 	private String css_selector;
 	private String outer_html;
+	private String xpath;
 	private String classification;
-	private String template;
-	
 	private String screenshot_url;
-	private String screenshot_checksum;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
 	
-	@Deprecated
-	private boolean part_of_form;
-	
-	@Properties
-	private Map<String, String> pre_render_css_values = new HashMap<>();
-	
+	private boolean visible;
+
 	@Properties
 	private Map<String, String> rendered_css_values = new HashMap<>();
 	
 	@Properties
 	private Map<String, String> attributes = new HashMap<>();
 	
-	@Relationship(type = "HAS", direction = Relationship.OUTGOING)
-	private Set<Rule> rules = new HashSet<>();
-
 	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<ElementState> child_elements = new ArrayList<>();
 	
@@ -93,23 +77,19 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		assert name != null;
 		assert screenshot_url != null;
 		
-		setType("ElementState");
 		setName(name);
-		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshotUrl(screenshot_url);
-		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
-		setPreRenderCssValues(css_map);
+		setRenderedCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
-		setRules(new HashSet<>());
-		setClassification(ElementClassification.CHILD);
+		setClassification(ElementClassification.LEAF);
+		setXpath(xpath);
 		setKey(generateKey());
 	}
 	
@@ -136,23 +116,19 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		assert outer_html != null;
 		assert !outer_html.isEmpty();
 		
-		setType("ElementState");
 		setName(name);
-		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshotUrl(screenshot_url);
 		setText(text);
-		setPreRenderCssValues(css_map);
-		setScreenshotChecksum(checksum);
+		setRenderedCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
 		setOuterHtml(outer_html);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(getOuterHtml()));
-		setRules(new HashSet<>());
 		setClassification(classification);
+		setXpath(xpath);
 		setKey(generateKey());
 	}
 	
@@ -175,11 +151,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return whether attributes match or not
 	 */
 	public boolean cssMatches(ElementState elem){
-		for(String propertyName : pre_render_css_values.keySet()){
+		for(String propertyName : rendered_css_values.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
 			}
-			if(!pre_render_css_values.get(propertyName).equals(elem.getPreRenderCssValues().get(propertyName))){
+			if(!rendered_css_values.get(propertyName).equals(elem.getRenderedCssValues().get(propertyName))){
 				return false;
 			}
 		}
@@ -202,42 +178,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	public void setText(String text) {
 		this.text = text;
-	}
-	
-	public String getXpath() {
-		return xpath;
-	}
-	
-	public void setXpath(String xpath) {
-		this.xpath = xpath;
-	}
-
-	public Map<String, String> getPreRenderCssValues() {
-		return pre_render_css_values;
-	}
-
-	public void setPreRenderCssValues(Map<String, String> css_values) {
-		this.pre_render_css_values = css_values;
-	}
-	
-	public Set<Rule> getRules(){
-		return this.rules;
-	}
-
-	public void setRules(Set<Rule> rules) {
-		this.rules = rules;
-	}
-
-	public void addRule(Rule rule) {
-		boolean exists = false;
-		for(Rule existing_rule : this.rules){
-			if(existing_rule.getKey().equals(rule.getKey())){
-				exists = true;
-			}
-		}
-		if(!exists){
-			this.rules.add(rule);
-		}
 	}
 
 	public void setAttributes(Map<String, String> attribute_persist_list) {
@@ -272,22 +212,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		this.screenshot_url = screenshot_url;
 	}
 
-	public String getType() {
-		return this.type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	public String getScreenshotChecksum() {
-		return screenshot_checksum;
-	}
-
-	public void setScreenshotChecksum(String screenshot_checksum) {
-		this.screenshot_checksum = screenshot_checksum;
-	}
-
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
@@ -296,22 +220,14 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 */
 	public String generateKey() {
 		String key = "";
-		List<String> properties = new ArrayList<>(getPreRenderCssValues().keySet());
+		List<String> properties = new ArrayList<>(getRenderedCssValues().keySet());
 		Collections.sort(properties);
 		for(String style : properties) {
-			key += getPreRenderCssValues().get(style);
+			key += getRenderedCssValues().get(style);
 		}
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getOuterHtml());
 	}
 	
-
-	/**
-	 * Prints this elements xpath
-	 */
-	public String toString(){
-		return this.xpath;
-	}
-
 	/**
 	 * Checks if {@link ElementState elements} are equal
 	 * 
@@ -331,21 +247,16 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
-		page_elem.setPreRenderCssValues(this.getPreRenderCssValues());
 		page_elem.setRenderedCssValues(this.getRenderedCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshotUrl(this.getScreenshotUrl());
-		page_elem.setScreenshotChecksum(this.getScreenshotChecksum());
 		page_elem.setText(this.getText());
-		page_elem.setType(this.getType());
-		page_elem.setXpath(this.getXpath());
 		page_elem.setYLocation(this.getYLocation());
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());
 		page_elem.setHeight(this.getHeight());
 		page_elem.setOuterHtml(this.getOuterHtml());
-		page_elem.setTemplate(this.getTemplate());
 		
 		return page_elem;
 	}
@@ -408,26 +319,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		return outer_html;
 	}
 
-	public String getTemplate(){
-		return this.template;
-	}
-	
-	public void setTemplate(String template) {
-		this.template = template;
-	}
-
-	@Deprecated
-	public boolean isPartOfForm() {
-		return part_of_form;
-	}
-
-	@Deprecated
-	public void setIsPartOfForm(boolean is_part_of_form) {
-		this.part_of_form = is_part_of_form;
-	}
-
 	public boolean isLeaf() {
-		return getClassification().equals(ElementClassification.CHILD);
+		return getClassification().equals(ElementClassification.LEAF);
 	}
 
 	public ElementClassification getClassification() {
@@ -456,5 +349,21 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 
 	public void setRenderedCssValues(Map<String, String> rendered_css_values) {
 		this.rendered_css_values.putAll(rendered_css_values);
+	}
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+
+	public String getXpath() {
+		return xpath;
+	}
+
+	public void setXpath(String xpath) {
+		this.xpath = xpath;
 	}
 }

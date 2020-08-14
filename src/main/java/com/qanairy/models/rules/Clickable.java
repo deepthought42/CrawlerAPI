@@ -1,6 +1,6 @@
 package com.qanairy.models.rules;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 public class Clickable extends Rule {	
 	public Clickable(){
@@ -10,7 +10,7 @@ public class Clickable extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(ElementState val) {
+	public Boolean evaluate(Element val) {
 		assert false;
 		// TODO Auto-generated method stub
 		return null;

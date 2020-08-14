@@ -2,7 +2,7 @@ package com.qanairy.models.rules;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
@@ -20,7 +20,7 @@ public class PatternRule extends Rule {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		for(String attribute: elem.getAttributes().keySet()){
 			if("vals".contentEquals(attribute)){
 				String pattern = "/^" + elem.getAttributes().get(attribute).toString() + " $/";

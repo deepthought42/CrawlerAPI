@@ -7,10 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 
 public class TestTests {
@@ -23,7 +22,7 @@ public class TestTests {
 		page.setUrl("https://test.tester.com/services/test-service.html");
 		objects.add(page);
 		
-		ElementState element = new ElementState();
+		Element element = new Element();
 		element.setName("a");
 		
 		Action action = new Action();
@@ -48,7 +47,7 @@ public class TestTests {
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);
 		
-		ElementState element = new ElementState();
+		Element element = new Element();
 		element.setName("a");
 		
 		Action action = new Action();
@@ -73,7 +72,7 @@ public class TestTests {
 		page.setUrl("https://test.tester.com/");
 		objects.add(page);
 		
-		ElementState element = new ElementState();
+		Element element = new Element();
 		element.addAttribute("id", "id-attr-1");
 		element.setName("a");
 		

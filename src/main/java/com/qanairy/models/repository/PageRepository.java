@@ -9,6 +9,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.qanairy.models.Element;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.experience.PerformanceInsight;
@@ -53,4 +54,10 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 
 	@Query("MATCH (p:Page{key:{page_key}}),(ps:PageState{key:{page_state_key}}) CREATE (p)-[h:HAS]->(ps) RETURN ps")
 	public void addPageState(@Param("page_key") String page_key, @Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:Page{url:{url}}) RETURN p LIMIT 1")
+	public Page findByUrl(@Param("url") String url);
+
+	@Query("MATCH (p:Page{key:{key}})-[]->(e:ElementState) RETURN e")
+	public List<Element> getElements(@Param("key") String key);
 }

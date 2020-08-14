@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
@@ -51,8 +51,6 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 	@Autowired
 	private DomainService domain_service;
 	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	public DomainPaddingAudit() {	}
 	
@@ -70,7 +68,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 
 		
 		List<Observation> observations = new ArrayList<>();
-		Map<ElementState, List<String>> elements_padding_map = new HashMap<>(); 
+		Map<Element, List<String>> elements_padding_map = new HashMap<>(); 
 		//get all pages
 		List<Page> pages = domain_service.getPages(domain.getHost());
 		
@@ -79,13 +77,13 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		for(Page page : pages) {
 			
 			//for each page state get elements
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("Domain Font Page State :: "+page_state);
+			//PageState page_state = page_service.getMostRecentPageState(page.getKey());
+			log.warn("Domain Font Page State :: "+page);
 			log.warn("Domain Font Page key :: "+page.getKey());
 			
-			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+			List<Element> elements = page_service.getElements(page.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
-			for(ElementState element : elements) {
+			for(Element element : elements) {
 				//TODO put element padding evaluation logic here
 				String padding_value = "";
 				List<String> paddings = new ArrayList<>();
@@ -150,7 +148,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 	 * 
 	 * @pre elements_padding_map != null
 	 */
-	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_padding_map) {
+	private Score evaluateSpacingConsistency(Map<Element, List<String>> elements_padding_map) {
 		assert elements_padding_map != null;
 		
 		int points_earned = 0;
@@ -159,7 +157,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		
 		Map<String, List<Double>> gcd_map = new HashMap<>();
 		Map<String, List<Double>> units = new HashMap<>();
-		for(ElementState element : elements_padding_map.keySet()) {
+		for(Element element : elements_padding_map.keySet()) {
 			//START UNIT SCORE HERE
 			units.putAll(sortSizeUnits(elements_padding_map.get(element)));
 		}
@@ -267,15 +265,15 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 	 * 
 	 * @return
 	 */
-	private Score evaluateUnits(Map<ElementState, List<String>> element_padding_map) {
+	private Score evaluateUnits(Map<Element, List<String>> element_padding_map) {
 		assert element_padding_map != null;
 		
 		int points_earned = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> unscalable_padding_elements = new ArrayList<>();
+		List<Element> unscalable_padding_elements = new ArrayList<>();
 
-		for(ElementState element : element_padding_map.keySet()) {
+		for(Element element : element_padding_map.keySet()) {
 			for(String padding_value : element_padding_map.get(element)) {
 				//determine unit measure
 				String unit = extractMeasureUnit(padding_value);

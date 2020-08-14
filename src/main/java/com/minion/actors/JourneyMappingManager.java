@@ -4,9 +4,13 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -16,21 +20,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
-import com.qanairy.models.RenderedPageState;
-import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditStage;
-import com.qanairy.models.enums.CrawlAction;
-import com.qanairy.models.message.AuditSet;
-import com.qanairy.models.message.CrawlActionMessage;
-import com.qanairy.models.message.DomainAuditMessage;
-import com.qanairy.models.message.PageAuditComplete;
-import com.qanairy.services.AuditRecordService;
-import com.qanairy.services.AuditService;
-import com.qanairy.services.DomainService;
+import com.qanairy.models.journeys.Journey;
+import com.qanairy.models.journeys.NavigationStep;
+import com.qanairy.models.journeys.Step;
+import com.qanairy.services.JourneyService;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -57,34 +51,20 @@ public class JourneyMappingManager extends AbstractActor{
 	private ActorSystem actor_system;
 	
 	@Autowired
-	private DomainService domain_service;
+	private JourneyService journey_service;
 	
-	@Autowired
-	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private AuditService audit_service;
-	
-	private ActorRef web_crawler_actor;
 	private Account account;
-	private int page_count;
-	private int page_state_count;
-	private int rendered_page_state_count;
+
 	private int page_audits_completed;
 	Map<String, Page> pages_experienced = new HashMap<>();
 	Map<String, Page> page_states_experienced = new HashMap<>();
-	private AuditRecord audit_record;
-
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		page_count = 0;
-		page_state_count = 0;
-		rendered_page_state_count = 0;
 		page_audits_completed = 0;
-		audit_record = new AuditRecord();
 	}
 
 	//re-subscribe when restart
@@ -106,11 +86,26 @@ public class JourneyMappingManager extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(URL.class, url-> {
+					log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
 					//create navigation step
-					NavigationStep step = new NavigationStep();
-					//Create new Journey with navigation step
-					//send Journey to JourneyExplorer actor
+					NavigationStep step = new NavigationStep(url.toString());
 					
+					Set<Step> steps = new HashSet<>();
+					steps.add(step);
+					List<String> ordered_keys = new ArrayList<>();
+					ordered_keys.add(step.getKey());
+					
+					//Create new Journey with navigation step
+					Journey journey = new Journey(steps, ordered_keys);
+
+					//send Journey to JourneyExplorer actor
+					ActorRef journeyExpander = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("journeyExpander"), "journeyExpander"+UUID.randomUUID());
+					journeyExpander.tell(journey, getSelf());	
+					
+				})
+				.match(Journey.class, journey -> {
+					journey_service.save(journey);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

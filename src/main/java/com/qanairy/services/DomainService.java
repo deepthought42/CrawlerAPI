@@ -14,7 +14,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -96,7 +96,7 @@ public class DomainService {
 		return domain_repo.getFormCount(user_id, url);
 	}
 
-	public Set<ElementState> getElementStates(String url, String user_id) {
+	public Set<Element> getElementStates(String url, String user_id) {
 		return domain_repo.getElementStates(url, user_id);
 	}
 

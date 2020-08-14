@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Group;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
@@ -132,8 +132,8 @@ public class TestCreatorService {
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
 		for(LookseeObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(ElementState.class)){
-				ElementState elem = (ElementState)path_obj;
+			if(path_obj.getClass().equals(Element.class)){
+				Element elem = (Element)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
 					//test_service.save(test);

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Page;
 import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
 import com.qanairy.models.audit.domain.DomainFontAudit;
 import com.qanairy.models.audit.domain.DomainLinksAudit;
@@ -82,7 +83,7 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePrerenderPageAudits(AuditCategory category, PageState page) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePrerenderPageAudits(AuditCategory category, Page page) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		

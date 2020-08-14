@@ -2,23 +2,23 @@ package com.qanairy.models.audit;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.PageState;
+import com.qanairy.models.Page;
 import com.qanairy.models.enums.ObservationType;
 
 /**
- * A observation of potential error for a given {@link ElementState element} 
+ * A observation of potential error for a given {@link Element element} 
  */
 public class PageObservation extends LookseeObject implements Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")
-	private PageState page;
+	private Page page;
 	
 	public PageObservation() {}
 	
-	public PageObservation(PageState page, String description) {
+	public PageObservation(Page page, String description) {
 		setPage(page);
 		setDescription(description);
 		setKey(this.generateKey());
@@ -32,12 +32,12 @@ public class PageObservation extends LookseeObject implements Observation {
 	}
 
 
-	public PageState getElements() {
+	public Page getElements() {
 		return page;
 	}
 
 
-	public void setPage(PageState page) {
+	public void setPage(Page page) {
 		this.page = page;
 	}
 

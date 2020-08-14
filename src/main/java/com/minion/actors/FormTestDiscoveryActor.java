@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Action;
 import com.qanairy.models.Form;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import akka.actor.AbstractActor;
@@ -104,7 +104,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	
 	
 	@Deprecated
-	public static List<List<LookseeObject>> generateRequirementChecks(ElementState input, boolean isRequired){
+	public static List<List<LookseeObject>> generateRequirementChecks(Element input, boolean isRequired){
 		assert input.getName().equals("input");
 		
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();

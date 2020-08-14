@@ -1,6 +1,6 @@
 package com.qanairy.models.rules;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
  * Creates a read-only {@link FormRule} on a {@link FormField}  
@@ -14,7 +14,7 @@ public class ReadOnlyRule extends Rule {
 	}
 	
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		//Check if field is read-only
 		return elem.getAttributes().containsKey("readonly");
 	}

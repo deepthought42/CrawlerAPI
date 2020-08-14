@@ -33,6 +33,7 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
@@ -154,12 +155,12 @@ public class UrlBrowserActor extends AbstractActor {
 							page_state = browser_service.buildPageStateWithElementsWithUserAndDomain(message.getAccountId(), message.getDomain(), browser);
 							
 							long start_time = System.currentTimeMillis();
-						  	List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), message.getDomain());
+						  	//List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), message.getDomain());
 						  	long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
-							page_state.addElements(elements);
+							//page_state.addElements(elements);
 							page_state = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getEntryPath(), page_state);
-							log.warn("DOM elements found :: "+elements.size());
+							//log.warn("DOM elements found :: "+elements.size());
 							page_service.addPageState(message.getAccountId(), page.getKey(), page_state);
 							log.warn("page state elements :: " + page_state.getElements().size());
 							break;

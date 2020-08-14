@@ -3,7 +3,7 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 /**
  * Defines a {@link Rule} where all letters a-z are not allowed regardless of case
@@ -20,7 +20,7 @@ public class AlphabeticRestrictionRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		Pattern pattern = Pattern.compile(getValue());
 
         Matcher matcher = pattern.matcher(elem.getText());

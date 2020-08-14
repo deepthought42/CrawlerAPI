@@ -24,7 +24,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
@@ -93,6 +93,7 @@ public class ParentPathExplorer extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(TestCandidateMessage.class, message-> {
+					/*
 			  		long start = System.currentTimeMillis();
 
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
@@ -117,7 +118,7 @@ public class ParentPathExplorer extends AbstractActor {
 					}
 
 					//get last page element
-					ElementState last_element = (ElementState)path_objects.get(last_elem_idx);
+					Element last_element = (Element)path_objects.get(last_elem_idx);
 			  		PageState last_page = PathUtils.getLastPageState(path_objects);
 			  		PageState first_page = PathUtils.getFirstPage(path_objects);
 			  		String host = new URL(last_page.getUrl()).getHost();
@@ -129,19 +130,9 @@ public class ParentPathExplorer extends AbstractActor {
 			  		//check if url changes between last page state and result
 			  		boolean is_page_change = !message.getResultPage().getUrl().equals(last_page.getUrl());
 			  		
-			  		
 					//do while result matches expected result
 					do{
-						/*
-						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
-						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-
-						if(discovery_action == DiscoveryAction.STOP) {
-							log.warn("path message discovery actor returning");
-							return;
-						}
-						*/
+						
 						try{
 							error_occurred = false;
 							browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
@@ -151,7 +142,7 @@ public class ParentPathExplorer extends AbstractActor {
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host, message.getAccountId());
 
 							log.warn("Parent path explorer is looking up parent element :: "+last_element.getXpath());
-							ElementState parent_element = element_state_service.getParentElement(message.getAccountId(), message.getDomain(), last_page.getKey(), last_element.getKey());
+							Element parent_element = element_state_service.getParentElement(message.getAccountId(), message.getDomain(), last_page.getKey(), last_element.getKey());
 							//if parent element does not have width then continue
 							if(parent_element == null){
 								log.warn("PARENT ELEMENT IS NULL!!! ABORTING PARENT PATH EXPANSION!!!!!!");
@@ -162,7 +153,7 @@ public class ParentPathExplorer extends AbstractActor {
 								BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 								String checksum = PageState.getFileChecksum(element_screenshot);
 								String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getEntryPath()).getHost(), last_element.getKey(), BrowserType.create(browser.getBrowserName()), message.getAccountId());
-								last_element.setScreenshotUrl(screenshot_url);
+								last_element.setViewportScreenshotUrl(screenshot_url);
 								last_element.setScreenshotChecksum(checksum);
 								last_element.setWidth(element_size.getWidth());
 								last_element.setHeight(element_size.getHeight());
@@ -200,7 +191,7 @@ public class ParentPathExplorer extends AbstractActor {
 							String checksum = PageState.getFileChecksum(element_screenshot);
 							String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(element_screenshot, host, checksum, BrowserType.create(browser.getBrowserName()), message.getAccountId());
 							parent_element.setScreenshotChecksum(checksum);
-							parent_element.setScreenshotUrl(screenshot_url);
+							parent_element.setViewportScreenshotUrl(screenshot_url);
 							parent_element.setWidth(element_size.getWidth());
 							parent_element.setHeight(element_size.getHeight());
 							parent_element.setXLocation(element_location.getX());
@@ -268,27 +259,6 @@ public class ParentPathExplorer extends AbstractActor {
 
 					//check if test already exists that contains subset of current test consisting of last set of page-element-action
 					//find last page state
-			  		/*
-				    int last_page_idx = 0;
-				    for(int idx = path_keys.size()-1; idx >= 0; idx--) {
-					    if(path_keys.get(idx).contains("pagestate")) {
-					 	    last_page_idx = idx;
-					 	    break;
-					    }
-				    }
-
-				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
-					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0), message.getDomain().getUrl(), message.getAccountId());
-					List<List<LookseeObject>> path_object_lists = new ArrayList<List<LookseeObject>>();
-					for(Test test : matching_tests) {
-						path_object_lists.add(test_service.loadPathObjects(message.getAccountId(), test.getPathKeys()));
-					}
-
-					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
-					if(is_duplicate_path) {
-						return;
-					}
-			  		*/
 					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
 					if(is_result_matches_other_page_in_path) {
 						return;
@@ -302,6 +272,7 @@ public class ParentPathExplorer extends AbstractActor {
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain, message.getAccountId());
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
+		  			*/
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -327,8 +298,8 @@ public class ParentPathExplorer extends AbstractActor {
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
 		for(LookseeObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(ElementState.class)){
-				ElementState elem = (ElementState)path_obj;
+			if(path_obj.getClass().equals(Element.class)){
+				Element elem = (Element)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
 					break;

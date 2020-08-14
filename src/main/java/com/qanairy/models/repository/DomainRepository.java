@@ -13,7 +13,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageLoadAnimation;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
@@ -50,7 +50,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Set<PageState> getPageStates(@Param("user_id") String user_id, @Param("url") String url);
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]-(d:Domain{url:{url}}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
-	public Set<ElementState> getElementStates(@Param("url") String url, @Param("user_id") String user_id);
+	public Set<Element> getElementStates(@Param("url") String url, @Param("user_id") String user_id);
 	
 	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
 	public Set<Action> getActions(@Param("user_id") String user_id, @Param("url") String url);

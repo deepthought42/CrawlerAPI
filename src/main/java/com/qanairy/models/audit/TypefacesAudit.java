@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -29,31 +30,12 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 
 	
 	@Relationship(type="FLAGGED")
-	List<ElementState> flagged_elements = new ArrayList<>();
+	List<Element> flagged_elements = new ArrayList<>();
 	
 	public TypefacesAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
-	
-	private static String getAuditDescription() {
-		return "";
-	}
 
-	private static List<String> buildBestPractices() {
-		List<String> best_practices = new ArrayList<>();
-		best_practices.add("According to the WCAG, \r\n" + 
-				"Text: Contrast of 4.5 - 7 with the background. \r\n" + 
-				"Large text/ Headlines: Contrast of 3 - 4.5 with the background. \r\n" + 
-				"Black on white or vice versa is not recommended.");
-		
-		return best_practices;
-	}
-	
-	private static String getAdaDescription() {
-		return "1.4.1 - Use of Color \r\n" + 
-				"Color is not used as the only visual means of conveying information, indicating an action, prompting a response, or distinguishing a visual element.\r\n";
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -70,7 +52,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		List<String> font_families = new ArrayList<>();
 		
 		for(ElementState element : page_state.getElements()) {
-			String font_family = element.getPreRenderCssValues().get("font-family");
+			String font_family = element.getRenderedCssValues().get("font-family");
 			font_families.add(font_family);
 			
 			if(family_scores.containsKey(font_family)) {

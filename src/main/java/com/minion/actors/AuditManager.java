@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -30,6 +31,7 @@ import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -60,6 +62,9 @@ public class AuditManager extends AbstractActor{
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private AuditService audit_service;
@@ -136,7 +141,14 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(PageState.class, page_state -> {
+					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state.getKey())) {
+						page_state = page_state_service.save(page_state);
+
+						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
+						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
+						
 						page_state_count++;
 						log.warn("Page State Count :: "+page_state_count);
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

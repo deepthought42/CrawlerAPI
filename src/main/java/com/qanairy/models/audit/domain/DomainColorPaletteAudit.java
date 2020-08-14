@@ -67,17 +67,13 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		//get all pages
 		List<Page> pages = domain_service.getPages(domain.getHost());
 		
-		log.warn("Domain pages :: "+pages.size());
 		//get most recent page state for each page
 		for(Page page : pages) {
 			
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("Domain Font Page State :: "+page_state);
-			log.warn("Domain Font Page key :: "+page.getKey());
 			
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-			log.warn("COLOR PALETTE AUDIT :: Elements available for color evaluation ...  "+elements.size());
 
 			for(ElementState element : elements) {
 				//identify all colors used on page. Images are not considered
@@ -150,9 +146,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
 		observations.add(observation);
 			
-		for(ColorData primary_color : palette.keySet()) {
-			log.warn("Primary color :: "+primary_color.rgb() + "   ;   " + primary_color.getLuminosity());
-		}
 		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
 		int score = ColorPaletteUtils.getPaletteScore(palette, scheme);
 		

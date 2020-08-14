@@ -305,15 +305,10 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public Page buildPageVersion( Page page, String page_src, String page_url, String title ) throws IOException, XPathExpressionException{
-		assert page != null;
-		
-		//Document doc = Jsoup.connect("http://"+page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(30000).get();
-		//String page_src = doc.outerHtml();
-		
-		//page_src = Jsoup.clean(page_src, Whitelist.relaxed());
-		//String page_url = "http://"+page.getUrl();
-		//String host = new URL(browser_url).getHost();
+	public Page buildPage( String page_src, String page_url, String title ) throws IOException, XPathExpressionException{
+		assert page_url != null;
+		assert page_src != null;
+		log.warn("building page....");
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		
 		//Element root = html_doc.getElementsByTag("body").get(0);
@@ -323,7 +318,7 @@ public class BrowserService {
 		URL clean_url = new URL(url_without_params);
 		List<com.qanairy.models.Element> elements = extractElements(page_src, clean_url, rule_sets);
 				
-		Page page_version = new Page(
+		Page page = new Page(
 				elements,
 				page_src,
 				title,
@@ -331,12 +326,12 @@ public class BrowserService {
 				clean_url.getPath());
 
 		
-		Page record = page_service.findByKey(page_version.getKey());
+		Page record = page_service.findByKey(page.getKey());
 		if(record != null) {
 			return record;
 		}
 		log.warn("built page...now saving page state...");
-		return page_version;
+		return page;
 	}
 	
 	/**
@@ -349,7 +344,7 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( Page page, String page_src, String page_url, String title, Browser browser ) throws IOException, XPathExpressionException{
+	public PageState buildPageState( Page page, Browser browser ) throws IOException, XPathExpressionException{
 		assert page != null;
 		assert browser != null;
 		
@@ -360,14 +355,13 @@ public class BrowserService {
 		//retrieve landable page state associated with page with given url
 		//String page_url = "http://"+page.getUrl();
 		//String host = new URL(browser_url).getHost();
-		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
+		//String url_without_params = BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl());
 		//String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		
-		//Element root = html_doc.getElementsByTag("body").get(0);
-		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); //new ArrayList<>();
-		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
-		
-		List<ElementState> elements = extractElementStates(page_src, new URL(url_without_params), browser);
+		String source = browser.getDriver().getPageSource();
+		//Element root = html_doc.getElementsByTag("body").get(0);	
+		log.warn("url for page : "+page.getUrl());
+
+		List<ElementState> elements = extractElementStates(source, new URL(page.getUrl()), browser);
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
@@ -384,13 +378,14 @@ public class BrowserService {
 		PageState page_state = new PageState( 
 				viewport_screenshot_url,
 				elements,
-				page_src,
+				source,
 				0,
 				0,
 				0,
 				0,
 				BrowserType.CHROME.toString(),
-				full_page_screenshot_url, page_url);
+				full_page_screenshot_url, 
+				page.getUrl());
 
 		PageState record = page_state_service.findByKey(page_state.getKey());
 		if(record != null) {
@@ -425,81 +420,6 @@ public class BrowserService {
 		return page;
 	}
 	
-	@Deprecated
-	private List<com.qanairy.models.Element> getDomElementTreeLinearWithUserAndDomain(String page_source, String user_id, Domain domain) throws IOException, XPathExpressionException {
-		assert domain != null;
-		assert user_id != null;
-		assert !user_id.isEmpty();
-		assert page_source != null;
-		assert !page_source.isEmpty();
-		
-		List<com.qanairy.models.Element> visited_elements = new ArrayList<>();
-		Map<com.qanairy.models.Element, List<Element>> frontier = new HashMap<>();
-		Map<String, Integer> xpath_cnt = new HashMap<>();
-		
-		//get html doc and get root element
-		Document html_doc = Jsoup.parse(page_source);
-		Element root = html_doc.getElementsByTag("body").get(0);
-		
-		//create element state from root node
-		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-
-		com.qanairy.models.Element root_element_state = buildElement("//body", attributes, root, ElementClassification.ANCESTOR,  new HashMap<>());
-		root_element_state = element_service.save(root_element_state);
-		
-		//put element on frontier
-		frontier.put(root_element_state, new ArrayList<>(root.children()));
-		while(!frontier.isEmpty()) {
-			com.qanairy.models.Element root_element = frontier.keySet().iterator().next();
-			List<Element> child_elements = frontier.remove(root_element);
-			visited_elements.add(root_element);
-
-			for(Element child : child_elements) {
-				String xpath = root_element.getXpath() + "/" + child.tagName();
-				if(!xpath_cnt.containsKey(xpath)) {
-					xpath_cnt.put(xpath, 1);
-				}
-				else {
-					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
-				}
-				if(isStructureTag(child.tagName())) {
-					continue;
-				}
-				
-				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
-
-				attributes = generateAttributesMapUsingJsoup(child);
-				
-				ElementClassification classification = null;
-				List<Element> children = new ArrayList<Element>(child.children());
-				if(children.isEmpty()) {
-					classification = ElementClassification.LEAF;
-				}
-				else if(isSliderElement(child)) {
-					classification = ElementClassification.SLIDER;
-				}
-				else {
-					classification = ElementClassification.ANCESTOR;
-				}
-				com.qanairy.models.Element element_state = buildElement(xpath, attributes, child, classification, new HashMap<>());
-
-				element_state = element_service.save(element_state);
-					
-				//put element on frontier
-				if(children.isEmpty()) {
-					visited_elements.add(element_state);
-				}
-				else {
-					frontier.put(element_state, new ArrayList<>(child.children()));
-				}
-				
-				root_element.addChildElement(element_state);
-			}
-			root_element = element_service.save(root_element);
-		}
-		return visited_elements;
-	}
-	
 	/**
 	 * 
 	 * @param page_source
@@ -519,25 +439,11 @@ public class BrowserService {
 		List<com.qanairy.models.Element> visited_elements = new ArrayList<>();
 		Map<String, String> frontier = new HashMap<>();
 		Map<String, Integer> xpath_cnt = new HashMap<>();
-
-		/*
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		//tidy.setXHTML(true); // set desired config options using tidy setters 
-		log.debug("tidy  :: "+tidy); //NOTE :: tidy contains the errors for the document. 
-		//extract body element for dom creation
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
-		log.warn("1===========================================================================");
-		log.warn("1===========================================================================");
-		log.warn("1===========================================================================");
 		
-		log.warn("w3c_document  ---   "+ w3c_document);
-		*/
 		//get html doc and get root element
 		Document html_doc = Jsoup.parse(page_source);
-		
 		Element root = html_doc.getElementsByTag("body").get(0);
-		
-		
+			
 		//create element state from root node
 		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
 		log.warn("page source 1 :: "+page_source.length());
@@ -552,12 +458,11 @@ public class BrowserService {
 		
 	//	Map<String, String> css_rendered = new HashMap<>();
 
-	//	ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
-		
-	//	root_element_state = element_service.save(root_element_state);
+		com.qanairy.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
+		root_element = element_service.save(root_element);
 
 		//put element on frontier
-		frontier.put("//body","");
+		frontier.put("//body",root_element.getKey());
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
 			String parent_element_key = frontier.remove(next_xpath);
@@ -605,7 +510,7 @@ public class BrowserService {
 				if(isStructureTag(child.tagName())) {
 					continue;
 				}
-				String xpath = element_state.getXpath() + "/" + child.tagName();
+				String xpath = next_xpath + "/" + child.tagName();
 				
 				if(xpath_cnt.containsKey(xpath)) {
 					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
@@ -1706,10 +1611,6 @@ public class BrowserService {
 		}
 		
 		return false;
-	}
-
-	public List<com.qanairy.models.Element> extractElementStatesWithUserAndDomain(String page_src, String user_id, Domain domain) throws IOException, XPathExpressionException {
-		return getDomElementTreeLinearWithUserAndDomain(page_src, user_id, domain);
 	}
 	
 	@Deprecated

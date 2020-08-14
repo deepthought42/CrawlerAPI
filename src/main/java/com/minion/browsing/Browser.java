@@ -577,7 +577,7 @@ public class Browser {
 	 * @throws XPathExpressionException 
 	 */
 	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
-
+		log.warn("loading css pre rendered properties using parser");
 		
 		Map<String, String> css_map = new HashMap<>();
 		//map rule set declarations with elements and save element

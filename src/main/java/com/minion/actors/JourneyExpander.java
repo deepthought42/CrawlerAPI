@@ -118,11 +118,11 @@ public class JourneyExpander extends AbstractActor{
 					//construct page and add page to list of page states
 					URL page_url = new URL(current_url);
 					String path = page_url.getPath();
-					Page page = new Page(new ArrayList<>(), browser.cleanSrc(browser.getDriver().getPageSource()), browser.getDriver().getTitle(), (page_url.getHost()+path), path);
+					Page page = new Page(new ArrayList<>(), Browser.cleanSrc(browser.getDriver().getPageSource()), browser.getDriver().getTitle(), page_url.toString(), path);
 					page = page_service.save( page );
 
 					//build page state for baseline
-					PageState journey_result_page = browser_service.buildPageState(page, browser.getDriver().getPageSource(), current_url, browser.getDriver().getTitle(), browser);
+					PageState journey_result_page = browser_service.buildPageState(page, browser);
 					Document doc = Jsoup.parse(journey_result_page.getSrc());
 					
 					//get all leaf elements 
@@ -143,12 +143,11 @@ public class JourneyExpander extends AbstractActor{
 						new_element_state.setVisible(web_element.isDisplayed());
 						
 						//if page url is not the same as journey result page url then load new page for this
-						String url_after_interaction = browser.getDriver().getCurrentUrl();
 						//construct page and add page to list of page states
 						URL new_page_url = new URL(current_url);
 						String new_path = page_url.getPath();
 						Page new_page = new Page(new ArrayList<>(), browser.cleanSrc(browser.getDriver().getPageSource()), browser.getDriver().getTitle(), (new_page_url.getHost()+new_path), new_path);						
-						PageState exploration_result_page = browser_service.buildPageState(new_page, browser.getDriver().getPageSource(), url_after_interaction, browser.getDriver().getTitle(), browser);
+						PageState exploration_result_page = browser_service.buildPageState(new_page, browser);
 						for(ElementState element_state : exploration_result_page.getElements()) {
 							WebElement new_web_element = browser.getDriver().findElement(By.xpath(element_state.getXpath()));
 
@@ -207,7 +206,7 @@ public class JourneyExpander extends AbstractActor{
 						
 						//if page url is not the same as journey result page url then load new page for this
 						String url_after_interaction = browser.getDriver().getCurrentUrl();
-						PageState exploration_result_page = browser_service.buildPageState(null, browser.getDriver().getPageSource(), url_after_interaction, browser.getDriver().getTitle(), browser);
+						PageState exploration_result_page = browser_service.buildPageState(page, browser);
 						for(ElementState element_state : exploration_result_page.getElements()) {
 							WebElement new_web_element = browser.getDriver().findElement(By.xpath(element_state.getXpath()));
 
@@ -253,7 +252,7 @@ public class JourneyExpander extends AbstractActor{
 						
 						//if page url is not the same as journey result page url then load new page for this
 						String url_after_interaction = browser.getDriver().getCurrentUrl();
-						PageState exploration_result_page = browser_service.buildPageState(null, browser.getDriver().getPageSource(), url_after_interaction, browser.getDriver().getTitle(), browser);
+						PageState exploration_result_page = browser_service.buildPageState(page, browser);
 						
 						for(ElementState element_state : exploration_result_page.getElements()) {
 							WebElement new_web_element = browser.getDriver().findElement(By.xpath(element_state.getXpath()));

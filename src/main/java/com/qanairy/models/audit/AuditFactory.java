@@ -176,6 +176,7 @@ public class AuditFactory {
 	 * @pre page != null
 	 */
 	public List<Audit> executePrerenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException {
+		assert domain != null;
 		assert category != null;
 		
 		List<Audit> domain_audits = new ArrayList<Audit>();

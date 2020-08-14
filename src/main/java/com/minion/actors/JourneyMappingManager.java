@@ -97,7 +97,7 @@ public class JourneyMappingManager extends AbstractActor{
 					
 					//Create new Journey with navigation step
 					Journey journey = new Journey(steps, ordered_keys);
-
+					journey_service.save(journey);
 					//send Journey to JourneyExplorer actor
 					ActorRef journeyExpander = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("journeyExpander"), "journeyExpander"+UUID.randomUUID());

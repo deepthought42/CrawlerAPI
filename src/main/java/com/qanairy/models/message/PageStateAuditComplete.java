@@ -17,5 +17,4 @@ public class PageStateAuditComplete {
 	public void setPageState(PageState page_state) {
 		this.page_state = page_state;
 	}
-
 }

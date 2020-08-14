@@ -56,7 +56,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * {@inheritDoc} 
 	 * 
 	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
 	 *  

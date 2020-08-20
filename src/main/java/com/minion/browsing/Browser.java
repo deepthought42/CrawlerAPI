@@ -187,9 +187,23 @@ public class Browser {
 	 */
 	public static String cleanSrc(String src) {
 		Document html_doc = Jsoup.parse(src);
-		html_doc.select("canvas").remove();
-
-		return html_doc.html();
+		
+		for(Element element : html_doc.select("script")) {
+			element.remove();
+		}
+		
+		for(Element element : html_doc.select("style")) {
+			element.remove();
+		}
+		
+		for(Element element : html_doc.select("link")) {
+			element.remove();
+		}
+		
+		String html = html_doc.html();
+		return html.replace(" style=\"\"", "");
+		//html_doc.select("link,script,style").remove();
+		//return html_doc.html();
 	}
 	
 	/**
@@ -577,8 +591,6 @@ public class Browser {
 	 * @throws XPathExpressionException 
 	 */
 	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
-		log.warn("loading css pre rendered properties using parser");
-		
 		Map<String, String> css_map = new HashMap<>();
 		//map rule set declarations with elements and save element
 		for(RuleSet rule_set : rule_sets) {

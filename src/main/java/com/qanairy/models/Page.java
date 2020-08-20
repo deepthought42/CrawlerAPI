@@ -20,6 +20,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.minion.browsing.Browser;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -74,8 +75,9 @@ public class Page extends LookseeObject {
 		assert path != null;
 
 		setElements(elements);
+		setPageStates(new ArrayList<>());
 		setUrl(url);
-		setSrc( BrowserService.extractTemplate(src));
+		setSrc( BrowserService.extractTemplate(Browser.cleanSrc(src)));
 		setTitle(title);
 		setPath(path);
 		setKey(generateKey());

@@ -112,4 +112,14 @@ public class BrowserTest {
 			cnt++;
 		}while(cnt<5);
 	}
+	
+	@Test
+	public void verifyCleanSrc() {
+		String src = "<html><script src=''></script><link href=''/><style>.style{}</style><head></head><body><div>This is a test</div></body></html>";
+		
+		String cleaned_src = Browser.cleanSrc(src);
+		assertFalse(cleaned_src.contains("<script"));
+		assertFalse(cleaned_src.contains("<link"));
+		assertFalse(cleaned_src.contains("<style"));
+	}
 }

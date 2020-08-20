@@ -11,8 +11,10 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.qanairy.models.enums.ElementClassification;
+import com.qanairy.services.BrowserService;
 
 
 /**
@@ -47,50 +49,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<ElementState> child_elements = new ArrayList<>();
 	
+	@Autowired
+	private BrowserService browser_service;
 
 	public ElementState(){
 		super();
-	}
-	
-	/**
-	 * 
-	 * @param text
-	 * @param xpath
-	 * @param name
-	 * @param attributes
-	 * @param css_map
-	 * 
-	 * @pre attributes != null
-	 * @pre css_map != null
-	 * @pre xpath != null
-	 * @pre name != null
-	 * @pre screenshot_url != null
-	 * @pre !screenshot_url.isEmpty()
-	 */
-	public ElementState(String text, String xpath, String name, Map<String, String> attributes, 
-			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
-		super();
-		assert attributes != null;
-		assert css_map != null;
-		assert xpath != null;
-		assert name != null;
-		assert screenshot_url != null;
-		
-		setName(name);
-		setAttributes(attributes);
-		setScreenshotUrl(screenshot_url);
-		setText(text);
-		setRenderedCssValues(css_map);
-		setXLocation(x_location);
-		setYLocation(y_location);
-		setWidth(width);
-		setHeight(height);
-		setOuterHtml(outer_html);
-		setCssSelector("");
-		setClassification(ElementClassification.LEAF);
-		setXpath(xpath);
-		setKey(generateKey());
 	}
 	
 	/**
@@ -109,8 +72,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @pre assert !outer_html.isEmpty()
 	 */
 	public ElementState(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
-						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
+						String screenshot_url, int x_location, int y_location, int width, int height,
+						ElementClassification classification, String outer_html, boolean isVisible){
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;
@@ -129,6 +92,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setCssSelector("");
 		setClassification(classification);
 		setXpath(xpath);
+		setVisible(isVisible);
 		setKey(generateKey());
 	}
 	
@@ -225,7 +189,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		for(String style : properties) {
 			key += getRenderedCssValues().get(style);
 		}
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getOuterHtml());
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+ BrowserService.extractTemplate(this.getOuterHtml()));
 	}
 	
 	/**

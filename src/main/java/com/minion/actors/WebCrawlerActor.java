@@ -34,6 +34,7 @@ import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -67,6 +68,9 @@ public class WebCrawlerActor extends AbstractActor{
 	@Autowired
 	private PageService page_service;
 	
+	@Autowired
+	private PageStateService page_state_service;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -97,7 +101,7 @@ public class WebCrawlerActor extends AbstractActor{
 					Map<String, Page> visited = new HashMap<>();
 					Domain domain = crawl_action.getDomain();
 					
-					String initial_url = "http://"+domain.getHost()+"/"+domain.getEntryPath();
+					String initial_url = "http://"+domain.getHost()+domain.getEntryPath();
 					
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
@@ -124,7 +128,7 @@ public class WebCrawlerActor extends AbstractActor{
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
-							Page page = browser_service.buildPage(Browser.cleanSrc(doc.outerHtml()), page_url_str, doc.title());
+							Page page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
 							page = page_service.save( page );
 
 							domain.addPage(page);
@@ -179,7 +183,7 @@ public class WebCrawlerActor extends AbstractActor{
 					System.out.println("total links visited :::  "+visited.keySet().size());
 				})
 				.match(Page.class, page -> {
-					log.warn("Web crawler received page state");
+					log.warn("Web crawler received page");
 					//Page page = page_state_service.getParentPage(page_state.getKey());
 					
 					boolean rendering_not_complete = true;
@@ -193,7 +197,9 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("navigating to page state url ::   "+page.getUrl());
 							browser.navigateTo(page.getUrl());
 							PageState page_state = browser_service.buildPageState(page, browser);
-							
+							page_state = page_state_service.save(page_state);
+							page.addPageState(page_state);
+							page = page_service.save(page);
 							//send RenderedPageState to sender
 							log.warn("telling sender of Rendered Page State outcomes ....");
 							getSender().tell(new RenderedPageState(page_state), getSelf());
@@ -207,7 +213,8 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Grid exception thrown ...  ");
 							e.printStackTrace();
 						}
-					}while(rendering_not_complete && cnt < 20);
+						cnt++;
+					}while(rendering_not_complete && cnt < 10);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

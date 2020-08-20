@@ -58,6 +58,6 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 	@Query("MATCH (p:Page{url:{url}}) RETURN p LIMIT 1")
 	public Page findByUrl(@Param("url") String url);
 
-	@Query("MATCH (p:Page{key:{key}})-[]->(e:ElementState) RETURN e")
+	@Query("MATCH (p:Page{key:{key}})-[]->(e:Element) RETURN e")
 	public List<Element> getElements(@Param("key") String key);
 }

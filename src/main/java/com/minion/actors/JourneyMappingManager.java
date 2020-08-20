@@ -88,7 +88,7 @@ public class JourneyMappingManager extends AbstractActor{
 				.match(URL.class, url-> {
 					log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
 					//create navigation step
-					NavigationStep step = new NavigationStep(url.toString());
+					NavigationStep step = new NavigationStep(url);
 					
 					Set<Step> steps = new HashSet<>();
 					steps.add(step);
@@ -105,7 +105,14 @@ public class JourneyMappingManager extends AbstractActor{
 					
 				})
 				.match(Journey.class, journey -> {
-					journey_service.save(journey);
+					log.warn("Journey mapping manager recieved JOURNEY message");
+					Journey journey_record = journey_service.save(journey);
+					
+					log.warn("Sending JOURNEY message to journey expansion actor");
+					//send Journey to JourneyExplorer actor
+					ActorRef journeyExpander = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("journeyExpander"), "journeyExpander"+UUID.randomUUID());
+					journeyExpander.tell(journey_record, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

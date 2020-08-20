@@ -31,12 +31,13 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.journeys.ElementInteractionStep;
 import com.qanairy.models.journeys.Journey;
 import com.qanairy.models.journeys.Step;
+import com.qanairy.models.journeys.StepExecutor;
+import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.StepService;
-import com.qanairy.utils.JourneyUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -73,6 +74,11 @@ public class JourneyExpander extends AbstractActor{
 	@Autowired
 	private StepService step_service;
 	
+	@Autowired
+	private ActionService action_service;
+	
+	@Autowired
+	private StepExecutor step_executor;
 	
 	//subscribe to cluster changes
 	@Override
@@ -100,90 +106,106 @@ public class JourneyExpander extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Journey.class, journey-> {
-					log.warn("JOURNEY EXPANSION MANAGER received new URL for mapping");
+					log.warn("JOURNEY EXPANSION MANAGER received new JOURNEY for mapping");
 
 					List<Journey> hover_interactions = new ArrayList<>();
 					List<Journey> click_interactions = new ArrayList<>();
-
 					List<String> interactive_elements = new ArrayList<>();
-
-					//start a new browser session
-					Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-					ActionFactory action_factory = new ActionFactory(browser.getDriver());
-
-					log.warn("journey :: "+journey);
-					log.warn("browser :: "+browser);
-					executeJourney(journey, browser);
-					String current_url = browser.getDriver().getCurrentUrl();
-					//construct page and add page to list of page states
-					URL page_url = new URL(current_url);
-					String path = page_url.getPath();
-					Page page = new Page(new ArrayList<>(), Browser.cleanSrc(browser.getDriver().getPageSource()), browser.getDriver().getTitle(), page_url.toString(), path);
-					page = page_service.save( page );
-
-					//build page state for baseline
-					PageState journey_result_page = browser_service.buildPageState(page, browser);
-					Document doc = Jsoup.parse(journey_result_page.getSrc());
 					
-					//get all leaf elements 
-					List<ElementState> leaf_elements = page_state_service.getVisibleLeafElements(journey_result_page.getKey());
-					
-					for(ElementState leaf_element : leaf_elements) {
-						
-						//check each leaf element for mouseover interaction
-						WebElement web_element = browser.getDriver().findElement(By.xpath(leaf_element.getXpath()));
-						action_factory.execAction(web_element, "", "mouseover");
-
-						Element element = Xsoup.compile(leaf_element.getXpath()).evaluate(doc).getElements().get(0);
-						ElementState new_element_state = BrowserService.buildElementState(
-								leaf_element.getXpath(), 
-								browser.extractAttributes(web_element), 
-								element, leaf_element.getClassification(), 
-								Browser.loadCssProperties(web_element, browser.getDriver()));
-						new_element_state.setVisible(web_element.isDisplayed());
-						
-						//if page url is not the same as journey result page url then load new page for this
-						//construct page and add page to list of page states
-						URL new_page_url = new URL(current_url);
-						String new_path = page_url.getPath();
-						Page new_page = new Page(new ArrayList<>(), browser.cleanSrc(browser.getDriver().getPageSource()), browser.getDriver().getTitle(), (new_page_url.getHost()+new_path), new_path);						
-						PageState exploration_result_page = browser_service.buildPageState(new_page, browser);
-						for(ElementState element_state : exploration_result_page.getElements()) {
-							WebElement new_web_element = browser.getDriver().findElement(By.xpath(element_state.getXpath()));
-
-							element_state.setRenderedCssValues(Browser.loadCssProperties(new_web_element, browser.getDriver()));
-							element_state.setVisible(new_web_element.isDisplayed());
-						}
-						
-						//check if page state is same as original page state. If not then add new ElementInteractionStep 
-						if(!journey_result_page.equals(exploration_result_page)) {
-							Step step = new ElementInteractionStep(journey_result_page, new_element_state, new Action("mouseover"), exploration_result_page);
-							step = step_service.save(step);
-							//clone journey and add this step at the end
-							Set<Step> steps = new HashSet<>(journey.getSteps());
-							steps.add(step);
-							List<String> ordered_keys = new ArrayList<>(journey.getOrderedKeys());
-							ordered_keys.add(step.getKey());
-							Journey new_journey = new Journey(steps, ordered_keys);
+					boolean executed_successfully = false;
+					int cnt = 0;
+					do {
+						try {
+							//start a new browser session
+							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+							ActionFactory action_factory = new ActionFactory(browser.getDriver());
+		
+							log.warn("journey :: "+journey);
+							log.warn("browser :: "+browser);
+							executeJourney(journey, browser);
+							String current_url = browser.getDriver().getCurrentUrl();
+							log.warn("CURRENT URL   ::    "+current_url);
+							//construct page and add page to list of page states
+							URL page_url = new URL(current_url);
+							String path = page_url.getPath();
+							Page page = new Page(new ArrayList<>(), browser.getDriver().getPageSource(), browser.getDriver().getTitle(), page_url.toString(), path);
+							page = page_service.save( page );
+		
+							//build page state for baseline
+							PageState journey_result_page = browser_service.buildPageState(page, browser);
+							journey_result_page = page_state_service.save(journey_result_page);
+							Document doc = Jsoup.parse(journey_result_page.getSrc());
 							
-							//add journey to list of elements to explore for click or typing interactions
-							hover_interactions.add(new_journey);
-							interactive_elements.add(leaf_element.getKey());
+							//get all leaf elements 
+							List<ElementState> leaf_elements = page_state_service.getVisibleLeafElements(journey_result_page.getKey());
+							
+							for(ElementState leaf_element : leaf_elements) {
+								
+								//check each leaf element for mouseover interaction
+								WebElement web_element = browser.getDriver().findElement(By.xpath(leaf_element.getXpath()));
+								action_factory.execAction(web_element, "", "mouseover");
+		
+								Element element = Xsoup.compile(leaf_element.getXpath()).evaluate(doc).getElements().get(0);
+								ElementState new_element_state = BrowserService.buildElementState(
+										leaf_element.getXpath(), 
+										browser.extractAttributes(web_element), 
+										element,
+										web_element, 
+										leaf_element.getClassification(), 
+										Browser.loadCssProperties(web_element, browser.getDriver()));
+								
+								new_element_state = element_state_service.save(new_element_state);
+								//if page url is not the same as journey result page url then load new page for this
+								//construct page and add page to list of page states
+								URL new_page_url = new URL(current_url);
+								String new_path = page_url.getPath();
+								Page new_page = new Page(new ArrayList<>(), BrowserService.extractTemplate(Browser.cleanSrc(browser.getDriver().getPageSource())), browser.getDriver().getTitle(), new_page_url.toString(), new_path);						
+								PageState exploration_result_page = browser_service.buildPageState(new_page, browser);
+								log.warn("Page state built in journey explorer");
+
+								log.warn("journey result page key :: "+journey_result_page.getKey());
+								log.warn("exploration result page ::  "+exploration_result_page.getKey());
+								log.warn("journey result matches exploration result?   " + journey_result_page.equals(exploration_result_page));
+								//check if page state is same as original page state. If not then add new ElementInteractionStep 
+								if(!journey_result_page.equals(exploration_result_page)) {
+									Action action = new Action("mouseover");
+									action = action_service.save(action);
+									exploration_result_page = page_state_service.save(exploration_result_page);
+									
+									log.warn("creating new element interaction step .... "+new_element_state);
+									Step step = new ElementInteractionStep(journey_result_page, new_element_state, action, exploration_result_page);
+									if(existsInJourney(journey, step)) {
+										continue;
+									}
+									step = step_service.save(step);
+									//add element back to service step
+									//clone journey and add this step at the end
+									Set<Step> steps = new HashSet<>(journey.getSteps());
+									steps.add(step);
+									List<String> ordered_keys = new ArrayList<>(journey.getOrderedKeys());
+									ordered_keys.add(step.getKey());
+									Journey new_journey = new Journey(steps, ordered_keys);
+									
+									//add journey to list of elements to explore for click or typing interactions
+									getSender().tell(new_journey, getSelf());
+									//hover_interactions.add(new_journey);
+									interactive_elements.add(leaf_element.getKey());
+								}
+							}
+	
+							log.warn("sending "+hover_interactions.size()+ " hover interactions to Journey Manager +++");
+							executed_successfully = true;
+							break;
 						}
-					}
-					
-					log.warn("sending "+hover_interactions.size()+ "  to Journey Manager +++");
-					for(Journey hover_journey : hover_interactions) {
-						getSender().tell(hover_journey, getSelf());
-					}
-					
-					
-					
-					
+						catch(Exception e) {
+							log.warn("Exception occurred while executing journey ::   "+e.getMessage());
+							e.printStackTrace();
+						}
+					}while(!executed_successfully && cnt < 10);
 					
 					
 
-					
+					/*
 					
 					
 					for(ElementState leaf_element : leaf_elements) {
@@ -199,9 +221,10 @@ public class JourneyExpander extends AbstractActor{
 						ElementState new_element_state = BrowserService.buildElementState(
 								leaf_element.getXpath(), 
 								browser.extractAttributes(web_element), 
-								element, leaf_element.getClassification(), 
+								element,
+								web_element, 
+								leaf_element.getClassification(), 
 								Browser.loadCssProperties(web_element, browser.getDriver()));
-						new_element_state.setVisible(web_element.isDisplayed());
 						new_element_state = element_state_service.save(new_element_state);
 						
 						//if page url is not the same as journey result page url then load new page for this
@@ -223,12 +246,12 @@ public class JourneyExpander extends AbstractActor{
 							//add journey to list of elements to explore for click or typing interactions
 							click_interactions.add(new_journey);
 							
-							//TODO : reset state by executing the journey again
+							//reset state by executing the journey again
 							executeJourney(journey, browser);
 						}
 					}
 					
-					log.warn("sending "+hover_interactions.size()+ "  to Journey Manager +++");
+					log.warn("sending  "+click_interactions.size()+ "  click interactions to Journey Manager +++");
 					for(Journey click_journey : click_interactions) {
 						getSender().tell(click_journey, getSelf());
 					}
@@ -245,9 +268,10 @@ public class JourneyExpander extends AbstractActor{
 						ElementState new_element_state = BrowserService.buildElementState(
 								last_element.getXpath(), 
 								browser.extractAttributes(web_element), 
-								element, last_element.getClassification(), 
+								element,
+								web_element, 
+								last_element.getClassification(), 
 								Browser.loadCssProperties(web_element, browser.getDriver()));
-						new_element_state.setVisible(web_element.isDisplayed());
 						new_element_state = element_state_service.save(new_element_state);
 						
 						//if page url is not the same as journey result page url then load new page for this
@@ -273,8 +297,9 @@ public class JourneyExpander extends AbstractActor{
 							
 							//TODO : reset state by executing the journey again
 							executeJourney(journey, browser);
+									
 						}
-					}
+					*/
 				})
 				.match(Journey.class, journey -> {
 
@@ -294,14 +319,28 @@ public class JourneyExpander extends AbstractActor{
 				.build();
 	}
 	
+	private boolean existsInJourney(Journey journey, Step step) {
+		for(Step journey_step : journey.getSteps()) {
+			if(step.getKey().contentEquals(step.getKey())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param journey
+	 * @param browser
+	 */
 	private void executeJourney(Journey journey, Browser browser) {
 		assert journey != null;
 		assert browser != null;
 		
 		List<Step> ordered_steps = new ArrayList<>();
-		
 		//execute journey steps
 		for(String step_key : journey.getOrderedKeys()) {
+			
 			for(Step step: journey.getSteps()) {
 				if(step.getKey().contentEquals(step_key)) {
 					ordered_steps.add(step);
@@ -309,12 +348,12 @@ public class JourneyExpander extends AbstractActor{
 				}
 			}
 		}
-		
+
 		for(Step step : ordered_steps) {
 			
 			log.warn("step :: "+step);
 			//execute step
-			step.execute(browser);
+			step_executor.execute(browser, step);
 		}
 	}	
 }

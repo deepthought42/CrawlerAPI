@@ -3,7 +3,6 @@ package com.qanairy.models;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,7 +10,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +22,8 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.minion.browsing.Browser;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.services.BrowserService;
 
 /**
  * A reference to a web page
@@ -57,91 +56,49 @@ public class PageState extends LookseeObject {
 
 
 	public PageState() {
-		super();
 		setElements(new ArrayList<>());
 	}
 	
 	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
+	 * Constructor
+	 * 
+	 * @param screenshot_url
 	 * @param elements
-	 * @param full_page_screenshot_url TODO
-	 * @param url TODO
+	 * @param src
+	 * @param scroll_x_offset
+	 * @param scroll_y_offset
+	 * @param viewport_width
+	 * @param viewport_height
+	 * @param browser
+	 * @param full_page_screenshot_url
 	 * @param url
-	 * @param full_page_checksum TODO
-	 * @param title TODO
-	 * @param screenshot
-	 *
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 *
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
 	 */
-	public PageState(String screenshot_url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name, String full_page_screenshot_url, String url)
+	public PageState(String screenshot_url, List<ElementState> elements, String src, boolean isLandable, 
+			long scroll_x_offset, long scroll_y_offset,
+			int viewport_width, int viewport_height, 
+			BrowserType browser, String full_page_screenshot_url, String url)
 	{
-		super();
 		assert screenshot_url != null;
 		assert elements != null;
 		assert src != null;
-		assert browser_name != null;
+		assert browser != null;
 		assert full_page_screenshot_url != null;
+		assert url != null;
+		assert !url.isEmpty();
 		
 		setViewportScreenshotUrl(screenshot_url);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
-		setBrowser(browser_name);
+		setBrowser(browser);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
-		setLandable(false);
+		setLandable(isLandable);
 		setSrc(src);
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
 	    setLoginRequired(false);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setUrl(url);
-		setKey(generateKey());
-	}
-	
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * @param url
-	 * @param elements
-	 * @param isLandable
-	 * @param title TODO
-	 * @param html
-	 * @param browsers_screenshots
-	 *
-	 * @pre elements != null;
-	 * @pre screenshot_url != null;
-	 *
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 */
-	public PageState(String screenshot_url, List<ElementState> elements, boolean isLandable,
-			String src, long scroll_x_offset, long scroll_y_offset, int viewport_width, int viewport_height,
-			String browser_name, String full_page_screenshot_url) {
-		super();
-		assert elements != null;
-		assert screenshot_url != null;
-		assert full_page_screenshot_url != null;
-		assert !full_page_screenshot_url.isEmpty();
-		
-		setViewportScreenshotUrl(screenshot_url);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(isLandable);
-		setBrowser(browser_name);
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setSrc(Browser.cleanSrc(src));
-		setLoginRequired(false);
-		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setKey(generateKey());
 	}
 
@@ -227,8 +184,7 @@ public class PageState extends LookseeObject {
 	@Override
 	public PageState clone() {
 		List<ElementState> elements = new ArrayList<ElementState>(getElements());
-
-		return new PageState(getViewportScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl());
+		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getUrl());
 	}
 
 	@JsonIgnore
@@ -303,13 +259,15 @@ public class PageState extends LookseeObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		List<ElementState> properties = new ArrayList<>(this.getElements());
-		Collections.sort(properties);
+		/*
+		List<ElementState> elements = new ArrayList<>(this.getElements());
+		Collections.sort(elements);
 		String key = "";
-		for(ElementState element : properties) {
+		for(ElementState element : elements) {
 			key += element.getKey();
 		}
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		*/
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSrc());
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {
@@ -352,12 +310,12 @@ public class PageState extends LookseeObject {
 		this.viewport_screenshot_url = viewport_screenshot_url;
 	}
 
-	public String getBrowser() {
-		return browser;
+	public BrowserType getBrowser() {
+		return BrowserType.create(browser);
 	}
 
-	public void setBrowser(String browser) {
-		this.browser = browser;
+	public void setBrowser(BrowserType browser) {
+		this.browser = browser.toString();
 	}
 
 

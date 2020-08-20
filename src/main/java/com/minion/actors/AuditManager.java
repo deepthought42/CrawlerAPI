@@ -141,19 +141,21 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(PageState.class, page_state -> {
+					log.warn("Recieved page state :: "+page_state.getUrl());
 					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state.getKey())) {
-						page_state = page_state_service.save(page_state);
-
+						//page_state = page_state_service.save(page_state);
+						//add page state to page somehow?
 						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
 						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
 						
 						page_state_count++;
-						log.warn("Page State Count :: "+page_state_count);
+						/*log.warn("Page State Count :: "+page_state_count);
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						web_crawl_actor.tell(page_state, getSelf());
+						*/
 						log.warn("page state received by audit manager ::      "+page_state);
 						log.warn("page state recieved by audit manager. page cnt : "+page_count+"   ;    page state count  ::   "+page_state_count);
 					}
@@ -174,6 +176,7 @@ public class AuditManager extends AbstractActor{
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+page_audits_completed);
 
 					if(page_audits_completed == page_count) {
+						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
 						Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						log.warn("Audit Manager is now ready to perform a domain audit");

@@ -21,6 +21,8 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -131,18 +133,15 @@ public class BrowserService {
 				 || height >= browser.getViewportSize().getHeight();
 	}
 
-
 	/**
  	 * Constructs an {@link Element} from a JSOUP {@link Element element}
  	 * 
 	 * @param xpath
 	 * @param attributes
-	 * @param css_values
 	 * @param element
+	 * @param web_elem
 	 * @param classification
 	 * @param rendered_css_values
-	 * 
-	 * @return
 	 * 
 	 * @pre xpath != null && !xpath.isEmpty();
 	 * @pre attributes != null;
@@ -150,11 +149,14 @@ public class BrowserService {
 	 * @pre classification != null
 	 * @pre rendered_css_values != null
 	 * @pre css_values != null;
+	 * 
+	 * @return
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
 			Map<String, String> attributes, 
-			Element element, 
+			Element element,
+			WebElement web_elem,
 			ElementClassification classification, 
 			Map<String, String> rendered_css_values
 	) {
@@ -164,20 +166,24 @@ public class BrowserService {
 		assert classification != null;
 		assert rendered_css_values != null;
 		
-		ElementState element_state = new ElementState();
-		element_state.setAttributes(attributes);
-		element_state.setOuterHtml(element.outerHtml());
-		element_state.setName(element.tagName());
-		element_state.setText(element.ownText().trim());
-		element_state.setClassification(classification);
-		element_state.setRenderedCssValues(rendered_css_values);
-		element_state.setKey(element_state.generateKey());
-		element_state.setXLocation(0);
-		element_state.setYLocation(0);
-		element_state.setWidth(0);
-		element_state.setHeight(0);
-		element_state.setKey(element_state.generateKey());
-		element_state.setXpath(xpath);
+		Point location = web_elem.getLocation();
+		Dimension dimension = web_elem.getSize();
+		
+		ElementState element_state = new ElementState(
+				element.ownText().trim(), 
+				xpath, 
+				element.tagName(), 
+				attributes, 
+				rendered_css_values, 
+				"", 
+				location.getX(), 
+				location.getY(), 
+				dimension.getWidth(), 
+				dimension.getHeight(), 
+				classification, 
+				element.outerHtml(),
+				web_elem.isDisplayed());
+		
 		return element_state;
 	}
 	
@@ -253,7 +259,7 @@ public class BrowserService {
 		//retrieve landable page state associated with page with given url
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String host = new URL(browser_url).getHost();
-		String page_src = BrowserService.generalizeSrc(Browser.cleanSrc(browser.getDriver().getPageSource()));
+		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
 		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
 
@@ -275,11 +281,12 @@ public class BrowserService {
 					viewport_screenshot_url,
 					new ArrayList<>(),
 					page_src,
+					false,
 					browser.getXScrollOffset(),
 					browser.getYScrollOffset(),
 					browser.getViewportSize().getWidth(),
 					browser.getViewportSize().getHeight(),
-					browser.getBrowserName(), 
+					BrowserType.create(browser.getBrowserName()), 
 					full_page_screenshot_url, browser_url);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
@@ -312,15 +319,16 @@ public class BrowserService {
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		
 		//Element root = html_doc.getElementsByTag("body").get(0);
-		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); //new ArrayList<>();
+		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
 		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
 		
+		String clean_source = Browser.cleanSrc(page_src);
 		URL clean_url = new URL(url_without_params);
-		List<com.qanairy.models.Element> elements = extractElements(page_src, clean_url, rule_sets);
+		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
 		Page page = new Page(
 				elements,
-				page_src,
+				clean_source,
 				title,
 				clean_url.toString(),
 				clean_url.getPath());
@@ -347,50 +355,47 @@ public class BrowserService {
 	public PageState buildPageState( Page page, Browser browser ) throws IOException, XPathExpressionException{
 		assert page != null;
 		assert browser != null;
-		
-		//Document doc = Jsoup.connect("http://"+page.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(30000).get();
-		//String page_src = doc.outerHtml();
-		
-		//page_src = Jsoup.clean(page_src, Whitelist.relaxed());
-		//retrieve landable page state associated with page with given url
-		//String page_url = "http://"+page.getUrl();
-		//String host = new URL(browser_url).getHost();
-		//String url_without_params = BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl());
-		//String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		String source = browser.getDriver().getPageSource();
-		//Element root = html_doc.getElementsByTag("body").get(0);	
-		log.warn("url for page : "+page.getUrl());
 
-		List<ElementState> elements = extractElementStates(source, new URL(page.getUrl()), browser);
+		String source = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String page_state_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(source);
+		
+		PageState page_state_record = page_state_service.findByKey(page_state_key);
+		if(page_state_record != null) {
+			return page_state_record;
+		}
+		//Element root = html_doc.getElementsByTag("body").get(0);	
+		log.warn("url for page state:  "+page.getUrl());
+
+		URL url = new URL(page.getUrl());
+		List<ElementState> elements = extractElementStates(source, url, browser);
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(page.getUrl()).getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(page.getUrl()).getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
+		long x_offset = browser.getXScrollOffset();
+		long y_offset = browser.getYScrollOffset();
+		Dimension size = browser.getDriver().manage().window().getSize();
 		
-				
-		PageState page_state = new PageState( 
+		PageState page_state = new PageState(
 				viewport_screenshot_url,
 				elements,
 				source,
-				0,
-				0,
-				0,
-				0,
-				BrowserType.CHROME.toString(),
+				false,
+				x_offset,
+				y_offset,
+				size.getWidth(),
+				size.getHeight(),
+				BrowserType.CHROME,
 				full_page_screenshot_url, 
 				page.getUrl());
 
-		PageState record = page_state_service.findByKey(page_state.getKey());
-		if(record != null) {
-			return record;
-		}
 		log.warn("built page...now saving page state...");
 		return page_state;
 	}
@@ -456,8 +461,6 @@ public class BrowserService {
 			log.warn(e.getMessage());
 		}
 		
-	//	Map<String, String> css_rendered = new HashMap<>();
-
 		com.qanairy.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
 		root_element = element_service.save(root_element);
 
@@ -579,9 +582,9 @@ public class BrowserService {
 		
 	//	Map<String, String> css_rendered = new HashMap<>();
 
-	//	ElementState root_element_state = buildElementState("//body", attributes, css_props , root, ElementClassification.ANCESTOR, css_rendered );
+		//ElementState root_element_state = buildElementState("//body", attributes, root, web_root, ElementClassification.ANCESTOR, css_props );
 		
-	//	root_element_state = element_service.save(root_element_state);
+		//root_element_state = element_state_service.save(root_element_state);
 
 		//put element on frontier
 		frontier.put("//body","");
@@ -622,12 +625,13 @@ public class BrowserService {
 				classification = ElementClassification.ANCESTOR;
 			}
 			
-			ElementState element_state = buildElementState(next_xpath, attributes, element, classification, rendered_css_props);
+			ElementState element_state = buildElementState(next_xpath, attributes, element, web_element, classification, rendered_css_props);
 			
 			element_state = element_state_service.save(element_state);
 			visited_elements.add(element_state);
-			element_service.addChildElement(parent_element_key, element_state.getKey());
-			
+			if(parent_element_key != null && !parent_element_key.isEmpty() && !parent_element_key.contentEquals(element_state.getKey())) {
+				element_state_service.addChildElement(parent_element_key, element_state.getKey());
+			}
 			
 			for(Element child : children) {
 				if(isStructureTag(child.tagName())) {
@@ -1502,9 +1506,12 @@ public class BrowserService {
 		
 		Document html_doc = Jsoup.parseBodyFragment(outerHtml);
 
-		html_doc.select("script").remove();
-		html_doc.select("link").remove();
-		html_doc.select("style").remove();
+		Cleaner cleaner = new Cleaner(Whitelist.relaxed());
+		html_doc = cleaner.clean(html_doc);
+		
+		//html_doc.select("script").remove()
+		//		.select("link").remove()
+		//		.select("style").remove();
 
 		for(Element element : html_doc.getAllElements()) {
 			element.removeAttr("id");
@@ -1513,6 +1520,8 @@ public class BrowserService {
 		
 		return html_doc.html();
 	}
+	
+	
 
 	public Map<String, Template> reduceTemplatesToParents(Map<String, Template> list_elements_list) {
 		Map<String, Template> element_map = new HashMap<>();

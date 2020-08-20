@@ -1,12 +1,10 @@
 package com.qanairy.models.journeys;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import com.minion.browsing.ActionFactory;
-import com.minion.browsing.Browser;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -14,12 +12,21 @@ import com.qanairy.models.PageState;
 /**
  * A set of Steps
  */
+@Component
 public class ElementInteractionStep extends Step {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementInteractionStep.class);
 
+	@Relationship(type = "STARTS")
 	private PageState start_page;
+	
+	@Relationship(type = "HAS")
 	private ElementState element;
+	
+	@Relationship(type = "HAS")
 	private Action action;
+	
+	@Relationship(type = "ENDS")
 	private PageState end_page;
 	
 	public ElementInteractionStep() {}
@@ -39,57 +46,38 @@ public class ElementInteractionStep extends Step {
 	
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(start_page.getKey() + element.getKey() + action.getKey() + end_page.getKey());
+		return "elementinteractionstep:"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(start_page.getKey() + element.getKey() + action.getKey() + end_page.getKey());
 	}
-
 
 	public PageState getStartPage() {
 		return start_page;
 	}
 
-
 	public void setStartPage(PageState start_page) {
 		this.start_page = start_page;
 	}
-
 
 	public ElementState getElement() {
 		return element;
 	}
 
-
 	public void setElement(ElementState element) {
 		this.element = element;
 	}
-
 
 	public Action getAction() {
 		return action;
 	}
 
-
 	public void setAction(Action action) {
 		this.action = action;
 	}
-
 
 	public PageState getEndPage() {
 		return end_page;
 	}
 
-
 	public void setEndPage(PageState end_page) {
 		this.end_page = end_page;
 	}
-
-	@Override
-	public void execute(Browser browser) {
-		assert browser != null;
-		log.warn("Element interaction browser ::  "+browser);
-		WebElement interactive_elem = browser.getDriver().findElement(By.xpath(element.getXpath()));
-		log.warn("Interactive element :: "+interactive_elem.getTagName());
-		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-		action_factory.execAction(interactive_elem, action.getValue(), action.getName());
-	}
-
 }

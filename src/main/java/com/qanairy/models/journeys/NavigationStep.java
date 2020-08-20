@@ -1,10 +1,10 @@
 package com.qanairy.models.journeys;
 
-import org.openqa.selenium.WebDriver;
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.Browser;
 
 /**
  * A set of Steps
@@ -16,16 +16,16 @@ public class NavigationStep extends Step {
 	
 	public NavigationStep() {}
 	
-	public NavigationStep(String url) {
+	public NavigationStep(URL url) {
 		assert url != null;
 
-		setUrl(url);
+		setUrl(url.getProtocol()+"://"+url.getHost()+url.getPath());
 		setKey(generateKey());
 	}
 	
 	@Override
 	public String generateKey() {
-		return "step:"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(url.toString());
+		return "navigationstep:"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(url.toString());
 	}
 
 	public String getUrl() {
@@ -34,14 +34,5 @@ public class NavigationStep extends Step {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	@Override
-	public void execute(Browser browser) {
-		assert browser != null;
-		
-		log.warn("navigation step browser  :: "+browser);
-		WebDriver driver = browser.getDriver();
-		driver.get(this.url);
 	}
 }

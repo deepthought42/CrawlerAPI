@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
@@ -48,14 +49,14 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	private DomainService domain_service;
 	
 	@Relationship(type="FLAGGED")
-	private List<ElementState> flagged_elements = new ArrayList<>();
+	private List<Element> flagged_elements = new ArrayList<>();
 	
 	public DomainFontAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * {@inheritDoc} 
 	 * 
 	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
 	 *  

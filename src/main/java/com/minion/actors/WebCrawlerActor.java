@@ -4,9 +4,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -17,10 +15,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,16 +25,16 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.RenderedPageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.CrawlActionMessage;
+import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -64,7 +59,9 @@ public class WebCrawlerActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(WebCrawlerActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-
+	@Autowired
+	private BrowserService browser_service;
+	
 	@Autowired
 	private DomainService domain_service;
 	
@@ -72,7 +69,7 @@ public class WebCrawlerActor extends AbstractActor{
 	private PageService page_service;
 	
 	@Autowired
-	private ElementStateService element_state_service;
+	private PageStateService page_state_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -104,7 +101,8 @@ public class WebCrawlerActor extends AbstractActor{
 					Map<String, Page> visited = new HashMap<>();
 					Domain domain = crawl_action.getDomain();
 					
-					String initial_url = "http://"+domain.getHost()+"/"+domain.getEntryPath();
+					String initial_url = "http://"+domain.getHost()+domain.getEntryPath();
+					
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
 					
@@ -115,39 +113,37 @@ public class WebCrawlerActor extends AbstractActor{
 						//remove link from beginning of frontier
 						String page_url_str = frontier.keySet().iterator().next();
 						log.warn("page url string :: "+page_url_str);
-						log.warn("frontier size before remove : :  "+frontier.size());
 						//page_url_str = BrowserUtils.sanitizeUserUrl(page_url_str);
 						//log.warn("page url string after sanitize  ::  "+page_url_str);
 						frontier.remove(page_url_str);
-						log.warn("frontier size after remove ::  "+frontier.size());
 						if( BrowserUtils.isImageUrl(page_url_str) || page_url_str.endsWith(".pdf")){
 							continue;
-						}		
+						}
 						
 						URL page_url = new URL(page_url_str);
-						String path = page_url.getPath();
-						
 
 						//construct page and add page to list of page states
-						Page page = new Page((page_url.getHost()+path), path);
-						page = page_service.save( page );
-
-						domain.addPage(page);
-						domain = domain_service.save(domain);
 						
-						visited.put(page_url_str, page);
-						//send message to page data extractor
-						log.debug("sending page to an audit manager...");
-						getSender().tell(page, getSelf());
-						log.warn("page url :: "+page_url);
-						log.warn("page host :: "+page_url.getHost());
-						log.warn("page path :: "+page_url.getPath());
-						log.warn("----------------------------------------------------------------");
-						log.warn("----------------------------------------------------------------");
 
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							Page page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
+							page = page_service.save( page );
+
+							domain.addPage(page);
+							domain = domain_service.save(domain);
+							
+							visited.put(page_url_str, page);
+							//send message to page data extractor
+							log.debug("sending page to an audit manager...");
+							getSender().tell(page, getSelf());
+							log.warn("page url :: "+page_url);
+							log.warn("page host :: "+page_url.getHost());
+							log.warn("page path :: "+page_url.getPath());
+							log.warn("----------------------------------------------------------------");
+							log.warn("----------------------------------------------------------------");
+							
 							Elements links = doc.select("a");
 							for (Element link : links) {
 								
@@ -156,7 +152,7 @@ public class WebCrawlerActor extends AbstractActor{
 									continue;
 								}
 								
-								String href = BrowserUtils.sanitizeUserUrl(href_str);
+								String href = BrowserUtils.sanitizeUrl(href_str);
 								//check if external link
 								if( BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href_str) || href_str.startsWith("mailto:")) {
 									log.debug("adding to external links :: "+href_str);
@@ -186,59 +182,24 @@ public class WebCrawlerActor extends AbstractActor{
 					}
 					System.out.println("total links visited :::  "+visited.keySet().size());
 				})
-				.match(PageState.class, page_state -> {
-					log.warn("Web crawler received page state");
+				.match(Page.class, page -> {
+					log.warn("Web crawler received page");
+					//Page page = page_state_service.getParentPage(page_state.getKey());
 					
 					boolean rendering_not_complete = true;
 					int cnt = 0;
-					List<String> element_xpaths_reviewed = new ArrayList<>();
+					//List<String> element_xpaths_reviewed = new ArrayList<>();
 					do {
 						try {
 							log.warn("getting browser for rendered page state extraction...");
 							//navigate to page url
 							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to page state url ::   "+page_state.getUrl());
-							browser.navigateTo(page_state.getUrl());
-							
-							//URL url = new URL(page_state.getUrl());
-							
-							//extract full page screenshot
-							/* Uncomment when ready to convert to rendered page and rendered element setup
-					BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-					String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-					String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-					full_page_screenshot.flush();
-							 */
-
-							//extract Element screenshots
-							List<ElementState> elements = page_state.getElements();// browser_service.extractElementStates(page_state.getSrc(), url);
-							log.warn("elements loaded for page state :: " +page_state.getElements().size());
-							for(ElementState element : elements) {
-								if(element_xpaths_reviewed.contains(element.getXpath())) {
-									continue;
-								}
-//								long start_time = System.currentTimeMillis();
-								WebElement web_element = browser.getDriver().findElement(By.xpath(element.getXpath()));
-								Map<String, String> css_props = Browser.loadCssProperties(web_element, browser.getDriver());
-								element.setRenderedCssValues(css_props);
-								element_state_service.save(element);
-								element_xpaths_reviewed.add(element.getXpath());
-								break;
-					
-//								long end_time = System.currentTimeMillis();
-							}
-							
-							//get rendered css values for element
-							//get screenshot of element
-							//extract browser offsets 
-							long x_offset = browser.getXScrollOffset();
-							long y_offset = browser.getYScrollOffset();
-							
-							//extract browser dimensions
-							Dimension dimension = browser.getViewportSize();
-							
-							//Save data to rendered state with dimensions. use element states and dimensions for key generation
-							
+							log.warn("navigating to page state url ::   "+page.getUrl());
+							browser.navigateTo(page.getUrl());
+							PageState page_state = browser_service.buildPageState(page, browser);
+							page_state = page_state_service.save(page_state);
+							page.addPageState(page_state);
+							page = page_service.save(page);
 							//send RenderedPageState to sender
 							log.warn("telling sender of Rendered Page State outcomes ....");
 							getSender().tell(new RenderedPageState(page_state), getSelf());
@@ -252,7 +213,8 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Grid exception thrown ...  ");
 							e.printStackTrace();
 						}
-					}while(rendering_not_complete && cnt < 20);
+						cnt++;
+					}while(rendering_not_complete && cnt < 10);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

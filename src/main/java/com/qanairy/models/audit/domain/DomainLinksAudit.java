@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
@@ -18,9 +18,9 @@ import com.qanairy.models.enums.AuditSubcategory;
 @Component
 public class DomainLinksAudit implements IExecutableDomainAudit {
 	
-	private List<ElementState> links_without_href =  new ArrayList<>();
-	private List<ElementState> invalid_links = new ArrayList<>();
-	private List<ElementState> dead_links = new ArrayList<>();
+	private List<Element> links_without_href =  new ArrayList<>();
+	private List<Element> invalid_links = new ArrayList<>();
+	private List<Element> dead_links = new ArrayList<>();
 	
 	public DomainLinksAudit() {	}
 

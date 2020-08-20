@@ -1,6 +1,6 @@
 package com.qanairy.models.rules;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 public class RequirementRule extends Rule{
 	/**
@@ -16,7 +16,7 @@ public class RequirementRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		return elem.getAttributes().containsKey("required");
 	}
 }

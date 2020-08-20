@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
@@ -117,11 +117,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							}
 						}
 						
-						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
 						//boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(message.getKeys(), path_object_lists);
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
 						log.warn("does result match path object in path   ??   "+is_result_matches_other_page_in_path);
-						if(is_result_matches_other_page_in_path || isResultAnimatedState) {
+						if(is_result_matches_other_page_in_path ) {
 							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
@@ -168,35 +167,4 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				.build();
 	}
 
-	/**
-	 * Checks if given {@PageState result} page has a image url that matches any animated image urls in the 
-	 * 	list of PageStates provided
-	 * 
-	 * @param page_states
-	 * @param result_page
-	 * 
-	 * @return
-	 * 
-	 * @pre page_states != null
-	 * @pre !page_states	.isEmpty()
-	 * @pre result_page != null
-	 */
-	private boolean isResultAnimatedState(List<PageState> page_states, PageState result_page) {
-		assert page_states != null;
-		assert !page_states.isEmpty();
-		assert result_page != null;
-		
-		for(PageState page_state : page_states){
-			if(!page_state.getAnimatedImageUrls().isEmpty()){
-				for(String image_url : page_state.getAnimatedImageUrls()){
-					//if result screenshot image url is the same as a previous animated state then return true
-					if(result_page.getScreenshotUrl().equals(image_url)){
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
-	}
 }

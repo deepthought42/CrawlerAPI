@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
@@ -52,19 +53,7 @@ public class PageStateService {
 		do{
 			page_err = false;
 			try{
-				for(String checksum : page_state.getScreenshotChecksums()){
-					List<PageState> page_state_records = page_state_repo.findByScreenshotChecksumsContainsForUserAndDomain(user_id, domain_url, checksum);
-					if(!page_state_records.isEmpty()){
-						page_state_record = page_state_records.get(0);
-						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
-						page_state_record = page_state_repo.save(page_state_record);
-						break;
-					}
-				}
-				
 				if(page_state_record != null){
-					page_state_record.setForms(page_state.getForms());
-
 					page_state_record = page_state_repo.save(page_state_record);
 					
 					page_state_record.setElements(getElementStates(page_state_record.getKey()));
@@ -74,12 +63,6 @@ public class PageStateService {
 					page_state_record = findByKey( page_state.getKey() );
 
 					if(page_state_record != null){
-						page_state_record.setForms( page_state.getForms() );
-
-						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
-							page_state_record.addScreenshotChecksum(screenshot_checksum);
-						}
-						
 						page_state_record = page_state_repo.save(page_state_record);
 						page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					}
@@ -214,7 +197,7 @@ public class PageStateService {
 	public Collection<ElementState> getExpandableElements(List<ElementState> elements) {
 		List<ElementState> expandable_elements = new ArrayList<>();
 		for(ElementState elem : elements) {
-			if(elem.isLeaf() && !elem.isPartOfForm()) {
+			if(elem.isLeaf()) {
 				expandable_elements.add(elem);
 			}
 		}
@@ -235,5 +218,14 @@ public class PageStateService {
 
 	public Audit findAuditBySubCategory(AuditSubcategory subcategory, String page_state_key) {
 		return page_state_repo.findAuditBySubCategory(subcategory.getShortName(), page_state_key);
+	}
+
+	public List<ElementState> getVisibleLeafElements(String page_state_key) {
+		return page_state_repo.getVisibleLeafElements(page_state_key);
+	}
+
+	public Page getParentPage(String page_state_key) {
+		return page_state_repo.getParentPage(page_state_key);
+
 	}
 }

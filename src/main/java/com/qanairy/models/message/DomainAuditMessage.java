@@ -12,6 +12,9 @@ public class DomainAuditMessage {
 	private AuditStage stage;
 	
 	public DomainAuditMessage(Domain domain, AuditStage stage){
+		assert domain != null;
+		assert stage != null;
+		
 		setDomain(domain);
 		setStage(stage);
 	}

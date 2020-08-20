@@ -1,6 +1,5 @@
 package com.qanairy.services;
 
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,13 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.qanairy.models.Account;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Animation;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
@@ -78,9 +77,7 @@ public class TestService {
 
 	@Autowired
 	private PageLoadAnimationService page_load_animation_service;
-	
-	@Autowired
-	private Crawler crawler;
+
 
 	/**
 	 * Runs an {@code Test}
@@ -103,13 +100,11 @@ public class TestService {
 
 		 int cnt = 0;
 		 Browser browser = null;
-		 Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		 List<ElementState> visible_elements = new ArrayList<>();
 		 
 		 do{
 			 try {
 				 browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.TEST);
-				 page = crawler.crawlPath(user_id, domain, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
+				 //page = crawler.crawlPath(user_id, domain, test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getMessage());
 			 }
@@ -147,7 +142,7 @@ public class TestService {
 					path_objects.add(page_state_service.saveUserAndDomain(user_id, url, (PageState)path_obj));
 					
 				}
-				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
+				else if(path_obj instanceof Element){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
@@ -241,10 +236,6 @@ public class TestService {
      return test_repo.findTestWithElementState(page_state_key, element_state_key);
    }
 
-   public void init(Crawler crawler){
-     this.crawler = crawler;
-   }
-
    public Test findByKey(String key, String url, String user_id){
      return test_repo.findByKey(key, url, user_id);
    }
@@ -329,7 +320,7 @@ public class TestService {
 		   //check if next element has the same xpath as the next element in path objects
 		   if(test_path_objects.size() > 1) {
 			   boolean matching_test_found = true;
-			   if(((ElementState)test_path_objects.get(current_idx)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())) {
+			   if(((Element)test_path_objects.get(current_idx)).getXpath().equalsIgnoreCase(((Element)path_objects.get(1)).getXpath())) {
 				   current_idx++;
 				   //check if remaining keys in path_objects match following keys in test_path_objects
 				   for(LookseeObject obj : path_objects.subList(2, path_objects.size())) {

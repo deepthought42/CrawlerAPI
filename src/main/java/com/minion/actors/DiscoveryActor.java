@@ -245,7 +245,7 @@ public class DiscoveryActor extends AbstractActor{
 					//send message to Domain Actor
 					domain_actor.tell(test_msg, getSelf());
 					
-					boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
+					//boolean isLandable = BrowserService.checkIfLandable(test.getResult(), test )  || !BrowserService.testContainsElement(test.getPathKeys());
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					log.warn("test spans multiple domains??    ::  "+test.getSpansMultipleDomains());
 					
@@ -271,7 +271,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain(), test_msg.getAccount());
 						
-						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
+						if( !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
 							if(!explored_pages.containsKey(test.getResult().getUrl())) {
 								explored_pages.put(test.getResult().getUrl(), test.getResult());
@@ -343,7 +343,6 @@ public class DiscoveryActor extends AbstractActor{
 					PageState page_state_record = page_state_service.findByKeyAndUsername(form_msg.getUserId(), form_msg.getPage().getKey());
 					log.warn("form message page key :: "+page_state_record.getKey());
 
-					page_state_record.addForm(form);
 					
 					try {
 						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), page_state_record);					    

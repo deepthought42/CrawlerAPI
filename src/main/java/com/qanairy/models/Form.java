@@ -31,17 +31,17 @@ public class Form extends LookseeObject implements Comparable<Form>{
 	private List<BugMessage> bug_messages;
 	
 	@Relationship(type = "DEFINED_BY")
-	private ElementState form_tag;
+	private Element form_tag;
 	
 	@Relationship(type = "HAS")
-	private List<ElementState> form_fields;
+	private List<Element> form_fields;
 	
 	@Relationship(type = "HAS_SUBMIT")
-	private ElementState submit_field;
+	private Element submit_field;
 	
 	public Form(){	}
 	
-	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
+	public Form(Element form_tag, List<Element> form_fields, Element submit_field, 
 				String name, double[] predictions, FormType type, Date date_discovered, 
 				FormStatus status){
 		setFormTag(form_tag);
@@ -63,7 +63,7 @@ public class Form extends LookseeObject implements Comparable<Form>{
 	 */
 	@Override
 	public String generateKey() {		
-		return "form::"+getFormTag().getScreenshotChecksum();
+		return "form::"+getFormTag();
 	}
 
 	/**
@@ -133,35 +133,35 @@ public class Form extends LookseeObject implements Comparable<Form>{
 		this.date_discovered = date_discovered;
 	}
 	
-	public List<ElementState> getFormFields() {
+	public List<Element> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(ElementState form_field) {
+	public boolean addFormField(Element form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<ElementState> form_field) {
+	public boolean addFormFields(List<Element> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<ElementState> form_fields) {
+	public void setFormFields(List<Element> form_fields) {
 		this.form_fields = form_fields;
 	}
 
-	public ElementState getSubmitField() {
+	public Element getSubmitField() {
 		return submit_field;
 	}
 
-	public void setSubmitField(ElementState submit_field) {
+	public void setSubmitField(Element submit_field) {
 		this.submit_field = submit_field;
 	}
 
-	public ElementState getFormTag() {
+	public Element getFormTag() {
 		return form_tag;
 	}
 
-	public void setFormTag(ElementState form_tag) {
+	public void setFormTag(Element form_tag) {
 		this.form_tag = form_tag;
 	}
 

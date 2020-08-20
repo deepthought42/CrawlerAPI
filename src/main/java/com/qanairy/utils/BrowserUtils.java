@@ -307,7 +307,7 @@ public class BrowserUtils {
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {
-		WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
+		WebElement web_elem = browser.findWebElementByXpath("");//element.getXpath());
 		Point location = web_elem.getLocation();
 		if(location.getX() != element.getXLocation() || location.getY() != element.getYLocation()){
 			log.warn("updating element state from ::  ( " + element.getXLocation() + " , "+element.getYLocation()+" ) " + " to    ::  ( " + location.getX() + " , "+location.getY()+")");
@@ -374,10 +374,10 @@ public class BrowserUtils {
 	 * @param source valid html source
 	 * @return {@link List list} of link urls
 	 */
-	public static List<ElementState> extractLinks(List<ElementState> elements) {
-		List<ElementState> links = new ArrayList<>();
+	public static List<com.qanairy.models.Element> extractLinks(List<com.qanairy.models.Element> elements) {
+		List<com.qanairy.models.Element> links = new ArrayList<>();
 		
-		for(ElementState element : elements) {
+		for(com.qanairy.models.Element element : elements) {
 			if(element.getName().equalsIgnoreCase("a")) {
 				links.add(element);
 			}

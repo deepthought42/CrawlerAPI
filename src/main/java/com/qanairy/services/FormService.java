@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.experience.BugMessage;
@@ -45,14 +45,14 @@ public class FormService {
 		Form form_record = form_repo.findByKeyForUserAndDomain(user_id, url, form.getKey());
 		if(form_record == null){
 			
-			List<ElementState> db_records = new ArrayList<ElementState>(form.getFormFields().size());
-			for(ElementState element : form.getFormFields()){
-				db_records.add(element_service.saveFormElement(element));
+			List<Element> db_records = new ArrayList<Element>(form.getFormFields().size());
+			for(Element element : form.getFormFields()){
+				//db_records.add(element_service.saveFormElement(element));
 			}
 			
 			form.setFormFields(db_records);
-			form.setSubmitField(element_service.saveFormElement(form.getSubmitField()));
-			form.setFormTag(element_service.saveFormElement(form.getFormTag()));
+			//form.setSubmitField(element_service.saveFormElement(form.getSubmitField()));
+			//form.setFormTag(element_service.saveFormElement(form.getFormTag()));
 
 			form_record = form_repo.save(form);
 		}
@@ -71,7 +71,7 @@ public class FormService {
 	    		Domain domain = optional_domain.get();
 		    	
 				form.setFormFields(form_repo.getElementStates(user_id, domain.getEntryPath(), form.getKey()));
-				for(ElementState element : form.getFormFields()){
+				for(Element element : form.getFormFields()){
 					element.setRules(element_service.getRules(user_id, element.getKey()));
 				}
 				form.setFormTag(form_repo.getFormElement(user_id, domain.getEntryPath(), form.getKey()));

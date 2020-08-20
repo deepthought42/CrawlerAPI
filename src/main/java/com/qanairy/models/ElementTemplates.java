@@ -3,13 +3,13 @@ package com.qanairy.models;
 import java.util.List;
 
 public class ElementTemplates {
-	private List<ElementState> elements;
+	private List<Element> elements;
 	private List<Template> templates;
 	
-	public List<ElementState> getElements() {
+	public List<Element> getElements() {
 		return elements;
 	}
-	public void setElements(List<ElementState> elements) {
+	public void setElements(List<Element> elements) {
 		this.elements = elements;
 	}
 	public List<Template> getTemplates() {

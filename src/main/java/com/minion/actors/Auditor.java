@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Page;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
@@ -20,6 +21,7 @@ import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageAuditComplete;
+import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditService;
 
 import akka.actor.AbstractActor;
@@ -74,7 +76,7 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageState.class, page_state-> {
+				.match(Page.class, page_state-> {
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	
@@ -82,16 +84,34 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
-			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
 
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(audits_executed);
-			   			audits.addAll(rendered_audits_executed);
 			   		}
 		   			
 					PageAuditComplete audit_complete = new PageAuditComplete(page_state);
+		   			getSender().tell(audit_complete, getSelf());
+		   			getSender().tell(new AuditSet(audits), getSelf());
+		   			//send message to either user or page channel containing reference to audits
+		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
+		   			postStop();
+				})
+				.match(PageState.class, page_state-> {
+				   	//generate audit report
+				   	List<Audit> audits = new ArrayList<>();
+				   	
+				   	for(AuditCategory audit_category : AuditCategory.values()) {
+				   		//check if page state already
+			   			//perform audit and return audit result
+			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
+
+			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
+
+			   			audits.addAll(rendered_audits_executed);
+			   		}
+		   			
+					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state);
 		   			getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits

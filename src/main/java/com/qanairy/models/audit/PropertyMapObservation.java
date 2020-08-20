@@ -5,12 +5,12 @@ import java.util.Map;
 
 import org.neo4j.ogm.annotation.Properties;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
- * A observation of potential error for a given {@link ElementState element} 
+ * A observation of potential error for a given {@link Element element} 
  */
 public class PropertyMapObservation extends LookseeObject implements Observation{
 	private String description;

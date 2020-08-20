@@ -5,22 +5,22 @@ import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
- * A observation of potential error for a given {@link ElementState element} 
+ * A observation of potential error for a given {@link Element element} 
  */
 public class ElementObservation extends LookseeObject implements Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")
-	private List<ElementState> elements;
+	private List<Element> elements;
 	
 	public ElementObservation() {}
 	
-	public ElementObservation(List<ElementState> elements, String description) {
+	public ElementObservation(List<Element> elements, String description) {
 		setElements(elements);
 		setDescription(description);
 		setKey(this.generateKey());
@@ -29,22 +29,22 @@ public class ElementObservation extends LookseeObject implements Observation {
 	@Override
 	public String generateKey() {
 		assert elements != null;
-		String key = elements.parallelStream().map(ElementState::getKey).sorted().collect(Collectors.joining(""));
+		String key = elements.parallelStream().map(Element::getKey).sorted().collect(Collectors.joining(""));
 		
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
 
 
-	public List<ElementState> getElements() {
+	public List<Element> getElements() {
 		return elements;
 	}
 
 
-	public void setElements(List<ElementState> elements) {
+	public void setElements(List<Element> elements) {
 		this.elements = elements;
 	}
 	
-	public boolean addElements(List<ElementState> elements) {
+	public boolean addElements(List<Element> elements) {
 		return this.elements.addAll(elements);
 	}
 

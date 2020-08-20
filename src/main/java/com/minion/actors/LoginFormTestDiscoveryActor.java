@@ -15,7 +15,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
@@ -105,13 +105,13 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 
 							//  clone test
 							//  get username element and add it to path
-							List<ElementState> elements = form.getFormFields();
+							List<Element> elements = form.getFormFields();
 							log.warning("***************************************************************");
 							log.warning("form input field count  :: " +elements.size());
 							log.warning("***************************************************************");
 							
 							//find username input element
-							ElementState username_elem = findInputElementByAttribute(elements, "username", message.getAccountId());
+							Element username_elem = findInputElementByAttribute(elements, "username", message.getAccountId());
 							
 							if(username_elem == null){
 								username_elem = findInputElementByAttribute(elements, "email", message.getAccountId());
@@ -138,7 +138,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							}
 							
 							//  get password element and add it to the path
-							ElementState password_elem = findInputElementByAttribute(elements, "password", message.getAccountId());
+							Element password_elem = findInputElementByAttribute(elements, "password", message.getAccountId());
 
 							if(password_elem == null){
 								log.info("could not find password !!!!!!!!");
@@ -251,13 +251,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return new ExploratoryPath(path_keys, path_objects);
 	}
 
-	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val, String user_id) {
-		for(ElementState element : elements){
-			//check if element is type email
-			log.warning("element get type :: "+element.getType().contains(search_val));
-			if(element.getType().contains(search_val)){
-				return element;
-			}
+	private Element findInputElementByAttribute(List<Element> elements, String search_val, String user_id) {
+		for(Element element : elements){
+
 			
 			//check if element has value username in any attributes
 			for(String attribute : element.getAttributes().keySet()){

@@ -16,8 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.ElementState;
-import com.qanairy.models.PageState;
+import com.qanairy.models.Page;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
@@ -28,18 +27,18 @@ import com.qanairy.utils.BrowserUtils;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class LinksAudit implements IExecutablePageStateAudit {
+public class LinksAudit implements IExecutablePageVersionAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
 	
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
-	private List<ElementState> links_without_href_value =  new ArrayList<>();
-	private List<ElementState> invalid_links = new ArrayList<>();
-	private List<ElementState> dead_links = new ArrayList<>();
-	private List<ElementState> non_labeled_links = new ArrayList<>();
+	private List<com.qanairy.models.Element> links_without_href_attribute =  new ArrayList<>();
+	private List<com.qanairy.models.Element> links_without_href_value =  new ArrayList<>();
+	private List<com.qanairy.models.Element> invalid_links = new ArrayList<>();
+	private List<com.qanairy.models.Element> dead_links = new ArrayList<>();
+	private List<com.qanairy.models.Element> non_labeled_links = new ArrayList<>();
 
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -55,12 +54,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
-		assert page_state != null;
+	public Audit execute(Page page) {
+		assert page != null;
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
-		List<ElementState> link_elements = new ArrayList<>();
-		for(ElementState element : page_state.getElements()) {
+		List<com.qanairy.models.Element> link_elements = new ArrayList<>();
+		for(com.qanairy.models.Element element : page.getElements()) {
 			if(element.getName().equalsIgnoreCase("a")) {
 				link_elements.add(element);
 			}
@@ -69,9 +68,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
-		for(ElementState link : link_elements) {
+		for(com.qanairy.models.Element link : link_elements) {
 	
-			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
+			Document jsoup_doc = Jsoup.parseBodyFragment(link.getTemplate(), page.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 			
 			if(element.hasAttr("href")) {
@@ -96,7 +95,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				try {
 					URI uri = new URI(href);
 					if(!uri.isAbsolute()) {
-						href = page_state.getUrl() + href;
+						href = page.getUrl() + href;
 					}
 				} catch (URISyntaxException e) {
 					e.printStackTrace();

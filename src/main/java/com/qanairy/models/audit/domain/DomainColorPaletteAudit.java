@@ -67,40 +67,36 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		//get all pages
 		List<Page> pages = domain_service.getPages(domain.getHost());
 		
-		log.warn("Domain pages :: "+pages.size());
 		//get most recent page state for each page
 		for(Page page : pages) {
 			
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("Domain Font Page State :: "+page_state);
-			log.warn("Domain Font Page key :: "+page.getKey());
 			
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-			log.warn("COLOR PALETTE AUDIT :: Elements available for color evaluation ...  "+elements.size());
 
 			for(ElementState element : elements) {
 				//identify all colors used on page. Images are not considered
 				
 				//check element for color css property
-				colors.put(element.getPreRenderCssValues().get("color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("color"), Boolean.TRUE);
 				//check element for text-decoration-color css property
-				colors.put(element.getPreRenderCssValues().get("text-decoration-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("text-decoration-color"), Boolean.TRUE);
 				//check element for text-emphasis-color
-				colors.put(element.getPreRenderCssValues().get("text-emphasis-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("text-emphasis-color"), Boolean.TRUE);
 	
 				//check element for background-color css property
-				colors.put(element.getPreRenderCssValues().get("background-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("background-color"), Boolean.TRUE);
 				//check element for caret-color
-				colors.put(element.getPreRenderCssValues().get("caret-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("caret-color"), Boolean.TRUE);
 				//check element for outline-color css property NB: SPECIFICALLY FOR BOXES
-				colors.put(element.getPreRenderCssValues().get("outline-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("outline-color"), Boolean.TRUE);
 				//check element for border-color, border-left-color, border-right-color, border-top-color, and border-bottom-color css properties NB: SPecifically for borders
-				colors.put(element.getPreRenderCssValues().get("border-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-left-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-right-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-top-color"), Boolean.TRUE);
-				colors.put(element.getPreRenderCssValues().get("border-bottom-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-left-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-right-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-top-color"), Boolean.TRUE);
+				colors.put(element.getRenderedCssValues().get("border-bottom-color"), Boolean.TRUE);
 			}
 			colors.remove("null");
 			colors.remove(null);
@@ -150,9 +146,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
 		observations.add(observation);
 			
-		for(ColorData primary_color : palette.keySet()) {
-			log.warn("Primary color :: "+primary_color.rgb() + "   ;   " + primary_color.getLuminosity());
-		}
 		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
 		int score = ColorPaletteUtils.getPaletteScore(palette, scheme);
 		

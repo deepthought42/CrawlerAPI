@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.models.Element;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.experience.PerformanceInsight;
@@ -118,6 +119,23 @@ public class PageService {
 		return page_repo.findByKey(key);
 	}
 
+	/**
+	 * Retrieve page from database using key
+	 * 
+	 * @param url
+	 * 
+	 * @return {@link Page} record
+	 * 
+	 * @pre key != null;
+	 * @pre !key.isEmpty();
+	 */
+	public Page findByUrl( String url ){
+		assert url != null;
+		assert !url.isEmpty();
+		
+		return page_repo.findByUrl(url);
+	}
+	
 	/**
 	 * 
 	 * 
@@ -235,5 +253,9 @@ public class PageService {
 
 	public PageState getMostRecentPageState(String key) {
 		return page_repo.findMostRecentPageState(key);
+	}
+
+	public List<Element> getElements(String key) {
+		return page_repo.getElements(key);
 	}
 }

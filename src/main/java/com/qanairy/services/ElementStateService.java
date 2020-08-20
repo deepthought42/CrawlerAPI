@@ -1,6 +1,5 @@
 package com.qanairy.services;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.api.exceptions.ExistingRuleException;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
 import com.qanairy.models.rules.Rule;
@@ -20,9 +20,6 @@ import com.qanairy.models.rules.Rule;
 public class ElementStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
-
-	@Autowired
-	private RuleService rule_service;
 
 	@Autowired
 	private ElementStateRepository element_repo;
@@ -40,19 +37,11 @@ public class ElementStateService {
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes			
-			Set<Rule> rule_records = new HashSet<>();
-			for(Rule rule : element.getRules()){
-				log.warn("adding rule to rule records :: " + rule.getType());
-				rule_records.add(rule_service.save(rule));
-			}
-			element.setRules(rule_records);
-
 			element_record = element_repo.save(element);
 		}
 		else {
-			element_record.setPreRenderCssValues(element.getPreRenderCssValues());
+			element_record.setRenderedCssValues(element.getRenderedCssValues());
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
-				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setScreenshotUrl(element.getScreenshotUrl());
 				element_record.setXLocation(element.getXLocation());
 				element_record.setYLocation(element.getYLocation());
@@ -76,19 +65,11 @@ public class ElementStateService {
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){			
-			Set<Rule> rule_records = new HashSet<>();
-			for(Rule rule : element.getRules()){
-				log.warn("adding rule to rule records :: " + rule.getType());
-				rule_records.add(rule_service.save(rule));
-			}
-			element.setRules(rule_records);
-
 			element_record = element_repo.save(element);
 		}
 		else{
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
 				element_record.setScreenshotUrl(element.getScreenshotUrl());
-				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setXpath(element.getXpath());
 	
 				element_record = element_repo.save(element_record);
@@ -109,7 +90,7 @@ public class ElementStateService {
 		element_repo.removeRule(user_id, element_key, rule_key);
 	}
 	
-	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(ElementState element){
+	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(Element element){
 		return false;
 	}
 
@@ -159,7 +140,7 @@ public class ElementStateService {
 	}
 
 	/**
-	 * gets parent element for given {@link ElementState} within the given {@link PageState}
+	 * gets parent element for given {@link Element} within the given {@link PageState}
 	 * 
 	 * @param page_state_key
 	 * @param element_state_key

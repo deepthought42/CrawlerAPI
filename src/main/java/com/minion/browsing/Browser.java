@@ -61,10 +61,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.enums.AlertChoice;
 
 import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
@@ -189,9 +187,23 @@ public class Browser {
 	 */
 	public static String cleanSrc(String src) {
 		Document html_doc = Jsoup.parse(src);
-		html_doc.select("canvas").remove();
-
-		return html_doc.html();
+		
+		for(Element element : html_doc.select("script")) {
+			element.remove();
+		}
+		
+		for(Element element : html_doc.select("style")) {
+			element.remove();
+		}
+		
+		for(Element element : html_doc.select("link")) {
+			element.remove();
+		}
+		
+		String html = html_doc.html();
+		return html.replace(" style=\"\"", "");
+		//html_doc.select("link,script,style").remove();
+		//return html_doc.html();
 	}
 	
 	/**
@@ -367,7 +379,7 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */	
-	public BufferedImage getElementScreenshot(ElementState element) throws IOException{
+	public BufferedImage getElementScreenshot(com.qanairy.models.Element element) throws IOException{
 		//calculate element position within screen
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
 		return Shutterbug.shootElementVerticallyCentered(driver, web_element).getImage();
@@ -579,8 +591,6 @@ public class Browser {
 	 * @throws XPathExpressionException 
 	 */
 	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
-
-		
 		Map<String, String> css_map = new HashMap<>();
 		//map rule set declarations with elements and save element
 		for(RuleSet rule_set : rule_sets) {
@@ -700,7 +710,7 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollToElement(ElementState element_state) 
+	public void scrollToElement(com.qanairy.models.Element element_state) 
     { 
 		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);

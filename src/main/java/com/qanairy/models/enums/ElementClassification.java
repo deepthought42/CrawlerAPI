@@ -3,7 +3,7 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum ElementClassification {
-	TEMPLATE("template"), CHILD("child"), SLIDER("slider"), ANCESTOR("ancestor");
+	TEMPLATE("template"), LEAF("leaf"), SLIDER("slider"), ANCESTOR("ancestor");
 	
 	private String shortName;
 

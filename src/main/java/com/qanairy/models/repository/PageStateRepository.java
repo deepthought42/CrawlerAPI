@@ -7,7 +7,9 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
@@ -62,4 +64,10 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(a:Audit{subcategory:{subcategory}}) RETURN a")
 	public Audit findAuditBySubCategory(@Param("subcategory") String subcategory, @Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:PageState{key:{page_state_key}})-[:HAS]->(e:ElementState{classification:'leaf'}) where e.visible=true RETURN e")
+	public List<ElementState> getVisibleLeafElements(@Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:Page)-[]->(ps:PageState{key:{page_state_key}}) return p LIMIT 1")
+	public Page getParentPage(@Param("page_state_key") String page_state_key);
 }

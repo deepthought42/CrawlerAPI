@@ -26,9 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.Observation;
@@ -38,7 +37,6 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
-import com.qanairy.services.PageStateService;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
@@ -54,10 +52,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
-	
+
 	
 	public DomainMarginAudit() {	}
 	
@@ -74,7 +69,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		assert domain != null;
 
 		List<Observation> observations = new ArrayList<>();
-		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
+		Map<Element, List<String>> elements_margin_map = new HashMap<>(); 
 
 		//get all pages
 		List<Page> pages = domain_service.getPages(domain.getHost());
@@ -83,14 +78,9 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		//get most recent page state for each page
 		for(Page page : pages) {
 			
-			//for each page state get elements
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("Domain Font Page State :: "+page_state);
-			log.warn("Domain Font Page key :: "+page.getKey());
-			
-			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+			List<Element> elements = page_service.getElements(page.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
-			for(ElementState element : elements) {
+			for(Element element : elements) {
 				String margin_value = "";
 				List<String> margins = new ArrayList<>();
 				if(element.getPreRenderCssValues().containsKey("margin")) {
@@ -149,7 +139,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	 * 
 	 * @pre elements_margin_map != null
 	 */
-	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_margin_map) {
+	private Score evaluateSpacingConsistency(Map<Element, List<String>> elements_margin_map) {
 		assert elements_margin_map != null;
 		
 		int points_earned = 0;
@@ -158,7 +148,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		
 		Map<String, List<Double>> gcd_map = new HashMap<>();
 		Map<String, List<Double>> units = new HashMap<>();
-		for(ElementState element : elements_margin_map.keySet()) {
+		for(Element element : elements_margin_map.keySet()) {
 			//START UNIT SCORE HERE
 			units.putAll(sortSizeUnits(elements_margin_map.get(element)));
 		}
@@ -266,15 +256,15 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	 * 
 	 * @return
 	 */
-	private Score evaluateUnits(Map<ElementState, List<String>> element_margin_map) {
+	private Score evaluateUnits(Map<Element, List<String>> element_margin_map) {
 		assert element_margin_map != null;
 		
 		int vertical_score = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> unscalable_margin_elements = new ArrayList<>();
+		List<Element> unscalable_margin_elements = new ArrayList<>();
 
-		for(ElementState element : element_margin_map.keySet()) {
+		for(Element element : element_margin_map.keySet()) {
 			for(String margin_value : element_margin_map.get(element)) {
 				//determine unit measure
 				String unit = extractMeasureUnit(margin_value);
@@ -352,14 +342,14 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	 * 
 	 * @pre elements != null
 	 */
-	private Score scoreMarginAsPadding(Set<ElementState> elements) {
+	private Score scoreMarginAsPadding(Set<Element> elements) {
 		assert elements != null;
 		
 		int score = 0;
 		int max_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> flagged_elements = new ArrayList<>();
-		for(ElementState element : elements) {
+		List<Element> flagged_elements = new ArrayList<>();
+		for(Element element : elements) {
 			//identify elements that own text and have margin but not padding set
 			if(!element.getText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
@@ -411,8 +401,8 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	 * @param elements
 	 * @return
 	 */
-	private int scoreNonCollapsingMargins(List<ElementState> elements) {
-		for(ElementState element : elements) {
+	private int scoreNonCollapsingMargins(List<Element> elements) {
+		for(Element element : elements) {
 			//identify situations of margin collapse by finding elements that are 
 				//positioned vertically where 1 is above the other and both have margins
 				//element is empty and has margins set

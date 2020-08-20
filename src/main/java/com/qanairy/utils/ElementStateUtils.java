@@ -12,17 +12,6 @@ import org.openqa.selenium.WebElement;
 import com.qanairy.models.ElementState;
 
 public class ElementStateUtils {
-	/*
-	public static List<WebElement> fitlerNonDisplayedElements(List<ElementState> elements) {
-		List<ElementState> filtered_elems = new ArrayList<>();
-		for(ElementState elem : elements){
-			if(elem.isDisplayed()){
-				filtered_elems.add(elem);
-			}
-		}
-		return filtered_elems;
-	}
-*/
 	
 	public static List<ElementState> filterElementsWithNegativePositions(List<ElementState> elements) {
 		List<ElementState> filtered_elements = new ArrayList<>();

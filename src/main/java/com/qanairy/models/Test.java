@@ -412,12 +412,12 @@ public class Test implements Persistable {
 					test_name +=  path + " page ";
 					page_state_idx++;
 				}
-				else if(obj instanceof ElementState){
+				else if(obj instanceof Element){
 					if(element_action_cnt > 0){
 						test_name += "> ";
 					}
 					
-					ElementState element = (ElementState)obj;
+					Element element = (Element)obj;
 					String tag_name = element.getName();
 					
 					if(element.getAttribute("id") != null){

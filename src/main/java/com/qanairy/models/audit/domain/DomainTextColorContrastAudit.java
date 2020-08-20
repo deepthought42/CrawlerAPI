@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
@@ -27,7 +27,7 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 	private static Logger log = LoggerFactory.getLogger(DomainTextColorContrastAudit.class);
 	
 	@Relationship(type="FLAGGED")
-	List<ElementState> flagged_elements = new ArrayList<>();
+	List<Element> flagged_elements = new ArrayList<>();
 	
 	public DomainTextColorContrastAudit() {}
 	

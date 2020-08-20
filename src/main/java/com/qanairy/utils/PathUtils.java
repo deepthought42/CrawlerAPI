@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.LookseeObject;
+import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.TestService;
@@ -28,7 +29,7 @@ public class PathUtils {
 		assert(path_objects != null);
 				
 		for(int idx = path_objects.size()-1; idx >= 0; idx--){
-			if(path_objects.get(idx).getKey().contains("pagestate")){
+			if(path_objects.get(idx).getKey().contains("page")){
 				return (PageState)path_objects.get(idx);
 			}
 		}

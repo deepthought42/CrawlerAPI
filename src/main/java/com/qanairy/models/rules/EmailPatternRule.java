@@ -3,7 +3,7 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 public class EmailPatternRule extends Rule {
 
@@ -14,7 +14,7 @@ public class EmailPatternRule extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(ElementState page_element) {
+	public Boolean evaluate(Element page_element) {
 		for(String attribute: page_element.getAttributes().keySet()){
 			if("vals".contentEquals(attribute)){
 				String pattern = "/^" + page_element.getAttributes().get(attribute).toString() + " $/";

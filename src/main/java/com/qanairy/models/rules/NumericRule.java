@@ -1,11 +1,11 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Element;
 
 
 /**
- * Defines a min/max value or length {@link Rule} on a {@link ElementState}
+ * Defines a min/max value or length {@link Rule} on a {@link Element}
  */
 public class NumericRule extends Rule{
 	public NumericRule(){}
@@ -24,7 +24,7 @@ public class NumericRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(Element elem) {
 		for(String attribute: elem.getAttributes().keySet()){
 			if("val".equals(attribute)){
 				String field_value = elem.getAttributes().get(attribute).toString();

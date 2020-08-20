@@ -24,6 +24,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 import com.qanairy.helpers.ActionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
@@ -69,11 +70,6 @@ public class PathExpansionActor extends AbstractActor {
 			.match(PathMessage.class, message -> {
 				log.warn("STARTING PATH EXPANSION....  "+message.getPathObjects().size());
 				
-				//if last page is an internal link then skip expansion
-				PageState last_page_state = PathUtils.getLastPageState(message.getPathObjects());
-				if(isInternalLink(last_page_state.getUrl())) {
-					return;
-				}
 				//get sublist of path from beginning to page state index
 				List<ExploratoryPath> exploratory_paths = expandPath(message);
 				log.warn("total path expansions found :: "+exploratory_paths.size());
@@ -128,8 +124,7 @@ public class PathExpansionActor extends AbstractActor {
 		//iterate over all elements
 		for(ElementState element : elements){
 			if(element.getClassification().equals(ElementClassification.SLIDER) || 
-				element.getClassification().equals(ElementClassification.TEMPLATE) || 
-				element.isPartOfForm()){
+				element.getClassification().equals(ElementClassification.TEMPLATE));
 				log.warn("skipping element :: "+element.getXpath());
 				continue;
 			}
@@ -151,8 +146,8 @@ public class PathExpansionActor extends AbstractActor {
 			//page element is not an input or a form
 			PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain(), path.getAccountId());
 
-			new_path.getPathObjects().add(element);
-			new_path.getKeys().add(element.getKey());
+			//new_path.getPathObjects().add(element);
+			//new_path.getKeys().add(element.getKey());
 
 			for(List<Action> action_list : ActionHelper.getActionLists()){
 				for(Action action : action_list){
@@ -167,14 +162,14 @@ public class PathExpansionActor extends AbstractActor {
 					pathList.add(action_path);
 				}
 			}
-		}
-		return pathList;
+		
+		return null;
 	}
 
 	/**
 	 * Checks if result has same url as last page in path of {@link Test}. If the urls match,
 	 * then a difference between the lists is acquired and only the complementary set is returned.
-	 * If the urls don't match then the entire set of {@link ElementState} for the result page is returned.
+	 * If the urls don't match then the entire set of {@link Element} for the result page is returned.
 	 *
 	 * @param test {@link Test} to be expanded
 	 *

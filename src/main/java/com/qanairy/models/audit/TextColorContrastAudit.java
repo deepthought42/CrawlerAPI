@@ -132,7 +132,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				max_luminosity = background_color_data.getLuminosity();
 			}
 			double contrast = 0.0;
-			if(ElementStateUtils.isHeader(element)) {
+			if(ElementStateUtils.isHeader(element.getName())) {
 				//score header element
 				//calculate contrast between text color and background-color
 				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);

@@ -69,13 +69,13 @@ public class ElementStateUtils {
 				&& (y+height) <= (viewport_size.getHeight()+y_offset);
 	}
 
-	public static boolean isHeader(ElementState element) {
-		return "h1".equalsIgnoreCase(element.getName()) 
-				|| "h2".equalsIgnoreCase(element.getName())
-				|| "h3".equalsIgnoreCase(element.getName())
-				|| "h4".equalsIgnoreCase(element.getName())
-				|| "h5".equalsIgnoreCase(element.getName())
-				|| "h6".equalsIgnoreCase(element.getName());
+	public static boolean isHeader(String tag_name) {
+		return "h1".equalsIgnoreCase(tag_name) 
+				|| "h2".equalsIgnoreCase(tag_name)
+				|| "h3".equalsIgnoreCase(tag_name)
+				|| "h4".equalsIgnoreCase(tag_name)
+				|| "h5".equalsIgnoreCase(tag_name)
+				|| "h6".equalsIgnoreCase(tag_name);
 	}
 
 	public static boolean isTextContainer(ElementState element_state) {
@@ -88,5 +88,11 @@ public class ElementStateUtils {
 		Document doc = Jsoup.parseBodyFragment(element.getAttribute("outerHTML"));
 		Element body = doc.body();
 		return !body.ownText().isEmpty();
+	}
+
+	public static boolean isList(String tag_name) {
+		return "ul".equalsIgnoreCase(tag_name) 
+				|| "ol".equalsIgnoreCase(tag_name)
+				|| "li".equalsIgnoreCase(tag_name);
 	}
 }

@@ -10,6 +10,7 @@ import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
@@ -28,6 +29,9 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
+import com.qanairy.utils.ElementStateUtils;
+
+import groovy.util.ObservableList.ElementUpdatedEvent;
 
 
 /**
@@ -59,19 +63,102 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	@Override
 	public Audit execute(Domain domain) {
 		assert domain != null;
+		
 		List<Observation> observations = new ArrayList<>();
 		List<Page> pages = domain_service.getPages(domain.getHost());
 
 		Score title_score = scorePageTitles(pages);
 		Score favicon_score = scoreFavicon(pages);
+		Score heading_score = scoreHeadings(pages);
+		
 		observations.addAll(title_score.getObservations());
 		observations.addAll(favicon_score.getObservations());
+		observations.addAll(heading_score.getObservations());
 		
-		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved();
-		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints();
+		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved() + heading_score.getPointsAchieved();
+		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints() + heading_score.getMaxPossiblePoints();
 		
 		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, observations, AuditLevel.DOMAIN, max_points);
+	}
+
+	
+	private Score scoreHeadings(List<Page> pages) {
+		assert pages != null;
+
+		int points_achieved = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		for(Page page : pages) {
+			//generate score for ordered and unordered lists and their headers
+			Score list_score = scoreOrderedListHeaders(page);
+			points_achieved += list_score.getPointsAchieved();
+			max_points += list_score.getMaxPossiblePoints();
+			observations.addAll(list_score.getObservations());
+			
+			//score text elements and their headers
+			Score text_block_header_score = scoreTextElementHeaders(page);
+			points_achieved += text_block_header_score.getPointsAchieved();
+			max_points += text_block_header_score.getMaxPossiblePoints();
+			observations.addAll(text_block_header_score.getObservations());
+		}
+		
+		
+		return new Score(points_achieved, max_points, observations);
+	}
+
+	private Score scoreOrderedListHeaders(Page page) {
+		assert page != null;
+		
+		Document html_doc = Jsoup.parse(page.getSrc());
+		int score = 0;
+		//review element tree top down to identify elements that own text.
+		Elements body_elem = html_doc.getElementsByTag("body");
+		List<Element> jsoup_elements = body_elem.get(0).children();
+		for(Element element : jsoup_elements) {
+			//ignore header tags (h1,h2,h3,h4,h5,h6)
+			if(ElementStateUtils.isHeader(element.tagName()) || !element.ownText().isEmpty()) {
+				continue;
+			}
+			
+			//extract ordered lists
+			//does element own text?
+			if(ElementStateUtils.isList(element.tagName())) {
+				
+				//check if element has header element sibling preceding it
+			}			
+		}
+		
+		return new Score(score, max_points, new HashSet<>());
+	}
+
+	
+	private Score scoreTextElementHeaders(Page page) {
+		assert page != null;
+		
+		int score = 0;
+		Document html_doc = Jsoup.parse(page.getSrc());
+		
+		//review element tree top down to identify elements that own text.
+		Elements body_elem = html_doc.getElementsByTag("body");
+		List<Element> jsoup_elements = body_elem.get(0).children();
+		while(!jsoup_elements.isEmpty()) {
+			Element element = jsoup_elements.remove(0);
+			//ignore header tags (h1,h2,h3,h4,h5,h6)
+			if(ElementStateUtils.isHeader(element.tagName()) || ElementStateUtils.isList(element.tagName())) {
+				continue;
+			}
+			
+			//does element own text?
+			if(!element.ownText().isEmpty()) {
+				jsoup_elements.addAll(element.children());
+			}
+			else {
+				//check if element has header element sibling preceding it
+			}
+		}
+		
+		return new Score(score, max_points, new HashSet<>());
 	}
 
 	private Score scoreFavicon(List<Page> pages) {

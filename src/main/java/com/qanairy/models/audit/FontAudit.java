@@ -52,7 +52,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		
 		Map<String, List<ElementState>> header_element_map = new HashMap<>();
 		for(ElementState element : page_state.getElements()) {
-			if(ElementStateUtils.isHeader(element)) {
+			if(ElementStateUtils.isHeader(element.getName())) {
 				if(header_element_map.containsKey(element.getName())) {
 					header_element_map.get(element.getName()).add(element);
 				}

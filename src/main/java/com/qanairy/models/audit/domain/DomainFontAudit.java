@@ -83,7 +83,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
 			for(ElementState element : elements) {
-				if(ElementStateUtils.isHeader(element)) {
+				if(ElementStateUtils.isHeader(element.getName())) {
 					if(header_element_map.containsKey(element.getName())) {
 						header_element_map.get(element.getName()).add(element);
 					}

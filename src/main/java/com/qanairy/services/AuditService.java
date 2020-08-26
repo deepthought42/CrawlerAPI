@@ -11,6 +11,7 @@ import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.repository.AuditRepository;
 
 /**
@@ -46,7 +47,28 @@ public class AuditService {
 			if(audit == null) {
 				continue;
 			}
+			
+			Audit audit_record = audit_repo.findByKey(audit.getKey());
+			if(audit_record != null) {
+				log.warn("audit already exists!!!");
+				audits_saved.add(audit_record);
+				continue;
+			}
+			log.warn("------------------------------------------------------------------------------");
 			log.warn("saving audit ;;: "+audit);
+			log.warn("Audit key :: "+audit.getKey());
+			log.warn(" :: "+audit.getPoints());
+			log.warn(" :: "+audit.getTotalPossiblePoints());
+			log.warn(" :: "+audit.getCategory());
+			log.warn(" :: "+audit.getCreatedAt());
+			log.warn(" :: "+audit.getLevel());
+			log.warn(" :: "+audit.getObservations());
+			for(Observation observation : audit.getObservations()) {
+				log.warn(" observation description :  "+observation.getDescription());
+				log.warn(" observation type :  "+observation.getType());
+			}
+			log.warn("Subcategory  :: "+audit.getSubcategory());
+			
 			log.warn("saving using audit repo :: " + audit_repo);
 			try {
 				Audit saved_audit = audit_repo.save(audit);

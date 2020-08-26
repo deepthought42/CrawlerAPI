@@ -43,6 +43,8 @@ public class Audit extends LookseeObject {
 	 * @param total_possible_points
 	 */
 	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points) {
+		super();
+		
 		assert category != null;
 		assert subcategory != null;
 		assert observations != null;

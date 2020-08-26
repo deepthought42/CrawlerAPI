@@ -95,7 +95,6 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
-		   			postStop();
 				})
 				.match(PageState.class, page_state-> {
 				   	//generate audit report
@@ -116,7 +115,6 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
-		   			postStop();
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");

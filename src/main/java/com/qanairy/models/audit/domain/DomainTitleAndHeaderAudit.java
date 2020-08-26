@@ -10,7 +10,6 @@ import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
@@ -30,8 +29,6 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
 import com.qanairy.utils.ElementStateUtils;
-
-import groovy.util.ObservableList.ElementUpdatedEvent;
 
 
 /**
@@ -109,9 +106,10 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 
 	private Score scoreOrderedListHeaders(Page page) {
 		assert page != null;
+		int score = 0;
+		int max_points = 0;
 		
 		Document html_doc = Jsoup.parse(page.getSrc());
-		int score = 0;
 		//review element tree top down to identify elements that own text.
 		Elements body_elem = html_doc.getElementsByTag("body");
 		List<Element> jsoup_elements = body_elem.get(0).children();
@@ -137,6 +135,8 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		assert page != null;
 		
 		int score = 0;
+		int max_points = 0;
+		
 		Document html_doc = Jsoup.parse(page.getSrc());
 		
 		//review element tree top down to identify elements that own text.
@@ -155,9 +155,28 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 			}
 			else {
 				//check if element has header element sibling preceding it
+				int element_idx = element.elementSiblingIndex();
+				Elements sibling_elements = element.siblingElements();
+				
+				for(Element sibling : sibling_elements) {
+					if(ElementStateUtils.isHeader(sibling.tagName())) {
+						//check if sibling has a lower index
+						int sibling_idx = sibling.siblingIndex();
+						if(sibling_idx < element_idx) {
+							score += 3;
+						}
+						else {
+							score += 1;
+						}
+						max_points += 3;
+						break;
+					}
+				}
 			}
 		}
 		
+		log.warn("Headings score ::    "+score);
+		log.warn("Headings max score :::  "+max_points);
 		return new Score(score, max_points, new HashSet<>());
 	}
 

@@ -114,10 +114,11 @@ public class JourneyExpander extends AbstractActor{
 					
 					boolean executed_successfully = false;
 					int cnt = 0;
+					Browser browser = null;
 					do {
 						try {
 							//start a new browser session
-							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 							ActionFactory action_factory = new ActionFactory(browser.getDriver());
 		
 							log.warn("journey :: "+journey);
@@ -200,8 +201,11 @@ public class JourneyExpander extends AbstractActor{
 						catch(Exception e) {
 							log.warn("Exception occurred while executing journey ::   "+e.getMessage());
 							e.printStackTrace();
+							if(browser != null) {
+								browser.close();
+							}
 						}
-					}while(!executed_successfully && cnt < 10);
+					}while(!executed_successfully && cnt < 50);
 					
 					
 

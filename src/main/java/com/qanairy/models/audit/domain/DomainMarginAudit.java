@@ -350,8 +350,15 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		Set<Observation> observations = new HashSet<>();
 		List<Element> flagged_elements = new ArrayList<>();
 		for(Element element : elements) {
+			if(element == null) {
+				log.warn("margin padding audit Element :: "+element);
+				continue;
+			}
+			log.warn("margin padding audit element text :: "+element.getText());
+			log.warn("margin padding audit element text :: "+ (element.getText()!=null));
+
 			//identify elements that own text and have margin but not padding set
-			if(!element.getText().trim().isEmpty()) {
+			if(element.getText() != null && !element.getText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
 				boolean margin_used_as_padding = false;
 				String margin_top = element.getPreRenderCssValues().get("margin-top");

@@ -18,7 +18,6 @@ import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.RenderedPageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.enums.AuditStage;
@@ -68,10 +67,9 @@ public class AuditManager extends AbstractActor{
 	private Account account;
 	private int page_count;
 	private int page_state_count;
-	private int rendered_page_state_count;
 	private int page_audits_completed;
 	Map<String, Page> pages_experienced = new HashMap<>();
-	Map<String, Page> page_states_experienced = new HashMap<>();
+	Map<String, PageState> page_states_experienced = new HashMap<>();
 	private AuditRecord audit_record;
 
 	//subscribe to cluster changes
@@ -81,7 +79,6 @@ public class AuditManager extends AbstractActor{
 				MemberEvent.class, UnreachableMember.class);
 		page_count = 0;
 		page_state_count = 0;
-		rendered_page_state_count = 0;
 		page_audits_completed = 0;
 		audit_record = new AuditRecord();
 	}
@@ -125,22 +122,22 @@ public class AuditManager extends AbstractActor{
 						page_count++;
 						pages_experienced.put(page.getKey(), page);
 						log.warn("Page Count :: "+page_count);
+						/*
 						ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
 						page_data_extractor.tell(page, getSelf());
-						
+						*/
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						web_crawl_actor.tell(page, getSelf());
-						log.warn("page state received by audit manager ::      "+page);
+						log.warn("page received by audit manager ::      "+page);
 					}
 				})
 				.match(PageState.class, page_state -> {
 					log.warn("Recieved page state :: "+page_state.getUrl());
 					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state.getKey())) {
-						//page_state = page_state_service.save(page_state);
-						//add page state to page somehow?
+						page_states_experienced.put(page_state.getKey(), page_state);
 						/*
 						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
@@ -148,11 +145,18 @@ public class AuditManager extends AbstractActor{
 						*/
 						
 						page_state_count++;
-						/*log.warn("Page State Count :: "+page_state_count);
+						log.warn("Page State Count :: "+page_state_count);
+						/*
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						web_crawl_actor.tell(page_state, getSelf());
 						*/
+						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("auditor"), "auditor"+UUID.randomUUID());
+						
+						//rendered_page_state_count++;
+						auditor.tell(page_state, getSelf());	
+						
 						log.warn("page state received by audit manager ::      "+page_state);
 						log.warn("page state recieved by audit manager. page cnt : "+page_count+"   ;    page state count  ::   "+page_state_count);
 					}
@@ -160,17 +164,10 @@ public class AuditManager extends AbstractActor{
 						log.warn("Page state already processed for audit manager ..... "+page_state.getUrl());
 					}
 				})
-				.match(RenderedPageState.class, page_state -> {
-					ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							.props("auditor"), "auditor"+UUID.randomUUID());
-					
-					rendered_page_state_count++;
-					log.warn("Rendered Page State Count :: "+rendered_page_state_count);
-					auditor.tell(page_state.getPageState(), getSelf());	
-				})
 				.match(PageStateAuditComplete.class, audit_complete -> {
 					page_audits_completed++;
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+page_count+"   ;    audit size  ::   "+page_audits_completed);
+					log.warn("Page Audit Complete message received by audit manager. page state cnt : "+page_state_count+"   ;    audit size  ::   "+page_audits_completed);
 
 					if(page_audits_completed == page_count) {
 						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());

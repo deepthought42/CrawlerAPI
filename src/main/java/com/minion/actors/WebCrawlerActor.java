@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.models.RenderedPageState;
@@ -188,33 +190,41 @@ public class WebCrawlerActor extends AbstractActor{
 					
 					boolean rendering_not_complete = true;
 					int cnt = 0;
+					PageState page_state = null;
+					Browser browser = null;
+					Map<String, ElementState> elements_mapped = new HashMap<>();
 					//List<String> element_xpaths_reviewed = new ArrayList<>();
 					do {
 						try {
-							log.warn("getting browser for rendered page state extraction...");
-							//navigate to page url
-							Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to page state url ::   "+page.getUrl());
 							browser.navigateTo(page.getUrl());
-							PageState page_state = browser_service.buildPageState(page, browser);
-							page_state = page_state_service.save(page_state);
-							page.addPageState(page_state);
-							page = page_service.save(page);
-							//send RenderedPageState to sender
-							log.warn("telling sender of Rendered Page State outcomes ....");
-							getSender().tell(new RenderedPageState(page_state), getSelf());
-							rendering_not_complete = false;
+							if(page_state == null) {
+									log.warn("getting browser for rendered page state extraction...");
+									//navigate to page url
+									page_state = browser_service.buildPageState(page, browser);
+									//send RenderedPageState to sender
+									rendering_not_complete = false;
+							}
+							
+							List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), new URL(page_state.getUrl()), browser, elements_mapped);
+							page_state.addElements(elements);
+	
+							cnt++;
+							browser.close();
 							break;
-						}catch(WebDriverException e) {
+						}
+						catch(Exception e) {
+							browser.close();
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
-						catch(GridException e) {
-							log.warn("Grid exception thrown ...  ");
-							e.printStackTrace();
-						}
-						cnt++;
-					}while(rendering_not_complete && cnt < 10);
+					}while(rendering_not_complete && cnt < 50);
+					page_state = page_state_service.save(page_state);
+					page.addPageState(page_state);
+					page = page_service.save(page);
+					log.warn("telling sender of Rendered Page State outcomes ....");
+					getSender().tell( page_state, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

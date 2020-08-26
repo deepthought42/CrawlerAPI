@@ -173,7 +173,7 @@ public class Browser {
 			}
 		}
 		*/
-		waitForPageToLoad();
+		//waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
 

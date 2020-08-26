@@ -51,14 +51,11 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	@Relationship(type="FLAGGED")
 	private List<Element> flagged_elements = new ArrayList<>();
 	
-	public DomainFontAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
-	}
+	public DomainFontAudit() {	}
 
 	/**
 	 * {@inheritDoc} 
-	 * 
-	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
+
 	 *  
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 

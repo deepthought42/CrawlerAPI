@@ -367,7 +367,7 @@ public class BrowserService {
 		log.warn("url for page state:  "+page.getUrl());
 
 		URL url = new URL(page.getUrl());
-		List<ElementState> elements = extractElementStates(source, url, browser);
+		//List<ElementState> elements = extractElementStates(source, url, browser);
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
@@ -385,7 +385,7 @@ public class BrowserService {
 		
 		PageState page_state = new PageState(
 				viewport_screenshot_url,
-				elements,
+				new ArrayList<>(),
 				source,
 				false,
 				x_offset,
@@ -540,7 +540,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<ElementState> getDomElementStates(String page_source, URL url,  Browser browser) throws IOException, XPathExpressionException {
+	private synchronized List<ElementState> getDomElementStates(String page_source, URL url,  Browser browser, Map<String, ElementState> element_states_map) throws IOException, XPathExpressionException {
 		assert page_source != null;
 		assert !page_source.isEmpty();
 		assert url != null;
@@ -1627,8 +1627,8 @@ public class BrowserService {
 		return getDomElementTreeLinear(page_src, browser, reviewed_xpaths);
 	}
 	
-	public List<ElementState> extractElementStates(String page_src, URL url, Browser browser) throws IOException, XPathExpressionException {
-		return getDomElementStates(page_src, url, browser);
+	public List<ElementState> extractElementStates(String page_src, URL url, Browser browser, Map<String, ElementState> elements) throws IOException, XPathExpressionException {
+		return getDomElementStates(page_src, url, browser, elements);
 	}
 	
 	public List<com.qanairy.models.Element> extractElements(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {

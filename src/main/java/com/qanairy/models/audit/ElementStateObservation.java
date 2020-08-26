@@ -13,7 +13,7 @@ import com.qanairy.models.enums.ObservationType;
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementStateObservation extends LookseeObject implements Observation {
+public class ElementStateObservation extends Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")

@@ -7,14 +7,12 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class RenderedElementObservation extends LookseeObject implements Observation {
-	private String description;
+public class RenderedElementObservation extends Observation {
 	
 	@Relationship(type = "FOR")
 	private List<ElementState> elements;
@@ -24,6 +22,7 @@ public class RenderedElementObservation extends LookseeObject implements Observa
 	public RenderedElementObservation(List<ElementState> elements, String description) {
 		setElements(elements);
 		setDescription(description);
+		setType(ObservationType.ELEMENT);
 		setKey(this.generateKey());
 	}
 	
@@ -47,16 +46,6 @@ public class RenderedElementObservation extends LookseeObject implements Observa
 	
 	public boolean addElements(List<ElementState> elements) {
 		return this.elements.addAll(elements);
-	}
-
-	@Override
-	public String getDescription() {
-		return this.description;
-	}
-
-	@Override
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	@Override

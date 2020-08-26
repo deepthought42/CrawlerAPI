@@ -99,7 +99,7 @@ public class PageDataExtractor extends AbstractActor{
 							e.printStackTrace();
 						}
 						cnt++;
-					}while(cnt < 5);
+					}while(cnt < 50);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

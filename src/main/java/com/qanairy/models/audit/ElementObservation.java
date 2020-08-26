@@ -6,13 +6,12 @@ import java.util.stream.Collectors;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementObservation extends LookseeObject implements Observation {
+public class ElementObservation extends Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")

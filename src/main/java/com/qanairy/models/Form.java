@@ -15,7 +15,7 @@ import com.qanairy.models.experience.BugMessage;
 /**
  * Represents a form tag and the encompassed inputs in a web browser
  */
-public class Form extends LookseeObject implements Comparable<Form>{
+public class Form extends LookseeObject{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Form.class);
 
@@ -108,13 +108,6 @@ public class Form extends LookseeObject implements Comparable<Form>{
         
         Form that = (Form)o;
 		return this.getKey().equals(that.getKey());
-	}
-	
-	@Override
-	public int compareTo(Form o) {
-		 if(this.getId() == o.getId())
-             return 0;
-         return this.getId() < o.getId() ? -1 : 1;
 	}
 	
 	public String getName() {

@@ -19,7 +19,7 @@ public class PageObservation extends Observation {
 	public PageObservation(Page page, String description) {
 		setPage(page);
 		setDescription(description);
-		setType(ObservationType.ELEMENT);
+		setType(ObservationType.PAGE);
 		setKey(this.generateKey());
 	}
 	

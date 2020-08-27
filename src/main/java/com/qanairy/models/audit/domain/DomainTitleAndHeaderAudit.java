@@ -194,7 +194,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 				points += 1;
 			}
 			else {
-				observations.add(new PageObservation(page, "pages without titles"));
+				observations.add(new PageObservation(page, "page missing title"));
 				points += 0;				
 			}
 		}

@@ -4,6 +4,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,6 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,6 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
-import com.qanairy.models.RenderedPageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.CrawlActionMessage;
@@ -38,6 +36,7 @@ import com.qanairy.services.DomainService;
 import com.qanairy.services.PageService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -186,14 +185,15 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.match(Page.class, page -> {
 					log.warn("Web crawler received page");
-					//Page page = page_state_service.getParentPage(page_state.getKey());
 					
-					boolean rendering_not_complete = true;
+					boolean rendering_incomplete = true;
+					boolean xpath_extraction_incomplete = true;
+
 					int cnt = 0;
 					PageState page_state = null;
 					Browser browser = null;
 					Map<String, ElementState> elements_mapped = new HashMap<>();
-					//List<String> element_xpaths_reviewed = new ArrayList<>();
+					List<String> xpaths = new ArrayList<>();
 					do {
 						try {
 							browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
@@ -204,13 +204,20 @@ public class WebCrawlerActor extends AbstractActor{
 									//navigate to page url
 									page_state = browser_service.buildPageState(page, browser);
 									//send RenderedPageState to sender
-									rendering_not_complete = false;
+							}
+							//extract all element xpaths
+							if(xpath_extraction_incomplete) {
+								xpaths.addAll(browser_service.extractAllUniqueElementXpaths(page_state.getSrc()));
+								xpath_extraction_incomplete=false;
 							}
 							
-							List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), new URL(page_state.getUrl()), browser, elements_mapped);
+							//for each xpath then extract element state
+							log.warn("getting element states for page state :: "+page_state.getUrl());
+							List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), xpaths, browser, elements_mapped);
 							page_state.addElements(elements);
 	
-							cnt++;
+							rendering_incomplete = false;
+							cnt=100;
 							browser.close();
 							break;
 						}
@@ -219,7 +226,9 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
-					}while(rendering_not_complete && cnt < 50);
+						TimingUtils.pauseThread(5000L);
+					}while(rendering_incomplete && cnt < 50);
+					
 					page_state = page_state_service.save(page_state);
 					page.addPageState(page_state);
 					page = page_service.save(page);

@@ -11,6 +11,7 @@ public enum ObservationType {
 	COLOR_PALETTE("Color Palette"), 
 	PROPERTY_MAP("Property Map"),
 	STYLE_MISSING("Style Missing"),
+	PAGE("Page"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

@@ -540,116 +540,47 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<ElementState> getDomElementStates(String page_source, URL url,  Browser browser, Map<String, ElementState> element_states_map) throws IOException, XPathExpressionException {
-		assert page_source != null;
-		assert !page_source.isEmpty();
-		assert url != null;
+	private synchronized List<ElementState> getDomElementStates(String src, List<String> xpaths, Browser browser, Map<String, ElementState> element_states_map) throws IOException, XPathExpressionException {
+		assert xpaths != null;
+		assert !xpaths.isEmpty();
 		assert browser != null;
+		assert element_states_map != null;
 		
 		List<ElementState> visited_elements = new ArrayList<>();
-		Map<String, String> frontier = new HashMap<>();
-		Map<String, Integer> xpath_cnt = new HashMap<>();
-
-		/*
-		Tidy tidy = new Tidy(); // obtain a new Tidy instance
-		//tidy.setXHTML(true); // set desired config options using tidy setters 
-		log.debug("tidy  :: "+tidy); //NOTE :: tidy contains the errors for the document. 
-		//extract body element for dom creation
-		org.w3c.dom.Document w3c_document = tidy.parseDOM(new ByteArrayInputStream(page_source.getBytes()), null);
-		log.warn("1===========================================================================");
-		log.warn("1===========================================================================");
-		log.warn("1===========================================================================");
 		
-		log.warn("w3c_document  ---   "+ w3c_document);
-		*/
-		//get html doc and get root element
-		Document html_doc = Jsoup.parse(page_source);
-		
-		Element root = html_doc.getElementsByTag("body").get(0);
 		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
+		Document html_doc = Jsoup.parse(src);
 		
-		//create element state from root node
-		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-		log.warn("page source 2 :: "+page_source.length());
-		log.warn("url 2  :: "+url);
-		Map<String, String> css_props = new HashMap<>();
-		try{
-			css_props.putAll(Browser.loadCssProperties(web_root, browser.getDriver()));
-		}
-		catch(Exception e) {
-			log.warn(e.getMessage());
-		}
-		
-	//	Map<String, String> css_rendered = new HashMap<>();
-
-		//ElementState root_element_state = buildElementState("//body", attributes, root, web_root, ElementClassification.ANCESTOR, css_props );
-		
-		//root_element_state = element_state_service.save(root_element_state);
-
-		//put element on frontier
-		frontier.put("//body","");
-		while(!frontier.isEmpty()) {
-			String next_xpath = frontier.keySet().iterator().next();
-			String parent_element_key = frontier.remove(next_xpath);
-			//ElementState root_element = frontier.remove(next_xpath);
-			//visited_elements.add(root_element);
-			//get Element by xpath
-			
-			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
-			if(elements.size() == 0) {
-				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath + "   :     url :   "  + url.toString());
+		for(String xpath : xpaths) {
+			if(element_states_map.containsKey(xpath)) {
+				continue;
 			}
-			Element element = elements.first();
-			WebElement web_element = browser.getDriver().findElement(By.xpath(next_xpath));
+			
+			WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
 			//get child elements for element
-			attributes = generateAttributesMapUsingJsoup(element);
-			
-			Map<String, String> rendered_css_props = new HashMap<>();
-			
-			try{
-				rendered_css_props.putAll(Browser.loadCssProperties(web_element, browser.getDriver()));
-			}
-			catch(Exception e) {
-				log.warn(e.getMessage());
-			}
+			Map<String, String> attributes = browser.extractAttributes(web_root);
+			Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
 			
 			ElementClassification classification = null;
-			List<Element> children = new ArrayList<Element>(element.children());
+			List<WebElement> children = getChildElements(web_element);
 			if(children.isEmpty()) {
 				classification = ElementClassification.LEAF;
-			}
-			else if(isSliderElement(element)) {
-				classification = ElementClassification.SLIDER;
 			}
 			else {
 				classification = ElementClassification.ANCESTOR;
 			}
 			
-			ElementState element_state = buildElementState(next_xpath, attributes, element, web_element, classification, rendered_css_props);
+			//load json element
+			Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
+			if(elements.size() == 0) {
+				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
+			}
+			Element element = elements.first();
 			
+			ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
+			element_states_map.put(xpath, element_state);
 			element_state = element_state_service.save(element_state);
 			visited_elements.add(element_state);
-			if(parent_element_key != null && !parent_element_key.isEmpty() && !parent_element_key.contentEquals(element_state.getKey())) {
-				element_state_service.addChildElement(parent_element_key, element_state.getKey());
-			}
-			
-			for(Element child : children) {
-				if(isStructureTag(child.tagName())) {
-					continue;
-				}
-				String xpath = next_xpath + "/" + child.tagName();
-				
-				if(xpath_cnt.containsKey(xpath)) {
-					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
-				}
-				else {
-					xpath_cnt.put(xpath, 1);
-				}
-				
-				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
-
-				frontier.put(xpath, element_state.getKey());
-			}
 		}
 		return visited_elements;
 	}
@@ -1627,11 +1558,61 @@ public class BrowserService {
 		return getDomElementTreeLinear(page_src, browser, reviewed_xpaths);
 	}
 	
-	public List<ElementState> extractElementStates(String page_src, URL url, Browser browser, Map<String, ElementState> elements) throws IOException, XPathExpressionException {
-		return getDomElementStates(page_src, url, browser, elements);
+	public List<ElementState> extractElementStates(String src, List<String> xpaths, Browser browser, Map<String, ElementState> elements) throws IOException, XPathExpressionException {
+		assert src != null;
+		assert !src.isEmpty();
+		assert xpaths != null;
+		assert !xpaths.isEmpty();
+		assert browser != null;
+		assert elements != null;
+		
+		return getDomElementStates(src, xpaths, browser, elements);
 	}
 	
 	public List<com.qanairy.models.Element> extractElements(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
 		return getDomElements(page_src, url, rule_sets);
+	}
+
+	public List<String> extractAllUniqueElementXpaths(String src) {
+		Map<String, String> frontier = new HashMap<>();
+		List<String> xpaths = new ArrayList<>();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+		
+		Document html_doc = Jsoup.parse(src);
+		//Element root = html_doc.getElementsByTag("body").get(0);
+		
+		frontier.put("//body","");
+		while(!frontier.isEmpty()) {
+			String next_xpath = frontier.keySet().iterator().next();
+			frontier.remove(next_xpath);
+			xpaths.add(next_xpath);
+
+			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
+			if(elements.size() == 0) {
+				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath);
+			}
+			Element element = elements.first();
+			List<Element> children = new ArrayList<Element>(element.children());
+			
+			for(Element child : children) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
+				String xpath = next_xpath + "/" + child.tagName();
+				
+				if(xpath_cnt.containsKey(xpath)) {
+					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
+				else {
+					xpath_cnt.put(xpath, 1);
+				}
+				
+				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+
+				frontier.put(xpath, "");
+			}
+		}	
+		
+		return xpaths;
 	}
 }

@@ -16,7 +16,7 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.PathStatus;
@@ -24,7 +24,7 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -57,7 +57,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private BrowserService browser_service;
 
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 
 	@Autowired
 	private DomainService domain_service;
@@ -127,7 +127,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							return;
 						}
 						else {
-							Page page = browser_service.buildPage(message.getAccountId(), result_page.getUrl());
+							PageVersion page = browser_service.buildPage(message.getAccountId(), result_page.getUrl());
 							page = page_service.saveForUser(message.getAccountId(), page);
 							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 

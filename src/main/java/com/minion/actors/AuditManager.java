@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
@@ -65,7 +65,7 @@ public class AuditManager extends AbstractActor{
 	
 	private ActorRef web_crawler_actor;
 	private Account account;
-	Map<String, Page> pages_experienced = new HashMap<>();
+	Map<String, PageVersion> pages_experienced = new HashMap<>();
 	Map<String, PageState> page_states_experienced = new HashMap<>();
 	Map<String, PageState> page_states_audited = new HashMap<>();
 
@@ -112,7 +112,7 @@ public class AuditManager extends AbstractActor{
 					}
 					
 				})
-				.match(Page.class, page -> {
+				.match(PageVersion.class, page -> {
 					log.warn("recieved page :: "+page.getUrl());
 					if(!pages_experienced.containsKey(page.getKey())) {
 						pages_experienced.put(page.getKey(), page);

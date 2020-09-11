@@ -57,13 +57,13 @@ import com.qanairy.models.experience.WebPImageDetail;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.services.AuditDetailService;
 import com.qanairy.services.PageSpeedAuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.PerformanceInsightService;
 
@@ -85,7 +85,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	private DomainService domain_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private ElementStateService element_state_service;
@@ -131,7 +131,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					}
 					*/
 					
-					Page page = browser_service.buildPage(message.getAccountId(), message.getUrl().toString());
+					PageVersion page = browser_service.buildPage(message.getAccountId(), message.getUrl().toString());
 					log.warn("page returned :: "+page);
 					page = page_service.saveForUser(message.getAccountId(), page);
 					

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
@@ -26,7 +26,7 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 
 
@@ -41,7 +41,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	private List<String> colors = new ArrayList<>();
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -65,10 +65,10 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		Map<String, Boolean> colors = new HashMap<String, Boolean>();
 
 		//get all pages
-		List<Page> pages = domain_service.getPages(domain.getHost());
+		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 		
 		//get most recent page state for each page
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());

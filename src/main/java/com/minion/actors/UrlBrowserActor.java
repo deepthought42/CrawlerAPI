@@ -35,14 +35,14 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
@@ -67,7 +67,7 @@ public class UrlBrowserActor extends AbstractActor {
 	private BrowserService browser_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -146,7 +146,7 @@ public class UrlBrowserActor extends AbstractActor {
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
 							//build page
-							Page page = browser_service.buildPage(message.getAccountId(), url);
+							PageVersion page = browser_service.buildPage(message.getAccountId(), url);
 							page = page_service.saveForUser(message.getAccountId(), page);
 							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 							

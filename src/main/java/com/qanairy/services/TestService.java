@@ -26,7 +26,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
@@ -85,7 +85,7 @@ public class TestService {
 	 * @param test test to be ran
 	 *
 	 * @pre test != null
-	 * @return	{@link TestRecord} indicating passing status and {@link Page} if not passing
+	 * @return	{@link TestRecord} indicating passing status and {@link PageVersion} if not passing
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException

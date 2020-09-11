@@ -37,7 +37,7 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(es:Element{key:{element_key}}) Match (es)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
 	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:Element{key:{element_key}}) MATCH (e)-[:HAS_CHILD]->(es:Element) RETURN es")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:PageVersion) MATCH (page)-[*]->(e:Element{key:{element_key}}) MATCH (e)-[:HAS_CHILD]->(es:Element) RETURN es")
 	public List<Element> getChildElementsForUser(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (e:Element{key:{element_key}})-[:HAS_CHILD]->(es:Element) RETURN es")
@@ -46,10 +46,10 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (e:Element{key:{parent_key}})-[:HAS_CHILD]->(es:Element{key:{child_key}}) RETURN es")
 	public List<Element> getChildElementForParent(@Param("parent_key") String parent_key, @Param("child_key") String child_key);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[*]->(p:Page{key:{page_state_key}}) MATCH (p)-[]->(parent_elem:Element) MATCH (parent_elem)-[:HAS]->(e:Element{key:{element_key}}) RETURN parent_elem LIMIT 1")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[*]->(p:PageVersion{key:{page_state_key}}) MATCH (p)-[]->(parent_elem:Element) MATCH (parent_elem)-[:HAS]->(e:Element{key:{element_key}}) RETURN parent_elem LIMIT 1")
 	public Element getParentElement(@Param("user_id") String user_id, @Param("url") Domain url, @Param("page_state_key") String page_state_key, @Param("element_key") String element_key);
 
-	@Query("MATCH (p:Page{key:{page_state_key}})-[*]->(parent_elem:Element) MATCH (parent_elem)-[:HAS_CHILD]->(e:Element{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
+	@Query("MATCH (p:PageVersion{key:{page_state_key}})-[*]->(parent_elem:Element) MATCH (parent_elem)-[:HAS_CHILD]->(e:Element{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
 	public Element getParentElement(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 
 	@Query("MATCH (parent:Element{key:{parent_key}}),(child:Element{key:{child_key}}) CREATE (parent)-[:HAS_CHILD]->(child) RETURN parent")

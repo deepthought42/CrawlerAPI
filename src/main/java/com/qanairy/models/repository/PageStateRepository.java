@@ -7,9 +7,8 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
@@ -29,7 +28,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
 	public List<PageState> findByScreenshotChecksumsContainsForUserAndDomain(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
-	@Query("MATCH (d:Page{url:{url}})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
+	@Query("MATCH (d:PageVersion{url:{url}})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
 	public List<PageState> findByScreenshotChecksumAndPageUrl(@Param("url") String url, @Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS_CHILD]->() RETURN a")
@@ -53,10 +52,10 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (a:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(f:Form{key:{form_key}}) RETURN p")
 	public List<PageState> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
 
-	@Query("MATCH (d:Domain{url:{url}})-[]->(p:Page) MATCH (p)-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
+	@Query("MATCH (d:Domain{url:{url}})-[]->(p:PageVersion) MATCH (p)-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
 	public List<PageState> findBySourceChecksumForDomain(@Param("url") String url, @Param("src_checksum") String src_checksum);
 	
-	@Query("MATCH (:Page{url:{url}})-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
+	@Query("MATCH (:PageVersion{url:{url}})-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
 	public List<PageState> findBySourceChecksumForPage(@Param("url") String url, @Param("src_checksum") String src_checksum);
 
 	@Query("MATCH (ps:PageState{key:{page_state_key}})-[]->(a:Audit) RETURN a")
@@ -68,6 +67,6 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState{key:{page_state_key}})-[:HAS]->(e:ElementState{classification:'leaf'}) where e.visible=true RETURN e")
 	public List<ElementState> getVisibleLeafElements(@Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (p:Page)-[]->(ps:PageState{key:{page_state_key}}) return p LIMIT 1")
-	public Page getParentPage(@Param("page_state_key") String page_state_key);
+	@Query("MATCH (p:PageVersion)-[]->(ps:PageState{key:{page_state_key}}) return p LIMIT 1")
+	public PageVersion getParentPage(@Param("page_state_key") String page_state_key);
 }

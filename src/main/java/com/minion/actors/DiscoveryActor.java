@@ -25,7 +25,7 @@ import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
@@ -46,7 +46,7 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -89,7 +89,7 @@ public class DiscoveryActor extends AbstractActor{
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 		
 	@Autowired
 	private TestService test_service;
@@ -346,7 +346,7 @@ public class DiscoveryActor extends AbstractActor{
 					
 					try {
 						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), page_state_record);					    
-						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
+						PageVersion page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
 						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {
 						try {

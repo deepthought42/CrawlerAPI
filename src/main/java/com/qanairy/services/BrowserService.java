@@ -44,7 +44,7 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Template;
@@ -82,7 +82,7 @@ public class BrowserService {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 
 	@Autowired
 	private FormService form_service;
@@ -118,7 +118,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws GridException
 	 */
-	public static boolean checkIfLandable(Page page_state, Test test) {
+	public static boolean checkIfLandable(PageVersion page_state, Test test) {
 		//find last page in path
 		PageState last_page = PathUtils.getLastPageState(test.getPathObjects());
 		
@@ -209,23 +209,19 @@ public class BrowserService {
 	public static com.qanairy.models.Element buildElement(
 			String xpath, 
 			Map<String, String> attributes, 
-			Element element, 
+			Element jsoup_element, 
 			ElementClassification classification, 
 			Map<String, String> pre_rendered_css_values
 	) {
 		assert xpath != null && !xpath.isEmpty();
 		assert attributes != null;
-		assert element != null;
+		assert jsoup_element != null;
 		assert classification != null;
 		assert pre_rendered_css_values != null;
 		
-		com.qanairy.models.Element element_state = new com.qanairy.models.Element();
-		element_state.setName(element.tagName());
-		element_state.setClassification(classification);
-		element_state.setKey(element_state.generateKey());
-		element_state.setPreRenderCssValues(pre_rendered_css_values);
-		element_state.setTemplate(BrowserService.extractTemplate(element.outerHtml()));
-		return element_state;
+		com.qanairy.models.Element element = new com.qanairy.models.Element(jsoup_element.ownText(), xpath, jsoup_element.tagName(), attributes, pre_rendered_css_values, jsoup_element.html(), classification, jsoup_element.outerHtml());
+
+		return element;
 	}
 
 	public static String generalizeSrc(String src) {
@@ -312,7 +308,7 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public Page buildPage( String page_src, String page_url, String title ) throws IOException, XPathExpressionException{
+	public PageVersion buildPage( String page_src, String page_url, String title ) throws IOException, XPathExpressionException{
 		assert page_url != null;
 		assert page_src != null;
 		log.warn("building page....");
@@ -326,7 +322,7 @@ public class BrowserService {
 		URL clean_url = new URL(url_without_params);
 		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
-		Page page = new Page(
+		PageVersion page = new PageVersion(
 				elements,
 				clean_source,
 				title,
@@ -334,7 +330,7 @@ public class BrowserService {
 				clean_url.getPath());
 
 		
-		Page record = page_service.findByKey(page.getKey());
+		PageVersion record = page_service.findByKey(page.getKey());
 		if(record != null) {
 			return record;
 		}
@@ -352,17 +348,13 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( Page page, Browser browser ) throws IOException, XPathExpressionException{
+	public PageState buildPageState( PageVersion page, Browser browser ) throws IOException, XPathExpressionException{
 		assert page != null;
 		assert browser != null;
 
 		String source = Browser.cleanSrc(browser.getDriver().getPageSource());
 		String page_state_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(source);
-		
-		PageState page_state_record = page_state_service.findByKey(page_state_key);
-		if(page_state_record != null) {
-			return page_state_record;
-		}
+
 		//Element root = html_doc.getElementsByTag("body").get(0);	
 		log.warn("url for page state:  "+page.getUrl());
 
@@ -393,7 +385,7 @@ public class BrowserService {
 				size.getWidth(),
 				size.getHeight(),
 				BrowserType.CHROME,
-				full_page_screenshot_url, 
+				full_page_screenshot_url,
 				page.getUrl());
 
 		log.warn("built page...now saving page state...");
@@ -405,7 +397,7 @@ public class BrowserService {
 	}
 
 	/**
-	 *Constructs a {@link Page} that contains all references to all elements on the page.
+	 *Constructs a {@link PageVersion} that contains all references to all elements on the page.
 	 *
 	 * @return page {@linkplain PageState}
 	 * @throws Exception 
@@ -413,14 +405,14 @@ public class BrowserService {
 	 * @pre url != null
 	 */
 	@Deprecated
-	public Page buildPage(String user_id, String url) throws Exception{
+	public PageVersion buildPage(String user_id, String url) throws Exception{
 		assert url != null;
 		assert user_id != null;
 		assert !user_id.isEmpty();
 		
 		String url_without_params = BrowserUtils.sanitizeUrl(url);
 		  	
-	  	Page page = null; //new Page(url_without_params);
+	  	PageVersion page = null; //new Page(url_without_params);
 		log.warn("page :: "+page);
 		return page;
 	}
@@ -1161,15 +1153,8 @@ public class BrowserService {
 					form_elem.getTagName(), 
 					browser.extractAttributes(form_elem), 
 					new HashMap<>(), 
-					"", 
-					checksum, 
-					form_elem.getLocation().getX(), 
-					form_elem.getLocation().getY(), 
-					form_elem.getSize().getWidth(), 
-					form_elem.getSize().getHeight(), 
 					form_elem.getAttribute("innerHTML"), 
 					ElementClassification.ANCESTOR, 
-					form_elem.isDisplayed(), 
 					form_elem.getAttribute("outerHTML"));
 			//String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, host, checksum, BrowserType.create(browser.getBrowserName()), user_id);
 			//form_tag.setScreenshotUrl(screenshot_url);
@@ -1232,14 +1217,7 @@ public class BrowserService {
 					input_elem.getTagName(), 
 					attributes, 
 					new HashMap<>(), 
-					"", 
-					input_elem.getLocation().getX(), 
-					input_elem.getLocation().getY(), 
-					input_elem.getSize().getWidth(), 
-					input_elem.getSize().getHeight(), 
 					input_elem.getAttribute("innerHTML"), 
-					"",
-					input_elem.isDisplayed(),
 					input_elem.getAttribute("outerHTML"));
 			com.qanairy.models.Element tag_record = element_service.findByKeyAndUserId(user_id, input_tag.getKey());
 			if( tag_record != null ) {
@@ -1312,7 +1290,7 @@ public class BrowserService {
 		String checksum = PageState.getFileChecksum(img);
 		
 		//Map<String, String> css_map = Browser.loadCssProperties(submit_element);
-		com.qanairy.models.Element elem = new com.qanairy.models.Element(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), "", submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), checksum, submit_element.isDisplayed(), submit_element.getAttribute("outerHTML"));
+		com.qanairy.models.Element elem = new com.qanairy.models.Element(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), submit_element.getAttribute("innerHTML"), submit_element.getAttribute("outerHTML"));
 		//String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		//elem.setViewportScreenshotUrl(screenshot_url);
 		elem = element_service.saveFormElement(elem);
@@ -1440,13 +1418,14 @@ public class BrowserService {
 		Cleaner cleaner = new Cleaner(Whitelist.relaxed());
 		html_doc = cleaner.clean(html_doc);
 		
-		//html_doc.select("script").remove()
-		//		.select("link").remove()
-		//		.select("style").remove();
+		html_doc.select("script").remove()
+				.select("link").remove()
+				.select("style").remove();
 
 		for(Element element : html_doc.getAllElements()) {
 			element.removeAttr("id");
 			element.removeAttr("name");
+			element.removeAttr("style");
 		}
 		
 		return html_doc.html();
@@ -1600,7 +1579,7 @@ public class BrowserService {
 				}
 				String xpath = next_xpath + "/" + child.tagName();
 				
-				if(xpath_cnt.containsKey(xpath)) {
+				if(xpath_cnt.containsKey(xpath) && xpath_cnt.get(xpath) <= elements.size() ) {
 					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
 				}
 				else {
@@ -1614,5 +1593,58 @@ public class BrowserService {
 		}	
 		
 		return xpaths;
+	}
+
+	public static String extractBody(String src) {
+		Document html_doc = Jsoup.parse(src);
+		Element root = html_doc.getElementsByTag("body").get(0);
+		
+		return root.outerHtml();
+	}
+
+	public static Set<String> extractMetadata(String src) {
+		Document html_doc = Jsoup.parse(src);
+		Elements meta_tags = html_doc.getElementsByTag("meta");
+		Set<String> meta_tag_html = new HashSet<String>();
+		
+		for(Element meta_tag : meta_tags) {
+			meta_tag_html.add(meta_tag.outerHtml());
+		}
+		return meta_tag_html;
+	}
+
+	public static Set<String> extractStylesheets(String src) {
+		Document html_doc = Jsoup.parse(src);
+		Elements link_tags = html_doc.getElementsByTag("link");
+		Set<String> stylesheet_urls = new HashSet<String>();
+		
+		for(Element link_tag : link_tags) {
+			stylesheet_urls.add(link_tag.absUrl("href"));
+		}
+		return stylesheet_urls;
+	}
+
+	public static Set<String> extractScriptUrls(String src) {
+		Document html_doc = Jsoup.parse(src);
+		Elements script_tags = html_doc.getElementsByTag("script");
+		Set<String> script_urls = new HashSet<String>();
+		
+		for(Element script_tag : script_tags) {
+			script_urls.add(script_tag.absUrl("src"));
+		}
+		return script_urls;
+	}
+
+	public static Set<String> extractIconLinks(String src) {
+		Document html_doc = Jsoup.parse(src);
+		Elements icon_tags = html_doc.getElementsByTag("link");
+		Set<String> icon_urls = new HashSet<String>();
+		
+		for(Element icon_tag : icon_tags) {
+			if(icon_tag.attr("rel").contains("icon")){
+				icon_urls.add(icon_tag.absUrl("href"));
+			}
+		}
+		return icon_urls;
 	}
 }

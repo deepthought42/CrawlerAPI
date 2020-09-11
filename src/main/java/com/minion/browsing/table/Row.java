@@ -5,7 +5,7 @@ import com.minion.browsing.ElementNode;
 import com.qanairy.models.Element;
 
 /**
- *	Contains the {@link ElementNode}s that make up a row in a [@link Table} within a {@link Page}. 
+ *	Contains the {@link ElementNode}s that make up a row in a [@link Table} within a {@link PageVersion}. 
  */
 public class Row {
 	private List<ElementNode<Element>> row_cells;

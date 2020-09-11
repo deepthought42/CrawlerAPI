@@ -1,20 +1,20 @@
 package com.qanairy.models.message;
 
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 
 public class PageAuditComplete {
 
-	private Page page;
+	private PageVersion page;
 	
-	public PageAuditComplete(Page page) {
+	public PageAuditComplete(PageVersion page) {
 		setPageState(page);
 	}
 
-	public Page getPageState() {
+	public PageVersion getPageState() {
 		return page;
 	}
 
-	public void setPageState(Page page) {
+	public void setPageState(PageVersion page) {
 		this.page = page;
 	}
 

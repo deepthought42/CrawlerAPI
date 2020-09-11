@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
@@ -54,7 +54,7 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(Page page) {
+	public Audit execute(PageVersion page) {
 		assert page != null;
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());

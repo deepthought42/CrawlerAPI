@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
@@ -33,7 +33,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 /**
- * Responsible for performing audits for {@link Page}s and {@link Domain}s
+ * Responsible for performing audits for {@link PageVersion}s and {@link Domain}s
  * 
  */
 @Component
@@ -76,7 +76,7 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Page.class, page_state-> {
+				.match(PageVersion.class, page_state-> {
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	

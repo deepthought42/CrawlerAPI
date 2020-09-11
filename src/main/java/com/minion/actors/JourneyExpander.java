@@ -24,7 +24,7 @@ import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
@@ -35,9 +35,10 @@ import com.qanairy.models.journeys.StepExecutor;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.ElementStateService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.StepService;
+import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -63,7 +64,7 @@ public class JourneyExpander extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -129,7 +130,7 @@ public class JourneyExpander extends AbstractActor{
 							//construct page and add page to list of page states
 							URL page_url = new URL(current_url);
 							String path = page_url.getPath();
-							Page page = new Page(new ArrayList<>(), browser.getDriver().getPageSource(), browser.getDriver().getTitle(), page_url.toString(), path);
+							PageVersion page = new PageVersion(new ArrayList<>(), browser.getDriver().getPageSource(), browser.getDriver().getTitle(), page_url.toString(), path);
 							page = page_service.save( page );
 		
 							//build page state for baseline
@@ -160,7 +161,7 @@ public class JourneyExpander extends AbstractActor{
 								//construct page and add page to list of page states
 								URL new_page_url = new URL(current_url);
 								String new_path = page_url.getPath();
-								Page new_page = new Page(new ArrayList<>(), BrowserService.extractTemplate(Browser.cleanSrc(browser.getDriver().getPageSource())), browser.getDriver().getTitle(), new_page_url.toString(), new_path);						
+								PageVersion new_page = new PageVersion(new ArrayList<>(), BrowserService.extractTemplate(Browser.cleanSrc(browser.getDriver().getPageSource())), browser.getDriver().getTitle(), new_page_url.toString(), new_path);						
 								PageState exploration_result_page = browser_service.buildPageState(new_page, browser);
 								log.warn("Page state built in journey explorer");
 
@@ -205,6 +206,7 @@ public class JourneyExpander extends AbstractActor{
 								browser.close();
 							}
 						}
+						TimingUtils.pauseThread(15000L);
 					}while(!executed_successfully && cnt < 50);
 					
 					

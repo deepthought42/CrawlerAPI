@@ -1,24 +1,24 @@
 package com.qanairy.models.message;
 
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 
 /**
  * Message that signals a new page has been identified and is ready to be processed
  * 
  */
 public class PageFoundMessage extends Message{
-	private Page page;
+	private PageVersion page;
 	
-	public PageFoundMessage(Page page){
+	public PageFoundMessage(PageVersion page){
 		//super(domain.getHost(), account_id);
 		setPage(page);
 	}
 
-	public Page getPage() {
+	public PageVersion getPage() {
 		return page;
 	}
 
-	public void setPage(Page page) {
+	public void setPage(PageVersion page) {
 		this.page = page;
 	}
 }

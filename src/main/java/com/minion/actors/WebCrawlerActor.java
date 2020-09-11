@@ -26,14 +26,14 @@ import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.TimingUtils;
@@ -67,7 +67,7 @@ public class WebCrawlerActor extends AbstractActor{
 	private DomainService domain_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -99,7 +99,7 @@ public class WebCrawlerActor extends AbstractActor{
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
 					Map<String, Boolean> frontier = new HashMap<>();
-					Map<String, Page> visited = new HashMap<>();
+					Map<String, PageVersion> visited = new HashMap<>();
 					Domain domain = crawl_action.getDomain();
 					
 					String initial_url = "http://"+domain.getHost()+domain.getEntryPath();
@@ -129,7 +129,7 @@ public class WebCrawlerActor extends AbstractActor{
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
-							Page page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
+							PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
 							page = page_service.save( page );
 
 							domain.addPage(page);
@@ -183,7 +183,7 @@ public class WebCrawlerActor extends AbstractActor{
 					}
 					System.out.println("total links visited :::  "+visited.keySet().size());
 				})
-				.match(Page.class, page -> {
+				.match(PageVersion.class, page -> {
 					log.warn("Web crawler received page");
 					
 					boolean rendering_incomplete = true;
@@ -226,7 +226,7 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
-						TimingUtils.pauseThread(5000L);
+						TimingUtils.pauseThread(15000L);
 					}while(rendering_incomplete && cnt < 50);
 					
 					page_state = page_state_service.save(page_state);

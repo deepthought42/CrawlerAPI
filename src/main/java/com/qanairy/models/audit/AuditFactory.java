@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
 import com.qanairy.models.audit.domain.DomainFontAudit;
 import com.qanairy.models.audit.domain.DomainLinksAudit;
@@ -83,7 +83,7 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePrerenderPageAudits(AuditCategory category, Page page) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePrerenderPageAudits(AuditCategory category, PageVersion page) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		
@@ -218,11 +218,13 @@ public class AuditFactory {
 		
 		List<Audit> domain_audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+			/*
 			Audit padding_audits = domain_padding_auditor.execute(domain);
 			domain_audits.add(padding_audits);
 
 			Audit margin_audits = domain_margin_auditor.execute(domain);
 			domain_audits.add(margin_audits);
+			*/
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			log.warn("running color manageent domain audit...");

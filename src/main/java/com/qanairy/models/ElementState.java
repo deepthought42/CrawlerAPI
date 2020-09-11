@@ -11,7 +11,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.services.BrowserService;
@@ -48,9 +47,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<ElementState> child_elements = new ArrayList<>();
-	
-	@Autowired
-	private BrowserService browser_service;
 
 	public ElementState(){
 		super();

@@ -119,7 +119,6 @@ public class BrowserTest {
 		
 		String cleaned_src = Browser.cleanSrc(src);
 		assertFalse(cleaned_src.contains("<script"));
-		assertFalse(cleaned_src.contains("<link"));
 		assertFalse(cleaned_src.contains("<style"));
 	}
 }

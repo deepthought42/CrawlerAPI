@@ -41,7 +41,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
@@ -54,7 +54,7 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
@@ -76,7 +76,7 @@ public class Crawler {
 	private ActionRepository action_repo;
 
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -166,7 +166,7 @@ public class Crawler {
 	 * @param path list of vertex keys
 	 * @param user_id TODO
 	 *
-	 * @return {@link Page result_page} state that resulted from crawling path
+	 * @return {@link PageVersion result_page} state that resulted from crawling path
 	 *
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -184,7 +184,7 @@ public class Crawler {
 
 		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		Page expected_page = null;
+		PageVersion expected_page = null;
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 		List<LookseeObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
@@ -192,8 +192,8 @@ public class Crawler {
 		String last_url = null;
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
-			if(current_obj instanceof Page){
-				expected_page = (Page)current_obj;
+			if(current_obj instanceof PageVersion){
+				expected_page = (PageVersion)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/*
@@ -282,7 +282,7 @@ public class Crawler {
 	 * @param path list of vertex keys
 	 * @param user_id TODO
 	 *
-	 * @return {@link Page result_page} state that resulted from crawling path
+	 * @return {@link PageVersion result_page} state that resulted from crawling path
 	 *
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -300,7 +300,7 @@ public class Crawler {
 
 		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		Page expected_page = null;
+		PageVersion expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
@@ -311,8 +311,8 @@ public class Crawler {
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
 			path_objects_explored.add(current_obj);
-			if(current_obj instanceof Page){
-				expected_page = (Page)current_obj;
+			if(current_obj instanceof PageVersion){
+				expected_page = (PageVersion)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/**

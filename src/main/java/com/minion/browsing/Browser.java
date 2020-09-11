@@ -64,7 +64,6 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
-import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
 import cz.vutbr.web.css.Declaration;
@@ -160,10 +159,12 @@ public class Browser {
 	public void navigateTo(String url) {
 		getDriver().get(url);
 		
-		/*
+		
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
+			e.printStackTrace();
+			/*
 			Alert alert = isAlertPresent();
 			if(alert != null){
 				log.debug("Alert was encountered during navigation page load!!!");
@@ -171,10 +172,11 @@ public class Browser {
 				
 				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
 			}
+			 */
 		}
-		*/
+		
 		//waitForPageToLoad();
-		log.debug("successfully navigated to "+url);
+		//log.debug("successfully navigated to "+url);
 	}
 
 	/**
@@ -197,7 +199,9 @@ public class Browser {
 		}
 		
 		for(Element element : html_doc.select("link")) {
-			element.remove();
+			if(element.attr("rel").contentEquals("text/css")) {
+				element.remove();
+			}
 		}
 		
 		String html = html_doc.html();
@@ -845,7 +849,7 @@ public class Browser {
 	 * Waits for the document ready state to be complete, then observes page transition if it exists
 	 */
 	public void waitForPageToLoad() {
-		new WebDriverWait(driver, 30).until(
+		new WebDriverWait(driver, 60).until(
 				webDriver -> ((JavascriptExecutor) webDriver)
 					.executeScript("return document.readyState")
 					.equals("complete"));
@@ -942,15 +946,9 @@ public class Browser {
 					rule_sets.add(rule);
 				}
 				//or even print the entire style sheet (formatted)
-			} catch (MalformedURLException e2) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (IOException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (CSSException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return rule_sets;

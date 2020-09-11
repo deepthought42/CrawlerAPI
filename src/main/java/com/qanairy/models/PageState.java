@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.services.BrowserService;
 
 /**
  * A reference to a web page
@@ -32,7 +31,6 @@ import com.qanairy.services.BrowserService;
 public class PageState extends LookseeObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
-	
 	//Deprecating this value because it should be coming from Page
 	private String src;
 	private String url;
@@ -60,11 +58,12 @@ public class PageState extends LookseeObject {
 	}
 	
 	/**
-	 * Constructor
+	 * 	 Constructor
 	 * 
 	 * @param screenshot_url
 	 * @param elements
 	 * @param src
+	 * @param isLandable
 	 * @param scroll_x_offset
 	 * @param scroll_y_offset
 	 * @param viewport_width
@@ -160,7 +159,7 @@ public class PageState extends LookseeObject {
 	 * Checks if Pages are equal
 	 *
 	 * @param page
-	 *            the {@link Page} object to compare current page to
+	 *            the {@link PageVersion} object to compare current page to
 	 *
 	 * @pre page != null
 	 * @return boolean value

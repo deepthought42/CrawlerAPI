@@ -12,7 +12,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
@@ -133,10 +133,10 @@ public class DomainService {
 	}
 
 	/**
-	 * Creates a relationship between existing {@link Page} and {@link Domain} records
+	 * Creates a relationship between existing {@link PageVersion} and {@link Domain} records
 	 * 
 	 * @param url {@link Domain} url
-	 * @param page_key key of {@link Page} object
+	 * @param page_key key of {@link PageVersion} object
 	 * @param user_id 
 	 * 
 	 * @return
@@ -148,7 +148,7 @@ public class DomainService {
 	 * @pre user_id != null
 	 * 
 	 */
-	public boolean addPage(String url, Page page, String user_id) {
+	public boolean addPage(String url, PageVersion page, String user_id) {
 		assert url != null;
 		assert !url.isEmpty();
 		assert page != null;
@@ -156,7 +156,7 @@ public class DomainService {
 		
 		Domain domain = findByUrlAndAccountId(url, user_id);
 		
-		Page page_record = domain_repo.getPage(user_id, url, page.getKey());
+		PageVersion page_record = domain_repo.getPage(user_id, url, page.getKey());
 		if(page_record == null) {
 			domain.addPage(page);
 			domain_repo.save(domain);
@@ -176,7 +176,7 @@ public class DomainService {
 	 * @pre user_id != null;
 	 * @pre !user_id.isEmpty();
 	 */
-	public Set<Page> getPagesForUser(String user_id, String url) {
+	public Set<PageVersion> getPagesForUser(String user_id, String url) {
 		assert url != null;
 		assert !url.isEmpty();
 		assert user_id != null;
@@ -189,7 +189,7 @@ public class DomainService {
 		return domain_repo.getMostRecentDomainAudits(url);
 	}
 
-	public List<Page> getPages(String domain_host) {
+	public List<PageVersion> getPages(String domain_host) {
 		return domain_repo.getPages(domain_host);
 	}
 

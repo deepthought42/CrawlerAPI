@@ -29,7 +29,7 @@ import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -109,7 +109,7 @@ public class AuditController {
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
-											   @RequestBody(required=true) Page page) throws Exception {
+											   @RequestBody(required=true) PageVersion page) throws Exception {
 
 	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
 	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());

@@ -41,7 +41,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
@@ -297,7 +297,7 @@ public class DomainController {
 	
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
-    public @ResponseBody Set<Page> getAllPages(HttpServletRequest request, 
+    public @ResponseBody Set<PageVersion> getAllPages(HttpServletRequest request, 
 											   @RequestParam(value="url", required=true) String url
 	) throws UnknownAccountException {        
 		Principal principal = request.getUserPrincipal();
@@ -311,7 +311,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<Page> pages = domain_service.getPagesForUser(acct.getUserId(), url);
+		Set<PageVersion> pages = domain_service.getPagesForUser(acct.getUserId(), url);
 		log.info("###### PAGE STATE COUNT :: "+pages.size());
 		return pages;
     	

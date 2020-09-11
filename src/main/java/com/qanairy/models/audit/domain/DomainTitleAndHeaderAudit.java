@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
@@ -62,7 +62,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		assert domain != null;
 		
 		List<Observation> observations = new ArrayList<>();
-		List<Page> pages = domain_service.getPages(domain.getHost());
+		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 
 		Score title_score = scorePageTitles(pages);
 		Score favicon_score = scoreFavicon(pages);
@@ -80,13 +80,13 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	}
 
 	
-	private Score scoreHeadings(List<Page> pages) {
+	private Score scoreHeadings(List<PageVersion> pages) {
 		assert pages != null;
 
 		int points_achieved = 0;
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			//generate score for ordered and unordered lists and their headers
 			Score list_score = scoreOrderedListHeaders(page);
 			points_achieved += list_score.getPointsAchieved();
@@ -104,7 +104,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		return new Score(points_achieved, max_points, observations);
 	}
 
-	private Score scoreOrderedListHeaders(Page page) {
+	private Score scoreOrderedListHeaders(PageVersion page) {
 		assert page != null;
 		int score = 0;
 		int max_points = 0;
@@ -131,7 +131,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	}
 
 	
-	private Score scoreTextElementHeaders(Page page) {
+	private Score scoreTextElementHeaders(PageVersion page) {
 		assert page != null;
 		
 		int score = 0;
@@ -142,6 +142,9 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		//review element tree top down to identify elements that own text.
 		Elements body_elem = html_doc.getElementsByTag("body");
 		List<Element> jsoup_elements = body_elem.get(0).children();
+		log.warn("#############################################################");
+		log.warn("#############################################################");
+		log.warn("#############################################################");
 		while(!jsoup_elements.isEmpty()) {
 			Element element = jsoup_elements.remove(0);
 			//ignore header tags (h1,h2,h3,h4,h5,h6)
@@ -153,12 +156,13 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 			if(!element.ownText().isEmpty()) {
 				jsoup_elements.addAll(element.children());
 			}
-			else {
+			else if(!element.text().isEmpty() ){
 				//check if element has header element sibling preceding it
 				int element_idx = element.elementSiblingIndex();
 				Elements sibling_elements = element.siblingElements();
-				
+				log.warn("Checking siblings of element :: "+element.tagName());
 				for(Element sibling : sibling_elements) {
+					log.warn("checking is sibling is a header tag ::    " + sibling.tagName());
 					if(ElementStateUtils.isHeader(sibling.tagName())) {
 						//check if sibling has a lower index
 						int sibling_idx = sibling.siblingIndex();
@@ -169,6 +173,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 							score += 1;
 						}
 						max_points += 3;
+						log.warn("header found for text as previous sibling :: " + score + " / " + max_points);
 						break;
 					}
 				}
@@ -180,21 +185,21 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		return new Score(score, max_points, new HashSet<>());
 	}
 
-	private Score scoreFavicon(List<Page> pages) {
+	private Score scoreFavicon(List<PageVersion> pages) {
 		assert pages != null;
 		
 		int points = 0;
 		Set<Observation> observations = new HashSet<>();
 
 		//find all pages for domain
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			//find most recent page state
 			//score title of page state
 			if(hasFavicon(page)) {
 				points += 1;
 			}
 			else {
-				observations.add(new PageObservation(page, "page missing title"));
+				observations.add(new PageObservation(page, "Page missing favicon"));
 				points += 0;				
 			}
 		}
@@ -204,13 +209,13 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 
 	/**
 	 * Checks if a {@link PageState} has a favicon defined
-	 * @param page_state
+	 * @param page
 	 * @return
 	 */
-	private boolean hasFavicon(Page page_state) {
-		assert page_state != null;
+	public boolean hasFavicon(PageVersion page) {
+		assert page != null;
 		
-		Document doc = Jsoup.parse(page_state.getSrc());
+		Document doc = Jsoup.parse(page.getSrc());
 		Elements link_elements = doc.getElementsByTag("link");
 		for(Element element: link_elements) {
 			if("icon".contentEquals(element.attr("rel")) && !element.attr("href").isEmpty()) {
@@ -225,14 +230,14 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	 * @param domain
 	 * @return
 	 */
-	private Score scorePageTitles(List<Page> pages) {
+	private Score scorePageTitles(List<PageVersion> pages) {
 		assert pages != null;
 		
 		Set<Observation> observations = new HashSet<>();
 		int points = 0;
 		
 		//find all pages for domain
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			//score title of page state
 			if(page.getTitle() != null && !page.getTitle().isEmpty()) {
 				points += 1;

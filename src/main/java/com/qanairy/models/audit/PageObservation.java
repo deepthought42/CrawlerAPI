@@ -3,7 +3,7 @@ package com.qanairy.models.audit;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.enums.ObservationType;
 
 /**
@@ -12,11 +12,11 @@ import com.qanairy.models.enums.ObservationType;
 public class PageObservation extends Observation {
 
 	@Relationship(type = "FOR")
-	private Page page;
+	private PageVersion page;
 	
 	public PageObservation() {}
 	
-	public PageObservation(Page page, String description) {
+	public PageObservation(PageVersion page, String description) {
 		setPage(page);
 		setDescription(description);
 		setType(ObservationType.PAGE);
@@ -31,12 +31,12 @@ public class PageObservation extends Observation {
 	}
 
 
-	public Page getElements() {
+	public PageVersion getElements() {
 		return page;
 	}
 
 
-	public void setPage(Page page) {
+	public void setPage(PageVersion page) {
 		this.page = page;
 	}
 

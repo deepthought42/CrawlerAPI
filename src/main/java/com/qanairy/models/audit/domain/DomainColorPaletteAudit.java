@@ -1,5 +1,10 @@
 package com.qanairy.models.audit.domain;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,12 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
+import org.imgscalr.Scalr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
+import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -66,18 +75,33 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 
 		//get all pages
 		List<PageVersion> pages = domain_service.getPages(domain.getHost());
+		Map<String, Double> color_map = new HashMap<>();
 		
 		//get most recent page state for each page
 		for(PageVersion page : pages) {
-			
+			log.warn("color management page version ::  "+page.getKey());
+			for(Element element : page_service.getElements(page.getKey())) {
+					log.warn("element css :: "+element.getPreRenderCssValues());
+			}
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			
+			log.warn("color management page state :: "+page_state.getKey());
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 
+			//retrieve image colors based on screenshots minus the contents of image elements
+			try {
+				color_map.putAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
+				log.warn("color_map ::   "+color_map);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			/*
+			log.warn("elements identified ::: " + elements.size());
 			for(ElementState element : elements) {
 				//identify all colors used on page. Images are not considered
-				
 				//check element for color css property
 				colors.put(element.getRenderedCssValues().get("color"), Boolean.TRUE);
 				//check element for text-decoration-color css property
@@ -100,7 +124,50 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			}
 			colors.remove("null");
 			colors.remove(null);
+			*/
 		}
+		
+		log.warn("colors :: "+colors.size());
+		Map<String, Double> filtered_color_map = new HashMap<>();
+		for(String color_key : color_map.keySet()) {
+			if(color_map.get(color_key) > 0.01 ) {
+				filtered_color_map.put(color_key, color_map.get(color_key));
+				log.warn("color    :: "+color_key + "   :    "+color_map.get(color_key));
+			}
+		}
+		
+		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
+		Map<String, Boolean> filtered_colors = new HashMap<>();
+		//discard any colors that are transparent
+		for(String color_str : filtered_color_map.keySet()) {
+			color_str = color_str.trim();
+			//color_str = color_str.replace("transparent", "");
+			//color_str = color_str.replace("!important", "");
+			//if(color_str == null || color_str.isEmpty() || color_str.equalsIgnoreCase("transparent")) {
+			//	continue;
+			//}
+
+			//extract r,g,b,a from color_str
+			ColorData color = new ColorData(color_str.trim());
+			//if gray(all rgb values are equal) put in gray colors map otherwise filtered_colors
+			String rgb_color_str = "rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
+			//convert rgb to hsl, store all as Color object
+			
+			if( Math.abs(color.getRed() - color.getGreen()) < 4
+					&& Math.abs(color.getRed() - color.getBlue()) < 4
+					&& Math.abs(color.getBlue() - color.getGreen()) < 4) {
+				gray_colors.put(rgb_color_str, Boolean.TRUE);
+			}
+			else {
+				filtered_colors.put(rgb_color_str, Boolean.TRUE);
+			}
+		}
+		/*
+		log.warn("colors :: "+colors.size());
+		for(String color_key : colors.keySet()) {
+			log.warn("color    :: "+color_key);
+		}
+		
 		
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> filtered_colors = new HashMap<>();
@@ -128,6 +195,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				filtered_colors.put(rgb_color_str, Boolean.TRUE);
 			}
 		}
+		*/
 		
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
@@ -138,6 +206,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		Map<ColorData, Set<ColorData>> palette = ColorPaletteUtils.extractPalette(filtered_colors.keySet());
 		for(ColorData primary_color : palette.keySet()) {
 			log.warn("Primary color :: "+primary_color.rgb() + "   ;   " + primary_color.getLuminosity());
+			log.warn("secondary colors .... "+palette.get(primary_color));
 		}
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
 		//score colors found against scheme
@@ -158,6 +227,63 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	}
 
 	
+	/**
+	 * 
+	 * @param screenshot_url
+	 * @param elements
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
+	private Map<String, Double> extractColorsFromPageState(URL screenshot_url,
+			List<ElementState> elements) throws MalformedURLException, IOException {
+		Map<String, Integer> color_map = new HashMap<>();
+		
+		log.warn("Loading image from url ::  "+screenshot_url);
+		//copy page state full page screenshot
+		BufferedImage screenshot = ImageIO.read(screenshot_url);
+		
+		for(ElementState element : elements) {
+			if(!element.getName().contentEquals("img")) {
+				continue;
+			}
+			
+			for(int x_pixel = element.getXLocation(); x_pixel < (element.getXLocation()+element.getWidth()); x_pixel++) {
+				for(int y_pixel = element.getYLocation(); y_pixel < (element.getYLocation()+element.getHeight()); y_pixel++) {
+					screenshot.setRGB(x_pixel, y_pixel, new Color(0,0,0).getRGB());
+				}	
+			}
+		}
+		
+		//resize image
+		BufferedImage thumbnail = Scalr.resize(screenshot, Scalr.Method.QUALITY, screenshot.getWidth()/8, screenshot.getHeight()/8);
+		
+		//analyze image for color use percentages
+		for(int x_pixel = 0; x_pixel < thumbnail.getWidth(); x_pixel++) {
+			for(int y_pixel = 0; y_pixel < thumbnail.getHeight(); y_pixel++) {
+				Color color = new Color(thumbnail.getRGB(x_pixel, y_pixel));
+				String color_str = color.getRed()+","+color.getGreen()+","+color.getBlue();
+
+				if(!color_map.containsKey(color_str)) {
+					color_map.put(color_str, 1);
+					log.warn("thumbnail rgb value  as rgb string ::  "+color_str+"");
+				}
+				else {
+					color_map.put(color_str, color_map.get(color_str)+1 );
+				}
+			}	
+		}
+		
+		int total_pixels = thumbnail.getWidth() * thumbnail.getHeight();
+		
+		Map<String, Double> color_percentages = new HashMap<String, Double>();
+		for(String color_key : color_map.keySet()) {
+			Double percentage = color_map.get(color_key)/(double)total_pixels;
+			color_percentages.put(color_key, percentage);
+		}
+		
+		return color_percentages;
+	}
 
 	public List<String> getGrayColors() {
 		return gray_colors;

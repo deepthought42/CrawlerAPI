@@ -96,7 +96,7 @@ public class UploadObjectSingleOperation {
 	            s3client.putObject(new PutObjectRequest(
 	             		                 bucketName,host_key+"/"+browser+"/"+element_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
         	}
-            filepath = "https://s3-us-west-2.amazonaws.com/looksee/"+host_key+"/"+browser+"/"+element_key+".png";
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+host_key+"/"+browser+"/"+element_key+".png";
 
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +
@@ -142,7 +142,7 @@ public class UploadObjectSingleOperation {
 	             		                 bucketName, user_id+"/"+domain+"/"+browser+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
 	            
         	}
-            filepath = "https://s3-us-west-2.amazonaws.com/looksee/"+user_id+"/"+domain+"/"+browser+"/"+page_key+".png";
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+user_id+"/"+domain+"/"+browser+"/"+page_key+".png";
 
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +

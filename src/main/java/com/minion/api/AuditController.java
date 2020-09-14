@@ -5,11 +5,14 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
+import javax.websocket.server.PathParam;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +85,7 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<AuditRecord> getAudits(HttpServletRequest request,
+    public @ResponseBody Set<AuditRecord> getAuditRecords(HttpServletRequest request,
     											@RequestParam(value="domain_host", required=true) String domain_host
 	) {
     	logger.warn("finding all recent audits for url :: "+domain_host);
@@ -102,10 +105,28 @@ public class AuditController {
     											@PathVariable("id") @NotBlank long id
 	) {
     	logger.warn("finding element with ID  :: "+id);
-        AuditRecord record = audit_record_service.findById(id).get();
-        return audit_record_service.getAllAudits(record.getKey());
+        //AuditRecord record = audit_record_service.findById(id).get();
+        //return audit_record_service.getAllAudits(record.getKey());
+    	Set<Audit> audit_set = new HashSet<Audit>();
+    	audit_set.add(audit_service.findById(id).get());
+    	
+        return audit_set;
     }
     
+
+    /**
+     * Retrieves {@link Audit audit} with given ID
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/color")
+    public @ResponseBody Set<Audit> getColorManagementAudits(HttpServletRequest request,
+    											@PathParam("domain") @NotBlank String domain
+	) {
+    	logger.warn("finding element with ID  :: "+domain);
+        return audit_record_service.getAllColorManagementAudits(domain);
+    }
     
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,

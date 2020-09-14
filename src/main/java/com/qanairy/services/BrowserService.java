@@ -353,7 +353,6 @@ public class BrowserService {
 		assert browser != null;
 
 		String source = Browser.cleanSrc(browser.getDriver().getPageSource());
-		String page_state_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(source);
 
 		//Element root = html_doc.getElementsByTag("body").get(0);	
 		log.warn("url for page state:  "+page.getUrl());

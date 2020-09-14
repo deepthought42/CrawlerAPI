@@ -57,4 +57,14 @@ public class AuditRecordService {
 	public Set<Audit> getAllAudits(@NotBlank String audit_record_key) {
 		return audit_record_repo.getAllAudits(audit_record_key);
 	}
+
+	public Optional<AuditRecord> findMostRecent(@NotBlank String domain_url) {
+		return audit_record_repo.findMostRecent(domain_url);
+	}
+
+	public Set<Audit> getAllColorManagementAudits(String domain_url) {
+        AuditRecord record = findMostRecent(domain_url).get();
+
+		return audit_record_repo.getAllColorManagementAudits(record.getKey());
+	}
 }

@@ -294,7 +294,7 @@ public class ColorPaletteUtils {
 				if(!color2.equals(color)) {
 					//if the difference between the 2 hues is less 3 degrees  
 					if(Math.abs(color.getHue() - color2.getHue()) < 0.09 ) {	
-						log.warn("Colors are similar in hue!!!!!");
+						//log.warn("Colors are similar in hue!!!!!");
 						if(similar_colors.isEmpty()) {
 							similar_colors.add(color);
 						}

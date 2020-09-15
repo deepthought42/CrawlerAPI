@@ -2,7 +2,9 @@ package com.qanairy.models.audit.domain;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -18,8 +20,18 @@ import org.imgscalr.Scalr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gcp.vision.CloudVisionTemplate;
 import org.springframework.stereotype.Component;
 
+import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.cloud.vision.v1.AnnotateImageResponse;
+import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
+import com.google.cloud.vision.v1.ColorInfo;
+import com.google.cloud.vision.v1.DominantColorsAnnotation;
+import com.google.cloud.vision.v1.Feature;
+import com.google.cloud.vision.v1.Image;
+import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.protobuf.ByteString;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
@@ -58,6 +70,9 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	@Autowired
 	private PageStateService page_state_service;
 	
+	@Autowired 
+	private CloudVisionTemplate cloudVisionTemplate;
+
 	public DomainColorPaletteAudit() {}
 	
 	/**
@@ -87,7 +102,10 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
 			log.warn("color management page state :: "+page_state.getKey());
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-
+			
+			//get image attributes from google cloud vision
+			cloudVisionTemplate.analyzeImage(imageResource, featureTypes)
+			
 			//retrieve image colors based on screenshots minus the contents of image elements
 			try {
 				color_map.putAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
@@ -314,6 +332,51 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			stringified_map.put(primary.rgb(), secondary_colors);
 		}
 		return null;
+	}
+	
+	/**
+	 * Detects image properties such as color frequency from the specified local image.
+	 * 
+	 * @param image_url
+	 * @throws IOException
+	 */
+	public static void detectProperties(String image_url) throws IOException {
+	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    InputStream url_input_stream = new URL(image_url).openStream();
+	    
+	    ByteString imgBytes = ByteString.readFrom(url_input_stream);
+	
+	    Image img = Image.newBuilder().setContent(imgBytes).build();
+	    Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).build();
+	    AnnotateImageRequest request =
+	        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+	    requests.add(request);
+	
+	    // Initialize client that will be used to send requests. This client only needs to be created
+	    // once, and can be reused for multiple requests. After completing all of your requests, call
+	    // the "close" method on the client to safely clean up any remaining background resources.
+	    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+	    	List<AnnotateImageResponse> responses = response.getResponsesList();
+	
+	      	for (AnnotateImageResponse res : responses) {
+		        if (res.hasError()) {
+		          System.out.format("Error: %s%n", res.getError().getMessage());
+		          return;
+		        }
+		
+		        // For full list of available annotations, see http://g.co/cloud/vision/docs
+		        DominantColorsAnnotation colors = res.getImagePropertiesAnnotation().getDominantColors();
+		        for (ColorInfo color : colors.getColorsList()) {
+		          System.out.format(
+		              "fraction: %f%nr: %f, g: %f, b: %f%n",
+		              color.getPixelFraction(),
+		              color.getColor().getRed(),
+		              color.getColor().getGreen(),
+		              color.getColor().getBlue());
+		        }
+	      	}
+	    }
 	}
 }
 

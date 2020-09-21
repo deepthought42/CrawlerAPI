@@ -29,6 +29,7 @@ public class AuditRecordService {
 
 	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
+		
 		return audit_record_repo.save(audit);
 	}
 

@@ -2,12 +2,7 @@ package com.qanairy.models.audit.domain;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -19,30 +14,14 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.imgscalr.Scalr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gcp.vision.CloudVisionTemplate;
 import org.springframework.stereotype.Component;
 
-import com.google.cloud.vision.v1.AnnotateImageRequest;
-import com.google.cloud.vision.v1.AnnotateImageResponse;
-import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
-import com.google.cloud.vision.v1.ColorInfo;
-import com.google.cloud.vision.v1.DominantColorsAnnotation;
-import com.google.cloud.vision.v1.EntityAnnotation;
-import com.google.cloud.vision.v1.Feature;
-import com.google.cloud.vision.v1.Image;
-import com.google.cloud.vision.v1.ImageAnnotatorClient;
-import com.google.cloud.vision.v1.WebDetection;
-import com.google.cloud.vision.v1.WebDetection.WebEntity;
-import com.google.cloud.vision.v1.WebDetection.WebImage;
-import com.google.cloud.vision.v1.WebDetection.WebLabel;
-import com.google.cloud.vision.v1.WebDetection.WebPage;
-import com.google.protobuf.ByteString;
+import com.looksee.gcp.CloudVisionUtils;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -50,6 +29,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteObservation;
 import com.qanairy.models.audit.ColorPaletteUtils;
+import com.qanairy.models.audit.ColorUsageStat;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
@@ -99,14 +79,11 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 
 		//get all pages
 		List<PageVersion> pages = domain_service.getPages(domain.getHost());
-		Map<String, Double> color_map = new HashMap<>();
+		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		//get most recent page state for each page
 		for(PageVersion page : pages) {
-			log.warn("color management page version ::  "+page.getKey());
-			for(Element element : page_service.getElements(page.getKey())) {
-					log.warn("element css :: "+element.getPreRenderCssValues());
-			}
+			log.warn("color management page version key :: "+page.getKey());
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
 			log.warn("color management page state :: "+page_state.getKey());
@@ -116,8 +93,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			//cloudVisionTemplate.analyzeImage(imageResource, featureTypes)
 			//retrieve image colors based on screenshots minus the contents of image elements
 			try {
-				color_map.putAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
-				log.warn("color_map ::   "+color_map);
+				color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
+				log.warn("color_map ::   "+color_usage_list);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -154,19 +131,20 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		}
 		
 		log.warn("colors :: "+colors.size());
+		/*
 		Map<String, Double> filtered_color_map = new HashMap<>();
-		for(String color_key : color_map.keySet()) {
-			if(color_map.get(color_key) > 0.01 ) {
-				filtered_color_map.put(color_key, color_map.get(color_key));
-				log.warn("color    :: "+color_key + "   :    "+color_map.get(color_key));
+		for(String color_key : color_usage_list.keySet()) {
+			if(color_usage_list.get(color_key) > 0.01 ) {
+				filtered_color_map.put(color_key, color_usage_list.get(color_key));
+				log.warn("color    :: "+color_key + "   :    "+color_usage_list.get(color_key));
 			}
 		}
-		
+		*/
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
-		for(String color_str : filtered_color_map.keySet()) {
-			color_str = color_str.trim();
+		for(ColorUsageStat color: color_usage_list) {
+			//color_str = color_str.trim();
 			//color_str = color_str.replace("transparent", "");
 			//color_str = color_str.replace("!important", "");
 			//if(color_str == null || color_str.isEmpty() || color_str.equalsIgnoreCase("transparent")) {
@@ -174,7 +152,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			//}
 
 			//extract r,g,b,a from color_str
-			ColorData color = new ColorData(color_str.trim());
+			//ColorData color = new ColorData(color_str.trim());
 			//if gray(all rgb values are equal) put in gray colors map otherwise filtered_colors
 			String rgb_color_str = "rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
 			//convert rgb to hsl, store all as Color object
@@ -261,10 +239,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	private Map<String, Double> extractColorsFromPageState(URL screenshot_url,
-			List<ElementState> elements) throws MalformedURLException, IOException {
-		Map<String, Integer> color_map = new HashMap<>();
-		
+	private List<ColorUsageStat> extractColorsFromPageState(URL screenshot_url,
+			List<ElementState> elements) throws MalformedURLException, IOException {		
 		log.warn("Loading image from url ::  "+screenshot_url);
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
@@ -275,14 +251,28 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			}
 			
 			for(int x_pixel = element.getXLocation(); x_pixel < (element.getXLocation()+element.getWidth()); x_pixel++) {
+				if(x_pixel > screenshot.getWidth()) {
+					break;
+				}
+				
+				if(x_pixel < 0) {
+					continue;
+				}
 				for(int y_pixel = element.getYLocation(); y_pixel < (element.getYLocation()+element.getHeight()); y_pixel++) {
+					if(y_pixel > screenshot.getHeight()) {
+						break;
+					}
+					
+					if(y_pixel < 0) {
+						continue;
+					}
 					screenshot.setRGB(x_pixel, y_pixel, new Color(0,0,0).getRGB());
 				}	
 			}
 		}
 		
-		detectProperties(screenshot);
-
+		return CloudVisionUtils.extractImageProperties(screenshot);
+		
 		/*
 		//resize image
 		BufferedImage thumbnail = Scalr.resize(screenshot, Scalr.Method.QUALITY, screenshot.getWidth()/8, screenshot.getHeight()/8);
@@ -310,8 +300,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 			color_percentages.put(color_key, percentage);
 		}
 		*/
-		Map<String, Double> color_percentages = new HashMap<String, Double>();
-		return color_percentages;
+		//Map<String, Double> color_percentages = new HashMap<String, Double>();
+		//return color_percentages;
 	}
 
 	public List<String> getGrayColors() {
@@ -345,100 +335,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		return null;
 	}
 	
-	/**
-	 * Detects image properties such as color frequency from the specified local image.
-	 * 
-	 * @param image_url
-	 * @throws IOException
-	 */
-	public static void detectProperties(BufferedImage buffered_image) throws IOException {
-	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    //InputStream url_input_stream = new URL(image_url).openStream();
-	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
-	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
-	    
-	    ByteString imgBytes = ByteString.readFrom(input_stream);
-	
-	    Image img = Image.newBuilder().setContent(imgBytes).build();
-	    Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).build();
-	    AnnotateImageRequest request =
-	        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-	    requests.add(request);
-	
-	    // Initialize client that will be used to send requests. This client only needs to be created
-	    // once, and can be reused for multiple requests. After completing all of your requests, call
-	    // the "close" method on the client to safely clean up any remaining background resources.
-	    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
-	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
-	    	List<AnnotateImageResponse> responses = response.getResponsesList();
-	
-	      	for (AnnotateImageResponse res : responses) {
-		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
-		        }
-		
-		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        DominantColorsAnnotation colors = res.getImagePropertiesAnnotation().getDominantColors();
-		        for (ColorInfo color : colors.getColorsList()) {
-		          System.out.format(
-		              "fraction: %f%nr: %f, g: %f, b: %f, score: %f%n",
-		              color.getPixelFraction(),
-		              color.getColor().getRed(),
-		              color.getColor().getGreen(),
-		              color.getColor().getBlue(), 
-		          	  color.getScore());
-		        }
-		        
-		        log.warn("annotations list size :: "+res.getLabelAnnotationsList().size());
-		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
-		        	log.warn("-----------------------Annotation list ----------------------------");
-		          annotation
-		              .getAllFields()
-		              .forEach((k, v) -> System.out.format("%s : %s%n", k, v.toString()));
-		        }
-		        
-		        log.warn("text annotations list size :: "+res.getTextAnnotationsList().size());
-		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
-		          System.out.format("Text: %s%n", annotation.getDescription());
-		          System.out.format("Position : %s%n", annotation.getBoundingPoly());
-		        }
-		        
-		        // Search the web for usages of the image. You could use these signals later
-		        // for user input moderation or linking external references.
-		        // For a full list of available annotations, see http://g.co/cloud/vision/docs
-		        WebDetection annotation = res.getWebDetection();
-		        System.out.println("Entity:Id:Score");
-		        System.out.println("===============");
-		        for (WebEntity entity : annotation.getWebEntitiesList()) {
-		          System.out.println(
-		              entity.getDescription() + " : " + entity.getEntityId() + " : " + entity.getScore());
-		        }
-		        for (WebLabel label : annotation.getBestGuessLabelsList()) {
-		          System.out.format("%nBest guess label: %s", label.getLabel());
-		        }
-		        System.out.println("%nPages with matching images: Score%n==");
-		        for (WebPage page : annotation.getPagesWithMatchingImagesList()) {
-		          System.out.println(page.getUrl() + " : " + page.getScore());
-		        }
-		        System.out.println("%nPages with partially matching images: Score%n==");
-		        for (WebImage image : annotation.getPartialMatchingImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
-		        }
-		        System.out.println("%nPages with fully matching images: Score%n==");
-		        for (WebImage image : annotation.getFullMatchingImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
-		        }
-		        System.out.println("%nPages with visually similar images: Score%n==");
-		        for (WebImage image : annotation.getVisuallySimilarImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
-		        }
-	      	}
-	    }
-	}
 }
 
 

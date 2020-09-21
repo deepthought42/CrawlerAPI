@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,7 +53,7 @@ import akka.actor.ActorSystem;
 @Controller
 @RequestMapping("/audits")
 public class AuditController {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	private AccountService account_service;
@@ -88,7 +87,7 @@ public class AuditController {
     public @ResponseBody Set<AuditRecord> getAuditRecords(HttpServletRequest request,
     											@RequestParam(value="domain_host", required=true) String domain_host
 	) {
-    	logger.warn("finding all recent audits for url :: "+domain_host);
+    	log.warn("finding all recent audits for url :: "+domain_host);
         
     	Domain domain = domain_service.findByHost(domain_host);
     	return domain_service.getAuditRecords(domain.getKey());
@@ -104,7 +103,7 @@ public class AuditController {
     public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
     											@PathVariable("id") @NotBlank long id
 	) {
-    	logger.warn("finding element with ID  :: "+id);
+    	log.warn("finding element with ID  :: "+id);
         //AuditRecord record = audit_record_service.findById(id).get();
         //return audit_record_service.getAllAudits(record.getKey());
     	Set<Audit> audit_set = new HashSet<Audit>();
@@ -124,10 +123,17 @@ public class AuditController {
     public @ResponseBody Set<Audit> getColorManagementAudits(HttpServletRequest request,
     											@PathParam("domain") @NotBlank String domain
 	) {
-    	logger.warn("finding element with ID  :: "+domain);
+    	log.warn("finding element with ID  :: "+domain);
         return audit_record_service.getAllColorManagementAudits(domain);
     }
     
+    /**
+     * 
+     * @param request
+     * @param page
+     * @return
+     * @throws Exception
+     */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
 											   @RequestBody(required=true) PageVersion page) throws Exception {
@@ -138,18 +144,25 @@ public class AuditController {
 	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
 	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
 	   	if(domain == null) {
+	   		log.warn("saving domain");
 	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "chrome", "");
 	   		domain = domain_service.save(domain);
 	   	}
 
+	   	log.warn("creating audit record");
 	   	//create new audit record
-	   	AuditRecord audit_record = new AuditRecord();
-	   	audit_record = audit_record_service.save(audit_record);
-	   	domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
+	   	//AuditRecord audit_record = new AuditRecord();
 	   	
+	   	//log.warn("Saving audit Record");
+	   	//audit_record = audit_record_service.save(audit_record);
+	   	
+	   	//log.warn("Adding audit record to domain");
+	   	//domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
+	   	
+	   	log.warn("telling audit manager about crawl action");
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", audit_record);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", null);
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
 	   /*	

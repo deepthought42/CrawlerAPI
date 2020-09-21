@@ -98,7 +98,6 @@ public class AuditManager extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, message-> {
-					audit_record = message.getAuditRecord();
 					if(message.getAction().equals(CrawlAction.START_LINK_ONLY)){
 						log.warn("Starting crawler");
 						

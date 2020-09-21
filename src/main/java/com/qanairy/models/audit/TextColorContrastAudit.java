@@ -1,15 +1,20 @@
 package com.qanairy.models.audit;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.gcp.CloudVisionUtils;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -65,6 +70,31 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 			element_list.add(element);
 		}
+		
+		
+		//analyze screenshots of all text images for contrast
+		for(ElementState element : element_list) {
+			try {
+				CloudVisionUtils.extractImageLabels(ImageIO.read(new URL(element.getScreenshotUrl())));
+				CloudVisionUtils.extractImageText(ImageIO.read(new URL(element.getScreenshotUrl())));
+				CloudVisionUtils.searchWebForImageUsage(ImageIO.read(new URL(element.getScreenshotUrl())));
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		//identify all colors used on page. Images are not considered

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -197,7 +201,28 @@ public class DomainService {
 		return domain_repo.findByPageState(page_state_key);
 	}
 
+	/**
+	 * Creates graph edge connection {@link AuditRecord} to {@link Domain domain} 
+	 * 
+	 * @param domain_key
+	 * @param audit_record_key
+	 * 
+	 * @pre domain_key != null;
+	 * @pre !domain_key.isEmpty();
+	 * @pre audit_record_key != null;
+	 * @pre !audit_record_key.isEmpty();
+	 */
 	public void addAuditRecord(String domain_key, String audit_record_key) {
+		assert domain_key != null;
+		assert !domain_key.isEmpty();
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		//check if audit record is already attached to domain
+		AuditRecord db_record = domain_repo.getAuditRecords(domain_key, audit_record_key);
+		if(db_record != null) {
+			return;
+		}
+		log.warn("connecting audit record to domain");
 		domain_repo.addAuditRecord(domain_key, audit_record_key);
 	}
 

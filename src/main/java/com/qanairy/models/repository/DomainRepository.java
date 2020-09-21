@@ -120,4 +120,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain{key:{domain_key}})-[]->(audit:AuditRecord) RETURN audit")
 	public Set<AuditRecord> getAuditRecords(@Param("domain_key") String domain_key);
+
+	@Query("MATCH (d:Domain{key:{domain_key}})-[]->(audit:AuditRecord{key:{audit_record_key}}) RETURN audit")
+	public AuditRecord getAuditRecords(@Param("domain_key") String domain_key, @Param("audit_record_key") String audit_record_key);
 }

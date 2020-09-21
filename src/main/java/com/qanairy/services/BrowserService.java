@@ -452,6 +452,7 @@ public class BrowserService {
 			log.warn(e.getMessage());
 		}
 		
+		log.warn("Building pre render element");
 		com.qanairy.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
 		root_element = element_service.save(root_element);
 
@@ -473,7 +474,6 @@ public class BrowserService {
 			attributes = generateAttributesMapUsingJsoup(element);
 			
 			Map<String, String> pre_render_css_props = new HashMap<>();
-			
 			try{
 				pre_render_css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, element));
 			}
@@ -1548,6 +1548,11 @@ public class BrowserService {
 	}
 	
 	public List<com.qanairy.models.Element> extractElements(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		assert page_src != null;
+		assert !page_src.isEmpty();
+		assert url != null;
+		assert rule_sets != null;
+		
 		return getDomElements(page_src, url, rule_sets);
 	}
 

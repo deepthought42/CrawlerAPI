@@ -13,6 +13,7 @@ import com.qanairy.models.LookseeObject;
  *
  */
 public class ColorData extends LookseeObject{
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorData.class);
 
 	private int red;
@@ -65,8 +66,24 @@ public class ColorData extends LookseeObject{
 		this.saturation = hsb[1];
 		this.brightness = hsb[2];
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));
+		this.setLuminosity(calculateLuminosity(red, green, blue));		
+	}
+
+	public ColorData(ColorUsageStat color_usage_stat) {
+		assert color_usage_stat != null;
 		
+		this.red = (int)color_usage_stat.getRed();
+		this.green = (int)color_usage_stat.getGreen();
+		this.blue = (int)color_usage_stat.getBlue();
+		setTransparency(Double.parseDouble("0.0"));
+	
+		//convert rgb to hsl, store all as Color object
+		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
+		this.hue = hsb[0];
+		this.saturation = hsb[1];
+		this.brightness = hsb[2];
+		
+		this.setLuminosity(calculateLuminosity(red, green, blue));
 	}
 
 	/**

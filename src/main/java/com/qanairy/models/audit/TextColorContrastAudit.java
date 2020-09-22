@@ -74,16 +74,94 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
+			List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
-				CloudVisionUtils.extractImageLabels(ImageIO.read(new URL(element.getScreenshotUrl())));
-				CloudVisionUtils.extractImageText(ImageIO.read(new URL(element.getScreenshotUrl())));
-				CloudVisionUtils.searchWebForImageUsage(ImageIO.read(new URL(element.getScreenshotUrl())));
+				color_data_list.addAll( CloudVisionUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
+				//CloudVisionUtils.extractImageLabels(ImageIO.read(new URL(element.getScreenshotUrl())));
+				//CloudVisionUtils.extractImageText(ImageIO.read(new URL(element.getScreenshotUrl())));
+				//CloudVisionUtils.searchWebForImageUsage(ImageIO.read(new URL(element.getScreenshotUrl())));
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+			
+			color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
+
+			ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
+			ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
+
+			ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
+			ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
+			float largest_pixel_percent = 0;
+			
+		    
+			//extract background colors
+			for(ColorUsageStat color_stat : color_data_list) {
+				log.warn("color_stat ::  rgb( "+color_stat.getRed()+" , " +color_stat.getGreen()+" , " +color_stat.getBlue() + " )   :    "+color_stat.getPixelPercent() + "  ; score ::  "+color_stat.getScore());
+				
+				//get color most used for background color
+				if(color_stat.getPixelPercent() > largest_pixel_percent) {
+					largest_pixel_percent = color_stat.getPixelPercent();
+				}
+			}
+			
+			
+			double max_luminosity = 0.0;
+			double min_luminosity = 0.0;
+			
+			if(text_color.getLuminosity() > background_color_data.getLuminosity()) {
+				min_luminosity = background_color_data.getLuminosity();
+				max_luminosity = text_color.getLuminosity();
+			}
+			else {
+				min_luminosity = text_color.getLuminosity();
+				max_luminosity = background_color_data.getLuminosity();
+			}
+			double contrast = 0.0;
+			if(ElementStateUtils.isHeader(element.getName())) {
+				//score header element
+				//calculate contrast between text color and background-color
+				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
+				total_headlines++;
+				/*
+				headlines < 3; value = 1
+				headlines > 3 and headlines < 4.5; value = 2
+				headlines >= 4.5; value = 3
+				 */
+				if(contrast < 3) {
+					headline_score += 1;
+					low_header_contrast.add(element);
+				}
+				else if(contrast >= 3 && contrast < 4.5) {
+					headline_score += 2;
+					mid_header_contrast.add(element);
+				}
+				else if(contrast >= 4.5) {
+					headline_score += 3;
+				}
+			}
+			else if(ElementStateUtils.isTextContainer(element)) {
+				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
+				total_text_elems++;
+				/*
+				text < 4.5; value = 1
+				text >= 4.5 and text < 7; value = 2
+				text >=7; value = 3
+				 */
+				if(contrast < 4.5) {
+					text_score += 1;
+					low_text_contrast.add(element);
+				}
+				else if(contrast >= 4.5 && contrast < 7) {
+					text_score += 2;
+					mid_text_contrast.add(element);
+				}
+				else if(contrast >= 7) {
+					text_score += 3;
+				}
 			}
 		}
 		
@@ -149,6 +227,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			
 			
 			background_color_data = new ColorData(background_color.trim());
+			
 			
 			double max_luminosity = 0.0;
 			double min_luminosity = 0.0;

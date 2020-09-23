@@ -22,6 +22,7 @@ import com.qanairy.models.repository.AuditRecordRepository;
  */
 @Service
 public class AuditRecordService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
 
 	@Autowired
@@ -60,12 +61,18 @@ public class AuditRecordService {
 	}
 
 	public Optional<AuditRecord> findMostRecent(@NotBlank String domain_url) {
+		log.warn("domain url :: "+domain_url);
 		return audit_record_repo.findMostRecent(domain_url);
 	}
 
 	public Set<Audit> getAllColorManagementAudits(String domain_url) {
+		assert domain_url != null;
+		assert !domain_url.isEmpty();
+		
+		log.warn("domain url for color management audits :: "+domain_url);
         AuditRecord record = findMostRecent(domain_url).get();
-
+        log.warn("audit record :: " + record);
+        log.warn("audit record key :: " + record.getKey());
 		return audit_record_repo.getAllColorManagementAudits(record.getKey());
 	}
 }

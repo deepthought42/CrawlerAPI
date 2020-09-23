@@ -169,7 +169,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		
 		
-		
+		/*
 		
 		
 		
@@ -246,11 +246,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//calculate contrast between text color and background-color
 				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
 				total_headlines++;
-				/*
-				headlines < 3; value = 1
-				headlines > 3 and headlines < 4.5; value = 2
-				headlines >= 4.5; value = 3
-				 */
+				
+				//headlines < 3; value = 1
+				//headlines > 3 and headlines < 4.5; value = 2
+				//headlines >= 4.5; value = 3
+				 
 				if(contrast < 3) {
 					headline_score += 1;
 					low_header_contrast.add(element);
@@ -266,11 +266,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			else if(ElementStateUtils.isTextContainer(element)) {
 				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
 				total_text_elems++;
-				/*
-				text < 4.5; value = 1
-				text >= 4.5 and text < 7; value = 2
-				text >=7; value = 3
-				 */
+				
+				//text < 4.5; value = 1
+				//text >= 4.5 and text < 7; value = 2
+				//text >=7; value = 3
+
 				if(contrast < 4.5) {
 					text_score += 1;
 					low_text_contrast.add(element);
@@ -284,6 +284,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 			}
 		}
+*/
 		
 		ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
 		ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");

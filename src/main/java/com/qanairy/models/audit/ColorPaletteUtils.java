@@ -315,4 +315,19 @@ public class ColorPaletteUtils {
 		
 		return color_sets;
 	}
+	
+	public static Map<String, Set<String>> convertPaletteToStringRepresentation(Map<ColorData, Set<ColorData>> palette) {
+		Map<String, Set<String>> stringified_map = new HashMap<>();
+		for(ColorData primary : palette.keySet()) {
+			Set<String> secondary_colors = new HashSet<>();
+			for(ColorData secondary : palette.get(primary)) {
+				if(secondary == null) {
+					continue;
+				}
+				secondary_colors.add(secondary.rgb());
+			}
+			stringified_map.put(primary.rgb(), secondary_colors);
+		}
+		return null;
+	}
 }

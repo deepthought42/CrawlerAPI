@@ -35,6 +35,9 @@ public class AuditFactory {
 	private LinksAudit links_auditor;
 
 	@Autowired
+	private ColorPaletteAudit color_palette_auditor;
+	
+	@Autowired
 	private TextColorContrastAudit text_contrast_auditor;
 	
 	@Autowired
@@ -138,7 +141,7 @@ public class AuditFactory {
 			
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
-			/*works but temp disabled
+			//works but temp disabled
 			Audit color_palette_audit = color_palette_auditor.execute(page);
 			Audit text_contrast_audit = text_contrast_auditor.execute(page);
 			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
@@ -146,7 +149,7 @@ public class AuditFactory {
 			audits.add(color_palette_audit);
 			audits.add(text_contrast_audit);
 			audits.add(non_text_contrast_audit);
-			*/
+			
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
 			

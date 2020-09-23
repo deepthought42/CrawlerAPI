@@ -1,9 +1,10 @@
-package com.qanairy.models.audit.domain;
+package com.qanairy.models.audit;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,19 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.gcp.CloudVisionUtils;
-import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
-import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.audit.ColorPaletteObservation;
-import com.qanairy.models.audit.ColorPaletteUtils;
-import com.qanairy.models.audit.ColorUsageStat;
-import com.qanairy.models.audit.Observation;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
-import com.qanairy.services.DomainService;
-import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 
 
@@ -39,71 +33,42 @@ import com.qanairy.services.PageStateService;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class DomainColorPaletteAudit implements IExecutableDomainAudit{
-	private static Logger log = LoggerFactory.getLogger(DomainColorPaletteAudit.class);
-
-	private List<String> gray_colors = new ArrayList<>();
-	private List<String> colors = new ArrayList<>();
-	
-	@Autowired
-	private PageVersionService page_service;
-	
-	@Autowired
-	private DomainService domain_service;
+public class ColorPaletteAudit implements IExecutablePageStateAudit {
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(ColorPaletteAudit.class);
 	
 	@Autowired
 	private PageStateService page_state_service;
-
-	public DomainColorPaletteAudit() {}
 	
+	private List<String> gray_colors = new ArrayList<>();
+	private List<String> colors = new ArrayList<>();
+	
+	public ColorPaletteAudit() {}
+
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
+	 *  
+	 * @throws MalformedURLException 
+	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(Domain domain) {
-		assert domain != null;
+	public Audit execute(PageState page_state) {
+		assert page_state != null;
 		
-		List<Observation> observations = new ArrayList<>();
-
-		Map<String, Boolean> colors = new HashMap<String, Boolean>();
-
-		
-		//get most recent audit record for domain
-		//get all color palette audits associated with audit record
-		//iterate over color palette audits
-			//extract colors into global color map
-			//calculate global color usage percentages using page state audits
-		//
-		
-		
-		//get all pages
-		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
+
+		log.warn("color management page state :: "+page_state.getKey());
+		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		
-		//get most recent page state for each page
-		for(PageVersion page : pages) {
-			log.warn("color management page version key :: "+page.getKey());
-			//for each page state get elements
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("color management page state :: "+page_state.getKey());
-			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-			
-			//get image attributes from google cloud vision
-			//cloudVisionTemplate.analyzeImage(imageResource, featureTypes)
-			//retrieve image colors based on screenshots minus the contents of image elements
-			try {
-				color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
-				log.warn("color_map ::   "+color_usage_list);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+		try {
+			color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
+			log.warn("color_map ::   "+color_usage_list);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		log.warn("colors :: "+colors.size());
 		
 		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
 		Map<String, Boolean> filtered_colors = new HashMap<>();
@@ -131,7 +96,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				filtered_colors.put(rgb_color_str, Boolean.TRUE);
 			}
 		}
-		
+
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
 		log.warn("colors found :: "+filtered_colors);
@@ -147,6 +112,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		//score colors found against scheme
 		Map<String, Set<String>> palette_stringified = ColorPaletteUtils.convertPaletteToStringRepresentation(palette);
 		
+		List<Observation> observations = new ArrayList<>();
+
 		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
 		observations.add(observation);
 			
@@ -155,12 +122,11 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		
 		//score colors found against scheme
 		setGrayColors(new ArrayList<>(gray_colors.keySet()));
-		setColors(new ArrayList<>(colors.keySet()));
+		setColors(colors);
 		 
-		
-		return new Audit();
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.DOMAIN, 3);
 	}
-
+	
 	/**
 	 * 
 	 * @param screenshot_url
@@ -234,7 +200,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		//return color_percentages;
 	}
 	
-
 	public List<String> getGrayColors() {
 		return gray_colors;
 	}
@@ -250,7 +215,4 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	public void setColors(List<String> colors) {
 		this.colors = colors;
 	}
-	
 }
-
-

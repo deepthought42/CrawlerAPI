@@ -151,13 +151,13 @@ public class AuditController {
 
 	   	log.warn("creating audit record");
 	   	//create new audit record
-	   	//AuditRecord audit_record = new AuditRecord();
+	   	AuditRecord audit_record = new AuditRecord();
 	   	
-	   	//log.warn("Saving audit Record");
-	   	//audit_record = audit_record_service.save(audit_record);
+	   	log.warn("Saving audit Record");
+	   	audit_record = audit_record_service.save(audit_record);
 	   	
-	   	//log.warn("Adding audit record to domain");
-	   	//domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
+	   	log.warn("Adding audit record to domain");
+	   	domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
 	   	
 	   	log.warn("telling audit manager about crawl action");
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)

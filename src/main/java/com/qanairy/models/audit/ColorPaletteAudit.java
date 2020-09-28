@@ -26,6 +26,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 
 
@@ -39,6 +40,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private ObservationService observation_service;
 	
 	private List<String> gray_colors = new ArrayList<>();
 	private List<String> colors = new ArrayList<>();
@@ -115,16 +119,16 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<Observation> observations = new ArrayList<>();
 
 		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
-		observations.add(observation);
+		observations.add(observation_service.save(observation));
 			
 		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
-		int score = ColorPaletteUtils.getPaletteScore(palette, scheme);
+		Score score = ColorPaletteUtils.getPaletteScore(palette, scheme);
 		
 		//score colors found against scheme
 		setGrayColors(new ArrayList<>(gray_colors.keySet()));
 		setColors(colors);
 		 
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.DOMAIN, 3);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score.getPointsAchieved(), observations, AuditLevel.PAGE, score.getMaxPossiblePoints());
 	}
 	
 	/**

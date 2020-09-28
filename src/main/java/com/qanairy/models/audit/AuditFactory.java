@@ -191,11 +191,7 @@ public class AuditFactory {
 			domain_audits.add(title_and_headers);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
-			log.warn("runing color manageent domain audit...");
-
-			Audit color_palette_audit = domain_color_palette_auditor.execute(domain);
 			
-			domain_audits.add(color_palette_audit);
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
 			
@@ -231,10 +227,13 @@ public class AuditFactory {
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			log.warn("running color manageent domain audit...");
+			log.warn("running color manageent domain audit...");
 
+			Audit color_palette_audit = domain_color_palette_auditor.execute(domain);			
 			Audit text_contrast_audit = domain_text_contrast_auditor.execute(domain);
 			Audit non_text_contrast_audit = domain_non_text_contrast_auditor.execute(domain);
 			
+			domain_audits.add(color_palette_audit);
 			domain_audits.add(text_contrast_audit);
 			domain_audits.add(non_text_contrast_audit);
 		}

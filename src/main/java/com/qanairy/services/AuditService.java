@@ -85,4 +85,11 @@ public class AuditService {
 		// TODO Auto-generated method stub
 		return IterableUtils.toList(audit_repo.findAll());
 	}
+
+	public List<Observation> getObservations(String audit_key) {
+		assert audit_key != null;
+		assert !audit_key.isEmpty();
+		
+		return audit_repo.findObservationsForAudit(audit_key);
+	}
 }

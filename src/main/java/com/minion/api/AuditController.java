@@ -100,14 +100,17 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
-    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
+    public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
     											@PathVariable("id") @NotBlank long id
 	) {
     	log.warn("finding element with ID  :: "+id);
-        //AuditRecord record = audit_record_service.findById(id).get();
-        //return audit_record_service.getAllAudits(record.getKey());
+
     	Set<Audit> audit_set = new HashSet<Audit>();
-    	audit_set.add(audit_service.findById(id).get());
+    	
+    	Audit audit = audit_service.findById(id).get();
+    	audit.setObservations( audit_service.getObservations(audit.getKey()) );
+        
+    	audit_set.add(audit);
     	
         return audit_set;
     }
@@ -121,10 +124,10 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color")
     public @ResponseBody Set<Audit> getColorManagementAudits(HttpServletRequest request,
-    											@PathParam("domain") @NotBlank String domain
+    											@PathParam("host") @NotBlank String host
 	) {
-    	log.warn("finding element with ID  :: "+domain);
-        return audit_record_service.getAllColorManagementAudits(domain);
+    	log.warn("finding element with ID  :: "+host);
+        return audit_record_service.getAllColorManagementAudits(host);
     }
     
     /**
@@ -162,7 +165,7 @@ public class AuditController {
 	   	log.warn("telling audit manager about crawl action");
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", null);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", audit_record);
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
 	   /*	

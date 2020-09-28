@@ -50,29 +50,53 @@ public class AuditRecordService {
 	
 	public void addAudit(String audit_record_key, String audit_key) {
 		//check if audit already exists for page state
-		Optional<Audit> audit = audit_record_repo.getAuditForPageState(audit_record_key, audit_key);
+		Optional<Audit> audit = audit_record_repo.getAuditForAuditRecord(audit_record_key, audit_key);
 		if(!audit.isPresent()) {
 			audit_record_repo.addAudit(audit_record_key, audit_key);
 		}
 	}
 
-	public Set<Audit> getAllAudits(@NotBlank String audit_record_key) {
+	public Set<Audit> getAllAudits(String audit_record_key) {
 		return audit_record_repo.getAllAudits(audit_record_key);
 	}
 
-	public Optional<AuditRecord> findMostRecent(@NotBlank String domain_url) {
-		log.warn("domain url :: "+domain_url);
-		return audit_record_repo.findMostRecent(domain_url);
+	public Optional<AuditRecord> findMostRecent(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		log.warn("domain url :: "+host);
+		return audit_record_repo.findMostRecent(host);
 	}
 
-	public Set<Audit> getAllColorManagementAudits(String domain_url) {
-		assert domain_url != null;
-		assert !domain_url.isEmpty();
+	public Set<Audit> getAllColorManagementAudits(String host) {
+		assert host != null;
+		assert !host.isEmpty();
 		
-		log.warn("domain url for color management audits :: "+domain_url);
-        AuditRecord record = findMostRecent(domain_url).get();
+		log.warn("domain url for color management audits :: "+host);
+        AuditRecord record = findMostRecent(host).get();
         log.warn("audit record :: " + record);
         log.warn("audit record key :: " + record.getKey());
 		return audit_record_repo.getAllColorManagementAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllColorPaletteAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageColorPaletteAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTextColorContrastAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTextColorContrastAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllNonTextColorContrastAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
 	}
 }

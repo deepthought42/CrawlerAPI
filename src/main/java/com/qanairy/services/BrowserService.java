@@ -56,6 +56,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ElementStateUtils;
 import com.qanairy.utils.PathUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -426,7 +427,11 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<com.qanairy.models.Element> getDomElements(String page_source, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+	private synchronized List<com.qanairy.models.Element> getDomElements(
+			String page_source, 
+			URL url,
+			List<RuleSet> rule_sets
+	) throws IOException, XPathExpressionException {
 		assert page_source != null;
 		assert !page_source.isEmpty();
 		assert url != null;
@@ -531,7 +536,12 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<ElementState> getDomElementStates(String src, List<String> xpaths, Browser browser, Map<String, ElementState> element_states_map) throws IOException, XPathExpressionException {
+	private synchronized List<ElementState> getDomElementStates(
+			String src, 
+			List<String> xpaths, 
+			Browser browser, 
+			Map<String, ElementState> element_states_map
+	) throws IOException, XPathExpressionException {
 		assert xpaths != null;
 		assert !xpaths.isEmpty();
 		assert browser != null;
@@ -541,6 +551,7 @@ public class BrowserService {
 		
 		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
 		Document html_doc = Jsoup.parse(src);
+		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
 		
 		for(String xpath : xpaths) {
 			if(element_states_map.containsKey(xpath)) {
@@ -548,6 +559,14 @@ public class BrowserService {
 			}
 			
 			WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
+			
+			//check if element is visible in pane and if not then continue to next element xpath
+			if( !web_element.isDisplayed()
+					|| !hasWidthAndHeight(web_element.getSize())) {
+				log.warn("element isn't displayed in viewport :: "+xpath);
+				continue;
+			}
+			
 			//get child elements for element
 			Map<String, String> attributes = browser.extractAttributes(web_root);
 			Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
@@ -560,7 +579,12 @@ public class BrowserService {
 			else {
 				classification = ElementClassification.ANCESTOR;
 			}
+			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+			String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+			element_screenshot.flush();
 			
+
 			//load json element
 			Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
 			if(elements.size() == 0) {
@@ -569,103 +593,10 @@ public class BrowserService {
 			Element element = elements.first();
 			
 			ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
+			element_state.setScreenshotUrl(viewport_screenshot_url);
 			element_states_map.put(xpath, element_state);
 			element_state = element_state_service.save(element_state);
 			visited_elements.add(element_state);
-		}
-		return visited_elements;
-	}
-	
-	
-	@Deprecated
-	private List<com.qanairy.models.Element> getDomElementTreeLinear(String page_source, Browser browser, Map<String, com.qanairy.models.Element> reviewed_xpaths) throws IOException {
-		assert page_source != null;
-		assert !page_source.isEmpty();
-		assert browser != null;
-		
-		List<com.qanairy.models.Element> visited_elements = new ArrayList<>();
-		Map<com.qanairy.models.Element, List<Element>> frontier = new HashMap<>();
-		Map<String, Integer> xpath_cnt = new HashMap<>();
-		
-		//get html doc and get root element
-		Document html_doc = Jsoup.parse(page_source);
-		Element root = html_doc.getElementsByTag("body").get(0);
-		
-		//create element state from root node
-		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-		com.qanairy.models.Element root_element_state = buildElement("//body", attributes, root, ElementClassification.ANCESTOR,  new HashMap<>());
-		root_element_state = element_service.save(root_element_state);
-
-		//put element on frontier
-		frontier.put(root_element_state, new ArrayList<>(root.children()));
-		while(!frontier.isEmpty()) {
-			com.qanairy.models.Element root_element = frontier.keySet().iterator().next();
-			List<Element> child_elements = frontier.remove(root_element);
-
-			for(Element child : child_elements) {
-				if(isStructureTag(child.tagName())) {
-					continue;
-				}
-				String xpath = root_element.getXpath() + "/" + child.tagName();
-
-				if(!xpath_cnt.containsKey(xpath)) {
-					xpath_cnt.put(xpath, 1);
-				}
-				else {
-					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
-				}
-				
-				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
-
-				ElementClassification classification = null;
-				List<Element> children = new ArrayList<Element>(child.children());
-				if(children.isEmpty()) {
-					classification = ElementClassification.LEAF;
-				}
-				else if(isSliderElement(child)) {
-					classification = ElementClassification.SLIDER;
-				}
-				else {
-					classification = ElementClassification.ANCESTOR;
-				}
-				
-				com.qanairy.models.Element element_state = null;
-				if(reviewed_xpaths.containsKey(xpath)){	
-					element_state = reviewed_xpaths.get(xpath);
-				}
-				else {
-					Map<String, String> child_css_values = new HashMap<>();
-					attributes = generateAttributesMapUsingJsoup(child);
-					WebElement web_element = null;
-					try {						
-						web_element = browser.findWebElementByXpath(xpath);
-					}catch(NoSuchElementException e) {
-					}
-					
-					if(web_element != null) {
-						child_css_values = Browser.loadCssProperties(web_element, browser.getDriver());
-						
-						//if(ElementStateUtils.isTextContainer(web_element)){
-							child_css_values.putAll(Browser.loadTextCssProperties(web_element));
-						//}
-						element_state = buildElement(xpath, attributes, child, classification, child_css_values);
-						element_state = element_service.save(element_state);
-						//put element on frontier
-						if(children.isEmpty()) {
-							reviewed_xpaths.put(root_element.getXpath(), element_state);
-							visited_elements.add(element_state);
-						}
-						else {
-							frontier.put(element_state, new ArrayList<>(child.children()));
-						}
-						element_service.addChildElement(root_element.getKey(), element_state.getKey());
-					}
-				}
-				
-			}
-			reviewed_xpaths.put(root_element.getXpath(), root_element);
-			visited_elements.add(root_element);
-			//root_element = element_service.save(root_element);
 		}
 		return visited_elements;
 	}
@@ -1506,7 +1437,7 @@ public class BrowserService {
 		else if(atom_cnt > 1 && molecule_cnt == 0 && organism_cnt == 0 && template_cnt == 0){
 			return TemplateType.MOLECULE;
 		}
-		else if((molecule_cnt == 1 && atom_cnt > 0 || molecule_cnt > 1 || organism_cnt > 0) && template_cnt == 0){
+		else if( (molecule_cnt == 1 && atom_cnt > 0 || molecule_cnt > 1 || organism_cnt > 0) && template_cnt == 0){
 			return TemplateType.ORGANISM;
 		}
 		else if(isTopLevelElement()){
@@ -1531,12 +1462,12 @@ public class BrowserService {
 		return false;
 	}
 	
-	@Deprecated
-	public List<com.qanairy.models.Element> extractElementStates(String page_src, Browser browser, Map<String, com.qanairy.models.Element> reviewed_xpaths) throws IOException {
-		return getDomElementTreeLinear(page_src, browser, reviewed_xpaths);
-	}
-	
-	public List<ElementState> extractElementStates(String src, List<String> xpaths, Browser browser, Map<String, ElementState> elements) throws IOException, XPathExpressionException {
+	public List<ElementState> extractElementStates(
+			String src, 
+			List<String> xpaths, 
+			Browser browser, 
+			Map<String, ElementState> elements
+	) throws IOException, XPathExpressionException {
 		assert src != null;
 		assert !src.isEmpty();
 		assert xpaths != null;
@@ -1547,7 +1478,11 @@ public class BrowserService {
 		return getDomElementStates(src, xpaths, browser, elements);
 	}
 	
-	public List<com.qanairy.models.Element> extractElements(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+	public List<com.qanairy.models.Element> extractElements(
+			String page_src, 
+			URL url, 
+			List<RuleSet> rule_sets
+	) throws IOException, XPathExpressionException {
 		assert page_src != null;
 		assert !page_src.isEmpty();
 		assert url != null;

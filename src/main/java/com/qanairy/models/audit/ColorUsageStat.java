@@ -56,4 +56,8 @@ public class ColorUsageStat {
 	public void setScore(float score) {
 		this.score = score;
 	}
+
+	public String getRGB() {
+		return red+","+green+","+blue;
+	}
 }

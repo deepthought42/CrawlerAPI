@@ -20,7 +20,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.services.ElementStateService;
+import com.qanairy.services.ObservationService;
 import com.qanairy.utils.ElementStateUtils;
 
 
@@ -33,7 +33,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(TextColorContrastAudit.class);
 	
 	@Autowired
-	private ElementStateService element_state_service;
+	private ObservationService observation_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -49,7 +49,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<Observation> observations = new ArrayList<>();
 		int total_headlines = 0;
 		int total_text_elems = 0;
 		int headline_score = 0;
@@ -71,9 +70,14 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			element_list.add(element);
 		}
 		
-		
+		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
+			if(element.getScreenshotUrl() == null || element.getScreenshotUrl().isEmpty()) {
+				log.warn("text element screenshot is empty ...."+element.getXpath());
+				continue;
+			}
+			
 			List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
 				color_data_list.addAll( CloudVisionUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
@@ -81,6 +85,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//CloudVisionUtils.extractImageText(ImageIO.read(new URL(element.getScreenshotUrl())));
 				//CloudVisionUtils.searchWebForImageUsage(ImageIO.read(new URL(element.getScreenshotUrl())));
 			} catch (MalformedURLException e) {
+				log.warn("element screenshot url  :: "+element.getScreenshotUrl());
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -285,16 +290,31 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		}
 */
+		List<Observation> observations = new ArrayList<>();
+		if(!mid_header_contrast.isEmpty()) {
+			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
+			observations.add(observation_service.save(mid_header_contrast_observation));
+		}
+		if(!low_header_contrast.isEmpty()) {
+			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
+			observations.add(observation_service.save(low_header_contrast_observation));
+		}
+		if(!mid_text_contrast.isEmpty()) {
+			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7");
+			observations.add(observation_service.save(mid_text_observation));
+		}
+		if(!low_text_contrast.isEmpty()) {
+			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5");
+			observations.add(observation_service.save(low_text_observation));
+		}
+		if(observations.isEmpty()) {
+			ElementStateObservation success_observation = new ElementStateObservation(page_state.getElements(), "All text and header elements are exceeding WCAG standards");
+			observations.add(observation_service.save(success_observation));
+		}
 		
-		ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
-		ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
-		ElementStateObservation mid_header_text_observation = new ElementStateObservation(mid_text_contrast, "Headers with contrast between 4.5 and 7");
-		ElementStateObservation low_header_text_observation = new ElementStateObservation(low_text_contrast, "Headers with contrast below 4.5");
 		
-		observations.add(mid_header_text_observation);
-		observations.add(mid_header_contrast_observation);
-		observations.add(low_header_text_observation);
-		observations.add(low_header_contrast_observation);
+
+		
 		
 		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
 		

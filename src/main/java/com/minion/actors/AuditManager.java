@@ -76,7 +76,6 @@ public class AuditManager extends AbstractActor{
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		audit_record = new AuditRecord();
 	}
 
 	//re-subscribe when restart
@@ -161,6 +160,7 @@ public class AuditManager extends AbstractActor{
 					if(pages_experienced.keySet().size() == page_states_audited.keySet().size()) {
 						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
 						Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
+						
 						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						log.warn("Audit Manager is now ready to perform a domain audit");
 						//AuditSet audit_record_set = new AuditSet(audits);
@@ -173,6 +173,7 @@ public class AuditManager extends AbstractActor{
 					//save all audits in audit list to database and add them to the audit record
 					for(Audit audit : audit_list.getAudits()){
 						audit = audit_service.save(audit);
+						log.warn("Audit record :: "+audit_record);
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey());
 					}
 				})

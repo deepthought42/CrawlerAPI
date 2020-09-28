@@ -23,15 +23,18 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.repository.AuditRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-
 	@Autowired
 	private DomainRepository domain_repo;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 	
 	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
@@ -228,5 +231,38 @@ public class DomainService {
 
 	public Set<AuditRecord> getAuditRecords(String domain_key) {
 		return domain_repo.getAuditRecords(domain_key);
+	}
+	
+	public Set<Audit> getMostRecentAuditRecordColorPaletteAudits(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		log.warn("domain url for color management audits :: "+host);
+        AuditRecord record = audit_record_service.findMostRecent(host).get();
+        log.warn("audit record :: " + record);
+        log.warn("audit record key :: " + record.getKey());
+		return audit_record_service.getAllColorPaletteAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordTextColorContrast(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		log.warn("domain url for color management audits :: "+host);
+        AuditRecord record = audit_record_service.findMostRecent(host).get();
+        log.warn("audit record :: " + record);
+        log.warn("audit record key :: " + record.getKey());
+		return audit_record_service.getAllTextColorContrastAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordNonTextColorContrast(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		log.warn("domain url for color management audits :: "+host);
+        AuditRecord record = audit_record_service.findMostRecent(host).get();
+        log.warn("audit record :: " + record);
+        log.warn("audit record key :: " + record.getKey());
+		return audit_record_service.getAllNonTextColorContrastAudits(record.getKey());
 	}
 }

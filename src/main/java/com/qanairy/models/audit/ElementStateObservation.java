@@ -1,5 +1,6 @@
 package com.qanairy.models.audit;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,7 @@ public class ElementStateObservation extends Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")
-	private List<ElementState> elements;
+	private List<ElementState> elements = new ArrayList<>();
 	
 	public ElementStateObservation() {}
 	

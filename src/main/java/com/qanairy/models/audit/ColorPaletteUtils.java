@@ -27,12 +27,14 @@ public class ColorPaletteUtils {
 	 * @pre palette != null
 	 * @pre scheme != null
 	 */
-	public static int getPaletteScore(Map<ColorData, Set<ColorData>> palette, ColorScheme scheme) {
+	public static Score getPaletteScore(Map<ColorData, Set<ColorData>> palette, ColorScheme scheme) {
 		assert palette != null;
 		assert scheme != null;
 		
 		//if palette has exactly 1 color set and that color set has more than 1 color, then monochromatic
 		int score = 0;
+		int max_points = 3;
+				
 		if(ColorScheme.GRAYSCALE.equals(scheme)) {
 			score = 3;
 		}
@@ -69,7 +71,7 @@ public class ColorPaletteUtils {
 			score = 0;
 		}
 		
-		return score;
+		return new Score(score, max_points, new HashSet<>());
 	}
 
 	/**

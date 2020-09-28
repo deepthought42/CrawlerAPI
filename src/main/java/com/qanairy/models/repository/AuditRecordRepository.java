@@ -19,7 +19,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	public AuditRecord findByKey(@Param("key") String key);
 	
 	@Query("MATCH (:AuditRecord{key:{audit_record_key}})-[:HAS]->(a:Audit{key:{audit_key}}) RETURN a")
-	public Optional<Audit> getAuditForPageState(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
+	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 
 	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}}),(a:Audit{key:{audit_key}}) CREATE (ar)-[h:HAS]->(a) RETURN ar")
 	public void addAudit(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
@@ -27,9 +27,18 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) RETURN audit,y,z")
 	public Set<Audit> getAllAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (d:Domain{host:{domain_url}})-[]-(ar:AuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
-	public Optional<AuditRecord> findMostRecent(@Param("domain_url") @NotBlank String domain_url);
+	@Query("MATCH (d:Domain{host:{domain_host}})-[]-(ar:AuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
+	public Optional<AuditRecord> findMostRecent(@Param("domain_host") @NotBlank String domain_host);
 
-	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{category:'Color Management'}) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) RETURN audit,y,z")
+	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{category:'Color Management'}) WHERE audit.level='domain' RETURN audit")
 	public Set<Audit> getAllColorManagementAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Color Palette'}) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageColorPaletteAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Text Background Contrast'}) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageTextColorContrastAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH(ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Non Text Background Contrast'}) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageNonTextColorContrastAudits(@Param("audit_record_key") String audit_record_key);
 }

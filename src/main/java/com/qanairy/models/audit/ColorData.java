@@ -51,9 +51,9 @@ public class ColorData extends LookseeObject{
 			tmp_color_str = tmp_color_str.replaceAll(" ", "");
 			String[] rgba = tmp_color_str.split(",");
 			
-			this.red = Integer.parseInt(rgba[0]);
-			this.green = Integer.parseInt(rgba[1]);
-			this.blue = Integer.parseInt(rgba[2]);
+			this.red = (int)Float.parseFloat(rgba[0]);
+			this.green = (int)Float.parseFloat(rgba[1]);
+			this.blue = (int)Float.parseFloat(rgba[2]);
 			if(rgba.length == 4) {
 				setTransparency(Double.parseDouble(rgba[3]));
 			}

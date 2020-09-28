@@ -1,8 +1,9 @@
-package com.qanairy.models.audit;
+package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,35 +11,34 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Properties;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ColorPaletteObservation extends Observation{
-	private String description;
+public class DomainColorPaletteObservation extends Observation{
 	
 	@Properties
 	private Map<String, Set<String>> palette = new HashMap<>();
 	private List<String> colors = new ArrayList<>();
 	private List<String> gray_colors = new ArrayList<>();
-	private String color_scheme;
+	private Set<String> color_schemes = new HashSet<>();
 	
-	public ColorPaletteObservation() {}
+	public DomainColorPaletteObservation() {}
 	
-	public ColorPaletteObservation(
+	public DomainColorPaletteObservation(
 			Map<String, Set<String>> palette, 
 			List<String> colors, 
 			List<String> gray_colors, 
-			ColorScheme scheme, 
+			Set<String> schemes, 
 			String description
 	) {
 		setPalette(palette);
 		setColors(colors);
 		setGrayColors(gray_colors);
-		setColorScheme(scheme);
+		setColorScheme(schemes);
 		setDescription(description);
 		setType(ObservationType.COLOR_PALETTE);
 		setKey(this.generateKey());
@@ -67,12 +67,12 @@ public class ColorPaletteObservation extends Observation{
 		this.gray_colors = gray_colors;
 	}
 
-	public ColorScheme getColorScheme() {
-		return ColorScheme.create(color_scheme);
+	public Set<String> getColorSchemes() {
+		return this.color_schemes;
 	}
 
-	public void setColorScheme(ColorScheme color_scheme) {
-		this.color_scheme = color_scheme.getShortName();
+	public void setColorScheme(Set<String> color_scheme) {
+		this.color_schemes.addAll(color_scheme);
 	}
 
 	public Map<String, Set<String>> getPalette() {

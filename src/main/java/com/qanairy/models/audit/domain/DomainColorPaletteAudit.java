@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,18 +22,19 @@ import org.springframework.stereotype.Component;
 import com.looksee.gcp.CloudVisionUtils;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.PageVersion;
-import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteObservation;
 import com.qanairy.models.audit.ColorPaletteUtils;
 import com.qanairy.models.audit.ColorUsageStat;
 import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.Score;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageVersionService;
-import com.qanairy.services.PageStateService;
 
 
 /**
@@ -46,14 +48,11 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 	private List<String> colors = new ArrayList<>();
 	
 	@Autowired
-	private PageVersionService page_service;
-	
-	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
-
+	private AuditService audit_service;
+	
 	public DomainColorPaletteAudit() {}
 	
 	/**
@@ -66,21 +65,96 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		assert domain != null;
 		
 		List<Observation> observations = new ArrayList<>();
-
-		Map<String, Boolean> colors = new HashMap<String, Boolean>();
-
 		
-		//get most recent audit record for domain
-		//get all color palette audits associated with audit record
+		//get all color palette audits associated with most recent audit record for domain host
+		Set<Audit> color_palette_audits = domain_service.getMostRecentAuditRecordColorPaletteAudits(domain.getHost());
+		int points = 0;
+		int max_points = 0;
+		Map<String, Set<String>> palette_colors = new HashMap<>();
+		Map<String, Boolean> schemes_recognized = new HashMap<>();
+		List<String> color_strings = new ArrayList<>();
+		List<String> gray_color_strings = new ArrayList<>();
+
 		//iterate over color palette audits
+		for(Audit audit : color_palette_audits) {
+			List<Observation> page_audit_observations = audit_service.getObservations(audit.getKey());
 			//extract colors into global color map
 			//calculate global color usage percentages using page state audits
-		//
+			for(Observation observation : page_audit_observations) {
+				if(observation instanceof ColorPaletteObservation) {
+					ColorPaletteObservation palette_observation = (ColorPaletteObservation)observation;
+					schemes_recognized.put(palette_observation.getColorScheme().getShortName(), Boolean.TRUE);
+					
+					gray_color_strings.addAll(palette_observation.getGrayColors());
+					color_strings.addAll(palette_observation.getColors());
+					palette_colors.putAll(palette_observation.getPalette());
+				}
+			}
+			
+			points += audit.getPoints();
+			max_points += audit.getTotalPossiblePoints();
+		}
+
+		//unpack color palette into ColorData object map
+		Map<ColorData, Set<ColorData>> color_data_palette_map = new HashMap<>();
+		for(String primary_color : palette_colors.keySet()) {
+			ColorData primary =  new ColorData(primary_color);
+			Set<ColorData> secondary_colors = new HashSet<>();
+			for(String secondary_color : palette_colors.get(primary_color)) {
+				secondary_colors.add(new ColorData(secondary_color));
+			}
+			
+			color_data_palette_map.put(primary, secondary_colors);
+		}
 		
+		if(schemes_recognized.size() == 1) {
+			points += 3;
+		}
+		max_points += 3;
+		
+		
+		DomainColorPaletteObservation observation = new DomainColorPaletteObservation(
+															palette_colors, 
+															color_strings, 
+															gray_color_strings, 
+															schemes_recognized.keySet(), 
+															"This is a color scheme description");
+		observations.add(observation);
+			
+		ColorScheme scheme = ColorPaletteUtils.getColorScheme(color_data_palette_map);
+		
+		Score score = ColorPaletteUtils.getPaletteScore(color_data_palette_map, scheme);
+		points += score.getPointsAchieved();
+		max_points += score.getMaxPossiblePoints();
+		
+		//score colors found against scheme
+		setGrayColors(new ArrayList<>(gray_color_strings));
+		setColors(new ArrayList<>(color_strings));
+		 
+		
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, points, observations, AuditLevel.DOMAIN, max_points);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//REMOVE THE FOLLOWING BECUASE IT IS OLD AND NO LONGER NEEDED
+		/*
 		
 		//get all pages
 		List<PageVersion> pages = domain_service.getPages(domain.getHost());
-		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		//get most recent page state for each page
 		for(PageVersion page : pages) {
@@ -159,6 +233,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		 
 		
 		return new Audit();
+		 */
 	}
 
 	/**

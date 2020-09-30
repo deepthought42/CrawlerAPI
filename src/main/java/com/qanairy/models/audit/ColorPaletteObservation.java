@@ -2,26 +2,22 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.neo4j.ogm.annotation.Properties;
+import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.Element;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.models.enums.ObservationType;
 
 
 /**
- * A observation of potential error for a given {@link Element element} 
+ * A observation of potential error for a given color palette 
  */
 public class ColorPaletteObservation extends Observation{
-	private String description;
 	
-	@Properties
-	private Map<String, Set<String>> palette = new HashMap<>();
+	@Relationship(type = "HAS")
+	private List<PaletteColor> palette_colors = new ArrayList<>();
+	
 	private List<String> colors = new ArrayList<>();
 	private List<String> gray_colors = new ArrayList<>();
 	private String color_scheme;
@@ -29,18 +25,17 @@ public class ColorPaletteObservation extends Observation{
 	public ColorPaletteObservation() {}
 	
 	public ColorPaletteObservation(
-			Map<String, Set<String>> palette, 
+			List<PaletteColor> palette, 
 			List<String> colors, 
 			List<String> gray_colors, 
 			ColorScheme scheme, 
 			String description
 	) {
-		setPalette(palette);
+		setPaletteColors(palette);
 		setColors(colors);
 		setGrayColors(gray_colors);
 		setColorScheme(scheme);
 		setDescription(description);
-		setType(ObservationType.COLOR_PALETTE);
 		setKey(this.generateKey());
 	}
 	
@@ -48,7 +43,7 @@ public class ColorPaletteObservation extends Observation{
 	public String generateKey() {
 		Collections.sort(colors);
 		Collections.sort(gray_colors);
-		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(  colors.toString() + gray_colors.toString() + this.getDescription() );
+		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + gray_colors.toString() + this.getDescription() );
 	}
 
 	public List<String> getColors() {
@@ -75,12 +70,12 @@ public class ColorPaletteObservation extends Observation{
 		this.color_scheme = color_scheme.getShortName();
 	}
 
-	public Map<String, Set<String>> getPalette() {
-		return palette;
+	public List<PaletteColor> getPaletteColors() {
+		return palette_colors;
 	}
 
-	public void setPalette(Map<String, Set<String>> palette) {
-		this.palette = palette;
+	public void setPaletteColors(List<PaletteColor> palette) {
+		this.palette_colors.addAll(palette);
 	}
 
 	@Override

@@ -563,7 +563,6 @@ public class BrowserService {
 			//check if element is visible in pane and if not then continue to next element xpath
 			if( !web_element.isDisplayed()
 					|| !hasWidthAndHeight(web_element.getSize())) {
-				log.warn("element isn't displayed in viewport :: "+xpath);
 				continue;
 			}
 			

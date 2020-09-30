@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.validation.constraints.NotBlank;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +62,6 @@ public class AuditRecordService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		log.warn("domain url :: "+host);
 		return audit_record_repo.findMostRecent(host);
 	}
 
@@ -72,10 +69,7 @@ public class AuditRecordService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		log.warn("domain url for color management audits :: "+host);
         AuditRecord record = findMostRecent(host).get();
-        log.warn("audit record :: " + record);
-        log.warn("audit record key :: " + record.getKey());
 		return audit_record_repo.getAllColorManagementAudits(record.getKey());
 	}
 

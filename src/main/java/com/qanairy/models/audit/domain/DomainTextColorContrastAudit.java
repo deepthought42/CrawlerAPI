@@ -67,6 +67,6 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, points, new ArrayList<>(), AuditLevel.DOMAIN, max_points);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, points, observations, AuditLevel.DOMAIN, max_points);
 	}
 }

@@ -27,7 +27,7 @@ public class ColorPaletteUtils {
 	 * @pre palette != null
 	 * @pre scheme != null
 	 */
-	public static Score getPaletteScore(Map<ColorData, Set<ColorData>> palette, ColorScheme scheme) {
+	public static Score getPaletteScore(List<PaletteColor> palette, ColorScheme scheme) {
 		assert palette != null;
 		assert scheme != null;
 		
@@ -51,17 +51,17 @@ public class ColorPaletteUtils {
 			score = 3;
 		}
 		else if(ColorScheme.SPLIT_COMPLIMENTARY.equals(scheme)) {
-			log.warn("Color scheme is SPLIT COMPLIMENTARY!!!");
+			log.debug("Color scheme is SPLIT COMPLIMENTARY!!!");
 			score = 3;
 		}
 		else if(ColorScheme.TRIADIC.equals(scheme)) {
 			//check if triadic
 			//if hues are nearly equal in differences then return triadic
-			log.warn("Color scheme is TRIADIC!!!");
+			log.debug("Color scheme is TRIADIC!!!");
 			score = 3;
 		}
 		else if(ColorScheme.TETRADIC.equals(scheme)) {
-			log.warn("Color scheme is Tetradic!!!");
+			log.debug("Color scheme is Tetradic!!!");
 
 			//check if outer points are equal in distances
 			score = 2;
@@ -81,7 +81,7 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre palette != null
 	 */
-	public static ColorScheme getColorScheme(Map<ColorData, Set<ColorData>> palette) {
+	public static ColorScheme getColorScheme(List<PaletteColor> palette) {
 		assert palette != null;
 		
 		//if palette has exactly 1 color set and that color set has more than 1 color, then monochromatic
@@ -89,8 +89,8 @@ public class ColorPaletteUtils {
 			return ColorScheme.GRAYSCALE;
 		}
 		//check if monochromatic
-		else if(palette.size() == 1 && palette.get(palette.keySet().iterator().next()).size() > 1) {
-			log.warn("COLOR IS MONOCHROMATIC!!!!!!!");
+		else if(palette.size() == 1 && palette.iterator().next().getTintsShadesTones().size() > 1) {
+			log.debug("COLOR IS MONOCHROMATIC!!!!!!!");
 			return ColorScheme.MONOCHROMATIC;
 		}
 		
@@ -104,16 +104,8 @@ public class ColorPaletteUtils {
 			//if difference in hue is less than 0.40 for min and max hues then return analogous
 			double min_hue = 1.0;
 			double max_hue = 0.0;
-			for(ColorData color : palette.keySet()) {
-				log.warn("primary color :: rgb : "+color.rgb() + " ;      hsv    :  "+color.hsb());
-				log.warn("primary color has subcolors    ::   "+palette.get(color).size());
-				for(ColorData sub_color : palette.get(color)) {
-					if(sub_color == null) {
-						continue;
-					}
-					log.warn("Sub-color  ::   "+sub_color.rgb());
-				}
-				
+			for(PaletteColor palette_color : palette) {
+				ColorData color = new ColorData(palette_color.getPrimaryColor());
 				if(color.getHue() > max_hue) {
 					max_hue = color.getHue();
 				}
@@ -123,12 +115,12 @@ public class ColorPaletteUtils {
 			}
 			
 			if((max_hue-min_hue) < 0.16) {
-				log.warn("Color scheme is ANALOGOUS");
+				log.debug("Color scheme is ANALOGOUS");
 				return ColorScheme.ANALOGOUS;
 			}
 			else {
 				//if all hues are roughly the same distance apart, then TRIADIC
-				if(areEquidistantColors(palette.keySet())) {
+				if(areEquidistantColors(palette)) {
 					return ColorScheme.TRIADIC;
 				}
 				else {
@@ -137,7 +129,7 @@ public class ColorPaletteUtils {
 			}
 		}
 		else if(palette.size() == 4) {
-			log.warn("Color scheme is Tetradic!!!");
+			log.debug("Color scheme is Tetradic!!!");
 			//check if hues are equal in differences
 			return ColorScheme.TETRADIC;
 		}
@@ -155,18 +147,21 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre colors != null;
 	 */
-	private static boolean areEquidistantColors(Set<ColorData> colors) {
+	private static boolean areEquidistantColors(List<PaletteColor> colors) {
 		assert colors != null;
 		
-		List<ColorData> color_list = new ArrayList<>(colors);
+		List<PaletteColor> color_list = new ArrayList<>(colors);
 		List<Double> distances = new ArrayList<>();
 		for(int a=0; a < color_list.size()-1; a++) {
+			ColorData color_a = new ColorData(color_list.get(a).getPrimaryColor());
 			for(int b=a+1; b < color_list.size(); b++) {
+				ColorData color_b = new ColorData(color_list.get(b).getPrimaryColor());
+
 				//TODO AN ACTUAL DISTANCE METHOD HERE WOULD BE GREAT!!!!
 				distances.add(
-						Math.sqrt( Math.pow((color_list.get(b).getHue() - color_list.get(a).getHue()), 2) 
-						+ Math.pow((color_list.get(b).getSaturation() - color_list.get(a).getSaturation()), 2) 
-						+ Math.pow((color_list.get(b).getLuminosity() - color_list.get(a).getLuminosity()), 2)));
+						Math.sqrt( Math.pow((color_b.getHue() - color_a.getHue()), 2) 
+						+ Math.pow((color_b.getSaturation() - color_a.getSaturation()), 2) 
+						+ Math.pow((color_b.getLuminosity() - color_a.getLuminosity()), 2)));
 			}	
 		}
 		
@@ -188,7 +183,7 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre palette != null
 	 */
-	private static int getComplementaryScore(Map<ColorData, Set<ColorData>> palette) {
+	private static int getComplementaryScore(List<PaletteColor> palette) {
 		assert palette != null;
 		
 		//complimentary colors should add up to 255, 255, 255 with a margin of error of 2%
@@ -197,10 +192,11 @@ public class ColorPaletteUtils {
 		double total_blue = 0;
 		
 		//if both color sets have only 1
-		for(ColorData color : palette.keySet()) {
-			total_red+= color.getRed();
-			total_green += color.getGreen();
-			total_blue += color.getBlue();
+		for(PaletteColor color : palette) {
+			ColorData color_data = new ColorData(color.getPrimaryColor());
+			total_red+= color_data.getRed();
+			total_green += color_data.getGreen();
+			total_blue += color_data.getBlue();
 		}
 		
 		int red_score = getComplimentaryColorScore(total_red);
@@ -232,62 +228,87 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre palette != null
 	 */
-	private static int getMonochromaticScore(Map<ColorData, Set<ColorData>> palette) {
+	private static int getMonochromaticScore(List<PaletteColor> palette) {
 		assert palette != null;
 		
+		int tint_shade_tone_size = palette.get(0).getTintsShadesTones().size();
 		int score = 0;
-		if(palette.get(palette.keySet().iterator().next()).size() == 2) {
+		if(tint_shade_tone_size == 2) {
 			score = 3;
 		}
-		else if(palette.get(palette.keySet().iterator().next()).size() <= 1) {
+		else if(tint_shade_tone_size <= 1) {
 			score = 1;
 		}
-		else if(palette.get(palette.keySet().iterator().next()).size() >= 3) {
+		else if(tint_shade_tone_size >= 3) {
 			score = 2;
 		}
 		return score;
 	}
 
-	public static Map<ColorData, Set<ColorData>> extractPalette(Set<String> color_strings) {
-		List<ColorData> colors = new ArrayList<ColorData>();
+	/**
+	 * Extracts set of {@link PaletteColor colors} that define a palette based on a set of rgb strings
+	 * 
+	 * @param color_strings
+	 * @return
+	 */
+	public static List<PaletteColor> extractPalette(List<String> color_strings) {
+		assert color_strings != null;
 		
+		List<ColorData> colors = new ArrayList<>();
 		for(String color : color_strings) {
-			colors.add(new ColorData(color.trim()));
+			colors.add(new ColorData(color));
 		}
+		
+		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		//identify colors that are a shade/tint of another color in the colors list and group them together in a set
 		Set<Set<ColorData>> color_sets = groupColors(colors);
 		
 		//identify primary colors using saturation. Higher saturation indicates purity or intensity of the color
-		Map<ColorData, Set<ColorData>> palette = new HashMap<>();
 		for(Set<ColorData> color_set : color_sets) {
 			if(color_set.size() == 1 ) {
-				palette.put(color_set.iterator().next(), new HashSet<>());
+				ColorData primary_color = color_set.iterator().next();
+				PaletteColor palette_color = new PaletteColor(
+						primary_color.rgb(), 
+						primary_color.getUsagePercent(), 
+						new HashMap<>());
+				palette_colors.add(palette_color);
 			}
 			else if(color_set.size() > 1) {
 				double max_saturation = -1.0;
 				ColorData primary_color = null;
-				Set<ColorData> seconday_colors = new HashSet<>();
+				Map<String, String> secondary_colors = new HashMap<>();
+				
 				for(ColorData color : color_set) {
 					if(color.getSaturation() > max_saturation) {
 						max_saturation = color.getSaturation();
-						seconday_colors.add(primary_color);
+						if(primary_color != null) {
+							secondary_colors.put(primary_color.rgb(), primary_color.getUsagePercent()+"");
+						}
 						primary_color = color;
 					}
 					else {
-						seconday_colors.add(color);
+						secondary_colors.put(color.rgb(), color.getUsagePercent()+"");
 					}
 				}
-				palette.put(primary_color, seconday_colors);
+				PaletteColor palette_color = new PaletteColor(
+													primary_color.rgb(), 
+													primary_color.getUsagePercent(), 
+													secondary_colors);
+				palette_colors.add(palette_color);
 			}
 		}
 		
-		return palette;
+		return palette_colors;
 	}
 
 	private static Set<Set<ColorData>> groupColors(List<ColorData> colors) {
+		assert colors != null;
+		
 		Set<Set<ColorData>> color_sets = new HashSet<>();
 		while(!colors.isEmpty()) {
+			String color_rgb = colors.get(0).toString();
+			
 			ColorData color = colors.get(0);
 			Set<ColorData> similar_colors = new HashSet<>();
 			for(int idx=0; idx < colors.size(); idx++) {
@@ -296,7 +317,7 @@ public class ColorPaletteUtils {
 				if(!color2.equals(color)) {
 					//if the difference between the 2 hues is less 3 degrees  
 					if(Math.abs(color.getHue() - color2.getHue()) < 0.09 ) {	
-						//log.warn("Colors are similar in hue!!!!!");
+						log.debug("Colors are similar in hue!!!!!");
 						if(similar_colors.isEmpty()) {
 							similar_colors.add(color);
 						}
@@ -318,7 +339,14 @@ public class ColorPaletteUtils {
 		return color_sets;
 	}
 	
+	/**
+	 * Converts a map representing primary and secondary colors within a palette from using {@link ColorData} to {@link String}
+	 * @param palette
+	 * @return
+	 */
 	public static Map<String, Set<String>> convertPaletteToStringRepresentation(Map<ColorData, Set<ColorData>> palette) {
+		assert palette != null;
+		
 		Map<String, Set<String>> stringified_map = new HashMap<>();
 		for(ColorData primary : palette.keySet()) {
 			Set<String> secondary_colors = new HashSet<>();
@@ -330,6 +358,6 @@ public class ColorPaletteUtils {
 			}
 			stringified_map.put(primary.rgb(), secondary_colors);
 		}
-		return null;
+		return stringified_map;
 	}
 }

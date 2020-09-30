@@ -54,9 +54,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		int headline_score = 0;
 		int text_score = 0;
 		
+		List<ElementState> high_header_contrast = new ArrayList<>();
 		List<ElementState> mid_header_contrast = new ArrayList<>();
 		List<ElementState> low_header_contrast = new ArrayList<>();
 
+		List<ElementState> high_text_contrast = new ArrayList<>();
 		List<ElementState> mid_text_contrast = new ArrayList<>();
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
@@ -64,7 +66,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+page_state.getElements().size());
 		//filter elements that aren't text elements
 		for(ElementState element : page_state.getElements()) {
-			if(element.getText()==null || element.getText().trim().isEmpty()) {
+			if(element.getText() == null || element.getText().trim().isEmpty()) {
 				continue;
 			}
 			element_list.add(element);
@@ -105,7 +107,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		    
 			//extract background colors
 			for(ColorUsageStat color_stat : color_data_list) {
-				log.warn("color_stat ::  rgb( "+color_stat.getRed()+" , " +color_stat.getGreen()+" , " +color_stat.getBlue() + " )   :    "+color_stat.getPixelPercent() + "  ; score ::  "+color_stat.getScore());
+				//log.warn("color_stat ::  rgb( "+color_stat.getRed()+" , " +color_stat.getGreen()+" , " +color_stat.getBlue() + " )   :    "+color_stat.getPixelPercent() + "  ; score ::  "+color_stat.getScore());
 				
 				//get color most used for background color
 				if(color_stat.getPixelPercent() > largest_pixel_percent) {
@@ -129,7 +131,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			if(ElementStateUtils.isHeader(element.getName())) {
 				//score header element
 				//calculate contrast between text color and background-color
-				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
+				contrast = (max_luminosity + 0.01) / (min_luminosity + 0.01);
 				total_headlines++;
 				/*
 				headlines < 3; value = 1
@@ -146,10 +148,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				else if(contrast >= 4.5) {
 					headline_score += 3;
+					high_header_contrast.add(element);
 				}
 			}
 			else if(ElementStateUtils.isTextContainer(element)) {
-				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
+				contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
 				total_text_elems++;
 				/*
 				text < 4.5; value = 1
@@ -166,131 +169,16 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				else if(contrast >= 7) {
 					text_score += 3;
+					high_text_contrast.add(element);
 				}
 			}
 		}
 		
-		
-		
-		
-		
-		/*
-		
-		
-		
-		
-		
-		//identify all colors used on page. Images are not considered
-		for(ElementState element : element_list) {
-			//check element for color css property
-			String color = element.getRenderedCssValues().get("color");
-			
-			//check element for background-color css property
-			String background_color = element.getRenderedCssValues().get("background-color");
-			
-			
-			if(color == null) {
-				log.warn("color is null");
-				continue;
-			}
-			
-			color = color.replace("inherit", "");
-			color = color.replace("transparent", "");
-			color = color.replace("!important", "");
-			color = color.trim();
-			
-			ColorData color_data = new ColorData(color.trim());
-			ColorData background_color_data = null;
-			ElementState parent = element.clone();
-			if(background_color != null) {
-				background_color = background_color.replace("inherit", "");
-				background_color = background_color.replace("transparent", "");
-				background_color = background_color.replace("!important", "");
-				background_color = background_color.trim();
-			}
-
-			if(background_color == null || background_color.isEmpty()) {
-				do {
-					parent = element_state_service.getParentElement(page_state.getKey(), parent.getKey());
-					
-					if(parent == null) {
-						continue;
-					}
-					background_color = parent.getRenderedCssValues().get("background-color");
-					if(background_color != null) {
-						//extract r,g,b,a from color css		
-						background_color = background_color.replace("transparent", "");
-						background_color = background_color.replace("!important", "");
-						background_color = background_color.trim();
-					}
-				}while((background_color == null || background_color.isEmpty()) && parent != null);
-			}
-			
-			if((background_color == null  || background_color.isEmpty())) {
-				background_color = "#ffffff";
-			}
-			
-			
-			background_color_data = new ColorData(background_color.trim());
-			
-			
-			double max_luminosity = 0.0;
-			double min_luminosity = 0.0;
-			
-			if(color_data.getLuminosity() > background_color_data.getLuminosity()) {
-				min_luminosity = background_color_data.getLuminosity();
-				max_luminosity = color_data.getLuminosity();
-			}
-			else {
-				min_luminosity = color_data.getLuminosity();
-				max_luminosity = background_color_data.getLuminosity();
-			}
-			double contrast = 0.0;
-			if(ElementStateUtils.isHeader(element.getName())) {
-				//score header element
-				//calculate contrast between text color and background-color
-				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
-				total_headlines++;
-				
-				//headlines < 3; value = 1
-				//headlines > 3 and headlines < 4.5; value = 2
-				//headlines >= 4.5; value = 3
-				 
-				if(contrast < 3) {
-					headline_score += 1;
-					low_header_contrast.add(element);
-				}
-				else if(contrast >= 3 && contrast < 4.5) {
-					headline_score += 2;
-					mid_header_contrast.add(element);
-				}
-				else if(contrast >= 4.5) {
-					headline_score += 3;
-				}
-			}
-			else if(ElementStateUtils.isTextContainer(element)) {
-				contrast = (max_luminosity + 0.05) / (min_luminosity + 0.05);
-				total_text_elems++;
-				
-				//text < 4.5; value = 1
-				//text >= 4.5 and text < 7; value = 2
-				//text >=7; value = 3
-
-				if(contrast < 4.5) {
-					text_score += 1;
-					low_text_contrast.add(element);
-				}
-				else if(contrast >= 4.5 && contrast < 7) {
-					text_score += 2;
-					mid_text_contrast.add(element);
-				}
-				else if(contrast >= 7) {
-					text_score += 3;
-				}
-			}
-		}
-*/
 		List<Observation> observations = new ArrayList<>();
+		if(!high_header_contrast.isEmpty()) {
+			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
+			observations.add(observation_service.save(high_header_contrast_observation));
+		}
 		if(!mid_header_contrast.isEmpty()) {
 			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
 			observations.add(observation_service.save(mid_header_contrast_observation));
@@ -298,6 +186,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		if(!low_header_contrast.isEmpty()) {
 			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
 			observations.add(observation_service.save(low_header_contrast_observation));
+		}
+		if(!high_text_contrast.isEmpty()) {
+			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
+			observations.add(observation_service.save(high_text_observation));
 		}
 		if(!mid_text_contrast.isEmpty()) {
 			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7");
@@ -312,16 +204,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(success_observation));
 		}
 		
-		
-
-		
-		
 		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
-		
-		if(total_possible_points == 0 ) {
-			total_possible_points = 1;
-		}
-		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   "+(headline_score+text_score)/total_possible_points);
+		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score)/total_possible_points);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
 	}
 }

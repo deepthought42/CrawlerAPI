@@ -128,7 +128,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(PageState.class, page_state -> {
-					log.warn("Recieved page state :: "+page_state.getUrl());
+					log.warn("Received page state :: "+page_state.getUrl());
 					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state.getKey())) {
 						page_states_experienced.put(page_state.getKey(), page_state);
@@ -174,7 +174,7 @@ public class AuditManager extends AbstractActor{
 					for(Audit audit : audit_list.getAudits()){
 						audit = audit_service.save(audit);
 						log.warn("Audit record :: "+audit_record);
-						audit_record_service.addAudit( audit_record.getKey(), audit.getKey());
+						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
 					}
 				})
 				.match(MemberUp.class, mUp -> {

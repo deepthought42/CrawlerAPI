@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.LookseeObject;
 
+import ch.qos.logback.classic.db.names.ColumnName;
+
 
 /**
  * Represents an both rgb and hsb and luminosity values
@@ -16,6 +18,7 @@ public class ColorData extends LookseeObject{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorData.class);
 
+	private float usage_percent;
 	private int red;
 	private int green;
 	private int blue;
@@ -84,6 +87,7 @@ public class ColorData extends LookseeObject{
 		this.brightness = hsb[2];
 		
 		this.setLuminosity(calculateLuminosity(red, green, blue));
+		setUsagePercent(color_usage_stat.getPixelPercent());
 	}
 
 	/**
@@ -221,5 +225,13 @@ public class ColorData extends LookseeObject{
 	@Override
 	public String generateKey() {
 		return rgb();
+	}
+
+	public float getUsagePercent() {
+		return usage_percent;
+	}
+
+	public void setUsagePercent(float usage_percent) {
+		this.usage_percent = usage_percent;
 	}
 }

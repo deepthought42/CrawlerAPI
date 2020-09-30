@@ -28,7 +28,6 @@ public abstract class Observation extends LookseeObject{
 
 	@Override
 	public String generateKey() {
-		// TODO Auto-generated method stub
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getType().getShortName()+getDescription());
 	}
 }

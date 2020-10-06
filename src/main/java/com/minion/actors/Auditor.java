@@ -85,13 +85,11 @@ public class Auditor extends AbstractActor{
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
 
-			   			audits_executed = audit_service.saveAll(audits_executed);
-
-			   			audits.addAll(audits_executed);
+			   			audits.addAll(  audit_service.saveAll(audits_executed) );
 			   		}
 		   			
-					PageAuditComplete audit_complete = new PageAuditComplete(page_state);
-		   			getSender().tell(audit_complete, getSelf());
+					//PageAuditComplete audit_complete = new PageAuditComplete(page_state);
+		   			//getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
@@ -106,7 +104,7 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
-
+    
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(rendered_audits_executed);

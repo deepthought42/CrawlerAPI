@@ -1,6 +1,5 @@
 package com.qanairy.models.audit;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -21,6 +20,8 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
+import com.qanairy.services.PageStateService;
+import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
 
 
@@ -34,6 +35,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ObservationService observation_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -62,115 +66,98 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> mid_text_contrast = new ArrayList<>();
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
-		List<ElementState> element_list = new ArrayList<>();
+		//List<ElementState> element_list = new ArrayList<>();
 		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+page_state.getElements().size());
 		//filter elements that aren't text elements
-		for(ElementState element : page_state.getElements()) {
-			if(element.getText() == null || element.getText().trim().isEmpty()) {
-				continue;
-			}
-			element_list.add(element);
-		}
+		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
+		
 		
 		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
-		for(ElementState element : element_list) {
-			if(element.getScreenshotUrl() == null || element.getScreenshotUrl().isEmpty()) {
-				log.warn("text element screenshot is empty ...."+element.getXpath());
-				continue;
-			}
-			
+		for(ElementState element : element_list) {			
 			List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
+				log.warn("extracting image properties for element ::   "+element.getName());
 				color_data_list.addAll( CloudVisionUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
-				//CloudVisionUtils.extractImageLabels(ImageIO.read(new URL(element.getScreenshotUrl())));
-				//CloudVisionUtils.extractImageText(ImageIO.read(new URL(element.getScreenshotUrl())));
-				//CloudVisionUtils.searchWebForImageUsage(ImageIO.read(new URL(element.getScreenshotUrl())));
-			} catch (MalformedURLException e) {
+				log.warn("successfully extracted image properties for element ::   "+element.getName());
+
+				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
+	
+				ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
+				ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
+	
+				ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
+				ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
+				float largest_pixel_percent = 0;
+			    
+				//extract background colors
+				for(ColorUsageStat color_stat : color_data_list) {
+					//get color most used for background color
+					if(color_stat.getPixelPercent() > largest_pixel_percent) {
+						largest_pixel_percent = color_stat.getPixelPercent();
+					}
+				}
+				
+				double max_luminosity = 0.0;
+				double min_luminosity = 0.0;
+				
+				if(text_color.getLuminosity() > background_color_data.getLuminosity()) {
+					min_luminosity = background_color_data.getLuminosity();
+					max_luminosity = text_color.getLuminosity();
+				}
+				else {
+					min_luminosity = text_color.getLuminosity();
+					max_luminosity = background_color_data.getLuminosity();
+				}
+				double contrast = 0.0;
+				if(ElementStateUtils.isHeader(element.getName())) {
+					//score header element
+					//calculate contrast between text color and background-color
+					contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
+					total_headlines++;
+					/*
+					headlines < 3; value = 1
+					headlines > 3 and headlines < 4.5; value = 2
+					headlines >= 4.5; value = 3
+					 */
+					if(contrast < 3) {
+						headline_score += 1;
+						low_header_contrast.add(element);
+					}
+					else if(contrast >= 3 && contrast < 4.5) {
+						headline_score += 2;
+						mid_header_contrast.add(element);
+					}
+					else if(contrast >= 4.5) {
+						headline_score += 3;
+						high_header_contrast.add(element);
+					}
+				}
+				else {
+					contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
+					total_text_elems++;
+					/*
+					text < 4.5; value = 1
+					text >= 4.5 and text < 7; value = 2
+					text >=7; value = 3
+					 */
+					if(contrast < 4.5) {
+						text_score += 1;
+						low_text_contrast.add(element);
+					}
+					else if(contrast >= 4.5 && contrast < 7) {
+						text_score += 2;
+						mid_text_contrast.add(element);
+					}
+					else if(contrast >= 7) {
+						text_score += 3;
+						high_text_contrast.add(element);
+					}
+				}
+			} catch (Exception e) {
 				log.warn("element screenshot url  :: "+element.getScreenshotUrl());
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
-
-			ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
-			ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
-
-			ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
-			ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
-			float largest_pixel_percent = 0;
-			
-		    
-			//extract background colors
-			for(ColorUsageStat color_stat : color_data_list) {
-				//log.warn("color_stat ::  rgb( "+color_stat.getRed()+" , " +color_stat.getGreen()+" , " +color_stat.getBlue() + " )   :    "+color_stat.getPixelPercent() + "  ; score ::  "+color_stat.getScore());
-				
-				//get color most used for background color
-				if(color_stat.getPixelPercent() > largest_pixel_percent) {
-					largest_pixel_percent = color_stat.getPixelPercent();
-				}
-			}
-			
-			
-			double max_luminosity = 0.0;
-			double min_luminosity = 0.0;
-			
-			if(text_color.getLuminosity() > background_color_data.getLuminosity()) {
-				min_luminosity = background_color_data.getLuminosity();
-				max_luminosity = text_color.getLuminosity();
-			}
-			else {
-				min_luminosity = text_color.getLuminosity();
-				max_luminosity = background_color_data.getLuminosity();
-			}
-			double contrast = 0.0;
-			if(ElementStateUtils.isHeader(element.getName())) {
-				//score header element
-				//calculate contrast between text color and background-color
-				contrast = (max_luminosity + 0.01) / (min_luminosity + 0.01);
-				total_headlines++;
-				/*
-				headlines < 3; value = 1
-				headlines > 3 and headlines < 4.5; value = 2
-				headlines >= 4.5; value = 3
-				 */
-				if(contrast < 3) {
-					headline_score += 1;
-					low_header_contrast.add(element);
-				}
-				else if(contrast >= 3 && contrast < 4.5) {
-					headline_score += 2;
-					mid_header_contrast.add(element);
-				}
-				else if(contrast >= 4.5) {
-					headline_score += 3;
-					high_header_contrast.add(element);
-				}
-			}
-			else if(ElementStateUtils.isTextContainer(element)) {
-				contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
-				total_text_elems++;
-				/*
-				text < 4.5; value = 1
-				text >= 4.5 and text < 7; value = 2
-				text >=7; value = 3
-				 */
-				if(contrast < 4.5) {
-					text_score += 1;
-					low_text_contrast.add(element);
-				}
-				else if(contrast >= 4.5 && contrast < 7) {
-					text_score += 2;
-					mid_text_contrast.add(element);
-				}
-				else if(contrast >= 7) {
-					text_score += 3;
-					high_text_contrast.add(element);
-				}
 			}
 		}
 		
@@ -187,6 +174,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
+		
 		if(!high_text_contrast.isEmpty()) {
 			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
 			observations.add(observation_service.save(high_text_observation));
@@ -199,13 +187,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5");
 			observations.add(observation_service.save(low_text_observation));
 		}
-		if(observations.isEmpty()) {
-			ElementStateObservation success_observation = new ElementStateObservation(page_state.getElements(), "All text and header elements are exceeding WCAG standards");
-			observations.add(observation_service.save(success_observation));
-		}
 		
 		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
-		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score)/total_possible_points);
+		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
 	}
+
+	
 }

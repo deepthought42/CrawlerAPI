@@ -53,8 +53,6 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 	@Override
 	public Audit execute(Domain domain) {
 		assert domain != null;
-
-
 		List<Observation> observations = new ArrayList<>();
 		
 		//get all color palette audits associated with most recent audit record for domain host

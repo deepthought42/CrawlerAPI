@@ -397,6 +397,14 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
+		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.debug("element screenshot :: "+element.getLocation().getX() + " , " + element.getLocation().getY());
+		log.debug("element screenshot size :: "+element.getSize().getWidth() + " , " + element.getSize().getHeight());
+		log.debug("viewport scroll offset  :  " + this.getXScrollOffset() + " , " + this.getYScrollOffset());
+		log.debug("viewport size ::  " + this.getViewportSize().getWidth() + " , " + this.getViewportSize().getHeight());
+		log.debug("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
+		
 		//calculate element position within screen
 		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
 	}
@@ -957,12 +965,23 @@ public class Browser {
 		return rule_sets;
 	}
 
+	/**
+	 * 
+	 * @param src
+	 * @return
+	 */
 	public static List<String> extractStylesheets(String src) {
 		List<String> raw_stylesheets = new ArrayList<>();
 		Document doc = Jsoup.parse(src);	
 		Elements stylesheets = doc.select("link");
+		log.warn("#######################################################################");
+		log.warn("#######################################################################");
+		log.warn("#######################################################################");
+		log.warn("stylesheets size :: "+stylesheets.size());
 		for(Element stylesheet : stylesheets) {
-			if("text/css".equalsIgnoreCase(stylesheet.attr("type"))) {
+			String rel_value = stylesheet.attr("rel");
+			log.warn("rel value of link tag ::  "+rel_value);
+			if("stylesheet".equalsIgnoreCase(rel_value)) {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet
 				if(stylesheet_url.trim().isEmpty()) {
@@ -972,6 +991,7 @@ public class Browser {
 					}
 				}
 				try {
+					log.warn("Adding stylesheet to raw stylesheets   ::   "+stylesheet_url);
 					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
 				} catch (KeyManagementException | NoSuchAlgorithmException e) {
 					// TODO Auto-generated catch block

@@ -7,9 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -19,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.gcp.CloudVisionUtils;
+import com.minion.browsing.Browser;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -27,6 +26,7 @@ import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.utils.BrowserUtils;
 
 
 /**
@@ -43,7 +43,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<String> gray_colors = new ArrayList<>();
+	//private List<String> gray_colors = new ArrayList<>();
 	private List<String> colors = new ArrayList<>();
 	
 	public ColorPaletteAudit() {}
@@ -61,7 +61,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
-
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		
 		try {
@@ -71,8 +70,27 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			e.printStackTrace();
 		}
 		
-		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
-		Map<String, Boolean> filtered_colors = new HashMap<>();
+		//extract declared css color properties
+		List<ColorData> colors_declared = new ArrayList<>();
+		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
+		
+		//open stylesheet
+		for(String stylesheet : raw_stylesheets) {
+			colors_declared.addAll(BrowserUtils.extractColorsFromStylesheet(stylesheet));
+		}
+		
+		log.warn("###########################################################################");
+		log.warn("###########################################################################");
+		log.warn("###########################################################################");
+		
+		log.warn("colors declared ::       "+colors_declared);
+
+		log.warn("###########################################################################");
+		log.warn("###########################################################################");
+		log.warn("###########################################################################");
+		/*
+		Map<ColorUsageStat, Boolean> gray_colors = new HashMap<ColorUsageStat, Boolean>();
+		Map<ColorUsageStat, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
 		for(ColorUsageStat color: color_usage_list) {
 			String rgb_color_str = "rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
@@ -81,29 +99,31 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			if( Math.abs(color.getRed() - color.getGreen()) < 4
 					&& Math.abs(color.getRed() - color.getBlue()) < 4
 					&& Math.abs(color.getBlue() - color.getGreen()) < 4) {
-				gray_colors.put(rgb_color_str, Boolean.TRUE);
+				gray_colors.put(color, Boolean.TRUE);
 			}
 			else {
-				filtered_colors.put(rgb_color_str, Boolean.TRUE);
+				filtered_colors.put(color, Boolean.TRUE);
 			}
 		}
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
-		
+		 */
 		List<ColorData> colors = new ArrayList<ColorData>();
 		
-		for(String color : filtered_colors.keySet()) {
-			colors.add(new ColorData(color.trim()));
+		for(ColorUsageStat color : color_usage_list) {
+			if(color.getPixelPercent() >= 0.025) {
+				colors.add(new ColorData(color));
+			}
 		}
+		
+		//colors.addAll(colors_declared);
 		//generate palette, identify color scheme and score how well palette conforms to color scheme
-		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(new ArrayList<String>(filtered_colors.keySet()));
+		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(colors);
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
 
 		List<Observation> observations = new ArrayList<>();
 		ColorPaletteObservation observation = new ColorPaletteObservation(
-														palette, 
-														new ArrayList<>(filtered_colors.keySet()), 
-														new ArrayList<>(gray_colors.keySet()), 
+														palette,
 														color_scheme, 
 														"This is a color scheme description");
 		
@@ -113,8 +133,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		Score score = ColorPaletteUtils.getPaletteScore(palette, color_scheme);
 		
 		//score colors found against scheme
-		setGrayColors(new ArrayList<>(gray_colors.keySet()));
-		setColors(new ArrayList<>(filtered_colors.keySet()));
+		//setGrayColors(new ArrayList<>(gray_colors));
+		setColors(new ArrayList<>(observation.getColors()));
 		 
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score.getPointsAchieved(), observations, AuditLevel.PAGE, score.getMaxPossiblePoints());
 	}
@@ -159,14 +179,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		}
 		
 		return CloudVisionUtils.extractImageProperties(screenshot);
-	}
-	
-	public List<String> getGrayColors() {
-		return gray_colors;
-	}
-
-	public void setGrayColors(List<String> gray_colors) {
-		this.gray_colors = gray_colors;
 	}
 
 	public List<String> getColors() {

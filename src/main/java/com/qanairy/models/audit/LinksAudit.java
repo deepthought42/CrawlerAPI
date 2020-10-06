@@ -16,7 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.PageVersion;
+import com.qanairy.models.ElementState;
+import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
@@ -27,18 +28,18 @@ import com.qanairy.utils.BrowserUtils;
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class LinksAudit implements IExecutablePageVersionAudit {
+public class LinksAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
 	
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<com.qanairy.models.Element> links_without_href_attribute =  new ArrayList<>();
-	private List<com.qanairy.models.Element> links_without_href_value =  new ArrayList<>();
-	private List<com.qanairy.models.Element> invalid_links = new ArrayList<>();
-	private List<com.qanairy.models.Element> dead_links = new ArrayList<>();
-	private List<com.qanairy.models.Element> non_labeled_links = new ArrayList<>();
+	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
+	private List<ElementState> links_without_href_value =  new ArrayList<>();
+	private List<ElementState> invalid_links = new ArrayList<>();
+	private List<ElementState> dead_links = new ArrayList<>();
+	private List<ElementState> non_labeled_links = new ArrayList<>();
 
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -54,12 +55,12 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageVersion page) {
-		assert page != null;
+	public Audit execute(PageState page_state) {
+		assert page_state != null;
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
-		List<com.qanairy.models.Element> link_elements = new ArrayList<>();
-		for(com.qanairy.models.Element element : page.getElements()) {
+		List<ElementState> link_elements = new ArrayList<>();
+		for(ElementState element : page_state.getElements()) {
 			if(element.getName().equalsIgnoreCase("a")) {
 				link_elements.add(element);
 			}
@@ -68,9 +69,9 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
-		for(com.qanairy.models.Element link : link_elements) {
+		for(ElementState link : link_elements) {
 	
-			Document jsoup_doc = Jsoup.parseBodyFragment(link.getTemplate(), page.getUrl());
+			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 			
 			if(element.hasAttr("href")) {
@@ -95,7 +96,7 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 				try {
 					URI uri = new URI(href);
 					if(!uri.isAbsolute()) {
-						href = page.getUrl() + href;
+						href = page_state.getUrl() + href;
 					}
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
@@ -151,32 +152,38 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 		}
 		
 		if(!links_without_href_attribute.isEmpty()) {
-			ElementObservation observation = new ElementObservation(links_without_href_attribute, "Links without an 'href' attribute present");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_attribute, "Links without an 'href' attribute present");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
-			ElementObservation observation = new ElementObservation(links_without_href_value, "Links without emptry 'href' values");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_value, "Links without emptry 'href' values");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(invalid_links, "Links with invalid addresses");
+			ElementStateObservation observation = new ElementStateObservation(invalid_links, "Links with invalid addresses");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(dead_links, "Dead links");
+			ElementStateObservation observation = new ElementStateObservation(dead_links, "Dead links");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(non_labeled_links, "Links without text");
+			ElementStateObservation observation = new ElementStateObservation(non_labeled_links, "Links without text");
 			observations.add(observation_service.save(observation));
 		}
 		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*6));
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*6); //the contstant 6 in this equation is the exact number of boolean checks for this audit
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
+						 AuditSubcategory.LINKS, 
+						 score, 
+						 observations, 
+						 AuditLevel.PAGE, 
+						 link_elements.size()*6); 
+		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

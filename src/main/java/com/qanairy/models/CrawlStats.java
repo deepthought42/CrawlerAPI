@@ -2,7 +2,7 @@ package com.qanairy.models;
 
 import java.time.LocalDateTime;
 
-public class CrawlStats {
+public class CrawlStats extends LookseeObject{
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
@@ -10,11 +10,11 @@ public class CrawlStats {
 	private long page_count;
 	private double average_time_per_page;
 	
-	public CrawlStats(LocalDateTime start_time, LocalDateTime end_time, long total_seconds, int size, double avg_time_per_page) {
+	public CrawlStats(LocalDateTime start_time, LocalDateTime end_time, long total_seconds, int page_count, double avg_time_per_page) {
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setTotalTime(total_seconds);
-		setPageCount(size);
+		setPageCount(page_count);
 		setAverageTimePerPage(avg_time_per_page);
 	}
 
@@ -47,5 +47,10 @@ public class CrawlStats {
 	}
 	public void setAverageTimePerPage(double average_time_per_page) {
 		this.average_time_per_page = average_time_per_page;
-	}	
+	}
+
+	@Override
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha512Hex( Integer.toString(start_time.hashCode()+end_time.hashCode()));
+	}
 }

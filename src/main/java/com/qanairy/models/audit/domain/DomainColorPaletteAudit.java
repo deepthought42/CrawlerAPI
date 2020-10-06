@@ -83,7 +83,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 					ColorPaletteObservation palette_observation = (ColorPaletteObservation)observation;
 					schemes_recognized.put(palette_observation.getColorScheme().getShortName(), Boolean.TRUE);
 					
-					gray_color_strings.addAll(palette_observation.getGrayColors());
 					color_strings.addAll(palette_observation.getColors());
 					palette_colors.addAll(palette_color_service.saveAll(palette_observation.getPaletteColors()));
 				}
@@ -110,8 +109,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
 																palette_colors, 
-																color_strings, 
-																new ArrayList<>(gray_color_strings), 
 																scheme, 
 																"This is a color scheme description");
 		

@@ -251,18 +251,13 @@ public class ColorPaletteUtils {
 	 * @param color_strings
 	 * @return
 	 */
-	public static List<PaletteColor> extractPalette(List<String> color_strings) {
+	public static List<PaletteColor> extractPalette(List<ColorData> color_strings) {
 		assert color_strings != null;
-		
-		List<ColorData> colors = new ArrayList<>();
-		for(String color : color_strings) {
-			colors.add(new ColorData(color));
-		}
 		
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		//identify colors that are a shade/tint of another color in the colors list and group them together in a set
-		Set<Set<ColorData>> color_sets = groupColors(colors);
+		Set<Set<ColorData>> color_sets = groupColors(color_strings);
 		
 		//identify primary colors using saturation. Higher saturation indicates purity or intensity of the color
 		for(Set<ColorData> color_set : color_sets) {

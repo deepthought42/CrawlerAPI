@@ -114,10 +114,9 @@ public class AuditController {
     	
         return audit_set;
     }
-    
 
     /**
-     * Retrieves {@link Audit audit} with given ID
+     * Retrieves set of {@link Audit audits} that have a type of 'color management'
      * 
      * @param id
      * @return {@link Audit audit} with given ID
@@ -129,6 +128,49 @@ public class AuditController {
     	log.warn("finding element with ID  :: "+host);
         return audit_record_service.getAllColorManagementAudits(host);
     }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of typography
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/typography")
+    public @ResponseBody Set<Audit> getTypographyAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return audit_record_service.getAllTypographyAudits(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of information architecture
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/information_architecture")
+    public @ResponseBody Set<Audit> getInformationArchitectureAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return audit_record_service.getAllInformationArchitectureAudits(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/visuals")
+    public @ResponseBody Set<Audit> getVisualAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding visual audits for domain with host  :: "+host);
+        return audit_record_service.getAllVisualAudits(host);
+    }
+    
     
     /**
      * 

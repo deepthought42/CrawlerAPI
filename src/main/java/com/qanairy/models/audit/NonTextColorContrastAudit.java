@@ -60,9 +60,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		List<ElementState> non_text_elements = getAllButtons(elements);
 		non_text_elements.addAll(getAllInputs(elements));
-		//non_text_elements.addAll(getAllIcons(page_state));
+
 		log.warn("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 		log.warn("non text elements identified :: "+non_text_elements.size());
+		
 		return evaluateNonTextContrast(page_state, non_text_elements);
 	}
 
@@ -101,22 +102,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		int score = 0;
 		List<ElementState> low_contrast_elements = new ArrayList<>();
 		List<ElementState> mid_contrast_elements = new ArrayList<>();
-		
+		List<ElementState> high_contrast_elements = new ArrayList<>();
+
 		for(ElementState element : non_text_elements) {
-			log.warn("evaluating non text element   ::    "+element.getName());
-			if(element.getScreenshotUrl() == null || element.getScreenshotUrl().isEmpty()) {
-				log.warn("non-text element screenshot is empty ...."+element.getXpath());
-				continue;
-			}
-			
 			//get parent element of button
 			try {
-				//String button_background_color = button.getRenderedCssValues().get("background-color");
-				ColorUsageStat most_used_color = null;
-				
-				log.warn("GETTING NON-TEXT ELEMENT BACKGROUND !!!!!!");
-				//TODO add observation of button without background
-				most_used_color = extractMostUsedColor(element);
+				ColorUsageStat most_used_color = extractMostUsedColor(element);
 				
 				//randomly sample colors just outside the perimeter of the element within page state screenshot
 				int x_position = element.getXLocation();
@@ -126,7 +117,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				Color parent_background_color = getPixelColor(new URL(page_state.getFullPageScreenshotUrl()), x_position-5, y_position-5);				
 				String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
 				double contrast = ColorData.computeContrast(new ColorData(parent_rgb), new ColorData(most_used_color.getRGB()));
-				
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					score += 1;
@@ -137,13 +127,13 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				else {
 					score += 3;
+					high_contrast_elements.add(element);
 				}
 			}
 			catch(Exception e) {
 				e.printStackTrace();
 			}
 		} 
-		log.warn("----------------------------------------------------------------------------------");
 
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
@@ -154,13 +144,16 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
+		if(!high_contrast_elements.isEmpty()) {
+			ElementStateObservation high_contrast_observation = new ElementStateObservation(high_contrast_elements, "Elements with a contrast greater than 4.5");
+			observations.add(observation_service.save(high_contrast_observation));
+		}
 		if(observations.isEmpty()) {
 			ElementStateObservation success_observation = new ElementStateObservation(non_text_elements, "All text and header elements are exceeding WCAG standards");
 			observations.add(observation_service.save(success_observation));
 		}
 		
-		log.warn("NON TEXT ELEMENT CONTRAST SCORE  ::   "+score);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, new ArrayList<>(), AuditLevel.PAGE, non_text_elements.size() *3);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, non_text_elements.size() *3);
 	}
 
 

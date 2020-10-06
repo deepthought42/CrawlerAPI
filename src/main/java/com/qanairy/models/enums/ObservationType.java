@@ -12,6 +12,7 @@ public enum ObservationType {
 	PROPERTY_MAP("Property Map"),
 	STYLE_MISSING("Style Missing"),
 	PAGE("Page"),
+	PAGE_STATE("Page State"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

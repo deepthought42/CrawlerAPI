@@ -126,12 +126,14 @@ public class BrowserService {
 		return !last_page.getUrl().equals(page_state.getUrl());
 	}
 
-	public static boolean isElementLargerThanViewport(Browser browser, Dimension element_size) {
+	public static boolean isElementLargerThanViewport(Browser browser, Dimension element_size, Point location) {
 		int height = element_size.getHeight();
 		int width = element_size.getWidth();
 
 		return width >= browser.getViewportSize().getWidth()
-				 || height >= browser.getViewportSize().getHeight();
+				 || height >= browser.getViewportSize().getHeight()
+				 || (location.getX()+width) > (browser.getViewportSize().getWidth()+browser.getXScrollOffset())
+				 || (location.getY()+height) > (browser.getViewportSize().getHeight()+browser.getYScrollOffset());
 	}
 
 	/**
@@ -315,7 +317,6 @@ public class BrowserService {
 		log.warn("building page....");
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		
-		//Element root = html_doc.getElementsByTag("body").get(0);
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
 		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
 		
@@ -527,6 +528,7 @@ public class BrowserService {
 	}
 	
 	/**
+	 * identify and collect data for elements within the Document Object Model 
 	 * 
 	 * @param page_source
 	 * @param url
@@ -559,12 +561,23 @@ public class BrowserService {
 			}
 			
 			WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
+			Dimension element_size = web_element.getSize();
+			Point element_location = web_element.getLocation();
 			
+			browser.scrollToElement(web_element);
 			//check if element is visible in pane and if not then continue to next element xpath
 			if( !web_element.isDisplayed()
-					|| !hasWidthAndHeight(web_element.getSize())) {
+					|| !hasWidthAndHeight(web_element.getSize())
+					|| isElementLargerThanViewport(browser, element_size, element_location)
+					|| isElementVisibleInPane(browser, element_location, element_size)) {
 				continue;
 			}
+			
+			log.warn("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
+			log.warn("web_element location :: "+element_location.getX() + " , " + element_location.getY());
+			log.warn("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
+			log.warn("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
+
 			
 			//get child elements for element
 			Map<String, String> attributes = browser.extractAttributes(web_root);
@@ -578,6 +591,7 @@ public class BrowserService {
 			else {
 				classification = ElementClassification.ANCESTOR;
 			}
+			
 			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 			String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));

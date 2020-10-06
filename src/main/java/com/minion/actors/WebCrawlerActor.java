@@ -4,6 +4,8 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
+import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
@@ -103,10 +106,11 @@ public class WebCrawlerActor extends AbstractActor{
 					Domain domain = crawl_action.getDomain();
 					
 					String initial_url = "http://"+domain.getHost()+domain.getEntryPath();
+					LocalDateTime start_time = LocalDateTime.now();
+					Map<String, PageVersion> pages = new HashMap<>();
 					
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
-					
 					
 					while(!frontier.isEmpty()) {
 						
@@ -124,14 +128,12 @@ public class WebCrawlerActor extends AbstractActor{
 						URL page_url = new URL(page_url_str);
 
 						//construct page and add page to list of page states
-						
-
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 							PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
 							page = page_service.save( page );
-
+							pages.put(page.getKey(), page);
 							domain.addPage(page);
 							domain = domain_service.save(domain);
 							
@@ -160,8 +162,8 @@ public class WebCrawlerActor extends AbstractActor{
 				   					external_links.put(href_str, Boolean.TRUE);
 								}
 								else if( !visited.containsKey(href) && !frontier.containsKey(href)){
-									log.warn("href after sanitize :: "+href_str);
-									log.warn("adding link to frontier :: "+href);
+									log.warn("href after sanitize :: " + href_str);
+									log.warn("adding link to frontier :: " + href);
 									//add link to frontier
 									frontier.put(href, Boolean.TRUE);
 								}
@@ -181,6 +183,14 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn(e.getMessage() + " : " +e.getUrl());
 						}
 					}
+					LocalDateTime end_time = LocalDateTime.now();
+					long run_time = start_time.until(end_time, ChronoUnit.MILLIS);
+					CrawlStats crawl_stats = new CrawlStats(start_time, 
+														    end_time, 
+													    	run_time, 
+													    	pages.size(), 
+													    	run_time/pages.size());
+					getSender().tell(crawl_stats, getSelf());
 					System.out.println("total links visited :::  "+visited.keySet().size());
 				})
 				.match(PageVersion.class, page -> {

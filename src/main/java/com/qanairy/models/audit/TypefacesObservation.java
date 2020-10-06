@@ -4,49 +4,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.Relationship;
-
 import com.qanairy.models.Element;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementStateObservation extends Observation {
+public class TypefacesObservation extends Observation {
 	private String description;
 	
-	@Relationship(type = "FOR")
-	private List<ElementState> elements = new ArrayList<>();
+	private List<String> typefaces = new ArrayList<>();
 	
-	public ElementStateObservation() {}
+	public TypefacesObservation() {}
 	
-	public ElementStateObservation(List<ElementState> elements, String description) {
-		setElements(elements);
+	public TypefacesObservation(List<String> typefaces, String description) {
+		setTypefaces(typefaces);
 		setDescription(description);
 		setKey(this.generateKey());
 	}
 	
 	@Override
 	public String generateKey() {
-		assert elements != null;
-		String key = elements.parallelStream().map(ElementState::getKey).sorted().collect(Collectors.joining(""));
+		assert typefaces != null;
+		String key = typefaces.parallelStream().sorted().collect(Collectors.joining(""));
 		
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
 
 
-	public List<ElementState> getElements() {
-		return elements;
+	public List<String> getTypefaces() {
+		return typefaces;
 	}
 
 
-	public void setElements(List<ElementState> elements) {
-		this.elements = elements;
+	public void setTypefaces(List<String> typefaces) {
+		this.typefaces = typefaces;
 	}
 	
-	public boolean addElements(List<ElementState> elements) {
-		return this.elements.addAll(elements);
+	public boolean addTypefaces(List<String> typefaces) {
+		return this.typefaces.addAll(typefaces);
 	}
 
 	@Override

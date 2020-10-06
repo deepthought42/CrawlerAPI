@@ -20,7 +20,7 @@ import com.qanairy.services.DomainService;
  * Responsible for executing an audit on the page audits for hyperlinks
  */
 @Component
-public class DomainLinksAudit implements IExecutableDomainAudit {
+public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 
 	@Autowired
 	private AuditService audit_service;
@@ -28,7 +28,7 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 	@Autowired
 	private DomainService domain_service;
 	
-	public DomainLinksAudit() {	}
+	public DomainImageAltTextAudit() {	}
 
 	/**
 	 * {@inheritDoc}
@@ -44,20 +44,18 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 		
 		List<Observation> observations = new ArrayList<>();
 
-		Set<Audit> link_audits = domain_service.getMostRecentAuditRecordLinks(domain.getHost());
+		Set<Audit> link_audits = domain_service.getMostRecentAuditRecordAltText(domain.getHost());
 		int points = 0;
 		int max_points = 0;
-		System.out.println("loaded page level LINK audits :: "+link_audits.size());
+		
 		for(Audit audit : link_audits) {
 			points += audit.getPoints();
 			max_points += audit.getTotalPossiblePoints();
-			System.out.println("Obtaining observations from NEO4J FOR AUDIT WITH KEY ;:::  "+audit.getKey());
 			observations.addAll(audit_service.getObservations(audit.getKey()));
-			System.out.println("observations size for domain link audit ::      "+observations.size());
-		}
+		}		
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
-						 AuditSubcategory.LINKS, 
+		return new Audit(AuditCategory.VISUALS, 
+						 AuditSubcategory.ALT_TEXT, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 

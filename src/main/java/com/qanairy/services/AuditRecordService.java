@@ -1,8 +1,10 @@
-package com.qanairy.services;
+           package com.qanairy.services;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.validation.constraints.NotBlank;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,5 +94,60 @@ public class AuditRecordService {
 		assert !audit_record_key.isEmpty();
 		
 		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTypographyAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllTypographyAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllTypefaceAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTypefaceAudits(audit_record_key);
+	}
+
+	////////////////////////////////////////
+	//	INFORMATION ARCHITECTURE
+	/////////////////////////////////////////	
+	public Set<Audit> getAllInformationArchitectureAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllInformationArchitectureAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllLinkAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageLinkAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTitleAndHeaderAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTitleAndHeaderAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllAltTextAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageAltTextAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllVisualAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllVisualAudits(record.getKey());
 	}
 }

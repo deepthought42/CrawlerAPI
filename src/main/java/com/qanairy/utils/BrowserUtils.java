@@ -1,16 +1,20 @@
 package com.qanairy.utils;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -30,6 +34,7 @@ import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
+import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.ScreenshotUploadService;
@@ -429,5 +434,171 @@ public class BrowserUtils {
 		assert href != null;
 		
 		return href.endsWith(".jpg") || href.endsWith(".png") || href.endsWith(".gif") || href.endsWith(".bmp") || href.endsWith(".tiff") || href.endsWith(".webp") || href.endsWith(".bpg") || href.endsWith(".heif");
+	}
+	
+	/**
+	 * Opens stylesheet content and searches for font-family css settings
+	 * 
+	 * @param stylesheet_url
+	 * @return
+	 * @throws IOException
+	 * 
+	 * @pre stylesheet_url != null;
+	 * 
+	 */
+	public static Collection<? extends String> extractFontFamiliesFromStylesheet(String stylesheet) {
+		assert stylesheet != null;
+		
+		List<String> font_families = new ArrayList<>();
+
+		//extract text matching font-family:.*; from stylesheets
+		//for each match, extract entire string even if it's a list and add string to font-families list
+		String patternString = "font-family:(.*?)[?=;|}]";
+
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(stylesheet);
+        while(matcher.find()) {
+        	String font_family_setting = matcher.group();
+        	if(font_family_setting.contains("inherit")) {
+        		continue;
+        	}
+        	font_family_setting = font_family_setting.replaceAll("'", "");
+        	font_family_setting = font_family_setting.replaceAll(";", "");
+        	font_family_setting = font_family_setting.replaceAll(":", "");
+        	font_family_setting = font_family_setting.replaceAll(":", "");
+        	font_family_setting = font_family_setting.replaceAll("}", "");
+        	font_family_setting = font_family_setting.replaceAll("!important", "");
+        	font_family_setting = font_family_setting.replaceAll("font-family", "");
+        	
+        	font_families.add(font_family_setting);
+        }
+        
+        return font_families;
+	}
+	
+	/**
+	 * Retrieves {@link ElementStates} that contain text
+	 * 
+	 * @param element_states
+	 * @return
+	 */
+	public static List<ElementState> getTextElements(List<ElementState> element_states) {
+		assert element_states != null;
+		
+		List<ElementState> element_list = new ArrayList<>();
+		for(ElementState element : element_states ) {
+			if(element.getText() != null && !element.getText().trim().isEmpty()) {
+				element_list.add(element);
+			}
+		}
+		
+		return element_list;
+	}
+
+	public static String getTitle(PageState page_state) {
+		Document doc = Jsoup.parse(page_state.getSrc());
+		
+		return doc.title();
+	}
+
+	/**
+	 * Extracts set of colors declared as background or text color in the css
+	 * 
+	 * @param stylesheet
+	 * @return
+	 */
+	public static Collection<? extends ColorData> extractColorsFromStylesheet(String stylesheet) {
+		assert stylesheet != null;
+		
+		List<ColorData> colors = new ArrayList<>();
+
+		//extract text matching font-family:.*; from stylesheets
+		//for each match, extract entire string even if it's a list and add string to font-families list
+       for(String prop_setting : extractCssPropertyDeclarations("background-color", stylesheet)) {
+    	   if(prop_setting.startsWith("#")) {
+    		   
+    		   Color color = hex2Rgb(prop_setting.trim().substring(1));
+    		   colors.add(new ColorData(color.getRed() + ","+color.getGreen()+","+color.getBlue()));
+    	   }
+    	   else if( prop_setting.startsWith("rgb") ){
+    		   colors.add(new ColorData(prop_setting));
+    	   }
+        }
+
+        for(String prop_setting : extractCssPropertyDeclarations("color", stylesheet)) {
+        	if(prop_setting.startsWith("#")) {
+     		   Color color = hex2Rgb(prop_setting.trim().substring(1));
+     		   colors.add(new ColorData(color.getRed() + ","+color.getGreen()+","+color.getBlue()));
+     	   }
+     	   else if( prop_setting.startsWith("rgb") ){
+     		   colors.add(new ColorData(prop_setting));
+     	   }
+        }
+        
+        return colors;
+	}
+	
+	/**
+	 * Extracts css property settings from a string containing valid css
+	 * @param prop
+	 * @param css
+	 * @return
+	 */
+	public static List<String> extractCssPropertyDeclarations(String prop, String css) {
+		assert prop != null;
+		assert css != null;
+		
+		String patternString = prop+":(.*?)[?=;|}]";
+		List<String> settings = new ArrayList<>();
+
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(css);
+        while(matcher.find()) {
+        	String setting = matcher.group();
+        	if(setting.contains("inherit")
+				|| setting.contains("transparent")) {
+        		continue;
+        	}
+        	setting = setting.replaceAll("'", "");
+        	setting = setting.replaceAll(";", "");
+        	setting = setting.replaceAll(":", "");
+        	setting = setting.replaceAll(":", "");
+        	setting = setting.replaceAll("}", "");
+        	setting = setting.replaceAll("!important", "");
+        	setting = setting.replaceAll(prop, "");
+
+        	settings.add(setting);
+        }
+        
+        return settings;
+	}
+	/**
+	 * Converts hexadecimal colors to RGB format
+	 * @param color_str e.g. "#FFFFFF"
+	 * @return 
+	 */
+	public static Color hex2Rgb(String color_str) {
+		assert color_str != null;
+
+		if(color_str.contentEquals("0")) {
+			return new Color(0,0,0);
+		}
+		if(color_str.length() == 3) {
+			color_str = expandHex(color_str);
+		}
+		
+	    return new Color(
+	            Integer.valueOf( color_str.substring( 0, 2 ), 16 ),
+	            Integer.valueOf( color_str.substring( 2, 4 ), 16 ),
+	            Integer.valueOf( color_str.substring( 4, 6 ), 16 ) );
+	}
+
+	private static String expandHex(String color_str) {
+		String expanded_hex = "";
+		for(int idx = 0; idx < color_str.length(); idx++) {
+			expanded_hex += color_str.charAt(idx)  + color_str.charAt(idx);
+		}
+		
+		return expanded_hex;
 	}
 }

@@ -23,7 +23,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.repository.AuditRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -237,32 +236,59 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		log.warn("domain url for color management audits :: "+host);
-        AuditRecord record = audit_record_service.findMostRecent(host).get();
-        log.warn("audit record :: " + record);
-        log.warn("audit record key :: " + record.getKey());
-		return audit_record_service.getAllColorPaletteAudits(record.getKey());
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllColorPaletteAudits(record.getKey());
 	}
 
 	public Set<Audit> getMostRecentAuditRecordTextColorContrast(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		log.warn("domain url for color management audits :: "+host);
-        AuditRecord record = audit_record_service.findMostRecent(host).get();
-        log.warn("audit record :: " + record);
-        log.warn("audit record key :: " + record.getKey());
-		return audit_record_service.getAllTextColorContrastAudits(record.getKey());
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllTextColorContrastAudits(record.getKey());
 	}
 
 	public Set<Audit> getMostRecentAuditRecordNonTextColorContrast(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		log.warn("domain url for color management audits :: "+host);
         AuditRecord record = audit_record_service.findMostRecent(host).get();
-        log.warn("audit record :: " + record);
-        log.warn("audit record key :: " + record.getKey());
 		return audit_record_service.getAllNonTextColorContrastAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordTypeface(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllTypefaceAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordLinks(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllLinkAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordTitleAndHeader(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllTitleAndHeaderAudits(record.getKey());
+	}
+
+	public Set<Audit> getMostRecentAuditRecordAltText(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllAltTextAudits(record.getKey());
+	}
+
+	public Domain findByAuditRecord(String audit_record_key) {
+		return domain_repo.findByAuditRecord(audit_record_key);
 	}
 }

@@ -89,7 +89,7 @@ public class AuditService {
 	public List<Observation> getObservations(String audit_key) {
 		assert audit_key != null;
 		assert !audit_key.isEmpty();
-		
+		log.warn("LOADING OBSERVATIONS FOR AUDIT WITH KEY :: " + audit_key);
 		return audit_repo.findObservationsForAudit(audit_key);
 	}
 }

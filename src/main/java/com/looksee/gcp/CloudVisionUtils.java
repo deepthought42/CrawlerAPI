@@ -44,7 +44,7 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static void extractImageText(BufferedImage buffered_image) throws IOException {
+	public static List<String> extractImageText(BufferedImage buffered_image) throws IOException {
 		
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
 	    //InputStream url_input_stream = new URL(image_url).openStream();
@@ -66,11 +66,20 @@ public class CloudVisionUtils {
 	    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
 	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
 	    	List<AnnotateImageResponse> responses = response.getResponsesList();
-	
-	      	for (AnnotateImageResponse res : responses) {
+	    	
+	    	log.warn("#########################################################################");
+	    	log.warn("#########################################################################");
+		      	
+    		for (AnnotateImageResponse res : responses) {
+	      		/*
+    			log.warn("response label annotations :: " +res.getLabelAnnotationsList());
+	      		log.warn("Full Text annotation :: " +res.getFullTextAnnotation());
+		        log.warn("text annotations :   "+res.getTextAnnotationsList());
+*/
+    			
 		        if (res.hasError()) {
 		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		          return new ArrayList<>();
 		        }
 		        
 		        log.warn("text annotations list size :: "+res.getTextAnnotationsList().size());
@@ -81,6 +90,7 @@ public class CloudVisionUtils {
 		        }
 	      	}
 	    }
+        return new ArrayList<>();
 	}
 	
 	/**

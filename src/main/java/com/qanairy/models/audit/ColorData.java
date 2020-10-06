@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.LookseeObject;
 
-import ch.qos.logback.classic.db.names.ColumnName;
-
 
 /**
  * Represents an both rgb and hsb and luminosity values

@@ -19,21 +19,17 @@ public class ColorPaletteObservation extends Observation{
 	private List<PaletteColor> palette_colors = new ArrayList<>();
 	
 	private List<String> colors = new ArrayList<>();
-	private List<String> gray_colors = new ArrayList<>();
 	private String color_scheme;
 	
 	public ColorPaletteObservation() {}
 	
 	public ColorPaletteObservation(
 			List<PaletteColor> palette, 
-			List<String> colors, 
-			List<String> gray_colors, 
 			ColorScheme scheme, 
 			String description
 	) {
 		setPaletteColors(palette);
-		setColors(colors);
-		setGrayColors(gray_colors);
+		setColors(palette);
 		setColorScheme(scheme);
 		setDescription(description);
 		setKey(this.generateKey());
@@ -42,24 +38,17 @@ public class ColorPaletteObservation extends Observation{
 	@Override
 	public String generateKey() {
 		Collections.sort(colors);
-		Collections.sort(gray_colors);
-		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + gray_colors.toString() + this.getDescription() );
+		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + this.getDescription() );
 	}
 
 	public List<String> getColors() {
 		return colors;
 	}
 
-	public void setColors(List<String> colors) {
-		this.colors = colors;
-	}
-
-	public List<String> getGrayColors() {
-		return gray_colors;
-	}
-
-	public void setGrayColors(List<String> gray_colors) {
-		this.gray_colors = gray_colors;
+	public void setColors(List<PaletteColor> palette_colors) {
+		for(PaletteColor color : palette_colors) {
+			this.colors.add(color.getPrimaryColor());
+		}
 	}
 
 	public ColorScheme getColorScheme() {

@@ -8,9 +8,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +19,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -34,6 +32,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ObservationService observation_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
 	private List<ElementState> links_without_href_value =  new ArrayList<>();
@@ -60,28 +61,31 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
-		for(ElementState element : page_state.getElements()) {
+		for(ElementState element : page_state_service.getElementStates(page_state.getKey())) {
 			if(element.getName().equalsIgnoreCase("a")) {
 				link_elements.add(element);
 			}
 		}
 		
+		log.warn("------------------------------------------------------------");
+		log.warn("Link elements found ... "+link_elements.size());
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {
-	
+	/*
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
-			
-			if(element.hasAttr("href")) {
+		*/
+			String href = link.getAttribute("href");
+			if(href != null && !href.isEmpty()) {
 				score++;
 			}
 			else {
 				links_without_href_attribute.add(link);
 				continue;
 			}
-			String href = element.absUrl("href");
+			//String href = element.absUrl("href");
 
 			//if href is a mailto link then give score full remaining value and continue
 			if(href.startsWith("mailto:")) {
@@ -131,10 +135,10 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			
 			//Does link contain a text label inside it
-			 if(element.hasText()) {
+			 if(link.getText().isEmpty()) {
 				score++;
 			 }
-			 else if(!element.hasText() && element.getElementsByTag("img").isEmpty()) {
+			 else if(!link.getText().isEmpty()) {
 				//does element use image as links?
 				non_labeled_links.add(link);
 			}
@@ -143,9 +147,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 			//TODO : Is link label relevant to destination url or content? yes(1) / No(0)
 				//TODO :does link text exist in url?
-				if(href.contains(element.ownText())) {
-					score++;
-				}
+			//	if(href.contains(element.ownText())) {
+				//	score++;
+				//}
 				
 				//TODO :does target content relate to link?
 			

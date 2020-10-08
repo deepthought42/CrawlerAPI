@@ -1,12 +1,16 @@
 package com.looksee.gcp;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -30,6 +34,7 @@ import com.google.cloud.vision.v1.WebDetection.WebImage;
 import com.google.cloud.vision.v1.WebDetection.WebLabel;
 import com.google.cloud.vision.v1.WebDetection.WebPage;
 import com.google.protobuf.ByteString;
+import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorUsageStat;
 
 /**
@@ -350,7 +355,7 @@ public class CloudVisionUtils {
 	 */
 	public static List<ColorUsageStat> extractImageProperties(BufferedImage buffered_image) throws IOException {
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
-		
+
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
 	    //InputStream url_input_stream = new URL(image_url).openStream();
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -393,6 +398,7 @@ public class CloudVisionUtils {
 		        }
 	      	}
 	    }
+	    
 	    return color_usage_stats;
 	}
 }

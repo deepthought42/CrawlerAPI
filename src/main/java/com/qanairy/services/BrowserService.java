@@ -569,14 +569,15 @@ public class BrowserService {
 			if( !web_element.isDisplayed()
 					|| !hasWidthAndHeight(web_element.getSize())
 					|| isElementLargerThanViewport(browser, element_size, element_location)
-					|| isElementVisibleInPane(browser, element_location, element_size)) {
+					|| !isElementVisibleInPane(browser, element_location, element_size)) {
 				continue;
 			}
 			
-			log.warn("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
-			log.warn("web_element location :: "+element_location.getX() + " , " + element_location.getY());
-			log.warn("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
-			log.warn("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
+			log.debug("---------------------------------------------------------------------------");
+			log.debug("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
+			log.debug("web_element location :: "+element_location.getX() + " , " + element_location.getY());
+			log.debug("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
+			log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
 
 			
 			//get child elements for element
@@ -594,7 +595,7 @@ public class BrowserService {
 			
 			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 			String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+			String element_screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			element_screenshot.flush();
 			
 
@@ -606,7 +607,7 @@ public class BrowserService {
 			Element element = elements.first();
 			
 			ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
-			element_state.setScreenshotUrl(viewport_screenshot_url);
+			element_state.setScreenshotUrl(element_screenshot_url);
 			element_states_map.put(xpath, element_state);
 			element_state = element_state_service.save(element_state);
 			visited_elements.add(element_state);

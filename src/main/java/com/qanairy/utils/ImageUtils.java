@@ -2,7 +2,19 @@ package com.qanairy.utils;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.openimaj.image.analysis.colour.CIEDE2000;
+
+import com.qanairy.models.audit.ColorData;
+import com.qanairy.models.audit.ColorUsageStat;
 
 public class ImageUtils {
 
@@ -14,4 +26,187 @@ public class ImageUtils {
         g2d.dispose();
         return resized;
     }
+	 
+	/**
+	 * Calculate the colour difference value between two colours in lab space.
+	 * @param lab1 first colour
+	 * @param lab2 second colour
+	 * @return the CIE 2000 colour difference
+	 */
+	public static float calculateDeltaE(float [] lab1, float[] lab2) {
+		return (float) CIEDE2000.calculateDeltaE(lab1[0],lab1[1],lab1[2],lab2[0],lab2[1],lab2[2]);
+	}
+	
+	/**
+	 * Calculate the colour difference value between two colours in lab space.
+	 * @param lab1 first colour
+	 * @param lab2 second colour
+	 * @return the CIE 2000 colour difference
+	 */
+	public static float calculateDeltaE(ColorData color1, ColorData color2) {
+		int[] lab1 = rgb2lab(color1.getRed(), color1.getGreen(), color1.getBlue());
+		int[] lab2 = rgb2lab(color2.getRed(), color2.getGreen(), color2.getBlue());
+
+		return (float) CIEDE2000.calculateDeltaE(lab1[0],lab1[1],lab1[2],lab2[0],lab2[1],lab2[2]);
+	}
+	
+	public static int[] rgb2lab(int R, int G, int B) {
+	    //http://www.brucelindbloom.com
+
+	    float r, g, b, X, Y, Z, fx, fy, fz, xr, yr, zr;
+	    float Ls, as, bs;
+	    float eps = 216.f/24389.f;
+	    float k = 24389.f/27.f;
+
+	    float Xr = 0.964221f;  // reference white D50
+	    float Yr = 1.0f;
+	    float Zr = 0.825211f;
+
+	    // RGB to XYZ
+	    r = R/255.f; //R 0..1
+	    g = G/255.f; //G 0..1
+	    b = B/255.f; //B 0..1
+
+	    // assuming sRGB (D65)
+	    if (r <= 0.04045)
+	        r = r/12;
+	    else
+	        r = (float) Math.pow((r+0.055)/1.055,2.4);
+
+	    if (g <= 0.04045)
+	        g = g/12;
+	    else
+	        g = (float) Math.pow((g+0.055)/1.055,2.4);
+
+	    if (b <= 0.04045)
+	        b = b/12;
+	    else
+	        b = (float) Math.pow((b+0.055)/1.055,2.4);
+
+
+	    X =  0.436052025f*r     + 0.385081593f*g + 0.143087414f *b;
+	    Y =  0.222491598f*r     + 0.71688606f *g + 0.060621486f *b;
+	    Z =  0.013929122f*r     + 0.097097002f*g + 0.71418547f  *b;
+
+	    // XYZ to Lab
+	    xr = X/Xr;
+	    yr = Y/Yr;
+	    zr = Z/Zr;
+
+	    if ( xr > eps )
+	        fx =  (float) Math.pow(xr, 1/3.);
+	    else
+	        fx = (float) ((k * xr + 16.) / 116.);
+
+	    if ( yr > eps )
+	        fy =  (float) Math.pow(yr, 1/3.);
+	    else
+	    fy = (float) ((k * yr + 16.) / 116.);
+
+	    if ( zr > eps )
+	        fz =  (float) Math.pow(zr, 1/3.);
+	    else
+	        fz = (float) ((k * zr + 16.) / 116);
+
+	    Ls = ( 116 * fy ) - 16;
+	    as = 500*(fx-fy);
+	    bs = 200*(fy-fz);
+	    int[] lab = new int[3];
+	    lab[0] = (int) (2.55*Ls + .5);
+	    lab[1] = (int) (as + .5); 
+	    lab[2] = (int) (bs + .5);       
+	    
+	    return lab;
+	}
+
+	/**
+	 * Detects image properties such as color frequency from the specified local image.
+	 * 
+	 * @param image_url
+	 * @throws IOException
+	 */
+	public static List<ColorUsageStat> extractImageProperties(BufferedImage buffered_image) throws IOException {
+		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
+		
+		int w = buffered_image.getWidth();
+		int h = buffered_image.getHeight();
+		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		AffineTransform at = new AffineTransform();
+		at.scale(0.5, 0.5);
+		AffineTransformOp scaleOp = 
+		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+		after = scaleOp.filter(buffered_image, after);
+		
+		Map<String, Integer> colors = new HashMap<>();
+		//extract colors
+		// Getting pixel color by position x and y
+		for(int x=0; x < after.getWidth(); x++) {
+			for(int y=0; y < after.getHeight(); y++) {
+				 int clr = after.getRGB(x, y);
+		        int red =   (clr & 0x00ff0000) >> 16;
+		        int green = (clr & 0x0000ff00) >> 8;
+		        int blue =   clr & 0x000000ff;
+		        String rgb = red+","+green+","+blue;
+		        if(colors.containsKey(rgb)) {
+		        	colors.compute(rgb, (key, value) -> (value++)); 
+		        }else {
+		        	colors.put(rgb, 0);
+		        }
+			}
+		}
+       
+		for(String color_str: colors.keySet()) {
+			ColorData color = new ColorData(color_str);
+			float percent = colors.get(color_str) / (float) ( w * h );
+			ColorUsageStat color_stat = new ColorUsageStat(color.getRed(), color.getGreen(), color.getBlue(), percent, 0);
+			color_usage_stats.add(color_stat);
+		}
+        
+		/*
+	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    //InputStream url_input_stream = new URL(image_url).openStream();
+	    ByteArrayOutputStream os = new ByteArrayOutputStream();
+	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
+	    
+	    ByteString imgBytes = ByteString.readFrom(input_stream);
+	
+	    Image img = Image.newBuilder().setContent(imgBytes).build();
+	    Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).build();
+	    AnnotateImageRequest request =
+	        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+	    requests.add(request);
+	
+	    // Initialize client that will be used to send requests. This client only needs to be created
+	    // once, and can be reused for multiple requests. After completing all of your requests, call
+	    // the "close" method on the client to safely clean up any remaining background resources.
+	    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+	    	List<AnnotateImageResponse> responses = response.getResponsesList();
+	
+	      	for (AnnotateImageResponse res : responses) {
+		        if (res.hasError()) {
+		          System.out.format("Error: %s%n", res.getError().getMessage());
+		          return color_usage_stats;
+		        }
+		
+		        // For full list of available annotations, see http://g.co/cloud/vision/docs
+		        DominantColorsAnnotation colors = res.getImagePropertiesAnnotation().getDominantColors();
+		        for (ColorInfo color : colors.getColorsList()) {
+		          System.out.format(
+		              "fraction: %f%nr: %f, g: %f, b: %f, score: %f%n",
+		              color.getPixelFraction(),
+		              color.getColor().getRed(),
+		              color.getColor().getGreen(),
+		              color.getColor().getBlue(),
+		          	  color.getScore());
+		          ColorUsageStat color_stat = new ColorUsageStat(color.getColor().getRed(), color.getColor().getGreen(), color.getColor().getBlue(), color.getPixelFraction(), color.getScore());
+		          color_usage_stats.add(color_stat);
+		        }
+	      	}
+	    }
+	    */
+	    return color_usage_stats;
+	}
+	
 }

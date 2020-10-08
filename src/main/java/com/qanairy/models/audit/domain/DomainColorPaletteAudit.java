@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteObservation;
 import com.qanairy.models.audit.ColorPaletteUtils;
 import com.qanairy.models.audit.Observation;
@@ -68,7 +69,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		Set<Audit> color_palette_audits = domain_service.getMostRecentAuditRecordColorPaletteAudits(domain.getHost());
 		int points = 0;
 		int max_points = 0;
-		List<PaletteColor> palette_colors = new ArrayList<>();
+		//List<PaletteColor> palette_colors = new ArrayList<>();
 		Map<String, Boolean> schemes_recognized = new HashMap<>();
 		List<String> color_strings = new ArrayList<>();
 		List<String> gray_color_strings = new ArrayList<>();
@@ -84,7 +85,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 					schemes_recognized.put(palette_observation.getColorScheme().getShortName(), Boolean.TRUE);
 					
 					color_strings.addAll(palette_observation.getColors());
-					palette_colors.addAll(palette_color_service.saveAll(palette_observation.getPaletteColors()));
+					//palette_colors.addAll(palette_color_service.saveAll(palette_observation.getPaletteColors()));
 				}
 			}
 			
@@ -97,18 +98,37 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		}
 		max_points += 3;
 		
-		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette_colors);
+		Map<String, Boolean> color_map = new HashMap<>();
+		for(String color : color_strings) {
+			color_map.put(color, Boolean.TRUE);
+		}
 		
-		Score score = ColorPaletteUtils.getPaletteScore(palette_colors, scheme);
+		List<ColorData> color_data_list = new ArrayList<>();
+		for(String color : color_map.keySet()) {
+			color_data_list.add(new ColorData(color));
+		}
+		
+		/*
+		Map<String, PaletteColor> palette_map = new HashMap<>();
+		for(PaletteColor color : palette_colors) {
+			palette_map.put(color.getPrimaryColor(), color);
+		}
+		palette_colors = new ArrayList<>(palette_map.values());
+		 */
+
+		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(color_data_list);
+		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
+		
+		Score score = ColorPaletteUtils.getPaletteScore(palette, scheme);
 		points += score.getPointsAchieved();
 		max_points += score.getMaxPossiblePoints();
 		
 		//score colors found against scheme
 		setGrayColors(new ArrayList<>(gray_color_strings));
-		setColors(new ArrayList<>(color_strings));
+		setColors(new ArrayList<>(color_map.keySet()));
 
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
-																palette_colors, 
+																palette, 
 																scheme, 
 																"This is a color scheme description");
 		

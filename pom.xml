@@ -328,7 +328,13 @@
 		    <scope>test</scope>
 		</dependency>
 		
-		
+		<!-- https://mvnrepository.com/artifact/org.openpnp/opencv -->
+		<dependency>
+		    <groupId>org.openpnp</groupId>
+		    <artifactId>opencv</artifactId>
+		    <version>3.2.0-0</version>
+		</dependency>
+				
 		<!-- https://mvnrepository.com/artifact/com.assertthat/selenium-shutterbug -->
 		<!-- 
 		<dependency>
@@ -404,13 +410,19 @@
 		  <groupId>org.springframework.cloud</groupId>
 		  <artifactId>spring-cloud-gcp-starter-vision</artifactId>
 		</dependency>
-		
-		
+				
 		<dependency>
 		  <groupId>org.springframework.cloud</groupId>
 		  <artifactId>spring-cloud-gcp-starter-storage</artifactId>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/org.openimaj/image-processing -->
+		<dependency>
+		    <groupId>org.openimaj</groupId>
+		    <artifactId>image-processing</artifactId>
+		    <version>1.3.10</version>
+		</dependency>
+				
 	</dependencies>
 	
 	<repositories>

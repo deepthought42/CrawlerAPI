@@ -248,16 +248,16 @@ public class ColorPaletteUtils {
 	/**
 	 * Extracts set of {@link PaletteColor colors} that define a palette based on a set of rgb strings
 	 * 
-	 * @param color_strings
+	 * @param colors
 	 * @return
 	 */
-	public static List<PaletteColor> extractPalette(List<ColorData> color_strings) {
-		assert color_strings != null;
+	public static List<PaletteColor> extractPalette(List<ColorData> colors) {
+		assert colors != null;
 		
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		//identify colors that are a shade/tint of another color in the colors list and group them together in a set
-		Set<Set<ColorData>> color_sets = groupColors(color_strings);
+		Set<Set<ColorData>> color_sets = groupColors(colors);
 		
 		//identify primary colors using saturation. Higher saturation indicates purity or intensity of the color
 		for(Set<ColorData> color_set : color_sets) {
@@ -297,42 +297,7 @@ public class ColorPaletteUtils {
 		return palette_colors;
 	}
 
-	private static Set<Set<ColorData>> groupColors(List<ColorData> colors) {
-		assert colors != null;
-		
-		Set<Set<ColorData>> color_sets = new HashSet<>();
-		while(!colors.isEmpty()) {
-			String color_rgb = colors.get(0).toString();
-			
-			ColorData color = colors.get(0);
-			Set<ColorData> similar_colors = new HashSet<>();
-			for(int idx=0; idx < colors.size(); idx++) {
-				ColorData color2 = colors.get(idx);
-
-				if(!color2.equals(color)) {
-					//if the difference between the 2 hues is less 3 degrees  
-					if(Math.abs(color.getHue() - color2.getHue()) < 0.09 ) {	
-						log.debug("Colors are similar in hue!!!!!");
-						if(similar_colors.isEmpty()) {
-							similar_colors.add(color);
-						}
-						similar_colors.add( color2 );
-					}
-				}
-			}
-			if(similar_colors.isEmpty()) {
-				similar_colors.add(color);
-			}
-			color_sets.add(similar_colors);
-			
-			//filter similar colors and primary color from colors set
-			for(ColorData similar_color : similar_colors) {
-				colors.remove(similar_color);
-			}
-		}
-		
-		return color_sets;
-	}
+	
 	
 	/**
 	 * Converts a map representing primary and secondary colors within a palette from using {@link ColorData} to {@link String}
@@ -354,5 +319,44 @@ public class ColorPaletteUtils {
 			stringified_map.put(primary.rgb(), secondary_colors);
 		}
 		return stringified_map;
+	}
+	
+	/**
+	 * 
+	 * @param colors
+	 * @return
+	 */
+	public static Set<Set<ColorData>> groupColors(List<ColorData> colors) {
+		assert colors != null;
+		
+		Set<Set<ColorData>> color_sets = new HashSet<>();
+		while(!colors.isEmpty()) {			
+			ColorData color = colors.get(0);
+			Set<ColorData> similar_colors = new HashSet<>();
+			for(int idx=0; idx < colors.size(); idx++) {
+				ColorData color2 = colors.get(idx);
+
+				//if the difference between the 2 hues is less 3 degrees 
+				if(Math.abs(color.getHue() - color2.getHue()) < 0.15) {	
+					if(similar_colors.isEmpty()) {
+						similar_colors.add(color);
+						//colors.remove(color);
+					}
+					similar_colors.add( color2 );
+					//colors.remove(color2);
+				}
+				
+			}
+			if(similar_colors.isEmpty()) {
+				similar_colors.add(color);
+				colors.remove(color);
+			}
+			for(ColorData similar : similar_colors) {
+				colors.remove(similar);
+			}
+			color_sets.add(similar_colors);
+		}
+		
+		return color_sets;
 	}
 }

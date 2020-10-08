@@ -110,7 +110,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		}
 		else if(primary_typefaces.size() > 2) {
 			score += 1;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, primary_typefaces.size()+" typefaces is " + (primary_typefaces.size()-2) + " too many. With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces");
+			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces");
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		

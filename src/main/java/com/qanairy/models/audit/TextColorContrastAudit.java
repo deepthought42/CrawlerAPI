@@ -23,6 +23,7 @@ import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
+import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -67,18 +68,20 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
 		//List<ElementState> element_list = new ArrayList<>();
-		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+page_state.getElements().size());
+		log.warn("page state key :: "+ page_state.getKey());
+		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+elements.size());
 		//filter elements that aren't text elements
-		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
+		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		
+		log.warn("getting contrast for elements :: "+ element_list.size());
 		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
 			List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
 				log.warn("extracting image properties for element ::   "+element.getName());
-				color_data_list.addAll( CloudVisionUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
+				color_data_list.addAll( ImageUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
 				log.warn("successfully extracted image properties for element ::   "+element.getName());
 
 				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
@@ -109,6 +112,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					min_luminosity = text_color.getLuminosity();
 					max_luminosity = background_color_data.getLuminosity();
 				}
+				
 				double contrast = 0.0;
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element

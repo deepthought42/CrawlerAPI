@@ -7,7 +7,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -60,8 +62,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<ColorUsageStat> color_usage_list = new ArrayList<>();
+		/*
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		try {
 			color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
@@ -69,7 +72,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		*/
 		//extract declared css color properties
 		List<ColorData> colors_declared = new ArrayList<>();
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
@@ -84,7 +87,10 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		log.warn("###########################################################################");
 		
 		log.warn("colors declared ::       "+colors_declared);
-
+		Map<String, ColorData> color_map = new HashMap<>();
+		for(ColorData color : colors_declared) {
+			color_map.put(color.rgb().trim(), color);
+		}
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
@@ -108,15 +114,15 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
 		 */
-		List<ColorData> colors = new ArrayList<ColorData>();
-		
+		List<ColorData> colors = new ArrayList<ColorData>(color_map.values());
+		/*
 		for(ColorUsageStat color : color_usage_list) {
 			if(color.getPixelPercent() >= 0.025) {
 				colors.add(new ColorData(color));
 			}
 		}
-		
-		//colors.addAll(colors_declared);
+		*/
+		//colors.addAll(colors);
 		//generate palette, identify color scheme and score how well palette conforms to color scheme
 		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(colors);
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);

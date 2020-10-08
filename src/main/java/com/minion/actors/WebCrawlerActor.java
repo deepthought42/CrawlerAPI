@@ -210,10 +210,10 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("navigating to page state url ::   "+page.getUrl());
 							browser.navigateTo(page.getUrl());
 							if(page_state == null) {
-									log.warn("getting browser for rendered page state extraction...");
-									//navigate to page url
-									page_state = browser_service.buildPageState(page, browser);
-									//send RenderedPageState to sender
+								log.warn("getting browser for rendered page state extraction...");
+								//navigate to page url
+								page_state = browser_service.buildPageState(page, browser);
+								//send RenderedPageState to sender
 							}
 							//extract all element xpaths
 							if(xpath_extraction_incomplete) {

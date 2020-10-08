@@ -25,7 +25,7 @@ public class PaletteColor extends LookseeObject {
 	public PaletteColor() {}
 	
 	public PaletteColor(String primary_color, float primary_color_percent, Map<String, String> tints_shades_tones) {
-		setPrimaryColor(primary_color);
+		setPrimaryColor(primary_color.trim());
 		setPrimaryColorPercent(primary_color_percent);
 		addTintsShadesTones(tints_shades_tones);
 		setKey(generateKey());

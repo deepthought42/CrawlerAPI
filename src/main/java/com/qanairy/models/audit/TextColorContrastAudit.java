@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.gcp.CloudVisionUtils;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -82,7 +81,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			try {
 				log.warn("extracting image properties for element ::   "+element.getName());
 				color_data_list.addAll( ImageUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
-				log.warn("successfully extracted image properties for element ::   "+element.getName());
 
 				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
 	
@@ -114,10 +112,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				
 				double contrast = 0.0;
+				contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element
 					//calculate contrast between text color and background-color
-					contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
+					log.warn("Element is a header with contrast :: "+contrast);
 					total_headlines++;
 					/*
 					headlines < 3; value = 1
@@ -125,36 +124,39 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					headlines >= 4.5; value = 3
 					 */
 					if(contrast < 3) {
-						headline_score += 1;
+						//No points are rewarded for low contrast headers
 						low_header_contrast.add(element);
 					}
 					else if(contrast >= 3 && contrast < 4.5) {
-						headline_score += 2;
+						headline_score += 1;
 						mid_header_contrast.add(element);
 					}
 					else if(contrast >= 4.5) {
-						headline_score += 3;
+						headline_score += 2;
 						high_header_contrast.add(element);
 					}
 				}
 				else {
-					contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
 					total_text_elems++;
 					/*
-					text < 4.5; value = 1
-					text >= 4.5 and text < 7; value = 2
-					text >=7; value = 3
+						text < 4.5; value = 1
+						text >= 4.5 and text < 7; value = 2
+						text >=7; value = 3
 					 */
+					log.warn("Text element has contrast of "+contrast);
 					if(contrast < 4.5) {
-						text_score += 1;
+						//No points are rewarded for low contrast text
+						log.warn("contrast less than 4.5");
 						low_text_contrast.add(element);
 					}
 					else if(contrast >= 4.5 && contrast < 7) {
-						text_score += 2;
+						log.warn("contrast less than 7");
+						text_score += 1;
 						mid_text_contrast.add(element);
 					}
 					else if(contrast >= 7) {
-						text_score += 3;
+						log.warn("contrast greater than 7");
+						text_score += 2;
 						high_text_contrast.add(element);
 					}
 				}
@@ -192,7 +194,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(low_text_observation));
 		}
 		
-		int total_possible_points = ((total_headlines*3) + (total_text_elems*3));
+		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
 	}

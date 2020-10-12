@@ -223,7 +223,7 @@ public class WebCrawlerActor extends AbstractActor{
 							
 							//for each xpath then extract element state
 							log.warn("getting element states for page state :: "+page_state.getUrl());
-							List<ElementState> elements = browser_service.extractElementStates(page_state.getSrc(), xpaths, browser, elements_mapped);
+							List<ElementState> elements = browser_service.extractElementStates(page_state, xpaths, browser, elements_mapped);
 							page_state.addElements(elements);
 	
 							rendering_incomplete = false;

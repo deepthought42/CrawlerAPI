@@ -8,6 +8,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,19 +76,20 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {
-	/*
+	
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
-		*/
-			String href = link.getAttribute("href");
-			if(href != null && !href.isEmpty()) {
+		
+			//String href = link.getAttribute("href");
+			if( element.hasAttr("href") ) {
+				log.warn("element has href attribute");
 				score++;
 			}
 			else {
 				links_without_href_attribute.add(link);
 				continue;
 			}
-			//String href = element.absUrl("href");
+			String href = element.absUrl("href");
 
 			//if href is a mailto link then give score full remaining value and continue
 			if(href.startsWith("mailto:")) {
@@ -135,12 +139,14 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			
 			//Does link contain a text label inside it
-			 if(link.getText().isEmpty()) {
-				score++;
+			 if(!link.getText().isEmpty()) {
+				 log.warn("LINK HAS text label");
+				 score++;
 			 }
-			 else if(!link.getText().isEmpty()) {
-				//does element use image as links?
-				non_labeled_links.add(link);
+			 else {
+				 log.warn("link doesn't have a text label");
+				 //does element use image as links?
+				 non_labeled_links.add(link);
 			}
 			 
 			//TODO : Does link have a hover styling? yes(1) / No(0)
@@ -180,14 +186,23 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(observation));
 		}
 		
-		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*6));
+		if(links_without_href_attribute.isEmpty()
+				&& links_without_href_value.isEmpty()
+				&& invalid_links.isEmpty()
+				&& dead_links.isEmpty()
+				&& non_labeled_links.isEmpty()
+		) {
+			ElementStateObservation observation = new ElementStateObservation(new ArrayList<>(), "All links are providing a delightful experience");
+			observations.add(observation_service.save(observation));
+		}
+		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
 						 AuditSubcategory.LINKS, 
 						 score, 
 						 observations, 
 						 AuditLevel.PAGE, 
-						 link_elements.size()*6); 
+						 link_elements.size()*5); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

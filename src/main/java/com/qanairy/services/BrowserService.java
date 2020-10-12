@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +29,6 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.minion.aws.UploadObjectSingleOperation;
+import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
@@ -56,7 +56,6 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
-import com.qanairy.utils.ElementStateUtils;
 import com.qanairy.utils.PathUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -267,12 +266,12 @@ public class BrowserService {
 			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			viewport_screenshot.flush();
 			
 			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()), user_id);
+			String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			full_page_screenshot.flush();
 
 			log.debug("creating new page state object ");
@@ -364,13 +363,13 @@ public class BrowserService {
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
-		String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		long x_offset = browser.getXScrollOffset();
 		long y_offset = browser.getYScrollOffset();
@@ -539,7 +538,7 @@ public class BrowserService {
 	 * @throws XPathExpressionException 
 	 */
 	private synchronized List<ElementState> getDomElementStates(
-			String src, 
+			PageState page_state, 
 			List<String> xpaths, 
 			Browser browser, 
 			Map<String, ElementState> element_states_map
@@ -549,10 +548,13 @@ public class BrowserService {
 		assert browser != null;
 		assert element_states_map != null;
 		
+		log.warn("page state screenshot url ::: "+page_state.getFullPageScreenshotUrl());
+		BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl(), BrowserType.CHROME);
+
 		List<ElementState> visited_elements = new ArrayList<>();
 		
 		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
-		Document html_doc = Jsoup.parse(src);
+		Document html_doc = Jsoup.parse(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
 		
 		for(String xpath : xpaths) {
@@ -564,12 +566,12 @@ public class BrowserService {
 			Dimension element_size = web_element.getSize();
 			Point element_location = web_element.getLocation();
 			
-			browser.scrollToElement(web_element);
+			//browser.scrollToElement(web_element);
+
 			//check if element is visible in pane and if not then continue to next element xpath
 			if( !web_element.isDisplayed()
 					|| !hasWidthAndHeight(web_element.getSize())
-					|| isElementLargerThanViewport(browser, element_size, element_location)
-					|| !isElementVisibleInPane(browser, element_location, element_size)) {
+					|| doesElementHaveNegativePosition(element_location)) {
 				continue;
 			}
 			
@@ -593,9 +595,14 @@ public class BrowserService {
 				classification = ElementClassification.ANCESTOR;
 			}
 			
-			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+			BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
+																				element_location.getY(), 
+																				element_size.getWidth(), 
+																				element_size.getHeight());
+			
+			//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 			String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
-			String element_screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+			String element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			element_screenshot.flush();
 			
 
@@ -1477,19 +1484,18 @@ public class BrowserService {
 	}
 	
 	public List<ElementState> extractElementStates(
-			String src, 
+			PageState page_state,
 			List<String> xpaths, 
 			Browser browser, 
 			Map<String, ElementState> elements
 	) throws IOException, XPathExpressionException {
-		assert src != null;
-		assert !src.isEmpty();
+		assert page_state != null;
 		assert xpaths != null;
 		assert !xpaths.isEmpty();
 		assert browser != null;
 		assert elements != null;
 		
-		return getDomElementStates(src, xpaths, browser, elements);
+		return getDomElementStates(page_state, xpaths, browser, elements);
 	}
 	
 	public List<com.qanairy.models.Element> extractElements(

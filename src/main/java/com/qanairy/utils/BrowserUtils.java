@@ -8,11 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,229 +22,18 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.aws.UploadObjectSingleOperation;
+import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
-import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.services.ScreenshotUploadService;
 
 
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
-
-	public static Redirect getPageTransition(String initial_url, Browser browser, String host, String user_id) throws GridException, IOException{
-		List<String> transition_urls = new ArrayList<String>();
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		List<BufferedImage> images = new ArrayList<>();
-		boolean transition_detected = false;
-
-		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
-
-		String last_key = sanitizeUrl(initial_url);
-		
-		//transition_urls.add(last_key);
-		do{
-			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl());
-
-			transition_detected = !new_key.equals(last_key);
-
-			if( transition_detected ){
-				try{
-		        	BufferedImage img = browser.getViewportScreenshot();
-					images.add(img);
-				}catch(Exception e){}
-				start_ms = System.currentTimeMillis();
-				transition_urls.add(new_key);
-				last_key = new_key;
-			}
-		}while((System.currentTimeMillis() - start_ms) < 3000);
-
-		for(BufferedImage img : images){
-			try{
-				String new_checksum = PageState.getFileChecksum(img);
-				image_checksums.add(new_checksum);
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3ForUser(img, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-
-		Redirect redirect = new Redirect(initial_url, transition_urls);
-		redirect.setImageChecksums(image_checksums);
-		redirect.setImageUrls(image_urls);
-
-		return redirect;
-	}
-
-	public static Animation getAnimation(Browser browser, String host, String user_id) throws IOException {
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		boolean transition_detected = false;
-		
-		long start_ms = System.currentTimeMillis();
-
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
-		String last_checksum = null;
-		List<Future<String>> url_futures = new ArrayList<>();
-		do{
-			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
-
-			//calculate screenshot checksum
-			String new_checksum = PageState.getFileChecksum(screenshot);
-
-			transition_detected = !new_checksum.equals(last_checksum);
-			if( transition_detected ){
-				if( animated_state_checksum_hash.containsKey(new_checksum)){
-					break;
-				}
-				start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
-				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
-			}
-		}while((System.currentTimeMillis() - start_ms) < 2000);
-
-		for(Future<String> future: url_futures){
-			try {
-				image_urls.add(future.get());
-			} catch (InterruptedException e) {
-				log.debug(e.getMessage());
-			} catch (ExecutionException e) {
-				log.debug(e.getMessage());
-			}
-		}
-		
-		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
-	}	
-	
-	/**
-	 * Watches for an animation that occurs during page load
-	 * 
-	 * @param browser
-	 * @param host
-	 * @param user_id TODO
-	 * @return
-	 * @throws IOException
-	 * 
-	 * @pre browser != null
-	 * @pre host != null
-	 * @pre host != empty
-	 */
-	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String user_id) throws IOException {
-		assert browser != null;
-		assert host != null;
-		assert !host.isEmpty();
-		
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		boolean transition_detected = false;
-		long start_ms = System.currentTimeMillis();
-		long total_time = System.currentTimeMillis();
-		
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
-		String last_checksum = null;
-		String new_checksum = null;
-		List<Future<String>> url_futures = new ArrayList<>();
-
-		do{
-			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
-			
-			//calculate screenshot checksum
-			new_checksum = PageState.getFileChecksum(screenshot);
-		
-			transition_detected = !new_checksum.equals(last_checksum);
-
-			if( transition_detected ){
-				if(animated_state_checksum_hash.containsKey(new_checksum)){
-					return null;
-				}
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
-				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
-				start_ms = System.currentTimeMillis();
-			}
-		}while((System.currentTimeMillis() - start_ms) < 1000 && (System.currentTimeMillis() - total_time) < 10000);
-
-		for(Future<String> future: url_futures){
-			try {
-				image_urls.add(future.get());
-			} catch (InterruptedException e) {
-				log.debug(e.getMessage());
-			} catch (ExecutionException e) {
-				log.debug(e.getMessage());
-			}
-		}
-		
-		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
-			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
-		}
-
-		return null;
-	}
-	
-	public static PageLoadAnimation detectShortAnimation(Browser browser, String host, String user_id) throws IOException {
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		boolean transition_detected = false;
-		long start_ms = System.currentTimeMillis();
-		long total_time = System.currentTimeMillis();
-		
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
-		String last_checksum = null;
-		String new_checksum = null;
-		List<Future<String>> url_futures = new ArrayList<>();
-
-		do{
-			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
-
-			//calculate screenshot checksum
-			new_checksum = PageState.getFileChecksum(screenshot);
-
-			transition_detected = !new_checksum.equals(last_checksum);
-
-			if( transition_detected ){
-				if(animated_state_checksum_hash.containsKey(new_checksum)){
-					return null;
-				}
-				start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
-				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum, BrowserType.create(browser.getBrowserName()), user_id));
-			}
-		}while((System.currentTimeMillis() - start_ms) < 500 && System.currentTimeMillis()-total_time < 3000);
-
-		for(Future<String> future: url_futures){
-			try {
-				image_urls.add(future.get());
-			} catch (InterruptedException e) {
-				log.debug(e.getMessage());
-			} catch (ExecutionException e) {
-				log.debug(e.getMessage());
-			}
-		}
-		
-		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
-			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
-		}
-
-		return null;
-	}
 	
 	public static String sanitizeUrl(String url) {
 		String domain = url;
@@ -463,6 +248,7 @@ public class BrowserUtils {
         		continue;
         	}
         	font_family_setting = font_family_setting.replaceAll("'", "");
+        	font_family_setting = font_family_setting.replaceAll("\"", "");
         	font_family_setting = font_family_setting.replaceAll(";", "");
         	font_family_setting = font_family_setting.replaceAll(":", "");
         	font_family_setting = font_family_setting.replaceAll(":", "");
@@ -560,6 +346,7 @@ public class BrowserUtils {
         		continue;
         	}
         	setting = setting.replaceAll("'", "");
+        	setting = setting.replaceAll("\"", "");
         	setting = setting.replaceAll(";", "");
         	setting = setting.replaceAll(":", "");
         	setting = setting.replaceAll(":", "");

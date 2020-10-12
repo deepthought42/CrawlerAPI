@@ -18,12 +18,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.gcp.CloudVisionUtils;
+import com.looksee.gcp.GoogleCloudStorage;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 
@@ -83,8 +85,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		return elements.parallelStream().filter(p ->p.getName().equalsIgnoreCase("button")).distinct().collect(Collectors.toList());  // iterating price 
 	}
 	
-	public Color getPixelColor(URL image_url, int x, int y) throws IOException {
-		BufferedImage image = ImageIO.read(image_url);
+	public Color getPixelColor(String image_url, int x, int y) throws IOException {
+		BufferedImage image = GoogleCloudStorage.getImage(image_url, BrowserType.CHROME);
 		return new Color(image.getRGB(x, y));
 	}
 
@@ -114,19 +116,19 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				int y_position = element.getYLocation();
 
 				//choose elemtn just to the right of the elemnt in the page screenshot
-				Color parent_background_color = getPixelColor(new URL(page_state.getFullPageScreenshotUrl()), x_position-5, y_position-5);				
+				Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-5, y_position-5);				
 				String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
 				double contrast = ColorData.computeContrast(new ColorData(parent_rgb), new ColorData(most_used_color.getRGB()));
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
-					score += 1;
+					//no points are rewarded for low contrast
 					low_contrast_elements.add(element);
 				}else if(contrast >= 3.0 && contrast < 4.5) {
-					score += 2;
+					score += 1;
 					mid_contrast_elements.add(element);
 				}
 				else {
-					score += 3;
+					score += 2;
 					high_contrast_elements.add(element);
 				}
 			}
@@ -147,10 +149,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		if(!high_contrast_elements.isEmpty()) {
 			ElementStateObservation high_contrast_observation = new ElementStateObservation(high_contrast_elements, "Elements with a contrast greater than 4.5");
 			observations.add(observation_service.save(high_contrast_observation));
-		}
-		if(observations.isEmpty()) {
-			ElementStateObservation success_observation = new ElementStateObservation(non_text_elements, "All text and header elements are exceeding WCAG standards");
-			observations.add(observation_service.save(success_observation));
 		}
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, non_text_elements.size() *3);

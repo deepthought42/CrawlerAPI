@@ -92,7 +92,6 @@ public class Auditor extends AbstractActor{
 		   			//getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
 		   			postStop();
 				})
 				.match(PageState.class, page_state-> {
@@ -100,7 +99,6 @@ public class Auditor extends AbstractActor{
 				   	List<Audit> audits = new ArrayList<>();
 				   	
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
-				   		log.warn("executing post render page audits for page state :: "+page_state.getKey());
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
@@ -114,16 +112,13 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
 		   			postStop();
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//perform audit and return audit result
-				   		log.warn("Executing domain audit for "+audit_category);
 				   		List<Audit> audits_executed = new ArrayList<>();
-				   		log.warn(domain_msg.getStage() + "   ----   equals PRERENDER?? ----  "+domain_msg.getStage().equals(AuditStage.PRERENDER) );
 			   			audits_executed.addAll(audit_factory.executePrerenderDomainAudit(audit_category, domain_msg.getDomain()));
 			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		

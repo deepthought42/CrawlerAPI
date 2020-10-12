@@ -1,9 +1,10 @@
-FROM openjdk:8-jdk-alpine
+#FROM openjdk:8-jdk-alpine
+FROM koosiedemoer/netty-tcnative-alpine
 
-COPY target/Look-see-0.1.0.jar /look-see.jar
-
+COPY target/Look-see-0.1.3.jar look-see.jar
+COPY GCP-MyFirstProject-1c31159db52c.json GCP-MyFirstProject-1c31159db52c.json
 EXPOSE 443
 EXPOSE 80
 EXPOSE 8080
 EXPOSE 9687
-ENTRYPOINT ["java","-jar", "/look-see.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-ea","-jar", "look-see.jar"]

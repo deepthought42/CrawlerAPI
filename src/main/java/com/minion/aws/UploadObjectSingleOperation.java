@@ -31,52 +31,6 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3ForUser(BufferedImage image, String domain, String element_key, BrowserType browser, String user_id) {
-		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
-		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
-		String filepath = null;
-		// credentials=new ProfileCredentialsProvider().getCredentials();
-        AmazonS3 s3client = new AmazonS3Client(credentials);
-        try {
-        	if(!s3client.doesObjectExist(bucketName, user_id+"/"+host_key+"/"+element_key+".png")){
-	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
-	        	ImageIO.write(image, "png", os);
-	        	byte[] buffer = os.toByteArray();
-	        	InputStream is = new ByteArrayInputStream(buffer);
-	        	ObjectMetadata meta = new ObjectMetadata();
-	        	meta.setContentLength(buffer.length);
-	        	
-	            log.debug("Uploading a new object to S3 from a file: "+ image);
-	            s3client.putObject(new PutObjectRequest(
-	             		                 bucketName, user_id+"/"+host_key+"/"+browser+"/"+element_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
-        	}
-            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+user_id+"/"+host_key+"/"+browser+"/"+element_key+".png";
-
-         } catch (AmazonServiceException ase) {
-            log.error("Caught an AmazonServiceException, which " +
-            		"means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            log.error("Error Message:    " + ase.getMessage());
-            log.error("HTTP Status Code: " + ase.getStatusCode());
-            log.error("AWS Error Code:   " + ase.getErrorCode());
-            log.error("Error Type:       " + ase.getErrorType());
-            log.error("Request ID:       " + ase.getRequestId());
-            ase.printStackTrace();
-        } catch (AmazonClientException ace) {
-            log.error("Caught an AmazonClientException, which " +
-            		"means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            log.error("Error Message: " + ace.getMessage());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
-        return filepath;
-    }
-	
 	public static String saveImageToS3(BufferedImage image, String domain, String element_key, BrowserType browser) {
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
@@ -117,51 +71,6 @@ public class UploadObjectSingleOperation {
                     "such as not being able to access the network.");
             log.error("Error Message: " + ace.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
-        return filepath;
-    }
-	
-	public static String saveImageToS3(String user_id, BufferedImage image, String domain, String page_key, BrowserType browser) {
-		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
-		String filepath = null;
-		// credentials=new ProfileCredentialsProvider().getCredentials();
-        AmazonS3 s3client = new AmazonS3Client(credentials);
-        try {
-        	if(!s3client.doesObjectExist(bucketName, user_id+"/"+domain+"/"+page_key+".png")){
-	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
-	        	ImageIO.write(image, "png", os);
-	        	byte[] buffer = os.toByteArray();
-	        	InputStream is = new ByteArrayInputStream(buffer);
-	        	ObjectMetadata meta = new ObjectMetadata();
-	        	meta.setContentLength(buffer.length);
-	        	
-	            log.debug("Uploading a new object to S3 from a file: "+ image);
-	            s3client.putObject(new PutObjectRequest(
-	             		                 bucketName, user_id+"/"+domain+"/"+browser+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
-	            
-        	}
-            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+user_id+"/"+domain+"/"+browser+"/"+page_key+".png";
-
-         } catch (AmazonServiceException ase) {
-            log.error("Caught an AmazonServiceException, which " +
-            		"means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            log.error("Error Message:    " + ase.getMessage());
-            log.error("HTTP Status Code: " + ase.getStatusCode());
-            log.error("AWS Error Code:   " + ase.getErrorCode());
-            log.error("Error Type:       " + ase.getErrorType());
-            log.error("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            log.error("Caught an AmazonClientException, which " +
-            		"means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            log.error("Error Message: " + ace.getMessage());
-        } catch (IOException e) {
 			e.printStackTrace();
 		}
         

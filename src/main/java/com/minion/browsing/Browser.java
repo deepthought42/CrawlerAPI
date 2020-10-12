@@ -397,16 +397,16 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
-		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		log.debug("element screenshot :: "+element.getLocation().getX() + " , " + element.getLocation().getY());
-		log.debug("element screenshot size :: "+element.getSize().getWidth() + " , " + element.getSize().getHeight());
-		log.debug("viewport scroll offset  :  " + this.getXScrollOffset() + " , " + this.getYScrollOffset());
-		log.debug("viewport size ::  " + this.getViewportSize().getWidth() + " , " + this.getViewportSize().getHeight());
-		log.debug("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.warn("element screenshot :: "+element.getLocation().getX() + " , " + element.getLocation().getY());
+		log.warn("element screenshot size :: "+element.getSize().getWidth() + " , " + element.getSize().getHeight());
+		log.warn("viewport scroll offset  :  " + this.getXScrollOffset() + " , " + this.getYScrollOffset());
+		log.warn("viewport size ::  " + this.getViewportSize().getWidth() + " , " + this.getViewportSize().getHeight());
+		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 		
 		//calculate element position within screen
-		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element, true).getImage();
 	}
 	
 	/**
@@ -725,9 +725,9 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollToElement(com.qanairy.models.Element element_state) 
+	public void scrollToElement(com.qanairy.models.Element element) 
     { 
-		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
+		WebElement elem = driver.findElement(By.xpath(element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());

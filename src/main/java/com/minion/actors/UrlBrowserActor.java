@@ -126,23 +126,8 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-								
-							redirect = BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
-							log.warn("redirect detected as :: " + redirect.getKey());
-							log.warn("redirect urls :: "+redirect.getUrls().size());
-							log.warn("redirect start url     ::  "+redirect.getStartUrl());
-						  	
-						  	if(redirect != null && ((redirect.getUrls().size() > 0 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
-								log.warn("redirect added to path objects list");
-						  		path_keys.add(redirect.getKey());
-								path_objects.add(redirect);
-							}
+							
 
-						  	animation = BrowserUtils.getLoadingAnimation(browser, host, message.getAccountId());
-							if(animation != null){
-								path_keys.add(animation.getKey());
-								path_objects.add(animation);
-							}
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
 							//build page

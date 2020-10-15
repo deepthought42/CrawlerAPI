@@ -1,7 +1,6 @@
 package com.minion.api;
 
 import java.security.Principal;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +31,9 @@ import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.AccountUsage;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DomainService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 
@@ -55,9 +50,6 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
-
-    @Autowired
-    private DomainService domain_service;
     
     private StripeClient stripeClient;
 
@@ -221,70 +213,6 @@ public class AccountController {
     	}
 		//remove account
         account_service.deleteAccount(account.getUserId());
-    }
-
-    @PreAuthorize("hasAuthority('read:accounts')")
-	@RequestMapping(path ="/usage", method = RequestMethod.GET)
-    public AccountUsage getUsageStats(HttpServletRequest request,@RequestParam(value="domain_host", required=true) String domain_host) throws UnknownAccountException{
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-        if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-
-		Calendar c = Calendar.getInstance();
-		int month_now = c.get(Calendar.MONTH);
-		int year_now = c.get(Calendar.YEAR);
-
-    	int monthly_test_count = 0;
-    	int domain_discovery_count = 0;
-    	int domain_total_discovered_tests = 0;
-    	int domain_tests_ran = 0;
-    	for(TestRecord record : account_service.getTestRecords(acct.getUsername(), domain_host)){
-    		Calendar cal = Calendar.getInstance();
-    		cal.setTime(record.getRanAt());
-    		int month_started = cal.get(Calendar.MONTH);
-    		int year_started = cal.get(Calendar.YEAR);
-
-    		if(month_started == month_now && year_started == year_now ){
-    			monthly_test_count++;
-    		}
-    		
-    		domain_tests_ran++;
-    	}
-
-    	//get count of monthly tests discovered
-    	int monthly_discovery_count = 0;
-        int monthly_discovered_tests = 0;
-    	for(DiscoveryRecord record :  account_service.getDiscoveryRecordsByMonth(acct.getUsername(), month_now)){
-    		Calendar cal = Calendar.getInstance();
-    		cal.setTime(record.getStartTime());
-    		int month_started = cal.get(Calendar.MONTH);
-    		int year_started = cal.get(Calendar.YEAR);
-
-    		if(month_started == month_now && year_started == year_now && record.getDomainUrl().equals(domain_host)){
-    			monthly_discovery_count++;
-    			monthly_discovered_tests += record.getTestCount();
-    		}
-
-    		if(record.getDomainUrl().equals(domain_host)){
-    			domain_discovery_count++;
-    			domain_total_discovered_tests += record.getTestCount();
-    		}
-    	}
-
-    	//calculate number of test records for domain
-    	DiscoveryRecord most_recent_discovery = domain_service.getMostRecentDiscoveryRecord(domain_host, acct.getUserId());
-
-    	long discovery_run_time = System.currentTimeMillis() - most_recent_discovery.getStartTime().getTime();
-
-        return new AccountUsage(monthly_discovery_count, (monthly_test_count-monthly_discovered_tests), monthly_discovery_count,
-        							domain_discovery_count, domain_tests_ran, domain_total_discovered_tests,
-        							most_recent_discovery.getStartTime(), discovery_run_time, most_recent_discovery.getLastPathRanAt());
     }
 }
 

@@ -10,6 +10,8 @@ public class CrawlStats extends LookseeObject{
 	private long page_count;
 	private double average_time_per_page;
 	
+	public CrawlStats() {}
+	
 	public CrawlStats(LocalDateTime start_time, LocalDateTime end_time, long total_seconds, int page_count, double avg_time_per_page) {
 		setStartTime(start_time);
 		setEndTime(end_time);

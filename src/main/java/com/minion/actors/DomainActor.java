@@ -18,7 +18,6 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
@@ -97,13 +96,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(DiscoveryActionRequest.class, message-> {
 					if(discovery_action == null) {
-						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getEntryPath(), message.getAccountId()).getStatus();
-						if(status == DiscoveryStatus.RUNNING) {
-							discovery_action = DiscoveryAction.START;
-						}
-						else {
-							discovery_action = DiscoveryAction.STOP;
-						}
+
 					}
 
 					getSender().tell(discovery_action, getSelf());

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageVersion;
@@ -74,14 +73,6 @@ public class DomainService {
 		return domain_repo.getTestCount(user_id, url);
 	}
 
-	public DiscoveryRecord getMostRecentDiscoveryRecord(String path, String user_id) {
-		return domain_repo.getMostRecentDiscoveryRecord(path, user_id);
-	}
-
-	public Set<DiscoveryRecord> getDiscoveryRecords(String user_id, String url) {
-		return domain_repo.getDiscoveryRecords(user_id, url);
-	}
-
 	public Optional<Domain> findById(long domain_id) {
 		return domain_repo.findById(domain_id);
 	}
@@ -110,20 +101,12 @@ public class DomainService {
 		return domain_repo.getActions(user_id, url);
 	}
 
-	public Set<PageState> getPageStates(String user_id, String url) {
-		return domain_repo.getPageStates(user_id, url);
+	public Set<PageState> getPageStates(String host) {
+		return domain_repo.getPageStates(host);
 	}
 
 	public Domain findByKey(String key, String user_id) {
 		return domain_repo.findByKey(key, user_id);
-	}
-
-	public Set<Test> getUnverifiedTests(String url, String user_id) {
-		return domain_repo.getUnverifiedTests(url, user_id);
-	}
-
-	public Set<Test> getVerifiedTests(String url, String user_id) {
-		return domain_repo.getVerifiedTests(url, user_id);
 	}
 
 	public Set<Test> getTests(String user_id, String url) {

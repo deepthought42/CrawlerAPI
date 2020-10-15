@@ -4,8 +4,10 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -68,7 +70,7 @@ public class AuditManager extends AbstractActor{
 	@Autowired
 	private CrawlStatService crawl_stats_service;
 	
-	private CrawlStats crawl_stats = null;
+	private CrawlStats crawl_stats = new CrawlStats();
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -162,17 +164,17 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(PageStateAuditComplete.class, audit_complete -> {
+					Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 					page_states_audited.put(audit_complete.getPageState().getKey(), audit_complete.getPageState());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+pages_experienced.keySet().size()+"   ;    audit size  ::   "+page_states_audited.keySet().size());
 					log.warn("crawl stats after completing page state audit :: " + this.crawl_stats);
 					log.warn("audit record crawl stat ::  "+ audit_record.getCrawlStats());
-					if( this.crawl_stats != null 
-						&& this.crawl_stats.getPageCount() == page_states_audited.keySet().size()
-					) {
+					List<PageVersion> pages = domain_service.getPages(domain.getHost());
+					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
+					if( pages.size() == page_states.size()) {
 						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
-						Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 						
 						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						log.warn("Audit Manager is now ready to perform a domain audit");

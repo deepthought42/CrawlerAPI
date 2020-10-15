@@ -12,8 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -319,13 +320,13 @@ public class BrowserService {
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
 		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
 		
-		String clean_source = Browser.cleanSrc(page_src);
+		String clean_source = page_src;
 		URL clean_url = new URL(url_without_params);
 		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
 		PageVersion page = new PageVersion(
 				elements,
-				clean_source,
+				page_src,
 				title,
 				clean_url.toString(),
 				clean_url.getPath());
@@ -353,7 +354,7 @@ public class BrowserService {
 		assert page != null;
 		assert browser != null;
 
-		String source = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String source = browser.getDriver().getPageSource();
 
 		//Element root = html_doc.getElementsByTag("body").get(0);	
 		log.warn("url for page state:  "+page.getUrl());
@@ -427,7 +428,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<com.qanairy.models.Element> getDomElements(
+	public synchronized List<com.qanairy.models.Element> getDomElements(
 			String page_source, 
 			URL url,
 			List<RuleSet> rule_sets
@@ -442,7 +443,8 @@ public class BrowserService {
 		Map<String, Integer> xpath_cnt = new HashMap<>();
 		
 		//get html doc and get root element
-		Document html_doc = Jsoup.parse(page_source);
+		String body_src = extractBody(page_source);
+		Document html_doc = Jsoup.parse(body_src);
 		Element root = html_doc.getElementsByTag("body").get(0);
 			
 		//create element state from root node
@@ -466,10 +468,10 @@ public class BrowserService {
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
 			String parent_element_key = frontier.remove(next_xpath);
+			
 			//ElementState root_element = frontier.remove(next_xpath);
 			//visited_elements.add(root_element);
 			//get Element by xpath
-			
 			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
 			if(elements.size() == 0) {
 				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath + "   :     url :   "  + url.toString());
@@ -498,12 +500,16 @@ public class BrowserService {
 				classification = ElementClassification.ANCESTOR;
 			}
 			
+			//reduce xpath to shortest unique path
+			// reduceXpathToShortestPath(next_xpath, page_source);
 			com.qanairy.models.Element element_state = buildElement(next_xpath, attributes, element, classification, pre_render_css_props);
 			
 			element_state = element_service.save(element_state);
 			visited_elements.add(element_state);
-			element_service.addChildElement(parent_element_key, element_state.getKey());
 			
+			if(!parent_element_key.contentEquals(element_state.getKey())) {
+				element_service.addChildElement(parent_element_key, element_state.getKey());
+			}
 			
 			for(Element child : children) {
 				if(isStructureTag(child.tagName())) {
@@ -511,7 +517,7 @@ public class BrowserService {
 				}
 				String xpath = next_xpath + "/" + child.tagName();
 				
-				if(xpath_cnt.containsKey(xpath)) {
+				if(xpath_cnt.containsKey(xpath) && xpath_cnt.get(xpath) <= elements.size()) {
 					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
 				}
 				else {
@@ -554,14 +560,16 @@ public class BrowserService {
 		List<ElementState> visited_elements = new ArrayList<>();
 		
 		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
-		Document html_doc = Jsoup.parse(page_state.getSrc());
+		
+		String body_src = extractBody(page_state.getSrc());
+		Document html_doc = Jsoup.parse(body_src);
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
 		
 		for(String xpath : xpaths) {
 			if(element_states_map.containsKey(xpath)) {
 				continue;
 			}
-			
+
 			WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
 			Dimension element_size = web_element.getSize();
 			Point element_location = web_element.getLocation();
@@ -742,7 +750,8 @@ public class BrowserService {
 
 		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) || "script".contentEquals(tag_name) || "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
 				|| "br".contentEquals(tag_name) || "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) || "use".contentEquals(tag_name)
-				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name);
+				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name)
+				|| "noscript".contentEquals(tag_name) || "meta".contentEquals(tag_name) || "base".contentEquals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
@@ -1511,26 +1520,33 @@ public class BrowserService {
 		return getDomElements(page_src, url, rule_sets);
 	}
 
+	/**
+	 * 
+	 * @param src
+	 * @return
+	 */
 	public List<String> extractAllUniqueElementXpaths(String src) {
+		assert src != null;
+		
 		Map<String, String> frontier = new HashMap<>();
 		List<String> xpaths = new ArrayList<>();
-		Map<String, Integer> xpath_cnt = new HashMap<>();
+		String body_src = extractBody(src);
 		
-		Document html_doc = Jsoup.parse(src);
-		//Element root = html_doc.getElementsByTag("body").get(0);
-		
+		Document html_doc = Jsoup.parse(body_src);
 		frontier.put("//body","");
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
 			frontier.remove(next_xpath);
 			xpaths.add(next_xpath);
-
+			
 			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
 			if(elements.size() == 0) {
 				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath);
+				continue;
 			}
 			Element element = elements.first();
 			List<Element> children = new ArrayList<Element>(element.children());
+			Map<String, Integer> xpath_cnt = new HashMap<>();
 			
 			for(Element child : children) {
 				if(isStructureTag(child.tagName())) {
@@ -1538,14 +1554,14 @@ public class BrowserService {
 				}
 				String xpath = next_xpath + "/" + child.tagName();
 				
-				if(xpath_cnt.containsKey(xpath) && xpath_cnt.get(xpath) <= elements.size() ) {
-					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				if(xpath_cnt.containsKey(child.tagName()) ) {
+					xpath_cnt.put(child.tagName(), xpath_cnt.get(child.tagName())+1);
 				}
 				else {
-					xpath_cnt.put(xpath, 1);
+					xpath_cnt.put(child.tagName(), 1);
 				}
 				
-				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+				xpath = xpath + "["+xpath_cnt.get(child.tagName())+"]";
 
 				frontier.put(xpath, "");
 			}
@@ -1555,10 +1571,14 @@ public class BrowserService {
 	}
 
 	public static String extractBody(String src) {
-		Document html_doc = Jsoup.parse(src);
-		Element root = html_doc.getElementsByTag("body").get(0);
-		
-		return root.outerHtml();
+		String patternString = "<body[^\\>]*>([\\s\\S]*)<\\/body>";
+
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(src);
+        if(matcher.find()) {
+        	return matcher.group();
+        }
+        return null;
 	}
 
 	public static Set<String> extractMetadata(String src) {

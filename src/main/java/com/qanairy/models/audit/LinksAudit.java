@@ -82,7 +82,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 			//String href = link.getAttribute("href");
 			if( element.hasAttr("href") ) {
-				log.warn("element has href attribute");
 				score++;
 			}
 			else {
@@ -140,7 +139,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 			//Does link contain a text label inside it
 			 if(!link.getText().isEmpty()) {
-				 log.warn("LINK HAS text label");
 				 score++;
 			 }
 			 else {

@@ -75,7 +75,7 @@ public class PageVersion extends LookseeObject {
 		setElements(elements);
 		setPageStates(new ArrayList<>());
 		setUrl(url);
-		setBody( Browser.cleanSrc(BrowserService.extractBody(src)));
+		setBody( BrowserService.extractBody(src));
 		setMetadata( BrowserService.extractMetadata(src) );
 		setStylesheetUrls( BrowserService.extractStylesheets(src));
 		setScriptUrls( BrowserService.extractScriptUrls(src));

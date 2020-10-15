@@ -46,8 +46,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain{url:{url}}) RETURN d LIMIT 1")
 	public Domain findByUrl(@Param("url") String url);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageVersion) MATCH (p)-[]-(ps:PageState) RETURN ps")
-	public Set<PageState> getPageStates(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (d:Domain{host:{host}})-[]->(p:PageVersion) MATCH (p)-[]-(ps:PageState) RETURN ps")
+	public Set<PageState> getPageStates(@Param("host") String host);
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]-(d:Domain{url:{url}}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
 	public Set<Element> getElementStates(@Param("url") String url, @Param("user_id") String user_id);
@@ -63,22 +63,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageVersion) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) RETURN COUNT(f)")
 	public int getFormCount(@Param("user_id") String user_id, @Param("url") String url);
-	
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
-	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH x=(t)-->(:TestRecord) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' OPTIONAL MATCH y=(t)-->(:Group) RETURN a,x,y")
-	public Set<Test> getVerifiedTests(@Param("url") String url, @Param("user_id") String user_id);
+	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{host:{host}}) MATCH (d)-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
+	public int getTestCount(@Param("user_id") String user_id, @Param("host") String host);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
-	public int getTestCount(@Param("user_id") String user_id, @Param("url") String url);
-
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
-	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("user_id") String user_id, @Param("url") String url);
-	
-	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(dr:DiscoveryRecord) WHERE NOT dr.status = 'STOPPED' RETURN dr ORDER BY dr.started_at DESC LIMIT 1")
-	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("url") String url, @Param("user_id") String user_id);
-	
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{key:{domain_key}}) MATCH (d)-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
 	public Set<TestUser> getTestUsers(@Param("user_id") String user_id, @Param("domain_key") String domain_key);
 

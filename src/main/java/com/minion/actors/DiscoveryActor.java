@@ -374,19 +374,7 @@ public class DiscoveryActor extends AbstractActor{
 	}
 
 	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
-		DiscoveryRecord discovery_record = null;
-		if(this.discovery_record == null){
-			log.warn("discovery actor is null for instance variable in discovery actor");
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(url, user_id);
-			
-			if(discovery_record == null){
-				log.warn("was unable to find running discovery record in db");
-				discovery_record = new DiscoveryRecord(new Date(), browser, url,
-						0, 0, 0,
-						DiscoveryStatus.RUNNING);
-			}
-			return discovery_record;
-		}
+
 		
 		return this.discovery_record;
 	}
@@ -445,9 +433,7 @@ public class DiscoveryActor extends AbstractActor{
 	
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
-		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getEntryPath(), message.getAccountId());
-		}
+		
 		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(discovery_record);

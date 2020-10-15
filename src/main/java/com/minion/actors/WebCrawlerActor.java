@@ -217,6 +217,7 @@ public class WebCrawlerActor extends AbstractActor{
 							}
 							//extract all element xpaths
 							if(xpath_extraction_incomplete) {
+								log.warn("extracting elements from body tag for page_state  ::    "+page_state.getUrl());
 								xpaths.addAll(browser_service.extractAllUniqueElementXpaths(page_state.getSrc()));
 								xpath_extraction_incomplete=false;
 							}
@@ -225,14 +226,16 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("getting element states for page state :: "+page_state.getUrl());
 							List<ElementState> elements = browser_service.extractElementStates(page_state, xpaths, browser, elements_mapped);
 							page_state.addElements(elements);
-	
+
 							rendering_incomplete = false;
 							cnt=100;
 							browser.close();
 							break;
 						}
 						catch(Exception e) {
-							browser.close();
+							if(browser != null) {
+								browser.close();
+							}
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}

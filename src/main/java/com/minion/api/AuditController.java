@@ -247,6 +247,34 @@ public class AuditController {
     }
     
     /**
+     * Retrieves set of {@link Audit audits} that have a type of information architecture
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/information_architecture/margin")
+    public @ResponseBody Set<Audit> getInformationArchitectureMarginAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return domain_service.getMostRecentAuditRecordMargins(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of information architecture
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/information_architecture/padding")
+    public @ResponseBody Set<Audit> getInformationArchitecturePaddingAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return domain_service.getMostRecentAuditRecordPadding(host);
+    }
+    
+    /**
      * Retrieves set of {@link Audit audits} that have a type of visuals
      * 
      * @param id

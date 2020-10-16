@@ -62,4 +62,10 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Alt Text'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageAltTextAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Margin'}) WHERE audit.level='domain' RETURN audit")
+	public Set<Audit> getAllPageMarginAudits(@Param("audit_record_key") String audit_record_key);
+	
+	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Padding'}) WHERE audit.level='domain' RETURN audit")
+	public Set<Audit> getAllPagePaddingAudits(@Param("audit_record_key") String audit_record_key);
 }

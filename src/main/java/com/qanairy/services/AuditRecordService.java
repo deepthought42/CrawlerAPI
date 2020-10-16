@@ -150,4 +150,18 @@ public class AuditRecordService {
         AuditRecord record = findMostRecent(host).get();
 		return audit_record_repo.getAllVisualAudits(record.getKey());
 	}
+
+	public Set<Audit> getAllMarginAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageMarginAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllPagePaddingAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPagePaddingAudits(audit_record_key);
+	}
 }

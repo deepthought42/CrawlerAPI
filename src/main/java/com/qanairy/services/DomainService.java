@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.validation.constraints.NotBlank;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -274,4 +276,18 @@ public class DomainService {
 	public Domain findByAuditRecord(String audit_record_key) {
 		return domain_repo.findByAuditRecord(audit_record_key);
 	}
+
+	public Set<Audit> getMostRecentAuditRecordMargins(@NotBlank String host) {
+		assert host != null;
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllMarginAudits(record.getKey());	
+    }
+	
+	public Set<Audit> getMostRecentAuditRecordPadding(@NotBlank String host) {
+		assert host != null;
+		
+		AuditRecord record = audit_record_service.findMostRecent(host).get();
+        return audit_record_service.getAllPagePaddingAudits(record.getKey());
+    }
 }

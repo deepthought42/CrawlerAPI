@@ -4,7 +4,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
+
 
 
 /**
@@ -61,18 +64,29 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 		int points = 0;
 		int max_points = 0;
 		
+		
+		
 		for(Audit audit : text_contrast_audits) {
 			points += audit.getPoints();
 			max_points += audit.getTotalPossiblePoints();
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
 		
+		//reduce observations to unique
+		Map<String, Observation> observation_map = new HashMap<>();
+		for(Observation obs : observations){
+			if(!observation_map.containsKey(obs.getKey())) {
+				observation_map.put(obs.getKey(), obs);
+			}
+		}
+		
 		return new Audit(AuditCategory.TYPOGRAPHY, 
 							AuditSubcategory.TYPEFACES, 
 							points, 
-							observations, 
+							new ArrayList<>(observation_map.values()), 
 							AuditLevel.DOMAIN, 
-							max_points, domain.getHost());
+							max_points, 
+							domain.getHost());
 	}
 	
 

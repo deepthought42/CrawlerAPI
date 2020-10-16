@@ -6,13 +6,12 @@ import java.util.Map;
 import org.neo4j.ogm.annotation.Properties;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class PropertyMapObservation extends LookseeObject implements Observation{
+public class PropertyMapObservation extends Observation{
 	private String description;
 	
 	@Properties
@@ -23,6 +22,7 @@ public class PropertyMapObservation extends LookseeObject implements Observation
 	public PropertyMapObservation(Map<String, List<Double>> properties, String description) {
 		setProperties(properties);
 		setDescription(description);
+		setType(ObservationType.PROPERTY_MAP);
 		setKey(this.generateKey());
 	}
 	

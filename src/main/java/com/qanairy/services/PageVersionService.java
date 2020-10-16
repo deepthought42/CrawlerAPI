@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.experience.PerformanceInsight;
-import com.qanairy.models.repository.PageRepository;
+import com.qanairy.models.repository.PageVersionRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.PerformanceInsightRepository;
 
@@ -20,12 +20,12 @@ import com.qanairy.models.repository.PerformanceInsightRepository;
  * Methods for interacting with page object
  */
 @Service
-public class PageService {
+public class PageVersionService {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageService.class);
+	private static Logger log = LoggerFactory.getLogger(PageVersionService.class);
 	
 	@Autowired
-	private PageRepository page_repo;
+	private PageVersionRepository page_repo;
 	
 	@Autowired
 	private PageStateRepository page_state_service;
@@ -35,19 +35,19 @@ public class PageService {
 	
 	
 	/**
-	 * Saves {@link Page} to database
+	 * Saves {@link PageVersion} to database
 	 * 
 	 * @param page
 	 * 
-	 * @return {@link Page} object reference to database object
+	 * @return {@link PageVersion} object reference to database object
 	 * 
 	 * @pre page != null;
 	 */
-	public Page saveForUser(String user_id, Page page){
+	public PageVersion saveForUser(String user_id, PageVersion page){
 		assert page != null;
 		assert user_id != null;
 		
-		Page page_record = findByKey(page.getKey());
+		PageVersion page_record = findByKey(page.getKey());
 		if(page_record != null){
 			page_record.setPageStates(page.getPageStates());
 			return page_repo.save(page_record);
@@ -59,18 +59,18 @@ public class PageService {
 	}
 	
 	/**
-	 * Saves {@link Page} to database
+	 * Saves {@link PageVersion} to database
 	 * 
 	 * @param page
 	 * 
-	 * @return {@link Page} object reference to database object
+	 * @return {@link PageVersion} object reference to database object
 	 * 
 	 * @pre page != null;
 	 */
-	public Page save(Page page){
+	public PageVersion save(PageVersion page){
 		assert page != null;
 		
-		Page page_record = findByKey(page.getKey());
+		PageVersion page_record = findByKey(page.getKey());
 		if(page_record != null){
 			page_record.setPageStates(page.getPageStates());
 			return page_repo.save(page_record);
@@ -85,7 +85,7 @@ public class PageService {
 	 * @param user_id
 	 * @param key
 	 * 
-	 * @return {@link Page} record
+	 * @return {@link PageVersion} record
 	 * 
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
@@ -93,7 +93,7 @@ public class PageService {
 	 * @pre !user_id.isEmpty()
 	 */
 	@Deprecated
-	public Page findByKeyAndUser(String user_id, String key){
+	public PageVersion findByKeyAndUser(String user_id, String key){
 		assert key != null;
 		assert !key.isEmpty();
 		assert user_id != null;
@@ -107,12 +107,12 @@ public class PageService {
 	 * 
 	 * @param key
 	 * 
-	 * @return {@link Page} record
+	 * @return {@link PageVersion} record
 	 * 
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
 	 */
-	public Page findByKey( String key ){
+	public PageVersion findByKey( String key ){
 		assert key != null;
 		assert !key.isEmpty();
 		
@@ -124,12 +124,12 @@ public class PageService {
 	 * 
 	 * @param url
 	 * 
-	 * @return {@link Page} record
+	 * @return {@link PageVersion} record
 	 * 
 	 * @pre key != null;
 	 * @pre !key.isEmpty();
 	 */
-	public Page findByUrl( String url ){
+	public PageVersion findByUrl( String url ){
 		assert url != null;
 		assert !url.isEmpty();
 		
@@ -171,7 +171,7 @@ public class PageService {
 	}
 
 	/**
-	 * Retrieves a List of all {@link PerformanceInsight}s associated with a {@link Page} that has a given key
+	 * Retrieves a List of all {@link PerformanceInsight}s associated with a {@link PageVersion} that has a given key
 	 * 
 	 * @param page_key
 	 * @return
@@ -187,7 +187,7 @@ public class PageService {
 	}
 	
 	/**
-	 * Retrieves the latest {@link PerformanceInsight} for a {@link Page} with a given key
+	 * Retrieves the latest {@link PerformanceInsight} for a {@link PageVersion} with a given key
 	 * 
 	 * @param page_key
 	 * @return
@@ -224,7 +224,7 @@ public class PageService {
 		if(page_state_record == null) {
 			page_state_record = page_state_service.save(page_state);
 		}
-		Page page = page_repo.findByKey(page_key);
+		PageVersion page = page_repo.findByKey(page_key);
 		page.addPageState(page_state_record);
 		page_repo.save(page);
 	}

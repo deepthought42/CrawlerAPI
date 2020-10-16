@@ -52,7 +52,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		
 		Map<String, List<ElementState>> header_element_map = new HashMap<>();
 		for(ElementState element : page_state.getElements()) {
-			if(ElementStateUtils.isHeader(element)) {
+			if(ElementStateUtils.isHeader(element.getName())) {
 				if(header_element_map.containsKey(element.getName())) {
 					header_element_map.get(element.getName()).add(element);
 				}
@@ -141,7 +141,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		
 		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score);
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, page_state.getUrl());
 	}
 	
 

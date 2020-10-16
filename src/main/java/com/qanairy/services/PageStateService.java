@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
@@ -224,7 +224,7 @@ public class PageStateService {
 		return page_state_repo.getVisibleLeafElements(page_state_key);
 	}
 
-	public Page getParentPage(String page_state_key) {
+	public PageVersion getParentPage(String page_state_key) {
 		return page_state_repo.getParentPage(page_state_key);
 
 	}

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
@@ -26,7 +26,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.ElementStateUtils;
 
@@ -40,7 +40,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	private static Logger log = LoggerFactory.getLogger(DomainFontAudit.class);
 
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -51,14 +51,11 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 	@Relationship(type="FLAGGED")
 	private List<Element> flagged_elements = new ArrayList<>();
 	
-	public DomainFontAudit() {
-		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
-	}
+	public DomainFontAudit() {	}
 
 	/**
 	 * {@inheritDoc} 
-	 * 
-	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
+
 	 *  
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
@@ -68,12 +65,12 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 		assert domain != null;
 		
 		//get all pages
-		List<Page> pages = domain_service.getPages(domain.getHost());
+		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 		Map<String, List<ElementState>> header_element_map = new HashMap<>();
 		
 		log.warn("Domain pages :: "+pages.size());
 		//get most recent page state for each page
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			
 			//for each page state get elements
 			PageState page_state = page_service.getMostRecentPageState(page.getKey());
@@ -83,7 +80,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
 			for(ElementState element : elements) {
-				if(ElementStateUtils.isHeader(element)) {
+				if(ElementStateUtils.isHeader(element.getName())) {
 					if(header_element_map.containsKey(element.getName())) {
 						header_element_map.get(element.getName()).add(element);
 					}
@@ -171,7 +168,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 		
 		
 		log.warn("DOMAIN FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score);
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, domain.getHost());
 	}
 	
 

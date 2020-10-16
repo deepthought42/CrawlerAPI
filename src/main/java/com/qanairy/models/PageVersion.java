@@ -3,7 +3,6 @@ package com.qanairy.models;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,13 +26,19 @@ import com.qanairy.services.BrowserService;
  * A reference to a web page
  *
  */
-public class Page extends LookseeObject {
-	private static Logger log = LoggerFactory.getLogger(Page.class);
+public class PageVersion extends LookseeObject {
+	private static Logger log = LoggerFactory.getLogger(PageVersion.class);
 
 	private String url;
 	private String path;
 	private String src;
+	
+	private String body;
 	private String title;
+	private Set<String> script_urls;
+	private Set<String> stylesheet_urls;
+	private Set<String> metadata;	
+	private Set<String> favicon_url;
 	
 	@Relationship(type = "HAS")
 	private List<Element> elements;
@@ -42,7 +47,7 @@ public class Page extends LookseeObject {
 	private List<PageState> page_states;
 
 
-	public Page() {
+	public PageVersion() {
 		super();
 		setElements(new ArrayList<>());
 		setPageStates(new ArrayList<>());
@@ -50,22 +55,15 @@ public class Page extends LookseeObject {
 	
 
 	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 *
-	 * @param url
+	 * Constructor 
+	 * 
 	 * @param elements
-	 * @param full_page_screenshot_url TODO
-	 * @param full_page_checksum TODO
-	 * @param title TODO
-	 * @param screenshot
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 *
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
+	 * @param src
+	 * @param title
+	 * @param url
+	 * @param path
 	 */
-	public Page(List<Element> elements, String src, String title, String url, String path)
+	public PageVersion(List<Element> elements, String src, String title, String url, String path)
 	{
 		super();
 		assert elements != null;
@@ -77,7 +75,12 @@ public class Page extends LookseeObject {
 		setElements(elements);
 		setPageStates(new ArrayList<>());
 		setUrl(url);
-		setSrc( BrowserService.extractTemplate(Browser.cleanSrc(src)));
+		setBody( BrowserService.extractBody(src));
+		setMetadata( BrowserService.extractMetadata(src) );
+		setStylesheetUrls( BrowserService.extractStylesheets(src));
+		setScriptUrls( BrowserService.extractScriptUrls(src));
+		setFaviconUrl(BrowserService.extractIconLinks(src));
+		setSrc( src );
 		setTitle(title);
 		setPath(path);
 		setKey(generateKey());
@@ -142,7 +145,7 @@ public class Page extends LookseeObject {
 	 * Checks if Pages are equal
 	 *
 	 * @param page
-	 *            the {@link Page} object to compare current page to
+	 *            the {@link PageVersion} object to compare current page to
 	 *
 	 * @pre page != null
 	 * @return boolean value
@@ -152,10 +155,10 @@ public class Page extends LookseeObject {
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
-		if (!(o instanceof Page))
+		if (!(o instanceof PageVersion))
 			return false;
 
-		Page that = (Page) o;
+		PageVersion that = (PageVersion) o;
 		
 		return this.getKey().equals(that.getKey());
 	}
@@ -164,10 +167,10 @@ public class Page extends LookseeObject {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Page clone() {
+	public PageVersion clone() {
 		List<Element> elements = new ArrayList<Element>(getElements());
 
-		Page page = new Page(elements, getSrc(), getTitle(), getUrl(), getPath());
+		PageVersion page = new PageVersion(elements, getSrc(), getTitle(), getUrl(), getPath());
 		return page;
 	}
 
@@ -235,8 +238,7 @@ public class Page extends LookseeObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		String src_template = BrowserService.extractTemplate(getSrc());
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(src_template);
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.extractTemplate(this.getBody()));
 	}
 
 	public String getSrc() {
@@ -295,5 +297,57 @@ public class Page extends LookseeObject {
 	public void setPath(String path) {
 		this.path = path;
 	}
+
+
+	public Set<String> getScriptUrls() {
+		return script_urls;
+	}
+
+
+	public void setScriptUrls(Set<String> script_urls) {
+		this.script_urls = script_urls;
+	}
+
+
+	public Set<String> getStylesheetUrls() {
+		return stylesheet_urls;
+	}
+
+
+	public void setStylesheetUrls(Set<String> stylesheet_urls) {
+		this.stylesheet_urls = stylesheet_urls;
+	}
+
+
+	public Set<String>  getMetadata() {
+		return metadata;
+	}
+
+
+	public void setMetadata(Set<String>  metadata) {
+		this.metadata = metadata;
+	}
+
+
+	public String getBody() {
+		return body;
+	}
+
+
+	public void setBody(String body) {
+		this.body = body;
+	}
+
+
+	public Set<String> getFaviconUrl() {
+		return favicon_url;
+	}
+
+
+	public void setFaviconUrl(Set<String> favicon_url) {
+		this.favicon_url = favicon_url;
+	}
+
+
 
 }

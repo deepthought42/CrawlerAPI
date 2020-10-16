@@ -1,0 +1,82 @@
+package com.looksee.gcp;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.channels.Channels;
+
+import javax.imageio.ImageIO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import com.qanairy.models.enums.BrowserType;
+
+/**
+ * Handles uploading files to Google Cloud Storage
+ */
+public class GoogleCloudStorage {
+	
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(GoogleCloudStorage.class);
+
+	private static String bucketName     = "look-see-data";
+	
+	public static String saveImage(BufferedImage image, String domain, String element_key, BrowserType browser) throws IOException {
+		assert image != null;
+		assert domain != null;
+		assert !domain.isEmpty();
+		assert element_key != null;
+		assert !element_key.isEmpty();
+		assert browser != null;
+		
+		Storage storage = StorageOptions.getDefaultInstance().getService();
+		Bucket bucket = storage.get(bucketName);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageIO.write( image, "png", baos );
+		baos.flush();
+		byte[] imageInByte = baos.toByteArray();
+		baos.close();
+
+		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
+		Blob blob = bucket.create(host_key+""+element_key+browser+".png", imageInByte);
+        
+        return blob.getMediaLink();
+    }
+	
+	public static BufferedImage getImage(String domain, String element_key, BrowserType browser) throws IOException {
+		assert domain != null;
+		assert !domain.isEmpty();
+		assert element_key != null;
+		assert !element_key.isEmpty();
+		assert browser != null;
+		
+		Storage storage = StorageOptions.getDefaultInstance().getService();
+		Bucket bucket = storage.get(bucketName);
+
+
+		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
+		Blob blob = bucket.get(host_key+""+element_key+browser+".png");
+		InputStream inputStream = Channels.newInputStream(blob.reader());
+
+        return ImageIO.read(inputStream);
+    }
+	
+	public static BufferedImage getImage(String image_url, BrowserType browser) throws IOException {
+		assert image_url != null;
+		assert !image_url.isEmpty();
+		assert browser != null;
+		
+//		Storage storage = StorageOptions.getDefaultInstance().getService();
+//		Bucket bucket = storage.get(bucketName);
+
+//		Blob blob = bucket.get(image_url);
+		return ImageIO.read(new URL(image_url));
+    }
+}

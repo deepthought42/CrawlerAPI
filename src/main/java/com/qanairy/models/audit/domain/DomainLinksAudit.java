@@ -2,25 +2,31 @@ package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.Element;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.AuditService;
+import com.qanairy.services.DomainService;
 
 /**
  * Responsible for executing an audit on the page audits for hyperlinks
  */
 @Component
 public class DomainLinksAudit implements IExecutableDomainAudit {
+
+	@Autowired
+	private AuditService audit_service;
 	
-	private List<Element> links_without_href =  new ArrayList<>();
-	private List<Element> invalid_links = new ArrayList<>();
-	private List<Element> dead_links = new ArrayList<>();
+	@Autowired
+	private DomainService domain_service;
 	
 	public DomainLinksAudit() {	}
 
@@ -35,12 +41,26 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 	@Override
 	public Audit execute(Domain domain) {
 		assert domain != null;
-		int score = 0;
-		List<Audit> audits = new ArrayList<>();
 		
-		for(Audit audit : audits) {
-			score += audit.getPoints();
+		List<Observation> observations = new ArrayList<>();
+
+		Set<Audit> link_audits = domain_service.getMostRecentAuditRecordLinks(domain.getHost());
+		int points = 0;
+		int max_points = 0;
+		System.out.println("loaded page level LINK audits :: "+link_audits.size());
+		for(Audit audit : link_audits) {
+			points += audit.getPoints();
+			max_points += audit.getTotalPossiblePoints();
+			System.out.println("Obtaining observations from NEO4J FOR AUDIT WITH KEY ;:::  "+audit.getKey());
+			observations.addAll(audit_service.getObservations(audit.getKey()));
+			System.out.println("observations size for domain link audit ::      "+observations.size());
 		}
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, new ArrayList<>(), AuditLevel.DOMAIN, audits.size());
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
+						 AuditSubcategory.LINKS, 
+						 points, 
+						 observations, 
+						 AuditLevel.DOMAIN, 
+						 max_points, domain.getHost());
 	}
 }

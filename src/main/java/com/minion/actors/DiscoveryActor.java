@@ -25,7 +25,7 @@ import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
@@ -46,7 +46,7 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -89,7 +89,7 @@ public class DiscoveryActor extends AbstractActor{
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 		
 	@Autowired
 	private TestService test_service;
@@ -346,7 +346,7 @@ public class DiscoveryActor extends AbstractActor{
 					
 					try {
 						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), page_state_record);					    
-						Page page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
+						PageVersion page = browser_service.buildPage(form_msg.getUserId(), page_state_record.getUrl());
 						page_service.addPageState(form_msg.getUserId(), page.getKey(), page_state_record);
 					}catch(Exception e) {
 						try {
@@ -374,19 +374,7 @@ public class DiscoveryActor extends AbstractActor{
 	}
 
 	private DiscoveryRecord getDiscoveryRecord(String url, String browser, String user_id) {
-		DiscoveryRecord discovery_record = null;
-		if(this.discovery_record == null){
-			log.warn("discovery actor is null for instance variable in discovery actor");
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(url, user_id);
-			
-			if(discovery_record == null){
-				log.warn("was unable to find running discovery record in db");
-				discovery_record = new DiscoveryRecord(new Date(), browser, url,
-						0, 0, 0,
-						DiscoveryStatus.RUNNING);
-			}
-			return discovery_record;
-		}
+
 		
 		return this.discovery_record;
 	}
@@ -445,9 +433,7 @@ public class DiscoveryActor extends AbstractActor{
 	
 
 	private void stopDiscovery(DiscoveryActionMessage message) {
-		if(discovery_record == null){
-			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getEntryPath(), message.getAccountId());
-		}
+		
 		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(discovery_record);

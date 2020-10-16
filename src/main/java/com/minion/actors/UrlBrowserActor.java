@@ -35,14 +35,14 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
@@ -67,7 +67,7 @@ public class UrlBrowserActor extends AbstractActor {
 	private BrowserService browser_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -126,27 +126,12 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-								
-							redirect = BrowserUtils.getPageTransition(url, browser, host, message.getAccountId());
-							log.warn("redirect detected as :: " + redirect.getKey());
-							log.warn("redirect urls :: "+redirect.getUrls().size());
-							log.warn("redirect start url     ::  "+redirect.getStartUrl());
-						  	
-						  	if(redirect != null && ((redirect.getUrls().size() > 0 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
-								log.warn("redirect added to path objects list");
-						  		path_keys.add(redirect.getKey());
-								path_objects.add(redirect);
-							}
+							
 
-						  	animation = BrowserUtils.getLoadingAnimation(browser, host, message.getAccountId());
-							if(animation != null){
-								path_keys.add(animation.getKey());
-								path_objects.add(animation);
-							}
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
 							//build page
-							Page page = browser_service.buildPage(message.getAccountId(), url);
+							PageVersion page = browser_service.buildPage(message.getAccountId(), url);
 							page = page_service.saveForUser(message.getAccountId(), page);
 							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
 							

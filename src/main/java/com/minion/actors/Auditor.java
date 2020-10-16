@@ -13,14 +13,12 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.DomainAuditMessage;
-import com.qanairy.models.message.PageAuditComplete;
 import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditService;
 
@@ -33,7 +31,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 /**
- * Responsible for performing audits for {@link Page}s and {@link Domain}s
+ * Responsible for performing audits for {@link PageVersion}s and {@link Domain}s
  * 
  */
 @Component
@@ -76,7 +74,7 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Page.class, page_state-> {
+				.match(PageVersion.class, page_state-> {
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	
@@ -85,17 +83,13 @@ public class Auditor extends AbstractActor{
 			   			//perform audit and return audit result
 			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
 
-			   			audits_executed = audit_service.saveAll(audits_executed);
-
-			   			audits.addAll(audits_executed);
+			   			audits.addAll(  audit_service.saveAll(audits_executed) );
 			   		}
 		   			
-					PageAuditComplete audit_complete = new PageAuditComplete(page_state);
-		   			getSender().tell(audit_complete, getSelf());
+					//PageAuditComplete audit_complete = new PageAuditComplete(page_state);
+		   			//getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
-		   			postStop();
 				})
 				.match(PageState.class, page_state-> {
 				   	//generate audit report
@@ -105,7 +99,7 @@ public class Auditor extends AbstractActor{
 				   		//check if page state already
 			   			//perform audit and return audit result
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
-
+    
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(rendered_audits_executed);
@@ -115,23 +109,18 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			log.warn("Completed audits for page state ... "+page_state.getUrl());
-		   			postStop();
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//perform audit and return audit result
-				   		log.warn("Executing domain audit for "+audit_category);
 				   		List<Audit> audits_executed = new ArrayList<>();
-				   		log.warn(domain_msg.getStage() + "   ----   equals PRERENDER?? ----  "+domain_msg.getStage().equals(AuditStage.PRERENDER) );
 			   			audits_executed.addAll(audit_factory.executePrerenderDomainAudit(audit_category, domain_msg.getDomain()));
 			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
 			   			getSender().tell(new AuditSet(audits_executed), getSelf());
 				   	}
-					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

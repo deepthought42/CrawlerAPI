@@ -18,7 +18,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 
 /**
  *	API for interacting with {@link User} data
@@ -32,7 +32,7 @@ public class PageController {
 	private AccountService account_service;
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;

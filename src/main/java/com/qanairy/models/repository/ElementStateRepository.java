@@ -37,7 +37,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{user_id:{user_id}})-[*]->(es:ElementState{key:{element_key}}) Match (es)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
 	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:Page) MATCH (page)-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[:HAS_CHILD]->(es:ElementState) RETURN es")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain) MATCH (d)-[]->(page:PageVersion) MATCH (page)-[*]->(e:ElementState{key:{element_key}}) MATCH (e)-[:HAS_CHILD]->(es:ElementState) RETURN es")
 	public List<ElementState> getChildElementsForUser(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (e:ElementState{key:{element_key}})-[:HAS_CHILD]->(es:ElementState) RETURN es")

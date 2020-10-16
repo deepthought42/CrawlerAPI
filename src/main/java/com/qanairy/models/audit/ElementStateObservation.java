@@ -1,5 +1,6 @@
 package com.qanairy.models.audit;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -7,17 +8,16 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementStateObservation extends LookseeObject implements Observation {
+public class ElementStateObservation extends Observation {
 	private String description;
 	
 	@Relationship(type = "FOR")
-	private List<ElementState> elements;
+	private List<ElementState> elements = new ArrayList<>();
 	
 	public ElementStateObservation() {}
 	

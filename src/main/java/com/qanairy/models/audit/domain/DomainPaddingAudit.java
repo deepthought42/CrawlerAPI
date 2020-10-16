@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -19,8 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.Observation;
@@ -30,9 +28,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
-import com.qanairy.services.PageStateService;
-
+import com.qanairy.services.PageVersionService;
 
 
 /**
@@ -46,7 +42,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 	private static final String[] SIZE_UNITS = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -70,16 +66,14 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		List<Observation> observations = new ArrayList<>();
 		Map<Element, List<String>> elements_padding_map = new HashMap<>(); 
 		//get all pages
-		List<Page> pages = domain_service.getPages(domain.getHost());
+		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 		
 		log.warn("Domain pages :: "+pages.size());
 		//get most recent page state for each page
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			
 			//for each page state get elements
 			//PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			log.warn("Domain Font Page State :: "+page);
-			log.warn("Domain Font Page key :: "+page.getKey());
 			
 			List<Element> elements = page_service.getElements(page.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
@@ -122,6 +116,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score unit_score = evaluateUnits(elements_padding_map);
 
+		observations.addAll(spacing_score.getObservations());
 		observations.addAll(unit_score.getObservations());
 		
 		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
@@ -129,16 +124,32 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		
 		int points = (int)(score * 100);
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
-		log.warn("PADDING SCORE  :::   "+points + " / 100" );	
+		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved() + unit_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() + unit_score.getMaxPossiblePoints()) );	
 
 		if(points == 0) {
 			//add observation that no elements were found with padding
 			observations.add(new StylingMissingObservation("Padding was not used")); 
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100, domain.getHost());
 	}
 
+	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
+		//extract baseline padding values
+		
+		//if no baseline exists then score 0 out of 3
+		//check if baseline is a multiple of 4 or 8
+		
+		
+		//if multiple of 8 give 3 out of 3
+		//if multiple of 4 give 2 out of 3
+		//else give score of 1 out of 3
+		
+		//check if other padding values are a multiple of the baseline
+		
+		return new Score(0, 0, new HashSet<>());
+	}
+	
 	/**
 	 * Generates {@link Score score} for spacing consistency across elements
 	 * 
@@ -148,7 +159,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 	 * 
 	 * @pre elements_padding_map != null
 	 */
-	private Score evaluateSpacingConsistency(Map<Element, List<String>> elements_padding_map) {
+	public Score evaluateSpacingConsistency(Map<Element, List<String>> elements_padding_map) {
 		assert elements_padding_map != null;
 		
 		int points_earned = 0;
@@ -185,6 +196,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			gcd_map.put(unit, gcd_list);
 		}			
 		
+		log.warn("GCD MAP VALUES ::   "+gcd_map);
 		//reduce gcd_list until no value is divisible by any other
 		//rank gcd list based on frequency values that are multiples of gcd
 		//generate score for each element padding based on gcd divisibility
@@ -243,7 +255,6 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 					
 				}while(!padding_list.isEmpty() && !gcd_values.isEmpty());
 				
-				
 				if(most_common_gcd_values.size() == 2) {
 					points_earned += 2;
 				}
@@ -281,7 +292,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 				points_earned += scoreMeasureUnit(unit);
 				max_vertical_score += 3;
 				
-				if(points_earned == 1) {
+				if(points_earned < 2) {
 					unscalable_padding_elements.add(element);
 				}
 			}
@@ -292,6 +303,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		
 		return new Score(points_earned, max_vertical_score, observations);
 	}
+	
 	
 	private String extractMeasureUnit(String padding_value) {
 		if(padding_value.contains("rem")) {
@@ -347,10 +359,12 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		else if(unit.contains("vh") || unit.contains("vw") || unit.contains("vmin") || unit.contains("vmax")) {
 			return 2;
 		}
-		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") || unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
+		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") ) {
 			return 1;
 		}
-		
+		else if(unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
+			return 0;
+		}
 		return 3;
 	}
 

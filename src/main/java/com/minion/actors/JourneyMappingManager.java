@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.journeys.Journey;
 import com.qanairy.models.journeys.NavigationStep;
 import com.qanairy.models.journeys.Step;
@@ -56,8 +56,8 @@ public class JourneyMappingManager extends AbstractActor{
 	private Account account;
 
 	private int page_audits_completed;
-	Map<String, Page> pages_experienced = new HashMap<>();
-	Map<String, Page> page_states_experienced = new HashMap<>();
+	Map<String, PageVersion> pages_experienced = new HashMap<>();
+	Map<String, PageVersion> page_states_experienced = new HashMap<>();
 	
 	//subscribe to cluster changes
 	@Override

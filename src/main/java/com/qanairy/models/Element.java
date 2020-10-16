@@ -61,7 +61,6 @@ public class Element extends LookseeObject implements Comparable<Element> {
 	 * @param name
 	 * @param attributes
 	 * @param css_map
-	 * 
 	 * @pre attributes != null
 	 * @pre css_map != null
 	 * @pre xpath != null
@@ -70,21 +69,19 @@ public class Element extends LookseeObject implements Comparable<Element> {
 	 * @pre !screenshot_url.isEmpty()
 	 */
 	public Element(String text, String xpath, String name, Map<String, String> attributes, 
-			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String screenshot_checksum, boolean displayed, String outer_html){
+			Map<String, String> css_map, String inner_html, String outer_html){
 		super();
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
 		assert name != null;
-		assert screenshot_url != null;
 		
 		setText(text);
 		setName(name);
 		setXpath(xpath);
 		setPreRenderCssValues(css_map);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(outer_html));
+		setTemplate(outer_html);
 		setRules(new HashSet<>());
 		setClassification(ElementClassification.LEAF);
 		setAttributes(attributes);
@@ -107,8 +104,7 @@ public class Element extends LookseeObject implements Comparable<Element> {
 	 * @pre assert !outer_html.isEmpty()
 	 */
 	public Element(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
-						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, ElementClassification classification, boolean displayed, String outer_html){
+						String inner_html, ElementClassification classification, String outer_html){
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;
@@ -118,9 +114,10 @@ public class Element extends LookseeObject implements Comparable<Element> {
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
+		
 		setPreRenderCssValues(css_map);
 		setCssSelector("");
-		setTemplate(BrowserService.extractTemplate(outer_html));
+		setTemplate(outer_html);
 		setRules(new HashSet<>());
 		setClassification(classification);
 		setKey(generateKey());
@@ -206,7 +203,7 @@ public class Element extends LookseeObject implements Comparable<Element> {
 		for(String style : properties) {
 			key += getPreRenderCssValues().get(style);
 		}
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
+		return "element::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
 	}
 	
 

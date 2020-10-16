@@ -1,25 +1,14 @@
 package com.minion.browsing;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
-import java.util.UUID;
 
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
-import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -41,7 +30,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
@@ -49,18 +38,13 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.AlertChoice;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
-import com.qanairy.models.message.PageFoundMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 import com.qanairy.utils.TimingUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -74,15 +58,6 @@ public class Crawler {
 
 	@Autowired
 	private ActionRepository action_repo;
-
-	@Autowired
-	private PageService page_service;
-	
-	@Autowired
-	private DomainService domain_service;
-	
-	 @Autowired
-    private ActorSystem actor_system;
 
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -166,7 +141,7 @@ public class Crawler {
 	 * @param path list of vertex keys
 	 * @param user_id TODO
 	 *
-	 * @return {@link Page result_page} state that resulted from crawling path
+	 * @return {@link PageVersion result_page} state that resulted from crawling path
 	 *
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -184,7 +159,7 @@ public class Crawler {
 
 		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		Page expected_page = null;
+		PageVersion expected_page = null;
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 		List<LookseeObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
@@ -192,8 +167,8 @@ public class Crawler {
 		String last_url = null;
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
-			if(current_obj instanceof Page){
-				expected_page = (Page)current_obj;
+			if(current_obj instanceof PageVersion){
+				expected_page = (PageVersion)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/*
@@ -212,11 +187,9 @@ public class Crawler {
 				}
 
 				//if redirect follows an action then watch page transition
-				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel, user_id);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
 			}
 			else if(current_obj instanceof com.qanairy.models.Element){
 				last_element = (com.qanairy.models.Element) current_obj;
@@ -247,13 +220,7 @@ public class Crawler {
 				}
 				else{
 					if(current_idx == ordered_path_objects.size()-1){
-						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel, user_id);
-						if(redirect.getUrls().size() > 2){
-							path_keys.add(redirect.getKey());
-							path_objects_explored.add(redirect);
-
-							current_idx++;
-						}
+						
 					}
 
 					Point p = browser.getViewportScrollOffset();
@@ -282,7 +249,7 @@ public class Crawler {
 	 * @param path list of vertex keys
 	 * @param user_id TODO
 	 *
-	 * @return {@link Page result_page} state that resulted from crawling path
+	 * @return {@link PageVersion result_page} state that resulted from crawling path
 	 *
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -300,7 +267,7 @@ public class Crawler {
 
 		com.qanairy.models.Element last_element = null;
 		LookseeObject last_obj = null;
-		Page expected_page = null;
+		PageVersion expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<LookseeObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
@@ -311,8 +278,8 @@ public class Crawler {
 		int current_idx = 0;
 		for(LookseeObject current_obj: ordered_path_objects){
 			path_objects_explored.add(current_obj);
-			if(current_obj instanceof Page){
-				expected_page = (Page)current_obj;
+			if(current_obj instanceof PageVersion){
+				expected_page = (PageVersion)current_obj;
 				last_url = expected_page.getUrl();
 				
 				/**
@@ -331,11 +298,9 @@ public class Crawler {
 				}
 
 				//if redirect follows an action then watch page transition
-				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel, user_id);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, user_id);
 			}
 			else if(current_obj instanceof com.qanairy.models.Element){
 				last_element = (com.qanairy.models.Element) current_obj;
@@ -369,18 +334,7 @@ public class Crawler {
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
 							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl())))){
-						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel, user_id);
-						if(redirect.getUrls().size() > 2){
-							if(current_idx == ordered_path_objects.size()-1){
-								path_keys.add(redirect.getKey());
-								path_objects_explored.add(redirect);
-							}
-							else if(current_idx < ordered_path_objects.size()-1){
-								path_keys.add(current_idx+1, redirect.getKey());
-								path_objects_explored.add(current_idx+1, redirect);
-							}
-							current_idx++;
-						}
+						
 					}
 
 					Point p = browser.getViewportScrollOffset();
@@ -460,11 +414,6 @@ public class Crawler {
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
-				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, user_id);
-				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
-					path.getPathKeys().add(loading_animation.getKey());
-					path.getPathObjects().add(loading_animation);
-				}
 						
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
@@ -545,11 +494,6 @@ public class Crawler {
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
-				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, domain.getHost(), user_id);
-				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
-					new_path.getKeys().add(loading_animation.getKey());
-					new_path.getPathObjects().add(loading_animation);
-				}
 								
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);

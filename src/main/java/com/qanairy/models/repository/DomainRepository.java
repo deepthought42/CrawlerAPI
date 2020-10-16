@@ -11,7 +11,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
@@ -37,8 +37,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain{host:{host}}) RETURN d LIMIT 1")
 	public Domain findByHost(@Param("host") String host);
 	
-	@Query("MATCH (d:Domain{host:{host}})-[:HAS]->(p:Page) RETURN p")
-	public List<Page> getPages(@Param("host") String host);
+	@Query("MATCH (d:Domain{host:{host}})-[:HAS]->(p:PageVersion) RETURN p")
+	public List<PageVersion> getPages(@Param("host") String host);
 	
 	@Query("MATCH (a:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) RETURN d LIMIT 1")
 	public Domain findByUrlAndAccountId(@Param("url") String url, @Param("user_id") String user_id);
@@ -46,8 +46,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain{url:{url}}) RETURN d LIMIT 1")
 	public Domain findByUrl(@Param("url") String url);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]->(p:Page) MATCH (p)-[]-(ps:PageState) RETURN ps")
-	public Set<PageState> getPageStates(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (d:Domain{host:{host}})-[]->(p:PageVersion) MATCH (p)-[]-(ps:PageState) RETURN ps")
+	public Set<PageState> getPageStates(@Param("host") String host);
 
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]-(d:Domain{url:{url}}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
 	public Set<Element> getElementStates(@Param("url") String url, @Param("user_id") String user_id);
@@ -61,24 +61,12 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:Page) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) MATCH a=(f)-[:DEFINED_BY]->() MATCH b=(f)-[:HAS]->(e) OPTIONAL MATCH c=(e)-->() return a,b,c")
 	public Set<Form> getForms(@Param("user_id") String user_id, @Param("url") String url);
 	
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:Page) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) RETURN COUNT(f)")
+	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageVersion) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) RETURN COUNT(f)")
 	public int getFormCount(@Param("user_id") String user_id, @Param("url") String url);
-	
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{host:{domain_host}}) MATCH (d)-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
-	public Set<Test> getUnverifiedTests(@Param("domain_host") String host, @Param("user_id") String user_id);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH x=(t)-->(:TestRecord) WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' OPTIONAL MATCH y=(t)-->(:Group) RETURN a,x,y")
-	public Set<Test> getVerifiedTests(@Param("url") String url, @Param("user_id") String user_id);
+	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{host:{host}}) MATCH (d)-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
+	public int getTestCount(@Param("user_id") String user_id, @Param("host") String host);
 
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
-	public int getTestCount(@Param("user_id") String user_id, @Param("url") String url);
-
-	@Query("MATCH(:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
-	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("user_id") String user_id, @Param("url") String url);
-	
-	@Query("MATCH (:Account{user_id:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(dr:DiscoveryRecord) WHERE NOT dr.status = 'STOPPED' RETURN dr ORDER BY dr.started_at DESC LIMIT 1")
-	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("url") String url, @Param("user_id") String user_id);
-	
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{key:{domain_key}}) MATCH (d)-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
 	public Set<TestUser> getTestUsers(@Param("user_id") String user_id, @Param("domain_key") String domain_key);
 
@@ -100,14 +88,14 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[:HAS_DOMAIN]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState{url:{page_url}}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) ORDER BY pi.executed_at DESC LIMIT 1")
 	public PerformanceInsight getMostRecentPerformanceInsight(@Param("user_id") String user_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page{key:{page_key}}) OPTIONAL MATCH a=(p)-->(z) RETURN p LIMIT 1")
-	public Page getPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:PageVersion{key:{page_key}}) OPTIONAL MATCH a=(p)-->(z) RETURN p LIMIT 1")
+	public PageVersion getPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}),(p:Page{key:{page_key}}) CREATE (d)-[:HAS]->(p) RETURN p")
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}),(p:PageVersion{key:{page_key}}) CREATE (d)-[:HAS]->(p) RETURN p")
 	public void addPage(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key);
 	
-	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:Page) RETURN p")
-	public Set<Page> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:PageVersion) RETURN p")
+	public Set<PageVersion> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
 
 	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:Audit) RETURN audit ORDER BY audit.createdAt DESC")
 	public Set<Audit> getMostRecentDomainAudits(@Param("url") String url);
@@ -120,4 +108,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain{key:{domain_key}})-[]->(audit:AuditRecord) RETURN audit")
 	public Set<AuditRecord> getAuditRecords(@Param("domain_key") String domain_key);
+
+	@Query("MATCH (d:Domain{key:{domain_key}})-[]->(audit:AuditRecord{key:{audit_record_key}}) RETURN audit")
+	public AuditRecord getAuditRecords(@Param("domain_key") String domain_key, @Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (d:Domain)-[*]->(:AuditRecord{key:{audit_record_key}}) RETURN d LIMIT 1")
+	public Domain findByAuditRecord(@Param("audit_record_key") String audit_record_key);
 }

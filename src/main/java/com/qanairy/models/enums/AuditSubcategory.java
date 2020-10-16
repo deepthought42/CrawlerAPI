@@ -10,14 +10,15 @@ public enum AuditSubcategory {
 	COLOR_PALETTE("Color Palette"),
 	TEXT_BACKGROUND_CONTRAST("Text Background Contrast"),
 	NON_TEXT_BACKGROUND_CONTRAST("Non Text Background Contrast"),
-	LINKS("Link"),
+	LINKS("Links"),
 	TYPEFACES("Typefaces"),
 	FONT("Font"),
 	PADDING("Padding"),
 	MARGIN("Margin"),
 	MEASURE_UNITS("Measure Units"),
 	TITLES("Titles"),
-	UNKNOWN("Unknown"), ;
+	ALT_TEXT("Alt Text"),
+	UNKNOWN("Unknown");
 	
 	private String shortName;
 

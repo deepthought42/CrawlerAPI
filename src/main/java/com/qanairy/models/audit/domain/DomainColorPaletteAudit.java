@@ -2,7 +2,6 @@ package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,21 +12,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteObservation;
 import com.qanairy.models.audit.ColorPaletteUtils;
 import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.PaletteColor;
+import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
-import com.qanairy.services.PageStateService;
+import com.qanairy.services.ObservationService;
+import com.qanairy.services.PaletteColorService;
 
 
 /**
@@ -35,19 +34,23 @@ import com.qanairy.services.PageStateService;
  */
 @Component
 public class DomainColorPaletteAudit implements IExecutableDomainAudit{
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DomainColorPaletteAudit.class);
 
 	private List<String> gray_colors = new ArrayList<>();
 	private List<String> colors = new ArrayList<>();
 	
 	@Autowired
-	private PageService page_service;
-	
-	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
+	private AuditService audit_service;
+	
+	@Autowired
+	private ObservationService observation_service;
+	
+	@Autowired
+	private PaletteColorService palette_color_service;
 	
 	public DomainColorPaletteAudit() {}
 	
@@ -61,103 +64,85 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		assert domain != null;
 		
 		List<Observation> observations = new ArrayList<>();
-
-		Map<String, Boolean> colors = new HashMap<String, Boolean>();
-
-		//get all pages
-		List<Page> pages = domain_service.getPages(domain.getHost());
 		
-		//get most recent page state for each page
-		for(Page page : pages) {
-			
-			//for each page state get elements
-			PageState page_state = page_service.getMostRecentPageState(page.getKey());
-			
-			List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		//get all color palette audits associated with most recent audit record for domain host
+		Set<Audit> color_palette_audits = domain_service.getMostRecentAuditRecordColorPaletteAudits(domain.getHost());
+		int points = 0;
+		int max_points = 0;
+		//List<PaletteColor> palette_colors = new ArrayList<>();
+		Map<String, Boolean> schemes_recognized = new HashMap<>();
+		List<String> color_strings = new ArrayList<>();
+		List<String> gray_color_strings = new ArrayList<>();
 
-			for(ElementState element : elements) {
-				//identify all colors used on page. Images are not considered
-				
-				//check element for color css property
-				colors.put(element.getRenderedCssValues().get("color"), Boolean.TRUE);
-				//check element for text-decoration-color css property
-				colors.put(element.getRenderedCssValues().get("text-decoration-color"), Boolean.TRUE);
-				//check element for text-emphasis-color
-				colors.put(element.getRenderedCssValues().get("text-emphasis-color"), Boolean.TRUE);
-	
-				//check element for background-color css property
-				colors.put(element.getRenderedCssValues().get("background-color"), Boolean.TRUE);
-				//check element for caret-color
-				colors.put(element.getRenderedCssValues().get("caret-color"), Boolean.TRUE);
-				//check element for outline-color css property NB: SPECIFICALLY FOR BOXES
-				colors.put(element.getRenderedCssValues().get("outline-color"), Boolean.TRUE);
-				//check element for border-color, border-left-color, border-right-color, border-top-color, and border-bottom-color css properties NB: SPecifically for borders
-				colors.put(element.getRenderedCssValues().get("border-color"), Boolean.TRUE);
-				colors.put(element.getRenderedCssValues().get("border-left-color"), Boolean.TRUE);
-				colors.put(element.getRenderedCssValues().get("border-right-color"), Boolean.TRUE);
-				colors.put(element.getRenderedCssValues().get("border-top-color"), Boolean.TRUE);
-				colors.put(element.getRenderedCssValues().get("border-bottom-color"), Boolean.TRUE);
+		//iterate over color palette audits
+		for(Audit audit : color_palette_audits) {
+			List<Observation> page_audit_observations = audit_service.getObservations(audit.getKey());
+			//extract colors into global color map
+			//calculate global color usage percentages using page state audits
+			for(Observation observation : page_audit_observations) {
+				if(observation instanceof ColorPaletteObservation) {
+					ColorPaletteObservation palette_observation = (ColorPaletteObservation)observation;
+					schemes_recognized.put(palette_observation.getColorScheme().getShortName(), Boolean.TRUE);
+					
+					color_strings.addAll(palette_observation.getColors());
+					//palette_colors.addAll(palette_color_service.saveAll(palette_observation.getPaletteColors()));
+				}
 			}
-			colors.remove("null");
-			colors.remove(null);
+			
+			points += audit.getPoints();
+			max_points += audit.getTotalPossiblePoints();
 		}
 		
-		Map<String, Boolean> gray_colors = new HashMap<String, Boolean>();
-		Map<String, Boolean> filtered_colors = new HashMap<>();
-		//discard any colors that are transparent
-		for(String color_str : colors.keySet()) {
-			color_str = color_str.trim();
-			color_str = color_str.replace("transparent", "");
-			color_str = color_str.replace("!important", "");
-			if(color_str == null || color_str.isEmpty() || color_str.equalsIgnoreCase("transparent")) {
-				continue;
-			}
+		if(schemes_recognized.size() == 1) {
+			points += 3;
+		}
+		max_points += 3;
+		
+		Map<String, Boolean> color_map = new HashMap<>();
+		for(String color : color_strings) {
+			color_map.put(color, Boolean.TRUE);
+		}
+		
+		List<ColorData> color_data_list = new ArrayList<>();
+		for(String color : color_map.keySet()) {
+			color_data_list.add(new ColorData(color));
+		}
+		
+		/*
+		Map<String, PaletteColor> palette_map = new HashMap<>();
+		for(PaletteColor color : palette_colors) {
+			palette_map.put(color.getPrimaryColor(), color);
+		}
+		palette_colors = new ArrayList<>(palette_map.values());
+		 */
 
-			//extract r,g,b,a from color_str
-			ColorData color = new ColorData(color_str.trim());
-			//if gray(all rgb values are equal) put in gray colors map otherwise filtered_colors
-			String rgb_color_str = "rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
-			//convert rgb to hsl, store all as Color object
-			
-			if( Math.abs(color.getRed() - color.getGreen()) < 4
-					&& Math.abs(color.getRed() - color.getBlue()) < 4
-					&& Math.abs(color.getBlue() - color.getGreen()) < 4) {
-				gray_colors.put(rgb_color_str, Boolean.TRUE);
-			}
-			else {
-				filtered_colors.put(rgb_color_str, Boolean.TRUE);
-			}
-		}
-		
-		gray_colors.remove(null);
-		filtered_colors.remove(null);
-		log.warn("colors found :: "+filtered_colors);
-		log.warn("gray colors :: "+gray_colors);
-		
-		//generate palette, identify color scheme and score how well palette conforms to color scheme
-		Map<ColorData, Set<ColorData>> palette = ColorPaletteUtils.extractPalette(filtered_colors.keySet());
-		for(ColorData primary_color : palette.keySet()) {
-			log.warn("Primary color :: "+primary_color.rgb() + "   ;   " + primary_color.getLuminosity());
-		}
-		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
-		//score colors found against scheme
-		Map<String, Set<String>> palette_stringified = convertPaletteToStringRepresentation(palette);
-		
-		ColorPaletteObservation observation = new ColorPaletteObservation(palette_stringified, new ArrayList<>(filtered_colors.keySet()), new ArrayList<>(gray_colors.keySet()), color_scheme, "This is a color scheme description");
-		observations.add(observation);
-			
+		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(color_data_list);
 		ColorScheme scheme = ColorPaletteUtils.getColorScheme(palette);
-		int score = ColorPaletteUtils.getPaletteScore(palette, scheme);
+		
+		Score score = ColorPaletteUtils.getPaletteScore(palette, scheme);
+		points += score.getPointsAchieved();
+		max_points += score.getMaxPossiblePoints();
 		
 		//score colors found against scheme
-		setGrayColors(new ArrayList<>(gray_colors.keySet()));
-		setColors(new ArrayList<>(colors.keySet()));
-		 
-		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score, observations, AuditLevel.DOMAIN, 3);
-	}
+		setGrayColors(new ArrayList<>(gray_color_strings));
+		setColors(new ArrayList<>(color_map.keySet()));
 
-	
+		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
+																palette, 
+																scheme, 
+																"This is a color scheme description");
+		
+		
+		observations.add(observation_service.save(palette_observation));
+			
+		
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
+						 AuditSubcategory.COLOR_PALETTE, 
+						 points, 
+						 observations, 
+						 AuditLevel.DOMAIN, 
+						 max_points, domain.getHost());
+	}	
 
 	public List<String> getGrayColors() {
 		return gray_colors;
@@ -175,20 +160,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		this.colors = colors;
 	}
 	
-	private Map<String, Set<String>> convertPaletteToStringRepresentation(Map<ColorData, Set<ColorData>> palette) {
-		Map<String, Set<String>> stringified_map = new HashMap<>();
-		for(ColorData primary : palette.keySet()) {
-			Set<String> secondary_colors = new HashSet<>();
-			for(ColorData secondary : palette.get(primary)) {
-				if(secondary == null) {
-					continue;
-				}
-				secondary_colors.add(secondary.rgb());
-			}
-			stringified_map.put(primary.rgb(), secondary_colors);
-		}
-		return null;
-	}
 }
 
 

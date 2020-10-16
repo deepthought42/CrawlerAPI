@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.LookseeObject;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.TestService;

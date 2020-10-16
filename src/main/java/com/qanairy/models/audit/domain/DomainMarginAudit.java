@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.Observation;
@@ -36,7 +36,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageService;
+import com.qanairy.services.PageVersionService;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
@@ -48,7 +48,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 	private String[] size_units = {"px", "pt", "%", "em", "rem", "ex", "vh", "vw", "vmax", "vmin", "mm", "cm", "in", "pc"};
 	
 	@Autowired
-	private PageService page_service;
+	private PageVersionService page_version_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -72,13 +72,13 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		Map<Element, List<String>> elements_margin_map = new HashMap<>(); 
 
 		//get all pages
-		List<Page> pages = domain_service.getPages(domain.getHost());
+		List<PageVersion> pages = domain_service.getPages(domain.getHost());
 		
 		log.warn("Domain pages :: "+pages.size());
 		//get most recent page state for each page
-		for(Page page : pages) {
+		for(PageVersion page : pages) {
 			
-			List<Element> elements = page_service.getElements(page.getKey());
+			List<Element> elements = page_version_service.getElements(page.getKey());
 			log.warn("page state elements for domain audit :: "+elements.size());
 			for(Element element : elements) {
 				String margin_value = "";
@@ -112,12 +112,16 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			}
 		}
 		
+		log.warn("Element margin map size :: "+elements_margin_map.size());
 		Score spacing_score = evaluateSpacingConsistency(elements_margin_map);
 		Score unit_score = evaluateUnits(elements_margin_map);
-		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
 
+		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
+		observations.addAll(spacing_score.getObservations());
 		observations.addAll(unit_score.getObservations());
 		observations.addAll(margin_as_padding_score.getObservations());
+		
+		log.warn("spacing score : "+spacing_score.getPointsAchieved() + " / " +spacing_score.getMaxPossiblePoints());
 		
 		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
 						+ (unit_score.getPointsAchieved()/(double)unit_score.getMaxPossiblePoints())
@@ -125,9 +129,9 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		
 		int points = (int)(score * 100);
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
-		log.warn("MARGIN SCORE  :::   "+points + " / 100" );	
+		log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100, domain.getHost());
 	}
 
 	/**
@@ -350,8 +354,13 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		Set<Observation> observations = new HashSet<>();
 		List<Element> flagged_elements = new ArrayList<>();
 		for(Element element : elements) {
+			if(element == null) {
+				log.warn("margin padding audit Element :: "+element);
+				continue;
+			}
+
 			//identify elements that own text and have margin but not padding set
-			if(!element.getText().trim().isEmpty()) {
+			if(element.getText() != null && !element.getText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
 				boolean margin_used_as_padding = false;
 				String margin_top = element.getPreRenderCssValues().get("margin-top");

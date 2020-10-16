@@ -16,29 +16,34 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.Page;
+import com.qanairy.models.ElementState;
+import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
  */
 @Component
-public class LinksAudit implements IExecutablePageVersionAudit {
+public class LinksAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
 	
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<com.qanairy.models.Element> links_without_href_attribute =  new ArrayList<>();
-	private List<com.qanairy.models.Element> links_without_href_value =  new ArrayList<>();
-	private List<com.qanairy.models.Element> invalid_links = new ArrayList<>();
-	private List<com.qanairy.models.Element> dead_links = new ArrayList<>();
-	private List<com.qanairy.models.Element> non_labeled_links = new ArrayList<>();
+	@Autowired
+	private PageStateService page_state_service;
+	
+	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
+	private List<ElementState> links_without_href_value =  new ArrayList<>();
+	private List<ElementState> invalid_links = new ArrayList<>();
+	private List<ElementState> dead_links = new ArrayList<>();
+	private List<ElementState> non_labeled_links = new ArrayList<>();
 
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -54,26 +59,29 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(Page page) {
-		assert page != null;
+	public Audit execute(PageState page_state) {
+		assert page_state != null;
 		
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
-		List<com.qanairy.models.Element> link_elements = new ArrayList<>();
-		for(com.qanairy.models.Element element : page.getElements()) {
+		List<ElementState> link_elements = new ArrayList<>();
+		for(ElementState element : page_state_service.getElementStates(page_state.getKey())) {
 			if(element.getName().equalsIgnoreCase("a")) {
 				link_elements.add(element);
 			}
 		}
 		
+		log.warn("------------------------------------------------------------");
+		log.warn("Link elements found ... "+link_elements.size());
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
-		for(com.qanairy.models.Element link : link_elements) {
+		for(ElementState link : link_elements) {
 	
-			Document jsoup_doc = Jsoup.parseBodyFragment(link.getTemplate(), page.getUrl());
+			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
-			
-			if(element.hasAttr("href")) {
+		
+			//String href = link.getAttribute("href");
+			if( element.hasAttr("href") ) {
 				score++;
 			}
 			else {
@@ -95,7 +103,7 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 				try {
 					URI uri = new URI(href);
 					if(!uri.isAbsolute()) {
-						href = page.getUrl() + href;
+						href = page_state.getUrl() + href;
 					}
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
@@ -130,53 +138,69 @@ public class LinksAudit implements IExecutablePageVersionAudit {
 			}
 			
 			//Does link contain a text label inside it
-			 if(element.hasText()) {
-				score++;
+			 if(!link.getText().isEmpty()) {
+				 score++;
 			 }
-			 else if(!element.hasText() && element.getElementsByTag("img").isEmpty()) {
-				//does element use image as links?
-				non_labeled_links.add(link);
+			 else {
+				 log.warn("link doesn't have a text label");
+				 //does element use image as links?
+				 non_labeled_links.add(link);
 			}
 			 
 			//TODO : Does link have a hover styling? yes(1) / No(0)
 			
 			//TODO : Is link label relevant to destination url or content? yes(1) / No(0)
 				//TODO :does link text exist in url?
-				if(href.contains(element.ownText())) {
-					score++;
-				}
+			//	if(href.contains(element.ownText())) {
+				//	score++;
+				//}
 				
 				//TODO :does target content relate to link?
 			
 		}
 		
 		if(!links_without_href_attribute.isEmpty()) {
-			ElementObservation observation = new ElementObservation(links_without_href_attribute, "Links without an 'href' attribute present");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_attribute, "Links without an 'href' attribute present");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
-			ElementObservation observation = new ElementObservation(links_without_href_value, "Links without emptry 'href' values");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_value, "Links without emptry 'href' values");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(invalid_links, "Links with invalid addresses");
+			ElementStateObservation observation = new ElementStateObservation(invalid_links, "Links with invalid addresses");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(dead_links, "Dead links");
+			ElementStateObservation observation = new ElementStateObservation(dead_links, "Dead links");
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
-			ElementObservation observation = new ElementObservation(non_labeled_links, "Links without text");
+			ElementStateObservation observation = new ElementStateObservation(non_labeled_links, "Links without text");
 			observations.add(observation_service.save(observation));
 		}
 		
-		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*6));
+		if(links_without_href_attribute.isEmpty()
+				&& links_without_href_value.isEmpty()
+				&& invalid_links.isEmpty()
+				&& dead_links.isEmpty()
+				&& non_labeled_links.isEmpty()
+		) {
+			ElementStateObservation observation = new ElementStateObservation(new ArrayList<>(), "All links are providing a delightful experience");
+			observations.add(observation_service.save(observation));
+		}
+		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.LINKS, score, observations, AuditLevel.PAGE,link_elements.size()*6); //the contstant 6 in this equation is the exact number of boolean checks for this audit
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
+						 AuditSubcategory.LINKS, 
+						 score, 
+						 observations, 
+						 AuditLevel.PAGE, 
+						 link_elements.size()*5, page_state.getUrl()); 
+		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

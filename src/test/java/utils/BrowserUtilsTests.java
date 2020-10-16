@@ -1,12 +1,14 @@
 package utils;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.qanairy.utils.BrowserUtils;
@@ -63,5 +65,14 @@ public class BrowserUtilsTests {
 		URL valid_url = new URL("https://www.google.com");
 		boolean does_exist = BrowserUtils.doesUrlExist(valid_url);
 		assertTrue(does_exist);
+	}
+	
+	@Test
+	public void verifyCanExtractFontFamiliesFromStylesheetCss() {
+		String stylesheet = ".title { background-color: #111111; color:#ffffff} .header { font-family: 'sans-serif';} .paragraph { font-family: 'helvetica,open-sans-sans-serif' }";
+		
+		List<String> font_families = new ArrayList<>(BrowserUtils.extractFontFamiliesFromStylesheet(stylesheet));
+		System.out.println("font_families    ::     "+font_families);
+		Assert.assertTrue(font_families.size() == 2);
 	}
 }

@@ -2,12 +2,10 @@ package com.minion.api;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,15 +31,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.minion.api.exception.PaymentDueException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
@@ -51,19 +46,12 @@ import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.FormStatus;
-import com.qanairy.models.enums.FormType;
 import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.message.FormDiscoveryMessage;
-import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.FormService;
 import com.qanairy.services.RedirectService;
-import com.qanairy.services.SubscriptionService;
 import com.qanairy.utils.BrowserUtils;
-import com.stripe.exception.StripeException;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -87,19 +75,10 @@ public class DomainController {
 	private DomainService domain_service;
 	
 	@Autowired
-	private FormRepository form_repo;
-
-	@Autowired
-	private FormService form_service;
-	
-	@Autowired
     private ActorSystem actor_system;
 	    
 	@Autowired
 	private TestUserRepository test_user_repo;
-	  
-	@Autowired
-	private SubscriptionService subscription_service;
 	
     /**
      * Create a new {@link Domain domain}
@@ -290,14 +269,14 @@ public class DomainController {
     	}
 		
 
-		Set<PageState> page_states = domain_service.getPageStates(acct.getUserId(), url);
+		Set<PageState> page_states = domain_service.getPageStates(url);
 		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
     }
 	
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
-    public @ResponseBody Set<Page> getAllPages(HttpServletRequest request, 
+    public @ResponseBody Set<PageVersion> getAllPages(HttpServletRequest request, 
 											   @RequestParam(value="url", required=true) String url
 	) throws UnknownAccountException {        
 		Principal principal = request.getUserPrincipal();
@@ -311,7 +290,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<Page> pages = domain_service.getPagesForUser(acct.getUserId(), url);
+		Set<PageVersion> pages = domain_service.getPagesForUser(acct.getUserId(), url);
 		log.info("###### PAGE STATE COUNT :: "+pages.size());
 		return pages;
     	
@@ -335,7 +314,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Set<PageState> page_state = domain_service.getPageStates(acct.getUserId(), url);
+		Set<PageState> page_state = domain_service.getPageStates(url);
 		Set<Element> page_elem = domain_service.getElementStates(url, acct.getUserId());
 		Set<Action> actions = domain_service.getActions(acct.getUserId(), url);
 		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), url);
@@ -547,172 +526,6 @@ public class DomainController {
     		throw new DomainNotFoundException();
     	}
     }
-    
-    /**
-     * Retrieves {@link FormRecord account} with a given key
-     * 
-     * @param key account key
-     * @return {@link FormRecord account}
-     * @throws IOException 
-     * @throws UnknownAccountException 
-     */
-	@PreAuthorize("hasAuthority('create:domains')")
-    @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
-    public @ResponseBody void updateForm(HttpServletRequest request,
-    							 @PathVariable(value="domain_id", required=true) long domain_id,
-    							 @RequestParam(value="id", required=true) long form_id,
-    							 @RequestParam(value="name", required=false) String name,
-    							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
-		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-		
-		Form form_record = form_service.findById(acct.getUserId(), domain_id, form_id);
-		
-		if(form_record == null){
-			throw new FormNotFoundException();
-		}
-		else{
-			if(name!=null && !name.isEmpty()){
-				form_record.setName(name);
-			}
-			form_record.setType(FormType.create(form_type));
-			
-			if(!form_record.getType().equals(FormType.UNKNOWN)){
-				form_record.setStatus(FormStatus.CLASSIFIED);
-			}
-			
-			try {
-	        //learn from form classification   			
-				DeepthoughtApi.learn(form_record, form_record.getMemoryId());
-			}catch(Exception e) {
-				log.error("There was an error sending learn request to RL engine for form record "+form_record.getId()+" with memory id "+form_record.getMemoryId());
-			}
-			
-	    	form_record = form_repo.save(form_record);
-			Optional<Domain> optional_domain = domain_service.findById(domain_id);
-			log.info("Does the domain exist :: "+optional_domain.isPresent());
-	    	if(optional_domain.isPresent()){
-	    		Domain domain = optional_domain.get();
-		    	PageState page = form_service.getPageState(acct.getUserId(), domain.getEntryPath(), form_record);
-
-	    		log.info("domain exists with domain :: "+domain.getEntryPath()+ "  ::   "+domain.getDiscoveryBrowserName());
-	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
-	    		//start form test creation actor
-	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page, acct.getUserId());
-		        
-	    		if(domain_actors.get(domain.getEntryPath()) == null){
-	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-  						  .props("domainActor"), "domain_actor"+domain.getEntryPath());
-	    			domain_actors.put(domain.getEntryPath(), domain_actor);
-	    		}
-	    		domain_actors.get(domain.getEntryPath()).tell(form_discovery_msg, ActorRef.noSender());
-	    	}
-	    	else{
-	    		throw new DomainNotFoundException();
-	    	}
-		}
-	}
-	
-
-	@RequestMapping(path="{domain_id}/status", method = RequestMethod.GET)
-    public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request,
-    												@PathVariable(value="domain_id", required=true) long domain_id)
-    														throws UnknownAccountException{
-		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	
-    	Optional<Domain> optional_domain = domain_service.findById(domain_id);
-		log.info("Does the domain exist :: "+optional_domain.isPresent());
-    	if(optional_domain.isPresent()){
-    		Domain domain = optional_domain.get();
-        	return domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
-    	}
-    	else{
-    		throw new DomainNotFoundException();
-    	}
-    }
-
-    /**
-	 *
-	 * @param request
-	 * @param url
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws UnknownAccountException
-     * @throws PaymentDueException
-     * @throws StripeException
-	 */
-    @PreAuthorize("hasAuthority('start:discovery')")
-	@RequestMapping(path="{domain_id}/start", method = RequestMethod.GET)
-	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request,
-														@PathVariable(value="domain_id", required=true) long domain_id)
-															throws MalformedURLException,
-										   	  						UnknownAccountException,
-										   	  						DiscoveryLimitReachedException,
-										   	  						PaymentDueException, StripeException {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	
-    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
-    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
-    	}
-
-    	Optional<Domain> optional_domain = domain_service.findById(domain_id);
-		log.info("Does the domain exist :: "+optional_domain.isPresent());
-    	if(optional_domain.isPresent()){
-    		Domain domain = optional_domain.get();
-    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getEntryPath(), acct.getUserId());
-    		Date now = new Date();
-        	long diffInMinutes = 10000;
-        	if(last_discovery_record != null){
-        		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
-        	}
-        	log.warn("domain retrieved from host :: " + domain + "   :   "+ domain.getEntryPath());
-        	
-    		if(diffInMinutes > 1440){
-    			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-    			if(!domain_actors.containsKey(domain.getEntryPath())){
-    				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-    						  .props("domainActor"), "domain_actor"+domain.getEntryPath());
-    				domain_actors.put(domain.getEntryPath(), domain_actor);
-    			}
-    		    
-    			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
-    			domain_actors.get(domain.getEntryPath()).tell(discovery_action_msg, null);
-    		}
-            else{
-            	throw new ExistingDiscoveryFoundException();
-            }
-    		
-    		return last_discovery_record;
-    	}
-    	else{
-    		throw new DomainNotFoundException();
-    	}
-    	
-    	
-	}
 
 	/**
 	 *

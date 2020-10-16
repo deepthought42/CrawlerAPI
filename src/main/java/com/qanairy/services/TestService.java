@@ -3,10 +3,8 @@ package com.qanairy.services;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
@@ -17,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.qanairy.models.Account;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
@@ -26,7 +23,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
@@ -36,8 +33,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.utils.PathUtils;
 
@@ -45,11 +40,6 @@ import com.qanairy.utils.PathUtils;
 public class TestService {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
-	@Autowired
-	private AccountRepository account_repo;
-
-	@Autowired
-	private DomainService domain_service;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -73,9 +63,6 @@ public class TestService {
 	private AnimationService animation_service;
 
 	@Autowired
-	private TestRecordRepository test_record_repo;
-
-	@Autowired
 	private PageLoadAnimationService page_load_animation_service;
 
 
@@ -85,7 +72,7 @@ public class TestService {
 	 * @param test test to be ran
 	 *
 	 * @pre test != null
-	 * @return	{@link TestRecord} indicating passing status and {@link Page} if not passing
+	 * @return	{@link TestRecord} indicating passing status and {@link PageVersion} if not passing
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException
@@ -193,44 +180,6 @@ public class TestService {
 			return test_repo.save(record);
 		}
 	}
-
-	public List<TestRecord> runAllTests(Account acct, Domain domain) {
-		//Fire discovery started event
-    	Set<Test> tests = domain_service.getVerifiedTests(domain.getEntryPath(), acct.getUserId());
-    	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
-    	List<TestRecord> test_records = new ArrayList<TestRecord>();
-
-    	for(Test test : tests){
-			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus(), domain, acct.getUserId());
-
-			log.warn("run test returned record  ::  "+record);
-			test_results.put(test.getKey(), record);
-			TestStatus is_passing = TestStatus.PASSING;
-			//update overall passing status based on all browser passing statuses
-			for(String status : test.getBrowserStatuses().values()){
-				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
-					is_passing = TestStatus.FAILING;
-					break;
-				}
-			}
-
-    		record = test_record_repo.save(record);
-    		test_records.add(record);
-
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getStatus().toString());
-
-	    	test.addRecord(record);
-			test.setStatus(is_passing);
-			test.setLastRunTimestamp(new Date());
-			test.setRunTime(record.getRunTime());
-			test_repo.save(test);
-
-			acct.addTestRecord(record);
-			account_repo.save(acct);
-   		}
-
-    	return test_records;
-	 }
 
    public List<Test> findTestsWithElementState(String page_state_key, String element_state_key){
      return test_repo.findTestWithElementState(page_state_key, element_state_key);

@@ -5,19 +5,32 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.openqa.selenium.Dimension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
+import com.minion.api.EntryPoint;
 import com.minion.browsing.Browser;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.services.BrowserService;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = EntryPoint.class)
 public class BrowserServiceTest {
+	
+	@Autowired
+	private BrowserService browser_service;
 	
 	@Test
 	public void isElementVisibleInPanel(){
@@ -40,6 +53,23 @@ public class BrowserServiceTest {
 		String checksum = PageState.getFileChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
 	
 		System.err.println("Checksum :: " + checksum);
+	}
+	
+	@Test 
+	public void verifyExtractAllUniqueElementXpaths() throws XPathExpressionException, MalformedURLException, IOException {
+		String src = "<html>"
+				+ "<div></div>"
+				+ "<body>"
+				+ "<div><span>item1<div>*</div></span><span>item 2</span></div>"
+				+ "<div>Other text here</div>"
+				+ "</body></html>";
+		try {
+		List<String> xpaths = browser_service.extractAllUniqueElementXpaths(src);
+		System.err.println(xpaths);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test

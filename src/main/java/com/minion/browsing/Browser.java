@@ -64,7 +64,6 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
-import cz.vutbr.web.css.CSSException;
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
 import cz.vutbr.web.css.Declaration;
@@ -160,10 +159,12 @@ public class Browser {
 	public void navigateTo(String url) {
 		getDriver().get(url);
 		
-		/*
+		
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
+			e.printStackTrace();
+			/*
 			Alert alert = isAlertPresent();
 			if(alert != null){
 				log.debug("Alert was encountered during navigation page load!!!");
@@ -171,10 +172,11 @@ public class Browser {
 				
 				page_alert.performChoice(getDriver(), AlertChoice.DISMISS);
 			}
+			 */
 		}
-		*/
-		waitForPageToLoad();
-		log.debug("successfully navigated to "+url);
+		
+		//waitForPageToLoad();
+		//log.debug("successfully navigated to "+url);
 	}
 
 	/**
@@ -197,7 +199,9 @@ public class Browser {
 		}
 		
 		for(Element element : html_doc.select("link")) {
-			element.remove();
+			if(element.attr("rel").contentEquals("text/css")) {
+				element.remove();
+			}
 		}
 		
 		String html = html_doc.html();
@@ -393,8 +397,16 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.warn("element screenshot :: "+element.getLocation().getX() + " , " + element.getLocation().getY());
+		log.warn("element screenshot size :: "+element.getSize().getWidth() + " , " + element.getSize().getHeight());
+		log.warn("viewport scroll offset  :  " + this.getXScrollOffset() + " , " + this.getYScrollOffset());
+		log.warn("viewport size ::  " + this.getViewportSize().getWidth() + " , " + this.getViewportSize().getHeight());
+		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
+		
 		//calculate element position within screen
-		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element, true).getImage();
 	}
 	
 	/**
@@ -591,6 +603,9 @@ public class Browser {
 	 * @throws XPathExpressionException 
 	 */
 	public static Map<String, String> loadCssPrerenderedPropertiesUsingParser(List<RuleSet> rule_sets, org.jsoup.nodes.Node element){
+		assert rule_sets != null;
+		assert element != null;
+		
 		Map<String, String> css_map = new HashMap<>();
 		//map rule set declarations with elements and save element
 		for(RuleSet rule_set : rule_sets) {
@@ -710,9 +725,9 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollToElement(com.qanairy.models.Element element_state) 
+	public void scrollToElement(com.qanairy.models.Element element) 
     { 
-		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
+		WebElement elem = driver.findElement(By.xpath(element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -845,7 +860,7 @@ public class Browser {
 	 * Waits for the document ready state to be complete, then observes page transition if it exists
 	 */
 	public void waitForPageToLoad() {
-		new WebDriverWait(driver, 30).until(
+		new WebDriverWait(driver, 60).until(
 				webDriver -> ((JavascriptExecutor) webDriver)
 					.executeScript("return document.readyState")
 					.equals("complete"));
@@ -942,26 +957,31 @@ public class Browser {
 					rule_sets.add(rule);
 				}
 				//or even print the entire style sheet (formatted)
-			} catch (MalformedURLException e2) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (IOException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (CSSException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return rule_sets;
 	}
 
+	/**
+	 * 
+	 * @param src
+	 * @return
+	 */
 	public static List<String> extractStylesheets(String src) {
 		List<String> raw_stylesheets = new ArrayList<>();
 		Document doc = Jsoup.parse(src);	
 		Elements stylesheets = doc.select("link");
+		log.warn("#######################################################################");
+		log.warn("#######################################################################");
+		log.warn("#######################################################################");
+		log.warn("stylesheets size :: "+stylesheets.size());
 		for(Element stylesheet : stylesheets) {
-			if("text/css".equalsIgnoreCase(stylesheet.attr("type"))) {
+			String rel_value = stylesheet.attr("rel");
+			log.warn("rel value of link tag ::  "+rel_value);
+			if("stylesheet".equalsIgnoreCase(rel_value)) {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet
 				if(stylesheet_url.trim().isEmpty()) {
@@ -971,6 +991,7 @@ public class Browser {
 					}
 				}
 				try {
+					log.warn("Adding stylesheet to raw stylesheets   ::   "+stylesheet_url);
 					raw_stylesheets.add(URLReader(new URL(stylesheet_url)));
 				} catch (KeyManagementException | NoSuchAlgorithmException e) {
 					// TODO Auto-generated catch block

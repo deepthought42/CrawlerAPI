@@ -13,8 +13,10 @@ import com.qanairy.models.LookseeObject;
  *
  */
 public class ColorData extends LookseeObject{
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorData.class);
 
+	private float usage_percent;
 	private int red;
 	private int green;
 	private int blue;
@@ -50,9 +52,9 @@ public class ColorData extends LookseeObject{
 			tmp_color_str = tmp_color_str.replaceAll(" ", "");
 			String[] rgba = tmp_color_str.split(",");
 			
-			this.red = Integer.parseInt(rgba[0]);
-			this.green = Integer.parseInt(rgba[1]);
-			this.blue = Integer.parseInt(rgba[2]);
+			this.red = (int)Float.parseFloat(rgba[0]);
+			this.green = (int)Float.parseFloat(rgba[1]);
+			this.blue = (int)Float.parseFloat(rgba[2]);
 			if(rgba.length == 4) {
 				setTransparency(Double.parseDouble(rgba[3]));
 			}
@@ -65,8 +67,25 @@ public class ColorData extends LookseeObject{
 		this.saturation = hsb[1];
 		this.brightness = hsb[2];
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));
+		this.setLuminosity(calculateLuminosity(red, green, blue));		
+	}
+
+	public ColorData(ColorUsageStat color_usage_stat) {
+		assert color_usage_stat != null;
 		
+		this.red = (int)color_usage_stat.getRed();
+		this.green = (int)color_usage_stat.getGreen();
+		this.blue = (int)color_usage_stat.getBlue();
+		setTransparency(Double.parseDouble("0.0"));
+	
+		//convert rgb to hsl, store all as Color object
+		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
+		this.hue = hsb[0];
+		this.saturation = hsb[1];
+		this.brightness = hsb[2];
+		
+		this.setLuminosity(calculateLuminosity(red, green, blue));
+		setUsagePercent(color_usage_stat.getPixelPercent());
 	}
 
 	/**
@@ -204,5 +223,13 @@ public class ColorData extends LookseeObject{
 	@Override
 	public String generateKey() {
 		return rgb();
+	}
+
+	public float getUsagePercent() {
+		return usage_percent;
+	}
+
+	public void setUsagePercent(float usage_percent) {
+		this.usage_percent = usage_percent;
 	}
 }

@@ -69,24 +69,58 @@ public class ElementStateUtils {
 				&& (y+height) <= (viewport_size.getHeight()+y_offset);
 	}
 
-	public static boolean isHeader(ElementState element) {
-		return "h1".equalsIgnoreCase(element.getName()) 
-				|| "h2".equalsIgnoreCase(element.getName())
-				|| "h3".equalsIgnoreCase(element.getName())
-				|| "h4".equalsIgnoreCase(element.getName())
-				|| "h5".equalsIgnoreCase(element.getName())
-				|| "h6".equalsIgnoreCase(element.getName());
+	
+	public static boolean isHeader(String tag_name) {
+		return "h1".equalsIgnoreCase(tag_name) 
+				|| "h2".equalsIgnoreCase(tag_name)
+				|| "h3".equalsIgnoreCase(tag_name)
+				|| "h4".equalsIgnoreCase(tag_name)
+				|| "h5".equalsIgnoreCase(tag_name)
+				|| "h6".equalsIgnoreCase(tag_name);
 	}
 
+
+	/**
+	 * Checks if outer html fragment owns text. An element is defined as owning text if 
+	 *   if it contains text immediately within the element. If an element has only
+	 *   child elements and no text then it does not own text
+	 *   
+	 * @param element_state {@link ElementState element} to be evaluated for text ownership
+	 * 
+	 * @return 1 if element is text owner, otherwise 0
+	 * 
+	 * @pre element_state != null;
+	 */
 	public static boolean isTextContainer(ElementState element_state) {
+		assert element_state != null;
+		
 		Document doc = Jsoup.parseBodyFragment(element_state.getOuterHtml());
 		Element body = doc.body();
 		return !body.ownText().isEmpty();
 	}
 	
+	/**
+	 * Checks if outer html fragment owns text. An element is defined as owning text if 
+	 *   if it contains text immediately within the element. If an element has only
+	 *   child elements and no text then it does not own text
+	 *   
+	 * @param element_state {@link WebElement element} to be evaluated for text ownership
+	 * 
+	 * @return 1 if element is text owner, otherwise 0
+	 * 
+	 * @pre element_state != null;
+	 */
 	public static boolean isTextContainer(WebElement element) {
+		assert element != null;
+		
 		Document doc = Jsoup.parseBodyFragment(element.getAttribute("outerHTML"));
 		Element body = doc.body();
 		return !body.ownText().isEmpty();
+	}
+
+	public static boolean isList(String tag_name) {
+		return "ul".equalsIgnoreCase(tag_name) 
+				|| "ol".equalsIgnoreCase(tag_name)
+				|| "li".equalsIgnoreCase(tag_name);
 	}
 }

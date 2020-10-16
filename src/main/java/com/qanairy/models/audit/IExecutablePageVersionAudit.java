@@ -1,7 +1,7 @@
 package com.qanairy.models.audit;
 
 import com.qanairy.models.PageState;
-import com.qanairy.models.Page;
+import com.qanairy.models.PageVersion;
 
 public interface IExecutablePageVersionAudit {
 	/**
@@ -10,5 +10,5 @@ public interface IExecutablePageVersionAudit {
 	 * @param page_state
 	 * @return
 	 */
-	public Audit execute(Page page_version);
+	public Audit execute(PageVersion page_version);
 }

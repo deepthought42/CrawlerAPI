@@ -1,4 +1,4 @@
-package com.qanairy.services;
+           package com.qanairy.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +22,7 @@ import com.qanairy.models.repository.AuditRecordRepository;
  */
 @Service
 public class AuditRecordService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
 
 	@Autowired
@@ -29,6 +30,7 @@ public class AuditRecordService {
 
 	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
+		
 		return audit_record_repo.save(audit);
 	}
 
@@ -48,13 +50,118 @@ public class AuditRecordService {
 	
 	public void addAudit(String audit_record_key, String audit_key) {
 		//check if audit already exists for page state
-		Optional<Audit> audit = audit_record_repo.getAuditForPageState(audit_record_key, audit_key);
+		Optional<Audit> audit = audit_record_repo.getAuditForAuditRecord(audit_record_key, audit_key);
 		if(!audit.isPresent()) {
 			audit_record_repo.addAudit(audit_record_key, audit_key);
 		}
 	}
 
-	public Set<Audit> getAllAudits(@NotBlank String audit_record_key) {
+	public Set<Audit> getAllAudits(String audit_record_key) {
 		return audit_record_repo.getAllAudits(audit_record_key);
+	}
+
+	public Optional<AuditRecord> findMostRecent(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		return audit_record_repo.findMostRecent(host);
+	}
+
+	public Set<Audit> getAllColorManagementAudits(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllColorManagementAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllColorPaletteAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageColorPaletteAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTextColorContrastAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTextColorContrastAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllNonTextColorContrastAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTypographyAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllTypographyAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllTypefaceAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTypefaceAudits(audit_record_key);
+	}
+
+	////////////////////////////////////////
+	//	INFORMATION ARCHITECTURE
+	/////////////////////////////////////////	
+	public Set<Audit> getAllInformationArchitectureAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllInformationArchitectureAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllLinkAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageLinkAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllTitleAndHeaderAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageTitleAndHeaderAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllAltTextAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageAltTextAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllVisualAudits(@NotBlank String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+        AuditRecord record = findMostRecent(host).get();
+		return audit_record_repo.getAllVisualAudits(record.getKey());
+	}
+
+	public Set<Audit> getAllMarginAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageMarginAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllPagePaddingAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPagePaddingAudits(audit_record_key);
 	}
 }

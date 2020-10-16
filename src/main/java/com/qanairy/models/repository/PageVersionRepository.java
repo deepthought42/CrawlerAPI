@@ -1,6 +1,8 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -8,62 +10,54 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.qanairy.models.Element;
+import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Page;
-import com.qanairy.models.Screenshot;
-import com.qanairy.models.audit.Audit;
+import com.qanairy.models.experience.PerformanceInsight;
 
 /**
  * 
  */
 @Repository
-public interface PageVersionRepository extends Neo4jRepository<Page, Long> {
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{key}}) RETURN p LIMIT 1")
-	public Page findByKeyAndUsername(@Param("user_id") String user_id, @Param("key") String key);
-
-	@Query("MATCH (p:PageState{key:{key}}) RETURN p LIMIT 1")
-	public Page findByKey(@Param("key") String key);
-
+public interface PageVersionRepository extends Neo4jRepository<PageVersion, Long> {
+	
 	@Deprecated
-	@Query("MATCH (:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public List<Page> findByScreenshotChecksumsContainsForUserAndDomain(@Param("user_id") String user_id, @Param("url") String url, @Param("screenshot_checksum") String checksum );
+	@Query("MATCH(:Account{user_id:{user_id}})-[*]->(p:PageVersion{key:{page_key}}) RETURN p LIMIT 1")
+	public PageVersion findByKeyAndUser(@Param("user_id") String user_id, @Param("page_key") String key);
 	
-	@Query("MATCH (d:Page{url:{url}})-[]->(p:PageState) MATCH a=(p)-[h:HAS]->() WHERE {screenshot_checksum} IN p.screenshot_checksums RETURN a")
-	public List<Page> findByScreenshotChecksumAndPageUrl(@Param("url") String url, @Param("screenshot_checksum") String checksum );
+	@Query("MATCH (p:PageVersion{key:{page_key}}) RETURN p LIMIT 1")
+	public PageVersion findByKey(@Param("page_key") String key);
 	
-	@Query("MATCH (p:PageState{full_page_checksum:{screenshot_checksum}}) MATCH a=(p)-[h:HAS_CHILD]->() RETURN a")
-	public List<Page> findByFullPageScreenshotChecksum(@Param("screenshot_checksum") String checksum );
+	@Query("MATCH (p:PageVersion{url:{url}})-[h:HAS]->(e:PageState) RETURN e")
+	public Set<PageState> getPageStates(@Param("url") String url);
+
+	@Query("MATCH (d:Domain{url:{url}})-[]->(p:PageVersion{key:{page_key}}),(insight:PerformanceInsight{key:{insight_key}}) CREATE (p)-[h:HAS]->(insight) RETURN insight")
+	public PerformanceInsight addPerformanceInsight(@Param("user_id") String user_id, @Param("url") String url, @Param("page_key") String page_key, @Param("insight_key") String insight_key);
+
+	@Query("MATCH (d:Domain{url:{url}})-[]->(p:PageVersion{key:{page_key}}) MATCH (p)-[]->(insight:PerformanceInsight{key:{insight_key}}) RETURN insight LIMIT 1")
+	public PerformanceInsight getPerformanceInsight(
+			@Param("user_id") String user_id, 
+			@Param("url") String url, 
+			@Param("page_key") String page_key, 
+			@Param("insight_key") String insight_key);
+
+	@Query("MATCH (p:PageVersion{key:{page_key}})-[]->(insight:PerformanceInsight) RETURN insight")
+	public List<PerformanceInsight> getAllPerformanceInsights(@Param("page_key") String page_key);
 	
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[*]->(e:ElementState) RETURN e")
-	public List<Element> getElementStatesForUser(@Param("user_id") String user_id, @Param("page_key") String key);
+	@Query("MATCH (p:PageVersion{key:{page_key}})-[]->(insight:PerformanceInsight) RETURN insight ORDER BY insight.executed_at DESC LIMIT 1")
+	public PerformanceInsight getLatestPerformanceInsight(@Param("page_key") String page_key);
 
-	@Query("MATCH (p:PageState{key:{page_key}})-[*]->(e:ElementState) RETURN e")
-	public List<Element> getElementStates(@Param("page_key") String key);
+	@Query("MATCH (p:PageVersion{key:{page_key}})-[:HAS]->(page_state:PageState) RETURN page_state ORDER BY page_state.created_at DESC LIMIT 1")
+	public PageState findMostRecentPageState(@Param("page_key") String page_key);
 
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[*]->(e:ElementState{name:'a'}) RETURN e")
-	public List<Element> getLinkElementStates(@Param("user_id") String user_id, @Param("page_key") String key);
+	@Query("MATCH (p:PageVersion{key:{page_key}})-[]->(page_state:PageState{key:{page_state_key}}) RETURN page_state LIMIT 1")
+	public Optional<PageState> findPageStateForPage(@Param("page_key") String page_key, @Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) MATCH (p)-[h:HAS]->(s:Screenshot) RETURN s")
-	public List<Screenshot> getScreenshots(@Param("user_id") String user_id, @Param("page_key") String page_key);
+	@Query("MATCH (p:PageVersion{key:{page_key}}),(ps:PageState{key:{page_state_key}}) CREATE (p)-[h:HAS]->(ps) RETURN ps")
+	public void addPageState(@Param("page_key") String page_key, @Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (:Account{username:{user_id}})-[*]->(p:PageState{key:{page_key}}) WHERE {screenshot_checksum} IN p.animated_image_checksums RETURN p LIMIT 1")
-	public PageState findByAnimationImageChecksum(@Param("user_id") String user_id, @Param("screenshot_checksum") String screenshot_checksum);
+	@Query("MATCH (p:PageVersion{url:{url}}) RETURN p LIMIT 1")
+	public PageVersion findByUrl(@Param("url") String url);
 
-	@Query("MATCH (a:Account{username:{user_id}})-[]->(d:Domain{url:{url}}) MATCH (d)-[]->(p:PageState) MATCH (p)-[:HAS]->(f:Form{key:{form_key}}) RETURN p")
-	public List<Page> findPageStatesWithForm(@Param("user_id") String user_id, @Param("url") String url, @Param("form_key") String form_key);
-
-	@Query("MATCH (d:Domain{url:{url}})-[]->(p:Page) MATCH (p)-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
-	public List<Page> findBySourceChecksumForDomain(@Param("url") String url, @Param("src_checksum") String src_checksum);
-	
-	@Query("MATCH (:Page{url:{url}})-[:HAS]->(ps:PageState{src_checksum:{src_checksum}}) MATCH a=(ps)-[h:HAS]->() RETURN a")
-	public List<Page> findBySourceChecksumForPage(@Param("url") String url, @Param("src_checksum") String src_checksum);
-
-	@Query("MATCH (ps:PageState{key:{page_state_key}})-[]->(a:Audit) RETURN a")
-	public List<Audit> getAudits(@Param("page_state_key") String page_state_key);
-
-	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(a:Audit{subcategory:{subcategory}}) RETURN a")
-	public Audit findAuditBySubCategory(@Param("subcategory") String subcategory, @Param("page_state_key") String page_state_key);
-
-	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(e:ElementState{classification:'leaf'}) where e.visible=1 RETURN e")
-	public List<Element> getVisibleLeafElements(@Param("page_state_key") String page_state_key);
+	@Query("MATCH (p:PageVersion{key:{key}})-[]->(e:Element) RETURN e")
+	public List<Element> getElements(@Param("key") String key);
 }

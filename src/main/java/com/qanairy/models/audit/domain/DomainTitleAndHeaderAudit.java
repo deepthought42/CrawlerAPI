@@ -3,14 +3,12 @@ package com.qanairy.models.audit.domain;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
-import com.qanairy.models.audit.PageObservation;
-import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
 
@@ -41,10 +38,11 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	@Relationship(type="FLAGGED")
 	private List<Element> flagged_elements = new ArrayList<>();
 	
-	
 	@Autowired
 	private DomainService domain_service;
 
+	@Autowired
+	private AuditService audit_service;
 	
 	public DomainTitleAndHeaderAudit() {}
 
@@ -59,83 +57,41 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	@Override
 	public Audit execute(Domain domain) {
 		assert domain != null;
+		
 		List<Observation> observations = new ArrayList<>();
-		List<Page> pages = domain_service.getPages(domain.getHost());
 
-		Score title_score = scorePageTitles(pages);
-		Score favicon_score = scoreFavicon(pages);
-		observations.addAll(title_score.getObservations());
-		observations.addAll(favicon_score.getObservations());
-		
-		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved();
-		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints();
-		
-		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, observations, AuditLevel.DOMAIN, max_points);
-	}
-
-	private Score scoreFavicon(List<Page> pages) {
-		assert pages != null;
-		
+		Set<Audit> title_and_header_audits = domain_service.getMostRecentAuditRecordTitleAndHeader(domain.getHost());
 		int points = 0;
-		Set<Observation> observations = new HashSet<>();
-
-		//find all pages for domain
-		for(Page page : pages) {
-			//find most recent page state
-			//score title of page state
-			if(hasFavicon(page)) {
-				points += 1;
-			}
-			else {
-				observations.add(new PageObservation(page, "pages without titles"));
-				points += 0;				
+		int max_points = 0;
+		
+		for(Audit audit : title_and_header_audits) {
+			points += audit.getPoints();
+			max_points += audit.getTotalPossiblePoints();
+			observations.addAll(audit_service.getObservations(audit.getKey()));
+		}
+		
+		//merge observations
+		Map<String, List<ElementState>> observation_map = new HashMap<>();
+		for(Observation observation : observations) {
+			if( observation instanceof ElementStateObservation){
+				ElementStateObservation element_obs = (ElementStateObservation)observation;
+				String description = element_obs.getDescription();
+				if(observation_map.containsKey(description)) {
+					List<ElementState> elements = observation_map.get(description);
+					elements.addAll(element_obs.getElements());
+				}
+				else {
+					observation_map.put(description, new ArrayList<>(element_obs.getElements()));
+				}
 			}
 		}
 		
-		return new Score(points, pages.size(), observations);
-	}
-
-	/**
-	 * Checks if a {@link PageState} has a favicon defined
-	 * @param page_state
-	 * @return
-	 */
-	private boolean hasFavicon(Page page_state) {
-		assert page_state != null;
-		
-		Document doc = Jsoup.parse(page_state.getSrc());
-		Elements link_elements = doc.getElementsByTag("link");
-		for(Element element: link_elements) {
-			if("icon".contentEquals(element.attr("rel")) && !element.attr("href").isEmpty()) {
-				return true;
-			}
+		List<Observation> compressed_observations = new ArrayList<>();
+		for(String key : observation_map.keySet()) {
+			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key);
+			compressed_observations.add(observation);
 		}
-		return false;
-	}
-
-	/**
-	 * Generate a score for page titles across all pages in this domain
-	 * @param domain
-	 * @return
-	 */
-	private Score scorePageTitles(List<Page> pages) {
-		assert pages != null;
 		
-		Set<Observation> observations = new HashSet<>();
-		int points = 0;
-		
-		//find all pages for domain
-		for(Page page : pages) {
-			//score title of page state
-			if(page.getTitle() != null && !page.getTitle().isEmpty()) {
-				points += 1;
-			}
-			else {
-				observations.add(new PageObservation(page, "pages without titles"));
-				points += 0;				
-			}
-		}
-		return new Score(points, pages.size(), observations);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, compressed_observations, AuditLevel.DOMAIN, max_points, domain.getHost());
 	}
 }

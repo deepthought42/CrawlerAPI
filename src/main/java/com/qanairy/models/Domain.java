@@ -26,7 +26,7 @@ public class Domain extends LookseeObject{
 	private Set<Test> tests;
 
 	@Relationship(type = "HAS")
-	private List<Page> pages;
+	private List<PageVersion> pages;
 
 	@Relationship(type = "HAS_TEST_USER")
 	private Set<TestUser> test_users;
@@ -183,9 +183,9 @@ public class Domain extends LookseeObject{
 		this.account = account;
 	}
 
-	public boolean addPage(Page page) {
+	public boolean addPage(PageVersion page) {
 		//check if page state exists
-		for(Page state : this.getPages()){
+		for(PageVersion state : this.getPages()){
 			if(state.getKey().equals(page.getKey())){
 				return false;
 			}
@@ -194,11 +194,11 @@ public class Domain extends LookseeObject{
 		return this.getPages().add(page);
 	}
 
-	public List<Page> getPages() {
+	public List<PageVersion> getPages() {
 		return this.pages;
 	}
 	
-	public void setPages(List<Page> pages) {
+	public void setPages(List<PageVersion> pages) {
 		this.pages = pages;
 	}
 

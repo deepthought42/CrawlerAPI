@@ -35,9 +35,11 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.CrawlActionMessage;
+import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
@@ -130,6 +132,51 @@ public class AuditController {
     }
     
     /**
+     * Retrieves set of {@link Audit audits} that have a type of 'color management'
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/color/palette")
+    public @ResponseBody Set<Audit> getColorManagementPaletteAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding element with ID  :: "+host);
+    	//get all pages
+    	return domain_service.getMostRecentAuditRecordColorPaletteAudits(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of 'color management'
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/color/textcontrast")
+    public @ResponseBody Set<Audit> getColorManagementTextContrastAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding audits for host  :: "+host);
+    	//get all pages
+    	return domain_service.getMostRecentAuditRecordTextColorContrast(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of 'color management'
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/color/nontextcontrast")
+    public @ResponseBody Set<Audit> getColorManagementNonTextContrastAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding audits for host  :: "+host);
+    	//get all pages
+    	return domain_service.getMostRecentAuditRecordNonTextColorContrast(host);
+    }
+    
+    /**
      * Retrieves set of {@link Audit audits} that have a type of typography
      * 
      * @param id
@@ -141,6 +188,20 @@ public class AuditController {
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return audit_record_service.getAllTypographyAudits(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of typoface
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/typography/typeface")
+    public @ResponseBody Set<Audit> getTypofaceAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return domain_service.getMostRecentAuditRecordTypeface(host);
     }
     
     /**
@@ -158,6 +219,34 @@ public class AuditController {
     }
     
     /**
+     * Retrieves set of {@link Audit audits} that have a type of information architecture
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/information_architecture/link")
+    public @ResponseBody Set<Audit> getInformationArchitectureLinkAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return domain_service.getMostRecentAuditRecordLinks(host);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of information architecture
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/information_architecture/title")
+    public @ResponseBody Set<Audit> getInformationArchitectureTitleAndHeaderAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding branding audits for domain with host  :: "+host);
+        return domain_service.getMostRecentAuditRecordTitleAndHeader(host);
+    }
+    
+    /**
      * Retrieves set of {@link Audit audits} that have a type of visuals
      * 
      * @param id
@@ -171,6 +260,19 @@ public class AuditController {
         return audit_record_service.getAllVisualAudits(host);
     }
     
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/visuals/alttext")
+    public @ResponseBody Set<Audit> getVisualAltTextAudits(HttpServletRequest request,
+    											@PathParam("host") @NotBlank String host
+	) {
+    	log.warn("finding visual audits for domain with host  :: "+host);
+    	return domain_service.getMostRecentAuditRecordAltText(host);
+    }
     
     /**
      * 
@@ -235,5 +337,37 @@ public class AuditController {
 	   	else if(acct.getSubscriptionToken() == null){
 	   		throw new MissingSubscriptionException();
 	   	}
+	}
+	
+	 /**
+     * 
+     * @param request
+     * @param page
+     * @return
+     * @throws Exception
+     */
+	@RequestMapping(path="/buildDomainAudits", method = RequestMethod.GET)
+	public @ResponseBody CrawlStats performDomainAudit(HttpServletRequest request,
+													@PathParam("host") @NotBlank String host) throws Exception {
+
+	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+host));
+	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
+	   	log.warn("host :: "+sanitized_url.getHost());
+	   	log.warn("domain :: "+domain);
+	   	DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
+		log.warn("Audit Manager is now ready to perform a domain audit");
+		//AuditSet audit_record_set = new AuditSet(audits);
+		ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				.props("auditor"), "auditor"+UUID.randomUUID());
+		auditor.tell(domain_msg, null);
+	   	//crawl site and retrieve all page urls/landable pages
+	   /*	
+	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
+		LocalDateTime end_time = LocalDateTime.now();
+
+		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
+	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
+	   	*/
+		return null;
 	}
 }

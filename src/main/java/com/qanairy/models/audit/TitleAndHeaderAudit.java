@@ -58,7 +58,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints() + heading_score.getMaxPossiblePoints();
 		
 		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, observations, AuditLevel.PAGE, max_points);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
 	}
 
 	/**

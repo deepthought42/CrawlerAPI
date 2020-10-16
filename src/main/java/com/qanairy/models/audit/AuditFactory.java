@@ -233,13 +233,13 @@ public class AuditFactory {
 			
 			Audit title_and_headers = domain_title_and_header_auditor.execute(domain);
 			domain_audits.add(title_and_headers);
-			/*
+			
 			Audit padding_audits = domain_padding_auditor.execute(domain);
 			domain_audits.add(padding_audits);
 
 			Audit margin_audits = domain_margin_auditor.execute(domain);
 			domain_audits.add(margin_audits);
-			*/
+			
 			
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
@@ -259,8 +259,8 @@ public class AuditFactory {
 			Audit domain_typeface_audit = domain_typeface_auditor.execute(domain);
 			domain_audits.add(domain_typeface_audit);
 			
-			Audit font_audit = domain_font_auditor.execute(domain);
-			domain_audits.add(font_audit);
+			//Audit font_audit = domain_font_auditor.execute(domain);
+			//domain_audits.add(font_audit);
 			
 		}
 		else if(AuditCategory.VISUALS.equals(category)) {

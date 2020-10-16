@@ -30,6 +30,7 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -566,66 +567,71 @@ public class BrowserService {
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
 		
 		for(String xpath : xpaths) {
-			if(element_states_map.containsKey(xpath)) {
-				continue;
+			try {
+				if(element_states_map.containsKey(xpath)) {
+					continue;
+				}
+	
+				WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
+				Dimension element_size = web_element.getSize();
+				Point element_location = web_element.getLocation();
+				
+				//browser.scrollToElement(web_element);
+	
+				//check if element is visible in pane and if not then continue to next element xpath
+				if( !web_element.isDisplayed()
+						|| !hasWidthAndHeight(web_element.getSize())
+						|| doesElementHaveNegativePosition(element_location)) {
+					continue;
+				}
+				
+				log.debug("---------------------------------------------------------------------------");
+				log.debug("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
+				log.debug("web_element location :: "+element_location.getX() + " , " + element_location.getY());
+				log.debug("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
+				log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
+	
+				
+				//get child elements for element
+				Map<String, String> attributes = browser.extractAttributes(web_root);
+				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
+				
+				ElementClassification classification = null;
+				List<WebElement> children = getChildElements(web_element);
+				if(children.isEmpty()) {
+					classification = ElementClassification.LEAF;
+				}
+				else {
+					classification = ElementClassification.ANCESTOR;
+				}
+				
+				BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
+																					element_location.getY(), 
+																					element_size.getWidth(), 
+																					element_size.getHeight());
+				
+				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+				String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
+				String element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+				element_screenshot.flush();
+				
+	
+				//load json element
+				Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
+				if(elements.size() == 0) {
+					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
+				}
+				Element element = elements.first();
+				
+				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
+				element_state.setScreenshotUrl(element_screenshot_url);
+				element_states_map.put(xpath, element_state);
+				element_state = element_state_service.save(element_state);
+				visited_elements.add(element_state);
 			}
-
-			WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
-			Dimension element_size = web_element.getSize();
-			Point element_location = web_element.getLocation();
-			
-			//browser.scrollToElement(web_element);
-
-			//check if element is visible in pane and if not then continue to next element xpath
-			if( !web_element.isDisplayed()
-					|| !hasWidthAndHeight(web_element.getSize())
-					|| doesElementHaveNegativePosition(element_location)) {
-				continue;
+			catch(NoSuchElementException e) {
+				log.warn("No such element found :: "+xpath);
 			}
-			
-			log.debug("---------------------------------------------------------------------------");
-			log.debug("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
-			log.debug("web_element location :: "+element_location.getX() + " , " + element_location.getY());
-			log.debug("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
-			log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
-
-			
-			//get child elements for element
-			Map<String, String> attributes = browser.extractAttributes(web_root);
-			Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
-			
-			ElementClassification classification = null;
-			List<WebElement> children = getChildElements(web_element);
-			if(children.isEmpty()) {
-				classification = ElementClassification.LEAF;
-			}
-			else {
-				classification = ElementClassification.ANCESTOR;
-			}
-			
-			BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
-																				element_location.getY(), 
-																				element_size.getWidth(), 
-																				element_size.getHeight());
-			
-			//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-			String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
-			String element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-			element_screenshot.flush();
-			
-
-			//load json element
-			Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
-			if(elements.size() == 0) {
-				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
-			}
-			Element element = elements.first();
-			
-			ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
-			element_state.setScreenshotUrl(element_screenshot_url);
-			element_states_map.put(xpath, element_state);
-			element_state = element_state_service.save(element_state);
-			visited_elements.add(element_state);
 		}
 		return visited_elements;
 	}

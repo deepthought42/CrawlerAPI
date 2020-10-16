@@ -72,6 +72,6 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points);
+						 max_points, domain.getHost());
 	}
 }

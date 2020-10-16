@@ -131,7 +131,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
 		log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100, domain.getHost());
 	}
 
 	/**

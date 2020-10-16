@@ -3,7 +3,9 @@ package com.qanairy.models.audit.domain;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jsoup.nodes.Element;
@@ -14,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
@@ -64,8 +68,30 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 			points += audit.getPoints();
 			max_points += audit.getTotalPossiblePoints();
 			observations.addAll(audit_service.getObservations(audit.getKey()));
-		}		
+		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, observations, AuditLevel.DOMAIN, max_points);
+		//merge observations
+		Map<String, List<ElementState>> observation_map = new HashMap<>();
+		for(Observation observation : observations) {
+			if( observation instanceof ElementStateObservation){
+				ElementStateObservation element_obs = (ElementStateObservation)observation;
+				String description = element_obs.getDescription();
+				if(observation_map.containsKey(description)) {
+					List<ElementState> elements = observation_map.get(description);
+					elements.addAll(element_obs.getElements());
+				}
+				else {
+					observation_map.put(description, new ArrayList<>(element_obs.getElements()));
+				}
+			}
+		}
+		
+		List<Observation> compressed_observations = new ArrayList<>();
+		for(String key : observation_map.keySet()) {
+			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key);
+			compressed_observations.add(observation);
+		}
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, compressed_observations, AuditLevel.DOMAIN, max_points, domain.getHost());
 	}
 }

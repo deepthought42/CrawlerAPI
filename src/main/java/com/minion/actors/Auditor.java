@@ -17,10 +17,8 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.DomainAuditMessage;
-import com.qanairy.models.message.PageAuditComplete;
 import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditService;
 
@@ -92,7 +90,6 @@ public class Auditor extends AbstractActor{
 		   			//getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			postStop();
 				})
 				.match(PageState.class, page_state-> {
 				   	//generate audit report
@@ -112,7 +109,6 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell(audit_complete, getSelf());
 		   			getSender().tell(new AuditSet(audits), getSelf());
 		   			//send message to either user or page channel containing reference to audits
-		   			postStop();
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
@@ -125,7 +121,6 @@ public class Auditor extends AbstractActor{
 			   			audits_executed = audit_service.saveAll(audits_executed);
 			   			getSender().tell(new AuditSet(audits_executed), getSelf());
 				   	}
-					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

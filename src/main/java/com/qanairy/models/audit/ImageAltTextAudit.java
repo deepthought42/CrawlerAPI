@@ -124,7 +124,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 						 score, 
 						 observations, 
 						 AuditLevel.PAGE, 
-						 image_elements.size()*2); 
+						 image_elements.size()*2, page_state.getUrl()); 
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}
 }

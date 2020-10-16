@@ -196,7 +196,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
 	}
 
 	

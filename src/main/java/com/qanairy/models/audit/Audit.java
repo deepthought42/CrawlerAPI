@@ -21,6 +21,7 @@ public class Audit extends LookseeObject {
 	private String level;
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
+	private String url;
 	
 	@Relationship(type="OBSERVED")
 	private List<Observation> observations;
@@ -41,8 +42,9 @@ public class Audit extends LookseeObject {
 	 * @param observations
 	 * @param level
 	 * @param total_possible_points
+	 * @param url TODO
 	 */
-	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points) {
+	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points, String url) {
 		super();
 		
 		assert category != null;
@@ -57,11 +59,12 @@ public class Audit extends LookseeObject {
 		setObservations(observations);
 		setCreatedAt(LocalDateTime.now());
 		setLevel(level);
+		setUrl(url);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints());
+		return new Audit(getCategory(), getSubcategory(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
 	}
 
 	/**
@@ -127,5 +130,14 @@ public class Audit extends LookseeObject {
 
 	public void setTotalPossiblePoints(int total_possible_points) {
 		this.total_possible_points = total_possible_points;
+	}
+	
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

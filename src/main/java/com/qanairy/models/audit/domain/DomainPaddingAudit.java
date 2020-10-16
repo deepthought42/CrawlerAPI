@@ -131,7 +131,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			observations.add(new StylingMissingObservation("Padding was not used")); 
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100);
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100, domain.getHost());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {

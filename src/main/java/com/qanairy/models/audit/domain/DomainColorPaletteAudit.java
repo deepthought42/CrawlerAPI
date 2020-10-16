@@ -141,7 +141,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points);
+						 max_points, domain.getHost());
 	}	
 
 	public List<String> getGrayColors() {

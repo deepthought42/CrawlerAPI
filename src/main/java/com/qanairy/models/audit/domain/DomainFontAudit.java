@@ -168,7 +168,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 		
 		
 		log.warn("DOMAIN FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score);
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, domain.getHost());
 	}
 	
 

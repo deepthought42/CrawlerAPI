@@ -62,7 +62,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		/*
+		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
@@ -72,7 +72,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
+		
 		//extract declared css color properties
 		List<ColorData> colors_declared = new ArrayList<>();
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
@@ -94,14 +94,14 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
-		/*
+		
 		Map<ColorUsageStat, Boolean> gray_colors = new HashMap<ColorUsageStat, Boolean>();
 		Map<ColorUsageStat, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
 		for(ColorUsageStat color: color_usage_list) {
 			String rgb_color_str = "rgb("+color.getRed()+","+color.getGreen()+","+color.getBlue()+")";
 			//convert rgb to hsl, store all as Color object
-			
+			color_map.put(rgb_color_str, new ColorData(rgb_color_str));
 			if( Math.abs(color.getRed() - color.getGreen()) < 4
 					&& Math.abs(color.getRed() - color.getBlue()) < 4
 					&& Math.abs(color.getBlue() - color.getGreen()) < 4) {
@@ -113,7 +113,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		}
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
-		 */
+		 
 		List<ColorData> colors = new ArrayList<ColorData>(color_map.values());
 		/*
 		for(ColorUsageStat color : color_usage_list) {
@@ -142,7 +142,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		//setGrayColors(new ArrayList<>(gray_colors));
 		setColors(new ArrayList<>(observation.getColors()));
 		 
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score.getPointsAchieved(), observations, AuditLevel.PAGE, score.getMaxPossiblePoints());
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.COLOR_PALETTE, score.getPointsAchieved(), observations, AuditLevel.PAGE, score.getMaxPossiblePoints(), page_state.getUrl());
 	}
 	
 	/**

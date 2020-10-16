@@ -47,13 +47,10 @@ import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.FormService;
 import com.qanairy.services.RedirectService;
-import com.qanairy.services.SubscriptionService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.ActorRef;

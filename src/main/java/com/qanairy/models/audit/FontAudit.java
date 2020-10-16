@@ -141,7 +141,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		
 		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score);
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, page_state.getUrl());
 	}
 	
 

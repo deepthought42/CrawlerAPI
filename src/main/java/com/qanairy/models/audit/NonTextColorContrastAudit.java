@@ -151,7 +151,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(high_contrast_observation));
 		}
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, non_text_elements.size() *3);
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, non_text_elements.size() *3, page_state.getUrl());
 	}
 
 

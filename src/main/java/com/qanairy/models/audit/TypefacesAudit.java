@@ -182,6 +182,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		}
 		
 				
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.TYPEFACES, score, observations, AuditLevel.PAGE, total_possible_points);
+		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.TYPEFACES, score, observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
 	}
 }

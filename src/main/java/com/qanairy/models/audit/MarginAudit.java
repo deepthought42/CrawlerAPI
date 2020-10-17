@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,25 +104,26 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 
 		log.warn("Element margin map size :: "+elements_margin_map.size());
-		Score spacing_score = evaluateSpacingConsistency(elements_margin_map);
-		Score unit_score = evaluateUnits(elements_margin_map);
+		// Score spacing_score = evaluateSpacingConsistency(elements_margin_map);     //commented out because this is old greatest common divisor methodology
+		Score spacing_score = evaluateSpacingMultipleOf8(elements_margin_map);
+		//Score unit_score = evaluateUnits(elements_margin_map);
 
 		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
+		
 		observations.addAll(spacing_score.getObservations());
-		observations.addAll(unit_score.getObservations());
+		//observations.addAll(unit_score.getObservations());
 		observations.addAll(margin_as_padding_score.getObservations());
 		
 		log.warn("spacing score : "+spacing_score.getPointsAchieved() + " / " +spacing_score.getMaxPossiblePoints());
-		
-		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
-						+ (unit_score.getPointsAchieved()/(double)unit_score.getMaxPossiblePoints())
-						+ (margin_as_padding_score.getPointsAchieved()/(double)margin_as_padding_score.getMaxPossiblePoints()))/3;
-		
-		int points = (int)(score * 100);
-		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
-		log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
+		//log.warn("unit score : "+spacing_score.getPointsAchieved() + " / " +spacing_score.getMaxPossiblePoints());
+		log.warn("margin as padding score : "+margin_as_padding_score.getPointsAchieved() + " / " +margin_as_padding_score.getMaxPossiblePoints());
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, 100, page_state.getUrl());
+		int points = spacing_score.getPointsAchieved() + margin_as_padding_score.getPointsAchieved();
+		int max_points = spacing_score.getMaxPossiblePoints() + margin_as_padding_score.getMaxPossiblePoints();
+		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
+		//log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
+
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
 	}
 
 	/**
@@ -135,6 +135,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	 * 
 	 * @pre elements_margin_map != null
 	 */
+	@Deprecated
 	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_margin_map) {
 		assert elements_margin_map != null;
 		
@@ -243,6 +244,64 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		return new Score(points_earned, max_points, observations);
+	}
+
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_margin_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_margin_map != null
+	 */
+	private Score evaluateSpacingMultipleOf8(Map<ElementState, List<String>> elements_margins) {
+		assert elements_margins != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		
+		for(ElementState element : elements_margins.keySet()) {
+			for(String size_str : elements_margins.get(element)) {
+				if(isMultipleOf8(size_str)) {
+					points_earned += 1;
+					List<ElementState> elements = new ArrayList<ElementState>();
+					elements.add(element);
+					observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
+				}
+				//else create observation that element is unlikely to scale gracefully
+				else {
+					List<ElementState> elements = new ArrayList<ElementState>();
+					elements.add(element);
+					observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8."));
+				}
+				max_points++;
+			}
+		}
+		
+		return new Score(points_earned, max_points, observations);
+	}
+	
+	public static boolean isMultipleOf8(String size_str) {
+		double size = Double.parseDouble(cleanSizeUnits(size_str));
+		if(size == 0.0) {
+			return true;
+		}
+		//check if size is a multiple of 8
+		int remainder = 0;
+		if(size > 8) {
+			remainder = (int)size % 8;
+		}
+		else {
+			remainder = 8 % (int)size;
+		}
+		//if multiple of 8 then note as well done
+		if(remainder <=1 ) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	/**
@@ -393,6 +452,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	}
 	
 	private boolean isSpacingValueZero(String spacing) {
+		spacing = cleanSizeUnits(spacing);
 		return spacing == null || ( !spacing.isEmpty() || !spacing.equals("0") || !spacing.equals("auto"));
 	}
 
@@ -552,16 +612,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	
 	private int scoreMeasureUnit(String unit) {
 		if(unit.contains("rem") || unit.contains("em") || unit.contains("%") ){
-			return 3;
-		}
-		else if(unit.contains("vh") || unit.contains("vw") || unit.contains("vmin") || unit.contains("vmax")) {
 			return 2;
 		}
-		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") || unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
+		else if(unit.contains("vh") || unit.contains("vw") || unit.contains("vmin") || unit.contains("vmax")) {
 			return 1;
 		}
+		else if(unit.contains("px") || unit.contains("ex") || unit.contains("pt") || unit.contains("cm") || unit.contains("mm") || unit.contains("in") || unit.contains("pc")) {
+			return 0;
+		}
 		
-		return 3;
+		return 2;
 	}
 	
 	public static List<Double> deflateGCD(List<Double> gcd_list){

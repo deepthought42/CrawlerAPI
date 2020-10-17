@@ -99,18 +99,19 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			elements_padding_map.put(element, paddings);
 		}
 		
-		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
-		Score unit_score = evaluateUnits(elements_padding_map);
+//		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
+		Score spacing_score = evaluateSpacingMultipleOf8(elements_padding_map);
+
+		//Score unit_score = evaluateUnits(elements_padding_map);
 
 		observations.addAll(spacing_score.getObservations());
-		observations.addAll(unit_score.getObservations());
+//		observations.addAll(unit_score.getObservations());
 		
-		double score = ((spacing_score.getPointsAchieved()/(double)spacing_score.getMaxPossiblePoints()) 
-						+ (unit_score.getPointsAchieved()/(double)unit_score.getMaxPossiblePoints()))/2;
+		int points = spacing_score.getPointsAchieved();
+		int max_points = spacing_score.getMaxPossiblePoints();
 		
-		int points = (int)(score * 100);
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
-		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved() + unit_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() + unit_score.getMaxPossiblePoints()) );	
+		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() ) );	
 
 		if(points == 0) {
 			//add observation that no elements were found with padding
@@ -118,7 +119,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		}
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, 
-						 points, observations, AuditLevel.PAGE, 100, page.getUrl());
+						 points, observations, AuditLevel.PAGE, max_points, page.getUrl());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -256,6 +257,65 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		return new Score(points_earned, max_points, observations);
 	}
 
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_margin_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_margin_map != null
+	 */
+	private Score evaluateSpacingMultipleOf8(Map<ElementState, List<String>> elements_margins) {
+		assert elements_margins != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		
+		for(ElementState element : elements_margins.keySet()) {
+			for(String size_str : elements_margins.get(element)) {
+				if(isMultipleOf8(size_str)) {
+					points_earned += 1;
+					List<ElementState> elements = new ArrayList<ElementState>();
+					elements.add(element);
+					observations.add(new ElementStateObservation(elements, "Padding values are multiple of 8"));
+				}
+				//else create observation that element is unlikely to scale gracefully
+				else {
+					List<ElementState> elements = new ArrayList<ElementState>();
+					elements.add(element);
+					observations.add(new ElementStateObservation(elements, "Has at least one padding value that isn't a multiple of 8."));
+				}
+				max_points++;
+			}
+		}
+		
+		return new Score(points_earned, max_points, observations);
+	}
+	
+	public static boolean isMultipleOf8(String size_str) {
+		double size = Double.parseDouble(cleanSizeUnits(size_str));
+		if(size == 0.0) {
+			return true;
+		}
+		//check if size is a multiple of 8
+		int remainder = 0;
+		if(size > 8) {
+			remainder = (int)size % 8;
+		}
+		else {
+			remainder = 8 % (int)size;
+		}
+		//if multiple of 8 then note as well done
+		if(remainder <=1 ) {
+			return true;
+		}
+		
+		return false;
+	}
+
+	
 	/**
 	 * Generates {@link Score score} based on which units (ie, %, em, rem, px, pt, etc.) are used for vertical(top,bottom) padding
 	 * 

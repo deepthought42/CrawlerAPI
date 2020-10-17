@@ -192,8 +192,13 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		Set<Observation> observations = new HashSet<>();
 
 		//score title of page state
-		if(hasFavicon(page_state)) {
+		if(hasFavicon(page_state.getSrc())) {
 			points += 1;
+			
+			//check if favicon is valid by having a valid href value defined
+			 //&& !element.attr("href").isEmpty()
+			
+			//check if resource can actually be reached
 		}
 		else {
 			observations.add(new PageStateObservation(page_state, "Favicon is missing."));
@@ -208,13 +213,13 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	 * @param page
 	 * @return
 	 */
-	public boolean hasFavicon(PageState page_state) {
-		assert page_state != null;
+	public static boolean hasFavicon(String page_src) {
+		assert page_src != null;
 		
-		Document doc = Jsoup.parse(page_state.getSrc());
+		Document doc = Jsoup.parse(page_src);
 		Elements link_elements = doc.getElementsByTag("link");
 		for(Element element: link_elements) {
-			if("icon".contentEquals(element.attr("rel")) && !element.attr("href").isEmpty()) {
+			if((element.attr("rel").contains("icon"))) {
 				return true;
 			}
 		}

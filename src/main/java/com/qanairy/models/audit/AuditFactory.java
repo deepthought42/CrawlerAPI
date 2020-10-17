@@ -61,6 +61,12 @@ public class AuditFactory {
 	private TypefacesAudit typeface_auditor;
 	
 	@Autowired
+	private PaddingAudit padding_auditor;
+	
+	@Autowired
+	private MarginAudit margin_auditor;
+	
+	@Autowired
 	private DomainPaddingAudit domain_padding_auditor;
 	
 	@Autowired
@@ -149,6 +155,12 @@ public class AuditFactory {
 			
 			Audit title_and_headers = title_and_header_auditor.execute(page);
 			audits.add(title_and_headers);
+			
+			Audit padding_audits = padding_auditor.execute(page);
+			audits.add(padding_audits);
+
+			Audit margin_audits = margin_auditor.execute(page);
+			audits.add(margin_audits);
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			//works but temp disabled

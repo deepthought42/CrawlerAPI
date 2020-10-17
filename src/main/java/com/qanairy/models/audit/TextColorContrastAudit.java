@@ -2,11 +2,8 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +19,6 @@ import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
-import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -80,15 +76,28 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
 				log.warn("extracting image properties for element ::   "+element.getName());
+				//get color
+				//get background color
+				//get contrast between the 2
+				String background = element.getAttribute("background-color");
+				String color = element.getAttribute("color");
+
+				ColorData background_color_data = new ColorData(background);
+				ColorData text_color = new ColorData(color);
+				
+				
+				
+				/*
+				
 				color_data_list.addAll( ImageUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
 
 				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
 	
 				ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
 				ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
-	
 				ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
 				ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
+				 */
 				float largest_pixel_percent = 0;
 			    
 				//extract background colors

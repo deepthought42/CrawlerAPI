@@ -754,10 +754,15 @@ public class BrowserService {
 	public static boolean isStructureTag(String tag_name) {
 		assert tag_name != null;
 
-		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) || "script".contentEquals(tag_name) || "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
-				|| "br".contentEquals(tag_name) || "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) || "use".contentEquals(tag_name)
-				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name)
-				|| "noscript".contentEquals(tag_name) || "meta".contentEquals(tag_name) || "base".contentEquals(tag_name);
+		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) 
+				|| "script".contentEquals(tag_name) || "g".contentEquals(tag_name) 
+				|| "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) 
+				|| "polygon".contentEquals(tag_name) || "br".contentEquals(tag_name) 
+				|| "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) 
+				|| "use".contentEquals(tag_name) || "template".contentEquals(tag_name) 
+				|| "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name)
+				|| "noscript".contentEquals(tag_name) || "meta".contentEquals(tag_name) 
+				|| "base".contentEquals(tag_name) || "em".contentEquals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {

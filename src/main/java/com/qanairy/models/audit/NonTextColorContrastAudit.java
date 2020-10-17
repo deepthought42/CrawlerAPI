@@ -26,6 +26,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 
@@ -42,6 +43,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private ElementStateService element_state_service;
 	
 	@Autowired
 	private ObservationService observation_service;
@@ -109,16 +113,16 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		for(ElementState element : non_text_elements) {
 			//get parent element of button
 			try {
-				ColorUsageStat most_used_color = extractMostUsedColor(element);
+				//ColorUsageStat most_used_color = extractMostUsedColor(element);
 				
 				//randomly sample colors just outside the perimeter of the element within page state screenshot
-				int x_position = element.getXLocation();
-				int y_position = element.getYLocation();
-
+				//int x_position = element.getXLocation();
+				//int y_position = element.getYLocation();
+				ElementState parent = element_state_service.getParentElement(page_state.getKey(), element.getKey());
 				//choose elemtn just to the right of the elemnt in the page screenshot
-				Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-5, y_position-5);				
-				String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
-				double contrast = ColorData.computeContrast(new ColorData(parent_rgb), new ColorData(most_used_color.getRGB()));
+				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
+				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
+				double contrast = ColorData.computeContrast(new ColorData(parent.getRenderedCssValues().get("background-color")), new ColorData(element.getRenderedCssValues().get("background-color")));
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					//no points are rewarded for low contrast

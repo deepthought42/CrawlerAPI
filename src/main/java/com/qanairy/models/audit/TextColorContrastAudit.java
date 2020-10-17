@@ -15,6 +15,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -34,6 +35,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -79,9 +83,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//get color
 				//get background color
 				//get contrast between the 2
-				String background = element.getAttribute("background-color");
-				String color = element.getAttribute("color");
+				String background = element.getRenderedCssValues().get("background-color");
+				String color = element.getRenderedCssValues().get("color");
 
+				log.warn("background-color ::   "+background);
+				
 				ColorData background_color_data = new ColorData(background);
 				ColorData text_color = new ColorData(color);
 				

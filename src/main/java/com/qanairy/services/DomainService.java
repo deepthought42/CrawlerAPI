@@ -176,8 +176,8 @@ public class DomainService {
 		return domain_repo.getPagesForUserId(user_id, url);
 	}
 
-	public Set<Audit> getMostRecentDomainAuditRecords(String url) {
-		return domain_repo.getMostRecentDomainAudits(url);
+	public AuditRecord getMostRecentDomainAuditRecord(String host) {
+		return domain_repo.getMostRecentDomainAuditRecord(host);
 	}
 
 	public List<PageVersion> getPages(String domain_host) {

@@ -261,24 +261,23 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int points_earned = 0;
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
+		List<ElementState> elements = new ArrayList<ElementState>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					List<ElementState> elements = new ArrayList<ElementState>();
-					elements.add(element);
-					observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
+					//elements.add(element);
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
-					List<ElementState> elements = new ArrayList<ElementState>();
 					elements.add(element);
-					observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8."));
 				}
 				max_points++;
 			}
 		}
+		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8."));
+		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
 	}

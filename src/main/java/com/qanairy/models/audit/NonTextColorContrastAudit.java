@@ -106,6 +106,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		assert non_text_elements != null;
 		
 		int score = 0;
+		int max_points = 0;
 		List<ElementState> low_contrast_elements = new ArrayList<>();
 		List<ElementState> mid_contrast_elements = new ArrayList<>();
 		List<ElementState> high_contrast_elements = new ArrayList<>();
@@ -118,10 +119,39 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//randomly sample colors just outside the perimeter of the element within page state screenshot
 				//int x_position = element.getXLocation();
 				//int y_position = element.getYLocation();
-				ElementState parent = element_state_service.getParentElement(page_state.getKey(), element.getKey());
+				//ElementState parent = element_state_service.getParentElement(page_state.getKey(), element.getKey());
+				
+				//retrieve all elements for page state
+				//evaluate each element to see if xpath is a subset of element xpath, keeping the elements with shortest difference
+				int diff_length = Integer.MAX_VALUE;
+				ElementState parent = null;
+				List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+				for(ElementState element_state : elements) {
+					if(element_state.getKey().contentEquals(element.getKey())) {
+						continue;
+					}
+					
+					if(element.getXpath().contains(element_state.getXpath())) {
+						/*if(parent.getRenderedCssValues().get("background-color").contentEquals(element.getRenderedCssValues().get("background-color"))) {
+							continue;
+						}
+						*/
+						int temp_diff = element.getXpath().length() - element_state.getXpath().length();
+						if(temp_diff < diff_length) {
+							diff_length = temp_diff;
+							parent = element_state;
+						}
+					}
+				}
 				//choose elemtn just to the right of the elemnt in the page screenshot
 				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
 				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
+				log.warn("page state url ::   "+page_state.getUrl());
+				log.warn("element key :: "+element.getKey());
+				log.warn("parent element :: "+parent.getXpath());
+				log.warn("element element :: "+element.getXpath());
+				log.warn("parent background color  ::  "+parent.getRenderedCssValues().get("background-color"));
+				log.warn("element background color :: "+element.getRenderedCssValues().get("background-color"));
 				double contrast = ColorData.computeContrast(new ColorData(parent.getRenderedCssValues().get("background-color")), new ColorData(element.getRenderedCssValues().get("background-color")));
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
@@ -135,6 +165,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					score += 2;
 					high_contrast_elements.add(element);
 				}
+				max_points+=2;
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -155,7 +186,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(high_contrast_observation));
 		}
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, non_text_elements.size() *3, page_state.getUrl());
+		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
 	}
 
 

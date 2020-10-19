@@ -272,25 +272,25 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		int points_earned = 0;
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
+		//List<ElementState> multiple_of_8 = new ArrayList<>();
+		List<ElementState> non_scalable = new ArrayList<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					List<ElementState> elements = new ArrayList<ElementState>();
-					elements.add(element);
-					observations.add(new ElementStateObservation(elements, "Padding values are multiple of 8"));
+					//multiple_of_8.add(element);
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
-					List<ElementState> elements = new ArrayList<ElementState>();
-					elements.add(element);
-					observations.add(new ElementStateObservation(elements, "Has at least one padding value that isn't a multiple of 8."));
+					non_scalable.add(element);
 				}
 				max_points++;
 			}
 		}
 		
+		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
+		observations.add(new ElementStateObservation(non_scalable, "Has at least one padding value that isn't a multiple of 8."));
 		return new Score(points_earned, max_points, observations);
 	}
 	

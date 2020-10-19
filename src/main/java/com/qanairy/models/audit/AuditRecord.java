@@ -26,7 +26,7 @@ public class AuditRecord extends LookseeObject {
 	}
 
 	public String generateKey() {
-		return "auditrecord:"+UUID.randomUUID().toString();
+		return "auditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
 	public Set<Audit> getAudits() {

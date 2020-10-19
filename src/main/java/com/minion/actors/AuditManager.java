@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,10 +167,12 @@ public class AuditManager extends AbstractActor{
 				.match(PageStateAuditComplete.class, audit_complete -> {
 					Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 					page_states_audited.put(audit_complete.getPageState().getKey(), audit_complete.getPageState());
+					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(domain.getHost());
+
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+pages_experienced.keySet().size()+"   ;    audit size  ::   "+page_states_audited.keySet().size());
-					log.warn("crawl stats after completing page state audit :: " + this.crawl_stats);
+					log.warn("audit record  :: " + audit_record);
 					log.warn("audit record crawl stat ::  "+ audit_record.getCrawlStats());
 					List<PageVersion> pages = domain_service.getPages(domain.getHost());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
@@ -185,10 +188,22 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(AuditSet.class, audit_list -> {
+					String url_str = audit_list.getUrl();
+					if(!url_str.contains("http")) {
+						url_str = "http://"+url_str;
+					}
+					log.warn("creating url using string ::  "+url_str);
+					URL url = new URL(url_str);
+					String host = url.getHost();
+					if(!host.contains("www.")) {
+						host = "www."+host;
+					}
+					log.warn("Looking up audit record for host :: "+host);
+					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(host);
+					log.warn("Audit record :: " + audit_record);
 					//save all audits in audit list to database and add them to the audit record
 					for(Audit audit : audit_list.getAudits()){
 						audit = audit_service.save(audit);
-						log.warn("Audit record :: " + audit_record);
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
 					}
 				})

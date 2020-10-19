@@ -97,8 +97,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:PageVersion) RETURN p")
 	public Set<PageVersion> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
 
-	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:Audit) RETURN audit ORDER BY audit.createdAt DESC")
-	public Set<Audit> getMostRecentDomainAudits(@Param("url") String url);
+	@Query("MATCH (d:Domain{host:{host}})-[]->(audit:AuditRecord) RETURN audit ORDER BY audit.createdAt DESC LIMIT 1")
+	public AuditRecord getMostRecentDomainAuditRecord(@Param("host") String host);
 
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:{page_state_key}}) RETURN d LIMIT 1")
 	public Domain findByPageState(@Param("page_state_key") String page_state_key);

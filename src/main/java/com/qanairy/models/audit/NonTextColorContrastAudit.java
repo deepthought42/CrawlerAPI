@@ -167,6 +167,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				max_points+=2;
 			}
+			catch(NullPointerException e) {
+				log.warn("null pointer..." + e.getMessage());
+				e.printStackTrace();
+			}
 			catch(Exception e) {
 				e.printStackTrace();
 			}

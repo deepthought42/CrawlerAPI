@@ -29,6 +29,7 @@ import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -85,16 +86,23 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
-		
-		log.warn("colors declared ::       "+colors_declared);
 		Map<String, ColorData> color_map = new HashMap<>();
-		for(ColorData color : colors_declared) {
+		for(ColorUsageStat stat : color_usage_list) {
+			ColorData color = new ColorData(stat);
+			color.setUsagePercent(stat.getPixelPercent());
+			
 			color_map.put(color.rgb().trim(), color);
 		}
+		/*
+		log.warn("colors declared ::       "+colors_declared);
+		for(ColorData color : colors_declared) {
+		}
+		*/
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		
+		/*
 		Map<ColorUsageStat, Boolean> gray_colors = new HashMap<ColorUsageStat, Boolean>();
 		Map<ColorUsageStat, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
@@ -113,7 +121,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		}
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
-		 
+		 */
 		List<ColorData> colors = new ArrayList<ColorData>(color_map.values());
 		/*
 		for(ColorUsageStat color : color_usage_list) {
@@ -184,7 +192,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		return CloudVisionUtils.extractImageProperties(screenshot);
+		//return CloudVisionUtils.extractImageProperties(screenshot);
+		return ImageUtils.extractImageProperties(screenshot);
 	}
 
 	public List<String> getColors() {

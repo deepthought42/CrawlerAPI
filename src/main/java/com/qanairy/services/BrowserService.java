@@ -560,7 +560,7 @@ public class BrowserService {
 
 		List<ElementState> visited_elements = new ArrayList<>();
 		
-		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
+		//WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
 		
 		String body_src = extractBody(page_state.getSrc());
 		Document html_doc = Jsoup.parse(body_src);
@@ -593,8 +593,8 @@ public class BrowserService {
 	
 				
 				//get child elements for element
-				Map<String, String> attributes = browser.extractAttributes(web_root);
-				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
+				Map<String, String> attributes = browser.extractAttributes(web_element);
+				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
@@ -1518,6 +1518,15 @@ public class BrowserService {
 		return getDomElementStates(page_state, xpaths, browser, elements);
 	}
 	
+	/**
+	 * 
+	 * @param page_src
+	 * @param url
+	 * @param rule_sets
+	 * @return
+	 * @throws IOException
+	 * @throws XPathExpressionException
+	 */
 	public List<com.qanairy.models.Element> extractElements(
 			String page_src, 
 			URL url, 

@@ -30,6 +30,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.AccountService;
@@ -118,13 +119,13 @@ public class IdeTestExportController {
 		
     	Domain domain = domain_service.findByHostForUser(domain_url.getHost(), acct.getUserId());
     	if(domain == null){
-    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),formatted_url,"chrome", "");
+    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),formatted_url, "");
     		domain = domain_service.save(domain);
     		SegmentAnalyticsHelper.sendDomainCreatedInRecorder(acct.getUserId(), domain.getKey());
     	}
 
     	Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", domain.getDiscoveryBrowserName());
+		options.put("browser", BrowserType.CHROME);
 		options.put("domain_key", domain.getKey());
 		
 		account_service.addDomainToAccount(acct, domain);

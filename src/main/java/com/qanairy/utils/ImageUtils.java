@@ -135,7 +135,7 @@ public class ImageUtils {
 		int h = buffered_image.getHeight();
 		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		AffineTransform at = new AffineTransform();
-		at.scale(0.5, 0.5);
+		//at.scale(0.5, 0.5);
 		AffineTransformOp scaleOp = 
 		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
 		after = scaleOp.filter(buffered_image, after);
@@ -161,7 +161,7 @@ public class ImageUtils {
        
 		for(String color_str: colors.keySet()) {
 			ColorData color = new ColorData(color_str);
-			float percent = colors.get(color_str) / (float) ( (w*0.5) * (h*0.5) );
+			float percent = colors.get(color_str) / (float) ( w * h );
 			//log.warn(color_str+"     :     "+percent);
 			ColorUsageStat color_stat = new ColorUsageStat(color.getRed(), color.getGreen(), color.getBlue(), percent, 0);
 			color_usage_stats.add(color_stat);

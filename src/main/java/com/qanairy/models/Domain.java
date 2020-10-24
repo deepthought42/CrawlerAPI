@@ -20,7 +20,6 @@ public class Domain extends LookseeObject{
 	private String entry_path;
 	private String protocol;
 	private String logo_url;
-	private String discovery_browser;
 	
 	@Relationship(type = "HAS_TEST")
 	private Set<Test> tests;
@@ -61,11 +60,10 @@ public class Domain extends LookseeObject{
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
-	public Domain( String protocol, String host, String path, String browser, String logo_url){
+	public Domain( String protocol, String host, String path, String logo_url){
 		setEntryPath(path);
 		setLogoUrl(logo_url);
 		setProtocol(protocol);
-		setDiscoveryBrowserName(browser);
 		setHost(host);
 		setPages(new ArrayList<>());
 		setAuditRecords(new HashSet<>());
@@ -142,14 +140,6 @@ public class Domain extends LookseeObject{
 	public void setTestUsers(Set<TestUser> test_users) {
 		this.test_users = new HashSet<TestUser>(test_users);
 	}
-	
-	public String getDiscoveryBrowserName() {
-		return discovery_browser;
-	}
-
-	public void setDiscoveryBrowserName(String discovery_browser) {
-		this.discovery_browser = discovery_browser;
-	}
 
 	public void addTest(Test test) {
 		this.tests.add(test);
@@ -172,7 +162,7 @@ public class Domain extends LookseeObject{
 	 */
 	@Override
 	public String generateKey() {
-		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getEntryPath().toString());
+		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getHost());
 	}
 	
 	public Account getAccount() {

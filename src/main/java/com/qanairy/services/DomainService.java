@@ -36,6 +36,11 @@ public class DomainService {
 	@Autowired
 	private AuditRecordService audit_record_service;
 	
+
+	public Set<Domain> getDomains() {
+		return domain_repo.getDomains();
+	}
+	
 	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
@@ -205,10 +210,7 @@ public class DomainService {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
 		//check if audit record is already attached to domain
-		AuditRecord db_record = domain_repo.getAuditRecords(domain_key, audit_record_key);
-		if(db_record != null) {
-			return;
-		}
+
 		log.warn("connecting audit record to domain");
 		domain_repo.addAuditRecord(domain_key, audit_record_key);
 	}

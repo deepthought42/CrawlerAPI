@@ -146,6 +146,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//choose elemtn just to the right of the elemnt in the page screenshot
 				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
 				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
+
 				log.warn("page state url ::   "+page_state.getUrl());
 				log.warn("element key :: "+element.getKey());
 				log.warn("parent element :: "+parent.getXpath());

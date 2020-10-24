@@ -109,7 +109,7 @@ public class UrlBrowserActor extends AbstractActor {
 					
 					String url = message.getUrl().toString();
 					String host = message.getUrl().getHost();
-					String browser_name = message.getDomain().getDiscoveryBrowserName();
+					String browser_name = BrowserType.CHROME.toString();
 					Redirect redirect = null;
 					PageLoadAnimation animation = null;
 					BrowserType browser_type = BrowserType.create(browser_name);

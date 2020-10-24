@@ -111,6 +111,7 @@ public class ColorData extends LookseeObject{
 		else {
 			R = Math.pow(((RsRGB+0.055)/1.055), 2.4);
 		}
+		
 		if(GsRGB <= 0.03928) {
 			G = GsRGB/12.92;
 		}

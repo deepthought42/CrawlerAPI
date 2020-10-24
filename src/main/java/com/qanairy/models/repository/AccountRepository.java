@@ -18,10 +18,10 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (account:Account{user_id:{user_id}}) RETURN account")
 	Account findByUserId(@Param("user_id") String user_id);
-
+	
 	@Query("MATCH (account:Account {user_id:{0}})-[:HAS_DOMAIN]->(domain:Domain) RETURN domain")
-	public Set<Domain> getDomains(String user_id);
-		
+	public Set<Domain> getDomainsForUser(String user_id);
+	
 	@Query("MATCH (account:Account {username:{username}})-[]->(d:DiscoveryRecord) WHERE datetime(d.started_at).month={month} return d")
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(@Param("username") String username, @Param("month") int month);
 	

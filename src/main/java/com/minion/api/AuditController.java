@@ -312,15 +312,19 @@ public class AuditController {
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
 											   @RequestBody(required=true) PageVersion page) throws Exception {
-
-	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
+    	String lowercase_url = page.getUrl().toLowerCase();
+    	if(!lowercase_url.contains("http")) {
+    		lowercase_url = "http://" + lowercase_url;
+    	}
+    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
 	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
 	   	System.out.println("domain returned from db ...."+domain);
 	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
 	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
 	   	if(domain == null) {
 	   		log.warn("saving domain");
-	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "chrome", "");
+	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "");
 	   		domain = domain_service.save(domain);
 	   	}
 

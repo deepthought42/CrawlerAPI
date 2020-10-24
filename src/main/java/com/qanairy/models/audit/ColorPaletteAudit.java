@@ -68,13 +68,14 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		try {
-			color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
+			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrl()), elements));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		//extract declared css color properties
+		/*
 		List<ColorData> colors_declared = new ArrayList<>();
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
 		
@@ -82,22 +83,19 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		for(String stylesheet : raw_stylesheets) {
 			colors_declared.addAll(BrowserUtils.extractColorsFromStylesheet(stylesheet));
 		}
-		
-		log.warn("###########################################################################");
-		log.warn("###########################################################################");
-		log.warn("###########################################################################");
+		*/
 		Map<String, ColorData> color_map = new HashMap<>();
 		for(ColorUsageStat stat : color_usage_list) {
 			ColorData color = new ColorData(stat);
+			if(color.getUsagePercent() < 0.05) {
+				continue;
+			}
 			color.setUsagePercent(stat.getPixelPercent());
+			log.warn("Color :: " + color.rgb() + "  :  " + color.getUsagePercent());
 			
 			color_map.put(color.rgb().trim(), color);
 		}
-		/*
-		log.warn("colors declared ::       "+colors_declared);
-		for(ColorData color : colors_declared) {
-		}
-		*/
+
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
@@ -161,8 +159,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	private List<ColorUsageStat> extractColorsFromPageState(URL screenshot_url,
-			List<ElementState> elements) throws MalformedURLException, IOException {		
+	private List<ColorUsageStat> extractColorsFromScreenshot(URL screenshot_url,
+			List<ElementState> elements
+	) throws MalformedURLException, IOException {		
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
 		

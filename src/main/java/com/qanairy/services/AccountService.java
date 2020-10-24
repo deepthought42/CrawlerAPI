@@ -59,10 +59,10 @@ public class AccountService {
 		account_repo.removeDomain(username, domain_key);
 	}
 
-	public Set<Domain> getDomains(String user_id) {
-		return account_repo.getDomains(user_id);
+	public Set<Domain> getDomainsForUser(String user_id) {
+		return account_repo.getDomainsForUser(user_id);
 	}
-
+	
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {
 		return account_repo.getDiscoveryRecordsByMonth(username, month);
 	}

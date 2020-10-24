@@ -164,13 +164,13 @@ public class DiscoveryActor extends AbstractActor{
 						return;
 					}
 					*/
-					discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+					discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
 
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
-						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						if(path_expansion_actor == null){
@@ -182,7 +182,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), message.getDomain().getDiscoveryBrowserName(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
@@ -227,7 +227,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
 			    	}
-					discovery_record = getDiscoveryRecord(test_msg.getDomain().getEntryPath(), test_msg.getDomain().getDiscoveryBrowserName(), test_msg.getAccount());
+					discovery_record = getDiscoveryRecord(test_msg.getDomain().getEntryPath(), BrowserType.CHROME.toString(), test_msg.getAccount());
 					Test test = test_msg.getTest();
 					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getEntryPath(), test_msg.getAccount());
 					if(existing_record == null) {
@@ -305,7 +305,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getEntryPath(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getAccountId());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getEntryPath(), BrowserType.CHROME.toString(), form_msg.getAccountId());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
@@ -411,7 +411,7 @@ public class DiscoveryActor extends AbstractActor{
 			}
 		}
 		
-		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
+		discovery_record = new DiscoveryRecord(new Date(), BrowserType.CHROME.toString(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
 		//create new discovery
 		discovery_service.save(discovery_record);
 

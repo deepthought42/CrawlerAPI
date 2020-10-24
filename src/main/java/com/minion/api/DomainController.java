@@ -8,7 +8,6 @@ import java.security.Principal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -87,15 +86,13 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request,
-							    		 @RequestParam(value="protocol", required=true) String protocol,
-							    		 @RequestParam(value="url", required=true) String url,
-							    		 @RequestParam(value="browser_name", required=true) String browser_name,
-							    		 @RequestParam(value="logo_url", required=false) String logo_url,
-							    		 @RequestParam(value="test_users", required=false) List<TestUser> users) 
+    									@RequestBody(required=true) String host,
+    									@RequestBody(required=false) String logo_url) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    	/*
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -106,9 +103,15 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	
-    	String lowercase_url = url.toLowerCase();
-    	String formatted_url = BrowserUtils.sanitizeUserUrl(protocol+"://"+lowercase_url );
+    	*/
+    	String lowercase_url = host.toLowerCase();
+    	if(!lowercase_url.contains("http")) {
+    		lowercase_url =  "http://" + lowercase_url;
+    	}
+    	log.warn("domain url ::   "+lowercase_url);
+    	String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url );
+    	log.warn("formatted url ::   "+formatted_url);
+
     	URL url_obj = new URL(formatted_url);
 		/*
     	String sanitized_url = url_obj.getHost()+url_obj.getPath();
@@ -118,21 +121,11 @@ public class DomainController {
 			throw new QanairyEmployeesOnlyException();
 		}
 		*/
-    	Domain domain = new Domain(protocol, url_obj.getHost(), url_obj.getPath(), browser_name, logo_url);
+    	Domain domain = new Domain("http", url_obj.getHost(), url_obj.getPath(), logo_url);
 		try{
 			domain = domain_service.save(domain);
 		}catch(Exception e){
 			domain = null;
-		}
-		
-		//check if domain is on account
-		Domain domain_record = null;
-		if(domain == null) {
-			domain_record = domain_service.findByHostForUser(url_obj.getHost(), acct.getUserId());
-		}
-		
-		if(domain_record == null) {
-			account_service.addDomainToAccount(acct, domain);
 		}
     	
     	return domain;
@@ -167,7 +160,6 @@ public class DomainController {
     	}
     	
     	Domain domain = domain_service.findByKey(key, acct.getUserId());
-    	domain.setDiscoveryBrowserName(browser_name);
     	domain.setLogoUrl(logo_url);
     	domain.setProtocol(protocol);
     	
@@ -204,9 +196,10 @@ public class DomainController {
     	account_service.save(acct);
     }
 
-    @PreAuthorize("hasAuthority('read:domains')")
+    //@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    	/*
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -217,8 +210,8 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	
-    	Set<Domain> domains = account_service.getDomains(id);
+    	*/
+    	Set<Domain> domains = domain_service.getDomains();
 	    return domains;
     }
     
@@ -572,7 +565,7 @@ public class DomainController {
 			domain_actors.put(domain.getEntryPath(), domain_actor);
 		}
     	
-		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.create(domain.getDiscoveryBrowserName()));
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.CHROME);
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}

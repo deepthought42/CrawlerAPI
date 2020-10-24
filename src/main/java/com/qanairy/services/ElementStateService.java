@@ -173,4 +173,10 @@ public class ElementStateService {
 		assert child_key != null;
 		return element_repo.findByPageStateAndChild(page_state_key, child_key);
 	}
+
+	public ElementState findByPageStateAndXpath(String page_state_key, String xpath) {
+		assert page_state_key != null;
+		assert xpath != null;
+		return element_repo.findByPageStateAndXpath(page_state_key, xpath);
+	}
 }

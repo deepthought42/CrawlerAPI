@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+
+import org.openqa.selenium.remote.BrowserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -98,7 +99,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, message-> {
-					String browser_name = message.getDomain().getDiscoveryBrowserName();					
+					String browser_name = BrowserType.CHROME.toString();					
 					
 					if(message.getPathObjects() != null){
 						PageState result_page = null;

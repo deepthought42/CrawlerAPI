@@ -57,4 +57,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 
 	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS_CHILD]->(e:ElementState{key:{element_state_key}}) RETURN parent_elem LIMIT 1")
 	public ElementState findByPageStateAndChild(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
+
+	@Query("MATCH (p:PageState{key:{page_state_key}})-[*]->(element:ElementState{xpath:{xpath}}) RETURN element LIMIT 1")
+	public ElementState findByPageStateAndXpath(@Param("page_state_key") String page_state_key, @Param("xpath") String xpath);
 }

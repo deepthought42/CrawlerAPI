@@ -245,6 +245,7 @@ public class ColorPaletteUtils {
 		return score;
 	}
 
+
 	/**
 	 * Extracts set of {@link PaletteColor colors} that define a palette based on a set of rgb strings
 	 * 
@@ -253,12 +254,24 @@ public class ColorPaletteUtils {
 	 */
 	public static List<PaletteColor> extractPalette(List<ColorData> colors) {
 		assert colors != null;
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
+		Set<ColorData> primary_colors = identifyPrimaryColors(colors);
 		List<PaletteColor> palette_colors = new ArrayList<>();
+		
+		for(ColorData color : colors) {
+			PaletteColor palette_color = new PaletteColor(
+					color.rgb(), 
+					color.getUsagePercent(), 
+					new HashMap<>());
+			palette_colors.add(palette_color);
+		}
+		
+/*
 		
 		//identify colors that are a shade/tint of another color in the colors list and group them together in a set
 		Set<Set<ColorData>> color_sets = groupColors(colors);
-		
 		//identify primary colors using saturation. Higher saturation indicates purity or intensity of the color
 		for(Set<ColorData> color_set : color_sets) {
 			if(color_set.size() == 1 ) {
@@ -293,12 +306,25 @@ public class ColorPaletteUtils {
 				palette_colors.add(palette_color);
 			}
 		}
-		
+		*/
 		return palette_colors;
 	}
+	
+	private static Set<ColorData> identifyPrimaryColors(List<ColorData> colors) {
+		log.warn("identifying primary colors ....  "+colors.size());
+		ColorData largest_color = null;
+		double percent = Double.MIN_VALUE;
+		for(ColorData color : colors) {
+			if(percent < color.getUsagePercent()) {
+				percent = color.getUsagePercent();
+				largest_color = color;
+			}
+		}
+		log.warn("largest color found :: "+largest_color.rgb() + "       usage :: "+largest_color.getUsagePercent());
+		log.warn("returning primary colors");
+		return new HashSet<>();
+	}
 
-	
-	
 	/**
 	 * Converts a map representing primary and secondary colors within a palette from using {@link ColorData} to {@link String}
 	 * @param palette

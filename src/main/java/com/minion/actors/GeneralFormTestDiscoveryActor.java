@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Action;
@@ -51,9 +50,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	@Autowired
-	private Crawler crawler;
-	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
 	
@@ -139,7 +135,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		do{
 						  			try{
-								  		browser = BrowserConnectionHelper.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
+								  		browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 						  				//result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getEntryPath(), visible_element_map, visible_elements);
 						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
@@ -169,7 +165,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 								discovery_record = discovery_repo.save(discovery_record);
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());  
 								
-								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
+								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.CHROME, message.getDomainActor(), message.getDomain(), message.getAccountId());
 								message.getDiscoveryActor().tell(test_message, getSelf());
 					  		}
 							break;

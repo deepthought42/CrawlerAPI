@@ -2,11 +2,8 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +15,11 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
-import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -38,6 +35,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -77,16 +77,47 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
-			List<ColorUsageStat> color_data_list = new ArrayList<>();
+			//List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
 				log.warn("extracting image properties for element ::   "+element.getName());
+				//get color
+				//get background color
+				//get contrast between the 2
+				String background = element.getRenderedCssValues().get("background-color");
+				String element_xpath = element.getXpath();
+								
+				while(background.trim().contentEquals("rgba(0, 0, 0, 0)")) {
+					String parent_xpath = getParentXpath(element_xpath);
+					if(parent_xpath.contentEquals("/")) {
+						log.warn("Reached body element, returning white rgb");
+						background = "rgb(255,255,255)";
+						break;
+					}
+					ElementState parent = element_state_service.findByPageStateAndXpath(page_state.getKey(), parent_xpath);
+					if(parent == null) {
+						break;
+					}
+					background = parent.getRenderedCssValues().get("background-color");
+					element_xpath = parent.getXpath();
+				}
+				String color = element.getRenderedCssValues().get("color");
+
+				log.warn("background-color ::   "+background);
+				log.warn("color ::   "+color);
+
+				ColorData background_color_data = new ColorData(background);
+				ColorData text_color = new ColorData(color);
+				
+				
+				
+				/*
+				
 				color_data_list.addAll( ImageUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
 
 				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
 	
 				ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
 				ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
-	
 				ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
 				ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
 				float largest_pixel_percent = 0;
@@ -98,21 +129,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 						largest_pixel_percent = color_stat.getPixelPercent();
 					}
 				}
+				 */
 				
-				double max_luminosity = 0.0;
-				double min_luminosity = 0.0;
 				
-				if(text_color.getLuminosity() > background_color_data.getLuminosity()) {
-					min_luminosity = background_color_data.getLuminosity();
-					max_luminosity = text_color.getLuminosity();
-				}
-				else {
-					min_luminosity = text_color.getLuminosity();
-					max_luminosity = background_color_data.getLuminosity();
-				}
-				
-				double contrast = 0.0;
-				contrast = (max_luminosity + 0.001) / (min_luminosity + 0.001);
+				double contrast = ColorData.computeContrast(background_color_data, text_color);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element
 					//calculate contrast between text color and background-color
@@ -197,6 +217,11 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
+	}
+
+	private String getParentXpath(String xpath) {
+		int idx = xpath.lastIndexOf("/");
+		return xpath.substring(0, idx);
 	}
 
 	

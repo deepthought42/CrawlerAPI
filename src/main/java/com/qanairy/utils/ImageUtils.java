@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.image.analysis.colour.CIEDE2000;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorUsageStat;
 
 public class ImageUtils {
+	private static Logger log = LoggerFactory.getLogger(ImageUtils.class);
 
 	 public static BufferedImage resize(BufferedImage img, int height, int width) {
         Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -132,7 +135,7 @@ public class ImageUtils {
 		int h = buffered_image.getHeight();
 		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		AffineTransform at = new AffineTransform();
-		at.scale(0.5, 0.5);
+		//at.scale(0.5, 0.5);
 		AffineTransformOp scaleOp = 
 		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
 		after = scaleOp.filter(buffered_image, after);
@@ -148,9 +151,10 @@ public class ImageUtils {
 		        int blue =   clr & 0x000000ff;
 		        String rgb = red+","+green+","+blue;
 		        if(colors.containsKey(rgb)) {
-		        	colors.compute(rgb, (key, value) -> (value++)); 
+		        	colors.put(rgb, colors.get(rgb)+1); 
+		        	
 		        }else {
-		        	colors.put(rgb, 0);
+		        	colors.put(rgb, 1);
 		        }
 			}
 		}
@@ -158,54 +162,11 @@ public class ImageUtils {
 		for(String color_str: colors.keySet()) {
 			ColorData color = new ColorData(color_str);
 			float percent = colors.get(color_str) / (float) ( w * h );
+			//log.warn(color_str+"     :     "+percent);
 			ColorUsageStat color_stat = new ColorUsageStat(color.getRed(), color.getGreen(), color.getBlue(), percent, 0);
 			color_usage_stats.add(color_stat);
 		}
         
-		/*
-	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    //InputStream url_input_stream = new URL(image_url).openStream();
-	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
-	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
-	    
-	    ByteString imgBytes = ByteString.readFrom(input_stream);
-	
-	    Image img = Image.newBuilder().setContent(imgBytes).build();
-	    Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).build();
-	    AnnotateImageRequest request =
-	        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-	    requests.add(request);
-	
-	    // Initialize client that will be used to send requests. This client only needs to be created
-	    // once, and can be reused for multiple requests. After completing all of your requests, call
-	    // the "close" method on the client to safely clean up any remaining background resources.
-	    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
-	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
-	    	List<AnnotateImageResponse> responses = response.getResponsesList();
-	
-	      	for (AnnotateImageResponse res : responses) {
-		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return color_usage_stats;
-		        }
-		
-		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        DominantColorsAnnotation colors = res.getImagePropertiesAnnotation().getDominantColors();
-		        for (ColorInfo color : colors.getColorsList()) {
-		          System.out.format(
-		              "fraction: %f%nr: %f, g: %f, b: %f, score: %f%n",
-		              color.getPixelFraction(),
-		              color.getColor().getRed(),
-		              color.getColor().getGreen(),
-		              color.getColor().getBlue(),
-		          	  color.getScore());
-		          ColorUsageStat color_stat = new ColorUsageStat(color.getColor().getRed(), color.getColor().getGreen(), color.getColor().getBlue(), color.getPixelFraction(), color.getScore());
-		          color_usage_stats.add(color_stat);
-		        }
-	      	}
-	    }
-	    */
 	    return color_usage_stats;
 	}
 	

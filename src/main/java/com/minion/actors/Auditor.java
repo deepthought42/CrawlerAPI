@@ -74,21 +74,21 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageVersion.class, page_state-> {
+				.match(PageVersion.class, page_version-> {
 				   	//generate audit report
 				   	List<Audit> audits = new ArrayList<>();
 				   	
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//check if page state already
 			   			//perform audit and return audit result
-			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_state);
+			   			List<Audit> audits_executed = audit_factory.executePrerenderPageAudits(audit_category, page_version);
 
 			   			audits.addAll(  audit_service.saveAll(audits_executed) );
 			   		}
 		   			
 					//PageAuditComplete audit_complete = new PageAuditComplete(page_state);
 		   			//getSender().tell(audit_complete, getSelf());
-		   			getSender().tell(new AuditSet(audits), getSelf());
+		   			getSender().tell(new AuditSet(audits, page_version.getUrl()), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 				})
 				.match(PageState.class, page_state-> {
@@ -107,7 +107,7 @@ public class Auditor extends AbstractActor{
 		   			
 					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state);
 		   			getSender().tell(audit_complete, getSelf());
-		   			getSender().tell(new AuditSet(audits), getSelf());
+		   			getSender().tell(new AuditSet(audits, page_state.getUrl()), getSelf());
 		   			//send message to either user or page channel containing reference to audits
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
@@ -119,7 +119,7 @@ public class Auditor extends AbstractActor{
 			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			getSender().tell(new AuditSet(audits_executed), getSelf());
+			   			getSender().tell(new AuditSet(audits_executed, domain_msg.getDomain().getHost()), getSelf());
 				   	}
 				})
 				.match(MemberUp.class, mUp -> {

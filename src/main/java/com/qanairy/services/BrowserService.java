@@ -560,7 +560,7 @@ public class BrowserService {
 
 		List<ElementState> visited_elements = new ArrayList<>();
 		
-		WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
+		//WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
 		
 		String body_src = extractBody(page_state.getSrc());
 		Document html_doc = Jsoup.parse(body_src);
@@ -593,8 +593,8 @@ public class BrowserService {
 	
 				
 				//get child elements for element
-				Map<String, String> attributes = browser.extractAttributes(web_root);
-				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_root, browser.getDriver());
+				Map<String, String> attributes = browser.extractAttributes(web_element);
+				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
@@ -754,10 +754,15 @@ public class BrowserService {
 	public static boolean isStructureTag(String tag_name) {
 		assert tag_name != null;
 
-		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) || "script".contentEquals(tag_name) || "g".contentEquals(tag_name) || "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) || "polygon".contentEquals(tag_name)
-				|| "br".contentEquals(tag_name) || "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) || "use".contentEquals(tag_name)
-				|| "template".contentEquals(tag_name) || "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name)
-				|| "noscript".contentEquals(tag_name) || "meta".contentEquals(tag_name) || "base".contentEquals(tag_name);
+		return "head".contentEquals(tag_name) || "link".contentEquals(tag_name) 
+				|| "script".contentEquals(tag_name) || "g".contentEquals(tag_name) 
+				|| "path".contentEquals(tag_name) || "svg".contentEquals(tag_name) 
+				|| "polygon".contentEquals(tag_name) || "br".contentEquals(tag_name) 
+				|| "style".contentEquals(tag_name) || "polyline".contentEquals(tag_name) 
+				|| "use".contentEquals(tag_name) || "template".contentEquals(tag_name) 
+				|| "audio".contentEquals(tag_name)  || "iframe".contentEquals(tag_name)
+				|| "noscript".contentEquals(tag_name) || "meta".contentEquals(tag_name) 
+				|| "base".contentEquals(tag_name) || "em".contentEquals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
@@ -1513,6 +1518,15 @@ public class BrowserService {
 		return getDomElementStates(page_state, xpaths, browser, elements);
 	}
 	
+	/**
+	 * 
+	 * @param page_src
+	 * @param url
+	 * @param rule_sets
+	 * @return
+	 * @throws IOException
+	 * @throws XPathExpressionException
+	 */
 	public List<com.qanairy.models.Element> extractElements(
 			String page_src, 
 			URL url, 

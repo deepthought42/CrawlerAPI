@@ -8,7 +8,6 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageVersion;
@@ -19,7 +18,6 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
-import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.experience.PerformanceInsight;
 
@@ -97,8 +95,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:{user_id}})-[]-(d:Domain{url:{url}}) MATCH (d)-[]-(p:PageVersion) RETURN p")
 	public Set<PageVersion> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
 
-	@Query("MATCH (d:Domain{url:{url}})-[]->(audit:Audit) RETURN audit ORDER BY audit.createdAt DESC")
-	public Set<Audit> getMostRecentDomainAudits(@Param("url") String url);
+	@Query("MATCH (d:Domain{host:{host}})-[]->(audit:AuditRecord) RETURN audit ORDER BY audit.createdAt DESC LIMIT 1")
+	public AuditRecord getMostRecentDomainAuditRecord(@Param("host") String host);
 
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:{page_state_key}}) RETURN d LIMIT 1")
 	public Domain findByPageState(@Param("page_state_key") String page_state_key);
@@ -114,4 +112,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain)-[*]->(:AuditRecord{key:{audit_record_key}}) RETURN d LIMIT 1")
 	public Domain findByAuditRecord(@Param("audit_record_key") String audit_record_key);
+
+
+	@Query("MATCH (domain:Domain) RETURN domain")
+	public Set<Domain> getDomains();
 }

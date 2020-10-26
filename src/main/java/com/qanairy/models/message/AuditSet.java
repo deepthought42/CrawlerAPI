@@ -11,9 +11,13 @@ import com.qanairy.models.audit.Audit;
  */
 public class AuditSet extends Message {
 	private List<Audit> audits;
+	private String url;
 	
-	public AuditSet(List<Audit> audits){
+
+	public AuditSet(List<Audit> audits, String url){
 		setAudits(audits);
+		setUrl(url);
+		
 	}
 
 	public List<Audit> getAudits() {
@@ -22,5 +26,13 @@ public class AuditSet extends Message {
 
 	public void setAudits(List<Audit> audits) {
 		this.audits = audits;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+	
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

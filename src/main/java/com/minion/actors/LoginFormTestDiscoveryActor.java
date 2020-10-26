@@ -178,7 +178,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addPathObject(submit_login);
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
-							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, domain.getDiscoveryBrowserName(), exploratory_path, domain.getEntryPath());
+							PageState result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, BrowserType.CHROME.toString(), exploratory_path, domain.getEntryPath());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 
@@ -186,10 +186,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
 							
-							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L, test.getPathKeys()));
+							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, BrowserType.CHROME.toString(), result_page, 0L, test.getPathKeys()));
 							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getEntryPath(), message.getAccountId());
 
-							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain(), message.getAccountId());
+							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(BrowserType.CHROME.toString()), message.getDomainActor(), message.getDomain(), message.getAccountId());
 							message.getDiscoveryActor().tell(test_message, getSelf());
 						}
 					}

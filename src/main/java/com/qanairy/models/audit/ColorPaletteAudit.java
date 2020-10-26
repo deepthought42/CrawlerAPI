@@ -29,6 +29,7 @@ import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -67,13 +68,14 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		try {
-			color_usage_list.addAll(extractColorsFromPageState(new URL(page_state.getFullPageScreenshotUrl()), elements));
+			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrl()), elements));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		//extract declared css color properties
+		/*
 		List<ColorData> colors_declared = new ArrayList<>();
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
 		
@@ -81,20 +83,24 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		for(String stylesheet : raw_stylesheets) {
 			colors_declared.addAll(BrowserUtils.extractColorsFromStylesheet(stylesheet));
 		}
-		
-		log.warn("###########################################################################");
-		log.warn("###########################################################################");
-		log.warn("###########################################################################");
-		
-		log.warn("colors declared ::       "+colors_declared);
+		*/
 		Map<String, ColorData> color_map = new HashMap<>();
-		for(ColorData color : colors_declared) {
+		for(ColorUsageStat stat : color_usage_list) {
+			ColorData color = new ColorData(stat);
+			if(color.getUsagePercent() < 0.05) {
+				continue;
+			}
+			color.setUsagePercent(stat.getPixelPercent());
+			log.warn("Color :: " + color.rgb() + "  :  " + color.getUsagePercent());
+			
 			color_map.put(color.rgb().trim(), color);
 		}
+
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		log.warn("###########################################################################");
 		
+		/*
 		Map<ColorUsageStat, Boolean> gray_colors = new HashMap<ColorUsageStat, Boolean>();
 		Map<ColorUsageStat, Boolean> filtered_colors = new HashMap<>();
 		//discard any colors that are transparent
@@ -113,7 +119,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		}
 		gray_colors.remove(null);
 		filtered_colors.remove(null);
-		 
+		 */
 		List<ColorData> colors = new ArrayList<ColorData>(color_map.values());
 		/*
 		for(ColorUsageStat color : color_usage_list) {
@@ -153,8 +159,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	private List<ColorUsageStat> extractColorsFromPageState(URL screenshot_url,
-			List<ElementState> elements) throws MalformedURLException, IOException {		
+	private List<ColorUsageStat> extractColorsFromScreenshot(URL screenshot_url,
+			List<ElementState> elements
+	) throws MalformedURLException, IOException {		
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
 		
@@ -184,7 +191,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		return CloudVisionUtils.extractImageProperties(screenshot);
+		//return CloudVisionUtils.extractImageProperties(screenshot);
+		return ImageUtils.extractImageProperties(screenshot);
 	}
 
 	public List<String> getColors() {

@@ -257,10 +257,10 @@ public class ColorPaletteUtils {
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
-		Set<ColorData> primary_colors = identifyPrimaryColors(colors);
+		Set<ColorData> primary_colors = removeSimilarColors(colors);
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
-		for(ColorData color : colors) {
+		for(ColorData color : primary_colors) {
 			PaletteColor palette_color = new PaletteColor(
 					color.rgb(), 
 					color.getUsagePercent(), 
@@ -310,19 +310,37 @@ public class ColorPaletteUtils {
 		return palette_colors;
 	}
 	
-	private static Set<ColorData> identifyPrimaryColors(List<ColorData> colors) {
+	private static Set<ColorData> removeSimilarColors(List<ColorData> colors) {
 		log.warn("identifying primary colors ....  "+colors.size());
 		ColorData largest_color = null;
 		double percent = Double.MIN_VALUE;
-		for(ColorData color : colors) {
-			if(percent < color.getUsagePercent()) {
-				percent = color.getUsagePercent();
-				largest_color = color;
+		Set<ColorData> primary_colors = new HashSet<>();
+		do {
+			for(ColorData color : colors) {
+				if(percent < color.getUsagePercent()) {
+					percent = color.getUsagePercent();
+					largest_color = color;
+				}
 			}
-		}
+			primary_colors.add(largest_color);
+			colors.remove(largest_color);
+			
+			Set<ColorData> similar_colors = new HashSet<>();
+			//remove any similar colors to primary color
+			for(ColorData color : colors) {
+				if(isSimilar(color, largest_color)) {
+					similar_colors.add(color);
+				}
+			}
+			
+			//remove similar colors from color set
+			for(ColorData color : similar_colors) {
+				colors.remove(color);
+			}
+		} while(!colors.isEmpty());
 		log.warn("largest color found :: "+largest_color.rgb() + "       usage :: "+largest_color.getUsagePercent());
 		log.warn("returning primary colors");
-		return new HashSet<>();
+		return primary_colors;
 	}
 
 	/**
@@ -384,5 +402,9 @@ public class ColorPaletteUtils {
 		}
 		
 		return color_sets;
+	}
+	
+	public static boolean isSimilar(ColorData color1, ColorData color2) {
+		return Math.abs(color1.getHue() - color2.getHue()) < 0.15;	
 	}
 }

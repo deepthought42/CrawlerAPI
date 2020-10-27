@@ -1,5 +1,7 @@
 package utils;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,5 +33,27 @@ public class ColorPaletteUtilsTest {
 		
 		System.out.println("colors :: "+color_sets);
 		
+	}
+	
+	@Test
+	public void getMaxRGBTest() {
+		ColorData color = new ColorData("rgb( 231,238,231 )");
+		int max = ColorPaletteUtils.getMax(color);
+		assertTrue(max == 238);
+		
+		int min = ColorPaletteUtils.getMin(color);
+		assertTrue(min == 231);
+		
+		boolean is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(!is_gray);
+	}
+	
+	@Test
+	public void isSimilarTest() {
+		ColorData color1 = new ColorData("rgb( 231,238,231 )");
+		ColorData color2 = new ColorData("rgb( 53,60,53 )");
+		
+		ColorPaletteUtils.isSimilar(color1, color2);
+
 	}
 }

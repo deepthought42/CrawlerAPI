@@ -67,19 +67,14 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
 		//List<ElementState> element_list = new ArrayList<>();
-		log.warn("page state key :: "+ page_state.getKey());
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+elements.size());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		log.warn("getting contrast for elements :: "+ element_list.size());
-		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
 			//List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
-				log.warn("extracting image properties for element ::   "+element.getName());
 				//get color
 				//get background color
 				//get contrast between the 2
@@ -101,9 +96,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					element_xpath = parent.getXpath();
 				}
 				String color = element.getRenderedCssValues().get("color");
-
-				log.warn("background-color ::   "+background);
-				log.warn("color ::   "+color);
 
 				ColorData background_color_data = new ColorData(background);
 				ColorData text_color = new ColorData(color);

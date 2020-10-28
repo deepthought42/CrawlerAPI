@@ -99,7 +99,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 				ColorData background_color_data = new ColorData(background);
 				ColorData text_color = new ColorData(color);
-				
+				if(text_color.getTransparency() > 0.0) {
+					text_color.alphaBlend(background_color_data);
+				}
 				
 				
 				/*

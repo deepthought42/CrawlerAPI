@@ -323,23 +323,27 @@ public class ColorPaletteUtils {
 					largest_color = color;
 				}
 			}
+			if(largest_color == null) {
+				continue;
+			}
+			
 			log.warn("colors size before removal :: "+colors.size());
 			primary_colors.add(largest_color);
-			colors.remove(largest_color);
 			log.warn("colors size after removal ::   "+colors.size());
 			Set<ColorData> similar_colors = new HashSet<>();
 			//remove any similar colors to primary color
 			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 			for(ColorData color : colors) {
-				log.warn("Color 1 for review :: "+color);
-				log.warn("Color Largest for review :: "+largest_color);
+				log.warn("Color 1 for review :: "+color.rgb());
+				log.warn("Color Largest for review :: "+largest_color.rgb());
 				if(isSimilar(color, largest_color)) {
 					similar_colors.add(color);
 				}
 			}
 			
 			log.warn("similar colors found ::    "+similar_colors);
-			
+			colors.remove(largest_color);
+
 			//remove similar colors from color set
 			for(ColorData color : similar_colors) {
 				colors.remove(color);

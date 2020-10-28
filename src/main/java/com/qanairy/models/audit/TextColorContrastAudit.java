@@ -67,47 +67,40 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
 		//List<ElementState> element_list = new ArrayList<>();
-		log.warn("page state key :: "+ page_state.getKey());
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-		log.warn("Elements available for TEXT COLOR CONTRAST evaluation ...  "+elements.size());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		log.warn("getting contrast for elements :: "+ element_list.size());
-		log.warn("evaluating elements for page ....  "+page_state.getUrl());
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
 			//List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
-				log.warn("extracting image properties for element ::   "+element.getName());
 				//get color
 				//get background color
 				//get contrast between the 2
-				String background = element.getRenderedCssValues().get("background-color");
+				ColorData background_color_data = new ColorData(element.getRenderedCssValues().get("background-color"));
 				String element_xpath = element.getXpath();
 								
-				while(background.trim().contentEquals("rgba(0, 0, 0, 0)")) {
+				while(background_color_data.getTransparency() == 0.0) {
 					String parent_xpath = getParentXpath(element_xpath);
 					if(parent_xpath.contentEquals("/")) {
 						log.warn("Reached body element, returning white rgb");
-						background = "rgb(255,255,255)";
+						background_color_data = new ColorData("rgb(255,255,255)");
 						break;
 					}
 					ElementState parent = element_state_service.findByPageStateAndXpath(page_state.getKey(), parent_xpath);
 					if(parent == null) {
 						break;
 					}
-					background = parent.getRenderedCssValues().get("background-color");
+					background_color_data = new ColorData(parent.getRenderedCssValues().get("background-color"));
 					element_xpath = parent.getXpath();
 				}
 				String color = element.getRenderedCssValues().get("color");
 
-				log.warn("background-color ::   "+background);
-				log.warn("color ::   "+color);
-
-				ColorData background_color_data = new ColorData(background);
 				ColorData text_color = new ColorData(color);
-				
+				if(text_color.getTransparency() > 0.0) {
+					text_color.alphaBlend(background_color_data);
+				}
 				
 				
 				/*

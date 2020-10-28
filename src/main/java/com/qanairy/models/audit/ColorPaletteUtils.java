@@ -257,10 +257,10 @@ public class ColorPaletteUtils {
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
-		Set<ColorData> primary_colors = identifyPrimaryColors(colors);
+		Set<ColorData> primary_colors = removeSimilarColors(colors);
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
-		for(ColorData color : colors) {
+		for(ColorData color : primary_colors) {
 			PaletteColor palette_color = new PaletteColor(
 					color.rgb(), 
 					color.getUsagePercent(), 
@@ -310,19 +310,52 @@ public class ColorPaletteUtils {
 		return palette_colors;
 	}
 	
-	private static Set<ColorData> identifyPrimaryColors(List<ColorData> colors) {
+	private static Set<ColorData> removeSimilarColors(List<ColorData> colors) {
 		log.warn("identifying primary colors ....  "+colors.size());
 		ColorData largest_color = null;
-		double percent = Double.MIN_VALUE;
-		for(ColorData color : colors) {
-			if(percent < color.getUsagePercent()) {
-				percent = color.getUsagePercent();
-				largest_color = color;
+		Set<ColorData> primary_colors = new HashSet<>();
+		do {
+			double percent = Double.MIN_VALUE;
+
+			for(ColorData color : colors) {
+				if(percent < color.getUsagePercent()) {
+					percent = color.getUsagePercent();
+					largest_color = color;
+				}
 			}
-		}
+			if(largest_color == null) {
+				continue;
+			}
+			
+			log.warn("colors size before removal :: "+colors.size());
+			primary_colors.add(largest_color);
+			log.warn("colors size after removal ::   "+colors.size());
+			Set<ColorData> similar_colors = new HashSet<>();
+			//remove any similar colors to primary color
+			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+			for(ColorData color : colors) {
+				log.warn("Color 1 for review :: "+color.rgb());
+				log.warn("Color Largest for review :: "+largest_color.rgb());
+				if(isSimilar(color, largest_color)) {
+					similar_colors.add(color);
+				}
+			}
+			
+			log.warn("similar colors found ::    "+similar_colors);
+			colors.remove(largest_color);
+
+			//remove similar colors from color set
+			for(ColorData color : similar_colors) {
+				colors.remove(color);
+				log.warn("removing color :: "+color.rgb());
+				
+			}
+			
+			log.warn("primary colors size ::   "+primary_colors.size());
+		} while(!colors.isEmpty());
 		log.warn("largest color found :: "+largest_color.rgb() + "       usage :: "+largest_color.getUsagePercent());
 		log.warn("returning primary colors");
-		return new HashSet<>();
+		return primary_colors;
 	}
 
 	/**
@@ -384,5 +417,60 @@ public class ColorPaletteUtils {
 		}
 		
 		return color_sets;
+	}
+	
+	public static boolean isSimilar(ColorData color1, ColorData color2) {
+		assert color1 != null;
+		assert color2 != null;
+		
+		if(isGrayScale(color1) && isGrayScale(color2)) {
+			log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
+			return true;
+		}
+		else if((isGrayScale(color1) && !isGrayScale(color2))
+			|| (!isGrayScale(color1) && isGrayScale(color2)))
+		{
+			log.warn("colors are not similar. one is gray scale and the other isn't");
+			return false;
+		}
+		
+		double hue_diff = Math.abs(color1.getHue() - color2.getHue());
+		double brightness_diff = Math.abs(color1.getBrightness() - color2.getBrightness());
+		log.warn("brightness 1 :: "+color1.getBrightness());
+		log.warn("brightness 2 ::  "+color2.getBrightness());
+		log.warn("Evaluating similarity based on brightness  ::    "+brightness_diff);
+		return ( hue_diff < 0.1 && brightness_diff < 0.5);	
+	}
+
+	public static boolean isGrayScale(ColorData color) {
+		return (getMax(color) - getMin(color)) <= 5;
+	}
+
+	public static int getMax(ColorData color) {
+		assert color != null;
+		
+		if(color.getRed() >= color.getBlue()
+				&& color.getRed() >= color.getGreen()) {
+			return color.getRed();
+		}
+		else if(color.getBlue() >= color.getRed()
+				&& color.getBlue() >= color.getGreen()) {
+			return color.getBlue();
+		}
+		
+		return color.getGreen();
+	}
+	
+	public static int getMin(ColorData color) {
+		if(color.getRed() <= color.getBlue()
+				&& color.getRed() <= color.getGreen()) {
+			return color.getRed();
+		}
+		else if(color.getBlue() <= color.getRed()
+				&& color.getBlue() <= color.getGreen()) {
+			return color.getBlue();
+		}
+		
+		return color.getGreen();
 	}
 }

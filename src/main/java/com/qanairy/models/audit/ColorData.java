@@ -58,6 +58,9 @@ public class ColorData extends LookseeObject{
 			if(rgba.length == 4) {
 				setTransparency(Double.parseDouble(rgba[3]));
 			}
+			else {
+				setTransparency(0.0);
+			}
 		}
 		
 		
@@ -88,6 +91,7 @@ public class ColorData extends LookseeObject{
 		setUsagePercent(color_usage_stat.getPixelPercent());
 	}
 
+
 	/**
 	 * Calculates luminosity from rgb color
 	 * 
@@ -100,9 +104,9 @@ public class ColorData extends LookseeObject{
 		//calculate luminosity
 		//For the sRGB colorspace, the relative luminance of a color is defined as
 		//where R, G and B are defined as:
-		double RsRGB = red/255;
-		double GsRGB = green/255;
-		double BsRGB = blue/255;
+		double RsRGB = red/255.0;
+		double GsRGB = green/255.0;
+		double BsRGB = blue/255.0;
 
 		double R, G, B;
 		if(RsRGB <= 0.03928) {
@@ -232,5 +236,19 @@ public class ColorData extends LookseeObject{
 
 	public void setUsagePercent(float usage_percent) {
 		this.usage_percent = usage_percent;
+	}
+
+	public void alphaBlend(ColorData background_color_data) {
+		this.red = (int) (((1 - getTransparency()) * background_color_data.getRed()) + (getTransparency() * getRed()));
+		this.green = (int) (((1 - getTransparency()) * background_color_data.getGreen()) + (getTransparency() * getGreen()));
+		this.blue = (int) (((1 - getTransparency()) * background_color_data.getBlue()) + (getTransparency() * getBlue()));
+	
+		//convert rgb to hsl, store all as Color object
+		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
+		this.hue = hsb[0];
+		this.saturation = hsb[1];
+		this.brightness = hsb[2];
+		
+		this.setLuminosity(calculateLuminosity(red, green, blue));
 	}
 }

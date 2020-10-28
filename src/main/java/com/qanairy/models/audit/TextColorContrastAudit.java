@@ -78,26 +78,25 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//get color
 				//get background color
 				//get contrast between the 2
-				String background = element.getRenderedCssValues().get("background-color");
+				ColorData background_color_data = new ColorData(element.getRenderedCssValues().get("background-color"));
 				String element_xpath = element.getXpath();
 								
-				while(background.trim().contentEquals("rgba(0, 0, 0, 0)")) {
+				while(background_color_data.getTransparency() == 0.0) {
 					String parent_xpath = getParentXpath(element_xpath);
 					if(parent_xpath.contentEquals("/")) {
 						log.warn("Reached body element, returning white rgb");
-						background = "rgb(255,255,255)";
+						background_color_data = new ColorData("rgb(255,255,255)");
 						break;
 					}
 					ElementState parent = element_state_service.findByPageStateAndXpath(page_state.getKey(), parent_xpath);
 					if(parent == null) {
 						break;
 					}
-					background = parent.getRenderedCssValues().get("background-color");
+					background_color_data = new ColorData(parent.getRenderedCssValues().get("background-color"));
 					element_xpath = parent.getXpath();
 				}
 				String color = element.getRenderedCssValues().get("color");
 
-				ColorData background_color_data = new ColorData(background);
 				ColorData text_color = new ColorData(color);
 				if(text_color.getTransparency() > 0.0) {
 					text_color.alphaBlend(background_color_data);

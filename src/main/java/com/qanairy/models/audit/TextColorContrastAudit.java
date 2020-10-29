@@ -80,8 +80,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//get contrast between the 2
 				ColorData background_color_data = new ColorData(element.getRenderedCssValues().get("background-color"));
 				String element_xpath = element.getXpath();
-								
-				while(background_color_data.getTransparency() == 0.0) {
+				log.warn("transparency :: "+background_color_data.getTransparency());
+				while(Double.compare(background_color_data.getTransparency(), 0.0) == 0) {
 					String parent_xpath = getParentXpath(element_xpath);
 					if(parent_xpath.contentEquals("/")) {
 						log.warn("Reached body element, returning white rgb");
@@ -124,7 +124,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				 */
 				
-				
+				log.warn("Background color :: "+background_color_data);
 				double contrast = ColorData.computeContrast(background_color_data, text_color);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element

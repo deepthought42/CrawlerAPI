@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.LookseeObject;
+import com.qanairy.models.XYZColorSpace;
 
 
 /**
@@ -59,7 +60,7 @@ public class ColorData extends LookseeObject{
 				setTransparency(Double.parseDouble(rgba[3]));
 			}
 			else {
-				setTransparency(0.0);
+				setTransparency(1);
 			}
 		}
 		
@@ -79,7 +80,7 @@ public class ColorData extends LookseeObject{
 		this.red = (int)color_usage_stat.getRed();
 		this.green = (int)color_usage_stat.getGreen();
 		this.blue = (int)color_usage_stat.getBlue();
-		setTransparency(Double.parseDouble("0.0"));
+		setTransparency(Double.parseDouble("1.0"));
 	
 		//convert rgb to hsl, store all as Color object
 		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
@@ -109,21 +110,21 @@ public class ColorData extends LookseeObject{
 		double BsRGB = blue/255.0;
 
 		double R, G, B;
-		if(RsRGB <= 0.03928) {
+		if(RsRGB <= 0.04045) {
 			R = RsRGB/12.92;
 		}
 		else {
 			R = Math.pow(((RsRGB+0.055)/1.055), 2.4);
 		}
 		
-		if(GsRGB <= 0.03928) {
+		if(GsRGB <= 0.04045) {
 			G = GsRGB/12.92;
 		}
 		else {
 			G = Math.pow(((GsRGB+0.055)/1.055), 2.4);
 		}
 		
-		if(BsRGB <= 0.03928) {
+		if(BsRGB <= 0.04045) {
 			B = BsRGB/12.92;
 		}
 		else {
@@ -131,6 +132,28 @@ public class ColorData extends LookseeObject{
 		}
 		
 		return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+	}
+	
+	/**
+	 * Conver RGB to XYZ from rgb color
+	 * 
+	 * @param red
+	 * @param green
+	 * @param blue
+	 * @return
+	 */
+	public XYZColorSpace RGBtoXYZ() {
+		//calculate luminosity
+		//For the sRGB colorspace, the relative luminance of a color is defined as
+		//where R, G and B are defined as:
+		double RsRGB = red/255.0;
+		double GsRGB = green/255.0;
+		double BsRGB = blue/255.0;
+		double X = 0.412453*RsRGB + 0.357580 * RsRGB + 0.180423 * RsRGB;
+		double Y = 0.212671*GsRGB + 0.715160 *GsRGB + 0.072169 * GsRGB; 
+		double Z  = 0.019334*BsRGB  +  0.119193*BsRGB  + 0.950227 * BsRGB; 
+	
+		return new XYZColorSpace(X, Y, Z);
 	}
 
 	/**
@@ -148,7 +171,12 @@ public class ColorData extends LookseeObject{
         if (!(obj instanceof ColorData)) return false;
         
 		ColorData color = (ColorData)obj;
-		return color.blue == this.blue && color.red == this.red && color.blue == this.blue;
+		return color.blue == this.blue && color.red == this.red && color.green == this.green;
+	}
+	
+	@Override
+	public String toString() {
+		return rgb();
 	}
 
 	public String hsb() {

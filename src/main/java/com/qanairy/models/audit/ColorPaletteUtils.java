@@ -10,6 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.CIEColorSpace;
 import com.qanairy.models.enums.ColorScheme;
 
 /**
@@ -257,7 +258,7 @@ public class ColorPaletteUtils {
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
-		Set<ColorData> primary_colors = removeSimilarColors(colors);
+		Set<ColorData> primary_colors = identifyPrimaryColors(colors);
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		for(ColorData color : primary_colors) {
@@ -310,14 +311,19 @@ public class ColorPaletteUtils {
 		return palette_colors;
 	}
 	
-	private static Set<ColorData> removeSimilarColors(List<ColorData> colors) {
+	public static Set<ColorData> identifyPrimaryColors(List<ColorData> colors) {
 		log.warn("identifying primary colors ....  "+colors.size());
 		ColorData largest_color = null;
 		Set<ColorData> primary_colors = new HashSet<>();
 		do {
+			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
+			log.warn("colors size before removal :: "+colors.size());
+			
 			double percent = Double.MIN_VALUE;
 
 			for(ColorData color : colors) {
+				log.warn("color :: "+color.rgb()+"     :       "+color.getUsagePercent());
 				if(percent < color.getUsagePercent()) {
 					percent = color.getUsagePercent();
 					largest_color = color;
@@ -326,17 +332,17 @@ public class ColorPaletteUtils {
 			if(largest_color == null) {
 				continue;
 			}
-			
-			log.warn("colors size before removal :: "+colors.size());
+			log.warn("identified largest color  ::   "+largest_color);
+
 			primary_colors.add(largest_color);
-			log.warn("colors size after removal ::   "+colors.size());
+			
 			Set<ColorData> similar_colors = new HashSet<>();
 			//remove any similar colors to primary color
-			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 			for(ColorData color : colors) {
-				log.warn("Color 1 for review :: "+color.rgb());
-				log.warn("Color Largest for review :: "+largest_color.rgb());
-				if(isSimilar(color, largest_color)) {
+
+				if(!color.equals(largest_color) && isSimilar(color, largest_color)) {
+					log.warn("Similar Color found :: "+color);
+
 					similar_colors.add(color);
 				}
 			}
@@ -350,7 +356,8 @@ public class ColorPaletteUtils {
 				log.warn("removing color :: "+color.rgb());
 				
 			}
-			
+			log.warn("colors size after removal ::   "+colors.size());
+
 			log.warn("primary colors size ::   "+primary_colors.size());
 		} while(!colors.isEmpty());
 		log.warn("largest color found :: "+largest_color.rgb() + "       usage :: "+largest_color.getUsagePercent());
@@ -392,11 +399,11 @@ public class ColorPaletteUtils {
 		while(!colors.isEmpty()) {			
 			ColorData color = colors.get(0);
 			Set<ColorData> similar_colors = new HashSet<>();
-			for(int idx=0; idx < colors.size(); idx++) {
+			for(int idx=1; idx < colors.size(); idx++) {
 				ColorData color2 = colors.get(idx);
 
 				//if the difference between the 2 hues is less 3 degrees 
-				if(Math.abs(color.getHue() - color2.getHue()) < 0.15) {	
+				if(isSimilar(color, color2)) {	
 					if(similar_colors.isEmpty()) {
 						similar_colors.add(color);
 						//colors.remove(color);
@@ -423,6 +430,18 @@ public class ColorPaletteUtils {
 		assert color1 != null;
 		assert color2 != null;
 		
+		CIEColorSpace cie_color1 = color1.RGBtoXYZ().XYZtoCIE();
+		CIEColorSpace cie_color2 = color2.RGBtoXYZ().XYZtoCIE();
+
+		double l_square = Math.pow(Math.abs(cie_color1.l-cie_color2.l), 2);
+		double a_square = Math.pow(Math.abs(cie_color1.a-cie_color2.a), 2);
+		double b_square = Math.pow(Math.abs(cie_color1.b-cie_color2.b), 2);
+
+		double diff = Math.sqrt( l_square + a_square + b_square);
+		log.warn("diff :: "+ (1/diff) + "   :    " + color1);
+		return (1/diff) >= 0.01;
+		
+		/*
 		if(isGrayScale(color1) && isGrayScale(color2)) {
 			log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
 			return true;
@@ -433,17 +452,21 @@ public class ColorPaletteUtils {
 			log.warn("colors are not similar. one is gray scale and the other isn't");
 			return false;
 		}
-		
+
 		double hue_diff = Math.abs(color1.getHue() - color2.getHue());
 		double brightness_diff = Math.abs(color1.getBrightness() - color2.getBrightness());
-		log.warn("brightness 1 :: "+color1.getBrightness());
-		log.warn("brightness 2 ::  "+color2.getBrightness());
-		log.warn("Evaluating similarity based on brightness  ::    "+brightness_diff);
-		return ( hue_diff < 0.1 && brightness_diff < 0.5);	
+		double saturation = Math.abs(color1.getSaturation() - color2.getSaturation());
+		double luminosity_diff = Math.abs(color1.getLuminosity() - color2.getLuminosity());
+
+		double diff = Math.sqrt(hue_diff*hue_diff + luminosity_diff*luminosity_diff + saturation*saturation);
+		log.warn("diff :: "+ diff);
+		return diff <= 1.0;
+				*/
+
 	}
 
 	public static boolean isGrayScale(ColorData color) {
-		return (getMax(color) - getMin(color)) <= 5;
+		return (getMax(color) - getMin(color)) <= 10;
 	}
 
 	public static int getMax(ColorData color) {

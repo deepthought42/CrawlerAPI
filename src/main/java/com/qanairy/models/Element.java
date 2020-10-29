@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.enums.ElementClassification;
 import com.qanairy.models.rules.Rule;
-import com.qanairy.services.BrowserService;
 
 
 /**

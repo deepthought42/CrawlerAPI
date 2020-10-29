@@ -576,12 +576,13 @@ public class BrowserService {
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
 				
-				//browser.scrollToElement(web_element);
+				browser.scrollToElement(web_element);
 	
 				//check if element is visible in pane and if not then continue to next element xpath
 				if( !web_element.isDisplayed()
 						|| !hasWidthAndHeight(web_element.getSize())
-						|| doesElementHaveNegativePosition(element_location)) {
+						|| doesElementHaveNegativePosition(element_location)
+						|| !isElementVisibleInPane(browser, web_element.getLocation(), web_element.getSize())) {
 					continue;
 				}
 				
@@ -605,11 +606,12 @@ public class BrowserService {
 					classification = ElementClassification.ANCESTOR;
 				}
 				
-				BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
+				/*
+				 BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
 																					element_location.getY(), 
 																					element_size.getWidth(), 
-																					element_size.getHeight());
-				
+																					element_size.getHeight()); */
+				BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
 				String element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -1271,8 +1273,6 @@ public class BrowserService {
 
 	public Map<String, Template> findTemplates(List<com.qanairy.models.Element> element_list){
 		//create a map for the various duplicate elements
-		log.warn("parent only list size :: " + element_list.size());
-
 		Map<String, Template> element_templates = new HashMap<>();
 		List<com.qanairy.models.Element> parents_only_element_list = new ArrayList<>();
 		for(com.qanairy.models.Element element : element_list) {
@@ -1281,13 +1281,11 @@ public class BrowserService {
 			}
 		}
 
-		log.warn("parent only list size :: " + parents_only_element_list.size());		
 		//iterate over all elements in list
 		
 		Map<String, Boolean> identified_templates = new HashMap<String, Boolean>();
 		for(int idx1 = 0; idx1 < parents_only_element_list.size()-1; idx1++){
 			com.qanairy.models.Element element1 = parents_only_element_list.get(idx1);
-			log.warn("****************************************************************");
 			boolean at_least_one_match = false;
 			if(identified_templates.containsKey(element1.getKey()) ) {
 				continue;
@@ -1310,7 +1308,6 @@ public class BrowserService {
 				}
 				
 				if(element1.getTemplate().equals(element2.getTemplate())){
-					log.warn("templates match !!");
 					String template_str = element2.getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));

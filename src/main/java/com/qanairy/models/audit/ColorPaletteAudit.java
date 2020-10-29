@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.gcp.CloudVisionUtils;
-import com.minion.browsing.Browser;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -28,7 +26,6 @@ import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ImageUtils;
 
 
@@ -87,7 +84,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		Map<String, ColorData> color_map = new HashMap<>();
 		for(ColorUsageStat stat : color_usage_list) {
 			ColorData color = new ColorData(stat);
-			if(color.getUsagePercent() < 0.05) {
+			if(color.getUsagePercent() < 0.0005) {
 				continue;
 			}
 			color.setUsagePercent(stat.getPixelPercent());

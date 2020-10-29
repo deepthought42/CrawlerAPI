@@ -133,19 +133,19 @@ public class ImageUtils {
 		
 		int w = buffered_image.getWidth();
 		int h = buffered_image.getHeight();
-		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-		AffineTransform at = new AffineTransform();
+		//BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		//AffineTransform at = new AffineTransform();
 		//at.scale(0.5, 0.5);
-		AffineTransformOp scaleOp = 
+		/*AffineTransformOp scaleOp = 
 		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
 		after = scaleOp.filter(buffered_image, after);
-		
+		*/
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < after.getWidth(); x++) {
-			for(int y=0; y < after.getHeight(); y++) {
-				 int clr = after.getRGB(x, y);
+		for(int x=0; x < buffered_image.getWidth(); x++) {
+			for(int y=0; y < buffered_image.getHeight(); y++) {
+				 int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;
 		        int green = (clr & 0x0000ff00) >> 8;
 		        int blue =   clr & 0x000000ff;

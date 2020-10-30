@@ -315,12 +315,12 @@ public class ColorPaletteUtils {
 		log.warn("identifying primary colors ....  "+colors.size());
 		ColorData largest_color = null;
 		Set<ColorData> primary_colors = new HashSet<>();
-		do {
+		while(!colors.isEmpty()) {
 			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 
 			log.warn("colors size before removal :: "+colors.size());
 			
-			double percent = Double.MIN_VALUE;
+			double percent = -5.0;
 
 			for(ColorData color : colors) {
 				log.warn("color :: "+color.rgb()+"     :       "+color.getUsagePercent());
@@ -359,9 +359,7 @@ public class ColorPaletteUtils {
 			log.warn("colors size after removal ::   "+colors.size());
 
 			log.warn("primary colors size ::   "+primary_colors.size());
-		} while(!colors.isEmpty());
-		log.warn("largest color found :: "+largest_color.rgb() + "       usage :: "+largest_color.getUsagePercent());
-		log.warn("returning primary colors");
+		}
 		return primary_colors;
 	}
 
@@ -439,7 +437,7 @@ public class ColorPaletteUtils {
 
 		double diff = Math.sqrt( l_square + a_square + b_square);
 		log.warn("diff :: "+ (1/diff) + "   :    " + color1);
-		return (1/diff) >= 0.01;
+		return (1/diff) >= 0.1;
 		
 		/*
 		if(isGrayScale(color1) && isGrayScale(color2)) {

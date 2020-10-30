@@ -2,8 +2,11 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,7 @@ import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
+import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -73,11 +77,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
-			//List<ColorUsageStat> color_data_list = new ArrayList<>();
 			try {
-				//get color
-				//get background color
-				//get contrast between the 2
+				
+				/*
 				ColorData background_color_data = new ColorData(element.getRenderedCssValues().get("background-color"));
 				String element_xpath = element.getXpath();
 				log.warn("transparency :: "+background_color_data.getTransparency());
@@ -95,34 +97,40 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					background_color_data = new ColorData(parent.getRenderedCssValues().get("background-color"));
 					element_xpath = parent.getXpath();
 				}
+				*/
 				String color = element.getRenderedCssValues().get("color");
-
 				ColorData text_color = new ColorData(color);
+				
+				//Identify background color by getting largest color used in picture
+				
+				/*
 				if(text_color.getTransparency() > 0.0) {
 					text_color.alphaBlend(background_color_data);
 				}
+				*/
+			
 				
 				
-				/*
-				
+				List<ColorUsageStat> color_data_list = new ArrayList<>();
 				color_data_list.addAll( ImageUtils.extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
 
 				color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
 	
-				ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
-				ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
-				ColorData background_color_data = new ColorData("rgb("+ background_usage.getRed()+","+background_usage.getGreen()+","+background_usage.getBlue()+")");
-				ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
-				float largest_pixel_percent = 0;
-			    
+				//ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
+				//ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
+				//ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
+				float largest_pixel_percent = -1f;
+			    ColorUsageStat largest_color = null;
 				//extract background colors
 				for(ColorUsageStat color_stat : color_data_list) {
 					//get color most used for background color
 					if(color_stat.getPixelPercent() > largest_pixel_percent) {
 						largest_pixel_percent = color_stat.getPixelPercent();
+						largest_color = color_stat;
 					}
 				}
-				 */
+				ColorData background_color_data = new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
+				
 				
 				log.warn("Background color :: "+background_color_data);
 				double contrast = ColorData.computeContrast(background_color_data, text_color);

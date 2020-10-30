@@ -64,7 +64,7 @@ public class ColorPaletteUtilsTest {
 		ColorData color2 = new ColorData("rgb( 53,60,53 )");
 		color2.setUsagePercent(1f);
 		
-		assertTrue(ColorPaletteUtils.isSimilar(color1, color2));
+		assertFalse(ColorPaletteUtils.isSimilar(color1, color2));
 	}
 	
 	@Test
@@ -88,14 +88,11 @@ public class ColorPaletteUtilsTest {
 		ColorData color2 = new ColorData("rgb( 53, 10,53 )");
 		color2.setUsagePercent(1f);
 
-		ColorData color3 = new ColorData("0,0,80");
-		color3.setUsagePercent(2f);
 		
 		List<ColorData> colors = new ArrayList<>();
 		colors.add(color);
 		colors.add(color1);
 		colors.add(color2);
-		colors.add(color3);
 		
 		Set<ColorData> color_set = ColorPaletteUtils.identifyPrimaryColors(colors);
 		for(ColorData primary : color_set) {

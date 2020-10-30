@@ -151,9 +151,15 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				log.warn("element key :: "+element.getKey());
 				log.warn("parent element :: "+parent.getXpath());
 				log.warn("element element :: "+element.getXpath());
-				log.warn("parent background color  ::  "+parent.getRenderedCssValues().get("background-color"));
-				log.warn("element background color :: "+element.getRenderedCssValues().get("background-color"));
-				double contrast = ColorData.computeContrast(new ColorData(parent.getRenderedCssValues().get("background-color")), new ColorData(element.getRenderedCssValues().get("background-color")));
+				ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
+				ColorData element_bkg = new ColorData(element.getRenderedCssValues().get("background-color"));
+				
+				//if element has border color different than element then set element_bkg to border color
+				if(hasContinuousBorder(element) && !borderColorMatchesBackground(element)){
+					element_bkg = getBorderColor(element);
+				}
+				
+				double contrast = ColorData.computeContrast(parent_bkg, element_bkg);
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					//no points are rewarded for low contrast
@@ -192,6 +198,29 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
+	}
+
+
+	private ColorData getBorderColor(ElementState element) {
+		return new ColorData(element.getRenderedCssValues().get("border-bottom-color"));
+	}
+
+
+	private boolean borderColorMatchesBackground(ElementState element) {
+		String border = element.getRenderedCssValues().get("border-bottom-color");
+		String background = element.getRenderedCssValues().get("background-color");
+		return border.contentEquals(background);
+	}
+
+
+	private boolean hasContinuousBorder(ElementState element) {
+		String bottom = element.getRenderedCssValues().get("border-bottom-color");
+		String top = element.getRenderedCssValues().get("border-top-color");
+		String left = element.getRenderedCssValues().get("border-left-color");
+		String right = element.getRenderedCssValues().get("border-right-color");
+		return bottom.contentEquals(top)
+				&& top.contentEquals(left)
+				&& left.contentEquals(right);
 	}
 
 

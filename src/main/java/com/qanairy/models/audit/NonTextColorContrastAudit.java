@@ -29,6 +29,7 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -151,7 +152,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				log.warn("element key :: "+element.getKey());
 				log.warn("parent element :: "+parent.getXpath());
 				log.warn("element element :: "+element.getXpath());
-				ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
+				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
+				ColorData parent_bkg = ImageUtils.extractBackgroundColor(element);
 				ColorData element_bkg = new ColorData(element.getRenderedCssValues().get("background-color"));
 				
 				//if element has border color different than element then set element_bkg to border color

@@ -258,7 +258,10 @@ public class ColorPaletteUtils {
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
-		Set<ColorData> primary_colors = identifyPrimaryColors(colors);
+		Set<ColorData> color_set = identifyColorSet(colors);
+		//Group colors
+		Set<Set<ColorData>> color_sets = groupColors(new ArrayList<>(color_set));
+		Set<ColorData> primary_colors = identifyPrimaryColors(color_sets);
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		for(ColorData color : primary_colors) {
@@ -311,7 +314,33 @@ public class ColorPaletteUtils {
 		return palette_colors;
 	}
 	
-	public static Set<ColorData> identifyPrimaryColors(List<ColorData> colors) {
+	/**
+	 * Evaluates each color set to identify the primary color. The primary color is defined as the 
+	 * second most used color in the set. The most used color in the set is defined as the background color
+	 * 
+	 * @param color_sets
+	 * @return
+	 */
+	private static Set<ColorData> identifyPrimaryColors(Set<Set<ColorData>> color_sets) {
+		assert color_sets != null;
+		Set<ColorData> primary_colors = new HashSet<>();
+		for(Set<ColorData> color_set : color_sets) {
+			List<ColorData> color_list = new ArrayList<>(color_set);
+			color_list.sort((o1, o2) -> Double.compare(o2.getUsagePercent(), o1.getUsagePercent()));
+			if(color_list.size() > 1) {
+				primary_colors.add(color_list.get(1));
+				log.warn("primary color identified :: "+color_list.get(1).rgb() + "  :   " +color_list.get(1).getUsagePercent());
+			}
+			else {
+				primary_colors.add(color_list.get(0));
+				log.warn("primary color identified :: "+color_list.get(0).rgb() + "  :   " +color_list.get(0).getUsagePercent());
+			}
+		}
+		// TODO Auto-generated method stub
+		return primary_colors;
+	}
+
+	public static Set<ColorData> identifyColorSet(List<ColorData> colors) {
 		log.warn("identifying primary colors ....  "+colors.size());
 		ColorData largest_color = null;
 		Set<ColorData> primary_colors = new HashSet<>();
@@ -401,7 +430,7 @@ public class ColorPaletteUtils {
 				ColorData color2 = colors.get(idx);
 
 				//if the difference between the 2 hues is less 3 degrees 
-				if(isSimilar(color, color2)) {	
+				if(isSimilarHue(color, color2)) {	
 					if(similar_colors.isEmpty()) {
 						similar_colors.add(color);
 						//colors.remove(color);
@@ -436,7 +465,6 @@ public class ColorPaletteUtils {
 		double b_square = Math.pow(Math.abs(cie_color1.b-cie_color2.b), 2);
 
 		double diff = Math.sqrt( l_square + a_square + b_square);
-		log.warn("diff :: "+ (1/diff) + "   :    " + color1);
 		return (1/diff) >= 0.1;
 		
 		/*
@@ -463,6 +491,30 @@ public class ColorPaletteUtils {
 
 	}
 
+	public static boolean isSimilarHue(ColorData color1, ColorData color2) {
+		assert color1 != null;
+		assert color2 != null;
+		
+		if(isGrayScale(color1) && isGrayScale(color2)) {
+			log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
+			log.warn("color luminosities ::   "+color1.getLuminosity() + "  :  "+color2.getLuminosity());
+			return (color1.getLuminosity() < 0.55 && color2.getLuminosity() < 0.55)
+					|| (color1.getLuminosity() >= 0.45 && color2.getLuminosity() >= 0.45);
+		}
+		else if((isGrayScale(color1) && !isGrayScale(color2))
+			|| (!isGrayScale(color1) && isGrayScale(color2)))
+		{
+			log.warn("colors are not similar. one is gray scale and the other isn't");
+			return false;
+		}
+
+		double hue_diff = Math.abs(color1.getHue() - color2.getHue());
+		log.warn("hue diff :: "+hue_diff);
+
+		return hue_diff < 0.3;
+	}
+
+	
 	public static boolean isGrayScale(ColorData color) {
 		return (getMax(color) - getMin(color)) <= 10;
 	}

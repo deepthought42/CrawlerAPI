@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorPaletteUtils;
+import com.qanairy.models.audit.PaletteColor;
 
 
 public class ColorPaletteUtilsTest {
@@ -94,7 +95,7 @@ public class ColorPaletteUtilsTest {
 		colors.add(color1);
 		colors.add(color2);
 		
-		Set<ColorData> color_set = ColorPaletteUtils.identifyPrimaryColors(colors);
+		Set<ColorData> color_set = ColorPaletteUtils.identifyColorSet(colors);
 		for(ColorData primary : color_set) {
 			System.out.println(primary.rgb());
 		}
@@ -141,9 +142,75 @@ public class ColorPaletteUtilsTest {
 		colors.add(color5);
 		colors.add(color6);
 		
-		Set<ColorData> color_set = ColorPaletteUtils.identifyPrimaryColors(colors);
+		Set<ColorData> color_set = ColorPaletteUtils.identifyColorSet(colors);
 		for(ColorData primary : color_set) {
 			System.out.println(primary.rgb());
 		}
 	}
+	
+	@Test
+	public void extractPaletteTest() {
+		ColorData color = new ColorData("rgb( 231,238,231)");
+		color.setUsagePercent(0.71f);
+		ColorData color1 = new ColorData("rgb(136,170,137)");
+		color1.setUsagePercent(0.001f);
+
+		ColorData color2 = new ColorData("rgb(53,60,53)");
+		color2.setUsagePercent(0.14f);
+
+		ColorData color3 = new ColorData("0,0,0");
+		color3.setUsagePercent(0.08f);
+		
+		ColorData color4 = new ColorData("rgb( 36,36,36)");
+		color4.setUsagePercent(0.02f);
+
+		ColorData color6 = new ColorData("129,136,129");
+		color6.setUsagePercent(0.001f);
+		
+		List<ColorData> colors = new ArrayList<>();
+		colors.add(color);
+		colors.add(color1);
+		colors.add(color2);
+		colors.add(color3);
+		colors.add(color4);
+		//colors.add(color5);
+		colors.add(color6);
+		
+
+		List<PaletteColor> color_set = ColorPaletteUtils.extractPalette(colors);
+		for(PaletteColor primary : color_set) {
+			System.out.println(primary.getPrimaryColor());
+		}
+		assertTrue(color_set.size() == 3);
+
+	}
+	
+	@Test
+	public void extractPaletteTestLookSeeColors() {
+		ColorData color = new ColorData("rgb( 35,31,32)");
+		color.setUsagePercent(0.71f);
+		ColorData color1 = new ColorData("rgb(193,193,193)");
+		color1.setUsagePercent(0.001f);
+
+		ColorData color2 = new ColorData("rgb(255,0,81)");
+		color2.setUsagePercent(0.14f);
+
+		ColorData color3 = new ColorData("35,27,24");
+		color3.setUsagePercent(0.08f);
+		
+		List<ColorData> colors = new ArrayList<>();
+		colors.add(color);
+		colors.add(color1);
+		colors.add(color2);
+		colors.add(color3);
+		
+
+		List<PaletteColor> color_set = ColorPaletteUtils.extractPalette(colors);
+		for(PaletteColor primary : color_set) {
+			System.out.println(primary.getPrimaryColor());
+		}
+		assertTrue(color_set.size() == 3);
+
+	}
+
 }

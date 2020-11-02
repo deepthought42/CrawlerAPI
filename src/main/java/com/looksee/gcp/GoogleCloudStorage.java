@@ -45,6 +45,7 @@ public class GoogleCloudStorage {
 		baos.close();
 
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
+		
 		Blob blob = bucket.create(host_key+""+element_key+browser+".png", imageInByte);
         
         return blob.getMediaLink();
@@ -68,10 +69,9 @@ public class GoogleCloudStorage {
         return ImageIO.read(inputStream);
     }
 	
-	public static BufferedImage getImage(String image_url, BrowserType browser) throws IOException {
+	public static BufferedImage getImage(String image_url) throws IOException {
 		assert image_url != null;
 		assert !image_url.isEmpty();
-		assert browser != null;
 		
 //		Storage storage = StorageOptions.getDefaultInstance().getService();
 //		Bucket bucket = storage.get(bucketName);

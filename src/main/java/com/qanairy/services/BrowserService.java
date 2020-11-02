@@ -508,10 +508,11 @@ public class BrowserService {
 			element_state = element_service.save(element_state);
 			visited_elements.add(element_state);
 			
+			/*
 			if(!parent_element_key.contentEquals(element_state.getKey())) {
 				element_service.addChildElement(parent_element_key, element_state.getKey());
 			}
-			
+			*/
 			for(Element child : children) {
 				if(isStructureTag(child.tagName())) {
 					continue;
@@ -556,7 +557,7 @@ public class BrowserService {
 		assert element_states_map != null;
 		
 		log.warn("page state screenshot url ::: "+page_state.getFullPageScreenshotUrl());
-		BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl(), BrowserType.CHROME);
+		//BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl());
 
 		List<ElementState> visited_elements = new ArrayList<>();
 		

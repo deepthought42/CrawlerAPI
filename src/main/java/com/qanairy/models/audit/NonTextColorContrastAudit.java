@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -91,7 +91,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	}
 	
 	public Color getPixelColor(String image_url, int x, int y) throws IOException {
-		BufferedImage image = GoogleCloudStorage.getImage(image_url, BrowserType.CHROME);
+		BufferedImage image = GoogleCloudStorage.getImage(image_url);
 		return new Color(image.getRGB(x, y));
 	}
 
@@ -115,33 +115,38 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		for(ElementState element : non_text_elements) {
 			//get parent element of button
 			try {
-				//ColorUsageStat most_used_color = extractMostUsedColor(element);
-				
-				//randomly sample colors just outside the perimeter of the element within page state screenshot
-				//int x_position = element.getXLocation();
-				//int y_position = element.getYLocation();
-				//ElementState parent = element_state_service.getParentElement(page_state.getKey(), element.getKey());
-				
 				//retrieve all elements for page state
 				//evaluate each element to see if xpath is a subset of element xpath, keeping the elements with shortest difference
-				int diff_length = Integer.MAX_VALUE;
-				ElementState parent = null;
+				ColorData parent_bkg = null;
 				List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 				for(ElementState element_state : elements) {
 					if(element_state.getKey().contentEquals(element.getKey())) {
 						continue;
 					}
 					
-					if(element.getXpath().contains(element_state.getXpath())) {
-						/*if(parent.getRenderedCssValues().get("background-color").contentEquals(element.getRenderedCssValues().get("background-color"))) {
-							continue;
+					try {
+						//log.warn("checking if element is parent ::  "+element_state.getXpath());
+						if(element.getXpath().contains(element_state.getXpath())) {
+							int element_area = element.getWidth() * element.getHeight();
+							int parent_area = element_state.getWidth() * element_state.getHeight();
+							
+							/*
+							log.warn("element area  :   "+element_area);
+							log.warn("parent area  :   "+parent_area);
+							log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
+							*/
+							if(parent_area > (element_area * 3)) {
+								//parent = element_state;
+								parent_bkg = ImageUtils.extractBackgroundColor(element_state);
+							}
 						}
-						*/
-						int temp_diff = element.getXpath().length() - element_state.getXpath().length();
-						if(temp_diff < diff_length) {
-							diff_length = temp_diff;
-							parent = element_state;
-						}
+					}
+					catch(IIOException e) {
+						log.warn("error getting screenshot for parent element. Looking for another element...");
+					}
+					catch(NullPointerException e) {
+						log.warn("null pointer..." + e.getMessage());
+						e.printStackTrace();
 					}
 				}
 				//choose elemtn just to the right of the elemnt in the page screenshot
@@ -149,15 +154,18 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
 
 				log.warn("page state url ::   "+page_state.getUrl());
+				log.warn("parent element :: "+parent_bkg);
 				log.warn("element key :: "+element.getKey());
-				log.warn("parent element :: "+parent.getXpath());
-				log.warn("element element :: "+element.getXpath());
+				//log.warn("parent element :: "+parent.getXpath());
+				log.warn("element xpath :: "+element.getXpath());
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
-				ColorData parent_bkg = ImageUtils.extractBackgroundColor(element);
-				ColorData element_bkg = new ColorData(element.getRenderedCssValues().get("background-color"));
+				ColorData element_bkg = ImageUtils.extractBackgroundColor(element);;
 				
 				//if element has border color different than element then set element_bkg to border color
-				if(hasContinuousBorder(element) && !borderColorMatchesBackground(element)){
+				if(!element.getName().contentEquals("input")
+						&& hasContinuousBorder(element) 
+						&& !borderColorMatchesBackground(element))
+				{
 					element_bkg = getBorderColor(element);
 				}
 				

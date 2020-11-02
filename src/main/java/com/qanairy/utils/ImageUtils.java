@@ -6,15 +6,20 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 import org.openimaj.image.analysis.colour.CIEDE2000;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.ElementState;
 import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.audit.ColorUsageStat;
 
@@ -168,6 +173,36 @@ public class ImageUtils {
 		}
         
 	    return color_usage_stats;
+	}
+
+	/**
+	 * Extracts background color from element screenshot by identifying the most prevalent color and returning that color
+	 * @param element
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
+	public static ColorData extractBackgroundColor(ElementState element) throws MalformedURLException, IOException {
+		List<ColorUsageStat> color_data_list = new ArrayList<>();
+		color_data_list.addAll( extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
+
+		color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
+
+		//ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
+		//ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
+		//ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
+		float largest_pixel_percent = -1f;
+	    ColorUsageStat largest_color = null;
+		//extract background colors
+		for(ColorUsageStat color_stat : color_data_list) {
+			//get color most used for background color
+			if(color_stat.getPixelPercent() > largest_pixel_percent) {
+				largest_pixel_percent = color_stat.getPixelPercent();
+				largest_color = color_stat;
+			}
+		}
+		return new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
+		
 	}
 	
 }

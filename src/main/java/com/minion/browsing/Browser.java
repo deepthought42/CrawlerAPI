@@ -1056,4 +1056,9 @@ public class Browser {
         }
         return sb.toString();
     }
+
+	public void scrollToBottomOfPage() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+	}
 }

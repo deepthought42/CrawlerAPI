@@ -4,7 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -47,16 +46,72 @@ public class ColorPaletteUtilsTest {
 		boolean is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(is_gray);
 		
-		color = new ColorData("rgb( 227,238,231 )");
+		color = new ColorData("rgb( 212,238,231 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(!is_gray);
 		
-		color = new ColorData("rgb( 228,238,231 )");
+		color = new ColorData("rgb( 213,238,231 )");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(!is_gray);
+		
+		color = new ColorData("rgb( 1,6,22 )");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 255,255,255 )");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb(  193,193,193 )");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb(  2,6,22 )");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 54,58,65)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 53,60,53)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 95,88,80)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 252,229,221)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(!is_gray);
+		
+		color = new ColorData("rgb(  99,104,113)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb( 34,41,53)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb(129,136,129)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(is_gray);
 	}
+	
 	
 	@Test
 	public void isSimilarTest() {
@@ -182,7 +237,6 @@ public class ColorPaletteUtilsTest {
 			System.out.println(primary.getPrimaryColor());
 		}
 		assertTrue(color_set.size() == 3);
-
 	}
 	
 	@Test
@@ -209,7 +263,7 @@ public class ColorPaletteUtilsTest {
 		for(PaletteColor primary : color_set) {
 			System.out.println(primary.getPrimaryColor());
 		}
-		assertTrue(color_set.size() == 3);
+		assertTrue(color_set.size() == 2);
 
 	}
 

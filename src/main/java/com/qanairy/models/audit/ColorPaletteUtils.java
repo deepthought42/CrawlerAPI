@@ -327,14 +327,9 @@ public class ColorPaletteUtils {
 		for(Set<ColorData> color_set : color_sets) {
 			List<ColorData> color_list = new ArrayList<>(color_set);
 			color_list.sort((o1, o2) -> Double.compare(o2.getUsagePercent(), o1.getUsagePercent()));
-			if(color_list.size() > 1) {
-				primary_colors.add(color_list.get(1));
-				log.warn("primary color identified :: "+color_list.get(1).rgb() + "  :   " +color_list.get(1).getUsagePercent());
-			}
-			else {
-				primary_colors.add(color_list.get(0));
-				log.warn("primary color identified :: "+color_list.get(0).rgb() + "  :   " +color_list.get(0).getUsagePercent());
-			}
+
+			primary_colors.add(color_list.get(0));
+			log.warn("primary color identified :: "+color_list.get(0).rgb() + "  :   " +color_list.get(0).getUsagePercent());
 		}
 		// TODO Auto-generated method stub
 		return primary_colors;
@@ -368,10 +363,8 @@ public class ColorPaletteUtils {
 			Set<ColorData> similar_colors = new HashSet<>();
 			//remove any similar colors to primary color
 			for(ColorData color : colors) {
-
 				if(!color.equals(largest_color) && isSimilar(color, largest_color)) {
 					log.warn("Similar Color found :: "+color);
-
 					similar_colors.add(color);
 				}
 			}
@@ -383,7 +376,6 @@ public class ColorPaletteUtils {
 			for(ColorData color : similar_colors) {
 				colors.remove(color);
 				log.warn("removing color :: "+color.rgb());
-				
 			}
 			log.warn("colors size after removal ::   "+colors.size());
 
@@ -498,8 +490,8 @@ public class ColorPaletteUtils {
 		if(isGrayScale(color1) && isGrayScale(color2)) {
 			log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
 			log.warn("color luminosities ::   "+color1.getLuminosity() + "  :  "+color2.getLuminosity());
-			return (color1.getLuminosity() < 0.55 && color2.getLuminosity() < 0.55)
-					|| (color1.getLuminosity() >= 0.45 && color2.getLuminosity() >= 0.45);
+			return (color1.getLuminosity() < 0.6 && color2.getLuminosity() < 0.6)
+					|| (color1.getLuminosity() >= 0.4 && color2.getLuminosity() >= 0.4);
 		}
 		else if((isGrayScale(color1) && !isGrayScale(color2))
 			|| (!isGrayScale(color1) && isGrayScale(color2)))
@@ -511,12 +503,14 @@ public class ColorPaletteUtils {
 		double hue_diff = Math.abs(color1.getHue() - color2.getHue());
 		log.warn("hue diff :: "+hue_diff);
 
-		return hue_diff < 0.3;
+		return hue_diff < 0.05;
 	}
 
 	
 	public static boolean isGrayScale(ColorData color) {
-		return (getMax(color) - getMin(color)) <= 10;
+		return ((color.getSaturation() <= 0.07 && color.getBrightness() > 0.2)
+				|| (color.getBrightness() < 0.25)
+				|| color.getLuminosity() < 0.15);
 	}
 
 	public static int getMax(ColorData color) {

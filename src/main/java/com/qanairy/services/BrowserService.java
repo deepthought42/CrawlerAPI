@@ -271,6 +271,7 @@ public class BrowserService {
 			String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			viewport_screenshot.flush();
 			
+			//scroll to bottom of page
 			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 			String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -468,7 +469,7 @@ public class BrowserService {
 		frontier.put("//body",root_element.getKey());
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
-			String parent_element_key = frontier.remove(next_xpath);
+			//String parent_element_key = frontier.remove(next_xpath);
 			
 			//ElementState root_element = frontier.remove(next_xpath);
 			//visited_elements.add(root_element);
@@ -1118,8 +1119,8 @@ public class BrowserService {
 				continue;
 			}
 			
-			BufferedImage img = browser.getElementScreenshot(form_elem);
-			String checksum = PageState.getFileChecksum(img);
+			//BufferedImage img = browser.getElementScreenshot(form_elem);
+			//String checksum = PageState.getFileChecksum(img);
 			//Map<String, String> css_map = Browser.loadCssProperties(form_elem);
 			com.qanairy.models.Element form_tag = new com.qanairy.models.Element(
 					form_elem.getText(), 

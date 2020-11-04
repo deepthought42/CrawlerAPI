@@ -8,7 +8,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -234,7 +236,7 @@ public class BrowserUtils {
 	public static Collection<? extends String> extractFontFamiliesFromStylesheet(String stylesheet) {
 		assert stylesheet != null;
 		
-		List<String> font_families = new ArrayList<>();
+		Map<String, Boolean> font_families = new HashMap<>();
 
 		//extract text matching font-family:.*; from stylesheets
 		//for each match, extract entire string even if it's a list and add string to font-families list
@@ -256,10 +258,10 @@ public class BrowserUtils {
         	font_family_setting = font_family_setting.replaceAll("!important", "");
         	font_family_setting = font_family_setting.replaceAll("font-family", "");
         	
-        	font_families.add(font_family_setting);
+        	font_families.put(font_family_setting.trim(), Boolean.TRUE);
         }
         
-        return font_families;
+        return font_families.keySet();
 	}
 	
 	/**

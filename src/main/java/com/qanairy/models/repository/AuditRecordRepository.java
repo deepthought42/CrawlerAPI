@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.enums.AuditCategory;
 
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
@@ -68,4 +69,10 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	
 	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Padding'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPagePaddingAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:{category}}) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageAudits(@Param("audit_record_key") String audit_record_key, @Param("category") String category);
 }

@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.cloud.storage.StorageException;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -469,7 +470,7 @@ public class BrowserService {
 		frontier.put("//body",root_element.getKey());
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
-			//String parent_element_key = frontier.remove(next_xpath);
+			String parent_element_key = frontier.remove(next_xpath);
 			
 			//ElementState root_element = frontier.remove(next_xpath);
 			//visited_elements.add(root_element);
@@ -616,7 +617,20 @@ public class BrowserService {
 				BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
-				String element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+				int idx = 0;
+				String element_screenshot_url = "";
+				while(idx < 3 && element_screenshot_url.isEmpty()) {
+					try {
+						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+				
+					}catch(IOException e) {
+						log.warn("*******************************************************************");
+						log.warn("*******************************************************************");
+						log.warn("ERROR OCCURRED WHILE UPLAODING IMAGE TO CLOUD STORAGE. RETRYING....");
+						log.warn("*******************************************************************");
+						log.warn("*******************************************************************");
+					}
+				}
 				element_screenshot.flush();
 				
 	

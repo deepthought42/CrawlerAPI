@@ -2,11 +2,8 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +15,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -39,9 +35,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -70,7 +63,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> mid_text_contrast = new ArrayList<>();
 		List<ElementState> low_text_contrast = new ArrayList<>();
 
-		//List<ElementState> element_list = new ArrayList<>();
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
@@ -78,12 +70,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
 			try {
-			
 				String color = element.getRenderedCssValues().get("color");
 				ColorData text_color = new ColorData(color);
 				
 				//Identify background color by getting largest color used in picture
-				
 				ColorData background_color_data = ImageUtils.extractBackgroundColor(element);
 				
 				log.warn("Background color :: "+background_color_data);

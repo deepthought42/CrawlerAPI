@@ -18,6 +18,7 @@ public enum AuditSubcategory {
 	MEASURE_UNITS("Measure Units"),
 	TITLES("Titles"),
 	ALT_TEXT("Alt Text"),
+	PARAGRAPHING("Paragraphing"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

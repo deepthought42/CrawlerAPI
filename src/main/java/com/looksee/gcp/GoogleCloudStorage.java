@@ -40,14 +40,13 @@ public class GoogleCloudStorage {
 		Bucket bucket = storage.get(bucketName);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ImageIO.write( image, "png", baos );
-		baos.flush();
+		//baos.flush();
 		byte[] imageInByte = baos.toByteArray();
 		baos.close();
 
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
 		
-		Blob blob = bucket.create(host_key+""+element_key+browser+".png", imageInByte);
-        
+		Blob blob = bucket.create(host_key+element_key+browser+".png", imageInByte);
         return blob.getMediaLink();
     }
 	

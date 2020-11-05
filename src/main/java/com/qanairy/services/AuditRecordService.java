@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditType;
 import com.qanairy.models.repository.AuditRecordRepository;
 
 /**
@@ -163,5 +165,19 @@ public class AuditRecordService {
 		assert !audit_record_key.isEmpty();
 		
 		return audit_record_repo.getAllPagePaddingAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllPageParagraphingAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllPageAudits(String audit_record_key, AuditCategory category) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
+		return audit_record_repo.getAllPageAudits(audit_record_key, category.toString());
 	}
 }

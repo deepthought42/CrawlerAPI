@@ -55,6 +55,9 @@ public class AuditFactory {
 	private ImageAltTextAudit image_alt_text_auditor;
 	
 	@Autowired
+	private ParagraphingAudit paragraph_auditor;
+	
+	@Autowired
 	private FontAudit font_auditor;
 
 	@Autowired
@@ -132,7 +135,7 @@ public class AuditFactory {
 	}
 	
 	/**
-	 * Executes all pre-render audits for the {@link AuditCategory category} provided
+	 * Executes all post-render audits for the {@link AuditCategory category} provided
 	 * 
 	 * @param category {@link AuditCategory} that we want to run audits for
 	 * @param page {@link PageState page} that audit should be executed against
@@ -174,18 +177,19 @@ public class AuditFactory {
 			
 		}
 		else if(AuditCategory.TYPOGRAPHY.equals(category)) {
-			
 			Audit typeface_audit = typeface_auditor.execute(page);
 			audits.add(typeface_audit);
 
 			//Audit font_audit = font_auditor.execute(page);
-			//audits.add(font_audit);
-			
+			//audits.add(font_audit);	
 		}
 		else if(AuditCategory.VISUALS.equals(category)) {
-			
 			Audit alt_text_audit = image_alt_text_auditor.execute(page);
 			audits.add(alt_text_audit);			
+		}	
+		else if(AuditCategory.WRITTEN_CONTENT.equals(category)) {
+			Audit paragraph_audit = paragraph_auditor.execute(page);
+			audits.add(paragraph_audit);			
 		}	
 		
 		return audits;

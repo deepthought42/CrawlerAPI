@@ -580,12 +580,13 @@ public class BrowserService {
 				Point element_location = web_element.getLocation();
 				
 				browser.scrollToElement(web_element);
-	
+				web_element = browser.getDriver().findElement(By.xpath(xpath));
+
 				//check if element is visible in pane and if not then continue to next element xpath
 				if( !web_element.isDisplayed()
-						|| !hasWidthAndHeight(web_element.getSize())
+						|| !hasWidthAndHeight(element_size)
 						|| doesElementHaveNegativePosition(element_location)
-						|| !isElementVisibleInPane(browser, web_element.getLocation(), web_element.getSize())) {
+						|| !isElementVisibleInPane(browser, element_location, element_size)) {
 					continue;
 				}
 				
@@ -593,7 +594,7 @@ public class BrowserService {
 				log.debug("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
 				log.debug("web_element location :: "+element_location.getX() + " , " + element_location.getY());
 				log.debug("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
-				log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().width);
+				log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().height);
 	
 				
 				//get child elements for element

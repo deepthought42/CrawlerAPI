@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +90,7 @@ public class DomainController {
     public @ResponseBody Domain create(HttpServletRequest request,
     									@RequestBody(required=true) String host,
     									@RequestBody(required=false) String logo_url) 
-    											throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    											throws UnknownAccountException, MalformedURLException {
     	/*
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -145,8 +144,7 @@ public class DomainController {
 							    		 @RequestParam(value="protocol", required=true) String protocol,
 								   		 @RequestParam(value="browser_name", required=true) String browser_name,
 								   		 @RequestParam(value="logo_url", required=false) String logo_url) 
-    											throws UnknownUserException, 
-    													UnknownAccountException, 
+    											throws UnknownAccountException, 
     													MalformedURLException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -177,8 +175,7 @@ public class DomainController {
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
     									@RequestBody Domain domain) 
-    											throws UnknownUserException, 
-														UnknownAccountException, 
+    											throws UnknownAccountException, 
 														MalformedURLException {
 
     	Principal principal = request.getUserPrincipal();
@@ -416,8 +413,7 @@ public class DomainController {
     									@RequestParam(value="password", required=true) String password,
     									@RequestParam(value="role", required=false) String role,
     									@RequestParam(value="enabled", required=true) boolean enabled) 
-    											throws UnknownUserException, 
-														UnknownAccountException, 
+    											throws UnknownAccountException, 
 														MalformedURLException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -497,8 +493,7 @@ public class DomainController {
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id) 
-    											throws UnknownUserException, 
-														UnknownAccountException, 
+    											throws UnknownAccountException, 
 														MalformedURLException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");

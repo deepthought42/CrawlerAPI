@@ -30,7 +30,7 @@ public class JUnitXmlConversionUtilTest {
 	
 	@Before
 	public void setUp(){
-		MockitoAnnotations.initMocks(this);
+		//MockitoAnnotations.initMocks(this);
 	}
 	
 	public void convertToJUnitXmlTestWith1FailingRecord(){

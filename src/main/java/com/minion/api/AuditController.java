@@ -5,6 +5,8 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -29,7 +31,7 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
@@ -87,13 +89,14 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<AuditRecord> getAuditRecords(HttpServletRequest request,
+    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
     											@RequestParam(value="domain_host", required=true) String domain_host
 	) {
     	log.warn("finding all recent audits for url :: "+domain_host);
         
     	Domain domain = domain_service.findByHost(domain_host);
-    	return domain_service.getAuditRecords(domain.getKey());
+    	AuditRecord audit_record = domain_service.getMostRecentAuditRecord(domain.getHost());
+    	return audit_record_service.getAllAudits(audit_record.getKey());
     }
 
     /**
@@ -340,7 +343,7 @@ public class AuditController {
      * @throws Exception
      */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
+	public @ResponseBody AuditStats startAudit(HttpServletRequest request,
 											   @RequestBody(required=true) PageVersion page) throws Exception {
     	String lowercase_url = page.getUrl().toLowerCase();
     	if(!lowercase_url.contains("http")) {
@@ -374,14 +377,10 @@ public class AuditController {
 		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", audit_record);
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
-	   /*	
-	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-		LocalDateTime end_time = LocalDateTime.now();
+	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
+		LocalDateTime start_time = LocalDateTime.now();
 
-		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
-	   	*/
-		return null;
+	   	return new CrawlStat(domain.getHost());
 	}
 
 	
@@ -409,7 +408,7 @@ public class AuditController {
      * @throws Exception
      */
 	@RequestMapping(path="/buildDomainAudits", method = RequestMethod.GET)
-	public @ResponseBody CrawlStats performDomainAudit(HttpServletRequest request,
+	public @ResponseBody CrawlStat performDomainAudit(HttpServletRequest request,
 													@PathParam("host") @NotBlank String host) throws Exception {
 
 	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+host));

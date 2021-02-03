@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.CrawlStat;
 import com.qanairy.models.LookseeObject;
 
 /**
@@ -18,7 +18,7 @@ public class AuditRecord extends LookseeObject {
 	private Set<Audit> audits;
 
 	@Relationship(type = "HAS")
-	private CrawlStats crawl_stats = null;
+	private CrawlStat crawl_stats = null;
 	
 	public AuditRecord() {
 		audits = new HashSet<>();
@@ -45,11 +45,11 @@ public class AuditRecord extends LookseeObject {
 		this.audits.addAll( audits );
 	}
 
-	public void setCrawlStats(CrawlStats crawl_stats) {
+	public void setCrawlStats(CrawlStat crawl_stats) {
 		this.crawl_stats = crawl_stats;
 	}
 	
-	public CrawlStats getCrawlStats() {
+	public CrawlStat getCrawlStats() {
 		return this.crawl_stats;
 	}
 }

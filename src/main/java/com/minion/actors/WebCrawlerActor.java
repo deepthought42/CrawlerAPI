@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
@@ -185,9 +185,9 @@ public class WebCrawlerActor extends AbstractActor{
 					}
 					LocalDateTime end_time = LocalDateTime.now();
 					long run_time = start_time.until(end_time, ChronoUnit.MILLIS);
-					CrawlStats crawl_stats = new CrawlStats(start_time, 
-														    end_time, 
-													    	run_time, 
+					CrawlStat crawl_stats = new CrawlStat( domain.getHost(),
+															start_time,
+														    end_time,
 													    	pages.size(), 
 													    	run_time/pages.size());
 					getSender().tell(crawl_stats, getSelf());

@@ -22,4 +22,5 @@ docker run -p 80:80 -p 8080:8080 -p 9080:9080 -p 443:443 --name look-see look-se
 
 ### Deploy docker container to gcr
 docker build --no-cache -t gcr.io/cosmic-envoy-280619/look-see-api:v#.#.# .
+
 docker push gcr.io/cosmic-envoy-280619/look-see-api:v#.#.#

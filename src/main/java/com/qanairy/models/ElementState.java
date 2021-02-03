@@ -65,7 +65,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 * @pre outer_html != null;
-	 * @pre assert !outer_html.isEmpty()
+	 * @pre !outer_html.isEmpty()
 	 */
 	public ElementState(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
 						String screenshot_url, int x_location, int y_location, int width, int height,

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.CrawlStat;
 
 import com.qanairy.models.repository.CrawlStatRepository;
 
@@ -17,7 +17,7 @@ public class CrawlStatService {
 	@Autowired
 	private CrawlStatRepository crawl_stat_repository;
 	
-	public CrawlStats save(CrawlStats crawl_stat) {
+	public CrawlStat save(CrawlStat crawl_stat) {
 		return crawl_stat_repository.save(crawl_stat);	
 	}
 }

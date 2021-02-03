@@ -96,12 +96,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(observation));
 		}
 		
+		/*
 		if(!images_with_alt_text.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
 					images_with_alt_text, 
-					"Images that have alternative text attribute. These elements are more accessibly");
+					"Images that have alternative text attribute. These elements are more accessible");
 			observations.add(observation_service.save(observation));
 		}
+		*/
 		
 		if(!images_without_alt_text_defined.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
@@ -110,12 +112,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(observation));
 		}
 		
+		/*
 		if(!images_with_alt_text_defined.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
 					images_with_alt_text_defined, 
 					"Images that have alternative text defined as a non empty string value");
 			observations.add(observation_service.save(observation));
 		}
+		*/
 		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
 		

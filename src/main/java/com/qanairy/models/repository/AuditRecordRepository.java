@@ -73,6 +73,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit{subcategory:{category}}) WHERE audit.level='page' RETURN audit")
-	public Set<Audit> getAllPageAudits(@Param("audit_record_key") String audit_record_key, @Param("category") String category);
+	@Query("MATCH (ar:AuditRecord{key:{audit_record_key}})-[]->(audit:Audit) WHERE audit.level='page' RETURN audit")
+	public Set<Audit> getAllPageAudits(@Param("audit_record_key") String audit_record_key);
 }

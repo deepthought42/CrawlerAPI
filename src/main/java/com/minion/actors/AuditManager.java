@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -71,7 +71,7 @@ public class AuditManager extends AbstractActor{
 	@Autowired
 	private CrawlStatService crawl_stats_service;
 	
-	private CrawlStats crawl_stats = new CrawlStats();
+	private CrawlStat crawl_stats;
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -207,7 +207,7 @@ public class AuditManager extends AbstractActor{
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
 					}
 				})
-				.match(CrawlStats.class, crawl_stats -> {
+				.match(CrawlStat.class, crawl_stats -> {
 					this.crawl_stats = crawl_stats_service.save(crawl_stats);
 					audit_record.setCrawlStats(this.crawl_stats);
 					audit_record_service.save(audit_record);

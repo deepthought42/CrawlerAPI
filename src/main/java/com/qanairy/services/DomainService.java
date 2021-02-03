@@ -306,6 +306,12 @@ public class DomainService {
 		assert category != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
-        return audit_record_service.getAllPageAudits(record.getKey(), category);
+        return audit_record_service.getAllPageAudits(record.getKey());
+	}
+
+	public AuditRecord getMostRecentAuditRecord(String host) {
+		assert host != null;
+		
+		return audit_record_service.findMostRecent(host).get();
 	}
 }

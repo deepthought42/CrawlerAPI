@@ -174,10 +174,10 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllPageAudits(String audit_record_key, AuditCategory category) {
+	public Set<Audit> getAllPageAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
 		
-		return audit_record_repo.getAllPageAudits(audit_record_key, category.toString());
+		return audit_record_repo.getAllPageAudits(audit_record_key);
 	}
 }

@@ -10,6 +10,7 @@ import com.qanairy.models.enums.ObservationType;
 public abstract class Observation extends LookseeObject{
 	private String description;
 	private String type;
+	private String explanation; //Further explanation apart from the description. Reason it matters, etc
 	
 	public String getDescription() {
 		return this.description;

@@ -113,18 +113,22 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		}
 		
 		List<Observation> observations = new ArrayList<>();
+		/*
 		if(!good_paragraph_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(good_paragraph_observations, "Great job keeping these text blocks to under 5 sentences"));
 		}
+		*/
 
 		if(!poor_paragraph_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(poor_paragraph_observations, "Paragraphs with more than 5 sentences"));
 		}
 		
 		//Sentence observations
+		/*
 		if(!good_sentence_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(good_sentence_observations, "Great job keeping sentences to under 10 words!!!"));
 		}
+		*/
 		
 		if(!meh_sentence_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(meh_sentence_observations, "Sentences between 10 and 20 words long"));

@@ -1,43 +1,25 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.aws.UploadObjectSingleOperation;
-import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.TestCandidateMessage;
-import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;

@@ -202,11 +202,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
+		/*
 		if(!high_contrast_elements.isEmpty()) {
 			ElementStateObservation high_contrast_observation = new ElementStateObservation(high_contrast_elements, "Elements with a contrast greater than 4.5");
 			observations.add(observation_service.save(high_contrast_observation));
 		}
-		
+		*/
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
 	}
 

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
@@ -69,9 +70,9 @@ public class AuditManager extends AbstractActor{
 	private AuditService audit_service;
 	
 	@Autowired
-	private CrawlStatService crawl_stats_service;
+	private CrawlStatService crawl_stat_service;
 	
-	private CrawlStat crawl_stats;
+	private CrawlStat crawl_stat;
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -173,18 +174,18 @@ public class AuditManager extends AbstractActor{
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("Page Audit Complete message received by audit manager. page cnt : "+pages_experienced.keySet().size()+"   ;    audit size  ::   "+page_states_audited.keySet().size());
 					log.warn("audit record  :: " + audit_record);
-					log.warn("audit record crawl stat ::  "+ audit_record.getCrawlStats());
+					log.warn("audit record crawl stat ::  "+ audit_record.getAuditStats());
 					List<PageVersion> pages = domain_service.getPages(domain.getHost());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
 					if( pages.size() == page_states.size()) {
 						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
 						
-						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
+						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						log.warn("Audit Manager is now ready to perform a domain audit");
 						//AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("auditor"), "auditor"+UUID.randomUUID());
-						auditor.tell(domain_msg, getSelf());
+						auditor.tell(domain_audit_msg, getSelf());
 					}
 				})
 				.match(AuditSet.class, audit_list -> {
@@ -205,27 +206,31 @@ public class AuditManager extends AbstractActor{
 					for(Audit audit : audit_list.getAudits()){
 						audit = audit_service.save(audit);
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
+						
+						//send pusher message to clients currently subscribed to domain audit channel
+						MessageBroadcaster.broadcastAudit(host, audit);
+						
 					}
 				})
-				.match(CrawlStat.class, crawl_stats -> {
-					this.crawl_stats = crawl_stats_service.save(crawl_stats);
-					audit_record.setCrawlStats(this.crawl_stats);
+				.match(CrawlStat.class, crawl_stat -> {
+					this.crawl_stat = crawl_stat_service.save(crawl_stat);
+					//audit_record.setAuditStats(this.crawl_stat);
 					audit_record_service.save(audit_record);
 					log.warn("=================================================================");
 					log.warn("=================================================================");
-					log.warn("crawl stat page count :: "+crawl_stats.getPageCount());
+					//log.warn("crawl stat page count :: "+crawl_stat.getPageCount());
 					log.warn("page states audited :: "+page_states_audited);
 					log.warn("page states audited size ::     "+page_states_audited.size());
-					if( crawl_stats.getPageCount() == page_states_audited.size() ) {
-							Domain domain = domain_service.findByAuditRecord(audit_record.getKey());
-							
-							DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-							log.warn("Audit Manager is now ready to perform a domain audit");
-							//AuditSet audit_record_set = new AuditSet(audits);
-							ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									.props("auditor"), "auditor"+UUID.randomUUID());
-							auditor.tell(domain_msg, getSelf());
-						}
+					if( crawl_stat.getPageCount() == page_states_audited.size() ) {
+						Domain domain = domain_service.findByAuditRecord(audit_record.getKey());
+						
+						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
+						log.warn("Audit Manager is now ready to perform a domain audit");
+						//AuditSet audit_record_set = new AuditSet(audits);
+						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("auditor"), "auditor"+UUID.randomUUID());
+						auditor.tell(domain_msg, getSelf());
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

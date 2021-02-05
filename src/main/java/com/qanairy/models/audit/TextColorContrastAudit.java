@@ -133,10 +133,12 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		
 		List<Observation> observations = new ArrayList<>();
+		/*
 		if(!high_header_contrast.isEmpty()) {
 			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
 			observations.add(observation_service.save(high_header_contrast_observation));
 		}
+		*/
 		if(!mid_header_contrast.isEmpty()) {
 			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
 			observations.add(observation_service.save(mid_header_contrast_observation));
@@ -146,10 +148,12 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
+		/*
 		if(!high_text_contrast.isEmpty()) {
 			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
 			observations.add(observation_service.save(high_text_observation));
 		}
+		*/
 		if(!mid_text_contrast.isEmpty()) {
 			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7");
 			observations.add(observation_service.save(mid_text_observation));

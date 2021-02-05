@@ -10,8 +10,10 @@ public class CrawlStat extends LookseeObject{
 	private long page_count;
 	private double average_time_per_page;
 	
+	public CrawlStat() {}
+	
 	public CrawlStat(String url) {
-		setStartTime(start_time);
+		setStartTime(LocalDateTime.now());
 		setHost(url);
 		setPageCount(0);
 		setKey(generateKey());
@@ -58,16 +60,16 @@ public class CrawlStat extends LookseeObject{
 		this.average_time_per_page = average_time_per_page;
 	}
 
-	public String getUrl() {
+	public String getHost() {
 		return host;
 	}
 
-	public void setHost(String url) {
-		this.host = url;
+	public void setHost(String host) {
+		this.host = host;
 	}
 
 	@Override
 	public String generateKey() {
-		return "crawlstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time.hashCode()+this.host);
+		return "crawlstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + this.host );
 	}
 }

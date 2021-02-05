@@ -140,6 +140,8 @@ public class WebCrawlerActor extends AbstractActor{
 							visited.put(page_url_str, page);
 							//send message to page data extractor
 							log.debug("sending page to an audit manager...");
+							
+							//Send PageVerstion to audit manager
 							getSender().tell(page, getSelf());
 							log.warn("page url :: "+page_url);
 							log.warn("page host :: "+page_url.getHost());

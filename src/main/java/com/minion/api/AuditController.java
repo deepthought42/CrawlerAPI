@@ -5,8 +5,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -31,6 +29,7 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.AuditStats;
 import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
@@ -363,8 +362,8 @@ public class AuditController {
 
 	   	log.warn("creating audit record");
 	   	//create new audit record
-	   	AuditRecord audit_record = new AuditRecord();
-	   	
+	   	AuditRecord audit_record = new AuditRecord(new AuditStats(domain.getHost()));
+
 	   	log.warn("Saving audit Record");
 	   	audit_record = audit_record_service.save(audit_record);
 	   	
@@ -378,9 +377,8 @@ public class AuditController {
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
 	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-		LocalDateTime start_time = LocalDateTime.now();
 
-	   	return new CrawlStat(domain.getHost());
+	   	return audit_record.getAuditStats();
 	}
 
 	

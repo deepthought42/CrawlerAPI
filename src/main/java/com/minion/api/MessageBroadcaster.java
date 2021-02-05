@@ -11,6 +11,8 @@ import com.qanairy.models.Form;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.audit.Audit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +22,25 @@ import org.slf4j.LoggerFactory;
 public class MessageBroadcaster {
 	private static Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
 	
-	private static Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+	private static Pusher pusher = new Pusher("1149966", "c88f4e4c6e128ed219c2", "149f5a3cb7f7c8d7205b");
 	
 	static{
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastAudit(String host, Audit audit) throws JsonProcessingException {	
+        //Object to JSON in String        
+        ObjectMapper mapper = new ObjectMapper();
+        String audit_json = mapper.writeValueAsString(audit);
+
+		pusher.trigger(host, "audit-update", audit_json);
 	}
 	
     /**

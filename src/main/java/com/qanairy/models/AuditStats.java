@@ -4,20 +4,36 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.neo4j.ogm.annotation.Relationship;
+
 public class AuditStats extends LookseeObject{
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
+	private String host;
+	
+	@Relationship(type = "HAS")
 	private CrawlStat crawl_stats;
+	
+	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
 	public AuditStats() {}
 	
-	public AuditStats(String url, LocalDateTime start_time, LocalDateTime end_time, int page_count, double avg_time_per_page) {
+	public AuditStats(String host_url) {
+		setStartTime(LocalDateTime.now());
+		setHost(host_url);
+		setCrawlStats(new CrawlStat(host_url));
+		setKey(generateKey());
+	}
+	
+	public AuditStats(String host_url, LocalDateTime start_time, LocalDateTime end_time, int page_count, double avg_time_per_page) {
 		setStartTime(start_time);
 		setEndTime(end_time);
-		setCrawlStats(new CrawlStat(url));
+		setCrawlStats(new CrawlStat(host_url));
+		setHost(host_url);
 		setSubcategoryStats(new HashSet<>());
+		setKey(generateKey());
 	}
 
 	public LocalDateTime getStartTime() {
@@ -52,8 +68,16 @@ public class AuditStats extends LookseeObject{
 		this.subcategory_stats = subcategory_stats;
 	}
 
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host_url) {
+		this.host = host_url;
+	}
+
 	@Override
 	public String generateKey() {
-		return "auditstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( Integer.toString(start_time.hashCode()+end_time.hashCode()));
+		return "auditstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + host);
 	}
 }

@@ -8,15 +8,22 @@ public class AuditSubcategoryStat extends LookseeObject{
 	
 	private LocalDateTime start_time; //time that audit subcategory is started
 	private LocalDateTime end_time; //time that audit of subcategory is completed
-	private AuditSubcategory subcategory;
+	private String subcategory;
 	private long pages_completed;
+	private String url;
 	
 	public AuditSubcategoryStat() {}
+	
+	public AuditSubcategoryStat(String url) {
+		setUrl(url);
+		setStartTime(LocalDateTime.now());
+	}
 	
 	public AuditSubcategoryStat(AuditSubcategory subcategory, 
 								LocalDateTime start_time, 
 								LocalDateTime end_time, 
-								int page_count) {
+								int page_count,
+								String host) {
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setPagesCompleted(page_count);
@@ -48,15 +55,23 @@ public class AuditSubcategoryStat extends LookseeObject{
 	}
 	
 	public void setSubcategory(AuditSubcategory subcategory) {
-		this.subcategory = subcategory;
+		this.subcategory = subcategory.toString();
 	}
 	
 	public AuditSubcategory getSubcategory() {
-		return subcategory;
+		return AuditSubcategory.valueOf(subcategory);
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	@Override
 	public String generateKey() {
-		return "auditsubcategorystat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( Integer.toString(start_time.hashCode()+end_time.hashCode()));
+		return "auditsubcategorystat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + url);
 	}
 }

@@ -60,7 +60,8 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 						 AuditSubcategory.LINKS, 
 						 points, 
 						 observations, 
-						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 AuditLevel.PAGE, 
+						 max_points,
+						 domain.getHost());
 	}
 }

@@ -255,8 +255,6 @@ public class AuditFactory {
 
 			Audit margin_audits = domain_margin_auditor.execute(domain);
 			domain_audits.add(margin_audits);
-			
-			
 		}
 		else if(AuditCategory.COLOR_MANAGEMENT.equals(category)) {
 			log.warn("running color manageent domain audit...");
@@ -282,7 +280,7 @@ public class AuditFactory {
 		else if(AuditCategory.VISUALS.equals(category)) {
 			
 			Audit alt_text_audit = domain_image_alt_text_auditor.execute(domain);
-			domain_audits.add(alt_text_audit);	
+			domain_audits.add(alt_text_audit);
 		}
 	
 		return domain_audits;

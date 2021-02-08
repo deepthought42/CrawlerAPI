@@ -3,6 +3,7 @@ package com.qanairy.models.audit.domain;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,11 +68,24 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
 		
+		String why_it_matters = "Color, just like the overall design, goes beyond aesthetics. It impacts the" + 
+				" usability and functionality of your website, deciding what information" + 
+				" stands out to the user." + 
+				" A good contrast ratio makes your content easy to read and navigate" + 
+				" through, creating a comfortable and engaging experience for your user. ";
+		
+		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
+				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
+		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
 						 AuditSubcategory.TEXT_BACKGROUND_CONTRAST, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 max_points, 
+						 domain.getHost(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 }

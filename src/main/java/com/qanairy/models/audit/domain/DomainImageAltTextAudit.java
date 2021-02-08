@@ -1,6 +1,7 @@
 package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,11 +55,21 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}		
 		
+		String why_it_matters = "Alt-text helps with both SEO and accessibility. Search engines use alt-text"
+				+ "to help determine how usable and your site is as a way of ranking your site.";
+		
+		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
+				"‘Alt’ text for images present on the website.";
+		
 		return new Audit(AuditCategory.VISUALS, 
 						 AuditSubcategory.ALT_TEXT, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, null);
+						 max_points, 
+						 null,
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 }

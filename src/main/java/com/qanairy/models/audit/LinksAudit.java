@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -195,12 +196,23 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		}
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
-						 AuditSubcategory.LINKS, 
-						 score, 
-						 observations, 
-						 AuditLevel.PAGE, 
-						 link_elements.size()*5, page_state.getUrl()); 
+		
+		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
+				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
+				+ " dead link, users bounce in search of a more reputable source.";
+		
+		String ada_compliance = "There is no ADA guideline for dead links";
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+						 AuditSubcategory.LINKS,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 link_elements.size()*5,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>()); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

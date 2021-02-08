@@ -2,7 +2,9 @@ package com.qanairy.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -22,6 +24,9 @@ public class Audit extends LookseeObject {
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
 	private String url;
+	private String why_it_matters;
+	private String ada_compliance;
+	private Set<String> recommendations;
 	
 	@Relationship(type="OBSERVED")
 	private List<Observation> observations;
@@ -50,8 +55,11 @@ public class Audit extends LookseeObject {
 			int points, 
 			List<Observation> observations, 
 			AuditLevel level, 
-			int total_possible_points, 
-			String url
+			int total_possible_points,
+			String url,
+			String why_it_matters,
+			String ada_compliance,
+			Set<String> recommendations
 	) {
 		super();
 		
@@ -68,11 +76,14 @@ public class Audit extends LookseeObject {
 		setCreatedAt(LocalDateTime.now());
 		setLevel(level);
 		setUrl(url);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
+		setRecommendations(recommendations);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
+		return new Audit(getCategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance(), new HashSet<>(getRecommendations()));
 	}
 
 	/**
@@ -147,5 +158,33 @@ public class Audit extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getWhyItMatters() {
+		return why_it_matters;
+	}
+
+	public void setWhyItMatters(String why_it_matters) {
+		this.why_it_matters = why_it_matters;
+	}
+
+	public String getAdaCompliance() {
+		return ada_compliance;
+	}
+
+	public void setAdaCompliance(String ada_compliance) {
+		this.ada_compliance = ada_compliance;
+	}
+
+	public Set<String> getRecommendations() {
+		return recommendations;
+	}
+
+	public void setRecommendations(Set<String> recommendations) {
+		this.recommendations = recommendations;
+	}
+	
+	public void addRecommendation(String recommendation) {
+		this.recommendations.add(recommendation);
 	}
 }

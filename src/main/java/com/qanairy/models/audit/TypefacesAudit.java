@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -143,11 +144,12 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		}
 		
 		//check graph for loop - if any keys within graph have more than 1 font associated with it.
+		boolean typeface_limit_msg_already_added = false;
 		for(String font : forward_connection_graph.keySet() ) {
 			//if connected set has more than 1 element then an inconsistency exists
 			if(forward_connection_graph.get(font).size() > 1){
 				score += 1;
-				TypefacesObservation observation = new  TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.");
+				TypefacesObservation observation = new TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.");
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -181,7 +183,23 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			total_possible_points += 2;
 		}
 		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				" the text on your website. It plays an important role in how clear, distinct" + 
+				" and legible the textual content is.";
+		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				" Images of text are not used and text is resizable. San-Serif typeface has" + 
+				" been used across the pages.";
 				
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.TYPEFACES, score, observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
+		return new Audit(AuditCategory.TYPOGRAPHY,
+						 AuditSubcategory.TYPEFACES,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 total_possible_points,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 }

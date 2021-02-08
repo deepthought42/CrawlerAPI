@@ -123,7 +123,24 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
 		//log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
+		
+		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of margins";
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
+						 AuditSubcategory.MARGIN,
+						 points,
+						 observations,
+						 AuditLevel.PAGE,
+						 max_points,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 
 	/**

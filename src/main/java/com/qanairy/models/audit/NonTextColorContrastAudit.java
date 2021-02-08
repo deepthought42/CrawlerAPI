@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -208,7 +209,26 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(high_contrast_observation));
 		}
 		*/
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
+		
+		
+		String why_it_matters = "<p>Icons are an easily recognizable, fun element, and a great way to\n" + 
+				"communicate with your user beyond just using text. Icons should be\n" + 
+				"familiar and captivating.</p>" + 
+				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
+				"button to have a high contrast score to create an eye-catching effect\n" + 
+				"and be evidently clickable.</p>";
+		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
+		
+		return new Audit(AuditCategory.COLOR_MANAGEMENT,
+						 AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 max_points,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 
 

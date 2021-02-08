@@ -131,7 +131,23 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			observations.add(new StylingMissingObservation("Padding was not used")); 
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100, domain.getHost());
+		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of padding";
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
+						 AuditSubcategory.PADDING, 
+						 points, 
+						 observations, 
+						 AuditLevel.PAGE, 
+						 100, 
+						 domain.getHost(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {

@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -140,8 +141,25 @@ public class FontAudit implements IExecutablePageStateAudit {
 		}
 		
 		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				" the text on your website. It plays an important role in how clear, distinct" + 
+				" and legible the textual content is.";
+		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				" Images of text are not used and text is resizable. San-Serif typeface has" + 
+				" been used across the pages.";
+		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, page_state.getUrl());
+		return new Audit(AuditCategory.TYPOGRAPHY,
+						 AuditSubcategory.FONT,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 max_score,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
 	}
 	
 

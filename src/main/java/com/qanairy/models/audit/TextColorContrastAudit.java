@@ -3,6 +3,7 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -165,7 +166,26 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
+		
+		
+		String why_it_matters = "Color, just like the overall design, goes beyond aesthetics. It impacts the" + 
+				" usability and functionality of your website, deciding what information" + 
+				" stands out to the user." + 
+				" A good contrast ratio makes your content easy to read and navigate" + 
+				" through, creating a comfortable and engaging experience for your user. ";
+		
+		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
+				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
+
+		return new Audit(AuditCategory.COLOR_MANAGEMENT,
+					     AuditSubcategory.TEXT_BACKGROUND_CONTRAST,
+					     (headline_score+text_score),
+					     observations, AuditLevel.PAGE,
+					     total_possible_points,
+					     page_state.getUrl(),
+					     why_it_matters,
+					     ada_compliance,
+					     new HashSet<String>());
 	}
 
 	private String getParentXpath(String xpath) {

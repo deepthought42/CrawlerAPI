@@ -3,6 +3,7 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -123,12 +124,24 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
 		
-		return new Audit(AuditCategory.VISUALS, 
+		String why_it_matters = "Alt-text helps with both SEO and accessibility. Search engines use alt-text"
+				+ " to help determine how usable and your site is as a way of ranking your site.";
+		
+		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
+				" ‘Alt’ text for images present on the website.";
+	
+		
+		return new Audit(AuditCategory.VISUALS,
 						 AuditSubcategory.ALT_TEXT,
-						 score, 
-						 observations, 
-						 AuditLevel.PAGE, 
-						 image_elements.size()*2, page_state.getUrl()); 
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 image_elements.size()*2,
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>());
+		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}
 }

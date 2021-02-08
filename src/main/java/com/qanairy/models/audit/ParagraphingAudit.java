@@ -138,13 +138,26 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			observations.add(new ElementStateObservation(poor_sentence_observations, "Sentences with over 20 words"));
 		}
 		
+		
+		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
+				" Attention spans are shorter, and users skim through most information." + 
+				" Presenting information in small, easy to digest chunks makes their" + 
+				" experience easy and convenient. ";
+		
+		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
+				" this category, reading level needs to be taken into consideration when" + 
+				" writing content and paragraphing. ";
+
 		return new Audit(AuditCategory.WRITTEN_CONTENT, 
 						 AuditSubcategory.PARAGRAPHING, 
 						 points_earned, 
 						 observations, 
 						 AuditLevel.PAGE, 
 						 max_points, 
-						 page_state.getUrl()); 
+						 page_state.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 new HashSet<>()); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}

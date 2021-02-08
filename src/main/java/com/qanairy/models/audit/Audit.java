@@ -17,7 +17,7 @@ import com.qanairy.models.enums.AuditSubcategory;
 public class Audit extends LookseeObject {
 
 	private String category;
-	private String subcategory; // name of the audit subcategory
+	private String name; // name of the audit
 	private String level;
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
@@ -44,7 +44,15 @@ public class Audit extends LookseeObject {
 	 * @param total_possible_points
 	 * @param url TODO
 	 */
-	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points, String url) {
+	public Audit(
+			AuditCategory category, 
+			AuditSubcategory subcategory, 
+			int points, 
+			List<Observation> observations, 
+			AuditLevel level, 
+			int total_possible_points, 
+			String url
+	) {
 		super();
 		
 		assert category != null;
@@ -52,7 +60,7 @@ public class Audit extends LookseeObject {
 		assert observations != null;
 		assert level != null;
 		
-		setSubcategory(subcategory);
+		setName(subcategory);
 		setCategory(category);
 		setPoints(points);
 		setTotalPossiblePoints(total_possible_points);
@@ -64,14 +72,14 @@ public class Audit extends LookseeObject {
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
+		return new Audit(getCategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
 	}
 
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
 	public String generateKey() {
-		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSubcategory().toString()+this.getCategory().toString()+this.getLevel()+getPoints()+getTotalPossiblePoints()+getCreatedAt().toString());
+		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getName().toString()+this.getCategory().toString()+this.getLevel()+getPoints()+getTotalPossiblePoints()+getCreatedAt().toString());
 	}
 
 	public AuditCategory getCategory() {
@@ -100,12 +108,12 @@ public class Audit extends LookseeObject {
 		this.points = points;
 	}
 
-	public AuditSubcategory getSubcategory() {
-		return AuditSubcategory.create(subcategory);
+	public AuditSubcategory getName() {
+		return AuditSubcategory.create(name);
 	}
 
-	public void setSubcategory(AuditSubcategory subcategory) {
-		this.subcategory = subcategory.getShortName();
+	public void setName(AuditSubcategory subcategory) {
+		this.name = subcategory.getShortName();
 	}
 
 	/**

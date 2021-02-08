@@ -65,7 +65,7 @@ public class AuditService {
 				log.warn(" observation description :  "+observation.getDescription());
 				log.warn(" observation type :  "+observation.getType());
 			}
-			log.warn("Subcategory  :: "+audit.getSubcategory());
+			log.warn("Subcategory  :: "+audit.getName());
 			
 			try {
 				Audit saved_audit = audit_repo.save(audit);

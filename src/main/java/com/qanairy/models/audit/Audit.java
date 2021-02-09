@@ -187,4 +187,8 @@ public class Audit extends LookseeObject {
 	public void addRecommendation(String recommendation) {
 		this.recommendations.add(recommendation);
 	}
+
+	public boolean removeRecommendation(String recommendation) {
+		return this.getRecommendations().remove(recommendation);		
+	}
 }

@@ -326,12 +326,57 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      */
     @RequestMapping(method= RequestMethod.GET, path="/visuals/paragraphs")
-    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
-    											@PathVariable("host") @NotBlank String host,
-    											@PathVariable("category") @NotBlank String category
+    public @ResponseBody Set<Audit> getAudits(
+    		HttpServletRequest request,
+    		@PathVariable("host") @NotBlank String host,
+    		@PathVariable("category") @NotBlank String category
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
     	return domain_service.getMostRecentAuditRecord(host, AuditCategory.create(category));
+    }
+    
+    /**
+     * Adds recommendation to @link Audit audit}
+     * 
+     * @param key key for audit that recommendation should be added to
+     * @param recommendation the expert opinion that should be added to the audit
+     * 
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(path="{key}/recommendations/add", method = RequestMethod.POST)
+    public @ResponseBody Audit addRecommendation(
+    		HttpServletRequest request,
+    		final @PathVariable String key,
+    		final @RequestBody(required=true) String recommendation
+	) {
+    	//find audit by key and add recommendation
+    	Audit audit = audit_service.findByKey(key);
+       	audit.addRecommendation(recommendation);
+       	
+       	//save and return
+       	return audit_service.save(audit);    	
+    }
+    
+    /**
+     * Adds recommendation to @link Audit audit}
+     * 
+     * @param key key for audit that recommendation should be added to
+     * @param recommendation the expert opinion that should be added to the audit
+     * 
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(path="{key}/recommendations", method = RequestMethod.DELETE)
+    public @ResponseBody Audit deleteRecommendation(
+    		HttpServletRequest request,
+    		final @PathVariable String key,
+    		@RequestParam(required=true) String recommendation
+	) {
+    	//find audit by key and add recommendation
+    	Audit audit = audit_service.findByKey(key);
+       	audit.removeRecommendation(recommendation);
+       	
+       	//save and return
+       	return audit_service.save(audit);    	
     }
     
     /**
@@ -342,8 +387,10 @@ public class AuditController {
      * @throws Exception
      */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody AuditStats startAudit(HttpServletRequest request,
-											   @RequestBody(required=true) PageVersion page) throws Exception {
+	public @ResponseBody AuditStats startAudit(
+			HttpServletRequest request,
+			@RequestBody(required=true) PageVersion page
+	) throws Exception {
     	String lowercase_url = page.getUrl().toLowerCase();
     	if(!lowercase_url.contains("http")) {
     		lowercase_url = "http://" + lowercase_url;

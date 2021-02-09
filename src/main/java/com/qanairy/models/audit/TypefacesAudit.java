@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -165,22 +166,25 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		
 		//GET TYPEFACES ACTUALLY RENDERED BY SYSTEM AND GENERATE SCORE BASED ON TYPEFACE CASCADE SETTINGS
 		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
-
+		Set<String> observed_fonts = new HashSet<>();
+		
 		for(ElementState element : element_list) {
 			
 			String font_family = element.getRenderedCssValues().get("font-family");
-			if(primary_typefaces.contains(font_family)) {
+			if(primary_typefaces.contains(font_family)  && !observed_fonts.contains(font_family)) {
 				score +=2;
-				ElementStateObservation observation = new  ElementStateObservation(element_list, "Text element has the desired font.");
+				ElementStateObservation observation = new ElementStateObservation(element_list, "Text element has the desired font.");
 				observations.add(observation_service.save(observation));
 			}
 			else {
 				score +=1;
-				ElementStateObservation observation = new  ElementStateObservation(element_list, "Text element rendered with a fallback typeface instead of the desired font.");
+				ElementStateObservation observation = new ElementStateObservation(element_list, "Text element rendered with a fallback typeface instead of the desired font.");
 				observations.add(observation_service.save(observation));
 			}
 			
 			total_possible_points += 2;
+			
+			observed_fonts.add(font_family);
 		}
 		
 		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 

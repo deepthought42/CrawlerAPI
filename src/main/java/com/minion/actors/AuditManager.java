@@ -177,6 +177,7 @@ public class AuditManager extends AbstractActor{
 					log.warn("audit record crawl stat ::  "+ audit_record.getAuditStats());
 					List<PageVersion> pages = domain_service.getPages(domain.getHost());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
+
 					if( pages.size() == page_states.size()) {
 						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
 						

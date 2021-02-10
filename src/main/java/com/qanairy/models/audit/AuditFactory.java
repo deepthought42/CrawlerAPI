@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PageVersion;
@@ -24,6 +26,8 @@ import com.qanairy.models.audit.domain.DomainTextColorContrastAudit;
 import com.qanairy.models.audit.domain.DomainTitleAndHeaderAudit;
 import com.qanairy.models.audit.domain.DomainTypefaceAudit;
 import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.message.AuditMessage;
 
 /**
  * Executes various {@link Audit audits}
@@ -153,6 +157,7 @@ public class AuditFactory {
 		
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+			
 			Audit link_audit = links_auditor.execute(page);
 			audits.add(link_audit);
 			
@@ -235,24 +240,29 @@ public class AuditFactory {
 	 * @return {@linkplain List} of {@link Audit audits} executed 
 	 * @throws URISyntaxException 
 	 * @throws MalformedURLException 
+	 * @throws JsonProcessingException 
 	 * 
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePostRenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePostRenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException, JsonProcessingException {
 		assert category != null;
 		
 		List<Audit> domain_audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+			MessageBroadcaster.broadcastAuditMessage(domain.getHost(), new AuditMessage(category, AuditSubcategory.LINKS, "Starting link audit"));
 			Audit link_audit = domain_links_auditor.execute(domain);
 			domain_audits.add(link_audit);
 			
+			MessageBroadcaster.broadcastAuditMessage(domain.getHost(), new AuditMessage(category, AuditSubcategory.TITLES, "Starting title and header audit"));
 			Audit title_and_headers = domain_title_and_header_auditor.execute(domain);
 			domain_audits.add(title_and_headers);
 			
+			MessageBroadcaster.broadcastAuditMessage(domain.getHost(), new AuditMessage(category, AuditSubcategory.PADDING, "Starting padding audit"));
 			Audit padding_audits = domain_padding_auditor.execute(domain);
 			domain_audits.add(padding_audits);
 
+			MessageBroadcaster.broadcastAuditMessage(domain.getHost(), new AuditMessage(category, AuditSubcategory.MARGIN, "Starting margin audit"));
 			Audit margin_audits = domain_margin_auditor.execute(domain);
 			domain_audits.add(margin_audits);
 		}

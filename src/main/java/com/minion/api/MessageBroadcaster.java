@@ -12,6 +12,9 @@ import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.message.AuditMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,20 @@ public class MessageBroadcaster {
         String audit_json = mapper.writeValueAsString(audit);
 
 		pusher.trigger(host, "audit-update", audit_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastAuditMessage(String host, AuditMessage audit_message) throws JsonProcessingException {	
+        //Object to JSON in String        
+        ObjectMapper mapper = new ObjectMapper();
+        String audit_json = mapper.writeValueAsString(audit_message);
+
+		pusher.trigger(host, "audit-message", audit_json);
 	}
 	
     /**

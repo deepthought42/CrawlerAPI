@@ -167,25 +167,26 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		//GET TYPEFACES ACTUALLY RENDERED BY SYSTEM AND GENERATE SCORE BASED ON TYPEFACE CASCADE SETTINGS
 		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
 		Set<String> observed_fonts = new HashSet<>();
+		List<ElementState> no_fallback_font = new ArrayList<>();
 		
 		for(ElementState element : element_list) {
 			
 			String font_family = element.getRenderedCssValues().get("font-family");
-			if(primary_typefaces.contains(font_family)  && !observed_fonts.contains(font_family)) {
+			if(primary_typefaces.contains(font_family) ) {
 				score +=2;
-				ElementStateObservation observation = new ElementStateObservation(element_list, "Text element has the desired font.");
-				observations.add(observation_service.save(observation));
 			}
 			else {
 				score +=1;
-				ElementStateObservation observation = new ElementStateObservation(element_list, "Text element rendered with a fallback typeface instead of the desired font.");
-				observations.add(observation_service.save(observation));
+				no_fallback_font.add(element);
 			}
 			
 			total_possible_points += 2;
 			
 			observed_fonts.add(font_family);
 		}
+		
+		ElementStateObservation observation = new ElementStateObservation(no_fallback_font, "Text element rendered with a fallback typeface instead of the desired font.");
+		observations.add(observation_service.save(observation));
 		
 		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
 				" the text on your website. It plays an important role in how clear, distinct" + 

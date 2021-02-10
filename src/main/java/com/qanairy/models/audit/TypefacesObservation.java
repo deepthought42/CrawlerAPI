@@ -57,6 +57,6 @@ public class TypefacesObservation extends Observation {
 
 	@Override
 	public ObservationType getType() {
-		return ObservationType.ELEMENT;
+		return ObservationType.TYPEFACES;
 	}
 }

@@ -11,6 +11,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 
 /**
@@ -19,6 +20,7 @@ import com.qanairy.models.enums.AuditSubcategory;
 public class Audit extends LookseeObject {
 
 	private String category;
+	private String subcategory;
 	private String name; // name of the audit
 	private String level;
 	private int points;      //scoring
@@ -51,7 +53,7 @@ public class Audit extends LookseeObject {
 	 */
 	public Audit(
 			AuditCategory category, 
-			AuditSubcategory subcategory, 
+			AuditSubcategory subcategory,
 			int points, 
 			List<Observation> observations, 
 			AuditLevel level, 
@@ -93,46 +95,46 @@ public class Audit extends LookseeObject {
 		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getName().toString()+this.getCategory().toString()+this.getLevel()+getPoints()+getTotalPossiblePoints()+getCreatedAt().toString());
 	}
 
-	public AuditCategory getCategory() {
-		return AuditCategory.create(category);
-	}
-
-	public void setCategory(AuditCategory category) {
-		this.category = category.getShortName();
-	}
-	
-
-	public List<Observation> getObservations() {
-		return observations;
-	}
-
-	public void setObservations(List<Observation> observations) {
-		this.observations = observations;
-	}
-
-
-	public int getPoints() {
-		return points;
-	}
-
-	public void setPoints(int points) {
-		this.points = points;
-	}
-
-	public AuditSubcategory getName() {
-		return AuditSubcategory.create(name);
-	}
-
-	public void setName(AuditSubcategory subcategory) {
-		this.name = subcategory.getShortName();
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString(){
 		return this.getKey();
+	}
+
+	public AuditCategory getCategory() {
+		return AuditCategory.create(category);
+	}
+	
+	public void setCategory(AuditCategory category) {
+		this.category = category.getShortName();
+	}
+	
+	
+	public List<Observation> getObservations() {
+		return observations;
+	}
+	
+	public void setObservations(List<Observation> observations) {
+		this.observations = observations;
+	}
+	
+	
+	public int getPoints() {
+		return points;
+	}
+	
+	public void setPoints(int points) {
+		this.points = points;
+	}
+	
+	public AuditName getName() {
+		return AuditName.create(name);
+	}
+	
+	public void setName(AuditName subcategory) {
+		this.name = subcategory.getShortName();
 	}
 	
 	public AuditLevel getLevel() {
@@ -190,5 +192,13 @@ public class Audit extends LookseeObject {
 
 	public boolean removeRecommendation(String recommendation) {
 		return this.getRecommendations().remove(recommendation);		
+	}
+
+	public String getSubcategory() {
+		return subcategory;
+	}
+
+	public void setSubcategory(String subcategory) {
+		this.subcategory = subcategory;
 	}
 }

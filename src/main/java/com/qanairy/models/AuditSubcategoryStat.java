@@ -2,7 +2,7 @@ package com.qanairy.models;
 
 import java.time.LocalDateTime;
 
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 
 public class AuditSubcategoryStat extends LookseeObject{
 	
@@ -19,7 +19,7 @@ public class AuditSubcategoryStat extends LookseeObject{
 		setStartTime(LocalDateTime.now());
 	}
 	
-	public AuditSubcategoryStat(AuditSubcategory subcategory, 
+	public AuditSubcategoryStat(AuditName subcategory, 
 								LocalDateTime start_time, 
 								LocalDateTime end_time, 
 								int page_count,
@@ -54,12 +54,12 @@ public class AuditSubcategoryStat extends LookseeObject{
 		this.pages_completed = pages_completed;
 	}
 	
-	public void setSubcategory(AuditSubcategory subcategory) {
+	public void setSubcategory(AuditName subcategory) {
 		this.subcategory = subcategory.toString();
 	}
 	
-	public AuditSubcategory getSubcategory() {
-		return AuditSubcategory.valueOf(subcategory);
+	public AuditName getSubcategory() {
+		return AuditName.valueOf(subcategory);
 	}
 
 	public String getUrl() {

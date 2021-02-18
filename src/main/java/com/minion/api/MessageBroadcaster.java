@@ -13,7 +13,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.message.AuditMessage;
 
 import org.slf4j.Logger;

@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.cloud.storage.StorageException;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -52,6 +51,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
+import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.ElementClassification;
@@ -59,6 +59,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ImageUtils;
 import com.qanairy.utils.PathUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -644,6 +645,8 @@ public class BrowserService {
 				
 				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
 				element_state.setScreenshotUrl(element_screenshot_url);
+				ColorData bkg_color = ImageUtils.extractBackgroundColor(element_state);
+				element_state.setBackgroundColor(bkg_color.rgb());
 				element_states_map.put(xpath, element_state);
 				element_state = element_state_service.save(element_state);
 				visited_elements.add(element_state);

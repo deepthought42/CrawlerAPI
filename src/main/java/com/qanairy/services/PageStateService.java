@@ -15,7 +15,7 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.repository.PageStateRepository;
 
 
@@ -216,7 +216,7 @@ public class PageStateService {
 		return page_state_repo.getAudits(page_state_key);
 	}
 
-	public Audit findAuditBySubCategory(AuditSubcategory subcategory, String page_state_key) {
+	public Audit findAuditBySubCategory(AuditName subcategory, String page_state_key) {
 		return page_state_repo.findAuditBySubCategory(subcategory.getShortName(), page_state_key);
 	}
 

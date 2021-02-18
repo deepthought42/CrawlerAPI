@@ -18,7 +18,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.ObservationService;
 
 /**
@@ -132,7 +132,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	
 		
 		return new Audit(AuditCategory.VISUALS,
-						 AuditSubcategory.ALT_TEXT,
+						 AuditName.ALT_TEXT,
 						 score,
 						 observations,
 						 AuditLevel.PAGE,

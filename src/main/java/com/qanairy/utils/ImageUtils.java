@@ -184,6 +184,10 @@ public class ImageUtils {
 	 */
 	public static ColorData extractBackgroundColor(ElementState element) throws MalformedURLException, IOException {
 		List<ColorUsageStat> color_data_list = new ArrayList<>();
+		log.warn("------------------------------------------------------");
+		log.warn("element screenshot url : "+element.getScreenshotUrl());
+		log.warn("------------------------------------------------------");
+		
 		color_data_list.addAll( extractImageProperties(ImageIO.read(new URL(element.getScreenshotUrl()))) );
 
 		color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));

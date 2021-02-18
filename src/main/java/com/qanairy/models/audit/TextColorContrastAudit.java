@@ -15,7 +15,8 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -36,6 +37,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired 
+	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -77,8 +81,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//Identify background color by getting largest color used in picture
 				ColorData background_color_data = ImageUtils.extractBackgroundColor(element);
 				
-				log.warn("Background color :: "+background_color_data);
 				double contrast = ColorData.computeContrast(background_color_data, text_color);
+				element.setTextContrast(contrast);
+				element_state_service.save(element);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element
 					//calculate contrast between text color and background-color
@@ -178,9 +183,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 
 		return new Audit(AuditCategory.COLOR_MANAGEMENT,
-					     AuditSubcategory.TEXT_BACKGROUND_CONTRAST,
-					     (headline_score+text_score),
-					     observations, AuditLevel.PAGE,
+					     AuditName.TEXT_BACKGROUND_CONTRAST,
+					     (headline_score + text_score),
+					     observations, 
+					     AuditLevel.PAGE,
 					     total_possible_points,
 					     page_state.getUrl(),
 					     why_it_matters,

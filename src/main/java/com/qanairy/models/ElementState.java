@@ -32,10 +32,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private String xpath;
 	private String classification;
 	private String screenshot_url;
+	private String background_color;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
+	private double text_contrast;
+	private double non_text_contrast;
 	
 	private boolean visible;
 
@@ -325,5 +328,29 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 
 	public void setXpath(String xpath) {
 		this.xpath = xpath;
+	}
+
+	public double getTextContrast() {
+		return text_contrast;
+	}
+
+	public void setTextContrast(double text_contrast) {
+		this.text_contrast = text_contrast;
+	}
+
+	public double getNonTextContrast() {
+		return non_text_contrast;
+	}
+
+	public void setNonTextContrast(double non_text_contrast) {
+		this.non_text_contrast = non_text_contrast;
+	}
+
+	public String getBackgroundColor() {
+		return background_color;
+	}
+
+	public void setBackgroundColor(String background_color) {
+		this.background_color = background_color;
 	}
 }

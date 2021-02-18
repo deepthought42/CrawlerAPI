@@ -21,7 +21,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -204,7 +204,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "There is no ADA guideline for dead links";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.LINKS,
+						 AuditName.LINKS,
 						 score,
 						 observations,
 						 AuditLevel.PAGE,

@@ -13,7 +13,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -67,7 +67,7 @@ public class DomainParagraphingAudit implements IExecutableDomainAudit {
 				" writing content and paragraphing. ";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.LINKS,
+						 AuditName.LINKS,
 						 points,
 						 observations,
 						 AuditLevel.DOMAIN,

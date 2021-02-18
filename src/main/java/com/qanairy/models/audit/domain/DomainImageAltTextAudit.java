@@ -13,7 +13,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -62,7 +62,7 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 				"‘Alt’ text for images present on the website.";
 		
 		return new Audit(AuditCategory.VISUALS, 
-						 AuditSubcategory.ALT_TEXT, 
+						 AuditName.ALT_TEXT, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 

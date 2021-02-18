@@ -22,7 +22,7 @@ import com.qanairy.models.audit.PaletteColor;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -150,7 +150,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				"a webpage easy for everyone to read. ";
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-						 AuditSubcategory.COLOR_PALETTE, 
+						 AuditName.COLOR_PALETTE, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 

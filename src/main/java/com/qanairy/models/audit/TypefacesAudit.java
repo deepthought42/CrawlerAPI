@@ -22,7 +22,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -197,7 +197,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 				" been used across the pages.";
 				
 		return new Audit(AuditCategory.TYPOGRAPHY,
-						 AuditSubcategory.TYPEFACES,
+						 AuditName.TYPEFACES,
 						 score,
 						 observations,
 						 AuditLevel.PAGE,

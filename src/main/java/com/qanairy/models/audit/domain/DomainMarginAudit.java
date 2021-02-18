@@ -34,7 +34,7 @@ import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 
@@ -139,7 +139,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		String ada_compliance = "There are no ADA requirements for use of margins";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
-						 AuditSubcategory.MARGIN, 
+						 AuditName.MARGIN, 
 						 points, 
 						 observations, 
 						 AuditLevel.PAGE, 

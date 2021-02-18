@@ -19,7 +19,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -72,7 +72,7 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; ";
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-							AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, 
+							AuditName.NON_TEXT_BACKGROUND_CONTRAST, 
 							points, 
 							observations, 
 							AuditLevel.DOMAIN, 

@@ -36,7 +36,8 @@ public class ElementStateService {
 
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			//iterate over attributes			
+			//iterate over attributes		
+			
 			element_record = element_repo.save(element);
 		}
 		else {

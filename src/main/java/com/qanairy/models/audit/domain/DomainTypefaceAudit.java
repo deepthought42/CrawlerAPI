@@ -23,7 +23,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -90,7 +90,7 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 				" been used across the pages.";
 		
 		return new Audit(AuditCategory.TYPOGRAPHY, 
-							AuditSubcategory.TYPEFACES, 
+							AuditName.TYPEFACES, 
 							points, 
 							new ArrayList<>(observation_map.values()), 
 							AuditLevel.DOMAIN, 

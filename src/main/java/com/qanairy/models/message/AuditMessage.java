@@ -1,7 +1,7 @@
 package com.qanairy.models.message;
 
 import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 
 public class AuditMessage {
 	
@@ -13,7 +13,7 @@ public class AuditMessage {
 	
 	public AuditMessage(
 			AuditCategory category,
-			AuditSubcategory subcategory,
+			AuditName subcategory,
 			String message
 	) {
 		setCategory(category);
@@ -27,11 +27,11 @@ public class AuditMessage {
 		this.category = category.getShortName();
 	}
 
-	public AuditSubcategory getName() {
-		return AuditSubcategory.valueOf(name);
+	public AuditName getName() {
+		return AuditName.valueOf(name);
 	}
 
-	public void setName(AuditSubcategory name) {
+	public void setName(AuditName name) {
 		this.name = name.getShortName();
 	}
 

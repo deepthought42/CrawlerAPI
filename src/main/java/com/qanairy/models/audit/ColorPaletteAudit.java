@@ -23,7 +23,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -161,7 +161,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 				" a webpage easy for everyone to read. ";
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT,
-						 AuditSubcategory.COLOR_PALETTE,
+						 AuditName.COLOR_PALETTE,
 						 score.getPointsAchieved(),
 						 observations,
 						 AuditLevel.PAGE,

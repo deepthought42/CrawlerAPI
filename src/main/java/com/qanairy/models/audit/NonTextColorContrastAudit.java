@@ -26,7 +26,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -125,29 +125,22 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						continue;
 					}
 					
-					try {
-						//log.warn("checking if element is parent ::  "+element_state.getXpath());
-						if(element.getXpath().contains(element_state.getXpath())) {
-							int element_area = element.getWidth() * element.getHeight();
-							int parent_area = element_state.getWidth() * element_state.getHeight();
+					//log.warn("checking if element is parent ::  "+element_state.getXpath());
+					if(element.getXpath().contains(element_state.getXpath())) {
+						int element_area = element.getWidth() * element.getHeight();
+						int parent_area = element_state.getWidth() * element_state.getHeight();
+						
+						
+						log.warn("element area  :   "+element_area);
+						log.warn("parent area  :   "+parent_area);
+						log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
+						
+						if(parent_area > (element_area * 3)) {
+							//parent = element_state;
+							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
 							
-							/*
-							log.warn("element area  :   "+element_area);
-							log.warn("parent area  :   "+parent_area);
-							log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
-							*/
-							if(parent_area > (element_area * 3)) {
-								//parent = element_state;
-								parent_bkg = ImageUtils.extractBackgroundColor(element_state);
-							}
+							parent_bkg = new ColorData(element_state.getBackgroundColor());
 						}
-					}
-					catch(IIOException e) {
-						log.warn("error getting screenshot for parent element. Looking for another element...");
-					}
-					catch(NullPointerException e) {
-						log.warn("null pointer..." + e.getMessage());
-						e.printStackTrace();
 					}
 				}
 				//choose elemtn just to the right of the elemnt in the page screenshot
@@ -160,8 +153,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//log.warn("parent element :: "+parent.getXpath());
 				log.warn("element xpath :: "+element.getXpath());
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
-				ColorData element_bkg = ImageUtils.extractBackgroundColor(element);;
-				
+				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
+				ColorData element_bkg = new ColorData(element.getBackgroundColor());
+
 				//if element has border color different than element then set element_bkg to border color
 				if(!element.getName().contentEquals("input")
 						&& hasContinuousBorder(element) 
@@ -171,6 +165,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				
 				double contrast = ColorData.computeContrast(parent_bkg, element_bkg);
+				element.setNonTextContrast(contrast);
+				element_state_service.save(element);
+				
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					//no points are rewarded for low contrast
@@ -220,7 +217,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT,
-						 AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST,
+						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
 						 score,
 						 observations,
 						 AuditLevel.PAGE,

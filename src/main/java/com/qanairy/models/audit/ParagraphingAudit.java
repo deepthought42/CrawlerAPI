@@ -18,7 +18,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -149,7 +149,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" writing content and paragraphing. ";
 
 		return new Audit(AuditCategory.WRITTEN_CONTENT, 
-						 AuditSubcategory.PARAGRAPHING, 
+						 AuditName.PARAGRAPHING, 
 						 points_earned, 
 						 observations, 
 						 AuditLevel.PAGE, 

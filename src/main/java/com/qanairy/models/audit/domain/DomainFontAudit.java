@@ -25,7 +25,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
@@ -180,7 +180,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 				"been used across the pages.";
 		
 		return new Audit(AuditCategory.TYPOGRAPHY, 
-						 AuditSubcategory.FONT, 
+						 AuditName.FONT, 
 						 score, 
 						 observations, 
 						 AuditLevel.PAGE, 

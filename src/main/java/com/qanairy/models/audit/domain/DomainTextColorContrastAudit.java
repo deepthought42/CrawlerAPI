@@ -19,7 +19,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -78,7 +78,7 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 		
 		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-						 AuditSubcategory.TEXT_BACKGROUND_CONTRAST, 
+						 AuditName.TEXT_BACKGROUND_CONTRAST, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 

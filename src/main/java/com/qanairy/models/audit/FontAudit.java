@@ -20,6 +20,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.utils.ElementStateUtils;
 
 
@@ -150,7 +151,8 @@ public class FontAudit implements IExecutablePageStateAudit {
 				" been used across the pages.";
 		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY,
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.FONT,
 						 score,
 						 observations,

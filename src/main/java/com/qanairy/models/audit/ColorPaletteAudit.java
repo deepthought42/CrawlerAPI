@@ -24,6 +24,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -160,7 +161,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 				" palette. However, keeping a cohesive color palette allows you to create" + 
 				" a webpage easy for everyone to read. ";
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT,
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.COLOR_PALETTE,
 						 score.getPointsAchieved(),
 						 observations,

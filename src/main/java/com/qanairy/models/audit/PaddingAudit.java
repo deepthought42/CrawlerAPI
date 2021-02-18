@@ -27,6 +27,7 @@ import com.qanairy.models.audit.StylingMissingObservation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.PageStateService;
 
 
@@ -126,7 +127,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "There are no ADA requirements for use of padding";
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.WHITESPACE,
 						 AuditName.PADDING,
 						 points,
 						 observations,

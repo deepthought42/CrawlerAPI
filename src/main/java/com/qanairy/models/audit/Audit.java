@@ -54,6 +54,7 @@ public class Audit extends LookseeObject {
 	public Audit(
 			AuditCategory category, 
 			AuditSubcategory subcategory,
+			AuditName name,
 			int points, 
 			List<Observation> observations, 
 			AuditLevel level, 
@@ -70,8 +71,9 @@ public class Audit extends LookseeObject {
 		assert observations != null;
 		assert level != null;
 		
-		setName(subcategory);
+		setName(name);
 		setCategory(category);
+		setSubcategory(subcategory);
 		setPoints(points);
 		setTotalPossiblePoints(total_possible_points);
 		setObservations(observations);
@@ -85,7 +87,7 @@ public class Audit extends LookseeObject {
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance(), new HashSet<>(getRecommendations()));
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance(), new HashSet<>(getRecommendations()));
 	}
 
 	/**
@@ -194,11 +196,11 @@ public class Audit extends LookseeObject {
 		return this.getRecommendations().remove(recommendation);		
 	}
 
-	public String getSubcategory() {
-		return subcategory;
+	public AuditSubcategory getSubcategory() {
+		return AuditSubcategory.create(subcategory);
 	}
 
-	public void setSubcategory(String subcategory) {
-		this.subcategory = subcategory;
+	public void setSubcategory(AuditSubcategory subcategory) {
+		this.subcategory = subcategory.toString();
 	}
 }

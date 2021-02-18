@@ -23,6 +23,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -196,7 +197,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 				" Images of text are not used and text is resizable. San-Serif typeface has" + 
 				" been used across the pages.";
 				
-		return new Audit(AuditCategory.TYPOGRAPHY,
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.TYPEFACES,
 						 score,
 						 observations,

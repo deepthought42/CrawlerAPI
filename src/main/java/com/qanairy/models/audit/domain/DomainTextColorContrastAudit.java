@@ -20,6 +20,7 @@ import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -77,7 +78,8 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
 				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT, 
 						 AuditName.TEXT_BACKGROUND_CONTRAST, 
 						 points, 
 						 observations, 

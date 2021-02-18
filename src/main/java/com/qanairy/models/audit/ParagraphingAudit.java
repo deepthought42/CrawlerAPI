@@ -19,6 +19,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -148,7 +149,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" this category, reading level needs to be taken into consideration when" + 
 				" writing content and paragraphing. ";
 
-		return new Audit(AuditCategory.WRITTEN_CONTENT, 
+		return new Audit(AuditCategory.CONTENT,
+						 AuditSubcategory.WRITTEN_CONTENT, 
 						 AuditName.PARAGRAPHING, 
 						 points_earned, 
 						 observations, 

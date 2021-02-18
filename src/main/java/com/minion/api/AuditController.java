@@ -36,7 +36,6 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.experience.PerformanceInsight;
@@ -332,7 +331,7 @@ public class AuditController {
     		@PathVariable("category") @NotBlank String category
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
-    	return domain_service.getMostRecentAuditRecord(host, AuditCategory.create(category));
+    	return domain_service.getMostRecentAudits(host);
     }
     
     /**

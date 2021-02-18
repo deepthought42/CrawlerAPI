@@ -19,6 +19,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ObservationService;
 
 /**
@@ -131,7 +132,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 				" ‘Alt’ text for images present on the website.";
 	
 		
-		return new Audit(AuditCategory.VISUALS,
+		return new Audit(AuditCategory.CONTENT,
+						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
 						 score,
 						 observations,

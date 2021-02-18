@@ -27,6 +27,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -216,7 +217,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				"and be evidently clickable.</p>";
 		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT,
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
 						 score,
 						 observations,

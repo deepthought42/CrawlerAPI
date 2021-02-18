@@ -87,4 +87,16 @@ public class ImageData {
 
         return diff / n / 255.0;
     }
+
+	public BufferedImage getImage() {
+		return image;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
 }

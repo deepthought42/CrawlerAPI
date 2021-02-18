@@ -14,6 +14,7 @@ import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -61,7 +62,8 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				"‘Alt’ text for images present on the website.";
 		
-		return new Audit(AuditCategory.VISUALS, 
+		return new Audit(AuditCategory.CONTENT,
+						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT, 
 						 points, 
 						 observations, 

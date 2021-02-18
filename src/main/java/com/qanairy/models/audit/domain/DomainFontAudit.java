@@ -26,6 +26,7 @@ import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
+import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
@@ -179,7 +180,8 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 				"Images of text are not used and text is resizable. San-Serif typeface has" + 
 				"been used across the pages.";
 		
-		return new Audit(AuditCategory.TYPOGRAPHY, 
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.FONT, 
 						 score, 
 						 observations, 

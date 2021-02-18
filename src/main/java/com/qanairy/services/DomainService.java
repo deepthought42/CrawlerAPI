@@ -24,7 +24,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -301,9 +300,8 @@ public class DomainService {
         return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
 	
-	public Set<Audit> getMostRecentAuditRecord(String host, AuditCategory category) {
+	public Set<Audit> getMostRecentAudits(String host) {
 		assert host != null;
-		assert category != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
         return audit_record_service.getAllPageAudits(record.getKey());

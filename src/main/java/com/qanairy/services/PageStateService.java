@@ -228,4 +228,8 @@ public class PageStateService {
 		return page_state_repo.getParentPage(page_state_key);
 
 	}
+
+	public PageState findByUrl(String url) {
+		return page_state_repo.findByUrl(url);
+	}
 }

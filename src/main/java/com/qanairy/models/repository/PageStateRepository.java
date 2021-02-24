@@ -69,4 +69,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (p:PageVersion)-[]->(ps:PageState{key:{page_state_key}}) return p LIMIT 1")
 	public PageVersion getParentPage(@Param("page_state_key") String page_state_key);
+
+	@Query("MATCH (p:PageState{url:{url}}) RETURN p LIMIT 1")
+	public PageState findByUrl(@Param("url") String url);
 }

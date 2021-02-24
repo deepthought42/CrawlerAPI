@@ -5,7 +5,10 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,6 +35,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.AuditStats;
 import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
@@ -324,14 +328,18 @@ public class AuditController {
      * @param id
      * @return {@link Audit audit} with given ID
      */
-    @RequestMapping(method= RequestMethod.GET, path="/visuals/paragraphs")
-    public @ResponseBody Set<Audit> getAudits(
+    @RequestMapping(method= RequestMethod.GET, path="/pages")
+    public @ResponseBody Map<PageState, Set<Audit>> getAuditsGroupedByPage(
     		HttpServletRequest request,
-    		@PathVariable("host") @NotBlank String host,
-    		@PathVariable("category") @NotBlank String category
+    		@RequestParam("host") @NotBlank String host
 	) {
-    	log.warn("finding visual audits for domain with host  :: "+host);
-    	return domain_service.getMostRecentAudits(host);
+    	//Get most recent audits
+    	log.warn("finding audits by page :: "+host);
+    	Set<Audit> audits = domain_service.getMostRecentAudits(host);
+    	
+    	log.warn("grouping audits by page");
+    	//Map audits to page states
+    	return audit_service.groupAuditsByPage(audits);
     }
     
     /**

@@ -31,7 +31,6 @@ import com.qanairy.models.enums.BrowserType;
 public class PageState extends LookseeObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
-	//Deprecating this value because it should be coming from Page
 	private String src;
 	private String url;
 	private boolean login_required;

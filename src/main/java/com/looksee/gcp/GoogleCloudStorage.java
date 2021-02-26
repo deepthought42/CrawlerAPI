@@ -18,6 +18,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.qanairy.models.enums.BrowserType;
 
@@ -31,7 +32,11 @@ public class GoogleCloudStorage {
 
 	private static String bucketName     = "look-see-data";
 	
-	public static String saveImage(BufferedImage image, String domain, String element_key, BrowserType browser) throws IOException {
+	public static String saveImage(BufferedImage image, 
+								   String domain, 
+								   String element_key, 
+								   BrowserType browser
+   ) throws StorageException, IOException {
 		assert image != null;
 		assert domain != null;
 		assert !domain.isEmpty();
@@ -50,7 +55,11 @@ public class GoogleCloudStorage {
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
 		
 		Blob blob = bucket.create(host_key+element_key+browser+".png", imageInByte);
-        return blob.getMediaLink();
+		
+        if(blob.exists()) {
+        	return blob.getMediaLink();
+        }
+        return "";
     }
 	
 	public static BufferedImage getImage(String domain, String element_key, BrowserType browser) throws IOException {

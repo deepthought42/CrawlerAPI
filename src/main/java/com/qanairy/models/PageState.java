@@ -3,6 +3,7 @@ package com.qanairy.models;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -47,6 +48,7 @@ public class PageState extends LookseeObject {
 	private int viewport_height;
 	private long full_page_width;
 	private long full_page_height;
+	private String page_name;
 
 	@Relationship(type = "HAS")
 	private List<ElementState> elements;
@@ -70,12 +72,20 @@ public class PageState extends LookseeObject {
 	 * @param browser
 	 * @param full_page_screenshot_url
 	 * @param url
+	 * @throws MalformedURLException 
 	 */
-	public PageState(String screenshot_url, List<ElementState> elements, String src, boolean isLandable, 
-			long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, 
-			BrowserType browser, String full_page_screenshot_url, String url)
-	{
+	public PageState(String screenshot_url, 
+			List<ElementState> elements, 
+			String src, 
+			boolean isLandable, 
+			long scroll_x_offset, 
+			long scroll_y_offset,
+			int viewport_width, 
+			int viewport_height, 
+			BrowserType browser, 
+			String full_page_screenshot_url,
+			String url
+	) {
 		assert screenshot_url != null;
 		assert elements != null;
 		assert src != null;
@@ -97,6 +107,7 @@ public class PageState extends LookseeObject {
 	    setLoginRequired(false);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
 		setUrl(url);
+		setPageName( generatePageName(getUrl()) );
 		setKey(generateKey());
 	}
 
@@ -250,6 +261,30 @@ public class PageState extends LookseeObject {
 	}
 
 	/**
+	 * Generates page name using path
+	 * 
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public String generatePageName(String url) {
+		String name = "";
+
+		try {
+			String path = new URL(url).getPath().trim();
+			path = path.replace("/", " ");
+			path = path.trim();
+			if("/".equals(path) || path.isEmpty()){
+				path = "home";
+			}
+			name += path;
+			
+			return name.trim();
+		} catch(MalformedURLException e){}
+		
+		return url;
+	}
+	
+	/**
 	 * {@inheritDoc}
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -380,5 +415,13 @@ public class PageState extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getPageName() {
+		return page_name;
+	}
+
+	public void setPageName(String page_name) {
+		this.page_name = page_name;
 	}
 }

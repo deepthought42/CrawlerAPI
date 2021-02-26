@@ -39,7 +39,6 @@ public class CloudNLPUtils {
     	System.out.printf("Text: %s%n", text);
     	System.out.printf("Sentiment: %s, %s%n", sentiment.getScore(), sentiment.getMagnitude());
     	return sentiment;
-    
 	}
 	
 	public static List<Entity> extractEntities(String text) throws IOException {

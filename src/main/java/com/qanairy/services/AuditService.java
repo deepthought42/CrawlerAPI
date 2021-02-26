@@ -14,9 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.models.Element;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PageStateAudits;
+import com.qanairy.models.SimpleElement;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditElementMap;
+import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
 import com.qanairy.models.repository.PageStateRepository;
 
@@ -98,7 +106,14 @@ public class AuditService {
 		return audit_repo.findObservationsForAudit(audit_key);
 	}
 
-	public Map<PageState, Set<Audit>> groupAuditsByPage(Set<Audit> audits) {
+	/**
+	 * using a list of audits, sorts the list by page and packages results into list 
+	 * 	of {@linkplain PageStateAudits}
+	 * 
+	 * @param audits
+	 * @return
+	 */
+	public List<PageStateAudits> groupAuditsByPage(Set<Audit> audits) {
 		Map<String, Set<Audit>> audit_url_map = new HashMap<>();
 		
 		log.warn("audit size :: "+audits.size());
@@ -117,14 +132,42 @@ public class AuditService {
 		}
 		
 		log.warn("total pages :: " + audit_url_map.size());
-		Map<PageState, Set<Audit>> page_audits = new HashMap<>();
+		List<PageStateAudits> page_audits = new ArrayList<>();
 		for(String url : audit_url_map.keySet()) {
 			//load page state by url
 			PageState page_state = page_state_service.findByUrl(url);
-			page_audits.put( page_state, audit_url_map.get(url)) ;
+			PageStateAudits page_state_audits = new PageStateAudits(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), audit_url_map.get(url));
+			page_audits.add( page_state_audits ) ;
 		}
 		
 		log.warn("page audits :: "+page_audits.size());
 		return page_audits;
+	}
+
+	public List<AuditElementMap> generateAuditElementMap(Set<Audit> audits) {
+		List<AuditElementMap> audit_elements = new ArrayList<>();
+		
+		for(Audit audit : audits) {
+			Set<SimpleElement> elements = new HashSet<>();
+			
+			for(Observation observation : audit.getObservations()) {
+				if(observation.getType().equals(ObservationType.ELEMENT)) {
+					List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+					for(ElementState element : element_states) {
+						elements.add(new SimpleElement(element.getScreenshotUrl(), 
+													   element.getXLocation(), 
+													   element.getYLocation(), 
+													   element.getWidth(), 
+													   element.getHeight()));
+					}
+				}
+			}
+			
+			Map<Audit, Set<SimpleElement>> audit_element_map = new HashMap<>();
+			audit_element_map.put(audit, elements);
+			audit_elements.add(new AuditElementMap(audit_element_map));
+		}
+		
+		return audit_elements;
 	}
 }

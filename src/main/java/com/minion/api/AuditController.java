@@ -5,10 +5,8 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,9 +33,10 @@ import com.qanairy.models.Account;
 import com.qanairy.models.AuditStats;
 import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageState;
+import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.AuditElementMap;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditStage;
@@ -329,7 +328,7 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      */
     @RequestMapping(method= RequestMethod.GET, path="/pages")
-    public @ResponseBody Map<PageState, Set<Audit>> getAuditsGroupedByPage(
+    public @ResponseBody List<PageStateAudits> getAuditsGroupedByPage(
     		HttpServletRequest request,
     		@RequestParam("host") @NotBlank String host
 	) {
@@ -340,6 +339,26 @@ public class AuditController {
     	log.warn("grouping audits by page");
     	//Map audits to page states
     	return audit_service.groupAuditsByPage(audits);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/elements")
+    public @ResponseBody List<AuditElementMap> getPageAuditElements(
+    		HttpServletRequest request,
+    		@RequestParam("page_url") @NotBlank String page_url
+	) {
+    	//Get most recent audits
+    	log.warn("finding audits by page :: "+page_url);
+    	Set<Audit> audits = domain_service.getMostRecentAudits(page_url);
+    	
+    	log.warn("grouping audits by page");
+    	//Map audits to page states
+    	return audit_service.generateAuditElementMap(audits);
     }
     
     /**

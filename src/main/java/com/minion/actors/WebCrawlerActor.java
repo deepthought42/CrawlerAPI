@@ -241,7 +241,7 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
-						TimingUtils.pauseThread(15000L);
+						//TimingUtils.pauseThread(15000L);
 					}while(rendering_incomplete && cnt < 50);
 					
 					page_state = page_state_service.save(page_state);

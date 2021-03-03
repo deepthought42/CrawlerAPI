@@ -3,7 +3,6 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -141,8 +140,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 						 image_elements.size()*2,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}

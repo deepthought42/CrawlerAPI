@@ -79,10 +79,12 @@ public class BrowserUtils {
 		URL new_url = new URL(url);
 		//check if host is subdomain
 		String new_host = new_url.getHost();
-		
+		new_host.replace("www.", "");
+		/*
 		if(!new_host.startsWith("www.")){
 			new_host = "www."+new_host;
 		}
+		*/
 		String new_key = new_host+new_url.getPath();
 		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);

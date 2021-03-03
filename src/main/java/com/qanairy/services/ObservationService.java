@@ -1,7 +1,5 @@
 package com.qanairy.services;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +11,13 @@ public class ObservationService {
 
 	@Autowired
 	private ObservationRepository observation_repo;
+	
+	public Observation findByKey(String key) {
+		assert key != null;
+		assert !key.isEmpty();
+		
+		return observation_repo.findByKey(key);
+	}
 	
 	public Observation save(Observation observation) {
 		assert observation != null;

@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -170,8 +169,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 score.getMaxPossiblePoints(),
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 	
 	/**

@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -160,8 +159,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 						 max_score,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 	
 

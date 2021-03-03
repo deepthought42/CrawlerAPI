@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditType;
 import com.qanairy.models.repository.AuditRecordRepository;
 
 /**

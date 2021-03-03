@@ -197,9 +197,12 @@ public class AuditManager extends AbstractActor{
 					log.warn("creating url using string ::  "+url_str);
 					URL url = new URL(url_str);
 					String host = url.getHost();
+					host.replace("www.", "");
+					/* NOTE:: if still exists after 4-1-2021 then remove
 					if(!host.contains("www.")) {
 						host = "www."+host;
 					}
+					*/
 					log.warn("Looking up audit record for host :: "+host);
 					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(host);
 					log.warn("Audit record :: " + audit_record);

@@ -1,13 +1,15 @@
 package com.qanairy.models;
 
 public class SimpleElement {
+	private String key;
 	private String screenshot_url;
 	private int x_location;
 	private int y_location;
 	private int width;
 	private int height;
 	
-	public SimpleElement(String screenshot_url, int x, int y, int width, int height) {
+	public SimpleElement(String key, String screenshot_url, int x, int y, int width, int height) {
+		setKey(key);
 		setScreenshotUrl(screenshot_url);
 		setXLocation(x);
 		setYLocation(y);
@@ -48,5 +50,13 @@ public class SimpleElement {
 	}
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}	
 }

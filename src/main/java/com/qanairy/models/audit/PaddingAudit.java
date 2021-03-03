@@ -136,8 +136,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {

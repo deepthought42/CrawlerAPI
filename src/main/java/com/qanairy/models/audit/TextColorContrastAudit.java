@@ -3,7 +3,6 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -192,8 +191,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     total_possible_points,
 					     page_state.getUrl(),
 					     why_it_matters,
-					     ada_compliance,
-					     new HashSet<String>());
+					     ada_compliance);
 	}
 
 	private String getParentXpath(String xpath) {

@@ -2,9 +2,7 @@ package com.qanairy.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -28,7 +26,6 @@ public class Audit extends LookseeObject {
 	private String url;
 	private String why_it_matters;
 	private String ada_compliance;
-	private Set<String> recommendations;
 	
 	@Relationship(type="OBSERVED")
 	private List<Observation> observations;
@@ -61,8 +58,7 @@ public class Audit extends LookseeObject {
 			int total_possible_points,
 			String url,
 			String why_it_matters,
-			String ada_compliance,
-			Set<String> recommendations
+			String ada_compliance
 	) {
 		super();
 		
@@ -82,12 +78,11 @@ public class Audit extends LookseeObject {
 		setUrl(url);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setRecommendations(recommendations);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance(), new HashSet<>(getRecommendations()));
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance());
 	}
 
 	/**
@@ -178,22 +173,6 @@ public class Audit extends LookseeObject {
 
 	public void setAdaCompliance(String ada_compliance) {
 		this.ada_compliance = ada_compliance;
-	}
-
-	public Set<String> getRecommendations() {
-		return recommendations;
-	}
-
-	public void setRecommendations(Set<String> recommendations) {
-		this.recommendations = recommendations;
-	}
-	
-	public void addRecommendation(String recommendation) {
-		this.recommendations.add(recommendation);
-	}
-
-	public boolean removeRecommendation(String recommendation) {
-		return this.getRecommendations().remove(recommendation);		
 	}
 
 	public AuditSubcategory getSubcategory() {

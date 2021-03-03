@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -226,8 +225,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 
 

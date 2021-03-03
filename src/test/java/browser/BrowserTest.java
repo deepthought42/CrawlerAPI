@@ -121,4 +121,13 @@ public class BrowserTest {
 		assertFalse(cleaned_src.contains("<script"));
 		assertFalse(cleaned_src.contains("<style"));
 	}
+	
+	@Test
+	public void verifyCleanUrl() throws MalformedURLException {
+		String url1 = "https://look-see.com";
+		URL url = new URL(url1);
+		
+		System.err.println("url :: "+url.getHost());
+		
+	}
 }

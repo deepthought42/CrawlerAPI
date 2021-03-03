@@ -75,8 +75,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<String>());
+						 ada_compliance);
 	}
 
 	/**

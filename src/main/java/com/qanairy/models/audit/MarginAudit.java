@@ -141,8 +141,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 
 	/**

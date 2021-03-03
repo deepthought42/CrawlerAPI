@@ -158,8 +158,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 max_points, 
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>()); 
+						 ada_compliance); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}

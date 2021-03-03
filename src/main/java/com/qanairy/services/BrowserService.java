@@ -290,7 +290,10 @@ public class BrowserService {
 					browser.getViewportSize().getWidth(),
 					browser.getViewportSize().getHeight(),
 					BrowserType.create(browser.getBrowserName()), 
-					full_page_screenshot_url, browser_url);
+					full_page_screenshot_url, 
+					full_page_screenshot.getWidth(), 
+					full_page_screenshot.getHeight(), 
+					browser_url);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -391,6 +394,8 @@ public class BrowserService {
 				size.getHeight(),
 				BrowserType.CHROME,
 				full_page_screenshot_url,
+				full_page_screenshot.getWidth(), 
+				full_page_screenshot.getHeight(), 
 				page.getUrl());
 
 		log.warn("built page...now saving page state...");

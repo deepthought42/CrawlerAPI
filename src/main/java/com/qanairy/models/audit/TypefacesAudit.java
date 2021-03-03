@@ -206,7 +206,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 						 total_possible_points,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 }

@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,19 +16,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.SimpleElement;
+import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditElementMap;
-import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.ElementObservationMap;
+import com.qanairy.models.audit.ObservationElementMap;
 import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
-import com.qanairy.models.repository.PageStateRepository;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -136,7 +137,8 @@ public class AuditService {
 		for(String url : audit_url_map.keySet()) {
 			//load page state by url
 			PageState page_state = page_state_service.findByUrl(url);
-			PageStateAudits page_state_audits = new PageStateAudits(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), audit_url_map.get(url));
+			SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight());
+			PageStateAudits page_state_audits = new PageStateAudits(simple_page, audit_url_map.get(url));
 			page_audits.add( page_state_audits ) ;
 		}
 		
@@ -144,30 +146,115 @@ public class AuditService {
 		return page_audits;
 	}
 
-	public List<AuditElementMap> generateAuditElementMap(Set<Audit> audits) {
-		List<AuditElementMap> audit_elements = new ArrayList<>();
+	/**
+	 * Creates a {@link List} of {@linkplain ObservationElementMap} objects based on a {@link Set} of {@link Audit audits}
+	 * @param audits
+	 * @param page_url
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public Set<ObservationElementMap> generateObservationElementMap(
+			Set<Audit> audits, String page_url
+	) throws MalformedURLException {
+		Set<ObservationElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {
-			Set<SimpleElement> elements = new HashSet<>();
+			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
+			URL url = new URL(audit.getUrl());
+			URL page_url_obj = new URL(page_url);
 			
-			for(Observation observation : audit.getObservations()) {
-				if(observation.getType().equals(ObservationType.ELEMENT)) {
-					List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
-					for(ElementState element : element_states) {
-						elements.add(new SimpleElement(element.getScreenshotUrl(), 
-													   element.getXLocation(), 
-													   element.getYLocation(), 
-													   element.getWidth(), 
-													   element.getHeight()));
+			if(url.getHost().contentEquals(page_url_obj.getHost()) 
+					&& url.getPath().contentEquals(page_url_obj.getPath())
+			) {
+				log.warn("found audit for page :: "+page_url);
+
+				for(Observation observation : audit.getObservations()) {
+					Set<SimpleElement> elements = new HashSet<>();
+
+					if(observation.getType().equals(ObservationType.ELEMENT)) {
+						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						for(ElementState element : element_states) {
+							elements.add(new SimpleElement(element.getKey(),
+														   element.getScreenshotUrl(), 
+														   element.getXLocation(), 
+														   element.getYLocation(), 
+														   element.getWidth(), 
+														   element.getHeight()));
+						}
 					}
+					ObservationElementMap observation_element = new ObservationElementMap(observation, elements);
+					audit_elements.add(observation_element);
 				}
-			}
 			
-			Map<Audit, Set<SimpleElement>> audit_element_map = new HashMap<>();
-			audit_element_map.put(audit, elements);
-			audit_elements.add(new AuditElementMap(audit_element_map));
+				
+			}
 		}
 		
 		return audit_elements;
+	}
+	
+	/**
+	 * WIP
+	 * 
+	 * @param audits
+	 * @param page_url
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, String page_url) throws MalformedURLException {
+		Set<ElementObservationMap> element_observations = new HashSet<>();
+		
+		Map<String, Set<Observation>> observation_map = new HashMap<>(); 
+		Map<String, SimpleElement> element_state_map = new HashMap<>();
+		for(Audit audit : audits) {
+			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
+			URL url = new URL(audit.getUrl());
+			URL page_url_obj = new URL(page_url);
+			
+			if(url.getHost().contentEquals(page_url_obj.getHost()) 
+					&& url.getPath().contentEquals(page_url_obj.getPath())
+			) {
+				log.warn("found audit for page :: "+page_url);
+
+				for(Observation observation : audit.getObservations()) {
+					if(observation.getType().equals(ObservationType.ELEMENT)) {
+						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						
+						for(ElementState element : element_states) {
+							if(!element_state_map.containsKey(element.getKey())) {
+								SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																				  element.getScreenshotUrl(), 
+																				  element.getXLocation(), 
+																				  element.getYLocation(), 
+																				  element.getWidth(), 
+																				  element.getHeight());
+								element_state_map.put(element.getKey(), simple_element);
+							}
+
+							//associate observation with element
+							if(observation_map.containsKey(element.getKey())) {
+								observation_map.get(element.getKey()).add(observation);
+							}
+							else {
+								Set<Observation> observations = new HashSet<>();
+								observations.add(observation);
+								observation_map.put(element.getKey(), observations);
+							}
+						}
+					}
+				}
+			
+				
+			}
+		}
+		
+		//associate simple elements and observations
+		for(String element_key : element_state_map.keySet()) {
+			
+			ElementObservationMap observation_element = new ElementObservationMap(observation_map.get(element_key), element_state_map.get(element_key));
+			element_observations.add(observation_element);
+		}
+		
+		return element_observations;
 	}
 }

@@ -36,8 +36,12 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditElementMap;
+import com.qanairy.models.audit.ObservationElementMap;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.ElementObservationMap;
+import com.qanairy.models.audit.ElementObservationTwoWayMapping;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
@@ -48,6 +52,7 @@ import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.ObservationService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
@@ -72,6 +77,9 @@ public class AuditController {
     
     @Autowired
     protected AuditService audit_service;
+    
+    @Autowired
+    protected ObservationService observation_service;
     
     @Autowired
     protected AuditRecordService audit_record_service;
@@ -346,19 +354,25 @@ public class AuditController {
      * 
      * @param id
      * @return {@link Audit audit} with given ID
+     * @throws MalformedURLException 
      */
     @RequestMapping(method= RequestMethod.GET, path="/elements")
-    public @ResponseBody List<AuditElementMap> getPageAuditElements(
+    public @ResponseBody ElementObservationTwoWayMapping getPageAuditElements(
     		HttpServletRequest request,
     		@RequestParam("page_url") @NotBlank String page_url
-	) {
+	) throws MalformedURLException {
     	//Get most recent audits
     	log.warn("finding audits by page :: "+page_url);
-    	Set<Audit> audits = domain_service.getMostRecentAudits(page_url);
+    	String domain_host = new URL(page_url).getHost();
+    	Set<Audit> audits = domain_service.getMostRecentAudits(domain_host);
     	
     	log.warn("grouping audits by page");
     	//Map audits to page states
-    	return audit_service.generateAuditElementMap(audits);
+    	Set<ObservationElementMap> observation_element_map = audit_service.generateObservationElementMap(audits, page_url);
+    	Set<ElementObservationMap> element_observation_map = audit_service.generateElementObservationMap(audits, page_url);
+    
+    	//package both elements into an object definition
+    	return new ElementObservationTwoWayMapping(observation_element_map, element_observation_map);
     }
     
     /**
@@ -370,17 +384,17 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      */
     @RequestMapping(path="{key}/recommendations/add", method = RequestMethod.POST)
-    public @ResponseBody Audit addRecommendation(
+    public @ResponseBody Observation addRecommendation(
     		HttpServletRequest request,
-    		final @PathVariable String key,
+    		final @PathVariable String observation_key,
     		final @RequestBody(required=true) String recommendation
 	) {
     	//find audit by key and add recommendation
-    	Audit audit = audit_service.findByKey(key);
-       	audit.addRecommendation(recommendation);
+    	Observation observation = observation_service.findByKey(observation_key);
+    	observation.addRecommendation(recommendation);
        	
        	//save and return
-       	return audit_service.save(audit);    	
+       	return observation_service.save(observation);    	
     }
     
     /**
@@ -392,17 +406,17 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      */
     @RequestMapping(path="{key}/recommendations", method = RequestMethod.DELETE)
-    public @ResponseBody Audit deleteRecommendation(
+    public @ResponseBody Observation deleteRecommendation(
     		HttpServletRequest request,
-    		final @PathVariable String key,
+    		final @PathVariable String observation_key,
     		@RequestParam(required=true) String recommendation
 	) {
     	//find audit by key and add recommendation
-    	Audit audit = audit_service.findByKey(key);
-       	audit.removeRecommendation(recommendation);
+    	Observation observation = observation_service.findByKey(observation_key);
+    	observation.removeRecommendation(recommendation);
        	
        	//save and return
-       	return audit_service.save(audit);    	
+       	return observation_service.save(observation);    	
     }
     
     /**

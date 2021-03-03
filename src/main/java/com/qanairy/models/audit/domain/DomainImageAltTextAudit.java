@@ -1,7 +1,6 @@
 package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -71,7 +70,6 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 						 max_points, 
 						 null,
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 }

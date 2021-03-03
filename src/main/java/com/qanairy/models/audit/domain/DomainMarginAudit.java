@@ -148,8 +148,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 						 100, 
 						 domain.getHost(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 
 	/**

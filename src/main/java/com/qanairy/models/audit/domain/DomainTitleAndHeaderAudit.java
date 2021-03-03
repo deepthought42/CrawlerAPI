@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,7 +106,6 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 					     max_points,
 					     domain.getHost(),
 					     why_it_matters,
-					     ada_compliance,
-					     new HashSet<>());
+					     ada_compliance);
 	}
 }

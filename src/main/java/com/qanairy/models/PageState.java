@@ -71,6 +71,8 @@ public class PageState extends LookseeObject {
 	 * @param viewport_height
 	 * @param browser
 	 * @param full_page_screenshot_url
+	 * @param full_page_width TODO
+	 * @param full_page_height TODO
 	 * @param url
 	 * @throws MalformedURLException 
 	 */
@@ -84,6 +86,8 @@ public class PageState extends LookseeObject {
 			int viewport_height, 
 			BrowserType browser, 
 			String full_page_screenshot_url,
+			long full_page_width, 
+			long full_page_height, 
 			String url
 	) {
 		assert screenshot_url != null;
@@ -106,6 +110,8 @@ public class PageState extends LookseeObject {
 		setScrollYOffset(scroll_y_offset);
 	    setLoginRequired(false);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
+		setFullPageWidth(full_page_width);
+		setFullPageHeight(full_page_height);
 		setUrl(url);
 		setPageName( generatePageName(getUrl()) );
 		setKey(generateKey());
@@ -193,7 +199,7 @@ public class PageState extends LookseeObject {
 	@Override
 	public PageState clone() {
 		List<ElementState> elements = new ArrayList<ElementState>(getElements());
-		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getUrl());
+		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getFullPageWidth(), getFullPageHeight(), getUrl());
 	}
 
 	@JsonIgnore

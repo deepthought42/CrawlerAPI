@@ -148,8 +148,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 						 100, 
 						 domain.getHost(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>());
+						 ada_compliance);
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {

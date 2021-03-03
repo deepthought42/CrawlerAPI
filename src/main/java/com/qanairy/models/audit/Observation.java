@@ -1,5 +1,7 @@
 package com.qanairy.models.audit;
 
+import java.util.Set;
+
 import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
@@ -11,6 +13,12 @@ public abstract class Observation extends LookseeObject{
 	private String description;
 	private String type;
 	private String explanation; //Further explanation apart from the description. Reason it matters, etc
+	private Set<String> recommendations;
+
+	@Override
+	public String generateKey() {
+		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getType().getShortName()+getDescription());
+	}
 	
 	public String getDescription() {
 		return this.description;
@@ -25,10 +33,20 @@ public abstract class Observation extends LookseeObject{
 	}
 	
 	public abstract ObservationType getType();
-	
 
-	@Override
-	public String generateKey() {
-		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getType().getShortName()+getDescription());
+	public Set<String> getRecommendations() {
+		return recommendations;
+	}
+
+	public void setRecommendations(Set<String> recommendations) {
+		this.recommendations = recommendations;
+	}
+	
+	public void addRecommendation(String recommendation) {
+		this.recommendations.add(recommendation);
+	}
+	
+	public boolean removeRecommendation(String recommendation) {
+		return this.getRecommendations().remove(recommendation);		
 	}
 }

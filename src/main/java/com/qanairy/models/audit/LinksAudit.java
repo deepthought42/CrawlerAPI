@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -213,8 +212,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						 link_elements.size()*5,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 ada_compliance,
-						 new HashSet<>()); 
+						 ada_compliance); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

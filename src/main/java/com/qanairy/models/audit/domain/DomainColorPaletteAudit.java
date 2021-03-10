@@ -128,14 +128,6 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		setGrayColors(new ArrayList<>(gray_color_strings));
 		setColors(new ArrayList<>(color_map.keySet()));
 
-		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
-																palette, 
-																scheme, 
-																"This is a color scheme description");
-		
-		
-		observations.add(observation_service.save(palette_observation));
-			
 		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 
 				"opinion on a product. 62–90% of that interaction is determined by the" + 
 				"color of the product alone." + 
@@ -149,15 +141,23 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				"palette. However, keeping a cohesive color palette allows you to create" + 
 				"a webpage easy for everyone to read. ";
 		
+		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
+																palette, 
+																scheme, 
+																"This is a color scheme description",
+																why_it_matters,
+																ada_compliance);
+		
+		
+		observations.add(observation_service.save(palette_observation));
+
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.COLOR_PALETTE, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 max_points, domain.getHost());
 	}	
 
 	public List<String> getGrayColors() {

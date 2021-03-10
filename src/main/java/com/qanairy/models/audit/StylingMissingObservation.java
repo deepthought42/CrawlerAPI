@@ -8,7 +8,7 @@ import com.qanairy.models.enums.ObservationType;
  */
 public class StylingMissingObservation extends Observation {
 	
-	public StylingMissingObservation(String description) {
+	public StylingMissingObservation(String description, String why_it_matters, String ada_compliance) {
 		super();
 		
 		assert description != null;

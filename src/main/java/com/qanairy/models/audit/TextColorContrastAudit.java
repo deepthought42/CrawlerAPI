@@ -138,40 +138,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		List<Observation> observations = new ArrayList<>();
-		/*
-		if(!high_header_contrast.isEmpty()) {
-			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
-			observations.add(observation_service.save(high_header_contrast_observation));
-		}
-		*/
-		if(!mid_header_contrast.isEmpty()) {
-			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
-			observations.add(observation_service.save(mid_header_contrast_observation));
-		}
-		if(!low_header_contrast.isEmpty()) {
-			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
-			observations.add(observation_service.save(low_header_contrast_observation));
-		}
-		
-		/*
-		if(!high_text_contrast.isEmpty()) {
-			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
-			observations.add(observation_service.save(high_text_observation));
-		}
-		*/
-		if(!mid_text_contrast.isEmpty()) {
-			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7");
-			observations.add(observation_service.save(mid_text_observation));
-		}
-		if(!low_text_contrast.isEmpty()) {
-			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5");
-			observations.add(observation_service.save(low_text_observation));
-		}
-		
-		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
-		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
-		
 		
 		String why_it_matters = "Color, just like the overall design, goes beyond aesthetics. It impacts the" + 
 				" usability and functionality of your website, deciding what information" + 
@@ -182,6 +148,40 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
 				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 
+		List<Observation> observations = new ArrayList<>();
+		/*
+		if(!high_header_contrast.isEmpty()) {
+			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
+			observations.add(observation_service.save(high_header_contrast_observation));
+		}
+		*/
+		if(!mid_header_contrast.isEmpty()) {
+			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5", why_it_matters, ada_compliance);
+			observations.add(observation_service.save(mid_header_contrast_observation));
+		}
+		if(!low_header_contrast.isEmpty()) {
+			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3", why_it_matters, ada_compliance);
+			observations.add(observation_service.save(low_header_contrast_observation));
+		}
+		
+		/*
+		if(!high_text_contrast.isEmpty()) {
+			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
+			observations.add(observation_service.save(high_text_observation));
+		}
+		*/
+		if(!mid_text_contrast.isEmpty()) {
+			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7", why_it_matters, ada_compliance);
+			observations.add(observation_service.save(mid_text_observation));
+		}
+		if(!low_text_contrast.isEmpty()) {
+			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5", why_it_matters, ada_compliance);
+			observations.add(observation_service.save(low_text_observation));
+		}
+		
+		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
+		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
+	
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 					     AuditName.TEXT_BACKGROUND_CONTRAST,
@@ -189,9 +189,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     observations, 
 					     AuditLevel.PAGE,
 					     total_possible_points,
-					     page_state.getUrl(),
-					     why_it_matters,
-					     ada_compliance);
+					     page_state.getUrl());
 	}
 
 	private String getParentXpath(String xpath) {

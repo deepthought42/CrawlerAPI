@@ -94,7 +94,14 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		log.warn("primary typefaces  size() ::    " + primary_typefaces.size());
 
 		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				" the text on your website. It plays an important role in how clear, distinct" + 
+				" and legible the textual content is.";
 		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				" Images of text are not used and text is resizable. San-Serif typeface has" + 
+				" been used across the pages.";
+				
 		//SCORE PRIMARY TYPEFACES 
 		int score = 0;
 		int total_possible_points = 3;
@@ -103,17 +110,17 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		//evaluate typefaces
 		if(primary_typefaces.size() ==  2) {
 			score += 2;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!");
+			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() < 2) {
 			score += 1;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Only 1 typeface was found. You might want to consider using 2 typefaces for the best experience");
+			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Only 1 typeface was found. You might want to consider using 2 typefaces for the best experience", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() > 2) {
 			score += 0;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces");
+			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		
@@ -151,7 +158,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			//if connected set has more than 1 element then an inconsistency exists
 			if(forward_connection_graph.get(font).size() > 1){
 				score += 1;
-				TypefacesObservation observation = new TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.");
+				TypefacesObservation observation = new TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.",
+																			why_it_matters, ada_compliance);
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -186,17 +194,9 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			observed_fonts.add(font_family);
 		}
 		
-		ElementStateObservation observation = new ElementStateObservation(no_fallback_font, "Text element rendered with a fallback typeface instead of the desired font.");
+		ElementStateObservation observation = new ElementStateObservation(no_fallback_font, "Text element rendered with a fallback typeface instead of the desired font.", why_it_matters, ada_compliance);
 		observations.add(observation_service.save(observation));
 		
-		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
-				" the text on your website. It plays an important role in how clear, distinct" + 
-				" and legible the textual content is.";
-		
-		String ada_compliance = "Your typography meets ADA requirements." + 
-				" Images of text are not used and text is resizable. San-Serif typeface has" + 
-				" been used across the pages.";
-				
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.TYPEFACES,
@@ -204,8 +204,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 total_possible_points,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 }

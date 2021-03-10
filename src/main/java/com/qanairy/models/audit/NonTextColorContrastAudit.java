@@ -191,13 +191,21 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		} 
 
+		String why_it_matters = "<p>Icons are an easily recognizable, fun element, and a great way to\n" + 
+				"communicate with your user beyond just using text. Icons should be\n" + 
+				"familiar and captivating.</p>" + 
+				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
+				"button to have a high contrast score to create an eye-catching effect\n" + 
+				"and be evidently clickable.</p>";
+		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
+		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
-			ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0");
+			ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(low_contrast_observation));
 		}
 		if(!mid_contrast_elements.isEmpty()) {
-			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
+			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
 		/*
@@ -208,13 +216,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		*/
 		
 		
-		String why_it_matters = "<p>Icons are an easily recognizable, fun element, and a great way to\n" + 
-				"communicate with your user beyond just using text. Icons should be\n" + 
-				"familiar and captivating.</p>" + 
-				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
-				"button to have a high contrast score to create an eye-catching effect\n" + 
-				"and be evidently clickable.</p>";
-		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
 		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
@@ -223,9 +224,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 
 

@@ -16,7 +16,7 @@ public class PageStateObservation extends Observation {
 	
 	public PageStateObservation() {}
 	
-	public PageStateObservation(PageState page, String description) {
+	public PageStateObservation(PageState page, String description, String why_it_matters, String ada_compliance) {
 		setPage(page);
 		setDescription(description);
 		setType(ObservationType.PAGE_STATE);

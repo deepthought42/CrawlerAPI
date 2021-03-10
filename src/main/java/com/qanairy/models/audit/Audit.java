@@ -24,8 +24,6 @@ public class Audit extends LookseeObject {
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
 	private String url;
-	private String why_it_matters;
-	private String ada_compliance;
 	
 	@Relationship(type="OBSERVED")
 	private List<Observation> observations;
@@ -56,9 +54,7 @@ public class Audit extends LookseeObject {
 			List<Observation> observations, 
 			AuditLevel level, 
 			int total_possible_points,
-			String url,
-			String why_it_matters,
-			String ada_compliance
+			String url
 	) {
 		super();
 		
@@ -76,13 +72,11 @@ public class Audit extends LookseeObject {
 		setCreatedAt(LocalDateTime.now());
 		setLevel(level);
 		setUrl(url);
-		setWhyItMatters(why_it_matters);
-		setAdaCompliance(ada_compliance);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
 	}
 
 	/**
@@ -157,22 +151,6 @@ public class Audit extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public String getWhyItMatters() {
-		return why_it_matters;
-	}
-
-	public void setWhyItMatters(String why_it_matters) {
-		this.why_it_matters = why_it_matters;
-	}
-
-	public String getAdaCompliance() {
-		return ada_compliance;
-	}
-
-	public void setAdaCompliance(String ada_compliance) {
-		this.ada_compliance = ada_compliance;
 	}
 
 	public AuditSubcategory getSubcategory() {

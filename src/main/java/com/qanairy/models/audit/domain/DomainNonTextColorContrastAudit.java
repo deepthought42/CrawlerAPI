@@ -66,11 +66,7 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 			max_points += audit.getTotalPossiblePoints();
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
-		
-		String why_it_matters = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper vel eros ut fermentum. Aenean scelerisque tincidunt arcu, in pulvinar enim dapibus et. Sed pharetra lorem et maximus cursus. Pellentesque aliquam ex quis sapien sollicitudin ornare. Curabitur sit amet metus eu mi interdum pretium. Praesent lobortis ligula id tortor finibus, non tincidunt nisi pretium. Fusce nisi justo, condimentum sed eros ut, volutpat tincidunt sem. Vestibulum vestibulum enim et viverra pharetra. Vivamus aliquam pulvinar facilisis. Quisque nec nisi est. Suspendisse quis scelerisque nulla. Integer sit amet egestas eros. Duis sagittis elit mi. Suspendisse diam sem, sodales et sodales a, posuere eget massa. Vestibulum ligula justo, ultrices vitae nisi nec, finibus posuere tortor.";
-		
-		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; ";
-		
+			
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT, 
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST, 
@@ -78,8 +74,6 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 						 observations, 
 						 AuditLevel.DOMAIN, 
 						 max_points, 
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 }

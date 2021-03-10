@@ -100,6 +100,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			elements_padding_map.put(element, paddings);
 		}
 		
+		
 //		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score spacing_score = evaluateSpacingMultipleOf8(elements_padding_map);
 
@@ -115,17 +116,18 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() ) );	
 
 		if(points == 0) {
+			
+			String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+					+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+					+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+					+ " are multiple of 8.";
+			
+			String ada_compliance = "There are no ADA requirements for use of padding";
+
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation("Padding was not used")); 
+			observations.add(new StylingMissingObservation("Padding was not used", why_it_matters, ada_compliance)); 
 		}
 		
-		
-		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
-				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
-				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
-				+ " are multiple of 8.";
-		
-		String ada_compliance = "There are no ADA requirements for use of padding";
 
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.WHITESPACE,
@@ -134,9 +136,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page.getUrl());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -306,8 +306,19 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of padding";
+
+		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
-		observations.add(new ElementStateObservation(non_scalable, "Has at least one padding value that isn't a multiple of 8."));
+		observations.add(new ElementStateObservation(non_scalable, 
+													"Has at least one padding value that isn't a multiple of 8.", 
+													why_it_matters,
+													ada_compliance));
 		return new Score(points_earned, max_points, observations);
 	}
 	
@@ -362,7 +373,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+			observations.add(new ElementStateObservation(unscalable_padding_elements, "Elements with unscalable padding units", null, null));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

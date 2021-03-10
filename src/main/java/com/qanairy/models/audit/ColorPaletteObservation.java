@@ -26,12 +26,14 @@ public class ColorPaletteObservation extends Observation{
 	public ColorPaletteObservation(
 			List<PaletteColor> palette, 
 			ColorScheme scheme, 
-			String description
+			String description, String why_it_matters, String ada_compliance
 	) {
 		setPaletteColors(palette);
 		setColors(palette);
 		setColorScheme(scheme);
 		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
 		setKey(this.generateKey());
 	}
 	

@@ -21,9 +21,11 @@ public class ElementStateObservation extends Observation {
 	
 	public ElementStateObservation() {}
 	
-	public ElementStateObservation(List<ElementState> elements, String description) {
+	public ElementStateObservation(List<ElementState> elements, String description, String why_it_matters, String ada_compliance) {
 		setElements(elements);
 		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
 		setKey(this.generateKey());
 	}
 	

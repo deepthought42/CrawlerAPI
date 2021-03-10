@@ -114,6 +114,13 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			}
 		}
 		
+		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of padding";
+		
 		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score unit_score = evaluateUnits(elements_padding_map);
 
@@ -129,15 +136,9 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 
 		if(points == 0) {
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation("Padding was not used")); 
+			observations.add(new StylingMissingObservation("Padding was not used", why_it_matters, ada_compliance)); 
 		}
 		
-		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
-				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
-				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
-				+ " are multiple of 8.";
-		
-		String ada_compliance = "There are no ADA requirements for use of padding";
 		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.WHITESPACE,
@@ -146,9 +147,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 						 observations, 
 						 AuditLevel.PAGE, 
 						 100, 
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -315,7 +314,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units", null, null));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

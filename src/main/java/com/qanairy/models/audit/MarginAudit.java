@@ -104,6 +104,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			elements_margin_map.put(element, margins);
 		}
 
+		
+
+			
 		log.warn("Element margin map size :: "+elements_margin_map.size());
 		// Score spacing_score = evaluateSpacingConsistency(elements_margin_map);     //commented out because this is old greatest common divisor methodology
 		Score spacing_score = evaluateSpacingMultipleOf8(elements_margin_map);
@@ -124,14 +127,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
 		//log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
 
-		
-		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
-				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
-				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
-				+ " are multiple of 8.";
-		
-		String ada_compliance = "There are no ADA requirements for use of margins";
-		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.WHITESPACE,
 						 AuditName.MARGIN,
@@ -139,9 +134,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 
 	/**
@@ -294,7 +287,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				max_points++;
 			}
 		}
-		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8."));
+		
+
+		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of margins";
+	
+		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8.", why_it_matters, ada_compliance));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -351,7 +353,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		if(!unscalable_margin_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
+			observations.add(new ElementStateObservation(unscalable_margin_elements, "Elements with unscalable margin units", null, null));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -463,7 +465,15 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!flagged_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(flagged_elements, "Elements that appear to use margin as padding"));
+
+			String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+					+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+					+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+					+ " are multiple of 8.";
+			
+			String ada_compliance = "There are no ADA requirements for use of margins";
+		
+			observations.add(new ElementStateObservation(flagged_elements, "Elements that appear to use margin as padding", why_it_matters, ada_compliance));
 		}
 		return new Score(score, max_score, observations);
 	}

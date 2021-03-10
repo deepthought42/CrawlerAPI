@@ -60,12 +60,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		
 		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
 		
-		
-
-		String why_it_matters = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper vel eros ut fermentum. Aenean scelerisque tincidunt arcu, in pulvinar enim dapibus et. Sed pharetra lorem et maximus cursus. Pellentesque aliquam ex quis sapien sollicitudin ornare. Curabitur sit amet metus eu mi interdum pretium. Praesent lobortis ligula id tortor finibus, non tincidunt nisi pretium. Fusce nisi justo, condimentum sed eros ut, volutpat tincidunt sem. Vestibulum vestibulum enim et viverra pharetra. Vivamus aliquam pulvinar facilisis. Quisque nec nisi est. Suspendisse quis scelerisque nulla. Integer sit amet egestas eros. Duis sagittis elit mi. Suspendisse diam sem, sodales et sodales a, posuere eget massa. Vestibulum ligula justo, ultrices vitae nisi nec, finibus posuere tortor.\n";
-		
-		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
-		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.TITLES,
@@ -73,9 +67,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 
 	/**
@@ -188,6 +180,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		
 		log.warn("Headings score ::    "+score);
 		log.warn("Headings max score :::  "+max_points);
 		return new Score(score, max_points, new HashSet<>());
@@ -218,7 +211,12 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			//check if resource can actually be reached
 		}
 		else {
-			observations.add(new PageStateObservation(page_state, "Favicon is missing."));
+
+			String why_it_matters = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper vel eros ut fermentum. Aenean scelerisque tincidunt arcu, in pulvinar enim dapibus et. Sed pharetra lorem et maximus cursus. Pellentesque aliquam ex quis sapien sollicitudin ornare. Curabitur sit amet metus eu mi interdum pretium. Praesent lobortis ligula id tortor finibus, non tincidunt nisi pretium. Fusce nisi justo, condimentum sed eros ut, volutpat tincidunt sem. Vestibulum vestibulum enim et viverra pharetra. Vivamus aliquam pulvinar facilisis. Quisque nec nisi est. Suspendisse quis scelerisque nulla. Integer sit amet egestas eros. Duis sagittis elit mi. Suspendisse diam sem, sodales et sodales a, posuere eget massa. Vestibulum ligula justo, ultrices vitae nisi nec, finibus posuere tortor.\n";
+			
+			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
+			
+			observations.add(new PageStateObservation(page_state, "Favicon is missing.", why_it_matters, ada_compliance));
 			points += 0;			
 		}
 		
@@ -260,7 +258,12 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			points += 1;
 		}
 		else {
-			observations.add(new PageStateObservation(page_state, "pages without titles"));
+
+			String why_it_matters = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper vel eros ut fermentum. Aenean scelerisque tincidunt arcu, in pulvinar enim dapibus et. Sed pharetra lorem et maximus cursus. Pellentesque aliquam ex quis sapien sollicitudin ornare. Curabitur sit amet metus eu mi interdum pretium. Praesent lobortis ligula id tortor finibus, non tincidunt nisi pretium. Fusce nisi justo, condimentum sed eros ut, volutpat tincidunt sem. Vestibulum vestibulum enim et viverra pharetra. Vivamus aliquam pulvinar facilisis. Quisque nec nisi est. Suspendisse quis scelerisque nulla. Integer sit amet egestas eros. Duis sagittis elit mi. Suspendisse diam sem, sodales et sodales a, posuere eget massa. Vestibulum ligula justo, ultrices vitae nisi nec, finibus posuere tortor.\n";
+			
+			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
+			
+			observations.add(new PageStateObservation(page_state, "pages without titles", null, null));
 			points += 0;				
 		}
 		

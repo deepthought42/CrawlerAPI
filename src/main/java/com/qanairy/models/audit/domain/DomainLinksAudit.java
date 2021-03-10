@@ -70,8 +70,6 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 						 observations, 
 						 AuditLevel.PAGE, 
 						 max_points,
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 }

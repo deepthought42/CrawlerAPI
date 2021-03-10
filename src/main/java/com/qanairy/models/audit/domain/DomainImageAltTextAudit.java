@@ -68,8 +68,6 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 						 observations, 
 						 AuditLevel.DOMAIN, 
 						 max_points, 
-						 null,
-						 why_it_matters,
-						 ada_compliance);
+						 null);
 	}
 }

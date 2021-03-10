@@ -62,7 +62,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		
+	
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		for(ElementState element : page_state_service.getElementStates(page_state.getKey())) {
@@ -160,28 +160,36 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 		}
 		
+		
+		
+		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
+				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
+				+ " dead link, users bounce in search of a more reputable source.";
+		
+		String ada_compliance = "There is no ADA guideline for dead links";
+		
 		if(!links_without_href_attribute.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(links_without_href_attribute, "Links without an 'href' attribute present");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_attribute, "Links without an 'href' attribute present", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(links_without_href_value, "Links without emptry 'href' values");
+			ElementStateObservation observation = new ElementStateObservation(links_without_href_value, "Links without emptry 'href' values", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(invalid_links, "Links with invalid addresses");
+			ElementStateObservation observation = new ElementStateObservation(invalid_links, "Links with invalid addresses", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(dead_links, "Dead links");
+			ElementStateObservation observation = new ElementStateObservation(dead_links, "Dead links", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(non_labeled_links, "Links without text");
+			ElementStateObservation observation = new ElementStateObservation(non_labeled_links, "Links without text", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -191,17 +199,11 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				&& dead_links.isEmpty()
 				&& non_labeled_links.isEmpty()
 		) {
-			ElementStateObservation observation = new ElementStateObservation(new ArrayList<>(), "All links are providing a delightful experience");
+			ElementStateObservation observation = new ElementStateObservation(new ArrayList<>(), "All links are providing a delightful experience", why_it_matters, ada_compliance);
 			observations.add(observation_service.save(observation));
 		}
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
-		
-		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
-				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
-				+ " dead link, users bounce in search of a more reputable source.";
-		
-		String ada_compliance = "There is no ADA guideline for dead links";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.PERFORMANCE,
@@ -210,9 +212,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 link_elements.size()*5,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance); 
+						 page_state.getUrl()); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

@@ -61,6 +61,19 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
+		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 
+				" opinion on a product. 62–90% of that interaction is determined by the" + 
+				" color of the product alone." + 
+				" Color impacts how a user feels when they interact with your website; it is" + 
+				" key to their experience. The right usage of colors can brighten a website" + 
+				" and communicates the tone of your brand. Furthermore, using your brand" + 
+				" colors consistently makes the website appear cohesive and collected," + 
+				" while creating a sense of familiarity for the user.";
+		
+		String ada_compliance = "There are no ADA compliance guidelines regarding the website color" + 
+				" palette. However, keeping a cohesive color palette allows you to create" + 
+				" a webpage easy for everyone to read. ";
+		
 		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
@@ -135,7 +148,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		ColorPaletteObservation observation = new ColorPaletteObservation(
 														palette,
 														color_scheme, 
-														"This is a color scheme description");
+														"This is a color scheme description", why_it_matters, ada_compliance);
 		
 		observations.add(observation_service.save(observation));
 
@@ -146,20 +159,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		//setGrayColors(new ArrayList<>(gray_colors));
 		setColors(new ArrayList<>(observation.getColors()));
 		
-		
-		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 
-				" opinion on a product. 62–90% of that interaction is determined by the" + 
-				" color of the product alone." + 
-				" Color impacts how a user feels when they interact with your website; it is" + 
-				" key to their experience. The right usage of colors can brighten a website" + 
-				" and communicates the tone of your brand. Furthermore, using your brand" + 
-				" colors consistently makes the website appear cohesive and collected," + 
-				" while creating a sense of familiarity for the user.";
-		
-		String ada_compliance = "There are no ADA compliance guidelines regarding the website color" + 
-				" palette. However, keeping a cohesive color palette allows you to create" + 
-				" a webpage easy for everyone to read. ";
-		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.COLOR_PALETTE,
@@ -167,9 +166,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 score.getMaxPossiblePoints(),
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 	
 	/**

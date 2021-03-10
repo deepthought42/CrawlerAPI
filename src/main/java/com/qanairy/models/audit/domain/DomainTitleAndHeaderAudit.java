@@ -88,14 +88,9 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		
 		List<Observation> compressed_observations = new ArrayList<>();
 		for(String key : observation_map.keySet()) {
-			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key);
+			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, null, null);
 			compressed_observations.add(observation);
 		}
-		
-		
-		String why_it_matters = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper vel eros ut fermentum. Aenean scelerisque tincidunt arcu, in pulvinar enim dapibus et. Sed pharetra lorem et maximus cursus. Pellentesque aliquam ex quis sapien sollicitudin ornare. Curabitur sit amet metus eu mi interdum pretium. Praesent lobortis ligula id tortor finibus, non tincidunt nisi pretium. Fusce nisi justo, condimentum sed eros ut, volutpat tincidunt sem. Vestibulum vestibulum enim et viverra pharetra. Vivamus aliquam pulvinar facilisis. Quisque nec nisi est. Suspendisse quis scelerisque nulla. Integer sit amet egestas eros. Duis sagittis elit mi. Suspendisse diam sem, sodales et sodales a, posuere eget massa. Vestibulum ligula justo, ultrices vitae nisi nec, finibus posuere tortor.\n";
-		
-		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
@@ -104,8 +99,6 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 					     compressed_observations,
 					     AuditLevel.DOMAIN,
 					     max_points,
-					     domain.getHost(),
-					     why_it_matters,
-					     ada_compliance);
+					     domain.getHost());
 	}
 }

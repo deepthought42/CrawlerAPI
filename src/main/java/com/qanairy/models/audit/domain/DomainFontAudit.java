@@ -186,9 +186,7 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 						 observations, 
 						 AuditLevel.PAGE, 
 						 max_score, 
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 	
 

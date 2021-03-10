@@ -17,9 +17,11 @@ public class TypefacesObservation extends Observation {
 	
 	public TypefacesObservation() {}
 	
-	public TypefacesObservation(List<String> typefaces, String description) {
+	public TypefacesObservation(List<String> typefaces, String description, String why_it_matters, String ada_compliance) {
 		setTypefaces(typefaces);
 		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
 		setKey(this.generateKey());
 	}
 	

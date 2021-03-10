@@ -56,16 +56,7 @@ public class DomainParagraphingAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 			System.out.println("observations size for domain link audit ::      "+observations.size());
 		}
-		
-		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
-				" Attention spans are shorter, and users skim through most information." + 
-				" Presenting information in small, easy to digest chunks makes their" + 
-				" experience easy and convenient. ";
-		
-		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
-				" this category, reading level needs to be taken into consideration when" + 
-				" writing content and paragraphing. ";
-		
+				
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.PERFORMANCE,
 						 AuditName.LINKS,
@@ -73,8 +64,6 @@ public class DomainParagraphingAudit implements IExecutableDomainAudit {
 						 observations,
 						 AuditLevel.DOMAIN,
 						 max_points,
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 }

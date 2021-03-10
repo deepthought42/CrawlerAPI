@@ -65,8 +65,6 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 		int points = 0;
 		int max_points = 0;
 		
-		
-		
 		for(Audit audit : text_contrast_audits) {
 			points += audit.getPoints();
 			max_points += audit.getTotalPossiblePoints();
@@ -80,15 +78,7 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 				observation_map.put(obs.getKey(), obs);
 			}
 		}
-		
-		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
-				" the text on your website. It plays an important role in how clear, distinct" + 
-				" and legible the textual content is.";
-		
-		String ada_compliance = "Your typography meets ADA requirements." + 
-				" Images of text are not used and text is resizable. San-Serif typeface has" + 
-				" been used across the pages.";
-		
+				
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.TYPEFACES, 
@@ -96,9 +86,7 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 						 new ArrayList<>(observation_map.values()), 
 						 AuditLevel.DOMAIN, 
 						 max_points, 
-						 domain.getHost(),
-						 why_it_matters,
-						 ada_compliance);
+						 domain.getHost());
 	}
 	
 

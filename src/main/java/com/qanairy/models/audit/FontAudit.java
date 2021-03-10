@@ -64,6 +64,15 @@ public class FontAudit implements IExecutablePageStateAudit {
 				}
 			}
 		}
+		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				" the text on your website. It plays an important role in how clear, distinct" + 
+				" and legible the textual content is.";
+		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				" Images of text are not used and text is resizable. San-Serif typeface has" + 
+				" been used across the pages.";
+		
 		List<Observation> observations = new ArrayList<>();
 		
 		int score = 0;
@@ -140,15 +149,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 			log.warn("#############################################################################");
 		}
 		
-		
-		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
-				" the text on your website. It plays an important role in how clear, distinct" + 
-				" and legible the textual content is.";
-		
-		String ada_compliance = "Your typography meets ADA requirements." + 
-				" Images of text are not used and text is resizable. San-Serif typeface has" + 
-				" been used across the pages.";
-		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
@@ -157,9 +157,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 max_score,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 	}
 	
 

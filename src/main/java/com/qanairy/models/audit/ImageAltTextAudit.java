@@ -64,6 +64,13 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		String why_it_matters = "Alt-text helps with both SEO and accessibility. Search engines use alt-text"
+				+ " to help determine how usable and your site is as a way of ranking your site.";
+		
+		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
+				" ‘Alt’ text for images present on the website.";
+	
+		
 		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
@@ -93,7 +100,10 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		if(!images_without_alt_text.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
 					images_without_alt_text, 
-					"Images without alternative text attribute");
+					"Images without alternative text attribute", 
+					why_it_matters, 
+					ada_compliance);
+			
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -109,7 +119,10 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		if(!images_without_alt_text_defined.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
 					images_without_alt_text_defined, 
-					"Images without alternative text defined as a non empty string value");
+					"Images without alternative text defined as a non empty string value", 
+					why_it_matters, 
+					ada_compliance);
+			
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -124,13 +137,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
 		
-		String why_it_matters = "Alt-text helps with both SEO and accessibility. Search engines use alt-text"
-				+ " to help determine how usable and your site is as a way of ranking your site.";
-		
-		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
-				" ‘Alt’ text for images present on the website.";
-	
-		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
@@ -138,9 +144,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 						 observations,
 						 AuditLevel.PAGE,
 						 image_elements.size()*2,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 ada_compliance);
+						 page_state.getUrl());
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}

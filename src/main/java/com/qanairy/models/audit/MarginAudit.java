@@ -34,6 +34,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
 /**
@@ -296,7 +297,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "There are no ADA requirements for use of margins";
 	
-		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8.", why_it_matters, ada_compliance));
+		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8.", why_it_matters, ada_compliance, Priority.LOW));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -353,7 +354,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		if(!unscalable_margin_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_margin_elements, "Elements with unscalable margin units", null, null));
+			observations.add(new ElementStateObservation(unscalable_margin_elements, "Elements with unscalable margin units", "", "", Priority.LOW));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -473,7 +474,12 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			
 			String ada_compliance = "There are no ADA requirements for use of margins";
 		
-			observations.add(new ElementStateObservation(flagged_elements, "Elements that appear to use margin as padding", why_it_matters, ada_compliance));
+			observations.add(new ElementStateObservation(
+									flagged_elements, 
+									"Elements that appear to use margin as padding", 
+									why_it_matters, 
+									ada_compliance,
+									Priority.LOW));
 		}
 		return new Score(score, max_score, observations);
 	}

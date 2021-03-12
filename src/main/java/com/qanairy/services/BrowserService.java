@@ -269,13 +269,13 @@ public class BrowserService {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
 			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+			String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 			String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			viewport_screenshot.flush();
 			
 			//scroll to bottom of page
 			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+			String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 			String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			full_page_screenshot.flush();
 
@@ -370,13 +370,13 @@ public class BrowserService {
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		long x_offset = browser.getXScrollOffset();
@@ -623,7 +623,7 @@ public class BrowserService {
 																					element_size.getHeight()); */
 				BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-				String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
+				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				int idx = 0;
 				String element_screenshot_url = "";
 				while(idx < 3 && element_screenshot_url.isEmpty()) {
@@ -1285,7 +1285,7 @@ public class BrowserService {
 			return null;
 		}
 		BufferedImage img = browser.getElementScreenshot(form_elem);
-		String checksum = PageState.getFileChecksum(img);
+		String checksum = ImageUtils.getChecksum(img);
 		
 		//Map<String, String> css_map = Browser.loadCssProperties(submit_element);
 		com.qanairy.models.Element elem = new com.qanairy.models.Element(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), submit_element.getAttribute("innerHTML"), submit_element.getAttribute("outerHTML"));

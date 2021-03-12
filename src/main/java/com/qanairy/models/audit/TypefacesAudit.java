@@ -24,6 +24,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -64,7 +65,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		
 		List<String> font_families = new ArrayList<>();
 		List<Observation> observations = new ArrayList<>();
-
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
 		
 		//open stylesheet
@@ -110,17 +110,36 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		//evaluate typefaces
 		if(primary_typefaces.size() ==  2) {
 			score += 2;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!", why_it_matters, ada_compliance);
-			observations.add(observation_service.save(observation));
+			//Set<String> recommendations = new HashSet<>();
+
+			//TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!", why_it_matters, ada_compliance, recommendations);
+			//observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() < 2) {
 			score += 1;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Only 1 typeface was found. You might want to consider using 2 typefaces for the best experience", why_it_matters, ada_compliance);
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add(" You might want to consider using 2 typefaces for the best experience");
+			TypefacesObservation observation = new TypefacesObservation(
+														primary_typefaces, 
+														"Only 1 typeface was found", 
+														why_it_matters, 
+														ada_compliance, 
+														recommendations,
+														Priority.MEDIUM);
+			
 			observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() > 2) {
 			score += 0;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", why_it_matters, ada_compliance);
+			Set<String> recommendations = new HashSet<>();
+
+			TypefacesObservation observation = new  TypefacesObservation(
+														primary_typefaces, 
+														"Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", 
+														why_it_matters, 
+														ada_compliance, 
+														recommendations,
+														Priority.MEDIUM);
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		
@@ -158,8 +177,15 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			//if connected set has more than 1 element then an inconsistency exists
 			if(forward_connection_graph.get(font).size() > 1){
 				score += 1;
-				TypefacesObservation observation = new TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.",
-																			why_it_matters, ada_compliance);
+				Set<String> recommendations = new HashSet<>();
+
+				TypefacesObservation observation = new TypefacesObservation(
+															forward_connection_graph.get(font), 
+															"Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.",
+															why_it_matters, 
+															ada_compliance, 
+															recommendations, 
+															Priority.MEDIUM);
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -194,7 +220,12 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			observed_fonts.add(font_family);
 		}
 		
-		ElementStateObservation observation = new ElementStateObservation(no_fallback_font, "Text element rendered with a fallback typeface instead of the desired font.", why_it_matters, ada_compliance);
+		ElementStateObservation observation = new ElementStateObservation(
+														no_fallback_font, 
+														"Text element rendered with a fallback typeface instead of the desired font.", 
+														why_it_matters, 
+														ada_compliance,
+														Priority.MEDIUM);
 		observations.add(observation_service.save(observation));
 		
 		return new Audit(AuditCategory.AESTHETICS,

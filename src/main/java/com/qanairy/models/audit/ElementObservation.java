@@ -1,32 +1,38 @@
 package com.qanairy.models.audit;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementObservation extends Observation {
-	private String description;
-	
+public class ElementObservation extends Observation {	
 	@Relationship(type = "FOR")
 	private List<Element> elements;
 	
 	public ElementObservation() {}
 	
-	public ElementObservation(List<Element> elements, String description, String why_it_matters, String ada_compliance) {
+	public ElementObservation(
+			List<Element> elements, 
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority
+	) {
 		setElements(elements);
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
+		setPriority(priority);
 		setKey(this.generateKey());
 	}
 	
+	/*
 	@Override
 	public String generateKey() {
 		assert elements != null;
@@ -34,7 +40,7 @@ public class ElementObservation extends Observation {
 		
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
-
+*/
 
 	public List<Element> getElements() {
 		return elements;
@@ -47,16 +53,6 @@ public class ElementObservation extends Observation {
 	
 	public boolean addElements(List<Element> elements) {
 		return this.elements.addAll(elements);
-	}
-
-	@Override
-	public String getDescription() {
-		return this.description;
-	}
-
-	@Override
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	@Override

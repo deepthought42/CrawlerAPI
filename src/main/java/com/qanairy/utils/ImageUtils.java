@@ -5,9 +5,12 @@ import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.codec.binary.Hex;
 import org.openimaj.image.analysis.colour.CIEDE2000;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,6 +206,33 @@ public class ImageUtils {
 		}
 		return new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
 		
+	}
+	
+	/**
+	 * 
+	 * @param buff_img
+	 * @return
+	 * @throws IOException
+	 */
+	public static String getChecksum(BufferedImage buff_img) throws IOException {
+		assert buff_img != null;
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
+		} catch (NoSuchAlgorithmException e) {
+			log.error("Error generating checksum of buffered image");
+		}
+		return "";
+
 	}
 	
 }

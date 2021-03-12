@@ -17,6 +17,7 @@ import javax.websocket.server.PathParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.Sanitizer;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +39,6 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ObservationElementMap;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ElementObservationTwoWayMapping;
 import com.qanairy.models.audit.Observation;
@@ -340,8 +340,9 @@ public class AuditController {
     		HttpServletRequest request,
     		@RequestParam("host") @NotBlank String host
 	) {
+    	host = BrowserUtils.sanitizeUrl(host);
     	//Get most recent audits
-    	log.warn("finding audits by page :: "+host);
+    	log.warn("finding audit pages by host :: "+host);
     	Set<Audit> audits = domain_service.getMostRecentAudits(host);
     	
     	log.warn("grouping audits by page");
@@ -361,8 +362,10 @@ public class AuditController {
     		HttpServletRequest request,
     		@RequestParam("page_url") @NotBlank String page_url
 	) throws MalformedURLException {
+    	page_url = BrowserUtils.sanitizeUrl(page_url);
+
     	//Get most recent audits
-    	log.warn("finding audits by page :: "+page_url);
+    	log.warn("finding audits elements by page url :: "+page_url);
     	String domain_host = new URL(page_url).getHost();
     	Set<Audit> audits = domain_service.getMostRecentAudits(domain_host);
     	

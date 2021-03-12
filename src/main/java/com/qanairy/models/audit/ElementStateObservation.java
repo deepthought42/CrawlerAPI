@@ -2,33 +2,39 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementStateObservation extends Observation {
-	private String description;
-	
+public class ElementStateObservation extends Observation {	
 	@Relationship(type = "FOR")
 	private List<ElementState> elements = new ArrayList<>();
 	
 	public ElementStateObservation() {}
 	
-	public ElementStateObservation(List<ElementState> elements, String description, String why_it_matters, String ada_compliance) {
+	public ElementStateObservation(
+			List<ElementState> elements, 
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority
+	) {
 		setElements(elements);
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
+		setPriority(priority);
 		setKey(this.generateKey());
 	}
 	
+	/*
 	@Override
 	public String generateKey() {
 		assert elements != null;
@@ -36,7 +42,7 @@ public class ElementStateObservation extends Observation {
 		
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
-
+*/
 
 	public List<ElementState> getElements() {
 		return elements;
@@ -49,16 +55,6 @@ public class ElementStateObservation extends Observation {
 	
 	public boolean addElements(List<ElementState> elements) {
 		return this.elements.addAll(elements);
-	}
-
-	@Override
-	public String getDescription() {
-		return this.description;
-	}
-
-	@Override
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	@Override

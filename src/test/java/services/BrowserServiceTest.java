@@ -23,6 +23,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.services.BrowserService;
+import com.qanairy.utils.ImageUtils;
 
 //@RunWith(SpringRunner.class)
 //@SpringBootTest(classes = EntryPoint.class)
@@ -49,7 +50,7 @@ public class BrowserServiceTest {
 	}
 	
 	public void screenshotFromUrl() throws MalformedURLException, IOException{
-		String checksum = PageState.getFileChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
+		String checksum = ImageUtils.getChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
 	
 		System.err.println("Checksum :: " + checksum);
 	}

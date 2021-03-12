@@ -20,6 +20,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -131,7 +132,12 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		*/
 
 		if(!poor_paragraph_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(poor_paragraph_observations, "Paragraphs with more than 5 sentences", why_it_matters, ada_compliance));
+			observations.add(new ElementStateObservation(
+									poor_paragraph_observations, 
+									"Paragraphs with more than 5 sentences", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.MEDIUM));
 		}
 		
 		//Sentence observations
@@ -142,11 +148,21 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		*/
 		
 		if(!meh_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(meh_sentence_observations, "Sentences between 10 and 20 words long", why_it_matters, ada_compliance));
+			observations.add(new ElementStateObservation(
+									meh_sentence_observations, 
+									"Sentences between 10 and 20 words long", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.MEDIUM));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(poor_sentence_observations, "Sentences with over 20 words", why_it_matters, ada_compliance));
+			observations.add(new ElementStateObservation(
+									poor_sentence_observations, 
+									"Sentences with over 20 words", 
+									why_it_matters, 
+									ada_compliance,
+									Priority.MEDIUM));
 		}
 		
 		

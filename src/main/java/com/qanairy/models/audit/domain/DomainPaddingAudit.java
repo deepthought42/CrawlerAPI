@@ -23,11 +23,11 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
-import com.qanairy.models.audit.StylingMissingObservation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 
@@ -134,10 +134,16 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
 		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved() + unit_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() + unit_score.getMaxPossiblePoints()) );	
 
+		/*
 		if(points == 0) {
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation("Padding was not used", why_it_matters, ada_compliance)); 
+			observations.add(new StylingMissingObservation(
+									"Padding was not used", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.LOW)); 
 		}
+		 */
 		
 		
 		return new Audit(AuditCategory.AESTHETICS,
@@ -314,7 +320,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units", null, null));
+			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units", "", "", Priority.MEDIUM));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

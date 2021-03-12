@@ -28,6 +28,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
 
@@ -125,7 +126,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			String ada_compliance = "There are no ADA requirements for use of padding";
 
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation("Padding was not used", why_it_matters, ada_compliance)); 
+			observations.add(new StylingMissingObservation(
+									"Padding was not used", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.LOW)); 
 		}
 		
 
@@ -318,7 +323,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		observations.add(new ElementStateObservation(non_scalable, 
 													"Has at least one padding value that isn't a multiple of 8.", 
 													why_it_matters,
-													ada_compliance));
+													ada_compliance,
+													Priority.LOW));
 		return new Score(points_earned, max_points, observations);
 	}
 	
@@ -373,7 +379,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_padding_elements, "Elements with unscalable padding units", null, null));
+			observations.add(new ElementStateObservation(unscalable_padding_elements, "Elements with unscalable padding units", "", "", Priority.LOW));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

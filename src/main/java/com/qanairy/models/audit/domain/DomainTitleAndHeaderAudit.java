@@ -24,6 +24,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
@@ -88,7 +89,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		
 		List<Observation> compressed_observations = new ArrayList<>();
 		for(String key : observation_map.keySet()) {
-			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, null, null);
+			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, "", "", Priority.HIGH);
 			compressed_observations.add(observation);
 		}
 		

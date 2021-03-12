@@ -24,6 +24,7 @@ import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ObservationElementMap;
+import com.qanairy.models.audit.SimpleObservation;
 import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
@@ -182,7 +183,19 @@ public class AuditService {
 														   element.getHeight()));
 						}
 					}
-					ObservationElementMap observation_element = new ObservationElementMap(observation, elements);
+					
+					ObservationElementMap observation_element = null;
+					if(observation.getType().equals(ObservationType.ELEMENT)) {
+						SimpleObservation simple_observation = new SimpleObservation(
+																		observation.getDescription(),
+																		observation.getWhyItMatters(),
+																		observation.getAdaCompliance(),
+																		observation.getPriority());
+						observation_element = new ObservationElementMap(simple_observation, elements);
+					}
+					else{
+						observation_element = new ObservationElementMap(observation, elements);
+					}
 					audit_elements.add(observation_element);
 				}
 			

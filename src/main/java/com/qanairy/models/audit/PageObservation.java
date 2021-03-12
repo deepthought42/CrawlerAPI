@@ -5,6 +5,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
@@ -16,20 +17,29 @@ public class PageObservation extends Observation {
 	
 	public PageObservation() {}
 	
-	public PageObservation(PageVersion page, String description) {
+	public PageObservation(
+				PageVersion page, 
+				String description, 
+				String why_it_matters, 
+				String ada_compliance, 
+				Priority priority) {
 		setPage(page);
 		setDescription(description);
 		setType(ObservationType.PAGE);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
+		setPriority(priority);
 		setKey(this.generateKey());
 	}
 	
+	/*
 	@Override
 	public String generateKey() {
 		assert page != null;
 		
 		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( page.getKey() + this.getDescription() );
 	}
-
+*/
 
 	public PageVersion getElements() {
 		return page;

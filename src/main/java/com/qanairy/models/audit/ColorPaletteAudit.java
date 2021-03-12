@@ -25,6 +25,7 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.ImageUtils;
@@ -148,7 +149,10 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		ColorPaletteObservation observation = new ColorPaletteObservation(
 														palette,
 														color_scheme, 
-														"This is a color scheme description", why_it_matters, ada_compliance);
+														"This is a color scheme description", 
+														why_it_matters, 
+														ada_compliance, 
+														Priority.MEDIUM);
 		
 		observations.add(observation_service.save(observation));
 

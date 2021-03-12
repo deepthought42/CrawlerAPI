@@ -27,6 +27,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -201,11 +202,11 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
-			ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0", why_it_matters, ada_compliance);
+			ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0", why_it_matters, ada_compliance, Priority.HIGH);
 			observations.add(observation_service.save(low_contrast_observation));
 		}
 		if(!mid_contrast_elements.isEmpty()) {
-			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5", why_it_matters, ada_compliance);
+			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5", why_it_matters, ada_compliance, Priority.HIGH);
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
 		/*

@@ -24,6 +24,7 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ObservationService;
@@ -146,7 +147,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 																scheme, 
 																"This is a color scheme description",
 																why_it_matters,
-																ada_compliance);
+																ada_compliance, 
+																Priority.HIGH);
 		
 		
 		observations.add(observation_service.save(palette_observation));

@@ -36,6 +36,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 
@@ -292,8 +293,10 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			}
 		}
 		
+		String ada_compliance = "";
+		String why_it_matters = "";
 		if(!unscalable_margin_elements.isEmpty()) {
-			observations.add(new ElementObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
+			observations.add(new ElementObservation(unscalable_margin_elements, "Elements with unscalable margin units", why_it_matters, ada_compliance, Priority.LOW));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -405,7 +408,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			}
 		}
 		if(!flagged_elements.isEmpty()) {
-			observations.add(new ElementObservation(flagged_elements, "Elements that appear to use margin as padding"));
+			observations.add(new ElementObservation(flagged_elements, "Elements that appear to use margin as padding", "Using margin as padding is discouraged because...", "There are no ADA requirements for margin use", Priority.LOW));
 		}
 		return new Score(score, max_score, observations);
 	}

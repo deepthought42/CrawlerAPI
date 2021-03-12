@@ -22,6 +22,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -169,27 +170,52 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "There is no ADA guideline for dead links";
 		
 		if(!links_without_href_attribute.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(links_without_href_attribute, "Links without an 'href' attribute present", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+															links_without_href_attribute, 
+															"Links without an 'href' attribute present", 
+															why_it_matters, 
+															ada_compliance, 
+															Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(links_without_href_value, "Links without emptry 'href' values", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+															links_without_href_value, 
+															"Links without emptry 'href' values", 
+															why_it_matters, 
+															ada_compliance, 
+															Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(invalid_links, "Links with invalid addresses", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+															invalid_links, 
+															"Links with invalid addresses", 
+															why_it_matters, 
+															ada_compliance, 
+															Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(dead_links, "Dead links", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+														dead_links, 
+														"Dead links", 
+														why_it_matters, 
+														ada_compliance, 
+														Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(non_labeled_links, "Links without text", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+															non_labeled_links, 
+															"Links without text", 
+															why_it_matters, 
+															ada_compliance, 
+															Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -199,7 +225,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				&& dead_links.isEmpty()
 				&& non_labeled_links.isEmpty()
 		) {
-			ElementStateObservation observation = new ElementStateObservation(new ArrayList<>(), "All links are providing a delightful experience", why_it_matters, ada_compliance);
+			ElementStateObservation observation = new ElementStateObservation(
+														new ArrayList<>(), 
+														"All links are providing a delightful experience", 
+														why_it_matters, 
+														ada_compliance, 
+														Priority.HIGH);
 			observations.add(observation_service.save(observation));
 		}
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));

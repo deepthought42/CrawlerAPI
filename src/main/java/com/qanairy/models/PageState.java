@@ -222,49 +222,7 @@ public class PageState extends LookseeObject {
 
 	public void addElement(ElementState element) {
 		this.elements.add(element);
-	}
-
-	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BufferedImage buff_img = ImageIO.read(new URL(url));
-
-		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but
-							// other formats ?
-
-		// Get file input stream for reading the file content
-		byte[] data = baos.toByteArray();
-		digest.update(data);
-		byte[] thedigest = digest.digest(data);
-		return Hex.encodeHexString(thedigest);
-	}
-
-	/**
-	 * 
-	 * @param buff_img
-	 * @return
-	 * @throws IOException
-	 */
-	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
-		assert buff_img != null;
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but
-							// other formats ?
-		// Get file input stream for reading the file content
-		byte[] data = baos.toByteArray();
-		try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			sha.update(data);
-			byte[] thedigest = sha.digest(data);
-			return Hex.encodeHexString(thedigest);
-		} catch (NoSuchAlgorithmException e) {
-			log.error("Error generating checksum of buffered image");
-		}
-		return "";
-
-	}
+	}	
 
 	/**
 	 * Generates page name using path

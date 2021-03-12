@@ -211,7 +211,6 @@ public class DomainService {
 		assert !audit_record_key.isEmpty();
 		//check if audit record is already attached to domain
 
-		log.warn("connecting audit record to domain");
 		domain_repo.addAuditRecord(domain_key, audit_record_key);
 	}
 
@@ -302,6 +301,7 @@ public class DomainService {
 	
 	public Set<Audit> getMostRecentAudits(String host) {
 		assert host != null;
+		assert !host.isEmpty();
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
         return audit_record_service.getAllPageAudits(record.getKey());
@@ -309,6 +309,7 @@ public class DomainService {
 
 	public AuditRecord getMostRecentAuditRecord(String host) {
 		assert host != null;
+		assert !host.isEmpty();
 		
 		return audit_record_service.findMostRecent(host).get();
 	}

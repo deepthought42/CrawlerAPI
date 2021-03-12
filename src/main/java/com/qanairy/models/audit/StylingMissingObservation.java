@@ -1,6 +1,7 @@
 package com.qanairy.models.audit;
 
 import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.Priority;
 
 /**
  * Details observations for when a page is devoid of a certain styling such as padding, 
@@ -8,13 +9,21 @@ import com.qanairy.models.enums.ObservationType;
  */
 public class StylingMissingObservation extends Observation {
 	
-	public StylingMissingObservation(String description, String why_it_matters, String ada_compliance) {
+	public StylingMissingObservation(
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority) {
 		super();
 		
 		assert description != null;
 		
 		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
+		setPriority(priority);
 		setType(ObservationType.STYLE_MISSING);
+		setKey(generateKey());
 	}
 
 	@Override

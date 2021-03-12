@@ -19,6 +19,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 
 /**
@@ -102,7 +103,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					images_without_alt_text, 
 					"Images without alternative text attribute", 
 					why_it_matters, 
-					ada_compliance);
+					ada_compliance,
+					Priority.HIGH);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -121,7 +123,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					images_without_alt_text_defined, 
 					"Images without alternative text defined as a non empty string value", 
 					why_it_matters, 
-					ada_compliance);
+					ada_compliance,
+					Priority.HIGH);
 			
 			observations.add(observation_service.save(observation));
 		}

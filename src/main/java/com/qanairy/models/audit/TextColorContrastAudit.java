@@ -16,6 +16,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -156,11 +157,21 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		*/
 		if(!mid_header_contrast.isEmpty()) {
-			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5", why_it_matters, ada_compliance);
+			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(
+																			mid_header_contrast, 
+																			"Headers with contrast between 3 and 4.5", 
+																			why_it_matters, 
+																			ada_compliance, 
+																			Priority.HIGH);
 			observations.add(observation_service.save(mid_header_contrast_observation));
 		}
 		if(!low_header_contrast.isEmpty()) {
-			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3", why_it_matters, ada_compliance);
+			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(
+																			low_header_contrast, 
+																			"Headers with contrast below 3", 
+																			why_it_matters, 
+																			ada_compliance, 
+																			Priority.HIGH);
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
@@ -171,11 +182,21 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		*/
 		if(!mid_text_contrast.isEmpty()) {
-			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7", why_it_matters, ada_compliance);
+			ElementStateObservation mid_text_observation = new ElementStateObservation(
+																mid_text_contrast, 
+																"Text with contrast between 4.5 and 7", 
+																why_it_matters, 
+																ada_compliance,
+																Priority.HIGH);
 			observations.add(observation_service.save(mid_text_observation));
 		}
 		if(!low_text_contrast.isEmpty()) {
-			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5", why_it_matters, ada_compliance);
+			ElementStateObservation low_text_observation = new ElementStateObservation(
+																	low_text_contrast, 
+																	"Text with contrast below 4.5", 
+																	why_it_matters, 
+																	ada_compliance,
+																	Priority.HIGH);
 			observations.add(observation_service.save(low_text_observation));
 		}
 		

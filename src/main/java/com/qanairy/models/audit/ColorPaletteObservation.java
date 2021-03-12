@@ -1,13 +1,13 @@
 package com.qanairy.models.audit;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.Priority;
 
 
 /**
@@ -26,7 +26,10 @@ public class ColorPaletteObservation extends Observation{
 	public ColorPaletteObservation(
 			List<PaletteColor> palette, 
 			ColorScheme scheme, 
-			String description, String why_it_matters, String ada_compliance
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority
 	) {
 		setPaletteColors(palette);
 		setColors(palette);
@@ -34,14 +37,17 @@ public class ColorPaletteObservation extends Observation{
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
+		setPriority(priority);
 		setKey(this.generateKey());
 	}
 	
+	/*
 	@Override
 	public String generateKey() {
 		Collections.sort(colors);
 		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + this.getDescription() );
 	}
+	*/
 
 	public List<String> getColors() {
 		return colors;

@@ -3,7 +3,9 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,6 +152,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 
 		List<Observation> observations = new ArrayList<>();
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("Use colors for text and images of text with background colors that have a contrast of at least 4.5:1 for ADA compliance");
+
+		
 		/*
 		if(!high_header_contrast.isEmpty()) {
 			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
@@ -162,7 +168,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			"Headers with contrast between 3 and 4.5", 
 																			why_it_matters, 
 																			ada_compliance, 
-																			Priority.HIGH);
+																			Priority.HIGH,
+																			recommendations );
 			observations.add(observation_service.save(mid_header_contrast_observation));
 		}
 		if(!low_header_contrast.isEmpty()) {
@@ -171,7 +178,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			"Headers with contrast below 3", 
 																			why_it_matters, 
 																			ada_compliance, 
-																			Priority.HIGH);
+																			Priority.HIGH,
+																			recommendations );
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
@@ -187,7 +195,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																"Text with contrast between 4.5 and 7", 
 																why_it_matters, 
 																ada_compliance,
-																Priority.HIGH);
+																Priority.HIGH, null);
 			observations.add(observation_service.save(mid_text_observation));
 		}
 		if(!low_text_contrast.isEmpty()) {
@@ -196,7 +204,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																	"Text with contrast below 4.5", 
 																	why_it_matters, 
 																	ada_compliance,
-																	Priority.HIGH);
+																	Priority.HIGH, null);
 			observations.add(observation_service.save(low_text_observation));
 		}
 		

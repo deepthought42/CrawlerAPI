@@ -89,7 +89,7 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		
 		List<Observation> compressed_observations = new ArrayList<>();
 		for(String key : observation_map.keySet()) {
-			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, "", "", Priority.HIGH);
+			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, "", "", Priority.HIGH, null);
 			compressed_observations.add(observation);
 		}
 		

@@ -1,7 +1,6 @@
 package com.qanairy.utils;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -18,20 +17,16 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Redirect;
 import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.enums.BrowserType;
 
 
 public class BrowserUtils {

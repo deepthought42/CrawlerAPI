@@ -17,7 +17,6 @@ import javax.websocket.server.PathParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.Sanitizer;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -388,6 +387,31 @@ public class AuditController {
      */
     @RequestMapping(path="{key}/recommendations/add", method = RequestMethod.POST)
     public @ResponseBody Observation addRecommendation(
+    		HttpServletRequest request,
+    		final @PathVariable String audit_key,
+    		final @RequestBody(required=true) String recommendation
+	) {
+		return null;
+    	/*
+    	//find audit by key and add recommendation
+    	Audit audit= audit_service.findByKey(audit_key);
+    	audit.addRecommendation(recommendation);
+       	
+       	//save and return
+       	return audit_service.save(audit);    
+       	*/
+    }
+    
+    /**
+     * Adds recommendation to @link Audit audit}
+     * 
+     * @param key key for audit that recommendation should be added to
+     * @param recommendation the expert opinion that should be added to the audit
+     * 
+     * @return {@link Audit audit} with given ID
+     */
+    @RequestMapping(path="/observations/{key}/recommendations/add", method = RequestMethod.POST)
+    public @ResponseBody Observation addRecommendationToObservation(
     		HttpServletRequest request,
     		final @PathVariable String observation_key,
     		final @RequestBody(required=true) String recommendation

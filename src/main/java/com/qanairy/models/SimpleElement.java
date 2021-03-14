@@ -7,14 +7,16 @@ public class SimpleElement {
 	private int y_location;
 	private int width;
 	private int height;
+	private String css_selector;
 	
-	public SimpleElement(String key, String screenshot_url, int x, int y, int width, int height) {
+	public SimpleElement(String key, String screenshot_url, int x, int y, int width, int height, String css_selector) {
 		setKey(key);
 		setScreenshotUrl(screenshot_url);
 		setXLocation(x);
 		setYLocation(y);
 		setWidth(width);
 		setHeight(height);
+		setCssSelector(css_selector);
 	}
 	
 	public String getScreenshotUrl() {
@@ -58,5 +60,13 @@ public class SimpleElement {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public String getCssSelector() {
+		return css_selector;
+	}
+
+	public void setCssSelector(String css_selector) {
+		this.css_selector = css_selector;
 	}	
 }

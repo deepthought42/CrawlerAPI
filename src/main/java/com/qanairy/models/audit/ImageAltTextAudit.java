@@ -104,7 +104,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					"Images without alternative text attribute", 
 					why_it_matters, 
 					ada_compliance,
-					Priority.HIGH);
+					Priority.HIGH, null);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -124,7 +124,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					"Images without alternative text defined as a non empty string value", 
 					why_it_matters, 
 					ada_compliance,
-					Priority.HIGH);
+					Priority.HIGH, null);
 			
 			observations.add(observation_service.save(observation));
 		}

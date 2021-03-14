@@ -1,12 +1,8 @@
 package com.qanairy.models.audit;
 
-import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.ElementState;
-import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
@@ -20,13 +16,16 @@ public class SimpleObservation extends Observation{
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority
+			Priority priority, 
+			String key, 
+			Set<String> recommendations
 	) {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
-		setKey(this.generateKey());
+		setRecommendations(recommendations);
+		setKey(key);
 	}
 	
 	/*

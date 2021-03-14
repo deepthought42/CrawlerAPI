@@ -184,9 +184,12 @@ public class AuditFactory {
 			audits.add(non_text_contrast_audit);
 		}
 		else if(AuditCategory.CONTENT.equals(category)) {
+			/* NOTE typeface audit is incomplete and currently commented out
+			 
 			Audit typeface_audit = typeface_auditor.execute(page);
 			audits.add(typeface_audit);
-
+			 */
+			
 			Audit alt_text_audit = image_alt_text_auditor.execute(page);
 			audits.add(alt_text_audit);
 			

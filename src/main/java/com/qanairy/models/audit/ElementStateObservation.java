@@ -2,6 +2,7 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -24,13 +25,15 @@ public class ElementStateObservation extends Observation {
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority
+			Priority priority, 
+			Set<String> recommendations
 	) {
 		setElements(elements);
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
+		setRecommendations(recommendations);
 		setKey(this.generateKey());
 	}
 	

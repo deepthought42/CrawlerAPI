@@ -1,12 +1,17 @@
 package com.qanairy.models.audit;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.gcp.CloudVisionUtils;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
@@ -144,9 +150,39 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				 score++;
 			 }
 			 else {
-				 log.warn("link doesn't have a text label");
-				 //does element use image as links?
-				 non_labeled_links.add(link);
+				 boolean element_includes_text = false;
+				 //check each child element. if element is an image and does not include text then add link to non labeled links
+				 for(ElementState child_element : link.getChildElements()) {
+					 if("img".contentEquals(child_element.getName())) {
+						 //send img src to google for text extraction
+						 URL url;
+						try {
+							url = new URL(child_element.getAttribute("href"));
+							BufferedImage img_src = ImageIO.read( url );
+							List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);
+							for(String text : image_text_list) {
+								if(text != null || !text.isEmpty()) {
+									element_includes_text = true;
+								}
+							}
+						} catch (MalformedURLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					 }
+				 }
+				 
+				 if(!element_includes_text) {
+					 log.warn("link doesn't have a text label");
+					 //does element use image as links?
+					 non_labeled_links.add(link);
+				 }
+				 else {
+					 score++;
+				 }
 			}
 			 
 			//TODO : Does link have a hover styling? yes(1) / No(0)
@@ -165,74 +201,80 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
 				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
-				+ " dead link, users bounce in search of a more reputable source.";
+				+ " dead link, users bounce in search of a mord()e reputable source.";
 		
 		String ada_compliance = "There is no ADA guideline for dead links";
 		
 		if(!links_without_href_attribute.isEmpty()) {
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add("Make sure links have a url set for the href value.");
+			
 			ElementStateObservation observation = new ElementStateObservation(
 															links_without_href_attribute, 
 															"Links without an 'href' attribute present", 
 															why_it_matters, 
 															ada_compliance, 
-															Priority.HIGH);
+															Priority.HIGH,
+															recommendations);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add("Make sure links have a url set for the href value.");
+			
 			ElementStateObservation observation = new ElementStateObservation(
 															links_without_href_value, 
-															"Links without emptry 'href' values", 
+															"Links without empty 'href' values", 
 															why_it_matters, 
 															ada_compliance, 
-															Priority.HIGH);
+															Priority.HIGH,
+															recommendations);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add("Make sure links point to a valid url.");
+			
 			ElementStateObservation observation = new ElementStateObservation(
 															invalid_links, 
 															"Links with invalid addresses", 
 															why_it_matters, 
 															ada_compliance, 
-															Priority.HIGH);
+															Priority.HIGH,
+															recommendations);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add("Make sure links point to a valid url.");
+			
 			ElementStateObservation observation = new ElementStateObservation(
 														dead_links, 
 														"Dead links", 
 														why_it_matters, 
 														ada_compliance, 
-														Priority.HIGH);
+														Priority.HIGH,
+														recommendations);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add("For best usability make sure links include text.");
+			
 			ElementStateObservation observation = new ElementStateObservation(
 															non_labeled_links, 
 															"Links without text", 
 															why_it_matters, 
 															ada_compliance, 
-															Priority.HIGH);
+															Priority.HIGH,
+															recommendations);
 			observations.add(observation_service.save(observation));
 		}
 		
-		if(links_without_href_attribute.isEmpty()
-				&& links_without_href_value.isEmpty()
-				&& invalid_links.isEmpty()
-				&& dead_links.isEmpty()
-				&& non_labeled_links.isEmpty()
-		) {
-			ElementStateObservation observation = new ElementStateObservation(
-														new ArrayList<>(), 
-														"All links are providing a delightful experience", 
-														why_it_matters, 
-														ada_compliance, 
-														Priority.HIGH);
-			observations.add(observation_service.save(observation));
-		}
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
 		

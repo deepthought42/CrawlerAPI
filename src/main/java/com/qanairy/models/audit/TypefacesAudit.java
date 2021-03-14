@@ -125,7 +125,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														why_it_matters, 
 														ada_compliance, 
 														recommendations,
-														Priority.MEDIUM);
+														Priority.MEDIUM );
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -133,13 +133,13 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			score += 0;
 			Set<String> recommendations = new HashSet<>();
 
-			TypefacesObservation observation = new  TypefacesObservation(
+			TypefacesObservation observation = new TypefacesObservation(
 														primary_typefaces, 
 														"Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", 
 														why_it_matters, 
 														ada_compliance, 
 														recommendations,
-														Priority.MEDIUM);
+														Priority.MEDIUM );
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		
@@ -185,7 +185,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 															why_it_matters, 
 															ada_compliance, 
 															recommendations, 
-															Priority.MEDIUM);
+															Priority.MEDIUM );
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -225,7 +225,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														"Text element rendered with a fallback typeface instead of the desired font.", 
 														why_it_matters, 
 														ada_compliance,
-														Priority.MEDIUM);
+														Priority.MEDIUM, null);
 		observations.add(observation_service.save(observation));
 		
 		return new Audit(AuditCategory.AESTHETICS,

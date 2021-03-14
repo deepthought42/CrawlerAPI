@@ -180,7 +180,8 @@ public class AuditService {
 														   element.getXLocation(), 
 														   element.getYLocation(), 
 														   element.getWidth(), 
-														   element.getHeight()));
+														   element.getHeight(),
+														   element.getXpath()));
 						}
 					}
 					
@@ -190,7 +191,9 @@ public class AuditService {
 																		observation.getDescription(),
 																		observation.getWhyItMatters(),
 																		observation.getAdaCompliance(),
-																		observation.getPriority());
+																		observation.getPriority(),
+																		observation.getKey(),
+																		observation.getRecommendations());
 						observation_element = new ObservationElementMap(simple_observation, elements);
 					}
 					else{
@@ -240,8 +243,20 @@ public class AuditService {
 																				  element.getXLocation(), 
 																				  element.getYLocation(), 
 																				  element.getWidth(), 
-																				  element.getHeight());
+																				  element.getHeight(),
+																				  element.getXpath());
 								element_state_map.put(element.getKey(), simple_element);
+							}
+							
+							
+							if(observation.getType().equals(ObservationType.ELEMENT)) {
+								observation = new SimpleObservation(
+										observation.getDescription(),
+										observation.getWhyItMatters(),
+										observation.getAdaCompliance(),
+										observation.getPriority(),
+										observation.getKey(),
+										observation.getRecommendations());
 							}
 
 							//associate observation with element

@@ -318,13 +318,16 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "There are no ADA requirements for use of padding";
 
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("For a responsive design we recommend using padding values that are a multiple of 8.");
 		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
 		observations.add(new ElementStateObservation(non_scalable, 
 													"Has at least one padding value that isn't a multiple of 8.", 
 													why_it_matters,
 													ada_compliance,
-													Priority.LOW));
+													Priority.LOW,
+													recommendations));
 		return new Score(points_earned, max_points, observations);
 	}
 	
@@ -379,7 +382,13 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_padding_elements, "Elements with unscalable padding units", "", "", Priority.LOW));
+			observations.add(new ElementStateObservation(
+					unscalable_padding_elements, 
+					"Elements with unscalable padding units", 
+					"", 
+					"", 
+					Priority.LOW, 
+					new HashSet<>()));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

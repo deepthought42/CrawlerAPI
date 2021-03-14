@@ -137,7 +137,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									"Paragraphs with more than 5 sentences", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.MEDIUM));
+									Priority.MEDIUM, null));
 		}
 		
 		//Sentence observations
@@ -153,7 +153,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									"Sentences between 10 and 20 words long", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.MEDIUM));
+									Priority.MEDIUM, null));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
@@ -162,7 +162,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									"Sentences with over 20 words", 
 									why_it_matters, 
 									ada_compliance,
-									Priority.MEDIUM));
+									Priority.MEDIUM, null));
 		}
 		
 		

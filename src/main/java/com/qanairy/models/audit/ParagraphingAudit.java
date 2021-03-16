@@ -70,7 +70,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		int max_points = 0;
 		
 		for(ElementState element : element_list) {
-			String text_block = element.getText();
+			String text_block = element.getOwnedText();
 			
 			//    parse text block into paragraph chunks(multiple paragraphs can exist in a text block)
 			String[] paragraphs = text_block.split("\n");

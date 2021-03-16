@@ -169,17 +169,17 @@ public class AuditFactory {
 			//works but temp disabled
 		
 			Audit color_palette_audit = color_palette_auditor.execute(page);
-			Audit text_contrast_audit = text_contrast_auditor.execute(page);
-	
 			audits.add(color_palette_audit);
+
+			Audit text_contrast_audit = text_contrast_auditor.execute(page);
 			audits.add(text_contrast_audit);
-			
+			/*
 			Audit padding_audits = padding_auditor.execute(page);
 			audits.add(padding_audits);
 
 			Audit margin_audits = margin_auditor.execute(page);
 			audits.add(margin_audits);
-			 
+			 */
 			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
 			audits.add(non_text_contrast_audit);
 		}

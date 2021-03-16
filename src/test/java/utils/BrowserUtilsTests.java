@@ -51,7 +51,7 @@ public class BrowserUtilsTests {
 	public void verifySanitizeUrlWithPath() throws MalformedURLException{
 		String url = "http://zaelab.com/services";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
-		
+
 		assertTrue("http://zaelab.com/services".equals(sanitized_url));
 	}
 	

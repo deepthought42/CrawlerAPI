@@ -148,15 +148,17 @@ public class BrowserService {
 	 * @param web_elem
 	 * @param classification
 	 * @param rendered_css_values
+	 * @param screenshot_url TODO
 	 * 
-	 * @pre xpath != null && !xpath.isEmpty();
-	 * @pre attributes != null;
-	 * @pre element != null;
+	 * @pre xpath != null && !xpath.isEmpty()
+	 * @pre attributes != null
+	 * @pre element != null
 	 * @pre classification != null
 	 * @pre rendered_css_values != null
-	 * @pre css_values != null;
+	 * @pre css_values != null
+	 * @pre screenshot != null
 	 * 
-	 * @return
+	 * @return {@link ElementState} based on {@link WebElement} and other params
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
@@ -164,30 +166,33 @@ public class BrowserService {
 			Element element,
 			WebElement web_elem,
 			ElementClassification classification, 
-			Map<String, String> rendered_css_values
+			Map<String, String> rendered_css_values, 
+			String screenshot_url
 	) {
 		assert xpath != null && !xpath.isEmpty();
 		assert attributes != null;
 		assert element != null;
 		assert classification != null;
 		assert rendered_css_values != null;
+		assert screenshot_url != null;
 		
 		Point location = web_elem.getLocation();
 		Dimension dimension = web_elem.getSize();
 		
 		ElementState element_state = new ElementState(
-				element.ownText().trim(), 
+				element.ownText().trim(),
+				element.text(),
 				xpath, 
 				element.tagName(), 
 				attributes, 
 				rendered_css_values, 
-				"", 
+				screenshot_url, 
 				location.getX(), 
 				location.getY(), 
 				dimension.getWidth(), 
 				dimension.getHeight(), 
-				classification, 
-				element.outerHtml(),
+				classification,
+				element.outerHtml(), 
 				web_elem.isDisplayed());
 		
 		return element_state;
@@ -332,7 +337,6 @@ public class BrowserService {
 		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
 		PageVersion page = new PageVersion(
-				elements,
 				page_src,
 				title,
 				clean_url.toString(),
@@ -626,10 +630,10 @@ public class BrowserService {
 				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				int idx = 0;
 				String element_screenshot_url = "";
-				while(idx < 3 && element_screenshot_url.isEmpty()) {
+				while(element_screenshot_url == null || element_screenshot_url.isEmpty()) {
 					try {
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-				
+						idx++;
 					}catch(IOException e) {
 						log.warn("*******************************************************************");
 						log.warn("*******************************************************************");
@@ -647,13 +651,13 @@ public class BrowserService {
 					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
 				}
 				Element element = elements.first();
-				
-				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
-				element_state.setScreenshotUrl(element_screenshot_url);
+				log.warn("Element screenshot url ::   "+element_screenshot_url);
+				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props, element_screenshot_url);
+				log.warn("element screenshot after building element state :: "+element_state.getScreenshotUrl());
 				ColorData bkg_color = ImageUtils.extractBackgroundColor(element_state);
 				element_state.setBackgroundColor(bkg_color.rgb());
-				element_states_map.put(xpath, element_state);
 				element_state = element_state_service.save(element_state);
+				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
 			}
 			catch(NoSuchElementException e) {

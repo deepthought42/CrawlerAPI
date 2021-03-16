@@ -344,7 +344,7 @@ public class AuditController {
     	log.warn("finding audit pages by host :: "+host);
     	Set<Audit> audits = domain_service.getMostRecentAudits(host);
     	
-    	log.warn("grouping audits by page");
+    	log.warn("grouping audits by page :: "+audits.size());
     	//Map audits to page states
     	return audit_service.groupAuditsByPage(audits);
     }
@@ -368,7 +368,6 @@ public class AuditController {
     	String domain_host = new URL(page_url).getHost();
     	Set<Audit> audits = domain_service.getMostRecentAudits(domain_host);
     	
-    	log.warn("grouping audits by page");
     	//Map audits to page states
     	Set<ObservationElementMap> observation_element_map = audit_service.generateObservationElementMap(audits, page_url);
     	Set<ElementObservationMap> element_observation_map = audit_service.generateElementObservationMap(audits, page_url);

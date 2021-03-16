@@ -130,7 +130,11 @@ public class JourneyExpander extends AbstractActor{
 							//construct page and add page to list of page states
 							URL page_url = new URL(current_url);
 							String path = page_url.getPath();
-							PageVersion page = new PageVersion(new ArrayList<>(), browser.getDriver().getPageSource(), browser.getDriver().getTitle(), page_url.toString(), path);
+							PageVersion page = new PageVersion(
+														browser.getDriver().getPageSource(), 
+														browser.getDriver().getTitle(), 
+														page_url.toString(), 
+														path);
 							page = page_service.save( page );
 		
 							//build page state for baseline
@@ -154,14 +158,15 @@ public class JourneyExpander extends AbstractActor{
 										element,
 										web_element, 
 										leaf_element.getClassification(), 
-										Browser.loadCssProperties(web_element, browser.getDriver()));
+										Browser.loadCssProperties(web_element, browser.getDriver()),
+										"");
 								
 								new_element_state = element_state_service.save(new_element_state);
 								//if page url is not the same as journey result page url then load new page for this
 								//construct page and add page to list of page states
 								URL new_page_url = new URL(current_url);
 								String new_path = page_url.getPath();
-								PageVersion new_page = new PageVersion(new ArrayList<>(), BrowserService.extractTemplate(Browser.cleanSrc(browser.getDriver().getPageSource())), browser.getDriver().getTitle(), new_page_url.toString(), new_path);						
+								PageVersion new_page = new PageVersion(BrowserService.extractTemplate(Browser.cleanSrc(browser.getDriver().getPageSource())), browser.getDriver().getTitle(), new_page_url.toString(), new_path);						
 								PageState exploration_result_page = browser_service.buildPageState(new_page, browser);
 								log.warn("Page state built in journey explorer");
 

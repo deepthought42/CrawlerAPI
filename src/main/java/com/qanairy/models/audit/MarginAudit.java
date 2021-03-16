@@ -311,6 +311,59 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		return new Score(points_earned, max_points, observations);
 	}
 	
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_margin_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_margin_map != null
+	 */
+	private Score evaluateSpacingAppliedEvenly(Map<ElementState, List<String>> elements_margins) {
+		assert elements_margins != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		List<ElementState> elements = new ArrayList<ElementState>();
+		
+		for(ElementState element : elements_margins.keySet()) {
+			for(String size_str : elements_margins.get(element)) {
+				if(isMultipleOf8(size_str)) {
+					points_earned += 1;
+					//elements.add(element);
+				}
+				//else create observation that element is unlikely to scale gracefully
+				else {
+					elements.add(element);
+				}
+				max_points++;
+			}
+		}
+		
+
+		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of margins";
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
+		
+		observations.add(new ElementStateObservation(
+								elements, 
+								"Has at least one margin value that isn't a multiple of 8.", 
+								why_it_matters, 
+								ada_compliance, 
+								Priority.LOW, 
+								recommendations));
+		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
+		
+		return new Score(points_earned, max_points, observations);
+	}
+	
 	public static boolean isMultipleOf8(String size_str) {
 		double size = Double.parseDouble(cleanSizeUnits(size_str));
 		if(size == 0.0) {
@@ -445,7 +498,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 
 			//identify elements that own text and have margin but not padding set
-			if(element.getText() != null && !element.getText().trim().isEmpty()) {
+			if(element.getOwnedText() != null && !element.getOwnedText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
 				boolean margin_used_as_padding = false;
 				String margin_top = element.getRenderedCssValues().get("margin-top");

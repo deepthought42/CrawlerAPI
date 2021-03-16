@@ -180,7 +180,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(AuditSet.class, audit_list -> {
-					String url_str = BrowserUtils.sanitizeUrl(audit_list.getUrl());
+					String url_str = BrowserUtils.sanitizeUserUrl(audit_list.getUrl());
 					
 					
 					/* NOTE:: if still exists after 4-1-2021 then remove
@@ -195,6 +195,7 @@ public class AuditManager extends AbstractActor{
 						host = "www."+host;
 					}
 					*/
+					
 					URL url = new URL(url_str);
 					String host = url.getHost();
 					
@@ -249,7 +250,7 @@ public class AuditManager extends AbstractActor{
 	private void stopAudit(CrawlActionMessage message) {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
-			actor_system.stop(web_crawler_actor);
+			//actor_system.stop(web_crawler_actor);
 			web_crawler_actor = null;
 		}
 	}

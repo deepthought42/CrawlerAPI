@@ -272,7 +272,7 @@ public class BrowserUtils {
 		
 		List<ElementState> element_list = new ArrayList<>();
 		for(ElementState element : element_states ) {
-			if(element.getText() != null && !element.getText().trim().isEmpty()) {
+			if(element.getOwnedText() != null && !element.getOwnedText().trim().isEmpty()) {
 				element_list.add(element);
 			}
 		}

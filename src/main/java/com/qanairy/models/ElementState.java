@@ -1,7 +1,6 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
 	private String name;
-	private String text;
+	private String owned_text;
+	private String all_text;
 	private String css_selector;
 	private String outer_html;
 	private String xpath;
@@ -57,12 +57,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	/**
 	 * 
-	 * @param text
+	 * @param all_text TODO
 	 * @param xpath
 	 * @param name
 	 * @param attributes
 	 * @param css_map
 	 * @param outer_html TODO
+	 * @param text
 	 * @pre xpath != null
 	 * @pre name != null
 	 * @pre screenshot_url != null
@@ -70,9 +71,9 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @pre outer_html != null;
 	 * @pre !outer_html.isEmpty()
 	 */
-	public ElementState(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
-						String screenshot_url, int x_location, int y_location, int width, int height,
-						ElementClassification classification, String outer_html, boolean isVisible){
+	public ElementState(String owned_text, String all_text, String xpath, String name, Map<String, String> attributes, 
+						Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width,
+						int height, ElementClassification classification, String outer_html, boolean isVisible){
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;
@@ -81,7 +82,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setName(name);
 		setAttributes(attributes);
 		setScreenshotUrl(screenshot_url);
-		setText(text);
+		setOwnedText(owned_text);
+		setAllText(all_text);
 		setRenderedCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
@@ -135,12 +137,20 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		this.name = tagName;
 	}
 	
-	public String getText() {
-		return text;
+	public String getOwnedText() {
+		return owned_text;
 	}
 	
-	public void setText(String text) {
-		this.text = text;
+	public void setOwnedText(String text) {
+		this.owned_text = text;
+	}
+	
+	public String getAllText() {
+		return all_text;
+	}
+	
+	public void setAllText(String text) {
+		this.all_text = text;
 	}
 
 	public void setAttributes(Map<String, String> attribute_persist_list) {
@@ -182,13 +192,15 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return
 	 */
 	public String generateKey() {
+		/*
 		String key = "";
 		List<String> properties = new ArrayList<>(getRenderedCssValues().keySet());
 		Collections.sort(properties);
 		for(String style : properties) {
 			key += getRenderedCssValues().get(style);
 		}
-		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+ BrowserService.extractTemplate(this.getOuterHtml()));
+		*/
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getScreenshotUrl() + BrowserService.extractTemplate(this.getOuterHtml()));
 	}
 	
 	/**
@@ -214,7 +226,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshotUrl(this.getScreenshotUrl());
-		page_elem.setText(this.getText());
+		page_elem.setOwnedText(this.getOwnedText());
+		page_elem.setAllText(this.getAllText());
 		page_elem.setYLocation(this.getYLocation());
 		page_elem.setXLocation(this.getXLocation());
 		page_elem.setWidth(this.getWidth());

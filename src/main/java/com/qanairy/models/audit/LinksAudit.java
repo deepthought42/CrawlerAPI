@@ -145,26 +145,39 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				e.printStackTrace();
 			}
 			
+			log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+			log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+			
 			//Does link contain a text label inside it
-			 if(!link.getText().isEmpty()) {
+			 if(!link.getAllText().isEmpty()) {
+				 log.warn("link has text.................");
 				 score++;
 			 }
 			 else {
 				 boolean element_includes_text = false;
+				 
+				 log.warn("# of child elements :: "+link.getChildElements().size());
+				 log.warn("link outerhtml  ::   "+link.getOuterHtml());
 				 //check each child element. if element is an image and does not include text then add link to non labeled links
 				 for(ElementState child_element : link.getChildElements()) {
+					 log.warn("element name  ::   "+child_element.getName());
 					 if("img".contentEquals(child_element.getName())) {
-						 //send img src to google for text extraction
-						 URL url;
+						//send img src to google for text extraction
 						try {
-							url = new URL(child_element.getAttribute("href"));
+							log.warn("href value :  "+child_element.getAttribute("href"));
+							URL url = new URL(child_element.getAttribute("href"));
+							log.warn("image src :  "+url.toString());
 							BufferedImage img_src = ImageIO.read( url );
 							List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);
+							log.warn("image text list :: "+image_text_list.size());
+							
 							for(String text : image_text_list) {
-								if(text != null || !text.isEmpty()) {
+								log.warn("text value :: "+text);
+								if(text != null && !text.isEmpty()) {
 									element_includes_text = true;
 								}
 							}
+							
 						} catch (MalformedURLException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -184,6 +197,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					 score++;
 				 }
 			}
+			 log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+			 log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 			 
 			//TODO : Does link have a hover styling? yes(1) / No(0)
 			

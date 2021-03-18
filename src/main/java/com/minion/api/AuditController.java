@@ -94,14 +94,15 @@ public class AuditController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
+     * @throws MalformedURLException 
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
     											@RequestParam(value="domain_host", required=true) String domain_host
-	) {
+	) throws MalformedURLException {
     	log.warn("finding all recent audits for url :: "+domain_host);
-        
+        domain_host = domain_host.replace("/", "").trim();
     	Domain domain = domain_service.findByHost(domain_host);
     	AuditRecord audit_record = domain_service.getMostRecentAuditRecord(domain.getHost());
     	return audit_record_service.getAllAudits(audit_record.getKey());

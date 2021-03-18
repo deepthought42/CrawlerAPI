@@ -38,7 +38,7 @@ public class FormField {
 	}
 	
 	private String generateKey() {
-		return form_field.getKey()+"::"+rules.hashCode();
+		return form_field.getKey()+""+rules.hashCode();
 	}
 
 	/**

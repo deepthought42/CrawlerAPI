@@ -212,7 +212,7 @@ public class PageVersion extends LookseeObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.extractTemplate(this.getBody()));
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.extractTemplate(this.getBody()));
 	}
 
 	public String getSrc() {

@@ -57,7 +57,7 @@ public class Screenshot implements Persistable {
 	}
 	
 	public String generateKey() {
-		return "screenshot::" + this.checksum;
+		return "screenshot" + this.checksum;
 	}
 
 	public Long getId() {

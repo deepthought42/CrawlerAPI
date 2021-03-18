@@ -22,7 +22,7 @@ public abstract class Observation extends LookseeObject{
 	
 	@Override
 	public String generateKey() {
-		return "observation::"+getSaltString();
+		return "observation"+getSaltString();
 	}
 	
 	protected String getSaltString() {

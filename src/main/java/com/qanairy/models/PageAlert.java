@@ -78,6 +78,6 @@ public class PageAlert extends LookseeObject {
 
 	@Override
 	public String generateKey() {
-		return "alert::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getMessage());
+		return "alert"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getMessage());
 	}
 }

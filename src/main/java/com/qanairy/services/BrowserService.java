@@ -651,9 +651,7 @@ public class BrowserService {
 					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
 				}
 				Element element = elements.first();
-				log.warn("Element screenshot url ::   "+element_screenshot_url);
 				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props, element_screenshot_url);
-				log.warn("element screenshot after building element state :: "+element_state.getScreenshotUrl());
 				ColorData bkg_color = ImageUtils.extractBackgroundColor(element_state);
 				element_state.setBackgroundColor(bkg_color.rgb());
 				element_state = element_state_service.save(element_state);
@@ -1136,7 +1134,7 @@ public class BrowserService {
 	 */
 	public Set<Form> extractAllForms(String user_id, Domain domain, Browser browser) throws Exception {
 		Set<Form> form_list = new HashSet<Form>();
-		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
+		log.info("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 
 		//String host = domain.getHost();

@@ -29,6 +29,8 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.Priority;
+import com.qanairy.services.BrowserService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -46,6 +48,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private ElementStateService element_state_service;
 	
 	private List<ElementState> links_without_href_attribute =  new ArrayList<>();
 	private List<ElementState> links_without_href_value =  new ArrayList<>();
@@ -84,7 +89,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {
-	
+			
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 		
@@ -155,17 +160,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			 }
 			 else {
 				 boolean element_includes_text = false;
-				 
-				 log.warn("# of child elements :: "+link.getChildElements().size());
-				 log.warn("link outerhtml  ::   "+link.getOuterHtml());
+				 log.warn("link xpath :: " + link.getXpath());
+				 List<ElementState> element_states = element_state_service.getChildElements( page_state.getKey(), link.getXpath() );
+				 log.warn("# of child elements :: " + element_states.size());
+				 log.warn("link outerhtml  ::   " + link.getOuterHtml());
 				 //check each child element. if element is an image and does not include text then add link to non labeled links
-				 for(ElementState child_element : link.getChildElements()) {
-					 log.warn("element name  ::   "+child_element.getName());
-					 if("img".contentEquals(child_element.getName())) {
+				 //for(ElementState child_element : element_states) {
+				//	 if("img".contentEquals(child_element.getName())) {
 						//send img src to google for text extraction
 						try {
-							log.warn("href value :  "+child_element.getAttribute("href"));
-							URL url = new URL(child_element.getAttribute("href"));
+							URL url = new URL( link.getScreenshotUrl() );
 							log.warn("image src :  "+url.toString());
 							BufferedImage img_src = ImageIO.read( url );
 							List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);
@@ -185,8 +189,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					 }
-				 }
+				
 				 
 				 if(!element_includes_text) {
 					 log.warn("link doesn't have a text label");

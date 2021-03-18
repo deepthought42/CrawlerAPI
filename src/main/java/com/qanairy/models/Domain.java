@@ -162,7 +162,7 @@ public class Domain extends LookseeObject{
 	 */
 	@Override
 	public String generateKey() {
-		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getHost());
+		return "domain"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getHost());
 	}
 	
 	public Account getAccount() {

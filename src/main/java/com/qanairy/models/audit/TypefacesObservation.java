@@ -38,7 +38,7 @@ public class TypefacesObservation extends Observation {
 		assert typefaces != null;
 		String key = typefaces.parallelStream().sorted().collect(Collectors.joining(""));
 		
-		return "typefaceobservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
+		return "typefaceobservation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
 	*/
 

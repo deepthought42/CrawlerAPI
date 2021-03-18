@@ -202,7 +202,7 @@ public class Element extends LookseeObject implements Comparable<Element> {
 		for(String style : properties) {
 			key += getPreRenderCssValues().get(style);
 		}
-		return "element::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
+		return "element"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+this.getTemplate()+this.getXpath());
 	}
 	
 

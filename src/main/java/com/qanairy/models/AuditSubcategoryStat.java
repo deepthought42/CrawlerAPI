@@ -72,6 +72,6 @@ public class AuditSubcategoryStat extends LookseeObject{
 
 	@Override
 	public String generateKey() {
-		return "auditsubcategorystat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + url);
+		return "auditsubcategorystat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + url);
 	}
 }

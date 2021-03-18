@@ -78,6 +78,6 @@ public class AuditStats extends LookseeObject{
 
 	@Override
 	public String generateKey() {
-		return "auditstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + host);
+		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + host);
 	}
 }

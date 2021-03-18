@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.utils.ImageUtils;
 
 
 /**

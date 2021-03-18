@@ -37,7 +37,7 @@ public class PageObservation extends Observation {
 	public String generateKey() {
 		assert page != null;
 		
-		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( page.getKey() + this.getDescription() );
+		return "observation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( page.getKey() + this.getDescription() );
 	}
 */
 

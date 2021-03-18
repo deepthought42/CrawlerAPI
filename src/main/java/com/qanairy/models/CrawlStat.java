@@ -70,6 +70,6 @@ public class CrawlStat extends LookseeObject{
 
 	@Override
 	public String generateKey() {
-		return "crawlstat::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + this.host );
+		return "crawlstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + this.host );
 	}
 }

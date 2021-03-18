@@ -38,7 +38,7 @@ public class PropertyMapObservation extends Observation{
 	@Override
 	public String generateKey() {
 
-		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( getProperties() + this.getDescription() );
+		return "observation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( getProperties() + this.getDescription() );
 	}
 */
 

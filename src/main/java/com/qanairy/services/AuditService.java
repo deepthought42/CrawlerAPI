@@ -167,8 +167,6 @@ public class AuditService {
 			if(url.getHost().contentEquals(page_url_obj.getHost()) 
 					&& url.getPath().contentEquals(page_url_obj.getPath())
 			) {
-				log.warn("found audit for page :: "+page_url);
-
 				for(Observation observation : audit.getObservations()) {
 					Set<SimpleElement> elements = new HashSet<>();
 
@@ -230,8 +228,6 @@ public class AuditService {
 			if(url.getHost().contentEquals(page_url_obj.getHost()) 
 					&& url.getPath().contentEquals(page_url_obj.getPath())
 			) {
-				log.warn("found audit for page :: "+page_url);
-
 				for(Observation observation : audit.getObservations()) {
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
 						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();

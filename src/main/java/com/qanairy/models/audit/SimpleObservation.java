@@ -34,7 +34,7 @@ public class SimpleObservation extends Observation{
 		assert elements != null;
 		String key = elements.parallelStream().map(ElementState::getKey).sorted().collect(Collectors.joining(""));
 		
-		return "observation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
+		return "observation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
 	}
 */
 

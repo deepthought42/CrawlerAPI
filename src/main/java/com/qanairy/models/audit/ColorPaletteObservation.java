@@ -45,7 +45,7 @@ public class ColorPaletteObservation extends Observation{
 	@Override
 	public String generateKey() {
 		Collections.sort(colors);
-		return "colorPaletteObservation::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + this.getDescription() );
+		return "colorPaletteObservation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + this.getDescription() );
 	}
 	*/
 

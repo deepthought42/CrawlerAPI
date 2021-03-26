@@ -23,11 +23,11 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
-import com.qanairy.models.audit.StylingMissingObservation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
@@ -124,13 +124,18 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 					+ " are multiple of 8.";
 			
 			String ada_compliance = "There are no ADA requirements for use of padding";
+	    	Set<String> labels = new HashSet<>();
+	    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
 
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation(
+			observations.add(new Observation(
 									"Padding was not used", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.LOW)); 
+									Priority.LOW,
+									new HashSet<>(),
+									ObservationType.ELEMENT,
+									labels	)); 
 		}
 		
 
@@ -321,13 +326,18 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		Set<String> recommendations = new HashSet<>();
 		recommendations.add("For a responsive design we recommend using padding values that are a multiple of 8.");
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
 		observations.add(new ElementStateObservation(non_scalable, 
 													"Has at least one padding value that isn't a multiple of 8.", 
 													why_it_matters,
 													ada_compliance,
 													Priority.LOW,
-													recommendations));
+													recommendations,
+													labels));
+		
 		return new Score(points_earned, max_points, observations);
 	}
 	
@@ -382,13 +392,18 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!unscalable_padding_elements.isEmpty()) {
+			Set<String> labels = new HashSet<>();
+			labels.add("whitespace");
+			labels.add("responsiveness");
+			
 			observations.add(new ElementStateObservation(
 					unscalable_padding_elements, 
 					"Elements with unscalable padding units", 
 					"", 
 					"", 
 					Priority.LOW, 
-					new HashSet<>()));
+					new HashSet<>(),
+					labels));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

@@ -22,7 +22,8 @@ public class PageStateObservation extends Observation {
 				String description, 
 				String why_it_matters, 
 				String ada_compliance, 
-				Priority priority) {
+				Priority priority
+	) {
 		setPage(page);
 		setDescription(description);
 		setType(ObservationType.PAGE_STATE);

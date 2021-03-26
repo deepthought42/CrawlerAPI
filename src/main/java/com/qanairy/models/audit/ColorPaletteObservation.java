@@ -2,6 +2,7 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -29,7 +30,9 @@ public class ColorPaletteObservation extends Observation{
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority
+			Priority priority, 
+			Set<String> recommendations, 
+			Set<String> labels
 	) {
 		setPaletteColors(palette);
 		setColors(palette);
@@ -38,16 +41,9 @@ public class ColorPaletteObservation extends Observation{
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
+		setLabels(labels);
 		setKey(this.generateKey());
 	}
-	
-	/*
-	@Override
-	public String generateKey() {
-		Collections.sort(colors);
-		return "colorPaletteObservation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( colors.toString() + this.getDescription() );
-	}
-	*/
 
 	public List<String> getColors() {
 		return colors;

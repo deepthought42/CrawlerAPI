@@ -8,8 +8,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -146,13 +148,19 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
 
 		List<Observation> observations = new ArrayList<>();
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
 		ColorPaletteObservation observation = new ColorPaletteObservation(
 														palette,
 														color_scheme, 
 														"This is a color scheme description", 
 														why_it_matters, 
 														ada_compliance, 
-														Priority.MEDIUM);
+														Priority.MEDIUM,
+														new HashSet<>(), 
+														labels);
 		
 		observations.add(observation_service.save(observation));
 

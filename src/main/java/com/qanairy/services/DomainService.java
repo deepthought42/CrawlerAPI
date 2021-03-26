@@ -133,8 +133,6 @@ public class DomainService {
 	 * 
 	 * @param url {@link Domain} url
 	 * @param page_key key of {@link PageVersion} object
-	 * @param user_id 
-	 * 
 	 * @return
 	 * 
 	 * @pre url != null
@@ -144,21 +142,12 @@ public class DomainService {
 	 * @pre user_id != null
 	 * 
 	 */
-	public boolean addPage(String url, PageVersion page, String user_id) {
-		assert url != null;
-		assert !url.isEmpty();
-		assert page != null;
-		assert user_id != null;
-		
-		Domain domain = findByUrlAndAccountId(url, user_id);
-		
-		PageVersion page_record = domain_repo.getPage(user_id, url, page.getKey());
-		if(page_record == null) {
-			domain.addPage(page);
-			domain_repo.save(domain);
-			return true;
-		}
-		return false;
+	public boolean addPage(String host, String page_version_key) {
+		assert host != null;
+		assert !host.isEmpty();
+		assert page_version_key != null;
+
+		return domain_repo.addPage(host, page_version_key) != null;
 	}
 
 	/**

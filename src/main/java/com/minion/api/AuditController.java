@@ -5,6 +5,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.websocket.server.PathParam;
 
 import org.slf4j.Logger;
@@ -31,7 +33,6 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.AuditStats;
-import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.PageVersion;
@@ -40,13 +41,13 @@ import com.qanairy.models.audit.ObservationElementMap;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ElementObservationTwoWayMapping;
+import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.CrawlActionMessage;
-import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
@@ -116,7 +117,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
     public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
-    											@PathVariable("id") @NotBlank long id
+									@PathVariable("id") @NotBlank long id
 	) {
     	log.warn("finding element with ID  :: "+id);
 
@@ -378,72 +379,50 @@ public class AuditController {
     }
     
     /**
-     * Adds recommendation to @link Audit audit}
+     * Creates a new {@link Observation observation} 
      * 
-     * @param key key for audit that recommendation should be added to
-     * @param recommendation the expert opinion that should be added to the audit
-     * 
-     * @return {@link Audit audit} with given ID
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
      */
-    @RequestMapping(path="{key}/recommendations/add", method = RequestMethod.POST)
-    public @ResponseBody Observation addRecommendation(
-    		HttpServletRequest request,
-    		final @PathVariable String audit_key,
-    		final @RequestBody(required=true) String recommendation
-	) {
-		return null;
+    @RequestMapping(method = RequestMethod.POST, value="/{key}/observations")
+    public @ResponseBody Observation addObservation(
+							    		HttpServletRequest request,
+										@PathVariable("key") String key,
+							    		@RequestBody @NotNull Observation observation
+	) throws UnknownAccountException {
     	/*
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	*/
+
+    	//find audit by key
+    	log.warn("Observation to be saved :: "+observation);
     	//find audit by key and add recommendation
-    	Audit audit= audit_service.findByKey(audit_key);
-    	audit.addRecommendation(recommendation);
-       	
-       	//save and return
-       	return audit_service.save(audit);    
-       	*/
-    }
     
-    /**
-     * Adds recommendation to @link Audit audit}
-     * 
-     * @param key key for audit that recommendation should be added to
-     * @param recommendation the expert opinion that should be added to the audit
-     * 
-     * @return {@link Audit audit} with given ID
-     */
-    @RequestMapping(path="/observations/{key}/recommendations/add", method = RequestMethod.POST)
-    public @ResponseBody Observation addRecommendationToObservation(
-    		HttpServletRequest request,
-    		final @PathVariable String observation_key,
-    		final @RequestBody(required=true) String recommendation
-	) {
-    	//find audit by key and add recommendation
-    	Observation observation = observation_service.findByKey(observation_key);
-    	observation.addRecommendation(recommendation);
-       	
-       	//save and return
-       	return observation_service.save(observation);    	
-    }
-    
-    /**
-     * Adds recommendation to @link Audit audit}
-     * 
-     * @param key key for audit that recommendation should be added to
-     * @param recommendation the expert opinion that should be added to the audit
-     * 
-     * @return {@link Audit audit} with given ID
-     */
-    @RequestMapping(path="{key}/recommendations", method = RequestMethod.DELETE)
-    public @ResponseBody Observation deleteRecommendation(
-    		HttpServletRequest request,
-    		final @PathVariable String observation_key,
-    		@RequestParam(required=true) String recommendation
-	) {
-    	//find audit by key and add recommendation
-    	Observation observation = observation_service.findByKey(observation_key);
-    	observation.removeRecommendation(recommendation);
-       	
-       	//save and return
-       	return observation_service.save(observation);    	
+    	//add observation to page
+
+    	observation.setKey(observation.generateKey());
+    	log.warn("Observation key :: "+observation.getKey());
+    	log.warn("audit key :: "+key);
+    	if(ObservationType.ELEMENT.equals(observation.getType())) {
+    		observation = new ElementStateObservation(
+    								new ArrayList<>(), 
+    								observation.getDescription(), 
+    								observation.getWhyItMatters(), 
+    								observation.getAdaCompliance(), 
+    								observation.getPriority(), 
+    								observation.getRecommendations(),
+    								observation.getLabels());
+    	}
+		observation = observation_service.save( observation );
+		audit_service.addObservation(key, observation.getKey());
+		return observation;
+
     }
     
     /**
@@ -510,37 +489,5 @@ public class AuditController {
 	   	else if(acct.getSubscriptionToken() == null){
 	   		throw new MissingSubscriptionException();
 	   	}
-	}
-	
-	 /**
-     * 
-     * @param request
-     * @param page
-     * @return
-     * @throws Exception
-     */
-	@RequestMapping(path="/buildDomainAudits", method = RequestMethod.GET)
-	public @ResponseBody CrawlStat performDomainAudit(HttpServletRequest request,
-													@PathParam("host") @NotBlank String host) throws Exception {
-
-	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+host));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
-	   	log.warn("host :: "+sanitized_url.getHost());
-	   	log.warn("domain :: "+domain);
-	   	DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-		log.warn("Audit Manager is now ready to perform a domain audit");
-		//AuditSet audit_record_set = new AuditSet(audits);
-		ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("auditor"), "auditor"+UUID.randomUUID());
-		auditor.tell(domain_msg, null);
-	   	//crawl site and retrieve all page urls/landable pages
-	   /*	
-	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-		LocalDateTime end_time = LocalDateTime.now();
-
-		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
-	   	*/
-		return null;
 	}
 }

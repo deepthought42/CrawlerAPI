@@ -130,7 +130,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						else {
 							PageVersion page = browser_service.buildPage(message.getAccountId(), result_page.getUrl());
 							page = page_service.saveForUser(message.getAccountId(), page);
-							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
+							domain_service.addPage(message.getDomain().getEntryPath(), page.getKey());
 
 							long start_time = System.currentTimeMillis();
 							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));

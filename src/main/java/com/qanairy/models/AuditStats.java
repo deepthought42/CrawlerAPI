@@ -13,9 +13,6 @@ public class AuditStats extends LookseeObject{
 	private String host;
 	
 	@Relationship(type = "HAS")
-	private CrawlStat crawl_stats;
-	
-	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
 	public AuditStats() {}
@@ -23,14 +20,12 @@ public class AuditStats extends LookseeObject{
 	public AuditStats(String host_url) {
 		setStartTime(LocalDateTime.now());
 		setHost(host_url);
-		setCrawlStats(new CrawlStat(host_url));
 		setKey(generateKey());
 	}
 	
 	public AuditStats(String host_url, LocalDateTime start_time, LocalDateTime end_time, int page_count, double avg_time_per_page) {
 		setStartTime(start_time);
 		setEndTime(end_time);
-		setCrawlStats(new CrawlStat(host_url));
 		setHost(host_url);
 		setSubcategoryStats(new HashSet<>());
 		setKey(generateKey());
@@ -50,14 +45,6 @@ public class AuditStats extends LookseeObject{
 	
 	public void setEndTime(LocalDateTime end_time) {
 		this.end_time = end_time;
-	}
-
-	public CrawlStat getCrawlStats() {
-		return crawl_stats;
-	}
-
-	public void setCrawlStats(CrawlStat crawl_stats) {
-		this.crawl_stats = crawl_stats;
 	}
 
 	public Set<AuditSubcategoryStat> getSubcategoryStats() {

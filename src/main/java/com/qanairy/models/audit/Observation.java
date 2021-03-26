@@ -1,7 +1,10 @@
 package com.qanairy.models.audit;
 
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+
+import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
@@ -11,14 +14,57 @@ import com.qanairy.models.enums.Priority;
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public abstract class Observation extends LookseeObject{
+@NodeEntity
+public class Observation extends LookseeObject{
 	private String description;
 	private String type;
-	private String explanation; //Further explanation apart from the description. Reason it matters, etc
-	private Set<String> recommendations;
+	private Set<String> recommendations = new HashSet<>();
 	private String why_it_matters;
 	private String ada_compliance;
 	private String priority;
+	// labels are intended to contain things like subcategory, accessibility, etc
+	private Set<String> labels;
+	
+	public Observation() {}
+	
+	public Observation(
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority, 
+			Set<String> recommendations,
+			ObservationType type, 
+			Set<String> labels
+	) {
+		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
+		setPriority(priority);
+		setRecommendations(recommendations);
+		setType(type);
+		setLabels(labels);
+		setKey(generateKey());
+	}
+	
+	public Observation(
+			String description, 
+			String why_it_matters, 
+			String ada_compliance, 
+			Priority priority,
+			String key, 
+			Set<String> recommendations,
+			ObservationType type, 
+			Set<String> labels
+	) {
+		setDescription(description);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(ada_compliance);
+		setPriority(priority);
+		setRecommendations(recommendations);
+		setType(type);
+		setLabels(labels);
+		setKey(key);
+	}
 	
 	@Override
 	public String generateKey() {
@@ -50,7 +96,9 @@ public abstract class Observation extends LookseeObject{
 		this.type = type.getShortName();
 	}
 	
-	public abstract ObservationType getType();
+	public ObservationType getType() {
+		return ObservationType.create(this.type);
+	}
 
 	public Set<String> getRecommendations() {
 		return recommendations;
@@ -61,6 +109,9 @@ public abstract class Observation extends LookseeObject{
 	}
 	
 	public void addRecommendation(String recommendation) {
+		assert recommendation != null;
+		assert !recommendation.isEmpty();
+		
 		this.recommendations.add(recommendation);
 	}
 	
@@ -90,5 +141,13 @@ public abstract class Observation extends LookseeObject{
 	
 	public void setPriority(Priority priority) {
 		this.priority = priority.getShortName();
+	}
+
+	public Set<String> getLabels() {
+		return labels;
+	}
+
+	public void setLabels(Set<String> labels) {
+		this.labels = labels;
 	}
 }

@@ -102,8 +102,11 @@ public class Element extends LookseeObject implements Comparable<Element> {
 	 * @pre outer_html != null;
 	 * @pre assert !outer_html.isEmpty()
 	 */
-	public Element(String text, String xpath, String name, Map<String, String> attributes, Map<String, String> css_map, 
-						String inner_html, ElementClassification classification, String outer_html){
+	public Element(String text, String xpath, String name, 
+					Map<String, String> attributes, 
+					Map<String, String> css_map, 
+					String inner_html, 
+					ElementClassification classification, String outer_html){
 		assert name != null;
 		assert xpath != null;
 		assert outer_html != null;

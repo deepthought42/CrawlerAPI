@@ -26,7 +26,8 @@ public class ElementStateObservation extends Observation {
 			String why_it_matters, 
 			String ada_compliance, 
 			Priority priority, 
-			Set<String> recommendations
+			Set<String> recommendations, 
+			Set<String> labels
 	) {
 		setElements(elements);
 		setDescription(description);
@@ -34,6 +35,7 @@ public class ElementStateObservation extends Observation {
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
 		setRecommendations(recommendations);
+		setLabels(labels);
 		setKey(this.generateKey());
 	}
 	

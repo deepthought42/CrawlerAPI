@@ -165,6 +165,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					element_bkg = getBorderColor(element);
 				}
 				
+				if(parent_bkg == null) {
+					parent_bkg = new ColorData("rgb(255,255,255)");
+				}
+				
 				double contrast = ColorData.computeContrast(parent_bkg, element_bkg);
 				element.setNonTextContrast(contrast);
 				element_state_service.save(element);
@@ -203,6 +207,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		Set<String> recommendations = new HashSet<>();
 		recommendations.add("Use colors for backgrounds of non text elements that have a contrast of at least 3:1 for ADA compliance(level AA).");
 
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
 			ElementStateObservation low_contrast_observation = new ElementStateObservation(
@@ -211,7 +219,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																		why_it_matters, 
 																		ada_compliance, 
 																		Priority.HIGH,
-																		recommendations );
+																		recommendations,
+																		labels);
+			
 			observations.add(observation_service.save(low_contrast_observation));
 		}
 		
@@ -222,7 +232,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																		why_it_matters, 
 																		ada_compliance, 
 																		Priority.HIGH,
-																		recommendations );
+																		recommendations,
+																		labels);
+			
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
 		/*

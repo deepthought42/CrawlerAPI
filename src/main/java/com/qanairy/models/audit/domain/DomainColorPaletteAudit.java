@@ -2,6 +2,7 @@ package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -142,13 +143,19 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 				"palette. However, keeping a cohesive color palette allows you to create" + 
 				"a webpage easy for everyone to read. ";
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
 																palette, 
 																scheme, 
 																"This is a color scheme description",
 																why_it_matters,
 																ada_compliance, 
-																Priority.HIGH);
+																Priority.HIGH,
+																new HashSet<>(), 
+																labels);
 		
 		
 		observations.add(observation_service.save(palette_observation));
@@ -159,7 +166,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 max_points,
+						 domain.getHost());
 	}	
 
 	public List<String> getGrayColors() {

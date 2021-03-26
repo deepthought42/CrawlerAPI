@@ -3,7 +3,9 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -56,6 +58,10 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("images");
+		
 		String tag_name = "img";
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> image_elements = new ArrayList<>();
@@ -98,13 +104,17 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		
+		
 		if(!images_without_alt_text.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
 					images_without_alt_text, 
 					"Images without alternative text attribute", 
 					why_it_matters, 
 					ada_compliance,
-					Priority.HIGH, null);
+					Priority.HIGH, 
+					new HashSet<>(),
+					labels);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -124,7 +134,9 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					"Images without alternative text defined as a non empty string value", 
 					why_it_matters, 
 					ada_compliance,
-					Priority.HIGH, null);
+					Priority.HIGH, 
+					new HashSet<>(),
+					labels);
 			
 			observations.add(observation_service.save(observation));
 		}

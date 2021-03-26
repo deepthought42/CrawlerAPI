@@ -1,6 +1,7 @@
 package com.qanairy.models.audit;
 
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -22,13 +23,17 @@ public class ElementObservation extends Observation {
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority
+			Priority priority,
+			
+			Set<String> recommendations, Set<String> labels
 	) {
 		setElements(elements);
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
+		setLabels(labels);
+		setRecommendations(recommendations);
 		setKey(this.generateKey());
 	}
 	

@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.validation.constraints.NotEmpty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,6 @@ import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ObservationElementMap;
-import com.qanairy.models.audit.SimpleObservation;
 import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
@@ -160,7 +161,6 @@ public class AuditService {
 		Set<ObservationElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {
-			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
 			URL url = new URL(audit.getUrl());
 			URL page_url_obj = new URL(page_url);
 			
@@ -185,13 +185,15 @@ public class AuditService {
 					
 					ObservationElementMap observation_element = null;
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						SimpleObservation simple_observation = new SimpleObservation(
+						Observation simple_observation = new Observation(
 																		observation.getDescription(),
 																		observation.getWhyItMatters(),
 																		observation.getAdaCompliance(),
 																		observation.getPriority(),
 																		observation.getKey(),
-																		observation.getRecommendations());
+																		observation.getRecommendations(),
+																		observation.getType(), 
+																		observation.getLabels());
 						observation_element = new ObservationElementMap(simple_observation, elements);
 					}
 					else{
@@ -244,15 +246,17 @@ public class AuditService {
 								element_state_map.put(element.getKey(), simple_element);
 							}
 							
-							
+
 							if(observation.getType().equals(ObservationType.ELEMENT)) {
-								observation = new SimpleObservation(
+								observation = new Observation(
 										observation.getDescription(),
 										observation.getWhyItMatters(),
 										observation.getAdaCompliance(),
 										observation.getPriority(),
 										observation.getKey(),
-										observation.getRecommendations());
+										observation.getRecommendations(),
+										observation.getType(), 
+										observation.getLabels());
 							}
 
 							//associate observation with element
@@ -280,5 +284,14 @@ public class AuditService {
 		}
 		
 		return element_observations;
+	}
+
+	public Observation addObservation(
+			@NotEmpty String key, 
+			@NotEmpty String observation_key) {
+		
+		log.warn("ADD OBSERVATION KEY :: "+observation_key);
+		log.warn("ADD OBSERVATION audit key :: "+key);
+		return audit_repo.addObservation(key, observation_key);
 	}
 }

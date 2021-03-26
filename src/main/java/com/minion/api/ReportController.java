@@ -1,13 +1,12 @@
 package com.minion.api;
 
-import java.util.List;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-import org.springframework.data.neo4j.util.IterableUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Action;
-import com.qanairy.models.repository.ActionRepository;
 
 /**
  *	API for interacting with {@link User} data
@@ -33,10 +31,12 @@ public class ReportController {
      * 
      * @param key account key
      * @return {@link Action account}
+     * @throws IOException 
      */
+    /*
     @RequestMapping(method = RequestMethod.GET)
-    public List<Action> getExcelReport() {
-    	/*
+    public XSSFWorkbook getExcelReport() throws IOException {
+    	
     	XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Java Books");
          
@@ -69,6 +69,8 @@ public class ReportController {
         try (FileOutputStream outputStream = new FileOutputStream("JavaBooks.xlsx")) {
             workbook.write(outputStream);
         }
-        */
+        
+        return workbook;
     }
+     */    
 }

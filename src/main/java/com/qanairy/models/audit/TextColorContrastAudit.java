@@ -162,6 +162,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			observations.add(observation_service.save(high_header_contrast_observation));
 		}
 		*/
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
 		if(!mid_header_contrast.isEmpty()) {
 			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(
 																			mid_header_contrast, 
@@ -169,7 +173,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			why_it_matters, 
 																			ada_compliance, 
 																			Priority.HIGH,
-																			recommendations );
+																			recommendations,
+																			labels );
 			observations.add(observation_service.save(mid_header_contrast_observation));
 		}
 		if(!low_header_contrast.isEmpty()) {
@@ -179,7 +184,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			why_it_matters, 
 																			ada_compliance, 
 																			Priority.HIGH,
-																			recommendations );
+																			recommendations,
+																			labels );
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
@@ -195,7 +201,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																"Text with contrast between 4.5 and 7", 
 																why_it_matters, 
 																ada_compliance,
-																Priority.HIGH, null);
+																Priority.HIGH,
+																new HashSet<>(),
+																labels );
 			observations.add(observation_service.save(mid_text_observation));
 		}
 		if(!low_text_contrast.isEmpty()) {
@@ -204,7 +212,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																	"Text with contrast below 4.5", 
 																	why_it_matters, 
 																	ada_compliance,
-																	Priority.HIGH, null);
+																	Priority.HIGH,
+																	new HashSet<>(),
+																	labels );
 			observations.add(observation_service.save(low_text_observation));
 		}
 		
@@ -225,6 +235,4 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		int idx = xpath.lastIndexOf("/");
 		return xpath.substring(0, idx);
 	}
-
-	
 }

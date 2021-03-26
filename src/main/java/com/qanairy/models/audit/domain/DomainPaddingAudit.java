@@ -319,8 +319,20 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 				}
 			}
 		}
+		
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units", "", "", Priority.MEDIUM));
+			Set<String> labels = new HashSet<>();
+			labels.add("responsiveness");
+			labels.add("whitespace");
+		
+			observations.add(new ElementObservation(
+										unscalable_padding_elements, 
+										"Elements with unscalable padding units", 
+										"", 
+										"", 
+										Priority.MEDIUM, 
+										new HashSet<>(), 
+										labels));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

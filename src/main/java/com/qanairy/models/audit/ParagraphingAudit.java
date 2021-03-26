@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,13 +132,19 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		}
 		*/
 
+		Set<String> labels = new HashSet<>();
+		labels.add("content");
+		labels.add("readability");
+		
 		if(!poor_paragraph_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(
 									poor_paragraph_observations, 
 									"Paragraphs with more than 5 sentences", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.MEDIUM, null));
+									Priority.MEDIUM, 
+									new HashSet<>(),
+									labels));
 		}
 		
 		//Sentence observations
@@ -153,7 +160,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									"Sentences between 10 and 20 words long", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.MEDIUM, null));
+									Priority.MEDIUM,
+									new HashSet<>(),
+									labels));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
@@ -162,7 +171,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									"Sentences with over 20 words", 
 									why_it_matters, 
 									ada_compliance,
-									Priority.MEDIUM, null));
+									Priority.MEDIUM, 
+									new HashSet<>(),
+									labels));
 		}
 		
 		

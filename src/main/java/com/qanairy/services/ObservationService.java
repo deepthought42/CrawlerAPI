@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +11,7 @@ import com.qanairy.models.repository.ObservationRepository;
 
 @Service
 public class ObservationService {
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	private ObservationRepository observation_repo;
@@ -61,10 +64,15 @@ public class ObservationService {
 		assert key != null;
 		assert !key.isEmpty();
 		assert recommendation != null;
-		assert recommendation.isEmpty();
+		assert !recommendation.isEmpty();
 		
 		Observation observation = findByKey(key);
+		
+		log.warn("key :: "+key);
+		log.warn("observation found :: "+observation);
+		log.warn("recommendation set :: "+observation.getRecommendations());
     	observation.addRecommendation(recommendation);
+    	
     	return save(observation);
 	}
 
@@ -84,7 +92,7 @@ public class ObservationService {
 		assert key != null;
 		assert !key.isEmpty();
 		assert priority != null;
-		assert priority.isEmpty();
+		assert !priority.isEmpty();
 		
 		Observation observation = findByKey(key);
     	observation.setPriority(Priority.create(priority));

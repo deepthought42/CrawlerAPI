@@ -220,12 +220,19 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			observed_fonts.add(font_family);
 		}
 		
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("typography");
+		labels.add("content");
+		
 		ElementStateObservation observation = new ElementStateObservation(
 														no_fallback_font, 
 														"Text element rendered with a fallback typeface instead of the desired font.", 
 														why_it_matters, 
 														ada_compliance,
-														Priority.MEDIUM, null);
+														Priority.MEDIUM,
+														new HashSet<>(),
+														labels);
 		observations.add(observation_service.save(observation));
 		
 		return new Audit(AuditCategory.AESTHETICS,

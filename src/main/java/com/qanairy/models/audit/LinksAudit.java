@@ -223,6 +223,11 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "There is no ADA guideline for dead links";
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("information architecture");
+		labels.add("navigation");
+		
 		if(!links_without_href_attribute.isEmpty()) {
 			Set<String> recommendations = new HashSet<>();
 			recommendations.add("Make sure links have a url set for the href value.");
@@ -233,7 +238,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															why_it_matters, 
 															ada_compliance, 
 															Priority.HIGH,
-															recommendations);
+															recommendations, 
+															labels);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -247,7 +253,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															why_it_matters, 
 															ada_compliance, 
 															Priority.HIGH,
-															recommendations);
+															recommendations,
+															labels);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -261,7 +268,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															why_it_matters, 
 															ada_compliance, 
 															Priority.HIGH,
-															recommendations);
+															recommendations,
+															labels);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -275,7 +283,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 														why_it_matters, 
 														ada_compliance, 
 														Priority.HIGH,
-														recommendations);
+														recommendations,
+														labels);
+			
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -289,7 +299,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															why_it_matters, 
 															ada_compliance, 
 															Priority.HIGH,
-															recommendations);
+															recommendations,
+															labels);
+			
 			observations.add(observation_service.save(observation));
 		}
 		

@@ -299,13 +299,17 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		Set<String> recommendations = new HashSet<>();
 		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
 		observations.add(new ElementStateObservation(
 								elements, 
 								"Has at least one margin value that isn't a multiple of 8.", 
 								why_it_matters, 
 								ada_compliance, 
 								Priority.LOW, 
-								recommendations));
+								recommendations,
+								labels));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -352,13 +356,17 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		Set<String> recommendations = new HashSet<>();
 		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
 		observations.add(new ElementStateObservation(
 								elements, 
 								"Has at least one margin value that isn't a multiple of 8.", 
 								why_it_matters, 
 								ada_compliance, 
 								Priority.LOW, 
-								recommendations));
+								recommendations,
+								labels));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -415,13 +423,18 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		if(!unscalable_margin_elements.isEmpty()) {
+			Set<String> labels = new HashSet<>();
+			labels.add("responsiveness");
+			labels.add("whitespace");
+			
 			observations.add(new ElementStateObservation(
 					unscalable_margin_elements, 
 					"Elements with unscalable margin units", 
 					"", 
 					"", 
 					Priority.LOW, 
-					null));
+					new HashSet<>(),
+					labels));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -540,14 +553,18 @@ public class MarginAudit implements IExecutablePageStateAudit {
 					+ " are multiple of 8.";
 			
 			String ada_compliance = "There are no ADA requirements for use of margins";
-		
+			
+			Set<String> labels = new HashSet<>();
+			labels.add("whitespace");
+			
 			observations.add(new ElementStateObservation(
 									flagged_elements, 
 									"Elements that appear to use margin as padding", 
 									why_it_matters, 
 									ada_compliance,
 									Priority.LOW, 
-									null));
+									new HashSet<>(),
+									labels));
 		}
 		return new Score(score, max_score, observations);
 	}

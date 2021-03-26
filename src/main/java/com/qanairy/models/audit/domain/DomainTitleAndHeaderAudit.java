@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,8 +89,19 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		}
 		
 		List<Observation> compressed_observations = new ArrayList<>();
+		Set<String> labels = new HashSet<>();
+		labels.add("seo");
+		labels.add("information architecture");
+		
 		for(String key : observation_map.keySet()) {
-			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key, "", "", Priority.HIGH, null);
+			ElementStateObservation observation = new ElementStateObservation(
+															observation_map.get(key), 
+															key, 
+															"", 
+															"", 
+															Priority.HIGH, 
+															null, 
+															labels);
 			compressed_observations.add(observation);
 		}
 		

@@ -2,6 +2,8 @@ package com.qanairy.models.repository;
 
 import java.util.List;
 
+import javax.validation.constraints.NotEmpty;
+
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +19,7 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 
 	@Query("MATCH (Audit{key:{audit_key}})-[:OBSERVED]-(observation) OPTIONAL MATCH y=(observation)-->() RETURN observation, y")
 	public List<Observation> findObservationsForAudit(@Param("audit_key") String audit_key);
+
+	@Query("MATCH (audit:Audit{key:{key}}),(observation:Observation{key:{observation_key}}) CREATE audit_observation=(audit)-[observed:OBSERVED]->(observation) RETURN observation")
+	public Observation addObservation(@Param("key") @NotEmpty String key, @Param("observation_key") @NotEmpty String observation_key);
 }

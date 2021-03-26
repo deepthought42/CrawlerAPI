@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
-import com.qanairy.models.CrawlStat;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -33,7 +32,6 @@ import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
-import com.qanairy.services.CrawlStatService;
 import com.qanairy.services.DomainService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -69,11 +67,7 @@ public class AuditManager extends AbstractActor{
 	
 	@Autowired
 	private AuditService audit_service;
-	
-	@Autowired
-	private CrawlStatService crawl_stat_service;
-	
-	private CrawlStat crawl_stat;
+
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -214,22 +208,6 @@ public class AuditManager extends AbstractActor{
 						
 						//send pusher message to clients currently subscribed to domain audit channel
 						MessageBroadcaster.broadcastAudit(host, audit);
-					}
-				})
-				.match(CrawlStat.class, crawl_stat -> {
-					this.crawl_stat = crawl_stat_service.save(crawl_stat);
-					//audit_record.setAuditStats(this.crawl_stat);
-					audit_record_service.save(audit_record);
-					
-					if( crawl_stat.getPageCount() == page_states_audited.size() ) {
-						Domain domain = domain_service.findByAuditRecord(audit_record.getKey());
-						
-						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-						log.warn("Audit Manager is now ready to perform a domain audit");
-						//AuditSet audit_record_set = new AuditSet(audits);
-						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("auditor"), "auditor"+UUID.randomUUID());
-						auditor.tell(domain_msg, getSelf());
 					}
 				})
 				.match(MemberUp.class, mUp -> {

@@ -3,14 +3,17 @@ package com.minion.api;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Action;
@@ -33,13 +36,13 @@ public class ReportController {
      * @return {@link Action account}
      * @throws IOException 
      */
-    /*
     @RequestMapping(method = RequestMethod.GET)
     public XSSFWorkbook getExcelReport() throws IOException {
     	
     	XSSFWorkbook workbook = new XSSFWorkbook();
+        //CellStyle cellStyle = workbook.createCellStyle();
+
         XSSFSheet sheet = workbook.createSheet("Java Books");
-         
         Object[][] bookData = {
                 {"Head First Java", "Kathy Serria", 79},
                 {"Effective Java", "Joshua Bloch", 36},
@@ -48,7 +51,7 @@ public class ReportController {
         };
  
         int rowCount = 0;
-         
+        
         for (Object[] aBook : bookData) {
             Row row = sheet.createRow(++rowCount);
              
@@ -71,6 +74,6 @@ public class ReportController {
         }
         
         return workbook;
+        
     }
-     */    
 }

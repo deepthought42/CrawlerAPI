@@ -17,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
-import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
@@ -32,8 +32,8 @@ import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageStateAuditComplete;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
-import com.qanairy.services.CrawlStatService;
 import com.qanairy.services.DomainService;
+import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -67,11 +67,7 @@ public class AuditManager extends AbstractActor{
 	
 	@Autowired
 	private AuditService audit_service;
-	
-	@Autowired
-	private CrawlStatService crawl_stats_service;
-	
-	private CrawlStats crawl_stats = new CrawlStats();
+
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -125,7 +121,6 @@ public class AuditManager extends AbstractActor{
 					log.warn("recieved page :: "+page.getUrl());
 					if(!pages_experienced.containsKey(page.getKey())) {
 						pages_experienced.put(page.getKey(), page);
-						log.warn("Page Count :: "+pages_experienced.keySet().size());
 						/*
 						ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
@@ -134,7 +129,6 @@ public class AuditManager extends AbstractActor{
 						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						web_crawl_actor.tell(page, getSelf());
-						log.warn("page received by audit manager ::      "+page);
 					}
 				})
 				.match(PageState.class, page_state -> {
@@ -167,65 +161,54 @@ public class AuditManager extends AbstractActor{
 				.match(PageStateAuditComplete.class, audit_complete -> {
 					Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 					page_states_audited.put(audit_complete.getPageState().getKey(), audit_complete.getPageState());
-					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(domain.getHost());
 
-					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("Page Audit Complete message received by audit manager. page cnt : "+pages_experienced.keySet().size()+"   ;    audit size  ::   "+page_states_audited.keySet().size());
-					log.warn("audit record  :: " + audit_record);
-					log.warn("audit record crawl stat ::  "+ audit_record.getCrawlStats());
 					List<PageVersion> pages = domain_service.getPages(domain.getHost());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
-					if( pages.size() == page_states.size()) {
-						log.warn("audit complete page state key :: "+audit_complete.getPageState().getKey());
-						
-						DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-						log.warn("Audit Manager is now ready to perform a domain audit");
+
+					if( pages.size() == page_states.size()) {						
+						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						//AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("auditor"), "auditor"+UUID.randomUUID());
-						auditor.tell(domain_msg, getSelf());
+						auditor.tell(domain_audit_msg, getSelf());
 					}
 				})
 				.match(AuditSet.class, audit_list -> {
-					String url_str = audit_list.getUrl();
+					String url_str = BrowserUtils.sanitizeUserUrl(audit_list.getUrl());
+					
+					
+					/* NOTE:: if still exists after 4-1-2021 then remove
 					if(!url_str.contains("http")) {
 						url_str = "http://"+url_str;
 					}
-					log.warn("creating url using string ::  "+url_str);
+
 					URL url = new URL(url_str);
 					String host = url.getHost();
+					host.replace("www.", "");
 					if(!host.contains("www.")) {
 						host = "www."+host;
 					}
-					log.warn("Looking up audit record for host :: "+host);
+					*/
+					
+					URL url = new URL(url_str);
+					String host = url.getHost();
+					
+					log.warn("(AUDIT MANAGER) looking up audit record using host  :: "+host);
+					
+					//NOTE: Audit record can be null, need to handle that scenario
 					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(host);
 					log.warn("Audit record :: " + audit_record);
 					//save all audits in audit list to database and add them to the audit record
 					for(Audit audit : audit_list.getAudits()){
+						log.warn("saving audit : "+audit);
 						audit = audit_service.save(audit);
+						log.warn("successfully saved audit : "+audit);
+						log.warn("audit record ::  "+audit_record);
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
+						
+						//send pusher message to clients currently subscribed to domain audit channel
+						MessageBroadcaster.broadcastAudit(host, audit);
 					}
-				})
-				.match(CrawlStats.class, crawl_stats -> {
-					this.crawl_stats = crawl_stats_service.save(crawl_stats);
-					audit_record.setCrawlStats(this.crawl_stats);
-					audit_record_service.save(audit_record);
-					log.warn("=================================================================");
-					log.warn("=================================================================");
-					log.warn("crawl stat page count :: "+crawl_stats.getPageCount());
-					log.warn("page states audited :: "+page_states_audited);
-					log.warn("page states audited size ::     "+page_states_audited.size());
-					if( crawl_stats.getPageCount() == page_states_audited.size() ) {
-							Domain domain = domain_service.findByAuditRecord(audit_record.getKey());
-							
-							DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-							log.warn("Audit Manager is now ready to perform a domain audit");
-							//AuditSet audit_record_set = new AuditSet(audits);
-							ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									.props("auditor"), "auditor"+UUID.randomUUID());
-							auditor.tell(domain_msg, getSelf());
-						}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -245,7 +228,7 @@ public class AuditManager extends AbstractActor{
 	private void stopAudit(CrawlActionMessage message) {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
-			actor_system.stop(web_crawler_actor);
+			//actor_system.stop(web_crawler_actor);
 			web_crawler_actor = null;
 		}
 	}

@@ -769,7 +769,7 @@ public class Browser {
 		Map<String, String> attributes_seen = new HashMap<String, String>();
 		
 		for(int i = 0; i < attributeList.size(); i++){
-			String[] attributes = attributeList.get(i).split("::");
+			String[] attributes = attributeList.get(i).split("");
 			
 			if(attributes.length > 1){
 				String attribute_name = attributes[0].trim().replace("\'", "'");
@@ -974,13 +974,8 @@ public class Browser {
 		List<String> raw_stylesheets = new ArrayList<>();
 		Document doc = Jsoup.parse(src);	
 		Elements stylesheets = doc.select("link");
-		log.warn("#######################################################################");
-		log.warn("#######################################################################");
-		log.warn("#######################################################################");
-		log.warn("stylesheets size :: "+stylesheets.size());
 		for(Element stylesheet : stylesheets) {
 			String rel_value = stylesheet.attr("rel");
-			log.warn("rel value of link tag ::  "+rel_value);
 			if("stylesheet".equalsIgnoreCase(rel_value)) {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet

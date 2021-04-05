@@ -12,6 +12,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -56,11 +57,19 @@ public class DomainLinksAudit implements IExecutableDomainAudit {
 			System.out.println("observations size for domain link audit ::      "+observations.size());
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
-						 AuditSubcategory.LINKS, 
+		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
+				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
+				+ " dead link, users bounce in search of a more reputable source.";
+		
+		String ada_compliance = "";
+		
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+						 AuditSubcategory.PERFORMANCE,
+						 AuditName.LINKS, 
 						 points, 
 						 observations, 
-						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 AuditLevel.PAGE, 
+						 max_points,
+						 domain.getHost());
 	}
 }

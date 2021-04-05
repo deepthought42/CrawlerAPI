@@ -63,7 +63,7 @@ public class Form extends LookseeObject{
 	 */
 	@Override
 	public String generateKey() {		
-		return "form::"+getFormTag();
+		return "form"+getFormTag();
 	}
 
 	/**

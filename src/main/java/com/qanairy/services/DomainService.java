@@ -1,11 +1,8 @@
 package com.qanairy.services;
 
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import javax.validation.constraints.NotBlank;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +21,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -64,17 +60,6 @@ public class DomainService {
 	
 	public Domain save(Domain domain) {
 		return domain_repo.save(domain);	
-	}
-	
-	public Domain addTest(String url, Test test, String user_id) throws MalformedURLException{
-		assert url != null;
-		assert !url.isEmpty();
-		assert test != null;
-		assert user_id != null;
-
-		Domain domain = domain_repo.findByUrlAndAccountId(url, user_id);
-		domain.addTest(test);
-		return domain_repo.save(domain);
 	}
 	
 	public int getTestCount(String user_id, String url) {
@@ -134,8 +119,6 @@ public class DomainService {
 	 * 
 	 * @param url {@link Domain} url
 	 * @param page_key key of {@link PageVersion} object
-	 * @param user_id 
-	 * 
 	 * @return
 	 * 
 	 * @pre url != null
@@ -145,21 +128,12 @@ public class DomainService {
 	 * @pre user_id != null
 	 * 
 	 */
-	public boolean addPage(String url, PageVersion page, String user_id) {
-		assert url != null;
-		assert !url.isEmpty();
-		assert page != null;
-		assert user_id != null;
-		
-		Domain domain = findByUrlAndAccountId(url, user_id);
-		
-		PageVersion page_record = domain_repo.getPage(user_id, url, page.getKey());
-		if(page_record == null) {
-			domain.addPage(page);
-			domain_repo.save(domain);
-			return true;
-		}
-		return false;
+	public boolean addPage(String host, String page_version_key) {
+		assert host != null;
+		assert !host.isEmpty();
+		assert page_version_key != null;
+
+		return domain_repo.addPage(host, page_version_key) != null;
 	}
 
 	/**
@@ -212,7 +186,6 @@ public class DomainService {
 		assert !audit_record_key.isEmpty();
 		//check if audit record is already attached to domain
 
-		log.warn("connecting audit record to domain");
 		domain_repo.addAuditRecord(domain_key, audit_record_key);
 	}
 
@@ -280,14 +253,14 @@ public class DomainService {
 		return domain_repo.findByAuditRecord(audit_record_key);
 	}
 
-	public Set<Audit> getMostRecentAuditRecordMargins(@NotBlank String host) {
+	public Set<Audit> getMostRecentAuditRecordMargins( String host) {
 		assert host != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
         return audit_record_service.getAllMarginAudits(record.getKey());	
     }
 	
-	public Set<Audit> getMostRecentAuditRecordPadding(@NotBlank String host) {
+	public Set<Audit> getMostRecentAuditRecordPadding( String host) {
 		assert host != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
@@ -301,11 +274,18 @@ public class DomainService {
         return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
 	
-	public Set<Audit> getMostRecentAuditRecord(String host, AuditCategory category) {
+	public Set<Audit> getMostRecentAudits(String host) {
 		assert host != null;
-		assert category != null;
+		assert !host.isEmpty();
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
-        return audit_record_service.getAllPageAudits(record.getKey(), category);
+        return audit_record_service.getAllPageAudits(record.getKey());
+	}
+
+	public AuditRecord getMostRecentAuditRecord(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		return audit_record_service.findMostRecent(host).get();
 	}
 }

@@ -12,6 +12,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -54,11 +55,19 @@ public class DomainImageAltTextAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}		
 		
-		return new Audit(AuditCategory.VISUALS, 
-						 AuditSubcategory.ALT_TEXT, 
+		String why_it_matters = "Alt-text helps with both SEO and accessibility. Search engines use alt-text"
+				+ "to help determine how usable and your site is as a way of ranking your site.";
+		
+		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
+				"‘Alt’ text for images present on the website.";
+		
+		return new Audit(AuditCategory.CONTENT,
+						 AuditSubcategory.IMAGERY,
+						 AuditName.ALT_TEXT, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, null);
+						 max_points, 
+						 null);
 	}
 }

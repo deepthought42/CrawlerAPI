@@ -32,7 +32,9 @@ import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
 /**
@@ -103,6 +105,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			elements_margin_map.put(element, margins);
 		}
 
+		
+
+			
 		log.warn("Element margin map size :: "+elements_margin_map.size());
 		// Score spacing_score = evaluateSpacingConsistency(elements_margin_map);     //commented out because this is old greatest common divisor methodology
 		Score spacing_score = evaluateSpacingMultipleOf8(elements_margin_map);
@@ -123,7 +128,14 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		//calculate score for question "Is margin used as margin?" NOTE: The expected calculation expects that margins are not used as margin
 		//log.warn("MARGIN SCORE  :::   " + points + " / 100" );	
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.MARGIN, points, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.WHITESPACE,
+						 AuditName.MARGIN,
+						 points,
+						 observations,
+						 AuditLevel.PAGE,
+						 max_points,
+						 page_state.getUrl());
 	}
 
 	/**
@@ -276,7 +288,93 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				max_points++;
 			}
 		}
-		observations.add(new ElementStateObservation(elements, "Has at least one margin value that isn't a multiple of 8."));
+		
+
+		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of margins";
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
+		observations.add(new ElementStateObservation(
+								elements, 
+								"Has at least one margin value that isn't a multiple of 8.", 
+								why_it_matters, 
+								ada_compliance, 
+								Priority.LOW, 
+								recommendations,
+								labels,
+								categories));
+		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
+		
+		return new Score(points_earned, max_points, observations);
+	}
+	
+	/**
+	 * Generates {@link Score score} for spacing consistency across elements
+	 * 
+	 * @param elements_margin_map
+	 * 
+	 * @return {@link Score score}
+	 * 
+	 * @pre elements_margin_map != null
+	 */
+	private Score evaluateSpacingAppliedEvenly(Map<ElementState, List<String>> elements_margins) {
+		assert elements_margins != null;
+		
+		int points_earned = 0;
+		int max_points = 0;
+		Set<Observation> observations = new HashSet<>();
+		List<ElementState> elements = new ArrayList<ElementState>();
+		
+		for(ElementState element : elements_margins.keySet()) {
+			for(String size_str : elements_margins.get(element)) {
+				if(isMultipleOf8(size_str)) {
+					points_earned += 1;
+					//elements.add(element);
+				}
+				//else create observation that element is unlikely to scale gracefully
+				else {
+					elements.add(element);
+				}
+				max_points++;
+			}
+		}
+		
+
+		String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+				+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of margins";
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
+		observations.add(new ElementStateObservation(
+								elements, 
+								"Has at least one margin value that isn't a multiple of 8.", 
+								why_it_matters, 
+								ada_compliance, 
+								Priority.LOW, 
+								recommendations,
+								labels,
+								categories));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -333,7 +431,22 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		}
 		
 		if(!unscalable_margin_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(unscalable_margin_elements, "Elements with unscalable margin units"));
+			Set<String> labels = new HashSet<>();
+			labels.add("responsiveness");
+			labels.add("whitespace");
+			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.name());
+			
+			observations.add(new ElementStateObservation(
+					unscalable_margin_elements, 
+					"Elements with unscalable margin units", 
+					"", 
+					"", 
+					Priority.LOW, 
+					new HashSet<>(),
+					labels,
+					categories));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -410,7 +523,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 
 			//identify elements that own text and have margin but not padding set
-			if(element.getText() != null && !element.getText().trim().isEmpty()) {
+			if(element.getOwnedText() != null && !element.getOwnedText().trim().isEmpty()) {
 				//check if element has margin but not padding set for any direction(top, bottom, left, right)
 				boolean margin_used_as_padding = false;
 				String margin_top = element.getRenderedCssValues().get("margin-top");
@@ -445,7 +558,29 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			}
 		}
 		if(!flagged_elements.isEmpty()) {
-			observations.add(new ElementStateObservation(flagged_elements, "Elements that appear to use margin as padding"));
+
+			String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
+					+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+					+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+					+ " are multiple of 8.";
+			
+			String ada_compliance = "There are no ADA requirements for use of margins";
+			
+			Set<String> labels = new HashSet<>();
+			labels.add("whitespace");
+			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.getShortName());
+			
+			observations.add(new ElementStateObservation(
+									flagged_elements, 
+									"Elements that appear to use margin as padding", 
+									why_it_matters, 
+									ada_compliance,
+									Priority.LOW, 
+									new HashSet<>(),
+									labels,
+									categories));
 		}
 		return new Score(score, max_score, observations);
 	}

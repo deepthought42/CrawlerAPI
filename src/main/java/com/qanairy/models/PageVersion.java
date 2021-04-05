@@ -18,8 +18,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.minion.browsing.Browser;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -41,38 +39,30 @@ public class PageVersion extends LookseeObject {
 	private Set<String> favicon_url;
 	
 	@Relationship(type = "HAS")
-	private List<Element> elements;
-	
-	@Relationship(type = "HAS")
 	private List<PageState> page_states;
 
 
 	public PageVersion() {
 		super();
-		setElements(new ArrayList<>());
 		setPageStates(new ArrayList<>());
 	}
 	
 
 	/**
 	 * Constructor 
-	 * 
-	 * @param elements
 	 * @param src
 	 * @param title
 	 * @param url
 	 * @param path
 	 */
-	public PageVersion(List<Element> elements, String src, String title, String url, String path)
+	public PageVersion(String src, String title, String url, String path)
 	{
 		super();
-		assert elements != null;
 		assert url != null;
 		assert src != null;
 		assert title != null;
 		assert path != null;
 
-		setElements(elements);
 		setPageStates(new ArrayList<>());
 		setUrl(url);
 		setBody( BrowserService.extractBody(src));
@@ -168,24 +158,8 @@ public class PageVersion extends LookseeObject {
 	 */
 	@Override
 	public PageVersion clone() {
-		List<Element> elements = new ArrayList<Element>(getElements());
-
-		PageVersion page = new PageVersion(elements, getSrc(), getTitle(), getUrl(), getPath());
+		PageVersion page = new PageVersion(getSrc(), getTitle(), getUrl(), getPath());
 		return page;
-	}
-
-	@JsonIgnore
-	public List<Element> getElements() {
-		return this.elements;
-	}
-
-	@JsonIgnore
-	public void setElements(List<Element> elements) {
-		this.elements = elements;
-	}
-
-	public void addElement(Element element) {
-		this.elements.add(element);
 	}
 
 	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
@@ -238,7 +212,7 @@ public class PageVersion extends LookseeObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.extractTemplate(this.getBody()));
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(BrowserService.extractTemplate(this.getBody()));
 	}
 
 	public String getSrc() {
@@ -247,15 +221,6 @@ public class PageVersion extends LookseeObject {
 
 	public void setSrc(String src) {
 		this.src = src;
-	}
-
-	public void addElements(List<Element> elements) {
-		//check for duplicates before adding
-		for(Element element : elements) {
-			if(!this.elements.contains(element)) {				
-				this.elements.add(element);
-			}
-		}
 	}
 
 	public String getTitle() {

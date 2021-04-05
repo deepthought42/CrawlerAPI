@@ -5,19 +5,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Defines all types of {@link Audit audits} that exist in the system
  */
-public enum ObservationType {
+public enum ObservationType {	
 	ELEMENT("Element"), 
 	TYPOGRAPHY("Typography"), 
 	COLOR_PALETTE("Color Palette"), 
 	PROPERTY_MAP("Property Map"),
 	STYLE_MISSING("Style Missing"),
-	PAGE("Page"),
-	PAGE_STATE("Page State"),
+	PAGE_STATE("Page"),
+	TYPEFACE("Typeface"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;
 
-    ObservationType (String shortName) {
+	ObservationType (String shortName) {
         this.shortName = shortName;
     }
 

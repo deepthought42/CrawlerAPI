@@ -22,6 +22,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -64,8 +65,6 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 		int points = 0;
 		int max_points = 0;
 		
-		
-		
 		for(Audit audit : text_contrast_audits) {
 			points += audit.getPoints();
 			max_points += audit.getTotalPossiblePoints();
@@ -79,14 +78,15 @@ public class DomainTypefaceAudit implements IExecutableDomainAudit {
 				observation_map.put(obs.getKey(), obs);
 			}
 		}
-		
-		return new Audit(AuditCategory.TYPOGRAPHY, 
-							AuditSubcategory.TYPEFACES, 
-							points, 
-							new ArrayList<>(observation_map.values()), 
-							AuditLevel.DOMAIN, 
-							max_points, 
-							domain.getHost());
+				
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
+						 AuditName.TYPEFACES, 
+						 points, 
+						 new ArrayList<>(observation_map.values()), 
+						 AuditLevel.DOMAIN, 
+						 max_points, 
+						 domain.getHost());
 	}
 	
 

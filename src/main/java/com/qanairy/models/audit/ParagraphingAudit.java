@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,9 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -68,7 +71,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		int max_points = 0;
 		
 		for(ElementState element : element_list) {
-			String text_block = element.getText();
+			String text_block = element.getOwnedText();
 			
 			//    parse text block into paragraph chunks(multiple paragraphs can exist in a text block)
 			String[] paragraphs = text_block.split("\n");
@@ -112,30 +115,77 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			// validate that spacing between paragraphs is at least 2x the font size within the paragraphs
 		}
 		
+
+		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
+				" Attention spans are shorter, and users skim through most information." + 
+				" Presenting information in small, easy to digest chunks makes their" + 
+				" experience easy and convenient. ";
+		
+		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
+				" this category, reading level needs to be taken into consideration when" + 
+				" writing content and paragraphing. ";
+
 		List<Observation> observations = new ArrayList<>();
+		/*
 		if(!good_paragraph_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(good_paragraph_observations, "Great job keeping these text blocks to under 5 sentences"));
 		}
+		*/
 
+		Set<String> labels = new HashSet<>();
+		labels.add("content");
+		labels.add("readability");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.CONTENT.getShortName());
+		
 		if(!poor_paragraph_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(poor_paragraph_observations, "Paragraphs with more than 5 sentences"));
+			observations.add(new ElementStateObservation(
+									poor_paragraph_observations, 
+									"Paragraphs with more than 5 sentences", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.MEDIUM, 
+									new HashSet<>(),
+									labels,
+									categories));
 		}
 		
 		//Sentence observations
+		/*
 		if(!good_sentence_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(good_sentence_observations, "Great job keeping sentences to under 10 words!!!"));
 		}
+		*/
 		
 		if(!meh_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(meh_sentence_observations, "Sentences between 10 and 20 words long"));
+			observations.add(new ElementStateObservation(
+									meh_sentence_observations, 
+									"Sentences between 10 and 20 words long", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.MEDIUM,
+									new HashSet<>(),
+									labels,
+									categories));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(poor_sentence_observations, "Sentences with over 20 words"));
+			observations.add(new ElementStateObservation(
+									poor_sentence_observations, 
+									"Sentences with over 20 words", 
+									why_it_matters, 
+									ada_compliance,
+									Priority.MEDIUM, 
+									new HashSet<>(),
+									labels,
+									categories));
 		}
 		
-		return new Audit(AuditCategory.WRITTEN_CONTENT, 
-						 AuditSubcategory.PARAGRAPHING, 
+		
+		return new Audit(AuditCategory.CONTENT,
+						 AuditSubcategory.WRITTEN_CONTENT, 
+						 AuditName.PARAGRAPHING, 
 						 points_earned, 
 						 observations, 
 						 AuditLevel.PAGE, 

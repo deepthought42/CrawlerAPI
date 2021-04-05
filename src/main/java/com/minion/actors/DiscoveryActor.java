@@ -199,7 +199,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
 						
-						String path_key = String.join(":::", message.getKeys());
+						String path_key = String.join(":", message.getKeys());
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
 							discovery_record.getExpandedPathKeys().add(path_key);
 						}
@@ -411,15 +411,12 @@ public class DiscoveryActor extends AbstractActor{
 			}
 		}
 		
-		discovery_record = new DiscoveryRecord(new Date(), BrowserType.CHROME.toString(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
 		//create new discovery
 		discovery_service.save(discovery_record);
 
 		Account account = account_service.findByUserId(message.getAccountId());
-		account.addDiscoveryRecord(discovery_record);
 		account = account_service.save(account);
 
-		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
 		
 		//start a discovery
@@ -437,26 +434,6 @@ public class DiscoveryActor extends AbstractActor{
 		log.warn("stopping discovery...");
 		discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(discovery_record);
-		
-		//stop all discovery processes
-		if(url_browser_actor != null){
-			actor_system.stop(url_browser_actor);
-			url_browser_actor = null;
-		}
-		if(path_expansion_actor != null){
-			actor_system.stop(path_expansion_actor);
-			path_expansion_actor = null;
-		}
-		if(form_discoverer != null){
-			actor_system.stop(form_discoverer);
-			form_discoverer = null;
-		}
-		if(!exploratory_browser_actors.isEmpty()){	
-			for(ActorRef actor : exploratory_browser_actors){
-				actor_system.stop(actor);
-			}
-			exploratory_browser_actors = new ArrayList<>();
-		}
 	}
 	
 	public Account getAccount() {

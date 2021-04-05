@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
+import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 
@@ -22,13 +24,15 @@ import com.google.cloud.vision.v1.ImageAnnotatorClient;
  */
 
 @SpringBootApplication(exclude={Neo4jDataAutoConfiguration.class, SecurityAutoConfiguration.class })
-@ComponentScan(basePackages = {"com.minion","com.qanairy", "com.looksee"})
+@ComponentScan(basePackages = {"com.minion*","com.qanairy*", "com.looksee*"})
 @PropertySources({
 	@PropertySource("classpath:application.properties"),
 	@PropertySource("classpath:auth0.properties")
 })
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 @ConfigurationProperties("spring.cloud.gcp.vision")
+@EnableNeo4jRepositories("com.qanairy.models.repository")
+@EntityScan(basePackages = { "com.qanairy.models", "com.qanairy.models" } )
 public class EntryPoint {
 	
 	public static void main(String[] args){

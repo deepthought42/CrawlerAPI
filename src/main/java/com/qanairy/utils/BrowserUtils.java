@@ -1,7 +1,6 @@
 package com.qanairy.utils;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -18,20 +17,16 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Redirect;
 import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.enums.BrowserType;
 
 
 public class BrowserUtils {
@@ -79,10 +74,12 @@ public class BrowserUtils {
 		URL new_url = new URL(url);
 		//check if host is subdomain
 		String new_host = new_url.getHost();
-		
+		new_host.replace("www.", "");
+		/*
 		if(!new_host.startsWith("www.")){
 			new_host = "www."+new_host;
 		}
+		*/
 		String new_key = new_host+new_url.getPath();
 		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
@@ -275,7 +272,7 @@ public class BrowserUtils {
 		
 		List<ElementState> element_list = new ArrayList<>();
 		for(ElementState element : element_states ) {
-			if(element.getText() != null && !element.getText().trim().isEmpty()) {
+			if(element.getOwnedText() != null && !element.getOwnedText().trim().isEmpty()) {
 				element_list.add(element);
 			}
 		}

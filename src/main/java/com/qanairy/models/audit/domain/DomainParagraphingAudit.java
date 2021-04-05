@@ -12,6 +12,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -55,12 +56,14 @@ public class DomainParagraphingAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 			System.out.println("observations size for domain link audit ::      "+observations.size());
 		}
-		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, 
-						 AuditSubcategory.LINKS, 
-						 points, 
-						 observations, 
-						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+				
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+						 AuditSubcategory.PERFORMANCE,
+						 AuditName.LINKS,
+						 points,
+						 observations,
+						 AuditLevel.DOMAIN,
+						 max_points,
+						 domain.getHost());
 	}
 }

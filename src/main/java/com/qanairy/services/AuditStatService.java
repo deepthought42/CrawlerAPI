@@ -5,19 +5,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.CrawlStats;
-
-import com.qanairy.models.repository.CrawlStatRepository;
+import com.qanairy.models.AuditStats;
+import com.qanairy.models.repository.AuditStatsRepository;
 
 @Service
-public class CrawlStatService {
+public class AuditStatService {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
-	private CrawlStatRepository crawl_stat_repository;
+	private AuditStatsRepository audit_stat_repository;
 	
-	public CrawlStats save(CrawlStats crawl_stat) {
-		return crawl_stat_repository.save(crawl_stat);	
+	public AuditStats save(AuditStats audit_stat) {
+		return audit_stat_repository.save(audit_stat);
 	}
 }

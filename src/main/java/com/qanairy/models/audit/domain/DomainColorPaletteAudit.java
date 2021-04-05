@@ -2,6 +2,7 @@ package com.qanairy.models.audit.domain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,8 +22,10 @@ import com.qanairy.models.audit.PaletteColor;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ObservationService;
@@ -127,21 +130,48 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		setGrayColors(new ArrayList<>(gray_color_strings));
 		setColors(new ArrayList<>(color_map.keySet()));
 
+		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 
+				"opinion on a product. 62–90% of that interaction is determined by the" + 
+				"color of the product alone." + 
+				"Color impacts how a user feels when they interact with your website; it is" + 
+				"key to their experience. The right usage of colors can brighten a website" + 
+				"and communicates the tone of your brand. Furthermore, using your brand" + 
+				"colors consistently makes the website appear cohesive and collected," + 
+				"while creating a sense of familiarity for the user.";
+		
+		String ada_compliance = "There are no ADA compliance guidelines regarding the website color" + 
+				"palette. However, keeping a cohesive color palette allows you to create" + 
+				"a webpage easy for everyone to read. ";
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
 																palette, 
 																scheme, 
-																"This is a color scheme description");
+																"This is a color scheme description",
+																why_it_matters,
+																ada_compliance, 
+																Priority.HIGH,
+																new HashSet<>(), 
+																labels,
+																categories);
 		
 		
 		observations.add(observation_service.save(palette_observation));
-			
-		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-						 AuditSubcategory.COLOR_PALETTE, 
+
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT,
+						 AuditName.COLOR_PALETTE, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 max_points,
+						 domain.getHost());
 	}	
 
 	public List<String> getGrayColors() {

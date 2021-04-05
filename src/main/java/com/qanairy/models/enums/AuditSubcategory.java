@@ -7,19 +7,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  */
 public enum AuditSubcategory {
 	//color management
-	COLOR_PALETTE("Color Palette"),
-	TEXT_BACKGROUND_CONTRAST("Text Background Contrast"),
-	NON_TEXT_BACKGROUND_CONTRAST("Non Text Background Contrast"),
-	LINKS("Links"),
-	TYPEFACES("Typefaces"),
-	FONT("Font"),
-	PADDING("Padding"),
-	MARGIN("Margin"),
-	MEASURE_UNITS("Measure Units"),
-	TITLES("Titles"),
-	ALT_TEXT("Alt Text"),
-	PARAGRAPHING("Paragraphing"),
-	UNKNOWN("Unknown");
+	WRITTEN_CONTENT("Written Content"),
+	IMAGERY("Imagery"),
+	VIDEOS("Videos"),
+	AUDIO("Audio"),
+	MENU_ANALYSIS("Menu Analysis"),
+	PERFORMANCE("Performance"),
+	SEO("SEO"),
+	TYPOGRAPHY("TYPOGRAPHY"),
+	COLOR_MANAGEMENT("Color Management"),
+	WHITESPACE("Whitespace"),
+	BRANDING("Branding");
 	
 	private String shortName;
 
@@ -34,9 +32,7 @@ public enum AuditSubcategory {
 
     @JsonCreator
     public static AuditSubcategory create (String value) {
-        if(value == null) {
-            return UNKNOWN;
-        }
+
         for(AuditSubcategory v : values()) {
             if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;

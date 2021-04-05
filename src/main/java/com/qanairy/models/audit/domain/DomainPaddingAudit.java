@@ -23,10 +23,11 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
-import com.qanairy.models.audit.StylingMissingObservation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 
@@ -113,6 +114,13 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			}
 		}
 		
+		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		String ada_compliance = "There are no ADA requirements for use of padding";
+		
 		Score spacing_score = evaluateSpacingConsistency(elements_padding_map);
 		Score unit_score = evaluateUnits(elements_padding_map);
 
@@ -126,12 +134,26 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
 		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved() + unit_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() + unit_score.getMaxPossiblePoints()) );	
 
+		/*
 		if(points == 0) {
 			//add observation that no elements were found with padding
-			observations.add(new StylingMissingObservation("Padding was not used")); 
+			observations.add(new StylingMissingObservation(
+									"Padding was not used", 
+									why_it_matters, 
+									ada_compliance, 
+									Priority.LOW)); 
 		}
+		 */
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.PADDING, points, observations, AuditLevel.PAGE, 100, domain.getHost());
+		
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.WHITESPACE,
+						 AuditName.PADDING, 
+						 points, 
+						 observations, 
+						 AuditLevel.PAGE, 
+						 100, 
+						 domain.getHost());
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -297,8 +319,24 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 				}
 			}
 		}
+		
 		if(!unscalable_padding_elements.isEmpty()) {
-			observations.add(new ElementObservation(unscalable_padding_elements, "Elements with unscalable padding units"));
+			Set<String> labels = new HashSet<>();
+			labels.add("responsiveness");
+			labels.add("whitespace");
+			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.name());
+			
+			observations.add(new ElementObservation(
+										unscalable_padding_elements, 
+										"Elements with unscalable padding units", 
+										"", 
+										"", 
+										Priority.MEDIUM, 
+										new HashSet<>(), 
+										labels,
+										categories));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

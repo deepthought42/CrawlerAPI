@@ -5,12 +5,13 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
 import javax.websocket.server.PathParam;
 
 import org.slf4j.Logger;
@@ -29,22 +30,27 @@ import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.AuditStats;
 import com.qanairy.models.Domain;
+import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.ObservationElementMap;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.ElementObservationMap;
+import com.qanairy.models.audit.ElementObservationTwoWayMapping;
+import com.qanairy.models.audit.ElementStateObservation;
+import com.qanairy.models.audit.Observation;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.CrawlActionMessage;
-import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.ObservationService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
@@ -71,6 +77,9 @@ public class AuditController {
     protected AuditService audit_service;
     
     @Autowired
+    protected ObservationService observation_service;
+    
+    @Autowired
     protected AuditRecordService audit_record_service;
     
     @Autowired
@@ -84,16 +93,18 @@ public class AuditController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
+     * @throws MalformedURLException 
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<AuditRecord> getAuditRecords(HttpServletRequest request,
+    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
     											@RequestParam(value="domain_host", required=true) String domain_host
-	) {
+	) throws MalformedURLException {
     	log.warn("finding all recent audits for url :: "+domain_host);
-        
+        domain_host = domain_host.replace("/", "").trim();
     	Domain domain = domain_service.findByHost(domain_host);
-    	return domain_service.getAuditRecords(domain.getKey());
+    	AuditRecord audit_record = domain_service.getMostRecentAuditRecord(domain.getHost());
+    	return audit_record_service.getAllAudits(audit_record.getKey());
     }
 
     /**
@@ -104,7 +115,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
     public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
-    											@PathVariable("id") @NotBlank long id
+									@PathVariable("id") long id
 	) {
     	log.warn("finding element with ID  :: "+id);
 
@@ -126,7 +137,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color")
     public @ResponseBody Set<Audit> getColorManagementAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding element with ID  :: "+host);
         return audit_record_service.getAllColorManagementAudits(host);
@@ -140,7 +151,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/palette")
     public @ResponseBody Set<Audit> getColorManagementPaletteAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding element with ID  :: "+host);
     	//get all pages
@@ -155,7 +166,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/textcontrast")
     public @ResponseBody Set<Audit> getColorManagementTextContrastAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding audits for host  :: "+host);
     	//get all pages
@@ -170,7 +181,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/nontextcontrast")
     public @ResponseBody Set<Audit> getColorManagementNonTextContrastAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding audits for host  :: "+host);
     	//get all pages
@@ -185,7 +196,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/typography")
     public @ResponseBody Set<Audit> getTypographyAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return audit_record_service.getAllTypographyAudits(host);
@@ -199,7 +210,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/typography/typeface")
     public @ResponseBody Set<Audit> getTypofaceAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordTypeface(host);
@@ -213,7 +224,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture")
     public @ResponseBody Set<Audit> getInformationArchitectureAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return audit_record_service.getAllInformationArchitectureAudits(host);
@@ -227,7 +238,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/link")
     public @ResponseBody Set<Audit> getInformationArchitectureLinkAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordLinks(host);
@@ -241,7 +252,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/title")
     public @ResponseBody Set<Audit> getInformationArchitectureTitleAndHeaderAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordTitleAndHeader(host);
@@ -255,7 +266,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/margin")
     public @ResponseBody Set<Audit> getInformationArchitectureMarginAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordMargins(host);
@@ -269,7 +280,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/padding")
     public @ResponseBody Set<Audit> getInformationArchitecturePaddingAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordPadding(host);
@@ -283,7 +294,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/visuals")
     public @ResponseBody Set<Audit> getVisualAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
         return audit_record_service.getAllVisualAudits(host);
@@ -297,7 +308,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/visuals/alttext")
     public @ResponseBody Set<Audit> getVisualAltTextAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
     	return domain_service.getMostRecentAuditRecordAltText(host);
@@ -311,7 +322,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/written_content/paragraphs")
     public @ResponseBody Set<Audit> getWrittenContentParagraphAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
     	return domain_service.getMostRecentAuditRecordParagraphing(host);
@@ -323,13 +334,97 @@ public class AuditController {
      * @param id
      * @return {@link Audit audit} with given ID
      */
-    @RequestMapping(method= RequestMethod.GET, path="/visuals/paragraphs")
-    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
-    											@PathVariable("host") @NotBlank String host,
-    											@PathVariable("category") @NotBlank String category
+    @RequestMapping(method= RequestMethod.GET, path="/pages")
+    public @ResponseBody List<PageStateAudits> getAuditsGroupedByPage(
+    		HttpServletRequest request,
+    		@RequestParam("host") String host
 	) {
-    	log.warn("finding visual audits for domain with host  :: "+host);
-    	return domain_service.getMostRecentAuditRecord(host, AuditCategory.create(category));
+    	host = BrowserUtils.sanitizeUrl(host);
+    	//Get most recent audits
+    	log.warn("finding audit pages by host :: "+host);
+    	Set<Audit> audits = domain_service.getMostRecentAudits(host);
+    	
+    	log.warn("grouping audits by page :: "+audits.size());
+    	//Map audits to page states
+    	return audit_service.groupAuditsByPage(audits);
+    }
+    
+    /**
+     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     * @throws MalformedURLException 
+     */
+    @RequestMapping(method= RequestMethod.GET, path="/elements")
+    public @ResponseBody ElementObservationTwoWayMapping getPageAuditElements(
+    		HttpServletRequest request,
+    		@RequestParam("page_url") String page_url
+	) throws MalformedURLException {
+    	page_url = BrowserUtils.sanitizeUrl(page_url);
+
+    	//Get most recent audits
+    	log.warn("finding audits elements by page url :: "+page_url);
+    	String domain_host = new URL(page_url).getHost();
+    	Set<Audit> audits = domain_service.getMostRecentAudits(domain_host);
+    	
+    	//Map audits to page states
+    	Set<ObservationElementMap> observation_element_map = audit_service.generateObservationElementMap(audits, page_url);
+    	Set<ElementObservationMap> element_observation_map = audit_service.generateElementObservationMap(audits, page_url);
+    
+    	//package both elements into an object definition
+    	return new ElementObservationTwoWayMapping(observation_element_map, element_observation_map);
+    }
+    
+    /**
+     * Creates a new {@link Observation observation} 
+     * 
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.POST, value="/$key/observations")
+    public @ResponseBody Observation addObservation(
+							    		HttpServletRequest request,
+										@PathVariable("key") String key,
+							    		@RequestBody Observation observation
+	) throws UnknownAccountException {
+    	/*
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	*/
+
+    	//find audit by key
+    	log.warn("Observation to be saved :: "+observation);
+    	//find audit by key and add recommendation
+    
+    	//add observation to page
+
+    	observation.setKey(observation.generateKey());
+    	log.warn("Observation key :: "+observation.getKey());
+    	log.warn("audit key :: "+key);
+    	
+    	
+    	
+    	if(ObservationType.ELEMENT.equals(observation.getType())) {
+    		observation = new ElementStateObservation(
+    								new ArrayList<>(), 
+    								observation.getDescription(), 
+    								observation.getWhyItMatters(), 
+    								observation.getAdaCompliance(), 
+    								observation.getPriority(), 
+    								observation.getRecommendations(),
+    								observation.getLabels(),
+    								observation.getCategories());
+    	}
+		observation = observation_service.save( observation );
+		audit_service.addObservation(key, observation.getKey());
+		return observation;
+
     }
     
     /**
@@ -340,8 +435,10 @@ public class AuditController {
      * @throws Exception
      */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody CrawlStats startAudit(HttpServletRequest request,
-											   @RequestBody(required=true) PageVersion page) throws Exception {
+	public @ResponseBody AuditStats startAudit(
+			HttpServletRequest request,
+			@RequestBody(required=true) PageVersion page
+	) throws Exception {
     	String lowercase_url = page.getUrl().toLowerCase();
     	if(!lowercase_url.contains("http")) {
     		lowercase_url = "http://" + lowercase_url;
@@ -360,8 +457,8 @@ public class AuditController {
 
 	   	log.warn("creating audit record");
 	   	//create new audit record
-	   	AuditRecord audit_record = new AuditRecord();
-	   	
+	   	AuditRecord audit_record = new AuditRecord(new AuditStats(domain.getHost()));
+
 	   	log.warn("Saving audit Record");
 	   	audit_record = audit_record_service.save(audit_record);
 	   	
@@ -374,14 +471,9 @@ public class AuditController {
 		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", audit_record);
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
-	   /*	
-	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-		LocalDateTime end_time = LocalDateTime.now();
+	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
 
-		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
-	   	*/
-		return null;
+	   	return audit_record.getAuditStats();
 	}
 
 	
@@ -399,37 +491,5 @@ public class AuditController {
 	   	else if(acct.getSubscriptionToken() == null){
 	   		throw new MissingSubscriptionException();
 	   	}
-	}
-	
-	 /**
-     * 
-     * @param request
-     * @param page
-     * @return
-     * @throws Exception
-     */
-	@RequestMapping(path="/buildDomainAudits", method = RequestMethod.GET)
-	public @ResponseBody CrawlStats performDomainAudit(HttpServletRequest request,
-													@PathParam("host") @NotBlank String host) throws Exception {
-
-	   	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+host));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
-	   	log.warn("host :: "+sanitized_url.getHost());
-	   	log.warn("domain :: "+domain);
-	   	DomainAuditMessage domain_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
-		log.warn("Audit Manager is now ready to perform a domain audit");
-		//AuditSet audit_record_set = new AuditSet(audits);
-		ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("auditor"), "auditor"+UUID.randomUUID());
-		auditor.tell(domain_msg, null);
-	   	//crawl site and retrieve all page urls/landable pages
-	   /*	
-	    Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-		LocalDateTime end_time = LocalDateTime.now();
-
-		long total_seconds = (end_time.toEpochSecond(ZoneOffset.UTC)-start_time.toEpochSecond(ZoneOffset.UTC));
-	   	return new CrawlStats(start_time, end_time, total_seconds, page_state_audits.size(), total_seconds/((double)page_state_audits.size()));
-	   	*/
-		return null;
 	}
 }

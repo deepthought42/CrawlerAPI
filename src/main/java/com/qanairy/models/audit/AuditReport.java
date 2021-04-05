@@ -6,7 +6,7 @@ import java.util.List;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
-import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.AuditName;
 
 public class AuditReport extends LookseeObject{
 	private String description; //definition

@@ -24,6 +24,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
@@ -168,7 +169,24 @@ public class DomainFontAudit implements IExecutableDomainAudit {
 		
 		
 		log.warn("DOMAIN FONT AUDIT SCORE   ::   "+score +" / " +max_score);
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.FONT, score, observations, AuditLevel.PAGE, max_score, domain.getHost());
+		
+		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				"the text on your website. It plays an important role in how clear, distinct" + 
+				"and legible the textual content is.";
+		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				"Images of text are not used and text is resizable. San-Serif typeface has" + 
+				"been used across the pages.";
+		
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
+						 AuditName.FONT, 
+						 score, 
+						 observations, 
+						 AuditLevel.PAGE, 
+						 max_score, 
+						 domain.getHost());
 	}
 	
 

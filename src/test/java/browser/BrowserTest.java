@@ -42,7 +42,7 @@ public class BrowserTest {
 	
 	@Test
 	public void verifyUrlReaderForHttps() throws MalformedURLException {
-		URL url = new URL("https://misorobotics.com/wp-content/plugins/contact-form-7-style/css/responsive.css?ver=3.1.8");
+		URL url = new URL("https://www.amazon.com");
 		try {
 			String output = Browser.URLReader(url);
 			System.out.println("output           :: "+output);
@@ -120,5 +120,14 @@ public class BrowserTest {
 		String cleaned_src = Browser.cleanSrc(src);
 		assertFalse(cleaned_src.contains("<script"));
 		assertFalse(cleaned_src.contains("<style"));
+	}
+	
+	@Test
+	public void verifyCleanUrl() throws MalformedURLException {
+		String url1 = "https://look-see.com";
+		URL url = new URL(url1);
+		
+		System.err.println("url :: "+url.getHost());
+		
 	}
 }

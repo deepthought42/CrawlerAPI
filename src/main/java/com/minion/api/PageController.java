@@ -18,6 +18,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageVersionService;
 
 /**
@@ -26,13 +27,16 @@ import com.qanairy.services.PageVersionService;
 @RestController
 @RequestMapping("/pages")
 public class PageController {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	private AccountService account_service;
 	
 	@Autowired
 	private PageVersionService page_service;
+	
+	@Autowired
+	private ObservationService observation_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;
@@ -45,7 +49,7 @@ public class PageController {
      * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:actions')")
-    @RequestMapping(method = RequestMethod.GET, path="/{page_key}/insights")
+    @RequestMapping(method = RequestMethod.GET, path="/$page_key/insights")
     public PerformanceInsight getInsights(HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String page_key
 	) throws UnknownAccountException {
@@ -57,7 +61,8 @@ public class PageController {
     		throw new UnknownAccountException();
     	}
     	
-        logger.info("finding all page insights :: "+page_key);
+        log.info("finding all page insights :: "+page_key);
         return page_service.findLatestInsight(page_key);
     }
+    
 }

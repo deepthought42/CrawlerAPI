@@ -18,6 +18,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -65,12 +66,14 @@ public class DomainNonTextColorContrastAudit implements IExecutableDomainAudit {
 			max_points += audit.getTotalPossiblePoints();
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
-		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-							AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, 
-							points, 
-							observations, 
-							AuditLevel.DOMAIN, 
-							max_points, domain.getHost());
+			
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT, 
+						 AuditName.NON_TEXT_BACKGROUND_CONTRAST, 
+					 	 points, 
+						 observations, 
+						 AuditLevel.DOMAIN, 
+						 max_points, 
+						 domain.getHost());
 	}
 }

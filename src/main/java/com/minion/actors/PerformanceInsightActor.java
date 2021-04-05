@@ -55,7 +55,6 @@ import com.qanairy.models.experience.ThirdPartySummaryDetail;
 import com.qanairy.models.experience.TimingDetail;
 import com.qanairy.models.experience.WebPImageDetail;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.services.AuditDetailService;
@@ -64,7 +63,6 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageVersionService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.PerformanceInsightService;
 
 /**
@@ -151,7 +149,7 @@ public class PerformanceInsightActor extends AbstractActor {
 					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
 					performance_insight_service.save(performance_insight);
 					page_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getEntryPath(), page.getKey(), performance_insight.getKey());
-					domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
+					domain_service.addPage(message.getDomain().getEntryPath(), page.getKey());
 
 					log.warn("creating landing page performance and SEO insights");					
 				})

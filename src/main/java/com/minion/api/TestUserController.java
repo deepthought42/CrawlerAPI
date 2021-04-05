@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +48,13 @@ public class TestUserController {
 	 * @throws MalformedURLException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    @RequestMapping(path="$user_id", method = RequestMethod.PUT)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="isEnabled", required=true) boolean isEnabled,
     									@RequestParam(value="password", required=true) String password,
     									@RequestParam(value="username", required=true) String username,
-    									@RequestParam(value="role", required=false) String role) 
-    											throws UnknownUserException {
+    									@RequestParam(value="role", required=false) String role)  {
     	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
     	if(optional_user.isPresent()){
     		TestUser test_user_record = optional_user.get();

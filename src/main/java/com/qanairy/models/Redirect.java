@@ -32,7 +32,7 @@ public class Redirect extends LookseeObject {
 		for(String url : urls){
 			url_string += url;
 		}
-		return "redirect::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_string);
+		return "redirect"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_string);
 	}
 
 	public List<String> getUrls() {

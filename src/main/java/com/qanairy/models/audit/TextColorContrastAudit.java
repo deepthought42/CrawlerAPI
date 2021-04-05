@@ -3,7 +3,9 @@ package com.qanairy.models.audit;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,10 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -35,6 +40,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired 
+	private ElementStateService element_state_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -76,8 +84,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				//Identify background color by getting largest color used in picture
 				ColorData background_color_data = ImageUtils.extractBackgroundColor(element);
 				
-				log.warn("Background color :: "+background_color_data);
 				double contrast = ColorData.computeContrast(background_color_data, text_color);
+				element.setTextContrast(contrast);
+				element_state_service.save(element);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element
 					//calculate contrast between text color and background-color
@@ -132,42 +141,105 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		
+		String why_it_matters = "Color, just like the overall design, goes beyond aesthetics. It impacts the" + 
+				" usability and functionality of your website, deciding what information" + 
+				" stands out to the user." + 
+				" A good contrast ratio makes your content easy to read and navigate" + 
+				" through, creating a comfortable and engaging experience for your user. ";
+		
+		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
+				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
+
 		List<Observation> observations = new ArrayList<>();
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("Use colors for text and images of text with background colors that have a contrast of at least 4.5:1 for ADA compliance");
+
+		
+		/*
 		if(!high_header_contrast.isEmpty()) {
 			ElementStateObservation high_header_contrast_observation = new ElementStateObservation(high_header_contrast, "Headers with contrast above 4.5");
 			observations.add(observation_service.save(high_header_contrast_observation));
 		}
+		*/
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.getShortName());
+		
 		if(!mid_header_contrast.isEmpty()) {
-			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(mid_header_contrast, "Headers with contrast between 3 and 4.5");
+			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(
+																			mid_header_contrast, 
+																			"Headers with contrast between 3 and 4.5", 
+																			why_it_matters, 
+																			ada_compliance, 
+																			Priority.HIGH,
+																			recommendations,
+																			labels, 
+																			categories);
 			observations.add(observation_service.save(mid_header_contrast_observation));
 		}
 		if(!low_header_contrast.isEmpty()) {
-			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(low_header_contrast, "Headers with contrast below 3");
+			ElementStateObservation low_header_contrast_observation = new ElementStateObservation(
+																			low_header_contrast, 
+																			"Headers with contrast below 3", 
+																			why_it_matters, 
+																			ada_compliance, 
+																			Priority.HIGH,
+																			recommendations,
+																			labels,
+																			categories);
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
+		/*
 		if(!high_text_contrast.isEmpty()) {
 			ElementStateObservation high_text_observation = new ElementStateObservation(high_text_contrast, "Text with contrast above 7");
 			observations.add(observation_service.save(high_text_observation));
 		}
+		*/
 		if(!mid_text_contrast.isEmpty()) {
-			ElementStateObservation mid_text_observation = new ElementStateObservation(mid_text_contrast, "Text with contrast between 4.5 and 7");
+			ElementStateObservation mid_text_observation = new ElementStateObservation(
+																mid_text_contrast, 
+																"Text with contrast between 4.5 and 7", 
+																why_it_matters, 
+																ada_compliance,
+																Priority.HIGH,
+																new HashSet<>(),
+																labels,
+																categories);
 			observations.add(observation_service.save(mid_text_observation));
 		}
 		if(!low_text_contrast.isEmpty()) {
-			ElementStateObservation low_text_observation = new ElementStateObservation(low_text_contrast, "Text with contrast below 4.5");
+			ElementStateObservation low_text_observation = new ElementStateObservation(
+																	low_text_contrast, 
+																	"Text with contrast below 4.5", 
+																	why_it_matters, 
+																	ada_compliance,
+																	Priority.HIGH,
+																	new HashSet<>(),
+																	labels,
+																	categories);
 			observations.add(observation_service.save(low_text_observation));
 		}
 		
 		int total_possible_points = ((total_headlines*2) + (total_text_elems*2));
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + (headline_score+text_score) + " : " + total_possible_points);
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.TEXT_BACKGROUND_CONTRAST, (headline_score+text_score), observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
+	
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT,
+					     AuditName.TEXT_BACKGROUND_CONTRAST,
+					     (headline_score + text_score),
+					     observations, 
+					     AuditLevel.PAGE,
+					     total_possible_points,
+					     page_state.getUrl());
 	}
 
 	private String getParentXpath(String xpath) {
 		int idx = xpath.lastIndexOf("/");
 		return xpath.substring(0, idx);
 	}
-
-	
 }

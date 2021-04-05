@@ -18,6 +18,7 @@ import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
@@ -67,11 +68,22 @@ public class DomainTextColorContrastAudit implements IExecutableDomainAudit {
 			observations.addAll(audit_service.getObservations(audit.getKey()));
 		}
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, 
-						 AuditSubcategory.TEXT_BACKGROUND_CONTRAST, 
+		String why_it_matters = "Color, just like the overall design, goes beyond aesthetics. It impacts the" + 
+				" usability and functionality of your website, deciding what information" + 
+				" stands out to the user." + 
+				" A good contrast ratio makes your content easy to read and navigate" + 
+				" through, creating a comfortable and engaging experience for your user. ";
+		
+		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
+				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
+		
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT, 
+						 AuditName.TEXT_BACKGROUND_CONTRAST, 
 						 points, 
 						 observations, 
 						 AuditLevel.DOMAIN, 
-						 max_points, domain.getHost());
+						 max_points, 
+						 domain.getHost());
 	}
 }

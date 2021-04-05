@@ -9,6 +9,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 
 /**
@@ -17,7 +18,8 @@ import com.qanairy.models.enums.AuditSubcategory;
 public class Audit extends LookseeObject {
 
 	private String category;
-	private String subcategory; // name of the audit subcategory
+	private String subcategory;
+	private String name; // name of the audit
 	private String level;
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
@@ -44,7 +46,16 @@ public class Audit extends LookseeObject {
 	 * @param total_possible_points
 	 * @param url TODO
 	 */
-	public Audit(AuditCategory category, AuditSubcategory subcategory, int points, List<Observation> observations, AuditLevel level, int total_possible_points, String url) {
+	public Audit(
+			AuditCategory category, 
+			AuditSubcategory subcategory,
+			AuditName name,
+			int points, 
+			List<Observation> observations, 
+			AuditLevel level, 
+			int total_possible_points,
+			String url
+	) {
 		super();
 		
 		assert category != null;
@@ -52,8 +63,9 @@ public class Audit extends LookseeObject {
 		assert observations != null;
 		assert level != null;
 		
-		setSubcategory(subcategory);
+		setName(name);
 		setCategory(category);
+		setSubcategory(subcategory);
 		setPoints(points);
 		setTotalPossiblePoints(total_possible_points);
 		setObservations(observations);
@@ -64,48 +76,14 @@ public class Audit extends LookseeObject {
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
 	}
 
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
 	public String generateKey() {
-		return "audit::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSubcategory().toString()+this.getCategory().toString()+this.getLevel()+getPoints()+getTotalPossiblePoints()+getCreatedAt().toString());
-	}
-
-	public AuditCategory getCategory() {
-		return AuditCategory.create(category);
-	}
-
-	public void setCategory(AuditCategory category) {
-		this.category = category.getShortName();
-	}
-	
-
-	public List<Observation> getObservations() {
-		return observations;
-	}
-
-	public void setObservations(List<Observation> observations) {
-		this.observations = observations;
-	}
-
-
-	public int getPoints() {
-		return points;
-	}
-
-	public void setPoints(int points) {
-		this.points = points;
-	}
-
-	public AuditSubcategory getSubcategory() {
-		return AuditSubcategory.create(subcategory);
-	}
-
-	public void setSubcategory(AuditSubcategory subcategory) {
-		this.subcategory = subcategory.getShortName();
+		return "audit"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getName().toString()+this.getCategory().toString()+this.getLevel()+getPoints()+getTotalPossiblePoints()+getCreatedAt().toString());
 	}
 
 	/**
@@ -114,6 +92,40 @@ public class Audit extends LookseeObject {
 	@Override
 	public String toString(){
 		return this.getKey();
+	}
+
+	public AuditCategory getCategory() {
+		return AuditCategory.create(category);
+	}
+	
+	public void setCategory(AuditCategory category) {
+		this.category = category.getShortName();
+	}
+	
+	
+	public List<Observation> getObservations() {
+		return observations;
+	}
+	
+	public void setObservations(List<Observation> observations) {
+		this.observations = observations;
+	}
+	
+	
+	public int getPoints() {
+		return points;
+	}
+	
+	public void setPoints(int points) {
+		this.points = points;
+	}
+	
+	public AuditName getName() {
+		return AuditName.create(name);
+	}
+	
+	public void setName(AuditName subcategory) {
+		this.name = subcategory.getShortName();
 	}
 	
 	public AuditLevel getLevel() {
@@ -139,5 +151,13 @@ public class Audit extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public AuditSubcategory getSubcategory() {
+		return AuditSubcategory.create(subcategory);
+	}
+
+	public void setSubcategory(AuditSubcategory subcategory) {
+		this.subcategory = subcategory.toString();
 	}
 }

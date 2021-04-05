@@ -48,6 +48,6 @@ public abstract class Rule extends LookseeObject {
 	
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getType()+"::"+this.getValue());
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getType()+""+this.getValue());
 	}
 }

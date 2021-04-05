@@ -16,8 +16,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 
@@ -54,7 +54,7 @@ public class TestRecordController {
 	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('read:test_records')")
-	@RequestMapping(path="{key}", method = RequestMethod.GET)
+	@RequestMapping(path="$key", method = RequestMethod.GET)
 	public @ResponseBody TestRecord getTestRecord(HttpServletRequest request, 
 														@PathVariable(value="key", required=true) String key) {
     	return test_record_repo.findByKey(key);

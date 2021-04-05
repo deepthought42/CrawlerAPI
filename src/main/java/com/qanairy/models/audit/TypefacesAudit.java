@@ -4,8 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -20,7 +22,9 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -61,7 +65,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		
 		List<String> font_families = new ArrayList<>();
 		List<Observation> observations = new ArrayList<>();
-
 		List<String> raw_stylesheets = Browser.extractStylesheets(page_state.getSrc()); 
 		
 		//open stylesheet
@@ -91,7 +94,14 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		log.warn("primary typefaces  size() ::    " + primary_typefaces.size());
 
 		
+		String why_it_matters = "Clean typography, with the use of only 1 to 2 typefaces, invites users to" + 
+				" the text on your website. It plays an important role in how clear, distinct" + 
+				" and legible the textual content is.";
 		
+		String ada_compliance = "Your typography meets ADA requirements." + 
+				" Images of text are not used and text is resizable. San-Serif typeface has" + 
+				" been used across the pages.";
+				
 		//SCORE PRIMARY TYPEFACES 
 		int score = 0;
 		int total_possible_points = 3;
@@ -100,17 +110,36 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		//evaluate typefaces
 		if(primary_typefaces.size() ==  2) {
 			score += 2;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!");
-			observations.add(observation_service.save(observation));
+			//Set<String> recommendations = new HashSet<>();
+
+			//TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!", why_it_matters, ada_compliance, recommendations);
+			//observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() < 2) {
 			score += 1;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Only 1 typeface was found. You might want to consider using 2 typefaces for the best experience");
+			Set<String> recommendations = new HashSet<>();
+			recommendations.add(" You might want to consider using 2 typefaces for the best experience");
+			TypefacesObservation observation = new TypefacesObservation(
+														primary_typefaces, 
+														"Only 1 typeface was found", 
+														why_it_matters, 
+														ada_compliance, 
+														recommendations,
+														Priority.MEDIUM );
+			
 			observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() > 2) {
 			score += 0;
-			TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces");
+			Set<String> recommendations = new HashSet<>();
+
+			TypefacesObservation observation = new TypefacesObservation(
+														primary_typefaces, 
+														"Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", 
+														why_it_matters, 
+														ada_compliance, 
+														recommendations,
+														Priority.MEDIUM );
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		
@@ -143,11 +172,20 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		}
 		
 		//check graph for loop - if any keys within graph have more than 1 font associated with it.
+		boolean typeface_limit_msg_already_added = false;
 		for(String font : forward_connection_graph.keySet() ) {
 			//if connected set has more than 1 element then an inconsistency exists
 			if(forward_connection_graph.get(font).size() > 1){
 				score += 1;
-				TypefacesObservation observation = new  TypefacesObservation(forward_connection_graph.get(font), "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.");
+				Set<String> recommendations = new HashSet<>();
+
+				TypefacesObservation observation = new TypefacesObservation(
+															forward_connection_graph.get(font), 
+															"Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.",
+															why_it_matters, 
+															ada_compliance, 
+															recommendations, 
+															Priority.MEDIUM );
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -163,25 +201,51 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		
 		//GET TYPEFACES ACTUALLY RENDERED BY SYSTEM AND GENERATE SCORE BASED ON TYPEFACE CASCADE SETTINGS
 		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
-
+		Set<String> observed_fonts = new HashSet<>();
+		List<ElementState> no_fallback_font = new ArrayList<>();
+		
 		for(ElementState element : element_list) {
 			
 			String font_family = element.getRenderedCssValues().get("font-family");
-			if(primary_typefaces.contains(font_family)) {
+			if(primary_typefaces.contains(font_family) ) {
 				score +=2;
-				ElementStateObservation observation = new  ElementStateObservation(element_list, "Text element has the desired font.");
-				observations.add(observation_service.save(observation));
 			}
 			else {
 				score +=1;
-				ElementStateObservation observation = new  ElementStateObservation(element_list, "Text element rendered with a fallback typeface instead of the desired font.");
-				observations.add(observation_service.save(observation));
+				no_fallback_font.add(element);
 			}
 			
 			total_possible_points += 2;
+			
+			observed_fonts.add(font_family);
 		}
 		
-				
-		return new Audit(AuditCategory.TYPOGRAPHY, AuditSubcategory.TYPEFACES, score, observations, AuditLevel.PAGE, total_possible_points, page_state.getUrl());
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("typography");
+		labels.add("content");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.getShortName());
+		
+		ElementStateObservation observation = new ElementStateObservation(
+														no_fallback_font, 
+														"Text element rendered with a fallback typeface instead of the desired font.", 
+														why_it_matters, 
+														ada_compliance,
+														Priority.MEDIUM,
+														new HashSet<>(),
+														labels,
+														categories);
+		observations.add(observation_service.save(observation));
+		
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.TYPOGRAPHY,
+						 AuditName.TYPEFACES,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 total_possible_points,
+						 page_state.getUrl());
 	}
 }

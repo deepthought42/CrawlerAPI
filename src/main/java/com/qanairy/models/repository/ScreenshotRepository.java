@@ -10,6 +10,6 @@ import com.qanairy.models.Screenshot;
  * 
  */
 public interface ScreenshotRepository extends Neo4jRepository<Screenshot, Long> {
-	@Query("MATCH (p:Screenshot{key:{key}}) RETURN p LIMIT 1")
+	@Query("MATCH (p:Screenshot{key:$key}) RETURN p LIMIT 1")
 	public Screenshot findByKey(@Param("key") String key);
 }

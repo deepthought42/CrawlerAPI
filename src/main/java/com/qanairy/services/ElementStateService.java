@@ -1,9 +1,9 @@
 package com.qanairy.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,8 @@ public class ElementStateService {
 	@Autowired
 	private ElementStateRepository element_repo;
 
+	@Autowired
+	private PageStateService page_state_service;
 	/**
 	 * 
 	 * @param element
@@ -31,12 +33,13 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element) throws ClientException{
+	public ElementState save(ElementState element){
 		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			//iterate over attributes			
+			//iterate over attributes		
+			
 			element_record = element_repo.save(element);
 		}
 		else {
@@ -61,7 +64,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState saveFormElement(ElementState element) throws ClientException{
+	public ElementState saveFormElement(ElementState element){
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){			
@@ -126,8 +129,23 @@ public class ElementStateService {
 		return element_repo.getChildElementsForUser(user_id, element_key);
 	}
 	
-	public List<ElementState> getChildElements(String element_key) {
-		return element_repo.getChildElements(element_key);
+	public List<ElementState> getChildElements(String page_key, String xpath) {
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		assert xpath != null;
+		assert !xpath.isEmpty();
+		
+		List<ElementState> element_states = page_state_service.getElementStates(page_key);
+		
+		// get elements that are the the child of the element state
+		List<ElementState> child_element_states = new ArrayList<>();
+		for(ElementState element : element_states) {
+			if(!element.getXpath().contentEquals(xpath) && element.getXpath().contains(xpath)) {
+				child_element_states.add(element);
+			}
+		}
+		
+		return child_element_states;
 	}
 	
 	public List<ElementState> getChildElementForParent(String parent_key, String child_element_key) {

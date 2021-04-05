@@ -7,10 +7,11 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
@@ -25,11 +26,12 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
-import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -124,29 +126,22 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						continue;
 					}
 					
-					try {
-						//log.warn("checking if element is parent ::  "+element_state.getXpath());
-						if(element.getXpath().contains(element_state.getXpath())) {
-							int element_area = element.getWidth() * element.getHeight();
-							int parent_area = element_state.getWidth() * element_state.getHeight();
+					//log.warn("checking if element is parent ::  "+element_state.getXpath());
+					if(element.getXpath().contains(element_state.getXpath())) {
+						int element_area = element.getWidth() * element.getHeight();
+						int parent_area = element_state.getWidth() * element_state.getHeight();
+						
+						
+						log.warn("element area  :   "+element_area);
+						log.warn("parent area  :   "+parent_area);
+						log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
+						
+						if(parent_area > (element_area * 3)) {
+							//parent = element_state;
+							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
 							
-							/*
-							log.warn("element area  :   "+element_area);
-							log.warn("parent area  :   "+parent_area);
-							log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
-							*/
-							if(parent_area > (element_area * 3)) {
-								//parent = element_state;
-								parent_bkg = ImageUtils.extractBackgroundColor(element_state);
-							}
+							parent_bkg = new ColorData(element_state.getBackgroundColor());
 						}
-					}
-					catch(IIOException e) {
-						log.warn("error getting screenshot for parent element. Looking for another element...");
-					}
-					catch(NullPointerException e) {
-						log.warn("null pointer..." + e.getMessage());
-						e.printStackTrace();
 					}
 				}
 				//choose elemtn just to the right of the elemnt in the page screenshot
@@ -159,8 +154,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//log.warn("parent element :: "+parent.getXpath());
 				log.warn("element xpath :: "+element.getXpath());
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
-				ColorData element_bkg = ImageUtils.extractBackgroundColor(element);;
-				
+				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
+				ColorData element_bkg = new ColorData(element.getBackgroundColor());
+
 				//if element has border color different than element then set element_bkg to border color
 				if(!element.getName().contentEquals("input")
 						&& hasContinuousBorder(element) 
@@ -169,7 +165,14 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					element_bkg = getBorderColor(element);
 				}
 				
+				if(parent_bkg == null) {
+					parent_bkg = new ColorData("rgb(255,255,255)");
+				}
+				
 				double contrast = ColorData.computeContrast(parent_bkg, element_bkg);
+				element.setNonTextContrast(contrast);
+				element_state_service.save(element);
+				
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					//no points are rewarded for low contrast
@@ -193,21 +196,67 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			}
 		} 
 
+		String why_it_matters = "<p>Icons are an easily recognizable, fun element, and a great way to\n" + 
+				"communicate with your user beyond just using text. Icons should be\n" + 
+				"familiar and captivating.</p>" + 
+				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
+				"button to have a high contrast score to create an eye-catching effect\n" + 
+				"and be evidently clickable.</p>";
+		String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
+		
+		Set<String> recommendations = new HashSet<>();
+		recommendations.add("Use colors for backgrounds of non text elements that have a contrast of at least 3:1 for ADA compliance(level AA).");
+
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("color");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
-			ElementStateObservation low_contrast_observation = new ElementStateObservation(low_contrast_elements, "Elements with a contrast below 3.0");
+			ElementStateObservation low_contrast_observation = new ElementStateObservation(
+																		low_contrast_elements, 
+																		"Elements with a contrast below 3.0",
+																		why_it_matters, 
+																		ada_compliance, 
+																		Priority.HIGH,
+																		recommendations,
+																		labels,
+									    								categories);
+			
 			observations.add(observation_service.save(low_contrast_observation));
 		}
+		
 		if(!mid_contrast_elements.isEmpty()) {
-			ElementStateObservation mid_contrast_observation = new ElementStateObservation(mid_contrast_elements, "Elements with a contrast between 3.0 and 4.5");
+			ElementStateObservation mid_contrast_observation = new ElementStateObservation(
+																		mid_contrast_elements, 
+																		"Elements with a contrast between 3.0 and 4.5", 
+																		why_it_matters, 
+																		ada_compliance, 
+																		Priority.HIGH,
+																		recommendations,
+																		labels,
+									    								categories);
+			
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
+		/*
 		if(!high_contrast_elements.isEmpty()) {
 			ElementStateObservation high_contrast_observation = new ElementStateObservation(high_contrast_elements, "Elements with a contrast greater than 4.5");
 			observations.add(observation_service.save(high_contrast_observation));
 		}
+		*/
 		
-		return new Audit(AuditCategory.COLOR_MANAGEMENT, AuditSubcategory.NON_TEXT_BACKGROUND_CONTRAST, score, observations, AuditLevel.PAGE, max_points, page_state.getUrl());
+		return new Audit(AuditCategory.AESTHETICS,
+						 AuditSubcategory.COLOR_MANAGEMENT,
+						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
+						 score,
+						 observations,
+						 AuditLevel.PAGE,
+						 max_points,
+						 page_state.getUrl());
 	}
 
 

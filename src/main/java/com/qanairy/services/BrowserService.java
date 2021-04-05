@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.cloud.storage.StorageException;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -52,6 +51,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
+import com.qanairy.models.audit.ColorData;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.ElementClassification;
@@ -59,6 +59,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.ImageUtils;
 import com.qanairy.utils.PathUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -147,15 +148,17 @@ public class BrowserService {
 	 * @param web_elem
 	 * @param classification
 	 * @param rendered_css_values
+	 * @param screenshot_url TODO
 	 * 
-	 * @pre xpath != null && !xpath.isEmpty();
-	 * @pre attributes != null;
-	 * @pre element != null;
+	 * @pre xpath != null && !xpath.isEmpty()
+	 * @pre attributes != null
+	 * @pre element != null
 	 * @pre classification != null
 	 * @pre rendered_css_values != null
-	 * @pre css_values != null;
+	 * @pre css_values != null
+	 * @pre screenshot != null
 	 * 
-	 * @return
+	 * @return {@link ElementState} based on {@link WebElement} and other params
 	 */
 	public static ElementState buildElementState(
 			String xpath, 
@@ -163,30 +166,33 @@ public class BrowserService {
 			Element element,
 			WebElement web_elem,
 			ElementClassification classification, 
-			Map<String, String> rendered_css_values
+			Map<String, String> rendered_css_values, 
+			String screenshot_url
 	) {
 		assert xpath != null && !xpath.isEmpty();
 		assert attributes != null;
 		assert element != null;
 		assert classification != null;
 		assert rendered_css_values != null;
+		assert screenshot_url != null;
 		
 		Point location = web_elem.getLocation();
 		Dimension dimension = web_elem.getSize();
 		
 		ElementState element_state = new ElementState(
-				element.ownText().trim(), 
+				element.ownText().trim(),
+				element.text(),
 				xpath, 
 				element.tagName(), 
 				attributes, 
 				rendered_css_values, 
-				"", 
+				screenshot_url, 
 				location.getX(), 
 				location.getY(), 
 				dimension.getWidth(), 
 				dimension.getHeight(), 
-				classification, 
-				element.outerHtml(),
+				classification,
+				element.outerHtml(), 
 				web_elem.isDisplayed());
 		
 		return element_state;
@@ -268,13 +274,13 @@ public class BrowserService {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
 			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
 			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-			String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+			String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 			String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			viewport_screenshot.flush();
 			
 			//scroll to bottom of page
 			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+			String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 			String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 			full_page_screenshot.flush();
 
@@ -289,7 +295,10 @@ public class BrowserService {
 					browser.getViewportSize().getWidth(),
 					browser.getViewportSize().getHeight(),
 					BrowserType.create(browser.getBrowserName()), 
-					full_page_screenshot_url, browser_url);
+					full_page_screenshot_url, 
+					full_page_screenshot.getWidth(), 
+					full_page_screenshot.getHeight(), 
+					browser_url);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -328,7 +337,6 @@ public class BrowserService {
 		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
 		PageVersion page = new PageVersion(
-				elements,
 				page_src,
 				title,
 				clean_url.toString(),
@@ -366,13 +374,13 @@ public class BrowserService {
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		long x_offset = browser.getXScrollOffset();
@@ -390,6 +398,8 @@ public class BrowserService {
 				size.getHeight(),
 				BrowserType.CHROME,
 				full_page_screenshot_url,
+				full_page_screenshot.getWidth(), 
+				full_page_screenshot.getHeight(), 
 				page.getUrl());
 
 		log.warn("built page...now saving page state...");
@@ -617,13 +627,13 @@ public class BrowserService {
 																					element_size.getHeight()); */
 				BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-				String screenshot_checksum = PageState.getFileChecksum(element_screenshot);
+				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				int idx = 0;
 				String element_screenshot_url = "";
-				while(idx < 3 && element_screenshot_url.isEmpty()) {
+				while(element_screenshot_url == null || element_screenshot_url.isEmpty()) {
 					try {
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-				
+						idx++;
 					}catch(IOException e) {
 						log.warn("*******************************************************************");
 						log.warn("*******************************************************************");
@@ -641,11 +651,11 @@ public class BrowserService {
 					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
 				}
 				Element element = elements.first();
-				
-				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props);
-				element_state.setScreenshotUrl(element_screenshot_url);
-				element_states_map.put(xpath, element_state);
+				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props, element_screenshot_url);
+				ColorData bkg_color = ImageUtils.extractBackgroundColor(element_state);
+				element_state.setBackgroundColor(bkg_color.rgb());
 				element_state = element_state_service.save(element_state);
+				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
 			}
 			catch(NoSuchElementException e) {
@@ -1124,7 +1134,7 @@ public class BrowserService {
 	 */
 	public Set<Form> extractAllForms(String user_id, Domain domain, Browser browser) throws Exception {
 		Set<Form> form_list = new HashSet<Form>();
-		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
+		log.info("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 
 		//String host = domain.getHost();
@@ -1277,7 +1287,7 @@ public class BrowserService {
 			return null;
 		}
 		BufferedImage img = browser.getElementScreenshot(form_elem);
-		String checksum = PageState.getFileChecksum(img);
+		String checksum = ImageUtils.getChecksum(img);
 		
 		//Map<String, String> css_map = Browser.loadCssProperties(submit_element);
 		com.qanairy.models.Element elem = new com.qanairy.models.Element(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), submit_element.getAttribute("innerHTML"), submit_element.getAttribute("outerHTML"));

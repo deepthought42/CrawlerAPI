@@ -5,6 +5,12 @@ import java.time.LocalDateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Property;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 /**
  * Universal object that contains values that are expected to exist on all persistable objects within the database
@@ -18,7 +24,12 @@ public abstract class LookseeObject {
     @Id
 	private Long id;
 	
+	@Property
 	private String key;
+	
+	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
+	@JsonSerialize(using = LocalDateTimeSerializer.class)
+	@Property
 	private LocalDateTime created_at;
 	
 	public LookseeObject() {

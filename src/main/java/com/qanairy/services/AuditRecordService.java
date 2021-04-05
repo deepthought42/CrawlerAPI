@@ -4,18 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.validation.constraints.NotBlank;
-
+import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditCategory;
-import com.qanairy.models.enums.AuditType;
 import com.qanairy.models.repository.AuditRecordRepository;
 
 /**
@@ -98,7 +94,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllTypographyAudits(@NotBlank String host) {
+	public Set<Audit> getAllTypographyAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -116,7 +112,7 @@ public class AuditRecordService {
 	////////////////////////////////////////
 	//	INFORMATION ARCHITECTURE
 	/////////////////////////////////////////	
-	public Set<Audit> getAllInformationArchitectureAudits(@NotBlank String host) {
+	public Set<Audit> getAllInformationArchitectureAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -145,7 +141,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageAltTextAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllVisualAudits(@NotBlank String host) {
+	public Set<Audit> getAllVisualAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -174,10 +170,10 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllPageAudits(String audit_record_key, AuditCategory category) {
+	public Set<Audit> getAllPageAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
 		
-		return audit_record_repo.getAllPageAudits(audit_record_key, category.toString());
+		return audit_record_repo.getAllPageAudits(audit_record_key);
 	}
 }

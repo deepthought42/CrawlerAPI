@@ -1,10 +1,9 @@
 package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,9 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.codec.binary.Hex;
+import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +25,11 @@ import com.qanairy.models.enums.BrowserType;
  * A reference to a web page
  *
  */
+@NodeEntity
 public class PageState extends LookseeObject {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
-	//Deprecating this value because it should be coming from Page
 	private String src;
 	private String url;
 	private boolean login_required;
@@ -48,6 +46,7 @@ public class PageState extends LookseeObject {
 	private int viewport_height;
 	private long full_page_width;
 	private long full_page_height;
+	private String page_name;
 
 	@Relationship(type = "HAS")
 	private List<ElementState> elements;
@@ -70,13 +69,25 @@ public class PageState extends LookseeObject {
 	 * @param viewport_height
 	 * @param browser
 	 * @param full_page_screenshot_url
+	 * @param full_page_width TODO
+	 * @param full_page_height TODO
 	 * @param url
+	 * @throws MalformedURLException 
 	 */
-	public PageState(String screenshot_url, List<ElementState> elements, String src, boolean isLandable, 
-			long scroll_x_offset, long scroll_y_offset,
-			int viewport_width, int viewport_height, 
-			BrowserType browser, String full_page_screenshot_url, String url)
-	{
+	public PageState(String screenshot_url, 
+			List<ElementState> elements, 
+			String src, 
+			boolean isLandable, 
+			long scroll_x_offset, 
+			long scroll_y_offset,
+			int viewport_width, 
+			int viewport_height, 
+			BrowserType browser, 
+			String full_page_screenshot_url,
+			long full_page_width, 
+			long full_page_height, 
+			String url
+	) {
 		assert screenshot_url != null;
 		assert elements != null;
 		assert src != null;
@@ -97,7 +108,10 @@ public class PageState extends LookseeObject {
 		setScrollYOffset(scroll_y_offset);
 	    setLoginRequired(false);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
+		setFullPageWidth(full_page_width);
+		setFullPageHeight(full_page_height);
 		setUrl(url);
+		setPageName( generatePageName(getUrl()) );
 		setKey(generateKey());
 	}
 
@@ -183,7 +197,7 @@ public class PageState extends LookseeObject {
 	@Override
 	public PageState clone() {
 		List<ElementState> elements = new ArrayList<ElementState>(getElements());
-		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getUrl());
+		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getFullPageWidth(), getFullPageHeight(), getUrl());
 	}
 
 	@JsonIgnore
@@ -206,50 +220,32 @@ public class PageState extends LookseeObject {
 
 	public void addElement(ElementState element) {
 		this.elements.add(element);
-	}
-
-	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BufferedImage buff_img = ImageIO.read(new URL(url));
-
-		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but
-							// other formats ?
-
-		// Get file input stream for reading the file content
-		byte[] data = baos.toByteArray();
-		digest.update(data);
-		byte[] thedigest = digest.digest(data);
-		return Hex.encodeHexString(thedigest);
-	}
+	}	
 
 	/**
+	 * Generates page name using path
 	 * 
-	 * @param buff_img
 	 * @return
-	 * @throws IOException
+	 * @throws MalformedURLException
 	 */
-	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
-		assert buff_img != null;
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but
-							// other formats ?
-		// Get file input stream for reading the file content
-		byte[] data = baos.toByteArray();
+	public String generatePageName(String url) {
+		String name = "";
+
 		try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			sha.update(data);
-			byte[] thedigest = sha.digest(data);
-			return Hex.encodeHexString(thedigest);
-		} catch (NoSuchAlgorithmException e) {
-			log.error("Error generating checksum of buffered image");
-		}
-		return "";
-
+			String path = new URL(url).getPath().trim();
+			path = path.replace("/", " ");
+			path = path.trim();
+			if("/".equals(path) || path.isEmpty()){
+				path = "home";
+			}
+			name += path;
+			
+			return name.trim();
+		} catch(MalformedURLException e){}
+		
+		return url;
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * @throws IOException
@@ -266,7 +262,7 @@ public class PageState extends LookseeObject {
 			key += element.getKey();
 		}
 		*/
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSrc());
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSrc());
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {
@@ -381,5 +377,13 @@ public class PageState extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getPageName() {
+		return page_name;
+	}
+
+	public void setPageName(String page_name) {
+		this.page_name = page_name;
 	}
 }

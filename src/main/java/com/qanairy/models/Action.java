@@ -1,10 +1,12 @@
 package com.qanairy.models;
 
+import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Defines an action in name only
  */
-public class Action extends LookseeObject implements Persistable{
+@NodeEntity
+public class Action extends LookseeObject {
 	
 	private String name;
 	private String value;

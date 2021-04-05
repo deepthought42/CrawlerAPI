@@ -2,19 +2,26 @@ package com.looksee.gcp;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
+import java.util.Collections;
 
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.qanairy.models.enums.BrowserType;
 
@@ -26,9 +33,13 @@ public class GoogleCloudStorage {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(GoogleCloudStorage.class);
 
-	private static String bucketName     = "look-see-data";
+	private static String bucket_name     = "look-see-data";
 	
-	public static String saveImage(BufferedImage image, String domain, String element_key, BrowserType browser) throws IOException {
+	public static String saveImage(BufferedImage image, 
+								   String domain, 
+								   String element_key, 
+								   BrowserType browser
+   ) throws StorageException, IOException {
 		assert image != null;
 		assert domain != null;
 		assert !domain.isEmpty();
@@ -37,17 +48,36 @@ public class GoogleCloudStorage {
 		assert browser != null;
 		
 		Storage storage = StorageOptions.getDefaultInstance().getService();
-		Bucket bucket = storage.get(bucketName);
+		Bucket bucket = storage.get(bucket_name);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ImageIO.write( image, "png", baos );
 		//baos.flush();
 		byte[] imageInByte = baos.toByteArray();
 		baos.close();
 
-		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);
+		String key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain + element_key + browser);
+		String file_name = key+".png";
+		Blob blob = bucket.get(file_name);
+		if(blob != null && blob.exists()) {
+        	return blob.getMediaLink();
+        }
 		
-		Blob blob = bucket.create(host_key+element_key+browser+".png", imageInByte);
-        return blob.getMediaLink();
+		//blob = bucket.create(key+".png", imageInByte);
+		BlobId blobId = BlobId.of(bucket_name, file_name);
+		BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("image/png").build();
+		try (WriteChannel writer = storage.writer(blobInfo)) {
+			writer.write(ByteBuffer.wrap(imageInByte, 0, imageInByte.length));
+		} catch (IOException ex) {
+		   throw ex;
+		}
+		
+		blob = bucket.get(file_name);
+		if(blob != null && blob.exists()) {
+        	return blob.getMediaLink();
+        }
+		else {
+			throw new IOException("Couldn't find blob after upload");
+		}
     }
 	
 	public static BufferedImage getImage(String domain, String element_key, BrowserType browser) throws IOException {
@@ -58,7 +88,7 @@ public class GoogleCloudStorage {
 		assert browser != null;
 		
 		Storage storage = StorageOptions.getDefaultInstance().getService();
-		Bucket bucket = storage.get(bucketName);
+		Bucket bucket = storage.get(bucket_name);
 
 
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);

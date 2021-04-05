@@ -33,8 +33,7 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.Element;
-import com.qanairy.models.ElementState;
+
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
@@ -45,7 +44,6 @@ import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
@@ -133,7 +131,7 @@ public class UrlBrowserActor extends AbstractActor {
 							//build page
 							PageVersion page = browser_service.buildPage(message.getAccountId(), url);
 							page = page_service.saveForUser(message.getAccountId(), page);
-							domain_service.addPage(message.getDomain().getEntryPath(), page, message.getAccountId());
+							domain_service.addPage(message.getDomain().getEntryPath(), page.getKey());
 							
 							//log.warn("parent only list size :: " + all_elements_list.size());
 							log.warn("building page state...");

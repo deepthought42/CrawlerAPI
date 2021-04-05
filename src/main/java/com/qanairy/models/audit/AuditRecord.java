@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.CrawlStats;
+import com.qanairy.models.AuditStats;
 import com.qanairy.models.LookseeObject;
 
 /**
@@ -18,11 +18,23 @@ public class AuditRecord extends LookseeObject {
 	private Set<Audit> audits;
 
 	@Relationship(type = "HAS")
-	private CrawlStats crawl_stats = null;
+	private AuditStats audit_stats;
 	
-	public AuditRecord() {
-		audits = new HashSet<>();
+	public AuditRecord() {}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param audit_stats {@link AuditStats} object with statics for audit progress
+	 * 
+	 * @pre audit_stats != null;
+	 */
+	public AuditRecord(AuditStats audit_stats) {
+		assert audit_stats != null;
+		
+		setAudits(new HashSet<>());
 		setKey(generateKey());
+		setAuditStats(audit_stats);
 	}
 
 	public String generateKey() {
@@ -45,11 +57,11 @@ public class AuditRecord extends LookseeObject {
 		this.audits.addAll( audits );
 	}
 
-	public void setCrawlStats(CrawlStats crawl_stats) {
-		this.crawl_stats = crawl_stats;
+	public void setAuditStats(AuditStats audit_stats) {
+		this.audit_stats = audit_stats;
 	}
 	
-	public CrawlStats getCrawlStats() {
-		return this.crawl_stats;
+	public AuditStats getAuditStats() {
+		return this.audit_stats;
 	}
 }

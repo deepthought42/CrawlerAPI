@@ -59,6 +59,6 @@ public class PaletteColor extends LookseeObject {
 	public String generateKey() {
 		List<String> sorted_keys = new ArrayList<>(tints_shades_tones.keySet());
 		Collections.sort(sorted_keys);
-		return "palettecolor::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( primary_color + sorted_keys );
+		return "palettecolor"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( primary_color + sorted_keys );
 	}
 }

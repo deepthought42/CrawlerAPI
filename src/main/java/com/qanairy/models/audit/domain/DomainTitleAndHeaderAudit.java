@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,13 +23,15 @@ import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.Priority;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.DomainService;
 
 
 /**
- * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
+ * Responsible for executing an audit on the titles and headers on a page for the information architecture audit category
  */
 @Component
 public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
@@ -49,7 +52,6 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
 	 *  
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
@@ -87,11 +89,33 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		}
 		
 		List<Observation> compressed_observations = new ArrayList<>();
+		Set<String> labels = new HashSet<>();
+		labels.add("seo");
+		labels.add("information architecture");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.name());
+		
 		for(String key : observation_map.keySet()) {
-			ElementStateObservation observation = new ElementStateObservation(observation_map.get(key), key);
+			ElementStateObservation observation = new ElementStateObservation(
+															observation_map.get(key), 
+															key, 
+															"", 
+															"", 
+															Priority.HIGH, 
+															null, 
+															labels,
+															categories);
 			compressed_observations.add(observation);
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE, AuditSubcategory.TITLES, points, compressed_observations, AuditLevel.DOMAIN, max_points, domain.getHost());
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+						 AuditSubcategory.SEO,
+					     AuditName.TITLES,
+					     points,
+					     compressed_observations,
+					     AuditLevel.DOMAIN,
+					     max_points,
+					     domain.getHost());
 	}
 }

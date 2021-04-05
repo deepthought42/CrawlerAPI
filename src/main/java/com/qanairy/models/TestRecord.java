@@ -118,7 +118,7 @@ public class TestRecord implements Persistable {
 	 */
 	@Override
 	public String generateKey() {
-		return "testrecord::"+getRanAt().hashCode()+getResult().getKey();
+		return "testrecord"+getRanAt().hashCode()+getResult().getKey();
 	}
 
 	public List<String> getPathKeys() {

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.CrawlStats;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
@@ -39,7 +37,6 @@ import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
-import com.qanairy.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -131,15 +128,20 @@ public class WebCrawlerActor extends AbstractActor{
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							if(!page_url_str.contains(domain.getHost()) ) {
+								continue;
+							}
 							PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
 							page = page_service.save( page );
 							pages.put(page.getKey(), page);
 							domain.addPage(page);
-							domain = domain_service.save(domain);
+							domain_service.addPage(domain.getHost(), page.getKey());
 							
 							visited.put(page_url_str, page);
 							//send message to page data extractor
 							log.debug("sending page to an audit manager...");
+							
+							//Send PageVerstion to audit manager
 							getSender().tell(page, getSelf());
 							log.warn("page url :: "+page_url);
 							log.warn("page host :: "+page_url.getHost());
@@ -184,14 +186,7 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 					}
 					LocalDateTime end_time = LocalDateTime.now();
-					long run_time = start_time.until(end_time, ChronoUnit.MILLIS);
-					CrawlStats crawl_stats = new CrawlStats(start_time, 
-														    end_time, 
-													    	run_time, 
-													    	pages.size(), 
-													    	run_time/pages.size());
-					getSender().tell(crawl_stats, getSelf());
-					System.out.println("total links visited :::  "+visited.keySet().size());
+					
 				})
 				.match(PageVersion.class, page -> {
 					log.warn("Web crawler received page");
@@ -239,7 +234,7 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("Webdriver exception thrown..."+e.getMessage());
 							e.printStackTrace();
 						}
-						TimingUtils.pauseThread(15000L);
+						//TimingUtils.pauseThread(15000L);
 					}while(rendering_incomplete && cnt < 50);
 					
 					page_state = page_state_service.save(page_state);

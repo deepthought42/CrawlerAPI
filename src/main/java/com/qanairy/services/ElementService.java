@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ public class ElementService {
 	 * 
 	 * @pre element != null
 	 */
-	public Element save(Element element) throws ClientException{
+	public Element save(Element element){
 		assert element != null;
 
 		Element element_record = element_repo.findByKey(element.getKey());
@@ -60,7 +59,7 @@ public class ElementService {
 	 * 
 	 * @pre element != null
 	 */
-	public Element saveFormElement(Element element) throws ClientException{
+	public Element saveFormElement(Element element){
 		assert element != null;
 		Element element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){			

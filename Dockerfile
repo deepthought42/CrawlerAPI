@@ -1,5 +1,5 @@
 #FROM openjdk:8-jdk-alpine
-FROM koosiedemoer/netty-tcnative-alpine
+FROM adoptopenjdk/openjdk14
 
 COPY target/Look-see-0.1.20.jar look-see.jar
 COPY GCP-MyFirstProject-1c31159db52c.json GCP-MyFirstProject-1c31159db52c.json

@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.validation.constraints.NotBlank;
-
+import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Audit;
@@ -96,7 +94,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllTypographyAudits(@NotBlank String host) {
+	public Set<Audit> getAllTypographyAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -114,7 +112,7 @@ public class AuditRecordService {
 	////////////////////////////////////////
 	//	INFORMATION ARCHITECTURE
 	/////////////////////////////////////////	
-	public Set<Audit> getAllInformationArchitectureAudits(@NotBlank String host) {
+	public Set<Audit> getAllInformationArchitectureAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -143,7 +141,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageAltTextAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllVisualAudits(@NotBlank String host) {
+	public Set<Audit> getAllVisualAudits( String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		

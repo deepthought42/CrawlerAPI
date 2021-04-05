@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.websocket.server.PathParam;
 
 import org.slf4j.Logger;
@@ -117,7 +115,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
     public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
-									@PathVariable("id") @NotBlank long id
+									@PathVariable("id") long id
 	) {
     	log.warn("finding element with ID  :: "+id);
 
@@ -139,7 +137,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color")
     public @ResponseBody Set<Audit> getColorManagementAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding element with ID  :: "+host);
         return audit_record_service.getAllColorManagementAudits(host);
@@ -153,7 +151,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/palette")
     public @ResponseBody Set<Audit> getColorManagementPaletteAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding element with ID  :: "+host);
     	//get all pages
@@ -168,7 +166,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/textcontrast")
     public @ResponseBody Set<Audit> getColorManagementTextContrastAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding audits for host  :: "+host);
     	//get all pages
@@ -183,7 +181,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/color/nontextcontrast")
     public @ResponseBody Set<Audit> getColorManagementNonTextContrastAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding audits for host  :: "+host);
     	//get all pages
@@ -198,7 +196,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/typography")
     public @ResponseBody Set<Audit> getTypographyAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return audit_record_service.getAllTypographyAudits(host);
@@ -212,7 +210,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/typography/typeface")
     public @ResponseBody Set<Audit> getTypofaceAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordTypeface(host);
@@ -226,7 +224,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture")
     public @ResponseBody Set<Audit> getInformationArchitectureAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return audit_record_service.getAllInformationArchitectureAudits(host);
@@ -240,7 +238,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/link")
     public @ResponseBody Set<Audit> getInformationArchitectureLinkAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordLinks(host);
@@ -254,7 +252,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/title")
     public @ResponseBody Set<Audit> getInformationArchitectureTitleAndHeaderAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordTitleAndHeader(host);
@@ -268,7 +266,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/margin")
     public @ResponseBody Set<Audit> getInformationArchitectureMarginAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordMargins(host);
@@ -282,7 +280,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/information_architecture/padding")
     public @ResponseBody Set<Audit> getInformationArchitecturePaddingAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding branding audits for domain with host  :: "+host);
         return domain_service.getMostRecentAuditRecordPadding(host);
@@ -296,7 +294,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/visuals")
     public @ResponseBody Set<Audit> getVisualAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
         return audit_record_service.getAllVisualAudits(host);
@@ -310,7 +308,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/visuals/alttext")
     public @ResponseBody Set<Audit> getVisualAltTextAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
     	return domain_service.getMostRecentAuditRecordAltText(host);
@@ -324,7 +322,7 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/written_content/paragraphs")
     public @ResponseBody Set<Audit> getWrittenContentParagraphAudits(HttpServletRequest request,
-    											@PathParam("host") @NotBlank String host
+    											@PathParam("host") String host
 	) {
     	log.warn("finding visual audits for domain with host  :: "+host);
     	return domain_service.getMostRecentAuditRecordParagraphing(host);
@@ -339,7 +337,7 @@ public class AuditController {
     @RequestMapping(method= RequestMethod.GET, path="/pages")
     public @ResponseBody List<PageStateAudits> getAuditsGroupedByPage(
     		HttpServletRequest request,
-    		@RequestParam("host") @NotBlank String host
+    		@RequestParam("host") String host
 	) {
     	host = BrowserUtils.sanitizeUrl(host);
     	//Get most recent audits
@@ -361,7 +359,7 @@ public class AuditController {
     @RequestMapping(method= RequestMethod.GET, path="/elements")
     public @ResponseBody ElementObservationTwoWayMapping getPageAuditElements(
     		HttpServletRequest request,
-    		@RequestParam("page_url") @NotBlank String page_url
+    		@RequestParam("page_url") String page_url
 	) throws MalformedURLException {
     	page_url = BrowserUtils.sanitizeUrl(page_url);
 
@@ -384,11 +382,11 @@ public class AuditController {
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 
      */
-    @RequestMapping(method = RequestMethod.POST, value="/{key}/observations")
+    @RequestMapping(method = RequestMethod.POST, value="/$key/observations")
     public @ResponseBody Observation addObservation(
 							    		HttpServletRequest request,
 										@PathVariable("key") String key,
-							    		@RequestBody @NotNull Observation observation
+							    		@RequestBody Observation observation
 	) throws UnknownAccountException {
     	/*
     	Principal principal = request.getUserPrincipal();

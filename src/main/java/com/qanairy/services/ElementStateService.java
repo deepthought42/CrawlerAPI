@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element) throws ClientException{
+	public ElementState save(ElementState element){
 		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());
@@ -65,7 +64,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState saveFormElement(ElementState element) throws ClientException{
+	public ElementState saveFormElement(ElementState element){
 		assert element != null;
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){			

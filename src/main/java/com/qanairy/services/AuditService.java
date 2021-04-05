@@ -10,12 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.validation.constraints.NotEmpty;
-
+import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.ElementState;
@@ -287,9 +285,12 @@ public class AuditService {
 	}
 
 	public Observation addObservation(
-			@NotEmpty String key, 
-			@NotEmpty String observation_key) {
-		
+			String key, 
+			String observation_key) {
+		assert key != null;
+		assert !key.isEmpty();
+		assert observation_key != null;
+		assert !observation_key.isEmpty();
 		log.warn("ADD OBSERVATION KEY :: "+observation_key);
 		log.warn("ADD OBSERVATION audit key :: "+key);
 		return audit_repo.addObservation(key, observation_key);

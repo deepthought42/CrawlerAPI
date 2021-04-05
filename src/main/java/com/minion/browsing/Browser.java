@@ -974,13 +974,8 @@ public class Browser {
 		List<String> raw_stylesheets = new ArrayList<>();
 		Document doc = Jsoup.parse(src);	
 		Elements stylesheets = doc.select("link");
-		log.warn("#######################################################################");
-		log.warn("#######################################################################");
-		log.warn("#######################################################################");
-		log.warn("stylesheets size :: "+stylesheets.size());
 		for(Element stylesheet : stylesheets) {
 			String rel_value = stylesheet.attr("rel");
-			log.warn("rel value of link tag ::  "+rel_value);
 			if("stylesheet".equalsIgnoreCase(rel_value)) {
 				String stylesheet_url = stylesheet.absUrl("href");
 				//parse the style sheet

@@ -66,7 +66,7 @@ public class ElementController {
      */
     @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/{element_key}/rules", method = RequestMethod.POST)
+    @RequestMapping(path="/elements/$element_key/rules", method = RequestMethod.POST)
     public ElementState addRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
@@ -173,7 +173,7 @@ public class ElementController {
      */
     @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/{element_key}/rules/{rule_key}", method = RequestMethod.DELETE)
+    @RequestMapping(path="/elements/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
     public ElementState removeRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
@@ -237,7 +237,7 @@ public class ElementController {
      */
     @ApiOperation(value = "updates form element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/forms/{form_key}/elements", method = RequestMethod.PUT)
+    @RequestMapping(path="/forms/$form_key/elements", method = RequestMethod.PUT)
     public ElementState updateFormElement(
     		HttpServletRequest request,
     		@PathVariable(value="form_key", required=true) String form_key,

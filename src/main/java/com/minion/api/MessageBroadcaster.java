@@ -2,6 +2,7 @@ package com.minion.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pusher.rest.Pusher;
 import com.qanairy.dto.TestCreatedDto;
 import com.qanairy.dto.TestDto;
@@ -39,6 +40,7 @@ public class MessageBroadcaster {
 	public static void broadcastAudit(String host, Audit audit) throws JsonProcessingException {	
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         String audit_json = mapper.writeValueAsString(audit);
 
 		pusher.trigger(host, "audit-update", audit_json);
@@ -53,6 +55,7 @@ public class MessageBroadcaster {
 	public static void broadcastAuditMessage(String host, AuditMessage audit_message) throws JsonProcessingException {	
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         String audit_json = mapper.writeValueAsString(audit_message);
 
 		pusher.trigger(host, "audit-message", audit_json);
@@ -67,6 +70,7 @@ public class MessageBroadcaster {
 	public static void broadcastDiscoveredTest(Test test, String host, String user_id) throws JsonProcessingException {	
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         String test_json = mapper.writeValueAsString(test);
 
 		pusher.trigger(user_id+host, "test-discovered", test_json);
@@ -83,6 +87,7 @@ public class MessageBroadcaster {
 		
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         String form_json = mapper.writeValueAsString(form);
         log.info("host ::   "+host);
 		pusher.trigger(user_id+host.trim(), "discovered-form", form_json);
@@ -97,6 +102,7 @@ public class MessageBroadcaster {
      */
 	public static void broadcastTest(Test test, String host) throws JsonProcessingException {	
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
 
         //Object to JSON in String
         String test_json = mapper.writeValueAsString(test);
@@ -118,6 +124,8 @@ public class MessageBroadcaster {
      */
 	public static void broadcastPathObject(LookseeObject path_object, String host, String user_id) throws JsonProcessingException {	
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
         //Object to JSON in String
         String path_object_json = mapper.writeValueAsString(path_object);
         
@@ -132,6 +140,7 @@ public class MessageBroadcaster {
      */
 	public static void broadcastTestStatus(String host, TestRecord record, Test test, String user_id) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
 
         //Object to JSON in String
         String test_json = mapper.writeValueAsString(new TestRecordDto(record, test.getKey()));
@@ -149,6 +158,7 @@ public class MessageBroadcaster {
 		log.info("broadcasting discovery status");
 		
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
 
         //Object to JSON in String
         String discovery_json = mapper.writeValueAsString(record);
@@ -165,6 +175,7 @@ public class MessageBroadcaster {
 	 */
 	public static void broadcastIdeTest(TestDto test_dto, String username) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
 
         //Object to JSON in String
         String test_json = mapper.writeValueAsString(test_dto);
@@ -176,6 +187,8 @@ public class MessageBroadcaster {
 		TestCreatedDto test_created_dto = new TestCreatedDto(test);
 		
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
 		String test_confirmation_json = mapper.writeValueAsString(test_created_dto);
 		pusher.trigger(username, "test-created", test_confirmation_json);
 	}

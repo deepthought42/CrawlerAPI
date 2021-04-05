@@ -49,12 +49,13 @@ public class ObservationController {
      * @throws UnknownAccountException 
      */
    // @PreAuthorize("hasAuthority('read:actions')")
-    @RequestMapping(method = RequestMethod.POST, path="/{key}/recommendations/add")
+    /*
+    @RequestMapping(method = RequestMethod.POST, path="/$key/recommendations/add")
     public Observation addRecommendation(HttpServletRequest request,
 			final @PathVariable(value="key", required=true) String key,
     		final @RequestBody(required=true) String recommendation
 	) throws UnknownAccountException {
-    	/*
+    
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -62,7 +63,6 @@ public class ObservationController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	*/
 
     	log.warn("Recommendation string to be saved :: "+recommendation);
     	//find audit by key and add recommendation
@@ -82,6 +82,7 @@ public class ObservationController {
     	
     	return observation;
     }
+     */
     
     /**
      * Adds recommendation to @link Audit audit}
@@ -91,6 +92,7 @@ public class ObservationController {
      * 
      * @return {@link Audit audit} with given ID
      */
+/*
     @RequestMapping(path="{observation_key}/recommendations", method = RequestMethod.DELETE)
     public @ResponseBody void deleteRecommendation(
     		HttpServletRequest request,
@@ -105,21 +107,13 @@ public class ObservationController {
        	observation_service.save(observation);
     }
     
-    @RequestMapping(method = RequestMethod.POST, path="/{key}/priority")
+    @RequestMapping(method = RequestMethod.POST, path="/$key/priority")
     public Observation updatePriority(HttpServletRequest request,
 			final @PathVariable(value="key", required=true) String key,
 			final @RequestParam(value="priority", required=true) String priority
 	) throws UnknownAccountException {
-    	/*
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
 
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	*/
-    	
     	return observation_service.updatePriority(key, priority);
     }
+    */
 }

@@ -18,11 +18,8 @@ public class Domain extends LookseeObject{
 	
 	private String host;
 	private String entry_path;
-	private String protocol;
+	private String protocol;	
 	private String logo_url;
-	
-	@Relationship(type = "HAS_TEST")
-	private Set<Test> tests;
 
 	@Relationship(type = "HAS")
 	private List<PageVersion> pages;
@@ -32,9 +29,6 @@ public class Domain extends LookseeObject{
 	
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Account account;
-
-	@Relationship(type = "HAS_DISCOVERY_RECORD")
-	private Set<DiscoveryRecord> discovery_records;
 	
 	@Relationship(type = "HAS")
 	private Set<AuditRecord> audit_records;
@@ -46,8 +40,6 @@ public class Domain extends LookseeObject{
 	 * @param organization
 	 */
 	public Domain(){
-		setTests( new HashSet<>() );
-		setDiscoveryRecords( new HashSet<>() );
 		setTestUsers( new HashSet<>() );
 		setPages( new ArrayList<>() );
 		setAuditRecords(new HashSet<>());
@@ -101,14 +93,6 @@ public class Domain extends LookseeObject{
 		this.host = host;
 	}
 
-	public Set<Test> getTests() {
-		return tests;
-	}
-
-	public void setTests(Set<Test> tests) {
-		this.tests = tests;
-	}
-
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
@@ -139,22 +123,6 @@ public class Domain extends LookseeObject{
 
 	public void setTestUsers(Set<TestUser> test_users) {
 		this.test_users = new HashSet<TestUser>(test_users);
-	}
-
-	public void addTest(Test test) {
-		this.tests.add(test);
-	}
-	
-	public Set<DiscoveryRecord> getDiscoveryRecords() {
-		return discovery_records;
-	}
-
-	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
-		this.discovery_records = discovery_records;
-	}
-	
-	public void addDiscoveryRecord(DiscoveryRecord record){
-		this.discovery_records.add(record);
 	}
 	
 	/**

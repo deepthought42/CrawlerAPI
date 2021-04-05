@@ -14,9 +14,9 @@ public interface StepRepository extends Neo4jRepository<Step, Long>{
 
 	public Step findByKey(@Param("step_key") String step_key);
 
-	@Query("MATCH (:ElementInteractionStep{key:{step_key}})-[:HAS]->(e:ElementState) RETURN e")
+	@Query("MATCH (:ElementInteractionStep{key:$step_key})-[:HAS]->(e:ElementState) RETURN e")
 	public ElementState getElementState(@Param("step_key") String step_key);
 	
-	@Query("MATCH (:ElementInteractionStep{key:{step_key}})-[]->(a:Action) RETURN a")
+	@Query("MATCH (:ElementInteractionStep{key:$step_key})-[]->(a:Action) RETURN a")
 	public Action getAction(@Param("step_key") String step_key);
 }

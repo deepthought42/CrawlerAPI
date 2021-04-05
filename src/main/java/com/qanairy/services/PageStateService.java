@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,52 +51,48 @@ public class PageStateService {
 		boolean page_err = false;
 		do{
 			page_err = false;
-			try{
+			if(page_state_record != null){
+				page_state_record = page_state_repo.save(page_state_record);
+				
+				page_state_record.setElements(getElementStates(page_state_record.getKey()));
+			}
+			else {
+				log.warn("page state wasn't found in database. Saving new page state to neo4j");
+				page_state_record = findByKey( page_state.getKey() );
+
 				if(page_state_record != null){
 					page_state_record = page_state_repo.save(page_state_record);
-					
 					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				}
-				else {
-					log.warn("page state wasn't found in database. Saving new page state to neo4j");
-					page_state_record = findByKey( page_state.getKey() );
-
-					if(page_state_record != null){
-						page_state_record = page_state_repo.save(page_state_record);
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
-					}
-					else{
-						//iterate over page elements
-						List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
-						for(ElementState element : page_state.getElements()){
-							boolean err = false;
-							int cnt = 0;
-							do{
-								err = false;
-								try{
-									element_records.add(element_state_service.save(element));
-								}catch(Exception e){
-									log.warn("error saving element to new page state :  "+e.getMessage());
-									//e.printStackTrace();
-									err = true;
-								}
-								cnt++;
-							}while(err && cnt < 5);
-							
-							if(err){
-								element_records.add(element);
+				else{
+					//iterate over page elements
+					List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
+					for(ElementState element : page_state.getElements()){
+						boolean err = false;
+						int cnt = 0;
+						do{
+							err = false;
+							try{
+								element_records.add(element_state_service.save(element));
+							}catch(Exception e){
+								log.warn("error saving element to new page state :  "+e.getMessage());
+								//e.printStackTrace();
+								err = true;
 							}
+							cnt++;
+						}while(err && cnt < 5);
+						
+						if(err){
+							element_records.add(element);
 						}
-						
-						page_state.setElements(element_records);
-						
-						page_state_record = page_state_repo.save(page_state);
 					}
+					
+					page_state.setElements(element_records);
+					
+					page_state_record = page_state_repo.save(page_state);
 				}
-			}catch(ClientException e){
-				e.printStackTrace();
-				page_err = true;
 			}
+
 			page_cnt++;
 		}while(page_err && page_cnt < 5);
 		

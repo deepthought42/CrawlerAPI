@@ -464,7 +464,7 @@ public class DomainController {
 	 * @throws UnknownUserException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="test_users/{user_id}", method = RequestMethod.DELETE)
+    @RequestMapping(path="test_users/$user_id", method = RequestMethod.DELETE)
     public @ResponseBody void delete(HttpServletRequest request,
     									@RequestParam(value="domain_key", required=true) String domain_key,
     									@RequestParam(value="username", required=true) String username

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,6 +128,9 @@ public class WebCrawlerActor extends AbstractActor{
 						//retrieve html source for page
 						try {
 							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							if(!page_url_str.contains(domain.getHost()) ) {
+								continue;
+							}
 							PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
 							page = page_service.save( page );
 							pages.put(page.getKey(), page);

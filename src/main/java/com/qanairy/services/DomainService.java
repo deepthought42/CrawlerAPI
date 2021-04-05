@@ -1,11 +1,8 @@
 package com.qanairy.services;
 
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import javax.validation.constraints.NotBlank;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,17 +60,6 @@ public class DomainService {
 	
 	public Domain save(Domain domain) {
 		return domain_repo.save(domain);	
-	}
-	
-	public Domain addTest(String url, Test test, String user_id) throws MalformedURLException{
-		assert url != null;
-		assert !url.isEmpty();
-		assert test != null;
-		assert user_id != null;
-
-		Domain domain = domain_repo.findByUrlAndAccountId(url, user_id);
-		domain.addTest(test);
-		return domain_repo.save(domain);
 	}
 	
 	public int getTestCount(String user_id, String url) {
@@ -267,14 +253,14 @@ public class DomainService {
 		return domain_repo.findByAuditRecord(audit_record_key);
 	}
 
-	public Set<Audit> getMostRecentAuditRecordMargins(@NotBlank String host) {
+	public Set<Audit> getMostRecentAuditRecordMargins( String host) {
 		assert host != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
         return audit_record_service.getAllMarginAudits(record.getKey());	
     }
 	
-	public Set<Audit> getMostRecentAuditRecordPadding(@NotBlank String host) {
+	public Set<Audit> getMostRecentAuditRecordPadding( String host) {
 		assert host != null;
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();

@@ -411,15 +411,12 @@ public class DiscoveryActor extends AbstractActor{
 			}
 		}
 		
-		discovery_record = new DiscoveryRecord(new Date(), BrowserType.CHROME.toString(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
 		//create new discovery
 		discovery_service.save(discovery_record);
 
 		Account account = account_service.findByUserId(message.getAccountId());
-		account.addDiscoveryRecord(discovery_record);
 		account = account_service.save(account);
 
-		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
 		
 		//start a discovery

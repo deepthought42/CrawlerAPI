@@ -49,7 +49,7 @@ public class PageController {
      * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:actions')")
-    @RequestMapping(method = RequestMethod.GET, path="/{page_key}/insights")
+    @RequestMapping(method = RequestMethod.GET, path="/$page_key/insights")
     public PerformanceInsight getInsights(HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String page_key
 	) throws UnknownAccountException {

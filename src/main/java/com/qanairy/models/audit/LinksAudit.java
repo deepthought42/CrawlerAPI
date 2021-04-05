@@ -228,6 +228,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		labels.add("information architecture");
 		labels.add("navigation");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());
+		
 		if(!links_without_href_attribute.isEmpty()) {
 			Set<String> recommendations = new HashSet<>();
 			recommendations.add("Make sure links have a url set for the href value.");
@@ -239,7 +242,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															ada_compliance, 
 															Priority.HIGH,
 															recommendations, 
-															labels);
+															labels,
+															categories);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -254,7 +258,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															ada_compliance, 
 															Priority.HIGH,
 															recommendations,
-															labels);
+															labels,
+															categories);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -269,7 +274,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															ada_compliance, 
 															Priority.HIGH,
 															recommendations,
-															labels);
+															labels,
+															categories);
 			observations.add(observation_service.save(observation));
 		}
 		
@@ -284,7 +290,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 														ada_compliance, 
 														Priority.HIGH,
 														recommendations,
-														labels);
+														labels, null);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -300,7 +306,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 															ada_compliance, 
 															Priority.HIGH,
 															recommendations,
-															labels);
+															labels, null);
 			
 			observations.add(observation_service.save(observation));
 		}

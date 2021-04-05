@@ -166,6 +166,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		labels.add("accessibility");
 		labels.add("color");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.getShortName());
+		
 		if(!mid_header_contrast.isEmpty()) {
 			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(
 																			mid_header_contrast, 
@@ -174,7 +177,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			ada_compliance, 
 																			Priority.HIGH,
 																			recommendations,
-																			labels );
+																			labels, 
+																			categories);
 			observations.add(observation_service.save(mid_header_contrast_observation));
 		}
 		if(!low_header_contrast.isEmpty()) {
@@ -185,7 +189,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																			ada_compliance, 
 																			Priority.HIGH,
 																			recommendations,
-																			labels );
+																			labels,
+																			categories);
 			observations.add(observation_service.save(low_header_contrast_observation));
 		}
 		
@@ -203,7 +208,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																ada_compliance,
 																Priority.HIGH,
 																new HashSet<>(),
-																labels );
+																labels,
+																categories);
 			observations.add(observation_service.save(mid_text_observation));
 		}
 		if(!low_text_contrast.isEmpty()) {
@@ -214,7 +220,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																	ada_compliance,
 																	Priority.HIGH,
 																	new HashSet<>(),
-																	labels );
+																	labels,
+																	categories);
 			observations.add(observation_service.save(low_text_observation));
 		}
 		

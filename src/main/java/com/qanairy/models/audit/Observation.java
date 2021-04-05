@@ -24,6 +24,7 @@ public class Observation extends LookseeObject{
 	private String priority;
 	// labels are intended to contain things like subcategory, accessibility, etc
 	private Set<String> labels;
+	private Set<String> categories;
 	
 	public Observation() {}
 	
@@ -34,7 +35,8 @@ public class Observation extends LookseeObject{
 			Priority priority, 
 			Set<String> recommendations,
 			ObservationType type, 
-			Set<String> labels
+			Set<String> labels, 
+			Set<String> categories
 	) {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
@@ -43,6 +45,7 @@ public class Observation extends LookseeObject{
 		setRecommendations(recommendations);
 		setType(type);
 		setLabels(labels);
+		setCategories(categories);
 		setKey(generateKey());
 	}
 	
@@ -54,7 +57,8 @@ public class Observation extends LookseeObject{
 			String key, 
 			Set<String> recommendations,
 			ObservationType type, 
-			Set<String> labels
+			Set<String> labels,
+			Set<String> categories
 	) {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
@@ -63,6 +67,7 @@ public class Observation extends LookseeObject{
 		setRecommendations(recommendations);
 		setType(type);
 		setLabels(labels);
+		setCategories(categories);
 		setKey(key);
 	}
 	
@@ -149,5 +154,13 @@ public class Observation extends LookseeObject{
 
 	public void setLabels(Set<String> labels) {
 		this.labels = labels;
+	}
+
+	public Set<String> getCategories() {
+		return categories;
+	}
+
+	public void setCategories(Set<String> categories) {
+		this.categories = categories;
 	}
 }

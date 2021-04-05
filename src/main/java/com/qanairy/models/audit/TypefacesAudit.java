@@ -225,6 +225,9 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		labels.add("typography");
 		labels.add("content");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.getShortName());
+		
 		ElementStateObservation observation = new ElementStateObservation(
 														no_fallback_font, 
 														"Text element rendered with a fallback typeface instead of the desired font.", 
@@ -232,7 +235,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														ada_compliance,
 														Priority.MEDIUM,
 														new HashSet<>(),
-														labels);
+														labels,
+														categories);
 		observations.add(observation_service.save(observation));
 		
 		return new Audit(AuditCategory.AESTHETICS,

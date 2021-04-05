@@ -126,8 +126,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			String ada_compliance = "There are no ADA requirements for use of padding";
 	    	Set<String> labels = new HashSet<>();
 	    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
-
-			//add observation that no elements were found with padding
+	    	
+	    	Set<String> categories = new HashSet<>();
+	    	categories.add(AuditCategory.AESTHETICS.getShortName());
+			
+	    	//add observation that no elements were found with padding
 			observations.add(new Observation(
 									"Padding was not used", 
 									why_it_matters, 
@@ -135,7 +138,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 									Priority.LOW,
 									new HashSet<>(),
 									ObservationType.ELEMENT,
-									labels	)); 
+									labels,
+									categories)); 
 		}
 		
 
@@ -329,6 +333,9 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		Set<String> labels = new HashSet<>();
 		labels.add("whitespace");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
 		observations.add(new ElementStateObservation(non_scalable, 
 													"Has at least one padding value that isn't a multiple of 8.", 
@@ -336,7 +343,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 													ada_compliance,
 													Priority.LOW,
 													recommendations,
-													labels));
+													labels,
+													categories));
 		
 		return new Score(points_earned, max_points, observations);
 	}
@@ -396,6 +404,9 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			labels.add("whitespace");
 			labels.add("responsiveness");
 			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.name());
+			
 			observations.add(new ElementStateObservation(
 					unscalable_padding_elements, 
 					"Elements with unscalable padding units", 
@@ -403,7 +414,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 					"", 
 					Priority.LOW, 
 					new HashSet<>(),
-					labels));
+					labels,
+					categories));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

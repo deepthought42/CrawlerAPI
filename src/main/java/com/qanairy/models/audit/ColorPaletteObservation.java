@@ -32,7 +32,7 @@ public class ColorPaletteObservation extends Observation{
 			String ada_compliance, 
 			Priority priority, 
 			Set<String> recommendations, 
-			Set<String> labels
+			Set<String> labels, Set<String> categories
 	) {
 		setPaletteColors(palette);
 		setColors(palette);

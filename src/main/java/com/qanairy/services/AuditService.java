@@ -191,7 +191,8 @@ public class AuditService {
 																		observation.getKey(),
 																		observation.getRecommendations(),
 																		observation.getType(), 
-																		observation.getLabels());
+																		observation.getLabels(),
+																		observation.getCategories());
 						observation_element = new ObservationElementMap(simple_observation, elements);
 					}
 					else{
@@ -254,7 +255,8 @@ public class AuditService {
 										observation.getKey(),
 										observation.getRecommendations(),
 										observation.getType(), 
-										observation.getLabels());
+										observation.getLabels(),
+										observation.getCategories());
 							}
 
 							//associate observation with element

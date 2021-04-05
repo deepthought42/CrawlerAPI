@@ -136,6 +136,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		labels.add("content");
 		labels.add("readability");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.CONTENT.getShortName());
+		
 		if(!poor_paragraph_observations.isEmpty()) {
 			observations.add(new ElementStateObservation(
 									poor_paragraph_observations, 
@@ -144,7 +147,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									ada_compliance, 
 									Priority.MEDIUM, 
 									new HashSet<>(),
-									labels));
+									labels,
+									categories));
 		}
 		
 		//Sentence observations
@@ -162,7 +166,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									ada_compliance, 
 									Priority.MEDIUM,
 									new HashSet<>(),
-									labels));
+									labels,
+									categories));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
@@ -173,7 +178,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 									ada_compliance,
 									Priority.MEDIUM, 
 									new HashSet<>(),
-									labels));
+									labels,
+									categories));
 		}
 		
 		

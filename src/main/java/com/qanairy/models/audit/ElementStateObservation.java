@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
@@ -27,7 +28,8 @@ public class ElementStateObservation extends Observation {
 			String ada_compliance, 
 			Priority priority, 
 			Set<String> recommendations, 
-			Set<String> labels
+			Set<String> labels, 
+			Set<String> categories
 	) {
 		setElements(elements);
 		setDescription(description);
@@ -36,6 +38,7 @@ public class ElementStateObservation extends Observation {
 		setPriority(priority);
 		setRecommendations(recommendations);
 		setLabels(labels);
+		setCategories(categories);
 		setKey(this.generateKey());
 	}
 	

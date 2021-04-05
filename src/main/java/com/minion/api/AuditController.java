@@ -407,6 +407,9 @@ public class AuditController {
     	observation.setKey(observation.generateKey());
     	log.warn("Observation key :: "+observation.getKey());
     	log.warn("audit key :: "+key);
+    	
+    	
+    	
     	if(ObservationType.ELEMENT.equals(observation.getType())) {
     		observation = new ElementStateObservation(
     								new ArrayList<>(), 
@@ -415,7 +418,8 @@ public class AuditController {
     								observation.getAdaCompliance(), 
     								observation.getPriority(), 
     								observation.getRecommendations(),
-    								observation.getLabels());
+    								observation.getLabels(),
+    								observation.getCategories());
     	}
 		observation = observation_service.save( observation );
 		audit_service.addObservation(key, observation.getKey());

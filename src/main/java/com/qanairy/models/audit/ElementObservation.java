@@ -24,8 +24,9 @@ public class ElementObservation extends Observation {
 			String why_it_matters, 
 			String ada_compliance, 
 			Priority priority,
-			
-			Set<String> recommendations, Set<String> labels
+			Set<String> recommendations, 
+			Set<String> labels, 
+			Set<String> categories
 	) {
 		setElements(elements);
 		setDescription(description);
@@ -33,6 +34,7 @@ public class ElementObservation extends Observation {
 		setAdaCompliance(ada_compliance);
 		setPriority(priority);
 		setLabels(labels);
+		setCategories(categories);
 		setRecommendations(recommendations);
 		setKey(this.generateKey());
 	}

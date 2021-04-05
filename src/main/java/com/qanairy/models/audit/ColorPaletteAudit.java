@@ -152,6 +152,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		labels.add("accessibility");
 		labels.add("color");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		ColorPaletteObservation observation = new ColorPaletteObservation(
 														palette,
 														color_scheme, 
@@ -160,7 +163,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 														ada_compliance, 
 														Priority.MEDIUM,
 														new HashSet<>(), 
-														labels);
+														labels,
+														categories);
 		
 		observations.add(observation_service.save(observation));
 

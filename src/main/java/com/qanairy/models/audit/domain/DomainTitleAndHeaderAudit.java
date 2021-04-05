@@ -93,6 +93,9 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 		labels.add("seo");
 		labels.add("information architecture");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.name());
+		
 		for(String key : observation_map.keySet()) {
 			ElementStateObservation observation = new ElementStateObservation(
 															observation_map.get(key), 
@@ -101,7 +104,8 @@ public class DomainTitleAndHeaderAudit implements IExecutableDomainAudit {
 															"", 
 															Priority.HIGH, 
 															null, 
-															labels);
+															labels,
+															categories);
 			compressed_observations.add(observation);
 		}
 		

@@ -211,6 +211,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		labels.add("accessibility");
 		labels.add("color");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
 			ElementStateObservation low_contrast_observation = new ElementStateObservation(
@@ -220,7 +223,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																		ada_compliance, 
 																		Priority.HIGH,
 																		recommendations,
-																		labels);
+																		labels,
+									    								categories);
 			
 			observations.add(observation_service.save(low_contrast_observation));
 		}
@@ -233,7 +237,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																		ada_compliance, 
 																		Priority.HIGH,
 																		recommendations,
-																		labels);
+																		labels,
+									    								categories);
 			
 			observations.add(observation_service.save(mid_contrast_observation));
 		}

@@ -324,7 +324,10 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			Set<String> labels = new HashSet<>();
 			labels.add("responsiveness");
 			labels.add("whitespace");
-		
+			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.name());
+			
 			observations.add(new ElementObservation(
 										unscalable_padding_elements, 
 										"Elements with unscalable padding units", 
@@ -332,7 +335,8 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 										"", 
 										Priority.MEDIUM, 
 										new HashSet<>(), 
-										labels));
+										labels,
+										categories));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

@@ -104,7 +104,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
 		
 		if(!images_without_alt_text.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(
@@ -114,7 +115,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					ada_compliance,
 					Priority.HIGH, 
 					new HashSet<>(),
-					labels);
+					labels,
+					categories);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -136,7 +138,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					ada_compliance,
 					Priority.HIGH, 
 					new HashSet<>(),
-					labels);
+					labels,
+					categories);
 			
 			observations.add(observation_service.save(observation));
 		}

@@ -147,6 +147,9 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		labels.add("accessibility");
 		labels.add("color");
 		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.name());
+		
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
 																palette, 
 																scheme, 
@@ -155,7 +158,8 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 																ada_compliance, 
 																Priority.HIGH,
 																new HashSet<>(), 
-																labels);
+																labels,
+																categories);
 		
 		
 		observations.add(observation_service.save(palette_observation));

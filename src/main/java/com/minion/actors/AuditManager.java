@@ -104,7 +104,7 @@ public class AuditManager extends AbstractActor{
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, message-> {
 					audit_record = message.getAuditRecord();
-					if(message.getAction().equals(CrawlAction.START_LINK_ONLY)){
+					if(message.getAction().equals(CrawlAction.START)){
 						log.warn("Starting crawler");
 						
 						//send message to page data extractor
@@ -196,14 +196,14 @@ public class AuditManager extends AbstractActor{
 					log.warn("(AUDIT MANAGER) looking up audit record using host  :: "+host);
 					
 					//NOTE: Audit record can be null, need to handle that scenario
-					AuditRecord audit_record = domain_service.getMostRecentDomainAuditRecord(host);
+					AuditRecord audit_record = domain_service.getMostRecentAuditRecord(host).get();
 					log.warn("Audit record :: " + audit_record);
 					//save all audits in audit list to database and add them to the audit record
 					for(Audit audit : audit_list.getAudits()){
 						log.warn("saving audit : "+audit);
 						audit = audit_service.save(audit);
-						log.warn("successfully saved audit : "+audit);
-						log.warn("audit record ::  "+audit_record);
+						log.warn("successfully saved audit : "+audit.getKey());
+						log.warn("audit record ::  "+audit_record.getKey());
 						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
 						
 						//send pusher message to clients currently subscribed to domain audit channel

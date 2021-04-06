@@ -103,7 +103,7 @@ public class AuditController {
     	log.warn("finding all recent audits for url :: "+domain_host);
         domain_host = domain_host.replace("/", "").trim();
     	Domain domain = domain_service.findByHost(domain_host);
-    	AuditRecord audit_record = domain_service.getMostRecentAuditRecord(domain.getHost());
+    	AuditRecord audit_record = domain_service.getMostRecentAuditRecord(domain.getHost()).get(); 
     	return audit_record_service.getAllAudits(audit_record.getKey());
     }
 
@@ -434,6 +434,53 @@ public class AuditController {
      * @return
      * @throws Exception
      */
+	@RequestMapping(path="/start-individual", method = RequestMethod.POST)
+	public @ResponseBody AuditStats startSinglePageAudit(
+			HttpServletRequest request,
+			@RequestBody(required=true) PageVersion page
+	) throws Exception {
+    	String lowercase_url = page.getUrl().toLowerCase();
+
+    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
+	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
+	   	System.out.println("domain returned from db ...."+domain);
+	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
+	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
+	   	if(domain == null) {
+	   		log.warn("saving domain");
+	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "");
+	   		domain = domain_service.save(domain);
+	   	}
+
+	   	log.warn("creating audit record");
+	   	//create new audit record
+	   	AuditRecord audit_record = new AuditRecord(new AuditStats(domain.getHost()));
+
+	   	log.warn("Saving audit Record");
+	   	audit_record = audit_record_service.save(audit_record);
+	   	
+	   	log.warn("Adding audit record to domain");
+	   	domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
+	   	
+	   	log.warn("telling audit manager about crawl action");
+	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				.props("auditManager"), "auditManager"+UUID.randomUUID());
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, true, sanitized_url);
+		audit_manager.tell(crawl_action, null);
+	   	//crawl site and retrieve all page urls/landable pages
+	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
+
+	   	return audit_record.getAuditStats();
+	}
+	
+    /**
+     * 
+     * @param request
+     * @param page
+     * @return
+     * @throws Exception
+     */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	public @ResponseBody AuditStats startAudit(
 			HttpServletRequest request,
@@ -468,7 +515,7 @@ public class AuditController {
 	   	log.warn("telling audit manager about crawl action");
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START_LINK_ONLY, domain, "temp-account", audit_record);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, false, sanitized_url);
 		audit_manager.tell(crawl_action, null);
 	   	//crawl site and retrieve all page urls/landable pages
 	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);

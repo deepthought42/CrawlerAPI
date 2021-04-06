@@ -1,5 +1,7 @@
 package com.qanairy.models.message;
 
+import java.net.URL;
+
 import com.qanairy.models.Domain;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.enums.CrawlAction;
@@ -11,11 +13,20 @@ import com.qanairy.models.enums.CrawlAction;
 public class CrawlActionMessage extends Message{
 	private CrawlAction action;
 	private AuditRecord audit_record;
+	private boolean is_individual;
+	private URL url;
 	
-	public CrawlActionMessage(CrawlAction action, Domain domain, String account_id, AuditRecord record){
+	public CrawlActionMessage(CrawlAction action, 
+							  Domain domain, 
+							  String account_id, 
+							  AuditRecord record, 
+							  boolean is_individual,
+							  URL url){
 		super(domain.getHost(), account_id);
 		setAction(action);
 		setDomain(domain);
+		setIsIndividual(is_individual);
+		setUrl(url);
 		setAuditRecord(record);
 	}
 	
@@ -33,5 +44,21 @@ public class CrawlActionMessage extends Message{
 
 	public void setAuditRecord(AuditRecord audit_record) {
 		this.audit_record = audit_record;
+	}
+
+	public boolean isIndividual() {
+		return is_individual;
+	}
+
+	public void setIsIndividual(boolean is_individual) {
+		this.is_individual = is_individual;
+	}
+
+	public URL getUrl() {
+		return url;
+	}
+
+	public void setUrl(URL url) {
+		this.url = url;
 	}	
 }

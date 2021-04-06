@@ -25,6 +25,7 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -121,18 +122,23 @@ public class DomainService {
 	 * @param page_key key of {@link PageVersion} object
 	 * @return
 	 * 
-	 * @pre url != null
-	 * @pre !url.isEmpty()
-	 * @pre page_key != null
-	 * @pre !page_key.isEmpty()
-	 * @pre user_id != null
+	 * @pre host != null
+	 * @pre !host.isEmpty()
+	 * @pre page_version_key != null
+	 * @pre !page_version_key.isEmpty()
 	 * 
 	 */
 	public boolean addPage(String host, String page_version_key) {
 		assert host != null;
 		assert !host.isEmpty();
 		assert page_version_key != null;
-
+		assert !page_version_key.isEmpty();
+		//check if page already exists. If it does then return true;
+		Optional<PageVersion> page = domain_repo.getPage(host, page_version_key);
+		if(page.isPresent()) {
+			return true;
+		}
+		
 		return domain_repo.addPage(host, page_version_key) != null;
 	}
 
@@ -156,8 +162,11 @@ public class DomainService {
 		return domain_repo.getPagesForUserId(user_id, url);
 	}
 
-	public AuditRecord getMostRecentDomainAuditRecord(String host) {
-		return domain_repo.getMostRecentDomainAuditRecord(host);
+	public Optional<AuditRecord> getMostRecentAuditRecord(String host) {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		return domain_repo.getMostRecentAuditRecord(host);
 	}
 
 	public List<PageVersion> getPages(String domain_host) {
@@ -280,12 +289,5 @@ public class DomainService {
 		
 		AuditRecord record = audit_record_service.findMostRecent(host).get();
         return audit_record_service.getAllPageAudits(record.getKey());
-	}
-
-	public AuditRecord getMostRecentAuditRecord(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		return audit_record_service.findMostRecent(host).get();
 	}
 }

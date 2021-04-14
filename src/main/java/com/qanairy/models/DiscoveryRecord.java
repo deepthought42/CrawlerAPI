@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.enums.ExecutionStatus;
 
 /**
  * Record detailing a "Discovery" ran by an account.
@@ -26,7 +26,7 @@ public class DiscoveryRecord implements Persistable {
 	private String browser_name;
 	private String domain_url;
 	private Date last_path_ran_at;
-	private DiscoveryStatus status;
+	private ExecutionStatus status;
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
@@ -37,7 +37,7 @@ public class DiscoveryRecord implements Persistable {
 
 	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url,
 							int test_cnt, int total_cnt, int examined_cnt,
-							DiscoveryStatus status){
+							ExecutionStatus status){
 		assert started_timestamp != null;
 		assert browser_name != null;
 		assert domain_url != null;
@@ -140,11 +140,11 @@ public class DiscoveryRecord implements Persistable {
 		return false;
 	}
 
-	public DiscoveryStatus getStatus() {
+	public ExecutionStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(DiscoveryStatus status) {
+	public void setStatus(ExecutionStatus status) {
 		this.status = status;
   }
 

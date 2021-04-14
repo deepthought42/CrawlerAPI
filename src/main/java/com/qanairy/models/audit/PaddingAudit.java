@@ -128,7 +128,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
 	    	
 	    	Set<String> categories = new HashSet<>();
-	    	categories.add(AuditCategory.AESTHETICS.getShortName());
+	    	categories.add(AuditCategory.AESTHETICS.toString());
 			
 	    	//add observation that no elements were found with padding
 			observations.add(new Observation(
@@ -334,7 +334,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
 		observations.add(new ElementStateObservation(non_scalable, 
@@ -405,7 +405,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			labels.add("responsiveness");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
 			observations.add(new ElementStateObservation(
 					unscalable_padding_elements, 

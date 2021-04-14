@@ -36,11 +36,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private ObservationService observation_service;
 	
-	private List<ElementState> images_without_alt_text =  new ArrayList<>();
-	private List<ElementState> images_with_alt_text =  new ArrayList<>();
-	private List<ElementState> images_without_alt_text_defined =  new ArrayList<>();
-	private List<ElementState> images_with_alt_text_defined =  new ArrayList<>();
-
 	public ImageAltTextAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
@@ -58,6 +53,11 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
+		List<ElementState> images_without_alt_text =  new ArrayList<>();
+		List<ElementState> images_with_alt_text =  new ArrayList<>();
+		List<ElementState> images_without_alt_text_defined =  new ArrayList<>();
+		List<ElementState> images_with_alt_text_defined =  new ArrayList<>();
+
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("images");
@@ -105,7 +105,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		}
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		if(!images_without_alt_text.isEmpty()) {
 			ElementStateObservation observation = new ElementStateObservation(

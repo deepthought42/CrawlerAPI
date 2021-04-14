@@ -300,7 +300,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		if(!unscalable_margin_elements.isEmpty()) {
 			observations.add(new ElementObservation(
@@ -427,7 +427,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
 			observations.add(new ElementObservation(
 									flagged_elements, 

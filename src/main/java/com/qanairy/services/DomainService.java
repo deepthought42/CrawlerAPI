@@ -21,6 +21,8 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.DomainAuditRecord;
+import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.repository.DomainRepository;
 
 @Service
@@ -162,7 +164,7 @@ public class DomainService {
 		return domain_repo.getPagesForUserId(user_id, url);
 	}
 
-	public Optional<AuditRecord> getMostRecentAuditRecord(String host) {
+	public Optional<DomainAuditRecord> getMostRecentAuditRecord(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -206,7 +208,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllColorPaletteAudits(record.getKey());
 	}
 
@@ -214,7 +216,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllTextColorContrastAudits(record.getKey());
 	}
 
@@ -222,7 +224,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-        AuditRecord record = audit_record_service.findMostRecent(host).get();
+        AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
 		return audit_record_service.getAllNonTextColorContrastAudits(record.getKey());
 	}
 
@@ -230,7 +232,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllTypefaceAudits(record.getKey());
 	}
 
@@ -238,7 +240,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllLinkAudits(record.getKey());
 	}
 
@@ -246,7 +248,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllTitleAndHeaderAudits(record.getKey());
 	}
 
@@ -254,7 +256,7 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllAltTextAudits(record.getKey());
 	}
 
@@ -265,29 +267,31 @@ public class DomainService {
 	public Set<Audit> getMostRecentAuditRecordMargins( String host) {
 		assert host != null;
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllMarginAudits(record.getKey());	
     }
 	
 	public Set<Audit> getMostRecentAuditRecordPadding( String host) {
 		assert host != null;
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllPagePaddingAudits(record.getKey());
     }
 
 	public Set<Audit> getMostRecentAuditRecordParagraphing(String host) {
 		assert host != null;
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
 	
-	public Set<Audit> getMostRecentAudits(String host) {
+	public Set<PageAuditRecord> getMostRecentPageAuditRecords(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		AuditRecord record = audit_record_service.findMostRecent(host).get();
-        return audit_record_service.getAllPageAudits(record.getKey());
+		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
+		return audit_record_service.getAllPageAudits(record.getKey());
 	}
+
+	
 }

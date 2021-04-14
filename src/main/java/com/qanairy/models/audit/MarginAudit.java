@@ -303,7 +303,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		observations.add(new ElementStateObservation(
 								elements, 
@@ -364,7 +364,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		observations.add(new ElementStateObservation(
 								elements, 
@@ -436,7 +436,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
 			observations.add(new ElementStateObservation(
 					unscalable_margin_elements, 
@@ -570,7 +570,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.getShortName());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
 			observations.add(new ElementStateObservation(
 									flagged_elements, 

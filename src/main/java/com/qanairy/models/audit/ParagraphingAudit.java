@@ -35,9 +35,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private	PageStateService page_state_service;
-
-	List<Observation> sentence_observations =  new ArrayList<>();
-	List<Observation> paragraph_observations =  new ArrayList<>();	
 	
 	public ParagraphingAudit() {
 	}
@@ -54,7 +51,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-
+		
 		List<ElementState> good_sentence_observations = new ArrayList<>();
 		List<ElementState> meh_sentence_observations = new ArrayList<>();
 		List<ElementState> poor_sentence_observations = new ArrayList<>();

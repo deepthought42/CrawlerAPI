@@ -1,67 +1,75 @@
 package com.qanairy.models.audit;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.qanairy.models.AuditStats;
 import com.qanairy.models.LookseeObject;
+import com.qanairy.models.enums.AuditLevel;
+import com.qanairy.models.enums.ExecutionStatus;
 
 /**
  * Record detailing an set of {@link Audit audits}.
  */
 public class AuditRecord extends LookseeObject {
 	
-	@Relationship(type = "HAS")
-	private Set<Audit> audits;
-
-	@Relationship(type = "HAS")
-	private AuditStats audit_stats;
+	private String status;
+	private String level;
+	private LocalDateTime start_time;
+	private LocalDateTime end_time;
 	
-	public AuditRecord() {}
+	public AuditRecord() {
+		setStartTime(LocalDateTime.now());
+	}
 	
 	/**
 	 * Constructor
-	 * 
-	 * @param audit_stats {@link AuditStats} object with statics for audit progress
+	 * @param level TODO
 	 * 
 	 * @pre audit_stats != null;
 	 */
-	public AuditRecord(AuditStats audit_stats) {
-		assert audit_stats != null;
-		
-		setAudits(new HashSet<>());
+	public AuditRecord(ExecutionStatus status, AuditLevel level) {
 		setKey(generateKey());
-		setAuditStats(audit_stats);
+		setStatus(status);
+		setStartTime(LocalDateTime.now());
 	}
 
 	public String generateKey() {
 		return "auditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
-	public Set<Audit> getAudits() {
-		return audits;
+	public ExecutionStatus getStatus() {
+		return ExecutionStatus.create(status);
 	}
 
-	public void setAudits(Set<Audit> audits) {
-		this.audits = audits;
+	public void setStatus(ExecutionStatus status) {
+		this.status = status.getShortName();
 	}
 
-	public void addAudit(Audit audit) {
-		this.audits.add( audit );
-	}
-	
-	public void addAudits(Set<Audit> audits) {
-		this.audits.addAll( audits );
+	public AuditLevel getLevel() {
+		return AuditLevel.create(level);
 	}
 
-	public void setAuditStats(AuditStats audit_stats) {
-		this.audit_stats = audit_stats;
+	public void setLevel(AuditLevel level) {
+		this.level = level.toString();
 	}
-	
-	public AuditStats getAuditStats() {
-		return this.audit_stats;
+
+	public LocalDateTime getStartTime() {
+		return start_time;
+	}
+
+	public void setStartTime(LocalDateTime start_time) {
+		this.start_time = start_time;
+	}
+
+	public LocalDateTime getEndTime() {
+		return end_time;
+	}
+
+	public void setEndTime(LocalDateTime end_time) {
+		this.end_time = end_time;
 	}
 }

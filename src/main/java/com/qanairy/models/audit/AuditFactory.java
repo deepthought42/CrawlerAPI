@@ -17,7 +17,6 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
 import com.qanairy.models.audit.domain.DomainFontAudit;
 import com.qanairy.models.audit.domain.DomainImageAltTextAudit;
-import com.qanairy.models.audit.domain.DomainLinksAudit;
 import com.qanairy.models.audit.domain.DomainMarginAudit;
 import com.qanairy.models.audit.domain.DomainNonTextColorContrastAudit;
 import com.qanairy.models.audit.domain.DomainPaddingAudit;
@@ -76,9 +75,6 @@ public class AuditFactory {
 	@Autowired
 	private DomainMarginAudit domain_margin_auditor;
 	
-	//Domain audits
-	@Autowired
-	private DomainLinksAudit domain_links_auditor;
 
 	@Autowired
 	private DomainColorPaletteAudit domain_color_palette_auditor;
@@ -149,7 +145,10 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePostRenderPageAudits(AuditCategory category, PageState page) throws MalformedURLException, URISyntaxException {
+	public List<Audit> executePostRenderPageAudits(
+							AuditCategory category, 
+							PageState page
+	) throws MalformedURLException, URISyntaxException {
 		assert category != null;
 		assert page != null;
 		
@@ -161,8 +160,6 @@ public class AuditFactory {
 			
 			Audit title_and_headers = title_and_header_auditor.execute(page);
 			audits.add(title_and_headers);
-			
-			
 			
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {

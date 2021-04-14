@@ -42,6 +42,7 @@ public class ElementStateService {
 			
 			element_record = element_repo.save(element);
 		}
+		/*
 		else {
 			element_record.setRenderedCssValues(element.getRenderedCssValues());
 			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
@@ -53,7 +54,7 @@ public class ElementStateService {
 				element_record = element_repo.save(element_record);
 			}
 		}
-
+	*/
 		return element_record;
 	}
 	

@@ -24,7 +24,6 @@ import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
-import com.qanairy.utils.ImageUtils;
 
 
 /**
@@ -82,15 +81,14 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				ColorData text_color = new ColorData(color);
 				
 				//Identify background color by getting largest color used in picture
-				ColorData background_color_data = ImageUtils.extractBackgroundColor(element);
+				//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
 				
-				double contrast = ColorData.computeContrast(background_color_data, text_color);
+				double contrast = ColorData.computeContrast(new ColorData(element.getBackgroundColor()), text_color);
 				element.setTextContrast(contrast);
 				element_state_service.save(element);
 				if(ElementStateUtils.isHeader(element.getName())) {
 					//score header element
 					//calculate contrast between text color and background-color
-					log.warn("Element is a header with contrast :: "+contrast);
 					total_headlines++;
 					/*
 					headlines < 3; value = 1
@@ -117,19 +115,15 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 						text >= 4.5 and text < 7; value = 2
 						text >=7; value = 3
 					 */
-					log.warn("Text element has contrast of "+contrast);
 					if(contrast < 4.5) {
 						//No points are rewarded for low contrast text
-						log.warn("contrast less than 4.5");
 						low_text_contrast.add(element);
 					}
 					else if(contrast >= 4.5 && contrast < 7) {
-						log.warn("contrast less than 7");
 						text_score += 1;
 						mid_text_contrast.add(element);
 					}
 					else if(contrast >= 7) {
-						log.warn("contrast greater than 7");
 						text_score += 2;
 						high_text_contrast.add(element);
 					}
@@ -167,7 +161,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		labels.add("color");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.getShortName());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		if(!mid_header_contrast.isEmpty()) {
 			ElementStateObservation mid_header_contrast_observation = new ElementStateObservation(

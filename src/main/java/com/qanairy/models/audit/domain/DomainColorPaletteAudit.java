@@ -148,7 +148,7 @@ public class DomainColorPaletteAudit implements IExecutableDomainAudit{
 		labels.add("color");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		ColorPaletteObservation palette_observation = new ColorPaletteObservation(
 																palette, 

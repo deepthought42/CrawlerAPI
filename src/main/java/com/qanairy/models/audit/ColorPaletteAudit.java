@@ -46,10 +46,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ObservationService observation_service;
-	
-	//private List<String> gray_colors = new ArrayList<>();
-	private List<String> colors = new ArrayList<>();
-	
+		
 	public ColorPaletteAudit() {}
 
 	/**
@@ -153,7 +150,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		labels.add("color");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		ColorPaletteObservation observation = new ColorPaletteObservation(
 														palette,
@@ -173,7 +170,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));
-		setColors(new ArrayList<>(observation.getColors()));
 		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
@@ -227,13 +223,5 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		
 		//return CloudVisionUtils.extractImageProperties(screenshot);
 		return ImageUtils.extractImageProperties(screenshot);
-	}
-
-	public List<String> getColors() {
-		return colors;
-	}
-
-	public void setColors(List<String> colors) {
-		this.colors = colors;
 	}
 }

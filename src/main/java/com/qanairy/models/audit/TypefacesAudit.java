@@ -226,7 +226,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		labels.add("content");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.getShortName());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		ElementStateObservation observation = new ElementStateObservation(
 														no_fallback_font, 

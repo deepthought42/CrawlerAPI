@@ -2,12 +2,12 @@ package com.qanairy.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum DiscoveryStatus {
-	RUNNING("running"), STOPPED("stopped"), COMPLETE("complete");
+public enum ExecutionStatus {
+	RUNNING("running"), STOPPED("stopped"), COMPLETE("complete"), IN_PROGRESS("in_progress");
 	
 	private String shortName;
 
-    DiscoveryStatus (String shortName) {
+    ExecutionStatus (String shortName) {
         this.shortName = shortName;
     }
 
@@ -17,11 +17,11 @@ public enum DiscoveryStatus {
     }
 
     @JsonCreator
-    public static DiscoveryStatus creat(String value) {
+    public static ExecutionStatus create(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
-        for(DiscoveryStatus v : values()) {
+        for(ExecutionStatus v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

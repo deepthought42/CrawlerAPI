@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,10 +24,10 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.DomainAuditRecord;
+import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.enums.AuditStage;
 import com.qanairy.models.enums.CrawlAction;
-import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageStateAuditComplete;
@@ -75,8 +76,6 @@ public class AuditManager extends AbstractActor{
 	Map<String, PageState> page_states_experienced = new HashMap<>();
 	Map<String, PageState> page_states_audited = new HashMap<>();
 
-	private AuditRecord audit_record;
-
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -103,7 +102,6 @@ public class AuditManager extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, message-> {
-					audit_record = message.getAuditRecord();
 					if(message.getAction().equals(CrawlAction.START)){
 						log.warn("Starting crawler");
 						
@@ -119,17 +117,10 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(PageVersion.class, page -> {
 					log.warn("recieved page :: "+page.getUrl());
-					if(!pages_experienced.containsKey(page.getKey())) {
-						pages_experienced.put(page.getKey(), page);
-						/*
-						ActorRef page_data_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("pageDataExtractor"), "pageDataExtractor"+UUID.randomUUID());
-						page_data_extractor.tell(page, getSelf());
-						*/
-						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
-						web_crawl_actor.tell(page, getSelf());
-					}
+					
+					ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+					web_crawl_actor.tell(page, getSelf());
 				})
 				.match(PageState.class, page_state -> {
 					log.warn("Received page state :: "+page_state.getUrl());
@@ -173,8 +164,8 @@ public class AuditManager extends AbstractActor{
 						auditor.tell(domain_audit_msg, getSelf());
 					}
 				})
-				.match(AuditSet.class, audit_list -> {
-					String url_str = BrowserUtils.sanitizeUserUrl(audit_list.getUrl());
+				.match(PageAuditRecord.class, audit_record -> {
+					String url_str = BrowserUtils.sanitizeUserUrl(audit_record.getPageState().getUrl());
 					
 					
 					/* NOTE:: if still exists after 4-1-2021 then remove
@@ -196,18 +187,24 @@ public class AuditManager extends AbstractActor{
 					log.warn("(AUDIT MANAGER) looking up audit record using host  :: "+host);
 					
 					//NOTE: Audit record can be null, need to handle that scenario
-					AuditRecord audit_record = domain_service.getMostRecentAuditRecord(host).get();
-					log.warn("Audit record :: " + audit_record);
-					//save all audits in audit list to database and add them to the audit record
-					for(Audit audit : audit_list.getAudits()){
-						log.warn("saving audit : "+audit);
-						audit = audit_service.save(audit);
-						log.warn("successfully saved audit : "+audit.getKey());
-						log.warn("audit record ::  "+audit_record.getKey());
-						audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
+					Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(host);
+					if(audit_record_opt.isPresent()){
+						DomainAuditRecord domain_audit_record = audit_record_opt.get();
+						//add page audit to domain audit
+						log.warn("domain audit record key :: "+domain_audit_record.getKey());
+						log.warn("Page audit record key :: "+audit_record.getKey());
+						audit_record_service.save(audit_record);
+						audit_record_service.addPageAuditToDomainAudit(domain_audit_record.getKey(), audit_record.getKey());
 						
-						//send pusher message to clients currently subscribed to domain audit channel
-						MessageBroadcaster.broadcastAudit(host, audit);
+						log.warn("Audit record :: " + audit_record);
+						//save all audits in audit list to database and add them to the audit record
+						for(Audit audit : audit_record.getAudits()){
+							audit = audit_service.save(audit);
+							audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
+							
+							//send pusher message to clients currently subscribed to domain audit channel
+							MessageBroadcaster.broadcastAudit(host, audit);
+						}						
 					}
 				})
 				.match(MemberUp.class, mUp -> {

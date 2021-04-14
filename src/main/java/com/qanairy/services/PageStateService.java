@@ -1,8 +1,10 @@
 package com.qanairy.services;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.audit.Audit;
+import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.repository.PageStateRepository;
 
@@ -131,9 +134,11 @@ public class PageStateService {
 
 			page_state_record = page_state_repo.save(page_state);
 		}
+		/*
 		else {
 			page_state_record.setElements(getElementStates(page_state_record.getKey()));
 		}
+		*/
 		return page_state_record;
 	}
 	
@@ -170,6 +175,9 @@ public class PageStateService {
 	}
 	
 	public List<ElementState> getElementStates(String page_key){
+		assert page_key != null;
+		assert !page_key.isEmpty();
+		
 		return page_state_repo.getElementStates(page_key);
 	}
 	
@@ -225,6 +233,25 @@ public class PageStateService {
 	}
 
 	public PageState findByUrl(String url) {
+		assert url != null;
+		assert !url.isEmpty();
+		
 		return page_state_repo.findByUrl(url);
 	}
+
+	public boolean addElement(String page_key, String element_key) {
+		assert page_key != null;
+		assert element_key != null;
+		Optional<ElementState> element_state = getElementState(page_key, element_key);
+		
+		if(element_state.isPresent()) {
+			return true;
+		}
+		return page_state_repo.addElement(page_key, element_key) != null;
+	}
+
+	private Optional<ElementState> getElementState(String page_key, String element_key) {
+		return page_state_repo.getElementState(page_key, element_key);
+	}
+
 }

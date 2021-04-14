@@ -30,7 +30,6 @@ import com.qanairy.utils.ElementStateUtils;
 public class FontAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(FontAudit.class);
-
 	
 	@Relationship(type="FLAGGED")
 	List<Element> flagged_elements = new ArrayList<>();

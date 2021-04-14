@@ -326,7 +326,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
 			observations.add(new ElementObservation(
 										unscalable_padding_elements, 

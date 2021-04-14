@@ -28,6 +28,7 @@ import com.qanairy.models.audit.ElementStateObservation;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -154,16 +155,16 @@ public class AuditService {
 	 * @throws MalformedURLException
 	 */
 	public Set<ObservationElementMap> generateObservationElementMap(
-			Set<Audit> audits, String page_url
+			Set<Audit> audits, 
+			URL page_url
 	) throws MalformedURLException {
 		Set<ObservationElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {
-			URL url = new URL(audit.getUrl());
-			URL page_url_obj = new URL(page_url);
+			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
-			if(url.getHost().contentEquals(page_url_obj.getHost()) 
-					&& url.getPath().contentEquals(page_url_obj.getPath())
+			if(url.getHost().contentEquals(page_url.getHost()) 
+					&& url.getPath().contentEquals(page_url.getPath())
 			) {
 				for(Observation observation : audit.getObservations()) {
 					Set<SimpleElement> elements = new HashSet<>();
@@ -216,18 +217,17 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, String page_url) throws MalformedURLException {
+	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, URL page_url) throws MalformedURLException {
 		Set<ElementObservationMap> element_observations = new HashSet<>();
 		
 		Map<String, Set<Observation>> observation_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
 		for(Audit audit : audits) {
 			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
-			URL url = new URL(audit.getUrl());
-			URL page_url_obj = new URL(page_url);
+			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
-			if(url.getHost().contentEquals(page_url_obj.getHost()) 
-					&& url.getPath().contentEquals(page_url_obj.getPath())
+			if(url.getHost().contentEquals(page_url.getHost()) 
+					&& url.getPath().contentEquals(page_url.getPath())
 			) {
 				for(Observation observation : audit.getObservations()) {
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
@@ -297,4 +297,5 @@ public class AuditService {
 		log.warn("ADD OBSERVATION audit key :: "+key);
 		return audit_repo.addObservation(key, observation_key);
 	}
+
 }

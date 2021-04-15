@@ -10,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
+import com.qanairy.models.audit.DomainAuditRecord;
+import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.repository.AuditRecordRepository;
 
 /**
@@ -55,21 +58,24 @@ public class AuditRecordService {
 	}
 
 	public Set<Audit> getAllAudits(String audit_record_key) {
+		assert audit_record_key != null;
+		assert !audit_record_key.isEmpty();
+		
 		return audit_record_repo.getAllAudits(audit_record_key);
 	}
 
-	public Optional<AuditRecord> findMostRecent(String host) {
+	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
-		return audit_record_repo.findMostRecent(host);
+		return audit_record_repo.findMostRecentDomainAuditRecord(host);
 	}
 
 	public Set<Audit> getAllColorManagementAudits(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
-        AuditRecord record = findMostRecent(host).get();
+        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
 		return audit_record_repo.getAllColorManagementAudits(record.getKey());
 	}
 
@@ -98,7 +104,7 @@ public class AuditRecordService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-        AuditRecord record = findMostRecent(host).get();
+        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
 		return audit_record_repo.getAllTypographyAudits(record.getKey());
 	}
 
@@ -116,7 +122,7 @@ public class AuditRecordService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-        AuditRecord record = findMostRecent(host).get();
+        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
 		return audit_record_repo.getAllInformationArchitectureAudits(record.getKey());
 	}
 
@@ -145,7 +151,7 @@ public class AuditRecordService {
 		assert host != null;
 		assert !host.isEmpty();
 		
-        AuditRecord record = findMostRecent(host).get();
+        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
 		return audit_record_repo.getAllVisualAudits(record.getKey());
 	}
 
@@ -170,10 +176,36 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllPageAudits(String audit_record_key) {
+	public Set<PageAuditRecord> getAllPageAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
 		
 		return audit_record_repo.getAllPageAudits(audit_record_key);
+	}
+
+	public Set<Audit> getAllAuditsForPageAuditRecord(String page_audit_key) {
+		assert page_audit_key != null;
+		assert !page_audit_key.isEmpty();
+		
+		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_key);
+	}
+
+	public void addPageAuditToDomainAudit(String domain_audit_record_key, String page_audit_record_key) {
+		//check if audit already exists for page state
+		audit_record_repo.addPageAuditRecord(domain_audit_record_key, page_audit_record_key);
+	}
+
+	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
+		assert url != null;
+		assert !url.isEmpty();
+		
+		return audit_record_repo.getMostRecentPageAuditRecord(url);
+	}
+
+	public PageState getPageStateForAuditRecord(String page_audit_key) {
+		assert page_audit_key != null;
+		assert !page_audit_key.isEmpty();
+		
+		return audit_record_repo.getPageStateForAuditRecord(page_audit_key);
 	}
 }

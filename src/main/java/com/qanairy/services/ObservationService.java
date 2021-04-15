@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.audit.Observation;
-import com.qanairy.models.enums.Priority;
 import com.qanairy.models.repository.ObservationRepository;
 
 @Service
@@ -70,8 +69,8 @@ public class ObservationService {
 		
 		log.warn("key :: "+key);
 		log.warn("observation found :: "+observation);
-		log.warn("recommendation set :: "+observation.getRecommendations());
-    	observation.addRecommendation(recommendation);
+		//log.warn("recommendation set :: "+observation.getRecommendations());
+    	//observation.addRecommendation(recommendation);
     	
     	return save(observation);
 	}
@@ -95,7 +94,7 @@ public class ObservationService {
 		assert !priority.isEmpty();
 		
 		Observation observation = findByKey(key);
-    	observation.setPriority(Priority.create(priority));
+    	//observation.setPriority(Priority.create(priority));
     	return save(observation);	
 	}
 }

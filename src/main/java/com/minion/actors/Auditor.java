@@ -2,8 +2,10 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +18,9 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
+import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.ExecutionStatus;
 import com.qanairy.models.message.AuditSet;
 import com.qanairy.models.message.DomainAuditMessage;
 import com.qanairy.models.message.PageStateAuditComplete;
@@ -93,7 +97,7 @@ public class Auditor extends AbstractActor{
 				})
 				.match(PageState.class, page_state-> {
 				   	//generate audit report
-				   	List<Audit> audits = new ArrayList<>();
+				   	Set<Audit> audits = new HashSet<>();
 				   	
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//check if page state already
@@ -107,7 +111,7 @@ public class Auditor extends AbstractActor{
 		   			
 					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state);
 		   			getSender().tell(audit_complete, getSelf());
-		   			getSender().tell(new AuditSet(audits, page_state.getUrl()), getSelf());
+		   			getSender().tell( new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state), getSelf() );
 		   			//send message to either user or page channel containing reference to audits
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {

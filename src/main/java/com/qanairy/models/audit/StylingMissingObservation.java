@@ -21,7 +21,6 @@ public class StylingMissingObservation extends Observation {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setPriority(priority);
 		setType(ObservationType.STYLE_MISSING);
 		setKey(generateKey());
 	}

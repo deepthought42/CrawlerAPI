@@ -34,6 +34,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
@@ -273,7 +274,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int points_earned = 0;
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> elements = new ArrayList<ElementState>();
+		Set<UXIssueMessage> elements = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
@@ -283,7 +284,11 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
-					elements.add(element);
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																		Priority.MEDIUM,
+																		"Has at least one margin value that isn't a multiple of 8.",
+																		element);
+					elements.add(issue_message);
 				}
 				max_points++;
 			}
@@ -303,17 +308,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		observations.add(new ElementStateObservation(
-								elements, 
+		observations.add(new Observation(
 								"Has at least one margin value that isn't a multiple of 8.", 
 								why_it_matters, 
 								ada_compliance, 
-								Priority.LOW, 
-								recommendations,
-								labels,
-								categories));
+								ObservationType.ELEMENT,
+								labels, 
+								categories,
+								elements));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -334,17 +338,21 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int points_earned = 0;
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> elements = new ArrayList<ElementState>();
+		Set<UXIssueMessage> elements = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					//elements.add(element);
+					
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
-					elements.add(element);
+					ElementStateIssueMessage element_issue = new ElementStateIssueMessage(
+							Priority.MEDIUM, 
+							"Has at least one margin value that isn't a multiple of 8.", 
+							element);
+					elements.add(element_issue);
 				}
 				max_points++;
 			}
@@ -364,17 +372,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		observations.add(new ElementStateObservation(
-								elements, 
-								"Has at least one margin value that isn't a multiple of 8.", 
+		observations.add(new Observation(
+								"Has at least one margin value that isn't a multiple of 8.",
 								why_it_matters, 
 								ada_compliance, 
-								Priority.LOW, 
-								recommendations,
-								labels,
-								categories));
+								ObservationType.ELEMENT,
+								labels, 
+								categories,
+								elements));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
 		return new Score(points_earned, max_points, observations);
@@ -414,7 +421,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int vertical_score = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> unscalable_margin_elements = new ArrayList<>();
+		Set<UXIssueMessage> unscalable_margin_elements = new HashSet<>();
 
 		for(ElementState element : element_margin_map.keySet()) {
 			for(String margin_value : element_margin_map.get(element)) {
@@ -425,7 +432,11 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				max_vertical_score += 3;
 				
 				if(vertical_score == 1) {
-					unscalable_margin_elements.add(element);
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM,
+																	"Elements with unscalable margin units", 
+																	element);
+					unscalable_margin_elements.add(issue_message);
 				}
 			}
 		}
@@ -436,17 +447,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
-			observations.add(new ElementStateObservation(
-					unscalable_margin_elements, 
-					"Elements with unscalable margin units", 
-					"", 
-					"", 
-					Priority.LOW, 
-					new HashSet<>(),
-					labels,
-					categories));
+			observations.add(new Observation(
+									"Elements with unscalable margin units", 
+									"", 
+									"", 
+									ObservationType.ELEMENT,
+									labels, 
+									categories,
+									unscalable_margin_elements));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -515,7 +525,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int score = 0;
 		int max_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> flagged_elements = new ArrayList<>();
+		Set<UXIssueMessage> flagged_elements = new HashSet<>();
 		for(ElementState element : elements) {
 			if(element == null) {
 				log.warn("margin padding audit Element :: "+element);
@@ -552,7 +562,12 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				
 				if(margin_used_as_padding) {
 					score += 1;
-					flagged_elements.add(element);
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM,
+																	"Elements that appear to use margin as padding", 
+																	element);
+					flagged_elements.add(issue_message);
 				}
 				max_score += 3;
 			}
@@ -570,17 +585,16 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.getShortName());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
-			observations.add(new ElementStateObservation(
-									flagged_elements, 
+			observations.add(new Observation(
 									"Elements that appear to use margin as padding", 
 									why_it_matters, 
 									ada_compliance,
-									Priority.LOW, 
-									new HashSet<>(),
-									labels,
-									categories));
+									ObservationType.ELEMENT,
+									labels, 
+									categories,
+									flagged_elements));
 		}
 		return new Score(score, max_score, observations);
 	}

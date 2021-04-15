@@ -2,11 +2,9 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.enums.ObservationType;
-import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
@@ -20,16 +18,12 @@ public class TypefacesObservation extends Observation {
 			List<String> typefaces, 
 			String description, 
 			String why_it_matters, 
-			String ada_compliance, 
-			Set<String> recommendations, 
-			Priority priority) {
+			String ada_compliance) {
 		setTypefaces(typefaces);
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setPriority(priority);
 		setKey(this.generateKey());
-		setRecommendations(recommendations);
 	}
 	
 	/*

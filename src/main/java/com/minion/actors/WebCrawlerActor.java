@@ -4,10 +4,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -23,14 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.browsing.Browser;
-import com.qanairy.helpers.BrowserConnectionHelper;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.PageState;
-import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
@@ -98,150 +90,108 @@ public class WebCrawlerActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
-					Map<String, Boolean> frontier = new HashMap<>();
-					Map<String, PageVersion> visited = new HashMap<>();
 					Domain domain = crawl_action.getDomain();
+					String initial_url = domain.getProtocol() + "://"+domain.getHost()+domain.getEntryPath();
 					
-					String initial_url = "http://"+domain.getHost()+domain.getEntryPath();
-					LocalDateTime start_time = LocalDateTime.now();
-					Map<String, PageVersion> pages = new HashMap<>();
-					
-					//add link to frontier
-					frontier.put(initial_url, Boolean.TRUE);
-					
-					while(!frontier.isEmpty()) {
+					if(crawl_action.isIndividual()) {
+						Document doc = Jsoup.connect(initial_url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+						PageVersion page = browser_service.buildPage(doc.outerHtml(), initial_url, doc.title());
+						page = page_service.save( page );
+						//domain.addPage(page);
+						domain_service.addPage(domain.getHost(), page.getKey());
 						
-						Map<String, Boolean> external_links = new HashMap<>();
-						//remove link from beginning of frontier
-						String page_url_str = frontier.keySet().iterator().next();
-						log.warn("page url string :: "+page_url_str);
-						//page_url_str = BrowserUtils.sanitizeUserUrl(page_url_str);
-						//log.warn("page url string after sanitize  ::  "+page_url_str);
-						frontier.remove(page_url_str);
-						if( BrowserUtils.isImageUrl(page_url_str) || page_url_str.endsWith(".pdf")){
-							continue;
-						}
+						getSender().tell(page, getSelf());
+					}
+					else {
+						Map<String, PageVersion> pages = new HashMap<>();
+						Map<String, Boolean> frontier = new HashMap<>();
+						Map<String, PageVersion> visited = new HashMap<>();
+												
+						//add link to frontier
+						frontier.put(initial_url, Boolean.TRUE);
 						
-						URL page_url = new URL(page_url_str);
-
-						//construct page and add page to list of page states
-						//retrieve html source for page
-						try {
-							Document doc = Jsoup.connect(page_url_str).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
-							if(!page_url_str.contains(domain.getHost()) ) {
+						while(!frontier.isEmpty()) {
+							
+							Map<String, Boolean> external_links = new HashMap<>();
+							//remove link from beginning of frontier
+							String page_url_str = frontier.keySet().iterator().next();
+							
+							frontier.remove(page_url_str);
+							if( BrowserUtils.isImageUrl(page_url_str) 
+									|| page_url_str.endsWith(".pdf")
+									|| !page_url_str.contains(domain.getHost())){
 								continue;
 							}
-							PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
-							page = page_service.save( page );
-							pages.put(page.getKey(), page);
-							domain.addPage(page);
-							domain_service.addPage(domain.getHost(), page.getKey());
+							log.warn("domain host :: "+domain.getHost());
+							log.warn("is domain host in page url??   "+page_url_str.contains(domain.getHost()));
+							log.warn("page url string :: "+page_url_str);
 							
-							visited.put(page_url_str, page);
-							//send message to page data extractor
-							log.debug("sending page to an audit manager...");
-							
-							//Send PageVerstion to audit manager
-							getSender().tell(page, getSelf());
-							log.warn("page url :: "+page_url);
-							log.warn("page host :: "+page_url.getHost());
-							log.warn("page path :: "+page_url.getPath());
-							log.warn("----------------------------------------------------------------");
-							log.warn("----------------------------------------------------------------");
-							
-							Elements links = doc.select("a");
-							for (Element link : links) {
+							URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
+							page_url_str = page_url_obj.getHost() + page_url_obj.getPath();
+							//construct page and add page to list of page states
+							//retrieve html source for page
+							try {
+								Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+								PageVersion page = browser_service.buildPage(doc.outerHtml(), page_url_str, doc.title());
+								page = page_service.save( page );
+								pages.put(page.getKey(), page);
+								domain_service.addPage(domain.getHost(), page.getKey());
 								
-								String href_str = link.absUrl("href");
-								if(href_str == null || href_str.isEmpty()) {
-									continue;
-								}
+								visited.put(page_url_str, page);
+								//send message to page data extractor
+								log.debug("sending page to an audit manager...");
 								
-								String href = BrowserUtils.sanitizeUrl(href_str);
-								//check if external link
-								if( BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href_str) || href_str.startsWith("mailto:")) {
-									log.debug("adding to external links :: "+href_str);
-				   					external_links.put(href_str, Boolean.TRUE);
+								//Send PageVerstion to audit manager
+								getSender().tell(page, getSelf());
+								
+								Elements links = doc.select("a");
+								for (Element link : links) {
+									
+									String href_str = link.absUrl("href");
+									if(href_str == null || href_str.isEmpty()) {
+										continue;
+									}
+									
+									String href = BrowserUtils.sanitizeUrl(href_str);
+									URL href_url = new URL(href);
+									href = href_url.getHost() + href_url.getPath();
+									//check if external link
+									if( BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href) || href.startsWith("mailto:")) {
+										log.debug("adding to external links :: "+href);
+					   					external_links.put(href, Boolean.TRUE);
+									}
+									else if( !visited.containsKey(href) 
+											&& !frontier.containsKey(href) 
+											&& !BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href)
+									){
+										log.warn("href after sanitize :: " + href);
+										log.warn("adding link to frontier :: " + href);
+										//add link to frontier
+										frontier.put(href, Boolean.TRUE);
+									}
 								}
-								else if( !visited.containsKey(href) && !frontier.containsKey(href)){
-									log.warn("href after sanitize :: " + href_str);
-									log.warn("adding link to frontier :: " + href);
-									//add link to frontier
-									frontier.put(href, Boolean.TRUE);
-								}
+							}catch(SocketTimeoutException e) {
+								log.warn("Error occurred while navigating to :: "+page_url_str);
 							}
-						}catch(SocketTimeoutException e) {
-							log.warn("Error occurred while navigating to :: "+page_url_str);
+							catch(HttpStatusException e) {
+								log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
+								e.printStackTrace();
+							}
+							catch(IllegalArgumentException e) {
+								log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
+								e.printStackTrace();
+							}
+							catch(UnsupportedMimeTypeException e) {
+								log.warn(e.getMessage() + " : " +e.getUrl());
+							}
 						}
-						catch(HttpStatusException e) {
-							log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
-							e.printStackTrace();
-						}
-						catch(IllegalArgumentException e) {
-							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
-							e.printStackTrace();
-						}
-						catch(UnsupportedMimeTypeException e) {
-							log.warn(e.getMessage() + " : " +e.getUrl());
-						}
+						
 					}
-					LocalDateTime end_time = LocalDateTime.now();
-					
 				})
 				.match(PageVersion.class, page -> {
-					log.warn("Web crawler received page");
-					
-					boolean rendering_incomplete = true;
-					boolean xpath_extraction_incomplete = true;
-
-					int cnt = 0;
-					PageState page_state = null;
-					Browser browser = null;
-					Map<String, ElementState> elements_mapped = new HashMap<>();
-					List<String> xpaths = new ArrayList<>();
-					do {
-						try {
-							browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-							log.warn("navigating to page state url ::   "+page.getUrl());
-							browser.navigateTo(page.getUrl());
-							if(page_state == null) {
-								log.warn("getting browser for rendered page state extraction...");
-								//navigate to page url
-								page_state = browser_service.buildPageState(page, browser);
-								//send RenderedPageState to sender
-							}
-							//extract all element xpaths
-							if(xpath_extraction_incomplete) {
-								log.warn("extracting elements from body tag for page_state  ::    "+page_state.getUrl());
-								xpaths.addAll(browser_service.extractAllUniqueElementXpaths(page_state.getSrc()));
-								xpath_extraction_incomplete=false;
-							}
-							
-							//for each xpath then extract element state
-							log.warn("getting element states for page state :: "+page_state.getUrl());
-							List<ElementState> elements = browser_service.extractElementStates(page_state, xpaths, browser, elements_mapped);
-							page_state.addElements(elements);
-
-							rendering_incomplete = false;
-							cnt=100;
-							browser.close();
-							break;
-						}
-						catch(Exception e) {
-							if(browser != null) {
-								browser.close();
-							}
-							log.warn("Webdriver exception thrown..."+e.getMessage());
-							e.printStackTrace();
-						}
-						//TimingUtils.pauseThread(15000L);
-					}while(rendering_incomplete && cnt < 50);
-					
-					page_state = page_state_service.save(page_state);
-					page.addPageState(page_state);
-					page = page_service.save(page);
-					log.warn("telling sender of Rendered Page State outcomes ....");
+					PageState page_state = browser_service.buildPageState(page);
 					getSender().tell( page_state, getSelf());
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -257,4 +207,6 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.build();
 	}
+
+	
 }

@@ -1,6 +1,7 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -37,7 +38,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[*]->(e:ElementState) RETURN e")
 	public List<ElementState> getElementStatesForUser(@Param("user_id") String user_id, @Param("page_key") String key);
 
-	@Query("MATCH (p:PageState{key:$page_key})-[*]->(e:ElementState) RETURN e")
+	@Query("MATCH (p:PageState{key:$page_key})-[]->(e:ElementState) RETURN e")
 	public List<ElementState> getElementStates(@Param("page_key") String key);
 
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[*]->(e:ElementState{name:'a'}) RETURN e")
@@ -70,6 +71,12 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageVersion)-[]->(ps:PageState{key:$page_state_key}) return p LIMIT 1")
 	public PageVersion getParentPage(@Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (p:PageState{url:$url}) RETURN p LIMIT 1")
+	@Query("MATCH (p:PageState{url:$url}) RETURN p ORDER BY p.created_at DESC LIMIT 1")
 	public PageState findByUrl(@Param("url") String url);
+
+	@Query("MATCH (p:PageState{key:$page_key}),(element:ElementState{key:$element_key}) CREATE (p)-[h:HAS]->(element) RETURN element")
+	public ElementState addElement(@Param("page_key") String page_key, @Param("element_key") String element_key);
+
+	@Query("MATCH (p:PageState{key:$page_key})-[]->(element:ElementState{key:$element_key}) RETURN element")
+	public Optional<ElementState> getElementState(@Param("page_key") String page_key, @Param("element_key") String element_key);
 }

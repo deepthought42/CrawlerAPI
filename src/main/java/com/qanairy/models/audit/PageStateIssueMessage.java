@@ -4,31 +4,25 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class PageStateObservation extends Observation {
+public class PageStateIssueMessage extends UXIssueMessage {
 
 	@Relationship(type = "FOR")
 	private PageState page_state;
 	
-	public PageStateObservation() {}
+	public PageStateIssueMessage() {}
 	
-	public PageStateObservation(
+	public PageStateIssueMessage(
 				PageState page, 
-				String description, 
-				String why_it_matters, 
-				String ada_compliance, 
+				String recommendation,
 				Priority priority
 	) {
 		setPage(page);
-		setDescription(description);
-		setType(ObservationType.PAGE_STATE);
-		setWhyItMatters(why_it_matters);
-		setAdaCompliance(ada_compliance);
+		setRecommendation(recommendation);
 		setPriority(priority);
 		setKey(this.generateKey());
 	}
@@ -50,10 +44,5 @@ public class PageStateObservation extends Observation {
 
 	public void setPage(PageState page_state) {
 		this.page_state = page_state;
-	}
-
-	@Override
-	public ObservationType getType() {
-		return ObservationType.PAGE_STATE;
 	}
 }

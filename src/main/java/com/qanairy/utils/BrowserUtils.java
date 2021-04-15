@@ -33,6 +33,12 @@ public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 	
 	public static String sanitizeUrl(String url) {
+		assert url != null;
+		assert !url.isEmpty();
+		
+		if(!url.contains("://")) {
+			url = "http://"+url;
+		}
 		String domain = url;
 		int param_index = domain.indexOf("?");
 		if(param_index >= 0){
@@ -71,6 +77,9 @@ public class BrowserUtils {
 		assert url != null;
 		assert !url.isEmpty();
 		
+		if(!url.contains("://")) {
+			url = "http://"+url;
+		}
 		URL new_url = new URL(url);
 		//check if host is subdomain
 		String new_host = new_url.getHost();

@@ -31,7 +31,7 @@ import com.qanairy.models.LookseeObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.enums.ExecutionStatus;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
@@ -209,7 +209,7 @@ public class DiscoveryActor extends AbstractActor{
 						//check if discovery is considered complete, if so then update status and send email to all accounts
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount() && discovery_record.getTotalPathCount()> 2){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
-							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
+							discovery_record.setStatus(ExecutionStatus.COMPLETE);
 							
 							for(Account account: accounts){
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
@@ -432,7 +432,7 @@ public class DiscoveryActor extends AbstractActor{
 	private void stopDiscovery(DiscoveryActionMessage message) {
 		
 		log.warn("stopping discovery...");
-		discovery_record.setStatus(DiscoveryStatus.STOPPED);
+		discovery_record.setStatus(ExecutionStatus.STOPPED);
 		discovery_service.save(discovery_record);
 	}
 	

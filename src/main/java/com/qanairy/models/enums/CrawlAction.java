@@ -3,7 +3,8 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum CrawlAction {
-	START_LINK_ONLY("start_link_only"), STOP("stop");
+	START("start"), 
+	STOP("stop");
 	
 	private String shortName;
 

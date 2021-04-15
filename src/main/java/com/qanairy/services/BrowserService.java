@@ -61,6 +61,7 @@ import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ImageUtils;
 import com.qanairy.utils.PathUtils;
+import com.qanairy.utils.TimingUtils;
 
 import cz.vutbr.web.css.RuleSet;
 import us.codecraft.xsoup.Xsoup;
@@ -107,10 +108,10 @@ public class BrowserService {
 	 * @pre browser_name != null;
 	 * @pre !browser_name.isEmpty();
 	 */
-	public Browser getConnection(String browser_name, BrowserEnvironment browser_env) throws MalformedURLException {
-		assert browser_name != null;
-		assert !browser_name.isEmpty();
-		return BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), browser_env);
+	public Browser getConnection(BrowserType browser, BrowserEnvironment browser_env) throws MalformedURLException {
+		assert browser != null;
+		
+		return BrowserConnectionHelper.getConnection(browser, browser_env);
 	}
 
 	/**
@@ -242,11 +243,14 @@ public class BrowserService {
 		html_doc.select("script").remove();
 		html_doc.select("link").remove();
 		html_doc.select("style").remove();
+		html_doc.select("iframe").remove();
+		
 		//html_doc.attr("id","");
 		for(Element element : html_doc.getAllElements()) {
 			element.removeAttr("id")
 				   .removeAttr("name")
-				   .removeAttr("style");
+				   .removeAttr("style")
+				   .removeAttr("data-id");
 		}
 		
 		return html_doc.html();
@@ -264,8 +268,9 @@ public class BrowserService {
 		assert browser != null;
 		
 		//retrieve landable page state associated with page with given url
-		String browser_url = browser.getDriver().getCurrentUrl();
-		String host = new URL(browser_url).getHost();
+		URL browser_url = new URL(browser.getDriver().getCurrentUrl());
+		String url_without_protocol = browser_url.getHost()+browser_url.getPath();
+		String host = browser_url.getHost();
 		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
 		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
@@ -298,7 +303,7 @@ public class BrowserService {
 					full_page_screenshot_url, 
 					full_page_screenshot.getWidth(), 
 					full_page_screenshot.getHeight(), 
-					browser_url);
+					url_without_protocol);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -329,12 +334,12 @@ public class BrowserService {
 		log.warn("building page....");
 		String url_without_params = BrowserUtils.sanitizeUrl(page_url);
 		
-		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
-		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
+		//List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
+		//List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
 		
-		String clean_source = page_src;
+		//String clean_source = page_src;
 		URL clean_url = new URL(url_without_params);
-		List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
+		//List<com.qanairy.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
 				
 		PageVersion page = new PageVersion(
 				page_src,
@@ -349,6 +354,71 @@ public class BrowserService {
 		}
 		log.warn("built page...now saving page state...");
 		return page;
+	}
+	
+	/**
+	 * Process used by the web crawler to build {@link PageState} from {@link PageVersion}
+	 * 
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	public PageState buildPageState(PageVersion page) throws Exception {
+		assert page != null;
+		
+		log.warn("building page state for page version :: "+page.getKey());
+		boolean rendering_incomplete = true;
+		boolean xpath_extraction_incomplete = true;
+
+		int cnt = 0;
+		PageState page_state = null;
+		Browser browser = null;
+		Map<String, ElementState> elements_mapped = new HashMap<>();
+		List<String> xpaths = new ArrayList<>();
+		do {
+			try {
+				log.warn("getting browser connection....");
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				log.warn("navigating to page state url ::   "+page.getUrl());
+				browser.navigateTo(page.getUrl());
+				if(page_state == null) {
+					log.warn("getting browser for rendered page state extraction...");
+					//navigate to page url
+					page_state = buildPageState(page, browser);
+					page_state = page_state_service.save(page_state);
+					page_service.addPageState(page.getKey(), page_state.getKey());
+					//send RenderedPageState to sender
+				}
+				//extract all element xpaths
+				if(xpath_extraction_incomplete) {
+					log.warn("extracting elements from body tag for page_state  ::    "+page_state.getUrl());
+					xpaths.addAll(extractAllUniqueElementXpaths(page_state.getSrc()));
+					xpath_extraction_incomplete=false;
+				}
+				
+				//for each xpath then extract element state
+				log.warn("getting element states for page state :: "+page_state.getUrl());
+				extractElementStates(page_state, xpaths, browser, elements_mapped);
+
+				rendering_incomplete = false;
+				cnt=10000;
+				browser.close();
+				break;
+			}
+			catch(Exception e) {
+				if(browser != null) {
+					browser.close();
+				}
+				log.warn("Webdriver exception thrown..."+e.getMessage());
+				e.printStackTrace();
+			}
+			cnt++;
+		}while(rendering_incomplete && cnt < 1000);
+		log.warn("page key :: "+page.getKey());
+		log.warn("page state key :: "+page_state.getKey());
+		
+		log.warn("telling sender of Rendered Page State outcomes ....");
+		return page_state;
 	}
 	
 	/**
@@ -371,8 +441,9 @@ public class BrowserService {
 		log.warn("url for page state:  "+page.getUrl());
 
 		URL url = new URL(page.getUrl());
+		String url_without_protocol = url.getHost()+url.getPath();
 		//List<ElementState> elements = extractElementStates(source, url, browser);
-		
+		TimingUtils.pauseThread(1500);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -400,7 +471,7 @@ public class BrowserService {
 				full_page_screenshot_url,
 				full_page_screenshot.getWidth(), 
 				full_page_screenshot.getHeight(), 
-				page.getUrl());
+				url_without_protocol);
 
 		log.warn("built page...now saving page state...");
 		return page_state;
@@ -472,7 +543,7 @@ public class BrowserService {
 			log.warn(e.getMessage());
 		}
 		
-		log.warn("Building pre render element");
+		log.warn("Building element xpaths");
 		com.qanairy.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
 		root_element = element_service.save(root_element);
 
@@ -480,7 +551,6 @@ public class BrowserService {
 		frontier.put("//body",root_element.getKey());
 		while(!frontier.isEmpty()) {
 			String next_xpath = frontier.keySet().iterator().next();
-			String parent_element_key = frontier.remove(next_xpath);
 			
 			//ElementState root_element = frontier.remove(next_xpath);
 			//visited_elements.add(root_element);
@@ -567,8 +637,6 @@ public class BrowserService {
 		assert !xpaths.isEmpty();
 		assert browser != null;
 		assert element_states_map != null;
-		
-		log.warn("page state screenshot url ::: "+page_state.getFullPageScreenshotUrl());
 		//BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl());
 
 		List<ElementState> visited_elements = new ArrayList<>();
@@ -620,20 +688,13 @@ public class BrowserService {
 					classification = ElementClassification.ANCESTOR;
 				}
 				
-				/*
-				 BufferedImage element_screenshot = full_page_screenshot.getSubimage(element_location.getX(),
-																					element_location.getY(), 
-																					element_size.getWidth(), 
-																					element_size.getHeight()); */
 				BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
-				int idx = 0;
 				String element_screenshot_url = "";
 				while(element_screenshot_url == null || element_screenshot_url.isEmpty()) {
 					try {
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-						idx++;
 					}catch(IOException e) {
 						log.warn("*******************************************************************");
 						log.warn("*******************************************************************");
@@ -643,7 +704,6 @@ public class BrowserService {
 					}
 				}
 				element_screenshot.flush();
-				
 	
 				//load json element
 				Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
@@ -651,10 +711,42 @@ public class BrowserService {
 					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
 				}
 				Element element = elements.first();
-				ElementState element_state = buildElementState(xpath, attributes, element, web_element, classification, rendered_css_props, element_screenshot_url);
-				ColorData bkg_color = ImageUtils.extractBackgroundColor(element_state);
-				element_state.setBackgroundColor(bkg_color.rgb());
+				ElementState element_state = buildElementState(xpath, 
+															   attributes, 
+															   element, 
+															   web_element, 
+															   classification, 
+															   rendered_css_props, 
+															   element_screenshot_url);
+				
+				String bg_color_css = element_state.getRenderedCssValues().get("background-color");
+								
+				if(bg_color_css.contains("inherit") || bg_color_css.contains("rgb(255,255,255)")) {
+					log.warn("found element with '" + bg_color_css + "' setting");
+					element_state.setBackgroundColor(bg_color_css);
+				}
+				else if(bg_color_css.contains("rgba")) {
+					//extract opacity color
+					int last_comma = bg_color_css.lastIndexOf(',')+1;
+					int last_paren = bg_color_css.lastIndexOf(')');
+					String opacity_str = bg_color_css.substring(last_comma, last_paren);
+					//convert opacity to double
+					double opacity = Double.parseDouble( opacity_str.strip() );
+					if(opacity < 0.7) {
+						ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
+						element_state.setBackgroundColor(bkg_color.rgb());
+					}
+					else {
+						element_state.setBackgroundColor(bg_color_css);
+					}
+					
+				}
+				else {
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
+					element_state.setBackgroundColor(bkg_color.rgb());
+				}
 				element_state = element_state_service.save(element_state);
+				page_state_service.addElement(page_state.getKey(), element_state.getKey());
 				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
 			}

@@ -24,10 +24,12 @@ import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ObservationElementMap;
-import com.qanairy.models.audit.ElementStateObservation;
+import com.qanairy.models.audit.UXIssueMessage;
+import com.qanairy.models.audit.ElementStateIssueMessage;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -154,22 +156,27 @@ public class AuditService {
 	 * @throws MalformedURLException
 	 */
 	public Set<ObservationElementMap> generateObservationElementMap(
-			Set<Audit> audits, String page_url
+			Set<Audit> audits, 
+			URL page_url
 	) throws MalformedURLException {
 		Set<ObservationElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {
-			URL url = new URL(audit.getUrl());
-			URL page_url_obj = new URL(page_url);
+			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
-			if(url.getHost().contentEquals(page_url_obj.getHost()) 
-					&& url.getPath().contentEquals(page_url_obj.getPath())
+			if(url.getHost().contentEquals(page_url.getHost()) 
+					&& url.getPath().contentEquals(page_url.getPath())
 			) {
 				for(Observation observation : audit.getObservations()) {
 					Set<SimpleElement> elements = new HashSet<>();
-
+					List<ElementState> element_states = new ArrayList<>();
+					
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						Set<UXIssueMessage> messages = observation.getMessages();
+						for(UXIssueMessage message : messages) {
+							element_states.add(((ElementStateIssueMessage)message).getElement());
+						}
+						
 						for(ElementState element : element_states) {
 							elements.add(new SimpleElement(element.getKey(),
 														   element.getScreenshotUrl(), 
@@ -187,12 +194,11 @@ public class AuditService {
 																		observation.getDescription(),
 																		observation.getWhyItMatters(),
 																		observation.getAdaCompliance(),
-																		observation.getPriority(),
 																		observation.getKey(),
-																		observation.getRecommendations(),
-																		observation.getType(), 
+																		observation.getType(),
 																		observation.getLabels(),
-																		observation.getCategories());
+																		observation.getCategories(), 
+																		new HashSet<>());
 						observation_element = new ObservationElementMap(simple_observation, elements);
 					}
 					else{
@@ -216,22 +222,26 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, String page_url) throws MalformedURLException {
+	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, URL page_url) throws MalformedURLException {
 		Set<ElementObservationMap> element_observations = new HashSet<>();
 		
 		Map<String, Set<Observation>> observation_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
 		for(Audit audit : audits) {
 			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
-			URL url = new URL(audit.getUrl());
-			URL page_url_obj = new URL(page_url);
+			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
-			if(url.getHost().contentEquals(page_url_obj.getHost()) 
-					&& url.getPath().contentEquals(page_url_obj.getPath())
+			if(url.getHost().contentEquals(page_url.getHost()) 
+					&& url.getPath().contentEquals(page_url.getPath())
 			) {
 				for(Observation observation : audit.getObservations()) {
+					List<ElementState> element_states = new ArrayList<>();
+
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						Set<UXIssueMessage> messages = observation.getMessages();
+						for(UXIssueMessage message : messages) {
+							element_states.add(((ElementStateIssueMessage)message).getElement());
+						}
 						
 						for(ElementState element : element_states) {
 							if(!element_state_map.containsKey(element.getKey())) {
@@ -251,12 +261,11 @@ public class AuditService {
 										observation.getDescription(),
 										observation.getWhyItMatters(),
 										observation.getAdaCompliance(),
-										observation.getPriority(),
 										observation.getKey(),
-										observation.getRecommendations(),
-										observation.getType(), 
+										observation.getType(),
 										observation.getLabels(),
-										observation.getCategories());
+										observation.getCategories(), 
+										new HashSet<>());
 							}
 
 							//associate observation with element
@@ -297,4 +306,5 @@ public class AuditService {
 		log.warn("ADD OBSERVATION audit key :: "+key);
 		return audit_repo.addObservation(key, observation_key);
 	}
+
 }

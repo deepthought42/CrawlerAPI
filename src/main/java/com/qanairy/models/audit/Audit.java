@@ -99,7 +99,7 @@ public class Audit extends LookseeObject {
 	}
 	
 	public void setCategory(AuditCategory category) {
-		this.category = category.getShortName();
+		this.category = category.toString();
 	}
 	
 	

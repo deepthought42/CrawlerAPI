@@ -5,11 +5,11 @@ import java.util.Random;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.LookseeObject;
 import com.qanairy.models.enums.ObservationType;
-import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
@@ -18,34 +18,36 @@ import com.qanairy.models.enums.Priority;
 public class Observation extends LookseeObject{
 	private String description;
 	private String type;
-	private Set<String> recommendations = new HashSet<>();
 	private String why_it_matters;
 	private String ada_compliance;
-	private String priority;
+	
+	@Relationship(type = "HAS")
+	private Set<UXIssueMessage> message;	
+	
 	// labels are intended to contain things like subcategory, accessibility, etc
 	private Set<String> labels;
 	private Set<String> categories;
 	
-	public Observation() {}
+	public Observation() {
+		setMessages(new HashSet<>());
+	}
 	
 	public Observation(
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority, 
-			Set<String> recommendations,
 			ObservationType type, 
-			Set<String> labels, 
-			Set<String> categories
+			Set<String> labels,
+			Set<String> categories, 
+			Set<UXIssueMessage> ux_issue_message
 	) {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setPriority(priority);
-		setRecommendations(recommendations);
 		setType(type);
 		setLabels(labels);
 		setCategories(categories);
+		setMessages(ux_issue_message);
 		setKey(generateKey());
 	}
 	
@@ -53,21 +55,19 @@ public class Observation extends LookseeObject{
 			String description, 
 			String why_it_matters, 
 			String ada_compliance, 
-			Priority priority,
-			String key, 
-			Set<String> recommendations,
+			String key,
 			ObservationType type, 
 			Set<String> labels,
-			Set<String> categories
+			Set<String> categories, 
+			Set<UXIssueMessage> ux_issue_messages
 	) {
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setPriority(priority);
-		setRecommendations(recommendations);
 		setType(type);
 		setLabels(labels);
 		setCategories(categories);
+		setMessages(ux_issue_messages);
 		setKey(key);
 	}
 	
@@ -104,25 +104,6 @@ public class Observation extends LookseeObject{
 	public ObservationType getType() {
 		return ObservationType.create(this.type);
 	}
-
-	public Set<String> getRecommendations() {
-		return recommendations;
-	}
-
-	public void setRecommendations(Set<String> recommendations) {
-		this.recommendations = recommendations;
-	}
-	
-	public void addRecommendation(String recommendation) {
-		assert recommendation != null;
-		assert !recommendation.isEmpty();
-		
-		this.recommendations.add(recommendation);
-	}
-	
-	public boolean removeRecommendation(String recommendation) {
-		return this.getRecommendations().remove(recommendation);		
-	}
 	
 	public String getWhyItMatters() {
 		return why_it_matters;
@@ -140,13 +121,6 @@ public class Observation extends LookseeObject{
 		this.ada_compliance = ada_compliance;
 	}
 
-	public Priority getPriority() {
-		return Priority.create(this.priority);
-	}
-	
-	public void setPriority(Priority priority) {
-		this.priority = priority.getShortName();
-	}
 
 	public Set<String> getLabels() {
 		return labels;
@@ -162,5 +136,13 @@ public class Observation extends LookseeObject{
 
 	public void setCategories(Set<String> categories) {
 		this.categories = categories;
+	}
+
+	public Set<UXIssueMessage> getMessages() {
+		return message;
+	}
+
+	public void setMessages(Set<UXIssueMessage> message) {
+		this.message = message;
 	}
 }

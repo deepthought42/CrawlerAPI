@@ -7,9 +7,11 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditRecord;
-import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.audit.DomainAuditRecord;
+import com.qanairy.models.audit.PageAuditRecord;
 
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
@@ -22,12 +24,15 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key}),(a:Audit{key:$audit_key}) CREATE (ar)-[h:HAS]->(a) RETURN ar")
 	public void addAudit(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
+	
+	@Query("MATCH (dar:DomainAuditRecord{key:$domain_audit_record_key}),(par:PageAuditRecord{key:$page_audit_key}) CREATE (dar)-[h:HAS]->(par) RETURN dar")
+	public void addPageAuditRecord(@Param("domain_audit_record_key") String domain_audit_record_key, @Param("page_audit_key") String page_audit_key);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) RETURN audit,y,z")
 	public Set<Audit> getAllAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (d:Domain{host:$domain_host})-[]-(ar:AuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
-	public Optional<AuditRecord> findMostRecent(@Param("domain_host")  String domain_host);
+	@Query("MATCH (d:Domain{host:$domain_host})-[]-(ar:DomainAuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
+	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(@Param("domain_host")  String domain_host);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{category:'Color Management'}) WHERE audit.level='domain' RETURN audit")
 	public Set<Audit> getAllColorManagementAudits(@Param("audit_record_key") String audit_record_key);
@@ -71,6 +76,15 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) WHERE audit.level='page' RETURN audit,y,z ")
-	public Set<Audit> getAllPageAudits(@Param("audit_record_key") String audit_record_key);
+	@Query("MATCH (ar:DomainAuditRecord{key:$domain_audit_record_key})-[]->(page_audit:PageAuditRecord) RETURN page_audit")
+	public Set<PageAuditRecord> getAllPageAudits(@Param("domain_audit_record_key") String domain_audit_record_key);
+
+	@Query("MATCH (page_audit:PageAuditRecord{key:$page_audit_key})-[]->(audit:Audit) MATCH y=(audit)-[]->(observation:Observation) MATCH z=(observation)-->(f:UXIssueMessage) OPTIONAL MATCH zz=(f)-->(:ElementState) RETURN audit,y,z, zz")
+	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_key") String page_audit_key);
+
+	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{url:$url}) RETURN page_audit ORDER BY page_audit.created_at DESC LIMIT 1")
+	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(@Param("url") String url);
+
+	@Query("MATCH (page_audit:PageAuditRecord{key:$page_audit_key})-[]->(page_state:PageState) RETURN page_state LIMIT 1")
+	public PageState getPageStateForAuditRecord(@Param("page_audit_key") String page_audit_key);
 }

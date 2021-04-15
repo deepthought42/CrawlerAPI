@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.services.BrowserService;
 
 /**
  * A reference to a web page
@@ -197,7 +198,19 @@ public class PageState extends LookseeObject {
 	@Override
 	public PageState clone() {
 		List<ElementState> elements = new ArrayList<ElementState>(getElements());
-		return new PageState(getViewportScreenshotUrl(), elements, getSrc(), isLandable(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser(), getFullPageScreenshotUrl(), getFullPageWidth(), getFullPageHeight(), getUrl());
+		return new PageState(getViewportScreenshotUrl(), 
+							 elements, 
+							 getSrc(), 
+							 isLandable(), 
+							 getScrollXOffset(), 
+							 getScrollYOffset(), 
+							 getViewportWidth(), 
+							 getViewportHeight(), 
+							 getBrowser(), 
+							 getFullPageScreenshotUrl(), 
+							 getFullPageWidth(), 
+							 getFullPageHeight(), 
+							 getUrl());
 	}
 
 	@JsonIgnore
@@ -262,7 +275,7 @@ public class PageState extends LookseeObject {
 			key += element.getKey();
 		}
 		*/
-		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getSrc());
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.url + BrowserService.generalizeSrc(this.getSrc()) );
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {

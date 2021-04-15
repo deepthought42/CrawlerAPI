@@ -128,18 +128,17 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
 	    	
 	    	Set<String> categories = new HashSet<>();
-	    	categories.add(AuditCategory.AESTHETICS.getShortName());
+	    	categories.add(AuditCategory.AESTHETICS.toString());
 			
 	    	//add observation that no elements were found with padding
 			observations.add(new Observation(
 									"Padding was not used", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.LOW,
-									new HashSet<>(),
 									ObservationType.ELEMENT,
 									labels,
-									categories)); 
+									categories,
+									new HashSet<>())); 
 		}
 		
 
@@ -304,7 +303,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		int max_points = 0;
 		Set<Observation> observations = new HashSet<>();
 		//List<ElementState> multiple_of_8 = new ArrayList<>();
-		List<ElementState> non_scalable = new ArrayList<>();
+		Set<UXIssueMessage> non_scalable = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
@@ -314,7 +313,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
-					non_scalable.add(element);
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage( 
+																	Priority.MEDIUM,
+																	"Has at least one padding value that isn't a multiple of 8.", 
+																	element);
+					non_scalable.add(issue_message);
 				}
 				max_points++;
 			}
@@ -334,17 +337,17 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
-		observations.add(new ElementStateObservation(non_scalable, 
-													"Has at least one padding value that isn't a multiple of 8.", 
-													why_it_matters,
-													ada_compliance,
-													Priority.LOW,
-													recommendations,
-													labels,
-													categories));
+		observations.add(new Observation(
+									"Has at least one padding value that isn't a multiple of 8.",
+									why_it_matters,
+									ada_compliance,
+									ObservationType.ELEMENT,
+									labels,
+									categories,
+									non_scalable));
 		
 		return new Score(points_earned, max_points, observations);
 	}
@@ -384,7 +387,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		int points_earned = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<ElementState> unscalable_padding_elements = new ArrayList<>();
+		Set<UXIssueMessage> unscalable_padding_elements = new HashSet<>();
 
 		for(ElementState element : element_padding_map.keySet()) {
 			for(String padding_value : element_padding_map.get(element)) {
@@ -395,7 +398,11 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				max_vertical_score += 3;
 				
 				if(points_earned < 2) {
-					unscalable_padding_elements.add(element);
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+							Priority.MEDIUM,
+							"", 
+							element);
+					unscalable_padding_elements.add(issue_message);
 				}
 			}
 		}
@@ -405,17 +412,16 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			labels.add("responsiveness");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
-			observations.add(new ElementStateObservation(
-					unscalable_padding_elements, 
-					"Elements with unscalable padding units", 
-					"", 
-					"", 
-					Priority.LOW, 
-					new HashSet<>(),
-					labels,
-					categories));
+			observations.add(new Observation(
+									"Elements with unscalable padding units",
+									"",
+									"",
+									ObservationType.ELEMENT,
+									labels, 
+									categories,
+									unscalable_padding_elements));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

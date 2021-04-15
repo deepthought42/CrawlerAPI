@@ -20,13 +20,15 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.ElementIssueMessage;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
+import com.qanairy.models.audit.UXIssueMessage;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
@@ -304,7 +306,7 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 		int points_earned = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<Element> unscalable_padding_elements = new ArrayList<>();
+		Set<UXIssueMessage> unscalable_padding_elements = new HashSet<>();
 
 		for(Element element : element_padding_map.keySet()) {
 			for(String padding_value : element_padding_map.get(element)) {
@@ -315,7 +317,12 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 				max_vertical_score += 3;
 				
 				if(points_earned < 2) {
-					unscalable_padding_elements.add(element);
+					String recommendation = "For the most scalable experience, try using scalable measures such as %";
+					ElementIssueMessage element_issue = new ElementIssueMessage(
+																element,
+																Priority.MEDIUM,
+																recommendation);
+					unscalable_padding_elements.add(element_issue);
 				}
 			}
 		}
@@ -326,17 +333,16 @@ public class DomainPaddingAudit implements IExecutableDomainAudit {
 			labels.add("whitespace");
 			
 			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.name());
+			categories.add(AuditCategory.AESTHETICS.toString());
 			
-			observations.add(new ElementObservation(
-										unscalable_padding_elements, 
-										"Elements with unscalable padding units", 
+			observations.add(new Observation(
+										"Elements with unscalable padding units",
 										"", 
 										"", 
-										Priority.MEDIUM, 
-										new HashSet<>(), 
+										ObservationType.ELEMENT,
 										labels,
-										categories));
+										categories,
+										unscalable_padding_elements));
 		}
 		
 		return new Score(points_earned, max_vertical_score, observations);

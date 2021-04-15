@@ -15,24 +15,25 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.audit.DomainAuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.PageVersionService;
+import com.qanairy.services.DomainService;
 
 /**
  *	API for interacting with {@link User} data
  */
 @RestController
-@RequestMapping("/pages")
-public class PageController {
+@RequestMapping("/domains")
+public class DomainAuditController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	private AccountService account_service;
 	
 	@Autowired
-	private PageVersionService page_service;
+	private DomainService domain_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;
@@ -45,9 +46,9 @@ public class PageController {
      * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:actions')")
-    @RequestMapping(method = RequestMethod.GET, path="/$page_key/insights")
-    public PerformanceInsight getInsights(HttpServletRequest request,
-			@PathVariable(value="page_key", required=true) String page_key
+    @RequestMapping(method = RequestMethod.GET, path="/audits")
+    public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
+			@PathVariable(value="host", required=true) String host
 	) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -57,8 +58,8 @@ public class PageController {
     		throw new UnknownAccountException();
     	}
     	
-        log.info("finding all page insights :: "+page_key);
-        return page_service.findLatestInsight(page_key);
+        log.info("finding all page insights :: "+host);
+        return domain_service.getMostRecentAuditRecord(host).get();
     }
     
 }

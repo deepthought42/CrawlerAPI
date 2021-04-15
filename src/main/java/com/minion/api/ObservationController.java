@@ -1,28 +1,14 @@
 package com.minion.api;
 
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.Observation;
-import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.ObservationType;
-import com.qanairy.models.experience.PerformanceInsight;
-import com.qanairy.services.ObservationService;
 
 /**
  *	API for interacting with {@link Observation} objects 
@@ -31,9 +17,6 @@ import com.qanairy.services.ObservationService;
 @RequestMapping("/observations")
 public class ObservationController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	private ObservationService observation_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;

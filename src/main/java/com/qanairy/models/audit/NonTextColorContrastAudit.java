@@ -5,29 +5,25 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
-import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.ObservationService;
@@ -41,8 +37,6 @@ import com.qanairy.services.PageStateService;
 public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(NonTextColorContrastAudit.class);
-
-	List<Element> flagged_elements = new ArrayList<>();
 
 	@Autowired
 	private PageStateService page_state_service;
@@ -69,10 +63,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		List<ElementState> non_text_elements = getAllButtons(elements);
 		non_text_elements.addAll(getAllInputs(elements));
-
-		log.warn("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-		log.warn("non text elements identified :: "+non_text_elements.size());
-		
+	
 		return evaluateNonTextContrast(page_state, non_text_elements);
 	}
 
@@ -110,9 +101,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		int score = 0;
 		int max_points = 0;
-		List<ElementState> low_contrast_elements = new ArrayList<>();
-		List<ElementState> mid_contrast_elements = new ArrayList<>();
-		List<ElementState> high_contrast_elements = new ArrayList<>();
+		Set<UXIssueMessage> low_contrast_elements = new HashSet<>();
+		Set<UXIssueMessage> mid_contrast_elements = new HashSet<>();
 
 		for(ElementState element : non_text_elements) {
 			//get parent element of button
@@ -130,12 +120,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					if(element.getXpath().contains(element_state.getXpath())) {
 						int element_area = element.getWidth() * element.getHeight();
 						int parent_area = element_state.getWidth() * element_state.getHeight();
-						
-						
-						log.warn("element area  :   "+element_area);
-						log.warn("parent area  :   "+parent_area);
-						log.warn("is parent twice the size of element ??    "+(parent_area > (element_area * 2)));
-						
+							
 						if(parent_area > (element_area * 3)) {
 							//parent = element_state;
 							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
@@ -148,11 +133,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
 				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
 
-				log.warn("page state url ::   "+page_state.getUrl());
-				log.warn("parent element :: "+parent_bkg);
-				log.warn("element key :: "+element.getKey());
-				//log.warn("parent element :: "+parent.getXpath());
-				log.warn("element xpath :: "+element.getXpath());
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
 				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
 				ColorData element_bkg = new ColorData(element.getBackgroundColor());
@@ -176,14 +156,27 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
 					//no points are rewarded for low contrast
-					low_contrast_elements.add(element);
+					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
+																				Priority.HIGH,
+																				"Elements with a contrast below 3.0",
+																				contrast,
+																				element_bkg.rgb(),
+																				parent_bkg.rgb(),
+																				element);
+					low_contrast_elements.add(low_contrast_issue);
 				}else if(contrast >= 3.0 && contrast < 4.5) {
 					score += 1;
-					mid_contrast_elements.add(element);
+					ColorContrastIssueMessage mid_contrast_issue = new ColorContrastIssueMessage(
+																				Priority.MEDIUM,
+																				"Elements with a contrast between 3 and 4.5",
+																				contrast,
+																				element_bkg.rgb(),
+																				parent_bkg.rgb(),
+																				element);
+					mid_contrast_elements.add(mid_contrast_issue);
 				}
 				else {
 					score += 2;
-					high_contrast_elements.add(element);
 				}
 				max_points+=2;
 			}
@@ -209,36 +202,34 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
-		labels.add("color");
+		labels.add("color contrast");
 		
 		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.name());
+		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		List<Observation> observations = new ArrayList<>();
 		if(!low_contrast_elements.isEmpty()) {
-			ElementStateObservation low_contrast_observation = new ElementStateObservation(
-																		low_contrast_elements, 
-																		"Elements with a contrast below 3.0",
-																		why_it_matters, 
-																		ada_compliance, 
-																		Priority.HIGH,
-																		recommendations,
-																		labels,
-									    								categories);
+			Observation low_contrast_observation = new Observation(
+															"Elements with a contrast below 3.0",
+															why_it_matters,
+															ada_compliance,
+															ObservationType.COLOR_CONTRAST,
+															labels,
+															categories,
+															low_contrast_elements);
 			
 			observations.add(observation_service.save(low_contrast_observation));
 		}
 		
 		if(!mid_contrast_elements.isEmpty()) {
-			ElementStateObservation mid_contrast_observation = new ElementStateObservation(
-																		mid_contrast_elements, 
-																		"Elements with a contrast between 3.0 and 4.5", 
-																		why_it_matters, 
-																		ada_compliance, 
-																		Priority.HIGH,
-																		recommendations,
-																		labels,
-									    								categories);
+			Observation mid_contrast_observation = new Observation(
+															"Elements with a contrast between 3.0 and 4.5",
+															why_it_matters,
+															ada_compliance,
+															ObservationType.COLOR_CONTRAST,
+															labels,
+															categories,
+															mid_contrast_elements);
 			
 			observations.add(observation_service.save(mid_contrast_observation));
 		}
@@ -280,26 +271,5 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		return bottom.contentEquals(top)
 				&& top.contentEquals(left)
 				&& left.contentEquals(right);
-	}
-
-
-	private ColorUsageStat extractMostUsedColor(ElementState button) throws IOException {
-		assert button != null;
-		
-		ColorUsageStat most_used_color = null;
-
-		float most_common_color = 0.0f;
-		URL url = new URL(button.getScreenshotUrl());
-		BufferedImage screenshot_reader = ImageIO.read(url);
-		List<ColorUsageStat> image_props = CloudVisionUtils.extractImageProperties(screenshot_reader);
-		//get most used color as background color
-		for(ColorUsageStat stat : image_props) {
-			if(most_common_color < stat.getPixelPercent()){
-				most_common_color = stat.getPixelPercent();
-				most_used_color = stat;
-			}
-		}
-		
-		return most_used_color;
 	}
 }

@@ -47,7 +47,7 @@ import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.audit.DomainAuditRecord;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ElementObservationTwoWayMapping;
-import com.qanairy.models.audit.ElementStateObservation;
+import com.qanairy.models.audit.ElementStateIssueMessage;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditCategory;
@@ -247,19 +247,6 @@ public class AuditController {
     	//add observation to page
 
     	observation.setKey(observation.generateKey());
-    	
-    	
-    	if(ObservationType.ELEMENT.equals(observation.getType())) {
-    		observation = new ElementStateObservation(
-    								new ArrayList<>(), 
-    								observation.getDescription(), 
-    								observation.getWhyItMatters(), 
-    								observation.getAdaCompliance(), 
-    								observation.getPriority(), 
-    								observation.getRecommendations(),
-    								observation.getLabels(),
-    								observation.getCategories());
-    	}
 		observation = observation_service.save( observation );
 		audit_service.addObservation(key, observation.getKey());
 		return observation;

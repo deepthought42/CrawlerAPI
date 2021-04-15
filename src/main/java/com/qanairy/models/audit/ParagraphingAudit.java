@@ -21,6 +21,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -52,13 +53,10 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<ElementState> good_sentence_observations = new ArrayList<>();
-		List<ElementState> meh_sentence_observations = new ArrayList<>();
-		List<ElementState> poor_sentence_observations = new ArrayList<>();
+		Set<UXIssueMessage> meh_sentence_observations = new HashSet<>();
+		Set<UXIssueMessage> poor_sentence_observations = new HashSet<>();
 
-		
-		List<ElementState> good_paragraph_observations = new ArrayList<>();
-		List<ElementState> poor_paragraph_observations = new ArrayList<>();
+		Set<UXIssueMessage> poor_paragraph_observations = new HashSet<>();
 		
 		//get all elements that are text containers
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
@@ -78,11 +76,12 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 					List<Sentence> sentences = CloudNLPUtils.extractSentences(paragraph);
 					Score paragraph_score = calculateParagraphScore(sentences.size());
 
-					if(paragraph_score.getPointsAchieved() == 1) {
-						good_paragraph_observations.add(element);
-					}
-					else if(paragraph_score.getPointsAchieved() == 0) {
-						poor_paragraph_observations.add(element);
+					if(paragraph_score.getPointsAchieved() == 0) {
+						ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+								Priority.MEDIUM, 
+								"Paragraphs with more than 5 sentences", 
+								element);
+						poor_paragraph_observations.add(issue_message);
 					}
 					
 					points_earned += paragraph_score.getPointsAchieved();
@@ -91,14 +90,21 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						System.err.println("sentence :: " + sentence.getText().getContent());
 						
 						Score sentence_score = calculateSentenceScore(sentence.getText().getContent());
-						if(sentence_score.getPointsAchieved() == 2) {
-							good_sentence_observations.add(element);
-						}
-						else if(sentence_score.getPointsAchieved() == 1) {
-							meh_sentence_observations.add(element);
+						if(sentence_score.getPointsAchieved() == 1) {
+							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
+							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																			Priority.MEDIUM, 
+																			recommendation, 
+																			element);
+							meh_sentence_observations.add(issue_message);
 						}
 						else if(sentence_score.getPointsAchieved() == 0) {
-							poor_sentence_observations.add(element);
+							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
+							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																			Priority.MEDIUM, 
+																			recommendation, 
+																			element);
+							poor_sentence_observations.add(issue_message);
 						}
 						points_earned += sentence_score.getPointsAchieved();
 						max_points += sentence_score.getMaxPossiblePoints();						
@@ -137,15 +143,14 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		categories.add(AuditCategory.CONTENT.getShortName());
 		
 		if(!poor_paragraph_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(
-									poor_paragraph_observations, 
-									"Paragraphs with more than 5 sentences", 
-									why_it_matters, 
-									ada_compliance, 
-									Priority.MEDIUM, 
-									new HashSet<>(),
+			observations.add(new Observation(
+									"Paragraphs with more than 5 sentences",
+									why_it_matters,
+									ada_compliance,
+									ObservationType.ELEMENT,
 									labels,
-									categories));
+									categories,
+									poor_paragraph_observations));
 		}
 		
 		//Sentence observations
@@ -156,27 +161,25 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		*/
 		
 		if(!meh_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(
-									meh_sentence_observations, 
+			observations.add(new Observation(
 									"Sentences between 10 and 20 words long", 
 									why_it_matters, 
 									ada_compliance, 
-									Priority.MEDIUM,
-									new HashSet<>(),
+									ObservationType.ELEMENT,
 									labels,
-									categories));
+									categories,
+									meh_sentence_observations));
 		}
 		
 		if(!poor_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(
-									poor_sentence_observations, 
+			observations.add(new Observation(
 									"Sentences with over 20 words", 
 									why_it_matters, 
 									ada_compliance,
-									Priority.MEDIUM, 
-									new HashSet<>(),
-									labels,
-									categories));
+									ObservationType.ELEMENT,
+									labels, 
+									categories,
+									poor_sentence_observations));
 		}
 		
 		

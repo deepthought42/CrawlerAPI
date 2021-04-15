@@ -14,14 +14,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PageVersion;
-import com.qanairy.models.audit.domain.DomainColorPaletteAudit;
 import com.qanairy.models.audit.domain.DomainFontAudit;
 import com.qanairy.models.audit.domain.DomainImageAltTextAudit;
 import com.qanairy.models.audit.domain.DomainMarginAudit;
 import com.qanairy.models.audit.domain.DomainNonTextColorContrastAudit;
 import com.qanairy.models.audit.domain.DomainPaddingAudit;
 import com.qanairy.models.audit.domain.DomainTextColorContrastAudit;
-import com.qanairy.models.audit.domain.DomainTitleAndHeaderAudit;
 import com.qanairy.models.audit.domain.DomainTypefaceAudit;
 import com.qanairy.models.enums.AuditCategory;
 
@@ -75,18 +73,11 @@ public class AuditFactory {
 	@Autowired
 	private DomainMarginAudit domain_margin_auditor;
 	
-
-	@Autowired
-	private DomainColorPaletteAudit domain_color_palette_auditor;
-	
 	@Autowired
 	private DomainTextColorContrastAudit domain_text_contrast_auditor;
 	
 	@Autowired
 	private DomainNonTextColorContrastAudit domain_non_text_contrast_auditor;
-	
-	@Autowired
-	private DomainTitleAndHeaderAudit domain_title_and_header_auditor;
 	
 	@Autowired
 	private DomainTypefaceAudit domain_typeface_auditor;

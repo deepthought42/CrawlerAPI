@@ -18,7 +18,6 @@ import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageVersionService;
 
 /**
@@ -34,9 +33,6 @@ public class PageController {
 	
 	@Autowired
 	private PageVersionService page_service;
-	
-	@Autowired
-	private ObservationService observation_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;

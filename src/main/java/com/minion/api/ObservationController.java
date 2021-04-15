@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.audit.Observation;
-import com.qanairy.services.ObservationService;
 
 /**
  *	API for interacting with {@link Observation} objects 
@@ -18,9 +17,6 @@ import com.qanairy.services.ObservationService;
 @RequestMapping("/observations")
 public class ObservationController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	private ObservationService observation_service;
 	
     @Autowired
     protected WebSecurityConfig appConfig;

@@ -6,19 +6,18 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class ElementObservation extends Observation {	
+public class ElementIssueMessage extends UXIssueMessage {	
 	@Relationship(type = "FOR")
-	private List<Element> elements;
+	private Element element;
 	
-	public ElementObservation() {}
+	public ElementIssueMessage() {}
 	
-	public ElementObservation(
+	public ElementIssueMessage(
 			List<Element> elements, 
 			String description, 
 			String why_it_matters, 
@@ -28,14 +27,17 @@ public class ElementObservation extends Observation {
 			Set<String> labels, 
 			Set<String> categories
 	) {
+		setKey(this.generateKey());
+	}
+	
+	public ElementIssueMessage(
+			Element elements, 
+			Priority priority,
+			String recommendation
+	) {
 		setElements(elements);
-		setDescription(description);
-		setWhyItMatters(why_it_matters);
-		setAdaCompliance(ada_compliance);
 		setPriority(priority);
-		setLabels(labels);
-		setCategories(categories);
-		setRecommendations(recommendations);
+		setRecommendation(recommendation);
 		setKey(this.generateKey());
 	}
 	
@@ -49,21 +51,12 @@ public class ElementObservation extends Observation {
 	}
 */
 
-	public List<Element> getElements() {
-		return elements;
+	public Element getElement() {
+		return element;
 	}
 
 
-	public void setElements(List<Element> elements) {
-		this.elements = elements;
-	}
-	
-	public boolean addElements(List<Element> elements) {
-		return this.elements.addAll(elements);
-	}
-
-	@Override
-	public ObservationType getType() {
-		return ObservationType.ELEMENT;
+	public void setElements(Element element) {
+		this.element = element;
 	}
 }

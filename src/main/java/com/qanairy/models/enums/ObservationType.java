@@ -13,6 +13,7 @@ public enum ObservationType {
 	STYLE_MISSING("Style Missing"),
 	PAGE_STATE("Page"),
 	TYPEFACE("Typeface"),
+	COLOR_CONTRAST("Color Contrast"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

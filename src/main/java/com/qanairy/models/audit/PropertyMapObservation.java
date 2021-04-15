@@ -29,7 +29,6 @@ public class PropertyMapObservation extends Observation{
 		setDescription(description);
 		setWhyItMatters(why_it_matters);
 		setAdaCompliance(ada_compliance);
-		setPriority(priority);
 		setType(ObservationType.PROPERTY_MAP);
 		setKey(this.generateKey());
 	}

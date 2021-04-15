@@ -21,6 +21,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 
@@ -53,10 +54,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<ElementState> images_without_alt_text =  new ArrayList<>();
-		List<ElementState> images_with_alt_text =  new ArrayList<>();
-		List<ElementState> images_without_alt_text_defined =  new ArrayList<>();
-		List<ElementState> images_with_alt_text_defined =  new ArrayList<>();
+		Set<UXIssueMessage> images_without_alt_text =  new HashSet<>();
+		Set<UXIssueMessage> images_without_alt_text_defined =  new HashSet<>();
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
@@ -89,18 +88,24 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			//Check if element has "alt" attribute present
 			if(element.hasAttr("alt")) {
 				score++;
-				images_with_alt_text.add(image_element);
 			}
 			else {
-				images_without_alt_text.add(image_element);
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH, 
+																"Images without alternative text attribute", 
+																image_element);
+				images_without_alt_text.add(issue_message);
 			}
 			
 			if(element.attr("alt").isEmpty()) {
-				images_without_alt_text_defined.add(image_element);
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH, 
+																"Images without alternative text defined as a non empty string value", 
+																image_element);
+				images_without_alt_text_defined.add(issue_message);
 			}
 			else {
 				score++;
-				images_with_alt_text_defined.add(image_element);
 			}
 		}
 		
@@ -108,15 +113,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		if(!images_without_alt_text.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(
-					images_without_alt_text, 
+			Observation observation = new Observation(
 					"Images without alternative text attribute", 
 					why_it_matters, 
 					ada_compliance,
-					Priority.HIGH, 
-					new HashSet<>(),
-					labels,
-					categories);
+					ObservationType.ELEMENT,
+					labels, 
+					categories,
+					images_without_alt_text);
 			
 			observations.add(observation_service.save(observation));
 		}
@@ -131,15 +135,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		*/
 		
 		if(!images_without_alt_text_defined.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(
-					images_without_alt_text_defined, 
-					"Images without alternative text defined as a non empty string value", 
-					why_it_matters, 
-					ada_compliance,
-					Priority.HIGH, 
-					new HashSet<>(),
-					labels,
-					categories);
+			Observation observation = new Observation( 
+											"Images without alternative text defined as a non empty string value", 
+											why_it_matters, 
+											ada_compliance,
+											ObservationType.ELEMENT,
+											labels, 
+											categories,
+											images_without_alt_text_defined);
 			
 			observations.add(observation_service.save(observation));
 		}

@@ -24,7 +24,8 @@ import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.ElementObservationMap;
 import com.qanairy.models.audit.ObservationElementMap;
-import com.qanairy.models.audit.ElementStateObservation;
+import com.qanairy.models.audit.UXIssueMessage;
+import com.qanairy.models.audit.ElementStateIssueMessage;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
@@ -168,9 +169,14 @@ public class AuditService {
 			) {
 				for(Observation observation : audit.getObservations()) {
 					Set<SimpleElement> elements = new HashSet<>();
-
+					List<ElementState> element_states = new ArrayList<>();
+					
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						Set<UXIssueMessage> messages = observation.getMessages();
+						for(UXIssueMessage message : messages) {
+							element_states.add(((ElementStateIssueMessage)message).getElement());
+						}
+						
 						for(ElementState element : element_states) {
 							elements.add(new SimpleElement(element.getKey(),
 														   element.getScreenshotUrl(), 
@@ -188,12 +194,11 @@ public class AuditService {
 																		observation.getDescription(),
 																		observation.getWhyItMatters(),
 																		observation.getAdaCompliance(),
-																		observation.getPriority(),
 																		observation.getKey(),
-																		observation.getRecommendations(),
-																		observation.getType(), 
+																		observation.getType(),
 																		observation.getLabels(),
-																		observation.getCategories());
+																		observation.getCategories(), 
+																		new HashSet<>());
 						observation_element = new ObservationElementMap(simple_observation, elements);
 					}
 					else{
@@ -230,8 +235,13 @@ public class AuditService {
 					&& url.getPath().contentEquals(page_url.getPath())
 			) {
 				for(Observation observation : audit.getObservations()) {
+					List<ElementState> element_states = new ArrayList<>();
+
 					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						List<ElementState> element_states = ((ElementStateObservation)observation).getElements();
+						Set<UXIssueMessage> messages = observation.getMessages();
+						for(UXIssueMessage message : messages) {
+							element_states.add(((ElementStateIssueMessage)message).getElement());
+						}
 						
 						for(ElementState element : element_states) {
 							if(!element_state_map.containsKey(element.getKey())) {
@@ -251,12 +261,11 @@ public class AuditService {
 										observation.getDescription(),
 										observation.getWhyItMatters(),
 										observation.getAdaCompliance(),
-										observation.getPriority(),
 										observation.getKey(),
-										observation.getRecommendations(),
-										observation.getType(), 
+										observation.getType(),
 										observation.getLabels(),
-										observation.getCategories());
+										observation.getCategories(), 
+										new HashSet<>());
 							}
 
 							//associate observation with element

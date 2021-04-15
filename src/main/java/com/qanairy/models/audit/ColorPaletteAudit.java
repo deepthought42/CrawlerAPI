@@ -27,9 +27,11 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.UXIssueMessageService;
 import com.qanairy.utils.ImageUtils;
 
 
@@ -46,6 +48,9 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ObservationService observation_service;
+	
+	@Autowired
+	private UXIssueMessageService ux_issue_service;
 		
 	public ColorPaletteAudit() {}
 
@@ -152,22 +157,22 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		ColorPaletteObservation observation = new ColorPaletteObservation(
-														palette,
-														color_scheme, 
-														"This is a color scheme description", 
-														why_it_matters, 
-														ada_compliance, 
-														Priority.MEDIUM,
-														new HashSet<>(), 
-														labels,
-														categories);
+		String recommendation = "Color palettes with 2 main colors are perceived as most pleasant to the human eye";
 		
-		observations.add(observation_service.save(observation));
-
+		UXIssueMessage palette_issue_message = new ColorPaletteIssueMessage(
+																Priority.HIGH,
+																recommendation,
+																new ArrayList<>(),
+																palette, 
+																color_scheme);
+		
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
+		issue_messages.add(ux_issue_service.save(palette_issue_message));
+		
+		Observation observation = new Observation("", why_it_matters, ada_compliance, ObservationType.COLOR_PALETTE, labels, categories, issue_messages);
 		//score colors found against scheme
 		Score score = ColorPaletteUtils.getPaletteScore(palette, color_scheme);
-		
+		observations.add(observation_service.save(observation));
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));
 		

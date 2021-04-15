@@ -24,6 +24,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -123,23 +124,18 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														primary_typefaces, 
 														"Only 1 typeface was found", 
 														why_it_matters, 
-														ada_compliance, 
-														recommendations,
-														Priority.MEDIUM );
+														ada_compliance );
 			
 			observations.add(observation_service.save(observation));
 		}
 		else if(primary_typefaces.size() > 2) {
 			score += 0;
-			Set<String> recommendations = new HashSet<>();
 
 			TypefacesObservation observation = new TypefacesObservation(
 														primary_typefaces, 
 														"Identified " +primary_typefaces.size()+" typefaces.  ( " + primary_typefaces+ "). With too many typefaces your user experience will seem incoherent and inconsistent. Simplicity is best and you should have no more than 2 typefaces", 
 														why_it_matters, 
-														ada_compliance, 
-														recommendations,
-														Priority.MEDIUM );
+														ada_compliance );
 			observations.add(observation_service.save(observation));
 		}
 		total_possible_points += 2;		
@@ -183,9 +179,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 															forward_connection_graph.get(font), 
 															"Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.",
 															why_it_matters, 
-															ada_compliance, 
-															recommendations, 
-															Priority.MEDIUM );
+															ada_compliance );
 				observations.add(observation_service.save(observation));
 			}
 			else {
@@ -202,7 +196,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		//GET TYPEFACES ACTUALLY RENDERED BY SYSTEM AND GENERATE SCORE BASED ON TYPEFACE CASCADE SETTINGS
 		List<ElementState> element_list = BrowserUtils.getTextElements(page_state_service.getElementStates(page_state.getKey()));
 		Set<String> observed_fonts = new HashSet<>();
-		List<ElementState> no_fallback_font = new ArrayList<>();
+		Set<UXIssueMessage> no_fallback_font = new HashSet<>();
 		
 		for(ElementState element : element_list) {
 			
@@ -212,7 +206,12 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				score +=1;
-				no_fallback_font.add(element);
+				String recommendation = "Check that the primary font is included and loaded correctly";
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM, 
+																	recommendation, 
+																	element);
+				no_fallback_font.add(issue_message);
 			}
 			
 			total_possible_points += 2;
@@ -228,15 +227,14 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		ElementStateObservation observation = new ElementStateObservation(
-														no_fallback_font, 
-														"Text element rendered with a fallback typeface instead of the desired font.", 
-														why_it_matters, 
-														ada_compliance,
-														Priority.MEDIUM,
-														new HashSet<>(),
-														labels,
-														categories);
+		Observation observation = new Observation(
+											"Text element rendered with a fallback typeface instead of the desired font.", 
+											why_it_matters, 
+											ada_compliance,
+											ObservationType.ELEMENT,
+											labels,
+											categories,
+											no_fallback_font);
 		observations.add(observation_service.save(observation));
 		
 		return new Audit(AuditCategory.AESTHETICS,

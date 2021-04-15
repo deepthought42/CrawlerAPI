@@ -28,6 +28,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
@@ -68,11 +69,11 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		List<ElementState> links_without_href_attribute =  new ArrayList<>();
-		List<ElementState> links_without_href_value =  new ArrayList<>();
-		List<ElementState> invalid_links = new ArrayList<>();
-		List<ElementState> dead_links = new ArrayList<>();
-		List<ElementState> non_labeled_links = new ArrayList<>();
+		Set<UXIssueMessage> links_without_href_attribute =  new HashSet<>();
+		Set<UXIssueMessage> links_without_href_value =  new HashSet<>();
+		Set<UXIssueMessage> invalid_links = new HashSet<>();
+		Set<UXIssueMessage> dead_links = new HashSet<>();
+		Set<UXIssueMessage> non_labeled_links = new HashSet<>();
 	
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
@@ -97,8 +98,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				score++;
 			}
 			else {
-				
-				links_without_href_attribute.add(link);
+				String recommendation = "Make sure links have a url set for the href value.";
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH,
+																recommendation, 
+																link);
+				links_without_href_attribute.add(issue_message);
 				continue;
 			}
 			String href = element.attr("href");
@@ -119,7 +124,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				score++;
 			}
 			else {
-				links_without_href_value.add(link);
+				String recommendation = "Make sure links have a url set for the href value.";
+				ElementStateIssueMessage issue_Message = new ElementStateIssueMessage(
+																Priority.HIGH, 
+																recommendation, 
+																link);
+				links_without_href_value.add(issue_Message);
 				continue;
 			}
 			
@@ -157,10 +167,22 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 				score++;
 			} catch (MalformedURLException e) {
-				invalid_links.add(link);
+				String recommendation = "Make sure links point to a valid url.";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH, 
+																recommendation, 
+																link);
+				invalid_links.add(issue_message);
 				e.printStackTrace();
 			} catch (URISyntaxException e) {
-				invalid_links.add(link);
+				String recommendation = "Make sure links point to a valid url.";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH, 
+																recommendation, 
+																link);
+				invalid_links.add(issue_message);
 				e.printStackTrace();
 			}
 			
@@ -180,10 +202,22 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					score++;
 				}
 				else {
-					dead_links.add(link);
+					String recommendaiotn = "Make sure links point to a valid url.";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.HIGH,
+																	recommendaiotn,
+																	link);
+					dead_links.add(issue_message);
 				}
 			} catch (IOException e) {
-				dead_links.add(link);
+				String recommendaiotn = "Make sure links point to a valid url.";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH,
+																recommendaiotn,
+																link);
+				dead_links.add(issue_message);
 				e.printStackTrace();
 			}
 			
@@ -222,8 +256,14 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				 
 				 if(!element_includes_text) {
 					 log.warn("link doesn't have a text label");
+					String recommendation = "For best usability make sure links include text.";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.HIGH,
+																	recommendation, 
+																	link);
 					 //does element use image as links?
-					 non_labeled_links.add(link);
+					 non_labeled_links.add(issue_message);
 				 }
 				 else {
 					 score++;
@@ -259,83 +299,66 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());
 		
 		if(!links_without_href_attribute.isEmpty()) {
-			Set<String> recommendations = new HashSet<>();
-			recommendations.add("Make sure links have a url set for the href value.");
 			
-			ElementStateObservation observation = new ElementStateObservation(
-															links_without_href_attribute, 
-															"Links without an 'href' attribute present", 
-															why_it_matters, 
-															ada_compliance, 
-															Priority.HIGH,
-															recommendations, 
-															labels,
-															categories);
+			Observation observation = new Observation(
+												"Links without an 'href' attribute present",
+												why_it_matters,
+												ada_compliance,
+												ObservationType.ELEMENT,
+												labels,
+												categories,
+												links_without_href_attribute);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!links_without_href_value.isEmpty()) {
-			Set<String> recommendations = new HashSet<>();
-			recommendations.add("Make sure links have a url set for the href value.");
 			
-			ElementStateObservation observation = new ElementStateObservation(
-															links_without_href_value, 
-															"Links with empty 'href' values", 
-															why_it_matters, 
-															ada_compliance, 
-															Priority.HIGH,
-															recommendations,
-															labels,
-															categories);
+			Observation observation = new Observation(
+												"Links with empty 'href' values", 
+												why_it_matters, 
+												ada_compliance,
+												ObservationType.ELEMENT,
+												labels,
+												categories,
+												links_without_href_value);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!invalid_links.isEmpty()) {
-			Set<String> recommendations = new HashSet<>();
-			recommendations.add("Make sure links point to a valid url.");
 			
-			ElementStateObservation observation = new ElementStateObservation(
-															invalid_links, 
-															"Links with invalid addresses", 
-															why_it_matters, 
-															ada_compliance, 
-															Priority.HIGH,
-															recommendations,
-															labels,
-															categories);
+			Observation observation = new Observation(
+												"Links with invalid addresses", 
+												why_it_matters, 
+												ada_compliance,
+												ObservationType.ELEMENT,
+												labels,
+												categories,
+												invalid_links);
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!dead_links.isEmpty()) {
-			Set<String> recommendations = new HashSet<>();
-			recommendations.add("Make sure links point to a valid url.");
-			
-			ElementStateObservation observation = new ElementStateObservation(
-														dead_links, 
-														"Dead links", 
-														why_it_matters, 
-														ada_compliance, 
-														Priority.HIGH,
-														recommendations,
-														labels,
-														categories);
+			Observation observation = new Observation(
+												"Dead links", 
+												why_it_matters, 
+												ada_compliance, 
+												ObservationType.ELEMENT,
+												labels,
+												categories,
+												dead_links);
 			
 			observations.add(observation_service.save(observation));
 		}
 		
 		if(!non_labeled_links.isEmpty()) {
-			Set<String> recommendations = new HashSet<>();
-			recommendations.add("For best usability make sure links include text.");
-			
-			ElementStateObservation observation = new ElementStateObservation(
-															non_labeled_links, 
-															"Links without text", 
-															why_it_matters, 
-															ada_compliance, 
-															Priority.HIGH,
-															recommendations,
-															labels,
-															categories);
+			Observation observation = new Observation(
+												"Links without text",
+												why_it_matters,
+												ada_compliance,
+												ObservationType.ELEMENT,
+												labels,
+												categories,
+												non_labeled_links);
 			
 			observations.add(observation_service.save(observation));
 		}

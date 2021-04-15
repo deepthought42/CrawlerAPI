@@ -29,13 +29,15 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Element;
 import com.qanairy.models.PageVersion;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.ElementObservation;
+import com.qanairy.models.audit.ElementIssueMessage;
 import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
+import com.qanairy.models.audit.UXIssueMessage;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageVersionService;
@@ -277,7 +279,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		int vertical_score = 0;
 		int max_vertical_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<Element> unscalable_margin_elements = new ArrayList<>();
+		Set<UXIssueMessage> unscalable_margin_elements = new HashSet<>();
 
 		for(Element element : element_margin_map.keySet()) {
 			for(String margin_value : element_margin_map.get(element)) {
@@ -288,7 +290,11 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 				max_vertical_score += 3;
 				
 				if(vertical_score == 1) {
-					unscalable_margin_elements.add(element);
+					ElementIssueMessage observation = new ElementIssueMessage(
+							element,
+							Priority.LOW, 
+							"Elements with unscalable margin units");
+					unscalable_margin_elements.add(observation);
 				}
 			}
 		}
@@ -303,14 +309,17 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		if(!unscalable_margin_elements.isEmpty()) {
-			observations.add(new ElementObservation(
-										unscalable_margin_elements, 
-										"Elements with unscalable margin units", 
-										why_it_matters, 
-										ada_compliance, 
-										Priority.LOW, 
-										new HashSet<>(), 
-										labels, null));
+			String recommendation = "";
+			String description = "Elements with unscalable margin units";
+			
+			observations.add(new Observation(
+										description,
+										why_it_matters,
+										ada_compliance,
+										ObservationType.ELEMENT,
+										labels,
+										categories,
+										unscalable_margin_elements));
 		}
 		return new Score(vertical_score, max_vertical_score, observations);
 	}
@@ -379,7 +388,7 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 		int score = 0;
 		int max_score = 0;
 		Set<Observation> observations = new HashSet<>();
-		List<Element> flagged_elements = new ArrayList<>();
+		Set<UXIssueMessage> flagged_elements = new HashSet<>();
 		for(Element element : elements) {
 			if(element == null) {
 				log.warn("margin padding audit Element :: "+element);
@@ -416,7 +425,11 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 				
 				if(margin_used_as_padding) {
 					score += 1;
-					flagged_elements.add(element);
+					ElementIssueMessage element_message = new ElementIssueMessage(
+							element, 
+							Priority.LOW, 
+							"Change margin to padding in css for this element");
+					flagged_elements.add(element_message);
 				}
 				max_score += 3;
 			}
@@ -429,15 +442,14 @@ public class DomainMarginAudit implements IExecutableDomainAudit {
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
 			
-			observations.add(new ElementObservation(
-									flagged_elements, 
-									"Elements that appear to use margin as padding", 
-									"Using margin as padding is discouraged because...", 
-									"There are no ADA requirements for margin use", 
-									Priority.LOW, 
-									new HashSet<>(), 
+			observations.add(new Observation(
+									"Elements that appear to use margin as padding",
+									"Using margin as padding is discouraged because...",
+									"There are no ADA requirements for margin use",
+									ObservationType.ELEMENT,
 									labels,
-									categories));
+									categories,
+									flagged_elements));
 		}
 		return new Score(score, max_score, observations);
 	}

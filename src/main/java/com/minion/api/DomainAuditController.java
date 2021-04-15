@@ -15,14 +15,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.audit.DomainAuditRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ObservationService;
-import com.qanairy.services.PageVersionService;
 
 /**
  *	API for interacting with {@link User} data

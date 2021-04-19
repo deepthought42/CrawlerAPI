@@ -2,9 +2,11 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.ColorScheme;
 import com.qanairy.models.enums.Priority;
 
@@ -26,11 +28,13 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 	 * Constructs new object
 	 * 
 	 * @param priority
+	 * @param description TODO
 	 * @param recommendation
 	 * @param colors
 	 * @param palette_colors
 	 * @param color_scheme
-	 * 
+	 * @param category TODO
+	 * @param labels TODO
 	 * @pre priority != null;
 	 * @pre recommendation != null;
 	 * @pre !recommendation.isEmpty();
@@ -40,10 +44,13 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 	 */
 	public ColorPaletteIssueMessage(
 			Priority priority, 
+			String description, 
 			String recommendation, 
 			List<String> colors, 
 			List<PaletteColor> palette_colors, 
-			ColorScheme color_scheme
+			ColorScheme color_scheme, 
+			AuditCategory category, 
+			Set<String> labels
 	) {
 		assert priority != null;
 		assert recommendation != null;
@@ -51,12 +58,16 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 		assert colors != null;
 		assert palette_colors != null;
 		assert color_scheme != null;
+		assert category != null;
+		assert labels != null;
 		
 		setPriority(priority);
 		setRecommendation(recommendation);
 		setColors(colors);
 		setPaletteColors(palette_colors);
 		setColorScheme(color_scheme);
+		setLabels(labels);
+		setCategory(category);
 		setKey(this.generateKey());
 	}
 

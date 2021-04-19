@@ -4,8 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -72,7 +74,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 				" Images of text are not used and text is resizable. San-Serif typeface has" + 
 				" been used across the pages.";
 		
-		List<Observation> observations = new ArrayList<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		int score = 0;
 		int max_score = 0;
@@ -147,16 +149,20 @@ public class FontAudit implements IExecutablePageStateAudit {
 			
 			log.warn("#############################################################################");
 		}
+		String description = "";
 		
 		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.FONT,
 						 score,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_score,
-						 page_state.getUrl());
+						 page_state.getUrl(), 
+						 why_it_matters, 
+						 ada_compliance, 
+						 description);
 	}
 	
 

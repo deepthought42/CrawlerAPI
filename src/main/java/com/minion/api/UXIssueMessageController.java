@@ -8,14 +8,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.UXIssueMessage;
 
 /**
- *	API for interacting with {@link Observation} objects 
+ *	API for interacting with {@link UXIssueMessage} objects 
  */
 @RestController
-@RequestMapping("/observations")
-public class ObservationController {
+@RequestMapping("/issues")
+public class UXIssueMessageController {
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
     @Autowired
@@ -34,7 +35,7 @@ public class ObservationController {
    // @PreAuthorize("hasAuthority('read:actions')")
     /*
     @RequestMapping(method = RequestMethod.POST, path="/$key/recommendations/add")
-    public Observation addRecommendation(HttpServletRequest request,
+    public UXIssueMessage addRecommendation(HttpServletRequest request,
 			final @PathVariable(value="key", required=true) String key,
     		final @RequestBody(required=true) String recommendation
 	) throws UnknownAccountException {
@@ -50,9 +51,9 @@ public class ObservationController {
     	log.warn("Recommendation string to be saved :: "+recommendation);
     	//find audit by key and add recommendation
     	Set<String> labels = new HashSet<>();
-    	Observation observation = observation_service.addRecommendation(key, recommendation);
-    	if(ObservationType.ELEMENT.equals(observation.getType())){
-    		return new Observation(
+    	UXIssueMessage observation = observation_service.addRecommendation(key, recommendation);
+    	if(UXIssueMessageType.ELEMENT.equals(observation.getType())){
+    		return new UXIssueMessage(
     							observation.getDescription(), 
     							observation.getWhyItMatters(), 
     							observation.getAdaCompliance(), 
@@ -83,7 +84,7 @@ public class ObservationController {
     		@RequestParam(required=true) String recommendation
 	) {
     	//find audit by key and add recommendation
-    	Observation observation = observation_service.findByKey(observation_key);
+    	UXIssueMessage observation = observation_service.findByKey(observation_key);
     	observation.removeRecommendation(recommendation);
        	
        	//save and return
@@ -91,7 +92,7 @@ public class ObservationController {
     }
     
     @RequestMapping(method = RequestMethod.POST, path="/$key/priority")
-    public Observation updatePriority(HttpServletRequest request,
+    public UXIssueMessage updatePriority(HttpServletRequest request,
 			final @PathVariable(value="key", required=true) String key,
 			final @RequestParam(value="priority", required=true) String priority
 	) throws UnknownAccountException {

@@ -4,26 +4,26 @@ import java.util.Set;
 
 import com.qanairy.models.SimpleElement;
 
-public class ElementObservationMap {
-	private Set<Observation> observations;
+public class ElementIssueMap {
+	private Set<UXIssueMessage> issues;
 	private SimpleElement element;
 
 	
-	public ElementObservationMap(
-			Set<Observation> observation,
+	public ElementIssueMap(
+			Set<UXIssueMessage> issues,
 			SimpleElement elements
 	) {
-		setObservations(observation);
+		setIssues(issues);
 		setElement(elements);
 	}
 
 
-	public Set<Observation> getObservations() {
-		return observations;
+	public Set<UXIssueMessage> getIssues() {
+		return issues;
 	}
 
-	public void setObservations(Set<Observation> observations) {
-		this.observations = observations;
+	public void setIssues(Set<UXIssueMessage> issue_messages) {
+		this.issues = issue_messages;
 	}
 
 	public SimpleElement getElement() {

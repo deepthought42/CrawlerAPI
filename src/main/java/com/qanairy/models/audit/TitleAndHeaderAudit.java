@@ -2,7 +2,6 @@ package com.qanairy.models.audit;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,6 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.ElementStateUtils;
@@ -46,30 +44,35 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		List<Observation> observations = new ArrayList<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		//List<PageVersion> pages = domain_service.getPages(domain.getHost());
 
 		Score title_score = scorePageTitles(page_state);
 		Score favicon_score = scoreFavicon(page_state);
 		Score heading_score = scoreHeadings(page_state);
 		
-		observations.addAll(title_score.getObservations());
-		observations.addAll(favicon_score.getObservations());
-		observations.addAll(heading_score.getObservations());
+		issue_messages.addAll(title_score.getIssueMessages());
+		issue_messages.addAll(favicon_score.getIssueMessages());
+		issue_messages.addAll(heading_score.getIssueMessages());
 		
 		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved() + heading_score.getPointsAchieved();
 		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints() + heading_score.getMaxPossiblePoints();
 		
 		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
+		String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
+		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.TITLES,
 						 points,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl());
+						 page_state.getUrl(), 
+						 why_it_matters, 
+						 ada_compliance, 
+						 "");
 	}
 
 	/**
@@ -83,21 +86,23 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 
 		int points_achieved = 0;
 		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		//generate score for ordered and unordered lists and their headers
+		// TODO :: INCOMPLETE SCORING OF ORDERED LIST HEADERS 
 		Score list_score = scoreOrderedListHeaders(page_state);
 		points_achieved += list_score.getPointsAchieved();
 		max_points += list_score.getMaxPossiblePoints();
-		observations.addAll(list_score.getObservations());
+		issue_messages.addAll(list_score.getIssueMessages());
 		
 		//score text elements and their headers
+		// TODO :: INCOMPLETE SCORING OF TEXT HEADER ELEMENTS
 		Score text_block_header_score = scoreTextElementHeaders(page_state);
 		points_achieved += text_block_header_score.getPointsAchieved();
 		max_points += text_block_header_score.getMaxPossiblePoints();
-		observations.addAll(text_block_header_score.getObservations());	
+		issue_messages.addAll(text_block_header_score.getIssueMessages());	
 		
-		return new Score(points_achieved, max_points, observations);
+		return new Score(points_achieved, max_points, issue_messages);
 	}
 
 	/**
@@ -201,7 +206,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		
 		int points = 0;
 		int max_points = 1;
-		Set<Observation> observations = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		//score title of page state
 		if(hasFavicon(page_state.getSrc())) {
@@ -213,29 +218,30 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			//check if resource can actually be reached
 		}
 		else {
-			String description = "favicon is missing";
-			String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
-			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
 			String recommendation = "";
 			
 			Set<String> labels = new HashSet<>();
 			labels.add("accessibility");
 			labels.add("color");
+			labels.add("seo");
 			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
 			Set<UXIssueMessage> favicon_issues = new HashSet<>();
+			String description = "favicon is missing";
 
 			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
 															page_state, 
-															recommendation, 
-															Priority.HIGH);
+															description, 
+															recommendation,
+															Priority.HIGH, 
+															AuditCategory.INFORMATION_ARCHITECTURE,
+															labels);
 			favicon_issues.add(favicon_issue);
-			observations.add(new Observation(description, why_it_matters, ada_compliance, ObservationType.PAGE_STATE, labels, categories, favicon_issues));
 			points += 0;			
 		}
 		
-		return new Score(points, max_points, observations);
+		return new Score(points, max_points, issue_messages);
 	}
 
 	/**
@@ -264,7 +270,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	private Score scorePageTitles(PageState page_state) {
 		assert page_state != null;
 		
-		Set<Observation> observations = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		int points = 0;
 		int max_points = 1;
 		String title = BrowserUtils.getTitle(page_state);
@@ -274,14 +280,15 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		}
 		else {
 
-			String description = "pages without titles";
+			String description = "page without title";
 			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
 			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
-			String recommendation = "";
+			String recommendation = "Add a title to the header tag in the html. eg. <title>Page title here</title>";
 			
 			Set<String> labels = new HashSet<>();
 			labels.add("accessibility");
 			labels.add("color");
+			labels.add("seo");
 			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
@@ -289,14 +296,17 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 
 			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
 															page_state, 
-															recommendation, 
-															Priority.HIGH);
+															description, 
+															recommendation,
+															Priority.HIGH,
+															AuditCategory.INFORMATION_ARCHITECTURE,
+															labels);
 			favicon_issues.add(favicon_issue);
-			observations.add(new Observation(description, why_it_matters, ada_compliance, ObservationType.PAGE_STATE, labels, categories, favicon_issues));
+			issue_messages.add(favicon_issue);
 
 			points += 0;				
 		}
 		
-		return new Score(points, max_points, observations);
+		return new Score(points, max_points, issue_messages);
 	}
 }

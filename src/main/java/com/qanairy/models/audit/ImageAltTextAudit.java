@@ -12,7 +12,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ElementState;
@@ -21,9 +20,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
-import com.qanairy.services.ObservationService;
 
 /**
  * Responsible for executing an audit on the images on a page to determine adherence to alternate text best practices 
@@ -33,9 +30,6 @@ import com.qanairy.services.ObservationService;
 public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ImageAltTextAudit.class);
-	
-	@Autowired
-	private ObservationService observation_service;
 	
 	public ImageAltTextAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -54,8 +48,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		Set<UXIssueMessage> images_without_alt_text =  new HashSet<>();
-		Set<UXIssueMessage> images_without_alt_text_defined =  new HashSet<>();
+		Set<UXIssueMessage> issue_messages =  new HashSet<>();
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
@@ -77,7 +70,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 				" ‘Alt’ text for images present on the website.";
 	
 		
-		List<Observation> observations = new ArrayList<>();
 		//score each link element
 		int score = 0;
 		for(ElementState image_element : image_elements) {
@@ -90,19 +82,27 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 				score++;
 			}
 			else {
+				String description = "Images without alternative text attribute";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
+																description, 
 																"Images without alternative text attribute", 
-																image_element);
-				images_without_alt_text.add(issue_message);
+																image_element,
+																AuditCategory.INFORMATION_ARCHITECTURE, 
+																labels);
+				issue_messages.add(issue_message);
 			}
 			
 			if(element.attr("alt").isEmpty()) {
+				String description = "Images without alternative text defined as a non empty string value";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
+																description, 
 																"Images without alternative text defined as a non empty string value", 
-																image_element);
-				images_without_alt_text_defined.add(issue_message);
+																image_element,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels);
+				issue_messages.add(issue_message);
 			}
 			else {
 				score++;
@@ -111,41 +111,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
-		
-		if(!images_without_alt_text.isEmpty()) {
-			Observation observation = new Observation(
-					"Images without alternative text attribute", 
-					why_it_matters, 
-					ada_compliance,
-					ObservationType.ELEMENT,
-					labels, 
-					categories,
-					images_without_alt_text);
-			
-			observations.add(observation_service.save(observation));
-		}
-		
-		/*
-		if(!images_with_alt_text.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(
-					images_with_alt_text, 
-					"Images that have alternative text attribute. These elements are more accessible");
-			observations.add(observation_service.save(observation));
-		}
-		*/
-		
-		if(!images_without_alt_text_defined.isEmpty()) {
-			Observation observation = new Observation( 
-											"Images without alternative text defined as a non empty string value", 
-											why_it_matters, 
-											ada_compliance,
-											ObservationType.ELEMENT,
-											labels, 
-											categories,
-											images_without_alt_text_defined);
-			
-			observations.add(observation_service.save(observation));
-		}
 		
 		/*
 		if(!images_with_alt_text_defined.isEmpty()) {
@@ -157,15 +122,19 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		*/
 		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
+		String description = "Images without alternative text defined as a non empty string value";
 		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
 						 score,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 image_elements.size()*2,
-						 page_state.getUrl());
+						 page_state.getUrl(), 
+						 why_it_matters, 
+						 ada_compliance, 
+						 description);
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}

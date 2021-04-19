@@ -3,7 +3,6 @@ package com.qanairy.models.audit;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +20,6 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
@@ -52,11 +50,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
-		
-		Set<UXIssueMessage> meh_sentence_observations = new HashSet<>();
-		Set<UXIssueMessage> poor_sentence_observations = new HashSet<>();
 
-		Set<UXIssueMessage> poor_paragraph_observations = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		//get all elements that are text containers
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
@@ -75,14 +70,22 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				try {
 					List<Sentence> sentences = CloudNLPUtils.extractSentences(paragraph);
 					Score paragraph_score = calculateParagraphScore(sentences.size());
-
+					
+					Set<String> labels = new HashSet<>();
+					labels.add("written content");
+					
 					if(paragraph_score.getPointsAchieved() == 0) {
+						String description = "Paragraphs with more than 5 sentences";
 						ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 								Priority.MEDIUM, 
-								"Paragraphs with more than 5 sentences", 
-								element);
-						poor_paragraph_observations.add(issue_message);
+								description, 
+								"", 
+								element,
+								AuditCategory.CONTENT,
+								labels);
+						issue_messages.add(issue_message);
 					}
+
 					
 					points_earned += paragraph_score.getPointsAchieved();
 					max_points += paragraph_score.getMaxPossiblePoints();
@@ -92,19 +95,27 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						Score sentence_score = calculateSentenceScore(sentence.getText().getContent());
 						if(sentence_score.getPointsAchieved() == 1) {
 							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
+							String description = "Sentence is too long";
 							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																			Priority.MEDIUM, 
-																			recommendation, 
-																			element);
-							meh_sentence_observations.add(issue_message);
+																			description, 
+																			recommendation,
+																			element,
+																			AuditCategory.CONTENT,
+																			labels);
+							issue_messages.add(issue_message);
 						}
 						else if(sentence_score.getPointsAchieved() == 0) {
 							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
+							String description = "Sentence is too long";
 							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																			Priority.MEDIUM, 
+																			description, 
 																			recommendation, 
-																			element);
-							poor_sentence_observations.add(issue_message);
+																			element,
+																			AuditCategory.CONTENT,
+																			labels);
+							issue_messages.add(issue_message);
 						}
 						points_earned += sentence_score.getPointsAchieved();
 						max_points += sentence_score.getMaxPossiblePoints();						
@@ -128,12 +139,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" this category, reading level needs to be taken into consideration when" + 
 				" writing content and paragraphing. ";
 
-		List<Observation> observations = new ArrayList<>();
-		/*
-		if(!good_paragraph_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(good_paragraph_observations, "Great job keeping these text blocks to under 5 sentences"));
-		}
-		*/
 
 		Set<String> labels = new HashSet<>();
 		labels.add("content");
@@ -142,55 +147,18 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.CONTENT.getShortName());
 		
-		if(!poor_paragraph_observations.isEmpty()) {
-			observations.add(new Observation(
-									"Paragraphs with more than 5 sentences",
-									why_it_matters,
-									ada_compliance,
-									ObservationType.ELEMENT,
-									labels,
-									categories,
-									poor_paragraph_observations));
-		}
-		
-		//Sentence observations
-		/*
-		if(!good_sentence_observations.isEmpty()) {
-			observations.add(new ElementStateObservation(good_sentence_observations, "Great job keeping sentences to under 10 words!!!"));
-		}
-		*/
-		
-		if(!meh_sentence_observations.isEmpty()) {
-			observations.add(new Observation(
-									"Sentences between 10 and 20 words long", 
-									why_it_matters, 
-									ada_compliance, 
-									ObservationType.ELEMENT,
-									labels,
-									categories,
-									meh_sentence_observations));
-		}
-		
-		if(!poor_sentence_observations.isEmpty()) {
-			observations.add(new Observation(
-									"Sentences with over 20 words", 
-									why_it_matters, 
-									ada_compliance,
-									ObservationType.ELEMENT,
-									labels, 
-									categories,
-									poor_sentence_observations));
-		}
-		
-		
+		String description = "";
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT, 
 						 AuditName.PARAGRAPHING, 
 						 points_earned, 
-						 observations, 
+						 issue_messages, 
 						 AuditLevel.PAGE, 
 						 max_points, 
-						 page_state.getUrl()); 
+						 page_state.getUrl(), 
+						 why_it_matters, 
+						 ada_compliance, 
+						 description); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}

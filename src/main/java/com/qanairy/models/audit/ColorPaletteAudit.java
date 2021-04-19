@@ -27,9 +27,7 @@ import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
 import com.qanairy.models.enums.ColorScheme;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
-import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.UXIssueMessageService;
 import com.qanairy.utils.ImageUtils;
@@ -45,9 +43,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private ObservationService observation_service;
 	
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
@@ -149,30 +144,32 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(colors);
 		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
 
-		List<Observation> observations = new ArrayList<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("color");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
-		
+		String description = "Sub-optimal color palette";
 		String recommendation = "Color palettes with 2 main colors are perceived as most pleasant to the human eye";
+				
 		
 		UXIssueMessage palette_issue_message = new ColorPaletteIssueMessage(
 																Priority.HIGH,
+																description,
 																recommendation,
 																new ArrayList<>(),
-																palette, 
-																color_scheme);
+																palette,
+																color_scheme,
+																AuditCategory.AESTHETICS,
+																labels);
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		issue_messages.add(ux_issue_service.save(palette_issue_message));
 		
-		Observation observation = new Observation("", why_it_matters, ada_compliance, ObservationType.COLOR_PALETTE, labels, categories, issue_messages);
 		//score colors found against scheme
 		Score score = ColorPaletteUtils.getPaletteScore(palette, color_scheme);
-		observations.add(observation_service.save(observation));
+		//observations.add(observation_service.save(observation));
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));
 		
@@ -180,10 +177,13 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.COLOR_PALETTE,
 						 score.getPointsAchieved(),
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 score.getMaxPossiblePoints(),
-						 page_state.getUrl());
+						 page_state.getUrl(),
+						 why_it_matters, 
+						 ada_compliance, 
+						 "");
 	}
 	
 	/**

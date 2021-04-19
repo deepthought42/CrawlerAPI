@@ -2,27 +2,43 @@ package com.qanairy.models.audit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.qanairy.models.Element;
-import com.qanairy.models.enums.ObservationType;
+import com.qanairy.models.enums.AuditCategory;
+import com.qanairy.models.enums.Priority;
 
 /**
  * A observation of potential error for a given {@link Element element} 
  */
-public class TypefacesObservation extends Observation {	
+public class TypefacesIssue extends UXIssueMessage {	
 	private List<String> typefaces = new ArrayList<>();
 	
-	public TypefacesObservation() {}
+	public TypefacesIssue() {}
 	
-	public TypefacesObservation(
+	public TypefacesIssue(
 			List<String> typefaces, 
 			String description, 
-			String why_it_matters, 
-			String ada_compliance) {
+			String recommendation, 
+			Priority priority, 
+			AuditCategory category, 
+			Set<String> labels) {
+		assert typefaces != null;
+		assert !typefaces.isEmpty();
+		assert description != null;
+		assert !description.isEmpty();
+		assert recommendation != null;
+		assert !recommendation.isEmpty();
+		assert priority != null;
+		assert category != null;
+		assert labels != null;
+		
 		setTypefaces(typefaces);
 		setDescription(description);
-		setWhyItMatters(why_it_matters);
-		setAdaCompliance(ada_compliance);
+		setRecommendation(recommendation);
+		setPriority(priority);
+		setCategory(category);
+		setLabels(labels);
 		setKey(this.generateKey());
 	}
 	
@@ -47,11 +63,5 @@ public class TypefacesObservation extends Observation {
 	
 	public boolean addTypefaces(List<String> typefaces) {
 		return this.typefaces.addAll(typefaces);
-	}
-	
-
-	@Override
-	public ObservationType getType() {
-		return ObservationType.TYPEFACE;
 	}
 }

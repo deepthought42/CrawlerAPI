@@ -21,13 +21,11 @@ import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
@@ -62,7 +60,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		assert page != null;
 
 		
-		List<Observation> observations = new ArrayList<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Map<ElementState, List<String>> elements_padding_map = new HashMap<>(); 
 		//get all pages
 	
@@ -107,7 +105,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 
 		//Score unit_score = evaluateUnits(elements_padding_map);
 
-		observations.addAll(spacing_score.getObservations());
+		issue_messages.addAll(spacing_score.getIssueMessages());
 //		observations.addAll(unit_score.getObservations());
 		
 		int points = spacing_score.getPointsAchieved();
@@ -116,40 +114,32 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		//calculate score for question "Is padding used as padding?" NOTE: The expected calculation expects that paddings are not used as padding
 		log.warn("PADDING SCORE  :::   "+ (spacing_score.getPointsAchieved()) + " / " + (spacing_score.getMaxPossiblePoints() ) );	
 
-		if(points == 0) {
-			
-			String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
-					+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
-					+ " have screens that are the same size as those used by the design team, but all monitor sizes"
-					+ " are multiple of 8.";
-			
-			String ada_compliance = "There are no ADA requirements for use of padding";
-	    	Set<String> labels = new HashSet<>();
-	    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
-	    	
-	    	Set<String> categories = new HashSet<>();
-	    	categories.add(AuditCategory.AESTHETICS.toString());
-			
-	    	//add observation that no elements were found with padding
-			observations.add(new Observation(
-									"Padding was not used", 
-									why_it_matters, 
-									ada_compliance, 
-									ObservationType.ELEMENT,
-									labels,
-									categories,
-									new HashSet<>())); 
-		}
+		
+		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
+				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
+				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
+				+ " are multiple of 8.";
+		
+		
+		String ada_compliance = "There are no ADA requirements for use of padding";
+    	Set<String> labels = new HashSet<>();
+    	labels.add(AuditSubcategory.WHITESPACE.getShortName());
+    	
+    	Set<String> categories = new HashSet<>();
+    	categories.add(AuditCategory.AESTHETICS.toString());
 		
 
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.WHITESPACE,
 						 AuditName.PADDING,
 						 points,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page.getUrl());
+						 page.getUrl(),
+						 why_it_matters,
+						 ada_compliance,
+						 "");
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -182,7 +172,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		int points_earned = 0;
 		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		Map<String, List<Double>> gcd_map = new HashMap<>();
 		Map<String, List<Double>> units = new HashMap<>();
@@ -284,7 +274,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 			max_points += 3;
 		}
 
-		return new Score(points_earned, max_points, observations);
+		return new Score(points_earned, max_points, issue_messages);
 	}
 
 	/**
@@ -301,9 +291,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		int points_earned = 0;
 		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
-		//List<ElementState> multiple_of_8 = new ArrayList<>();
-		Set<UXIssueMessage> non_scalable = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
@@ -313,43 +301,26 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
+					String description = "At least one margin value isn't a multiple of 8.";
+					Set<String> labels = new HashSet<>();
+					labels.add("whitespace");
+					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage( 
 																	Priority.MEDIUM,
-																	"Has at least one padding value that isn't a multiple of 8.", 
-																	element);
-					non_scalable.add(issue_message);
+																	description, 
+																	"For best responsiveness make sure margin values are a multiple of 8.", 
+																	element,
+																	AuditCategory.AESTHETICS,
+																	labels);
+					issue_messages.add(issue_message);
 				}
 				max_points++;
 			}
 		}
 		
-		String why_it_matters = "Keeping your use of paddings to a miminum, and when you use them making sure you"
-				+ " the padding values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
-				+ " have screens that are the same size as those used by the design team, but all monitor sizes"
-				+ " are multiple of 8.";
 		
-		String ada_compliance = "There are no ADA requirements for use of padding";
-
-		Set<String> recommendations = new HashSet<>();
-		recommendations.add("For a responsive design we recommend using padding values that are a multiple of 8.");
 		
-		Set<String> labels = new HashSet<>();
-		labels.add("whitespace");
-		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.toString());
-		
-		//observations.add(new ElementStateObservation(multiple_of_8, "Padding values are multiple of 8"));
-		observations.add(new Observation(
-									"Has at least one padding value that isn't a multiple of 8.",
-									why_it_matters,
-									ada_compliance,
-									ObservationType.ELEMENT,
-									labels,
-									categories,
-									non_scalable));
-		
-		return new Score(points_earned, max_points, observations);
+		return new Score(points_earned, max_points, issue_messages);
 	}
 	
 	public static boolean isMultipleOf8(String size_str) {
@@ -386,8 +357,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		
 		int points_earned = 0;
 		int max_vertical_score = 0;
-		Set<Observation> observations = new HashSet<>();
-		Set<UXIssueMessage> unscalable_padding_elements = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		for(ElementState element : element_padding_map.keySet()) {
 			for(String padding_value : element_padding_map.get(element)) {
@@ -398,33 +368,24 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				max_vertical_score += 3;
 				
 				if(points_earned < 2) {
+					String description = "At least one margin value isn't a multiple of 8.";
+					Set<String> labels = new HashSet<>();
+					labels.add("whitespace");
+					labels.add("responsiveness");
+					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 							Priority.MEDIUM,
-							"", 
-							element);
-					unscalable_padding_elements.add(issue_message);
+							description, 
+							"For best responsiveness make sure margin values are a multiple of 8.", 
+							element,
+							AuditCategory.AESTHETICS,
+							labels);
+					issue_messages.add(issue_message);
 				}
 			}
 		}
-		if(!unscalable_padding_elements.isEmpty()) {
-			Set<String> labels = new HashSet<>();
-			labels.add("whitespace");
-			labels.add("responsiveness");
-			
-			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.toString());
-			
-			observations.add(new Observation(
-									"Elements with unscalable padding units",
-									"",
-									"",
-									ObservationType.ELEMENT,
-									labels, 
-									categories,
-									unscalable_padding_elements));
-		}
 		
-		return new Score(points_earned, max_vertical_score, observations);
+		return new Score(points_earned, max_vertical_score, issue_messages);
 	}
 	
 	

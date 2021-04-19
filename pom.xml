@@ -542,7 +542,28 @@
 		    <artifactId>joda-time</artifactId>
 		    <version>2.10.10</version>
 		</dependency>
-				
+		
+		<!-- https://mvnrepository.com/artifact/com.chimbori.crux/crux -->
+		<!-- https://mvnrepository.com/artifact/io.whelk.flesch.kincaid/whelk-flesch-kincaid -->
+		<dependency>
+		    <groupId>io.whelk.flesch.kincaid</groupId>
+		    <artifactId>whelk-flesch-kincaid</artifactId>
+		    <version>0.1.6</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
+		<dependency>
+		    <groupId>edu.stanford.nlp</groupId>
+		    <artifactId>stanford-corenlp</artifactId>
+		    <version>4.2.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-pos-tagger -->
+		<dependency>
+		    <groupId>edu.stanford.nlp</groupId>
+		    <artifactId>stanford-corenlp</artifactId>
+			<version>4.2.0</version>
+		    <classifier>models</classifier>
+		</dependency>
+
 	</dependencies>
 	
 	<repositories>

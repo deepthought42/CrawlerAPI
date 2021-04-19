@@ -1,11 +1,9 @@
 package com.qanairy.models.audit;
 
-import java.util.List;
-import java.util.Set;
-
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
+import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
 /**
@@ -18,26 +16,16 @@ public class ElementIssueMessage extends UXIssueMessage {
 	public ElementIssueMessage() {}
 	
 	public ElementIssueMessage(
-			List<Element> elements, 
-			String description, 
-			String why_it_matters, 
-			String ada_compliance, 
-			Priority priority,
-			Set<String> recommendations, 
-			Set<String> labels, 
-			Set<String> categories
-	) {
-		setKey(this.generateKey());
-	}
-	
-	public ElementIssueMessage(
 			Element elements, 
-			Priority priority,
-			String recommendation
+			String description,
+			String recommendation, 
+			Priority priority
 	) {
 		setElements(elements);
 		setPriority(priority);
 		setRecommendation(recommendation);
+		setDescription(description);
+		setType(ObservationType.ELEMENT);
 		setKey(this.generateKey());
 	}
 	

@@ -4,23 +4,20 @@ import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 
 /**
- * Details observations for when a page is devoid of a certain styling such as padding, 
+ * Details issues for when a page is devoid of a certain styling such as padding, 
  * that should be used, because it adds extra white-space to the content
  */
-public class StylingMissingObservation extends Observation {
+public class StylingMissingIssueMessage extends UXIssueMessage {
 	
-	public StylingMissingObservation(
+	public StylingMissingIssueMessage(
 			String description, 
-			String why_it_matters, 
-			String ada_compliance, 
+			String recommendation, 
 			Priority priority) {
 		super();
 		
 		assert description != null;
-		
+		setRecommendation(recommendation);
 		setDescription(description);
-		setWhyItMatters(why_it_matters);
-		setAdaCompliance(ada_compliance);
 		setType(ObservationType.STYLE_MISSING);
 		setKey(generateKey());
 	}

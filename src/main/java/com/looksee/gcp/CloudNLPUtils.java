@@ -26,6 +26,18 @@ public class CloudNLPUtils {
 
 		// Detects the sentiment of the text
 		List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();
+		
+		language.shutdown();
+		return sentences;
+	}
+	
+	public static List<Sentence> extractParagraphs(String text) throws IOException {
+	    LanguageServiceClient language = LanguageServiceClient.create();
+		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+
+		// Detects the sentiment of the text
+		List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();
+		
 		language.shutdown();
 		return sentences;
 	}

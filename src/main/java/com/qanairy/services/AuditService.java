@@ -22,11 +22,10 @@ import com.qanairy.models.PageStateAudits;
 import com.qanairy.models.SimpleElement;
 import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.ElementObservationMap;
-import com.qanairy.models.audit.ObservationElementMap;
+import com.qanairy.models.audit.ElementIssueMap;
+import com.qanairy.models.audit.IssueElementMap;
 import com.qanairy.models.audit.UXIssueMessage;
 import com.qanairy.models.audit.ElementStateIssueMessage;
-import com.qanairy.models.audit.Observation;
 import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.repository.AuditRepository;
 import com.qanairy.utils.BrowserUtils;
@@ -80,10 +79,10 @@ public class AuditService {
 			log.warn("points :: "+audit.getPoints() + " / " + audit.getTotalPossiblePoints());
 			log.warn(" :: "+audit.getCategory());
 			log.warn(" :: "+audit.getLevel());
-			log.warn(" :: "+audit.getObservations());
-			for(Observation observation : audit.getObservations()) {
-				log.warn(" observation description :  "+observation.getDescription());
-				log.warn(" observation type :  "+observation.getType());
+			log.warn(" :: "+audit.getMessages());
+			for(UXIssueMessage issue_msg : audit.getMessages()) {
+				log.warn(" observation description :  "+issue_msg.getDescription());
+				log.warn(" observation type :  "+issue_msg.getType());
 			}
 			log.warn("Subcategory  :: "+audit.getName());
 			
@@ -103,10 +102,10 @@ public class AuditService {
 		return IterableUtils.toList(audit_repo.findAll());
 	}
 
-	public List<Observation> getObservations(String audit_key) {
+	public Set<UXIssueMessage> getIssues(String audit_key) {
 		assert audit_key != null;
 		assert !audit_key.isEmpty();
-		return audit_repo.findObservationsForAudit(audit_key);
+		return audit_repo.findIssueMessages(audit_key);
 	}
 
 	/**
@@ -149,17 +148,17 @@ public class AuditService {
 	}
 
 	/**
-	 * Creates a {@link List} of {@linkplain ObservationElementMap} objects based on a {@link Set} of {@link Audit audits}
+	 * Creates a {@link List} of {@linkplain IssueElementMap} objects based on a {@link Set} of {@link Audit audits}
 	 * @param audits
 	 * @param page_url
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ObservationElementMap> generateObservationElementMap(
+	public Set<IssueElementMap> generateIssueElementMap(
 			Set<Audit> audits, 
 			URL page_url
 	) throws MalformedURLException {
-		Set<ObservationElementMap> audit_elements = new HashSet<>();
+		Set<IssueElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {
 			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
@@ -167,44 +166,33 @@ public class AuditService {
 			if(url.getHost().contentEquals(page_url.getHost()) 
 					&& url.getPath().contentEquals(page_url.getPath())
 			) {
-				for(Observation observation : audit.getObservations()) {
+				log.warn("preparing to process audit messages :: "+audit.getMessages());
+
+				for(UXIssueMessage issue_msg : audit.getMessages()) {
+					log.warn("issue message :: "+issue_msg.getDescription());
+
 					Set<SimpleElement> elements = new HashSet<>();
-					List<ElementState> element_states = new ArrayList<>();
-					
-					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						Set<UXIssueMessage> messages = observation.getMessages();
-						for(UXIssueMessage message : messages) {
-							element_states.add(((ElementStateIssueMessage)message).getElement());
-						}
+					IssueElementMap observation_element = null;
+
+					if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
+						log.warn("issue is an element type");
+
+						ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
 						
-						for(ElementState element : element_states) {
-							elements.add(new SimpleElement(element.getKey(),
-														   element.getScreenshotUrl(), 
-														   element.getXLocation(), 
-														   element.getYLocation(), 
-														   element.getWidth(), 
-														   element.getHeight(),
-														   element.getXpath()));
-						}
-					}
-					
-					ObservationElementMap observation_element = null;
-					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						Observation simple_observation = new Observation(
-																		observation.getDescription(),
-																		observation.getWhyItMatters(),
-																		observation.getAdaCompliance(),
-																		observation.getKey(),
-																		observation.getType(),
-																		observation.getLabels(),
-																		observation.getCategories(), 
-																		new HashSet<>());
-						observation_element = new ObservationElementMap(simple_observation, elements);
+						elements.add(new SimpleElement(element.getKey(),
+													   element.getScreenshotUrl(), 
+													   element.getXLocation(), 
+													   element.getYLocation(), 
+													   element.getWidth(), 
+													   element.getHeight(),
+													   element.getXpath()));
+						observation_element = new IssueElementMap(issue_msg, elements);
 					}
 					else{
-						observation_element = new ObservationElementMap(observation, elements);
+						observation_element = new IssueElementMap(issue_msg, elements);
 					}
 					audit_elements.add(observation_element);
+					 
 				}
 			
 				
@@ -222,89 +210,75 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementObservationMap> generateElementObservationMap(Set<Audit> audits, URL page_url) throws MalformedURLException {
-		Set<ElementObservationMap> element_observations = new HashSet<>();
+	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits, URL page_url) throws MalformedURLException {
+		log.warn("generating element observation map.....");
 		
-		Map<String, Set<Observation>> observation_map = new HashMap<>(); 
+		Set<ElementIssueMap> element_issues = new HashSet<>();
+		
+		Map<String, Set<UXIssueMessage>> issue_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
+		
 		for(Audit audit : audits) {
 			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
 			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
 			if(url.getHost().contentEquals(page_url.getHost()) 
-					&& url.getPath().contentEquals(page_url.getPath())
+				&& url.getPath().contentEquals(page_url.getPath())
 			) {
-				for(Observation observation : audit.getObservations()) {
-					List<ElementState> element_states = new ArrayList<>();
-
-					if(observation.getType().equals(ObservationType.ELEMENT)) {
-						Set<UXIssueMessage> messages = observation.getMessages();
-						for(UXIssueMessage message : messages) {
-							element_states.add(((ElementStateIssueMessage)message).getElement());
-						}
+				log.warn("preparing to process audit messages :: "+audit.getMessages());
+				for(UXIssueMessage issue_msg : audit.getMessages()) {
+					log.warn("issue message :: "+issue_msg.getDescription());
+					if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
+						log.warn("issue is an element type");
+						ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
 						
-						for(ElementState element : element_states) {
-							if(!element_state_map.containsKey(element.getKey())) {
-								SimpleElement simple_element = 	new SimpleElement(element.getKey(),
-																				  element.getScreenshotUrl(), 
-																				  element.getXLocation(), 
-																				  element.getYLocation(), 
-																				  element.getWidth(), 
-																				  element.getHeight(),
-																				  element.getXpath());
-								element_state_map.put(element.getKey(), simple_element);
-							}
-							
+						if(!element_state_map.containsKey(element.getKey())) {
+							log.warn("element hasn't been encountered before. building new SimpleElement...");
+							SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																			  element.getScreenshotUrl(), 
+																			  element.getXLocation(), 
+																			  element.getYLocation(), 
+																			  element.getWidth(), 
+																			  element.getHeight(),
+																			  element.getXpath());
+							element_state_map.put(element.getKey(), simple_element);
+						}
 
-							if(observation.getType().equals(ObservationType.ELEMENT)) {
-								observation = new Observation(
-										observation.getDescription(),
-										observation.getWhyItMatters(),
-										observation.getAdaCompliance(),
-										observation.getKey(),
-										observation.getType(),
-										observation.getLabels(),
-										observation.getCategories(), 
-										new HashSet<>());
-							}
-
-							//associate observation with element
-							if(observation_map.containsKey(element.getKey())) {
-								observation_map.get(element.getKey()).add(observation);
-							}
-							else {
-								Set<Observation> observations = new HashSet<>();
-								observations.add(observation);
-								observation_map.put(element.getKey(), observations);
-							}
+							//associate issue with element
+						if(issue_map.containsKey(element.getKey())) {
+							issue_map.get(element.getKey()).add(issue_msg);
+						}
+						else {
+							Set<UXIssueMessage> issue_messages = new HashSet<>();
+							issue_messages.add(issue_msg);
+							issue_map.put(element.getKey(), issue_messages);
 						}
 					}
 				}
-			
-				
 			}
 		}
-		
-		//associate simple elements and observations
+		log.warn("bundling maps together...");
+		//associate simple elements and issues
 		for(String element_key : element_state_map.keySet()) {
 			
-			ElementObservationMap observation_element = new ElementObservationMap(observation_map.get(element_key), element_state_map.get(element_key));
-			element_observations.add(observation_element);
+			ElementIssueMap issue_element = new ElementIssueMap(issue_map.get(element_key), element_state_map.get(element_key));
+			element_issues.add(issue_element);
 		}
 		
-		return element_observations;
+		return element_issues;
 	}
 
-	public Observation addObservation(
+	public UXIssueMessage addIssue(
 			String key, 
-			String observation_key) {
+			String issue_key) {
 		assert key != null;
 		assert !key.isEmpty();
-		assert observation_key != null;
-		assert !observation_key.isEmpty();
-		log.warn("ADD OBSERVATION KEY :: "+observation_key);
+		assert issue_key != null;
+		assert !issue_key.isEmpty();
+		
+		log.warn("ADD OBSERVATION KEY :: "+issue_key);
 		log.warn("ADD OBSERVATION audit key :: "+key);
-		return audit_repo.addObservation(key, observation_key);
+		return audit_repo.addIssueMessage(key, issue_key);
 	}
 
 }

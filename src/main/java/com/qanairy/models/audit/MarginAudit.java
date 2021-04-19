@@ -28,13 +28,11 @@ import com.qanairy.models.Element;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.audit.Audit;
-import com.qanairy.models.audit.Observation;
 import com.qanairy.models.audit.Score;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.PageStateService;
 
@@ -66,7 +64,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 
-		List<Observation> observations = new ArrayList<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Map<ElementState, List<String>> elements_margin_map = new HashMap<>(); 
 
 		//get all pages
@@ -116,9 +114,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 
 		Score margin_as_padding_score = scoreMarginAsPadding(elements_margin_map.keySet());
 		
-		observations.addAll(spacing_score.getObservations());
+		issue_messages.addAll(spacing_score.getIssueMessages());
 		//observations.addAll(unit_score.getObservations());
-		observations.addAll(margin_as_padding_score.getObservations());
+		issue_messages.addAll(margin_as_padding_score.getIssueMessages());
 		
 		log.warn("spacing score : "+spacing_score.getPointsAchieved() + " / " +spacing_score.getMaxPossiblePoints());
 		//log.warn("unit score : "+spacing_score.getPointsAchieved() + " / " +spacing_score.getMaxPossiblePoints());
@@ -133,131 +131,15 @@ public class MarginAudit implements IExecutablePageStateAudit {
 						 AuditSubcategory.WHITESPACE,
 						 AuditName.MARGIN,
 						 points,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl());
+						 page_state.getUrl(),
+						 "",
+						 "",
+						 "");
 	}
 
-	/**
-	 * Generates {@link Score score} for spacing consistency across elements
-	 * 
-	 * @param elements_margin_map
-	 * 
-	 * @return {@link Score score}
-	 * 
-	 * @pre elements_margin_map != null
-	 */
-	@Deprecated
-	private Score evaluateSpacingConsistency(Map<ElementState, List<String>> elements_margin_map) {
-		assert elements_margin_map != null;
-		
-		int points_earned = 0;
-		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
-		
-		Map<String, List<Double>> gcd_map = new HashMap<>();
-		Map<String, List<Double>> units = new HashMap<>();
-		for(ElementState element : elements_margin_map.keySet()) {
-			//START UNIT SCORE HERE
-			units.putAll(sortSizeUnits(elements_margin_map.get(element)));
-		}
-		
-		//extract multiples for margins
-		//most common multiples, the highest multiples that can be found to satisfy the list of unique margin values
-		for(String unit : units.keySet()) {
-			//scale units values by 100 and make unique
-			List<Double> distinct_list =  sortAndMakeDistinct(units.get(unit));
-			
-			if(distinct_list.size() == 1) {
-				gcd_map.put(unit, distinct_list);
-				continue;
-			}
-			
-			List<Double> gcd_list = new ArrayList<>();
-			for(int idx = 0; idx < distinct_list.size()-1; idx++) {
-				for(int idx2 = idx+1; idx2 < distinct_list.size(); idx2++) {
-					gcd_list.add(findGCD(distinct_list.get(idx), distinct_list.get(idx2)));
-				}
-			}
-			
-			gcd_list.remove(new Double(1));
-			//reduce gcd again.
-			gcd_map.put(unit, gcd_list);
-		}			
-		
-		//reduce gcd_list until no value is divisible by any other
-		//rank gcd list based on frequency values that are multiples of gcd
-		//generate score for each element margin based on gcd divisibility
-		
-		//COMPUTE SCORE FOR MARGIN BASED ON GCD VALUES
-		Map<String, List<Double>> unit_gcd_lists = new HashMap<>();
-		for(String unit : gcd_map.keySet()) {
-			List<Double> most_common_gcd_values = new ArrayList<>();
-			if(gcd_map.get(unit).size() == 1) {
-				log.warn("unit : "+unit+"  has only 1 gcd!!");
-				points_earned += 3;
-				most_common_gcd_values.addAll(gcd_map.get(unit));
-			}
-			else {
-				List<Double> margin_list = units.get(unit);
-				List<Double> gcd_values = gcd_map.get(unit);
-				do {
-					Map<Double, List<Double>> gcd_match_lists = new HashMap<>();
-					
-					//find highest gcd values that define the set
-					for(double gcd : gcd_values) {
-						gcd_match_lists.put(gcd, new ArrayList<Double>());
-						for(double value : margin_list) {
-							if(value % gcd == 0 && gcd != 1){
-								gcd_match_lists.get(gcd).add(value);
-							}
-						}
-					}
-					
-					//identify gcd with most matches
-					int largest_gcd_count = 0;
-					double largest_gcd = 0;
-					for(Double gcd : gcd_match_lists.keySet()) {
-						if(gcd_match_lists.get(gcd).size() >= largest_gcd_count ) {
-							largest_gcd_count = gcd_match_lists.get(gcd).size();
-							
-							if(gcd > largest_gcd) {
-								largest_gcd = gcd;
-							}
-						}
-					}
-					
-					//remove gcd value from input gcd list
-					gcd_values.remove(largest_gcd);
-					
-					if(largest_gcd_count > 0) {						
-						//add the largest gcd to the list of most applicable gcd values
-						most_common_gcd_values.add(largest_gcd);
-					}
-					
-					//remove gcd matches from vertical margin list
-					List<Double> largest_gcd_matches = gcd_match_lists.get(largest_gcd);
-					if(largest_gcd_matches != null) {
-						margin_list.removeAll(largest_gcd_matches);
-					}
-					
-				}while(!margin_list.isEmpty() && !gcd_values.isEmpty());
-				
-				
-				if(most_common_gcd_values.size() == 2) {
-					points_earned += 2;
-				}
-				else {
-					points_earned += 1;
-				}
-			}
-			unit_gcd_lists.put(unit, most_common_gcd_values);
-			max_points += 3;
-		}
-		
-		return new Score(points_earned, max_points, observations);
-	}
 
 	/**
 	 * Generates {@link Score score} for spacing consistency across elements
@@ -273,8 +155,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 		int points_earned = 0;
 		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
-		Set<UXIssueMessage> elements = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
@@ -284,11 +165,18 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
+					String description = "At least one margin value isn't a multiple of 8.";
+					Set<String> labels = new HashSet<>();
+					labels.add("whitespace");
+					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																		Priority.MEDIUM,
-																		"Has at least one margin value that isn't a multiple of 8.",
-																		element);
-					elements.add(issue_message);
+																		description,
+																		"For best responsiveness make sure margin values are a multiple of 8.", 
+																		element, 
+																		AuditCategory.AESTHETICS, 
+																		labels);
+					issue_messages.add(issue_message);
 				}
 				max_points++;
 			}
@@ -310,17 +198,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		observations.add(new Observation(
-								"Has at least one margin value that isn't a multiple of 8.", 
-								why_it_matters, 
-								ada_compliance, 
-								ObservationType.ELEMENT,
-								labels, 
-								categories,
-								elements));
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
-		return new Score(points_earned, max_points, observations);
+		return new Score(points_earned, max_points, issue_messages);
 	}
 	
 	/**
@@ -337,8 +217,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 		int points_earned = 0;
 		int max_points = 0;
-		Set<Observation> observations = new HashSet<>();
-		Set<UXIssueMessage> elements = new HashSet<>();
+		Set<UXIssueMessage> element_issues = new HashSet<>();
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
@@ -348,11 +227,13 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
+					String description = "Has at least one margin value that isn't a multiple of 8.";
 					ElementStateIssueMessage element_issue = new ElementStateIssueMessage(
 							Priority.MEDIUM, 
-							"Has at least one margin value that isn't a multiple of 8.", 
-							element);
-					elements.add(element_issue);
+							description, 
+							"For best responsiveness make sure margin values are a multiple of 8.", 
+							element, null, null);
+					element_issues.add(element_issue);
 				}
 				max_points++;
 			}
@@ -374,17 +255,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
-		observations.add(new Observation(
-								"Has at least one margin value that isn't a multiple of 8.",
-								why_it_matters, 
-								ada_compliance, 
-								ObservationType.ELEMENT,
-								labels, 
-								categories,
-								elements));
+
 		//observations.add(new ElementStateObservation(elements, "Margin values are multiple of 8"));
 		
-		return new Score(points_earned, max_points, observations);
+		return new Score(points_earned, max_points, element_issues);
 	}
 	
 	public static boolean isMultipleOf8(String size_str) {
@@ -420,8 +294,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 		int vertical_score = 0;
 		int max_vertical_score = 0;
-		Set<Observation> observations = new HashSet<>();
-		Set<UXIssueMessage> unscalable_margin_elements = new HashSet<>();
+		Set<UXIssueMessage> element_issues = new HashSet<>();
 
 		for(ElementState element : element_margin_map.keySet()) {
 			for(String margin_value : element_margin_map.get(element)) {
@@ -432,33 +305,24 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				max_vertical_score += 3;
 				
 				if(vertical_score == 1) {
+					Set<String> labels = new HashSet<>();
+					labels.add("responsiveness");
+					labels.add("whitespace");
+					
+					String description = "Unscalable margin units";
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.MEDIUM,
+																	description, 
 																	"Elements with unscalable margin units", 
-																	element);
-					unscalable_margin_elements.add(issue_message);
+																	element, 
+																	AuditCategory.AESTHETICS,
+																	labels);
+					element_issues.add(issue_message);
 				}
 			}
 		}
 		
-		if(!unscalable_margin_elements.isEmpty()) {
-			Set<String> labels = new HashSet<>();
-			labels.add("responsiveness");
-			labels.add("whitespace");
-			
-			Set<String> categories = new HashSet<>();
-			categories.add(AuditCategory.AESTHETICS.toString());
-			
-			observations.add(new Observation(
-									"Elements with unscalable margin units", 
-									"", 
-									"", 
-									ObservationType.ELEMENT,
-									labels, 
-									categories,
-									unscalable_margin_elements));
-		}
-		return new Score(vertical_score, max_vertical_score, observations);
+		return new Score(vertical_score, max_vertical_score, element_issues);
 	}
 
 
@@ -524,8 +388,11 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		
 		int score = 0;
 		int max_score = 0;
-		Set<Observation> observations = new HashSet<>();
-		Set<UXIssueMessage> flagged_elements = new HashSet<>();
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
+		Set<UXIssueMessage> element_issues = new HashSet<>();
 		for(ElementState element : elements) {
 			if(element == null) {
 				log.warn("margin padding audit Element :: "+element);
@@ -562,17 +429,21 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				
 				if(margin_used_as_padding) {
 					score += 1;
-					
+					String description = "Margin used as padding";
+
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.MEDIUM,
+																	description, 
 																	"Elements that appear to use margin as padding", 
-																	element);
-					flagged_elements.add(issue_message);
+																	element, 
+																	AuditCategory.AESTHETICS,
+																	labels);
+					element_issues.add(issue_message);
 				}
 				max_score += 3;
 			}
 		}
-		if(!flagged_elements.isEmpty()) {
+		if(!element_issues.isEmpty()) {
 
 			String why_it_matters = "Keeping your use of margins to a miminum, and when you use them making sure"
 					+ " the margin values are a multiple of 8 dpi ensures your site is more responsive. Not all users"
@@ -581,22 +452,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			
 			String ada_compliance = "There are no ADA requirements for use of margins";
 			
-			Set<String> labels = new HashSet<>();
-			labels.add("whitespace");
-			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
-			
-			observations.add(new Observation(
-									"Elements that appear to use margin as padding", 
-									why_it_matters, 
-									ada_compliance,
-									ObservationType.ELEMENT,
-									labels, 
-									categories,
-									flagged_elements));
 		}
-		return new Score(score, max_score, observations);
+		return new Score(score, max_score, element_issues);
 	}
 	
 	private boolean isSpacingValueZero(String spacing) {

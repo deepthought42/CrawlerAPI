@@ -1,9 +1,12 @@
 package com.qanairy.models.audit;
 
+import java.util.Set;
+
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.Element;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.Priority;
 
 /**
@@ -18,12 +21,14 @@ public class PageStateIssueMessage extends UXIssueMessage {
 	
 	public PageStateIssueMessage(
 				PageState page, 
-				String recommendation,
-				Priority priority
+				String description,
+				String recommendation, Priority priority, AuditCategory category, Set<String> labels
 	) {
 		setPage(page);
 		setRecommendation(recommendation);
 		setPriority(priority);
+		setCategory(category);
+		setLabels(labels);
 		setKey(this.generateKey());
 	}
 	

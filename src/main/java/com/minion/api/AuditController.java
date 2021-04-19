@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.PathParam;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -40,20 +38,18 @@ import com.qanairy.models.PageVersion;
 import com.qanairy.models.SimplePage;
 import com.qanairy.models.audit.Audit;
 import com.qanairy.models.audit.AuditFactory;
-import com.qanairy.models.audit.ObservationElementMap;
+import com.qanairy.models.audit.IssueElementMap;
 import com.qanairy.models.audit.PageAuditRecord;
 import com.qanairy.models.audit.PageAudits;
+import com.qanairy.models.audit.UXIssueMessage;
 import com.qanairy.models.audit.AuditRecord;
 import com.qanairy.models.audit.DomainAuditRecord;
-import com.qanairy.models.audit.ElementObservationMap;
-import com.qanairy.models.audit.ElementObservationTwoWayMapping;
-import com.qanairy.models.audit.ElementStateIssueMessage;
-import com.qanairy.models.audit.Observation;
+import com.qanairy.models.audit.ElementIssueMap;
+import com.qanairy.models.audit.ElementIssueTwoWayMapping;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.CrawlAction;
 import com.qanairy.models.enums.ExecutionStatus;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.experience.PerformanceInsight;
 import com.qanairy.models.message.CrawlActionMessage;
 import com.qanairy.services.AccountService;
@@ -61,9 +57,8 @@ import com.qanairy.services.AuditRecordService;
 import com.qanairy.services.AuditService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.ObservationService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.PageVersionService;
+import com.qanairy.services.UXIssueMessageService;
 import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
@@ -75,6 +70,7 @@ import akka.actor.ActorSystem;
 @Controller
 @RequestMapping("/audits")
 public class AuditController {
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
    	public final static long SECS_PER_HOUR = 60 * 60;
@@ -84,9 +80,6 @@ public class AuditController {
 	
 	@Autowired
 	private PageVersionService page_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private AccountService account_service;
@@ -101,7 +94,7 @@ public class AuditController {
     protected AuditService audit_service;
     
     @Autowired
-    protected ObservationService observation_service;
+    protected UXIssueMessageService issue_message_service;
     
     @Autowired
     protected AuditRecordService audit_record_service;
@@ -149,7 +142,7 @@ public class AuditController {
     	Set<Audit> audit_set = new HashSet<Audit>();
     	
     	Audit audit = audit_service.findById(id).get();
-    	audit.setObservations( audit_service.getObservations(audit.getKey()) );
+    	audit.setMessages( audit_service.getIssues(audit.getKey()) );
         
     	audit_set.add(audit);
     	
@@ -196,7 +189,7 @@ public class AuditController {
      * @throws MalformedURLException 
      */
     @RequestMapping(method= RequestMethod.GET, path="/elements")
-    public @ResponseBody ElementObservationTwoWayMapping getPageAuditElements(
+    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
     		HttpServletRequest request,
     		@RequestParam("page_url") String page_url
 	) throws MalformedURLException {
@@ -210,13 +203,13 @@ public class AuditController {
     		PageAuditRecord page_audit_record = page_audit.get();
     		audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getKey());    		
     	}
-    	
+    	log.warn("processing audits :: "+audits.size());
     	//Map audits to page states
-    	Set<ObservationElementMap> observation_element_map = audit_service.generateObservationElementMap(audits, url);
-    	Set<ElementObservationMap> element_observation_map = audit_service.generateElementObservationMap(audits, url);
+    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits, url);
+    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits, url);
     
     	//package both elements into an object definition
-    	return new ElementObservationTwoWayMapping(observation_element_map, element_observation_map);
+    	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map);
     }
     
     /**
@@ -225,11 +218,11 @@ public class AuditController {
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 
      */
-    @RequestMapping(method = RequestMethod.POST, value="/$key/observations")
-    public @ResponseBody Observation addObservation(
+    @RequestMapping(method = RequestMethod.POST, value="/$key/issues")
+    public @ResponseBody UXIssueMessage addIssue(
 							    		HttpServletRequest request,
 										@PathVariable("key") String key,
-							    		@RequestBody Observation observation
+							    		@RequestBody UXIssueMessage issue_message
 	) throws UnknownAccountException {
     	/*
     	Principal principal = request.getUserPrincipal();
@@ -246,10 +239,10 @@ public class AuditController {
     
     	//add observation to page
 
-    	observation.setKey(observation.generateKey());
-		observation = observation_service.save( observation );
-		audit_service.addObservation(key, observation.getKey());
-		return observation;
+    	issue_message.setKey(issue_message.generateKey());
+		issue_message = issue_message_service.save( issue_message );
+		audit_service.addIssue(key, issue_message.getKey());
+		return issue_message;
 
     }
     

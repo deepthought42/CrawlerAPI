@@ -1,8 +1,12 @@
 package com.qanairy.models.audit;
 
+import java.util.List;
+import java.util.Set;
+
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.qanairy.models.ElementState;
+import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.Priority;
 
 
@@ -23,13 +27,14 @@ public class ColorContrastIssueMessage extends UXIssueMessage{
 	 * Constructs new instance
 	 * 
 	 * @param priority
+	 * @param description TODO
 	 * @param recommendation
 	 * @param contrast
 	 * @param foreground_color
 	 * @param background_color
 	 * @param element
-	 * 
-	 * 
+	 * @param category TODO
+	 * @param labels TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
 	 * @pre !recommendation.isEmpty()
@@ -42,11 +47,14 @@ public class ColorContrastIssueMessage extends UXIssueMessage{
 	 */
 	public ColorContrastIssueMessage(
 			Priority priority, 
+			String description,
 			String recommendation,
 			double contrast,
 			String foreground_color,
-			String background_color,
-			ElementState element
+			String background_color, 
+			ElementState element, 
+			AuditCategory category, 
+			Set<String> labels
 	) {
 		assert priority != null;
 		assert recommendation != null;
@@ -62,6 +70,8 @@ public class ColorContrastIssueMessage extends UXIssueMessage{
 		setForegroundColor(foreground_color);
 		setBackgroundColor(background_color);
 		setElement(element);
+		setCategory(category);
+		setLabels(labels);
 		setKey(this.generateKey());
 	}
 

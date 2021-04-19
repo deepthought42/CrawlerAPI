@@ -23,10 +23,8 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
 import com.qanairy.services.ElementStateService;
-import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 
 
@@ -43,9 +41,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ElementStateService element_state_service;
-	
-	@Autowired
-	private ObservationService observation_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -101,8 +96,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		int score = 0;
 		int max_points = 0;
-		Set<UXIssueMessage> low_contrast_elements = new HashSet<>();
-		Set<UXIssueMessage> mid_contrast_elements = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		for(ElementState element : non_text_elements) {
 			//get parent element of button
@@ -155,25 +149,39 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				
 				//calculate contrast of button background with background of parent element
 				if(contrast < 3.0){
+					String description = "Element background has low contrast against the surrounding background";
 					//no points are rewarded for low contrast
+					Set<String> labels = new HashSet<>();
+					labels.add("contrast");
+					
 					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
 																				Priority.HIGH,
+																				description,
 																				"Elements with a contrast below 3.0",
 																				contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
-																				element);
-					low_contrast_elements.add(low_contrast_issue);
+																				element,
+																				AuditCategory.AESTHETICS,
+																				labels);
+					issue_messages.add(low_contrast_issue);
 				}else if(contrast >= 3.0 && contrast < 4.5) {
+					Set<String> labels = new HashSet<>();
+					labels.add("contrast");
+					
 					score += 1;
+					String description = "Element background has medium contrast against the surrounding background";
 					ColorContrastIssueMessage mid_contrast_issue = new ColorContrastIssueMessage(
 																				Priority.MEDIUM,
+																				description,
 																				"Elements with a contrast between 3 and 4.5",
 																				contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
-																				element);
-					mid_contrast_elements.add(mid_contrast_issue);
+																				element,
+																				AuditCategory.AESTHETICS,
+																				labels);
+					issue_messages.add(mid_contrast_issue);
 				}
 				else {
 					score += 2;
@@ -206,48 +214,26 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
-		
-		List<Observation> observations = new ArrayList<>();
-		if(!low_contrast_elements.isEmpty()) {
-			Observation low_contrast_observation = new Observation(
-															"Elements with a contrast below 3.0",
-															why_it_matters,
-															ada_compliance,
-															ObservationType.COLOR_CONTRAST,
-															labels,
-															categories,
-															low_contrast_elements);
-			
-			observations.add(observation_service.save(low_contrast_observation));
-		}
-		
-		if(!mid_contrast_elements.isEmpty()) {
-			Observation mid_contrast_observation = new Observation(
-															"Elements with a contrast between 3.0 and 4.5",
-															why_it_matters,
-															ada_compliance,
-															ObservationType.COLOR_CONTRAST,
-															labels,
-															categories,
-															mid_contrast_elements);
-			
-			observations.add(observation_service.save(mid_contrast_observation));
-		}
+				
+
 		/*
 		if(!high_contrast_elements.isEmpty()) {
 			ElementStateObservation high_contrast_observation = new ElementStateObservation(high_contrast_elements, "Elements with a contrast greater than 4.5");
 			observations.add(observation_service.save(high_contrast_observation));
 		}
 		*/
-		
+		String description = "Color contrast of text";
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
 						 score,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl());
+						 page_state.getUrl(), 
+						 why_it_matters, 
+						 ada_compliance, 
+						 description);
 	}
 
 

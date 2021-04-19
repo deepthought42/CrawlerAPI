@@ -28,9 +28,7 @@ import com.qanairy.models.enums.AuditCategory;
 import com.qanairy.models.enums.AuditLevel;
 import com.qanairy.models.enums.AuditName;
 import com.qanairy.models.enums.AuditSubcategory;
-import com.qanairy.models.enums.ObservationType;
 import com.qanairy.models.enums.Priority;
-import com.qanairy.services.ObservationService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -43,9 +41,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
 	
 	private static final int MAX_POINTS_EACH = 5;
-	
-	@Autowired
-	private ObservationService observation_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -69,11 +64,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state) {
 		assert page_state != null;
 		
-		Set<UXIssueMessage> links_without_href_attribute =  new HashSet<>();
-		Set<UXIssueMessage> links_without_href_value =  new HashSet<>();
-		Set<UXIssueMessage> invalid_links = new HashSet<>();
-		Set<UXIssueMessage> dead_links = new HashSet<>();
-		Set<UXIssueMessage> non_labeled_links = new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 	
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
@@ -87,7 +78,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		log.warn("------------------------------------------------------------");
 		log.warn("Link elements found ... "+link_elements.size());
-		List<Observation> observations = new ArrayList<>();
+
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {			
@@ -99,11 +90,18 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				String recommendation = "Make sure links have a url set for the href value.";
+				String description = "Link missing href attribute";
+				Set<String> labels = new HashSet<>();
+				labels.add("information architecture");
+				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
+																description,
 																recommendation, 
-																link);
-				links_without_href_attribute.add(issue_message);
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels);
+				issue_messages.add(issue_message);
 				continue;
 			}
 			String href = element.attr("href");
@@ -118,6 +116,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				score += 4;
 				continue;
 			}
+			Set<String> labels = new HashSet<>();
+			labels.add("information architecture");
 			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
@@ -125,11 +125,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				String recommendation = "Make sure links have a url set for the href value.";
+				String description = "Make sure links have a url set for the href value.";
+				
 				ElementStateIssueMessage issue_Message = new ElementStateIssueMessage(
 																Priority.HIGH, 
+																description, 
 																recommendation, 
-																link);
-				links_without_href_value.add(issue_Message);
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels);
+				issue_messages.add(issue_Message);
 				continue;
 			}
 			
@@ -167,22 +172,30 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 				score++;
 			} catch (MalformedURLException e) {
-				String recommendation = "Make sure links point to a valid url.";
-				
+				String recommendation = "Make sure links point to a valid url";
+				String description = "Invalid link url";
+	
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
+																description, 
 																recommendation, 
-																link);
-				invalid_links.add(issue_message);
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels);
+				issue_messages.add(issue_message);
 				e.printStackTrace();
 			} catch (URISyntaxException e) {
 				String recommendation = "Make sure links point to a valid url.";
-				
+				String description = "Invalid link url.";
+
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
+																description, 
 																recommendation, 
-																link);
-				invalid_links.add(issue_message);
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels);
+				issue_messages.add(issue_message);
 				e.printStackTrace();
 			}
 			
@@ -202,22 +215,29 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					score++;
 				}
 				else {
-					String recommendaiotn = "Make sure links point to a valid url.";
-					
+					String recommendation = "Make sure links point to a valid url";
+					String description = "Invalid link url";
+
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.HIGH,
-																	recommendaiotn,
-																	link);
-					dead_links.add(issue_message);
+																	description,
+																	recommendation, link,
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	labels);
+					issue_messages.add(issue_message);
 				}
 			} catch (IOException e) {
-				String recommendaiotn = "Make sure links point to a valid url.";
-				
+				String recommendation = "Make sure links point to a valid url";
+				String description = "Invalid link url";
+
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
-																recommendaiotn,
-																link);
-				dead_links.add(issue_message);
+																description,
+																recommendation, 
+																link, 
+																AuditCategory.INFORMATION_ARCHITECTURE, 
+																labels);
+				issue_messages.add(issue_message);
 				e.printStackTrace();
 			}
 			
@@ -256,14 +276,18 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				 
 				 if(!element_includes_text) {
 					 log.warn("link doesn't have a text label");
-					String recommendation = "For best usability make sure links include text.";
-					
+					String recommendation = "For best usability make sure links include text";
+					String description = "Link is missing text";
+
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.HIGH,
+																	description, 
 																	recommendation, 
-																	link);
+																	link,
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	labels);
 					 //does element use image as links?
-					 non_labeled_links.add(issue_message);
+					issue_messages.add(issue_message);
 				 }
 				 else {
 					 score++;
@@ -298,82 +322,21 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());
 		
-		if(!links_without_href_attribute.isEmpty()) {
-			
-			Observation observation = new Observation(
-												"Links without an 'href' attribute present",
-												why_it_matters,
-												ada_compliance,
-												ObservationType.ELEMENT,
-												labels,
-												categories,
-												links_without_href_attribute);
-			observations.add(observation_service.save(observation));
-		}
-		
-		if(!links_without_href_value.isEmpty()) {
-			
-			Observation observation = new Observation(
-												"Links with empty 'href' values", 
-												why_it_matters, 
-												ada_compliance,
-												ObservationType.ELEMENT,
-												labels,
-												categories,
-												links_without_href_value);
-			observations.add(observation_service.save(observation));
-		}
-		
-		if(!invalid_links.isEmpty()) {
-			
-			Observation observation = new Observation(
-												"Links with invalid addresses", 
-												why_it_matters, 
-												ada_compliance,
-												ObservationType.ELEMENT,
-												labels,
-												categories,
-												invalid_links);
-			observations.add(observation_service.save(observation));
-		}
-		
-		if(!dead_links.isEmpty()) {
-			Observation observation = new Observation(
-												"Dead links", 
-												why_it_matters, 
-												ada_compliance, 
-												ObservationType.ELEMENT,
-												labels,
-												categories,
-												dead_links);
-			
-			observations.add(observation_service.save(observation));
-		}
-		
-		if(!non_labeled_links.isEmpty()) {
-			Observation observation = new Observation(
-												"Links without text",
-												why_it_matters,
-												ada_compliance,
-												ObservationType.ELEMENT,
-												labels,
-												categories,
-												non_labeled_links);
-			
-			observations.add(observation_service.save(observation));
-		}
-		
 		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (link_elements.size()*5));
 		
+		String description = "Making sure your links are setup correctly is incredibly important";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.PERFORMANCE,
 						 AuditName.LINKS,
 						 score,
-						 observations,
+						 issue_messages,
 						 AuditLevel.PAGE,
 						 link_elements.size() * MAX_POINTS_EACH,
-						 page_state.getUrl()); 
+						 page_state.getUrl(),
+						 why_it_matters, 
+						 ada_compliance, 
+						 description); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

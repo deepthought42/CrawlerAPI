@@ -14,13 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PageVersion;
-import com.qanairy.models.audit.domain.DomainFontAudit;
-import com.qanairy.models.audit.domain.DomainImageAltTextAudit;
-import com.qanairy.models.audit.domain.DomainMarginAudit;
-import com.qanairy.models.audit.domain.DomainNonTextColorContrastAudit;
-import com.qanairy.models.audit.domain.DomainPaddingAudit;
-import com.qanairy.models.audit.domain.DomainTextColorContrastAudit;
-import com.qanairy.models.audit.domain.DomainTypefaceAudit;
 import com.qanairy.models.enums.AuditCategory;
 
 /**
@@ -45,15 +38,15 @@ public class AuditFactory {
 	
 	@Autowired
 	private TitleAndHeaderAudit title_and_header_auditor;
-	
-	@Autowired
-	private DomainFontAudit domain_font_auditor;
 
 	@Autowired
 	private ImageAltTextAudit image_alt_text_auditor;
 	
 	@Autowired
 	private ParagraphingAudit paragraph_auditor;
+	
+	@Autowired
+	private ReadabilityAudit readability_auditor;
 	
 	@Autowired
 	private FontAudit font_auditor;
@@ -67,23 +60,6 @@ public class AuditFactory {
 	@Autowired
 	private MarginAudit margin_auditor;
 	
-	@Autowired
-	private DomainPaddingAudit domain_padding_auditor;
-	
-	@Autowired
-	private DomainMarginAudit domain_margin_auditor;
-	
-	@Autowired
-	private DomainTextColorContrastAudit domain_text_contrast_auditor;
-	
-	@Autowired
-	private DomainNonTextColorContrastAudit domain_non_text_contrast_auditor;
-	
-	@Autowired
-	private DomainTypefaceAudit domain_typeface_auditor;
-	
-	@Autowired
-	private DomainImageAltTextAudit domain_image_alt_text_auditor;
 	/**
 	 * Executes all pre-render audits for the {@link AuditCategory category} provided
 	 * 
@@ -181,6 +157,8 @@ public class AuditFactory {
 			Audit alt_text_audit = image_alt_text_auditor.execute(page);
 			audits.add(alt_text_audit);
 			
+			Audit readability_audit = readability_auditor.execute(page);
+			audits.add(readability_audit);
 			//Audit font_audit = font_auditor.execute(page);
 			//audits.add(font_audit);
 			

@@ -1,8 +1,8 @@
 package com.qanairy.models.audit;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -25,15 +25,22 @@ public class Audit extends LookseeObject {
 	private int total_possible_points;      //scoring
 	private String url;
 	
-	@Relationship(type="OBSERVED")
-	private List<Observation> observations;
+	private String description;
+	private String why_it_matters;
+	private String ada_compliance;
+	
+	@Relationship(type = "HAS")
+	private Set<UXIssueMessage> message;
+	
+	private Set<String> labels;
+
 	
 	/**
 	 * Construct empty action object
 	 */
 	public Audit(){
 		super();
-		setObservations(new ArrayList<>());
+		setMessages(new HashSet<>());
 	}
 	
 	/**
@@ -41,26 +48,32 @@ public class Audit extends LookseeObject {
 	 * @param category
 	 * @param subcategory
 	 * @param points
-	 * @param observations
+	 * @param ux_issues
 	 * @param level
 	 * @param total_possible_points
 	 * @param url TODO
+	 * @param why_it_matters TODO
+	 * @param wcag_compliance TODO
+	 * @param description TODO
 	 */
 	public Audit(
 			AuditCategory category, 
 			AuditSubcategory subcategory,
 			AuditName name,
 			int points, 
-			List<Observation> observations, 
+			Set<UXIssueMessage> ux_issues, 
 			AuditLevel level, 
 			int total_possible_points,
-			String url
+			String url, 
+			String why_it_matters, 
+			String wcag_compliance, 
+			String description
 	) {
 		super();
 		
 		assert category != null;
 		assert subcategory != null;
-		assert observations != null;
+		assert ux_issues != null;
 		assert level != null;
 		
 		setName(name);
@@ -68,15 +81,18 @@ public class Audit extends LookseeObject {
 		setSubcategory(subcategory);
 		setPoints(points);
 		setTotalPossiblePoints(total_possible_points);
-		setObservations(observations);
+		setMessages(ux_issues);
 		setCreatedAt(LocalDateTime.now());
 		setLevel(level);
 		setUrl(url);
+		setWhyItMatters(why_it_matters);
+		setAdaCompliance(wcag_compliance);
+		setDescription(description);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getObservations(), getLevel(), getTotalPossiblePoints(), getUrl());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getAdaCompliance(), getDescription());
 	}
 
 	/**
@@ -101,16 +117,6 @@ public class Audit extends LookseeObject {
 	public void setCategory(AuditCategory category) {
 		this.category = category.toString();
 	}
-	
-	
-	public List<Observation> getObservations() {
-		return observations;
-	}
-	
-	public void setObservations(List<Observation> observations) {
-		this.observations = observations;
-	}
-	
 	
 	public int getPoints() {
 		return points;
@@ -159,5 +165,47 @@ public class Audit extends LookseeObject {
 
 	public void setSubcategory(AuditSubcategory subcategory) {
 		this.subcategory = subcategory.toString();
+	}
+	
+	public String getDescription() {
+		return this.description;
+	}
+	
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	public String getWhyItMatters() {
+		return why_it_matters;
+	}
+
+	public void setWhyItMatters(String why_it_matters) {
+		this.why_it_matters = why_it_matters;
+	}
+
+	public String getAdaCompliance() {
+		return ada_compliance;
+	}
+
+	public void setAdaCompliance(String ada_compliance) {
+		this.ada_compliance = ada_compliance;
+	}
+
+
+	public Set<String> getLabels() {
+		return labels;
+	}
+
+	public void setLabels(Set<String> labels) {
+		this.labels = labels;
+	}
+
+
+	public Set<UXIssueMessage> getMessages() {
+		return message;
+	}
+
+	public void setMessages(Set<UXIssueMessage> message) {
+		this.message = message;
 	}
 }

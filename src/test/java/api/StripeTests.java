@@ -1,6 +1,6 @@
 package api;
 
-import com.qanairy.models.StripeClient;
+import com.looksee.models.StripeClient;
 
 public class StripeTests {
 	public StripeClient stripeClient;

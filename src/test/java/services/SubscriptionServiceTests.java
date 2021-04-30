@@ -16,11 +16,11 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.enums.SubscriptionPlan;
-import com.qanairy.services.AccountService;
-import com.qanairy.services.SubscriptionService;
+import com.looksee.models.Account;
+import com.looksee.models.DiscoveryRecord;
+import com.looksee.models.enums.SubscriptionPlan;
+import com.looksee.services.AccountService;
+import com.looksee.services.SubscriptionService;
 import com.stripe.exception.StripeException;
 
 @SpringBootTest

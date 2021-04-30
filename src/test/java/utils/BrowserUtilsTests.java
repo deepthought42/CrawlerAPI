@@ -11,7 +11,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.qanairy.utils.BrowserUtils;
+import com.looksee.utils.BrowserUtils;
 
 public class BrowserUtilsTests {
 
@@ -33,10 +33,10 @@ public class BrowserUtilsTests {
 	
 	@Test
 	public void verifySanitizeUrlWithoutSubdomain() throws MalformedURLException{
-		String url = "http://www.qanairy.com";
+		String url = "http://www.look-see.com";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		
-		assertTrue("http://www.qanairy.com".equals(sanitized_url));
+		assertTrue("http://look-see.com".equals(sanitized_url));
 	}
 	
 	@Test

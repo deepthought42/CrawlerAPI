@@ -6,7 +6,7 @@ import org.jsoup.Jsoup;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.qanairy.utils.ContentUtils;
+import com.looksee.utils.ContentUtils;
 
 import edu.stanford.nlp.simple.Document;
 import edu.stanford.nlp.simple.Sentence;

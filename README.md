@@ -8,6 +8,7 @@
 ### Command Line Interface(CLI)
 
 maven clean install
+
 java -ea -jar target/Look-see-#.#.#.jar
 
 NOTE: The `-ea` flag tells the java compiler to run the program with assertions enabled
@@ -27,3 +28,13 @@ docker run -p 80:80 -p 8080:8080 -p 9080:9080 -p 443:443 --name look-see look-se
 docker build --no-cache -t gcr.io/cosmic-envoy-280619/look-see-api:v#.#.# .
 
 docker push gcr.io/cosmic-envoy-280619/look-see-api:v#.#.#
+
+
+
+# Security
+
+## Generating a new PKCS12 certificate for SSL
+
+Run the following command in Linux to create a keystore called api_key with a privateKeyEntry
+
+openssl pkcs12 -export -inkey private.key -in certificate.crt -out api_key.p12

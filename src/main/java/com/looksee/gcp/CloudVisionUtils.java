@@ -36,8 +36,8 @@ import com.google.cloud.vision.v1.WebDetection.WebLabel;
 import com.google.cloud.vision.v1.WebDetection.WebPage;
 import com.google.cloud.vision.v1.Word;
 import com.google.protobuf.ByteString;
-import com.qanairy.models.audit.ColorUsageStat;
-import com.qanairy.utils.ImageUtils;
+import com.looksee.models.audit.ColorUsageStat;
+import com.looksee.utils.ImageUtils;
 
 /**
  * Contains methods for analyzing analyzing images using the Google Cloud Vision API

@@ -172,7 +172,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					highest_contrast = border_contrast;
 				}
 				element.setNonTextContrast(highest_contrast);
-				element_state_service.save(element);
+				element = element_state_service.save(element);
 				
 				//calculate contrast of button background with background of parent element
 				if(highest_contrast < 3.0){

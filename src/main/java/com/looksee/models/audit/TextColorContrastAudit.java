@@ -90,7 +90,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				ColorData background_color = new ColorData(element.getBackgroundColor());
 				double contrast = ColorData.computeContrast(background_color, text_color);
 				element.setTextContrast(contrast);
-				element_state_service.save(element);
+				element = element_state_service.save(element);
 				
 				if(!element.getOwnedText().isEmpty()){
 					String font_size_str = element.getRenderedCssValues().get("font-size");
@@ -101,7 +101,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					
 					//TODO convert font size to double
 					double font_size = Double.parseDouble(font_size_str.strip());
-					total_possible_points += 2;
+					total_possible_points += 1;
 					//TODO if font size is greater than 18 or if greater than 14 and bold then check if contrast > 3 (A Compliance)
 					if(font_size >= 24 || (font_size >= 18.5 && BrowserUtils.isTextBold(font_weight))) {
 						if( contrast < 3 ) {

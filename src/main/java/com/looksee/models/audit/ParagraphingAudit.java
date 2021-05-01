@@ -147,9 +147,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" this category, reading level needs to be taken into consideration when" + 
 				" writing content and paragraphing. ";
 		
-		for(Sentence sentence : sentences) {
-			System.err.println("sentence :: " + sentence.getText().getContent());
-			
+		for(Sentence sentence : sentences) {			
 			String[] words = sentence.getText().getContent().split(" ");
 			
 			if(words.length > 25) {
@@ -169,13 +167,12 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				issue_messages.add(issue_message);
 				
 				points_earned += 0;
-				max_points += 1;
+				max_points += 3;
 			}
 			else {
-				points_earned += 1;
-				max_points += 1;
+				points_earned += 3;
+				max_points += 3;
 			}
-
 		}
 		return new Score(points_earned, max_points, issue_messages);					
 	}

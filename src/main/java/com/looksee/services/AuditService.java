@@ -22,6 +22,7 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IssueElementMap;
@@ -230,7 +231,33 @@ public class AuditService {
 			) {
 				log.warn("preparing to process audit messages :: "+audit.getMessages());
 				for(UXIssueMessage issue_msg : audit.getMessages()) {
-					if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
+					//NOTE: color contrast is first because it inherits form EleementIssueMessage
+					if(issue_msg.getType().equals(ObservationType.COLOR_CONTRAST)) {
+						ElementState element = ((ColorContrastIssueMessage)issue_msg).getElement();
+						
+						if(!element_state_map.containsKey(element.getKey())) {
+							SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																			  element.getScreenshotUrl(), 
+																			  element.getXLocation(), 
+																			  element.getYLocation(), 
+																			  element.getWidth(), 
+																			  element.getHeight(),
+																			  element.getCssSelector(),
+																			  element.getAllText());
+							element_state_map.put(element.getKey(), simple_element);
+						}
+
+							//associate issue with element
+						if(issue_map.containsKey(element.getKey())) {
+							issue_map.get(element.getKey()).add(issue_msg);
+						}
+						else {
+							Set<UXIssueMessage> issue_messages = new HashSet<>();
+							issue_messages.add(issue_msg);
+							issue_map.put(element.getKey(), issue_messages);
+						}
+					}
+					else if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
 						ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
 						
 						if(!element_state_map.containsKey(element.getKey())) {

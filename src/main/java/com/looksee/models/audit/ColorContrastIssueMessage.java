@@ -2,8 +2,6 @@ package com.looksee.models.audit;
 
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.Relationship;
-
 import com.looksee.models.ElementState;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
@@ -13,10 +11,8 @@ import com.looksee.models.enums.Priority;
 /**
  * A observation of potential error for a given color palette 
  */
-public class ColorContrastIssueMessage extends UXIssueMessage{
-	@Relationship(type = "FOR")
-	private ElementState element;
-	
+public class ColorContrastIssueMessage extends ElementStateIssueMessage{
+
 	private double contrast;
 	private String foreground_color;
 	private String background_color;
@@ -103,13 +99,5 @@ public class ColorContrastIssueMessage extends UXIssueMessage{
 
 	public void setBackgroundColor(String background_color) {
 		this.background_color = background_color;
-	}
-
-	public ElementState getElement() {
-		return element;
-	}
-
-	public void setElement(ElementState element) {
-		this.element = element;
 	}
 }

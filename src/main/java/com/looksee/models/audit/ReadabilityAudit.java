@@ -112,16 +112,16 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 
 			int element_points = 0;
 			if(ease_of_reading_score >= 80 ) {
-				element_points = 5;
-			}
-			else if(ease_of_reading_score < 80 && ease_of_reading_score >= 70) {
-				element_points = 4;
-			}
-			else if(ease_of_reading_score < 70 && ease_of_reading_score >= 60) {
 				element_points = 3;
 			}
-			else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
+			else if(ease_of_reading_score < 80 && ease_of_reading_score >= 70) {
 				element_points = 2;
+			}
+			else if(ease_of_reading_score < 70 && ease_of_reading_score >= 60) {
+				element_points = 2;
+			}
+			else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
+				element_points = 1;
 			}
 			else if(ease_of_reading_score < 50 && ease_of_reading_score >= 30) {
 				element_points = 1;
@@ -131,7 +131,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			}
 			
 			points_earned += element_points;
-			max_points += 5;
+			max_points += 3;
 			
 			if(element_points < 5) {
 				recommendation = "Content is written at a " + ContentUtils.getGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";

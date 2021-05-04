@@ -2,6 +2,7 @@ package com.looksee.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.auth0.client.auth.AuthAPI;
@@ -14,14 +15,17 @@ import com.auth0.net.Request;
 public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+	//@Value(value = "${auth0.client_id}")
+	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
+	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
+	private static String domain = "look-see.us.auth0.com";
+	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
+	
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;
 
     public Auth0Client() {
-        //this.auth0 = new AuthAPI("dev-qanairy.auth0.com", "IGBRMudqLag0UKqwcEmYPAdTxQsoAMUv", "5R6Uy4EhKWuavOC9DDdoENMxSlJgJ6TIOBPYvES3ajhlWqaTEKfm5lZ4z9YgIT-F");//Auth0(clientid, domain);
-        //this.auth0 = new AuthAPI("staging-qanairy.auth0.com", "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw", "XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm");//Auth0(clientid, domain);
-    	this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");
-    	//this.client = this.auth0.newAuthenticationAPIClient();
+        this.auth0 = new AuthAPI(domain, client_id, client_secret);
     }
 
 	/**

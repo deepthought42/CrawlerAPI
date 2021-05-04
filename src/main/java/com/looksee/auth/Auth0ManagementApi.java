@@ -19,10 +19,10 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 public class Auth0ManagementApi {
 	private static Logger log = LoggerFactory.getLogger(Auth0ManagementApi.class);
 
-	private static String client_id = "d0YAPCQl5rk8YhsDI1U5GaEfqvMSC5Ea";
-	private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";
-	private static String base_url = "https://staging-qanairy.auth0.com/";
-	private static String audience_url = base_url + "api/v2/";
+	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
+	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
+	private static String domain = "look-see.us.auth0.com";
+	private static String audience_url = "https://" + domain + "api/v2/";
 	private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
 	
 	//STAGING
@@ -37,11 +37,11 @@ public class Auth0ManagementApi {
 	private ManagementAPI mgmt_api;
 
 	public Auth0ManagementApi(String access_token){
-		this.mgmt_api = new ManagementAPI(base_url, api_token);
+		this.mgmt_api = new ManagementAPI(domain, api_token);
 	}
 	
 	public static String getToken() throws UnirestException{
-		HttpResponse<String> response1 = Unirest.post(base_url + "oauth/token")
+		HttpResponse<String> response1 = Unirest.post(domain + "oauth/token")
 					  .header("content-type", "application/json")
 					  .body("{\"client_id\":\"" + client_id + "\",\"client_secret\":\"" + client_secret + "\",\"audience\":\"" + audience_url + "\",\"grant_type\":\"client_credentials\"}")
 					  .asString();		

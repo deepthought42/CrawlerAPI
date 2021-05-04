@@ -9,11 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -53,15 +50,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
     	http.csrf().disable().authorizeRequests()
 	        .mvcMatchers(HttpMethod.GET, "/actuator/info").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-	        .mvcMatchers(HttpMethod.POST, "/accounts").permitAll()
-	        .mvcMatchers(HttpMethod.GET, "/audits/all").permitAll()
-	        .mvcMatchers(HttpMethod.POST, "/audits/start").permitAll()
-	        .mvcMatchers(HttpMethod.PUT, "/audits/stop").permitAll()
-	        .mvcMatchers(HttpMethod.PUT, "/audits/pages").permitAll()
-	        .mvcMatchers(HttpMethod.PUT, "/audits/elements").permitAll()
+	        .mvcMatchers(HttpMethod.POST, "/audits/start-individual").permitAll()
+	        .mvcMatchers(HttpMethod.GET, "/audits/pages").permitAll()
+	        .mvcMatchers(HttpMethod.GET, "/audits/elements").permitAll()
 	        .mvcMatchers("/api/private-scoped").hasAuthority("SCOPE_read:messages") //this line is left in as future example
+	        .anyRequest()
+	        .authenticated()
 	        .and().cors()
-	        .and().oauth2ResourceServer().jwt();
+	        .and().oauth2ResourceServer()
+	        .jwt()
+            .decoder(jwtDecoder());
     	
     	//http.oauth2ResourceServer().jwt();
     	/** old code
@@ -82,7 +80,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
          */
     }
     
-    @Bean
     JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder)
                 JwtDecoders.fromOidcIssuerLocation(issuer);

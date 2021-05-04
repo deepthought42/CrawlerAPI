@@ -150,7 +150,7 @@ public class AuditController {
     
     
     /**
-     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * Retrieves set of {@link Audit audits} for the most recent page with a given page url
      * 
      * @param id
      * @return {@link Audit audit} with given ID
@@ -190,7 +190,7 @@ public class AuditController {
     }
     
     /**
-     * Retrieves set of {@link Audit audits} that have a type of visuals
+     * 
      * 
      * @param id
      * @return {@link Audit audit} with given ID
@@ -398,7 +398,8 @@ public class AuditController {
 
 	
 	@RequestMapping("/stop")
-	public @ResponseBody void stopAudit(HttpServletRequest request, @RequestParam(value="url", required=true) String url)
+	public @ResponseBody void stopAudit(HttpServletRequest request, 
+				@RequestParam(value="url", required=true) String url)
 			throws MalformedURLException, UnknownAccountException 
 	{
 	   	Principal principal = request.getUserPrincipal();

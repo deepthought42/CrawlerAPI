@@ -17,13 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.minion.api.EntryPoint;
-import com.minion.browsing.Browser;
-import com.qanairy.models.ElementState;
-import com.qanairy.models.PageState;
-import com.qanairy.models.enums.TemplateType;
-import com.qanairy.services.BrowserService;
-import com.qanairy.utils.ImageUtils;
+import com.looksee.api.EntryPoint;
+import com.looksee.browsing.Browser;
+import com.looksee.models.ElementState;
+import com.looksee.models.PageState;
+import com.looksee.models.enums.TemplateType;
+import com.looksee.services.BrowserService;
+import com.looksee.utils.ImageUtils;
 
 //@RunWith(SpringRunner.class)
 //@SpringBootTest(classes = EntryPoint.class)

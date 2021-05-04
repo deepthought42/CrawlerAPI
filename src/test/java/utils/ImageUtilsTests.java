@@ -3,8 +3,8 @@ package utils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.qanairy.models.audit.ColorData;
-import com.qanairy.utils.ImageUtils;
+import com.looksee.models.audit.ColorData;
+import com.looksee.utils.ImageUtils;
 
 public class ImageUtilsTests {
 	@Test

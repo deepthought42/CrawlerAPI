@@ -23,7 +23,7 @@ import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
-import com.qanairy.models.enums.BrowserType;
+import com.looksee.models.enums.BrowserType;
 
 /**
  * Handles uploading files to Google Cloud Storage

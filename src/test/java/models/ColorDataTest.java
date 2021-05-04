@@ -3,7 +3,7 @@ package models;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.qanairy.models.audit.ColorData;
+import com.looksee.models.audit.ColorData;
 
 public class ColorDataTest {
 

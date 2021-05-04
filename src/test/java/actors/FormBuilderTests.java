@@ -2,7 +2,7 @@ package actors;
 
 import org.testng.annotations.Test;
 
-import com.minion.actors.FormDiscoveryActor;
+import com.looksee.actors.FormDiscoveryActor;
 
 import akka.actor.Props;
 

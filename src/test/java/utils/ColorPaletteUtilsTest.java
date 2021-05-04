@@ -9,9 +9,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.qanairy.models.audit.ColorData;
-import com.qanairy.models.audit.ColorPaletteUtils;
-import com.qanairy.models.audit.PaletteColor;
+import com.looksee.models.audit.ColorData;
+import com.looksee.models.audit.ColorPaletteUtils;
+import com.looksee.models.audit.PaletteColor;
 
 
 public class ColorPaletteUtilsTest {

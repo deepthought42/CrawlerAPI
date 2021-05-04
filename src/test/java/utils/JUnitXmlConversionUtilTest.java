@@ -10,10 +10,10 @@ import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
-import com.qanairy.models.enums.TestStatus;
-import com.qanairy.utils.JUnitXmlConversionUtil;
+import com.looksee.models.Test;
+import com.looksee.models.TestRecord;
+import com.looksee.models.enums.TestStatus;
+import com.looksee.utils.JUnitXmlConversionUtil;
 
 /**
  * Unit tests for {@link JUnitXmlConversionUtil}

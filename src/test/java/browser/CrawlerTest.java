@@ -10,12 +10,12 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 
-import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
-import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.ElementState;
-import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
+import com.looksee.browsing.Browser;
+import com.looksee.browsing.Crawler;
+import com.looksee.helpers.BrowserConnectionHelper;
+import com.looksee.models.ElementState;
+import com.looksee.models.enums.BrowserEnvironment;
+import com.looksee.models.enums.BrowserType;
 
 public class CrawlerTest {
 	//@Test

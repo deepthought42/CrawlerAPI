@@ -3,7 +3,7 @@ package audit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.qanairy.models.audit.TitleAndHeaderAudit;
+import com.looksee.models.audit.TitleAndHeaderAudit;
 
 public class TitleAndHeaderAuditTest {
 

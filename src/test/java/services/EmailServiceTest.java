@@ -1,6 +1,6 @@
 package services;
 
-import com.qanairy.services.EmailServiceImpl;
+import com.looksee.services.EmailServiceImpl;
 
 public class EmailServiceTest {
 	

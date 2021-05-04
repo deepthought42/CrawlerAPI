@@ -12,8 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.PageState;
+import com.looksee.models.ExploratoryPath;
+import com.looksee.models.PageState;
 
 @SpringBootTest
 public class ExploratoryPathTests {

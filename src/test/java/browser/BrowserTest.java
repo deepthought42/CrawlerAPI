@@ -15,11 +15,11 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
-import com.minion.browsing.Browser;
-import com.qanairy.helpers.BrowserConnectionHelper;
-import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
-import com.qanairy.services.BrowserService;
+import com.looksee.browsing.Browser;
+import com.looksee.helpers.BrowserConnectionHelper;
+import com.looksee.models.enums.BrowserEnvironment;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.services.BrowserService;
 
 /**
  * 

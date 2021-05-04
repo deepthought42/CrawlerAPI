@@ -6,11 +6,11 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.qanairy.models.Action;
-import com.qanairy.models.Element;
-import com.qanairy.models.LookseeObject;
-import com.qanairy.models.PageState;
-import com.qanairy.models.Test;
+import com.looksee.models.Action;
+import com.looksee.models.Element;
+import com.looksee.models.LookseeObject;
+import com.looksee.models.PageState;
+import com.looksee.models.Test;
 
 public class TestTests {
 	

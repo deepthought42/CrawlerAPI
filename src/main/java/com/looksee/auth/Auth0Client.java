@@ -55,6 +55,27 @@ public class Auth0Client {
     	
     	return username;
 	}
+	
+	public String getEmail(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String email = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    email = info.getValues().get("email").toString();
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+    	
+    	return email;
+	}
 
 	public String getNickname(String auth_access_token) {
 		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);

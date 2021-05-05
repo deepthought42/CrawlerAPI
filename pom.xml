@@ -478,11 +478,36 @@
 		    <scope>runtime</scope>
 		</dependency>
 
+		<!--  GOOGLE CLOUD -->
 		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-pagespeedonline -->
 		<dependency>
 		    <groupId>com.google.apis</groupId>
 		    <artifactId>google-api-services-pagespeedonline</artifactId>
 		    <version>v5-rev13-1.25.0</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
+		<dependency>
+		    <groupId>com.google.api-client</groupId>
+		    <artifactId>google-api-client</artifactId>
+		    <version>1.31.4</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty -->
+		<dependency>
+		    <groupId>com.google.oauth-client</groupId>
+		    <artifactId>google-oauth-client-jetty</artifactId>
+		    <version>1.31.5</version>
+		</dependency>
+
+				
+		<!-- END GOOGLE CLOUD -->
+		
+		<!-- https://mvnrepository.com/artifact/com.sendgrid/sendgrid-java -->
+		<dependency>
+		    <groupId>com.sendgrid</groupId>
+		    <artifactId>sendgrid-java</artifactId>
+		    <version>4.7.2</version>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->

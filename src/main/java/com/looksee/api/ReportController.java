@@ -1,11 +1,10 @@
 package com.looksee.api;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
-import java.util.Set;
+import java.security.GeneralSecurityException;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -17,16 +16,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.auth0.json.auth.UserInfo;
-import com.auth0.net.Request;
 import com.looksee.auth.Auth0Client;
-import com.looksee.models.PageState;
-import com.looksee.models.SimplePage;
-import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.PageAudits;
-import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.security.SecurityConfig;
+import com.looksee.services.SendGridMailService;
 import com.looksee.utils.BrowserUtils;
 
 /**
@@ -40,11 +32,14 @@ public class ReportController {
     @Autowired
     protected SecurityConfig appConfig;
     
+    @Autowired
+    protected SendGridMailService sendgrid_service;
     /**
      * Retrieves {@link Action account} with a given key
      * 
      * @param key account key
      * @return {@link Action account}
+     * @throws MessagingException 
      * @throws IOException 
      */
     /*
@@ -91,17 +86,25 @@ public class ReportController {
     */
     
     @RequestMapping(method = RequestMethod.GET)
-    public void getReport(HttpServletRequest request,
+    public String getReport(HttpServletRequest request,
     		@RequestParam("url") String url
-	) throws MalformedURLException {
+	) throws  GeneralSecurityException, IOException {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(url));
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
     	
+    	String token = request.getHeader("Authorization").split(" ")[1];
     	Auth0Client auth_client = new Auth0Client();
-    	auth_client.getUsername(principal.getName());
+    	//Auth0ManagementApi auth0_mgmt = new Auth0ManagementApi(token);
+    	//auth_client.getUsername(principal.getName());
+
+    	String user_email = auth_client.getEmail(token);
+    	log.warn("user email :: "+user_email);
     	
-    	auth_client.getUsername(request.getHeader("Authorization"));
+	  String email_msg = "A UX audit has been requested by \n\n email : " + user_email + " \n\n webpage url : "+sanitized_url;
+    	sendgrid_service.sendMail(email_msg);
+    	//send email with user email and url that they want to have audited
+    
     	
+    	
+    	return sanitized_url.toString();
     }
 }

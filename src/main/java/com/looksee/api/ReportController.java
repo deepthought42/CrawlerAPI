@@ -99,7 +99,7 @@ public class ReportController {
     	String user_email = auth_client.getEmail(token);
     	log.warn("user email :: "+user_email);
     	
-	  String email_msg = "A UX audit has been requested by \n\n email : " + user_email + " \n\n webpage url : "+sanitized_url;
+    	String email_msg = "A UX audit has been requested by \n\n email : " + user_email + " \n\n webpage url : <a href='"+sanitized_url + "'>"+sanitized_url+"</a>";
     	sendgrid_service.sendMail(email_msg);
     	//send email with user email and url that they want to have audited
     

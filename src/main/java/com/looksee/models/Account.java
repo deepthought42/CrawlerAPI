@@ -33,9 +33,6 @@ public class Account {
 	@Relationship(type = "HAS_DOMAIN")
 	private Set<Domain> domains = new HashSet<>();
 
-	@Relationship(type = "HAS_DISCOVERY_RECORD")
-	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
-
 	@Relationship(type = "HAS_TEST_RECORD")
 	private Set<TestRecord> test_records = new HashSet<>();
 
@@ -156,18 +153,6 @@ public class Account {
 		if(domain_found){
 			this.domains.remove(idx);
 		}
-	}
-
-	public Set<DiscoveryRecord> getDiscoveryRecords() {
-		return discovery_records;
-	}
-
-	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
-		this.discovery_records = discovery_records;
-	}
-
-	public void addDiscoveryRecord(DiscoveryRecord record){
-		this.discovery_records.add(record);
 	}
 
 	public Set<TestRecord> getTestRecords() {

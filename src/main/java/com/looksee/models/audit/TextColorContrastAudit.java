@@ -106,6 +106,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					if(font_size >= 24 || (font_size >= 18.5 && BrowserUtils.isTextBold(font_weight))) {
 						if( contrast < 3 ) {
 							//low contrast header issue
+							String title = "Large text has low contrast";
 							String description = "Headline text has low contrast against the background";
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.HIGH,
@@ -117,7 +118,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									element,
 																									AuditCategory.AESTHETICS,
 																									labels, 
-																									ada_compliance);
+																									ada_compliance,
+																									title);
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
 						}
 						else if(contrast >= 3) {
@@ -128,6 +130,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					else if(font_size < 24 && !BrowserUtils.isTextBold(font_weight) ) {
 						if( contrast < 4.5 ) {
 							//fail
+							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
@@ -139,7 +142,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						element,
 																						AuditCategory.AESTHETICS, 
 																						labels, 
-																						ada_compliance);
+																						ada_compliance,
+																						title);
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
@@ -266,6 +270,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     total_possible_points,
 					     page_state.getUrl(),
 					     why_it_matters,
-					     "Text with contrast below 4.5");
+					     "Text with contrast below 4.5", 
+						 page_state);
 	}
 }

@@ -13,7 +13,7 @@ import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
-import com.looksee.models.experience.BugMessage;
+import com.looksee.models.audit.performance.BugMessage;
 import com.looksee.models.repository.BugMessageRepository;
 import com.looksee.models.repository.FormRepository;
 

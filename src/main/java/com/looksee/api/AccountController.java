@@ -73,8 +73,8 @@ public class AccountController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create( 
     		@RequestParam(value="user_id", required=true) String user_id,
-    		@RequestParam(value="username", required=true) String username)
-    												throws Exception{
+    		@RequestParam(value="username", required=true) String username
+    ) throws Exception{
     	Account acct = account_service.findByUsername(username);
 
     	//create account

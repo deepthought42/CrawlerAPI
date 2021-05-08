@@ -88,6 +88,7 @@ public class AuditFactory {
 			Audit title_and_headers = title_and_header_auditor.execute(page);
 			audits.add(title_and_headers);
 			
+			//Audit performance = 
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {
 			//works but temp disabled

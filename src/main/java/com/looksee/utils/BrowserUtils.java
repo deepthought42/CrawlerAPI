@@ -2,9 +2,12 @@ package com.looksee.utils;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,6 +16,20 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.HttpMethod;
+
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.StrictHostnameVerifier;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,6 +38,9 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 import com.looksee.browsing.Browser;
 import com.looksee.models.ElementState;
@@ -189,20 +209,36 @@ public class BrowserUtils {
 	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
 	 * @param url
 	 * @return
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public static boolean doesUrlExist(URL url) throws IOException {
+	public static boolean doesUrlExist(URL url) throws Exception {
 		assert(url != null);
 		
 		//perform check for http clients
-		if("http".equalsIgnoreCase(url.getProtocol()) || "https".equalsIgnoreCase(url.getProtocol())){
+		if("http".equalsIgnoreCase(url.getProtocol())){
 			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-			huc.setRequestMethod("HEAD");
 			int responseCode = huc.getResponseCode();
-
+			
 			if (responseCode != 404) {
 				return true;
 			} else {
+				return false;
+			}
+		}
+		if("https".equalsIgnoreCase(url.getProtocol())){
+			log.warn("url :: "+url);
+			HttpsURLConnection https_client = getHttpsClient(url.toString());
+
+			//HttpsURLConnection huc = (HttpsURLConnection) url.openConnection();
+			try {
+				int responseCode = https_client.getResponseCode();
+				log.warn("response code :: "+responseCode);
+				if (responseCode != 404) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch(UnknownHostException e) {
 				return false;
 			}
 		}
@@ -216,6 +252,39 @@ public class BrowserUtils {
 		return false;
 	}
 
+	private static HttpsURLConnection getHttpsClient(String url) throws Exception {
+		 
+        // Security section START
+        TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+ 
+                @Override
+                public void checkClientTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+ 
+                @Override
+                public void checkServerTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+            }};
+ 
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        // Security section END
+        
+        HttpsURLConnection client = (HttpsURLConnection) new URL(url).openConnection();
+        //add request header
+        client.setRequestProperty("User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
+        return client;
+    }
+	
 	/**
 	 * Checks if url string ends with an image suffix indicating that it points to an image file
 	 * 

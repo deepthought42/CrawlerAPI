@@ -7,8 +7,8 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.looksee.models.experience.PageSpeedAudit;
-import com.looksee.models.experience.PerformanceInsight;
+import com.looksee.models.audit.performance.PageSpeedAudit;
+import com.looksee.models.audit.performance.PerformanceInsight;
 
 /**
  * 

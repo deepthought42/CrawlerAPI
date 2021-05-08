@@ -176,6 +176,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				
 				//calculate contrast of button background with background of parent element
 				if(highest_contrast < 3.0){
+					String title = "Element has low contrast";
 					String description = "Element background has low contrast against the surrounding background";
 					//no points are rewarded for low contrast
 					Set<String> labels = new HashSet<>();
@@ -193,7 +194,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				element,
 																				AuditCategory.AESTHETICS,
 																				labels,
-																				ada_compliance);
+																				ada_compliance,
+																				title);
 					issue_messages.add(low_contrast_issue);
 				}
 				else {
@@ -244,7 +246,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description);
+						 description,
+						 page_state);
 	}
 
 

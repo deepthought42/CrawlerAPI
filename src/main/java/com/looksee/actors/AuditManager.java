@@ -123,6 +123,11 @@ public class AuditManager extends AbstractActor{
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
 						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
 						*/
+				   		ActorRef insight_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+						
+						//rendered_page_state_count++;
+				   		insight_auditor.tell(page_state, getSelf());
 						
 						log.warn("Page State Count :: "+page_states_experienced.keySet().size());
 						/*

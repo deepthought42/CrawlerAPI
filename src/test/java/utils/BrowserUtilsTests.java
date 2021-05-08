@@ -1,5 +1,6 @@
 package utils;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -61,10 +62,21 @@ public class BrowserUtilsTests {
 	}
 	
 	@Test
-	public void verifyUrlExists() throws IOException {
+	public void verifyUrlExists() throws Exception {
 		URL valid_url = new URL("https://www.google.com");
 		boolean does_exist = BrowserUtils.doesUrlExist(valid_url);
+		
 		assertTrue(does_exist);
+
+		URL valid_url2 = new URL("https://app.look-see.com");
+		boolean does_exist2 = BrowserUtils.doesUrlExist(valid_url2);
+		
+		assertTrue(does_exist2);
+		
+		URL valid_url3 = new URL("https://app-nonexisting.look-see.com");
+		boolean does_exist3 = BrowserUtils.doesUrlExist(valid_url3);
+		
+		assertFalse(does_exist3);
 	}
 	
 	@Test

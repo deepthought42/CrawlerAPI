@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.looksee.models.Account;
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.experience.PerformanceInsight;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.DomainService;

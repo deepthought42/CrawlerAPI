@@ -209,6 +209,9 @@ public class PageStateService {
 	}
 	
 	public List<Audit> getAudits(String page_state_key){
+		assert page_state_key != null;
+		assert !page_state_key.isEmpty();
+		
 		return page_state_repo.getAudits(page_state_key);
 	}
 

@@ -82,7 +82,9 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 				score++;
 			}
 			else {
+				String title= "Images without alternative text attribute";
 				String description = "Images without alternative text attribute";
+
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 
@@ -90,12 +92,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																image_element,
 																AuditCategory.INFORMATION_ARCHITECTURE, 
 																labels,
-																ada_compliance);
+																ada_compliance,
+																title);
 				issue_messages.add(issue_message);
 			}
 			
 			if(element.attr("alt").isEmpty()) {
-				String description = "Images without alternative text defined as a non empty string value";
+				String title = "Image alternative text value is empty";
+				String description = "Image alternative text value is empty";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 
@@ -103,7 +107,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																image_element,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
-																ada_compliance);
+																ada_compliance,
+																title);
 				issue_messages.add(issue_message);
 			}
 			else {
@@ -135,7 +140,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 						 image_elements.size()*2,
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description);
+						 description,
+						 page_state);
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}

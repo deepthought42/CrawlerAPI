@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.experience.AuditDetail;
-import com.looksee.models.experience.PageSpeedAudit;
+import com.looksee.models.audit.performance.AuditDetail;
+import com.looksee.models.audit.performance.PageSpeedAudit;
 import com.looksee.models.repository.AuditDetailRepository;
 import com.looksee.models.repository.PageSpeedAuditRepository;
 
@@ -28,14 +28,16 @@ public class PageSpeedAuditService {
 	 * @return
 	 */
 	public PageSpeedAudit save(PageSpeedAudit audit){
+		assert audit != null;
+		
+		/*for(AuditDetail detail : audit.getDetails()) {
 		List<AuditDetail> audit_details = new ArrayList<AuditDetail>();
 		
 		//save audit details
-		for(AuditDetail detail : audit.getDetails()) {
 			audit_details.add(audit_detail_repo.save(detail));
 		}
-		
 		audit.setDetails(audit_details);
+		 */
 		return audit_repo.save(audit);
 	}
 

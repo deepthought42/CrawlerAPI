@@ -161,7 +161,8 @@ public class FontAudit implements IExecutablePageStateAudit {
 						 max_score,
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description);
+						 description,
+						 page_state);
 	}
 	
 

@@ -27,7 +27,8 @@ public class ElementStateIssueMessage extends UXIssueMessage {
 			ElementState element, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance
+			String wcag_compliance,
+			String title
 	) {
 		setPriority(priority);
 		setDescription(description);
@@ -37,6 +38,7 @@ public class ElementStateIssueMessage extends UXIssueMessage {
 		setCategory(category);
 		setLabels(labels);
 		setWcagCompliance(wcag_compliance);
+		setTitle(title);
 		setKey(this.generateKey());
 	}
 	

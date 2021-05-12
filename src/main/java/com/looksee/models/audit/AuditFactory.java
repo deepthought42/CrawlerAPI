@@ -51,6 +51,9 @@ public class AuditFactory {
 	private FontAudit font_auditor;
 
 	@Autowired
+	private SecurityAudit security_audit;
+	
+	@Autowired
 	private TypefacesAudit typeface_auditor;
 	
 	@Autowired
@@ -88,6 +91,9 @@ public class AuditFactory {
 			Audit title_and_headers = title_and_header_auditor.execute(page);
 			audits.add(title_and_headers);
 			
+			Audit security = security_audit.execute(page);
+			audits.add(security);
+			
 			//Audit performance = 
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {
@@ -120,6 +126,7 @@ public class AuditFactory {
 			
 			Audit readability_audit = readability_auditor.execute(page);
 			audits.add(readability_audit);
+			
 			//Audit font_audit = font_auditor.execute(page);
 			//audits.add(font_audit);
 			

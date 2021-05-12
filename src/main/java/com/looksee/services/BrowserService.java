@@ -274,7 +274,8 @@ public class BrowserService {
 					full_page_screenshot.getWidth(), 
 					full_page_screenshot.getHeight(), 
 					url_without_protocol,
-					browser.getDriver().getTitle());
+					browser.getDriver().getTitle(),
+					BrowserUtils.checkIfSecure(browser_url, browser.getDriver().getTitle(), page_src));
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -314,6 +315,7 @@ public class BrowserService {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				log.warn("navigating to page state url ::   "+url);
 				browser.navigateTo(url.toString());
+				url = new URL(browser.getDriver().getCurrentUrl());
 				if(page_state == null) {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
@@ -406,7 +408,8 @@ public class BrowserService {
 				full_page_screenshot.getWidth(), 
 				full_page_screenshot.getHeight(), 
 				url_without_protocol,
-				title);
+				title,
+				BrowserUtils.checkIfSecure(url, title, source));
 
 		log.warn("built page...now saving page state...");
 		return page_state;
@@ -605,6 +608,7 @@ public class BrowserService {
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				String element_screenshot_url = "";
+				
 				while(element_screenshot_url == null || element_screenshot_url.isEmpty()) {
 					try {
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -634,8 +638,9 @@ public class BrowserService {
 															   element_screenshot_url);
 				
 				String bg_color_css = element_state.getRenderedCssValues().get("background-color");
-								
-				if(bg_color_css.contains("inherit") || bg_color_css.contains("rgb(255,255,255)")) {
+				String bg_image = element_state.getRenderedCssValues().get("background-image");
+	
+				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
 					log.warn("found element with '" + bg_color_css + "' setting");
 					element_state.setBackgroundColor(bg_color_css);
 				}
@@ -646,14 +651,8 @@ public class BrowserService {
 					String opacity_str = bg_color_css.substring(last_comma, last_paren);
 					//convert opacity to double
 					double opacity = Double.parseDouble( opacity_str.strip() );
-					if(opacity < 0.7) {
-						ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
-						element_state.setBackgroundColor(bkg_color.rgb());
-					}
-					else {
-						element_state.setBackgroundColor(bg_color_css);
-					}
-					
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
+					element_state.setBackgroundColor( bkg_color.rgb() );	
 				}
 				else {
 					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));

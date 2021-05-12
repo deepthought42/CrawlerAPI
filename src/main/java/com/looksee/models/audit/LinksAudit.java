@@ -271,7 +271,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				 
 				 if(!element_includes_text) {
 					String recommendation = "For best usability make sure links include text. You can assign text to a link by entering text within the link tag or by using an image with text";
-					String description = "Link tag doesn't contain any text";
+					String description = "Link doesn't contain any text";
 					String title = "Link is missing text";
 
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(

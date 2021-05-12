@@ -40,6 +40,8 @@ import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
 import com.looksee.models.Redirect;
 import com.looksee.models.TestUser;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.DiscoveryAction;
@@ -563,6 +565,30 @@ public class DomainController {
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}
+    
+    /**
+     * Retrieves list of {@link PerformanceInsight insights} with a given key
+     * 
+     * @param key account key
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @PreAuthorize("hasAuthority('read:actions')")
+    @RequestMapping(method = RequestMethod.GET, path="/audits")
+    public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
+			@PathVariable(value="host", required=true) String host
+	) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+        log.info("finding all page insights :: "+host);
+        return domain_service.getMostRecentAuditRecord(host).get();
+    }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

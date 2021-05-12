@@ -43,7 +43,7 @@ import com.looksee.utils.BrowserUtils;
  *	API for interacting with {@link User} data
  */
 @RestController
-@RequestMapping(path = "reports")
+@RequestMapping(path = "/reports")
 public class ReportController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	

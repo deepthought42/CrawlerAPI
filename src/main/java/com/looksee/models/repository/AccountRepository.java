@@ -15,6 +15,7 @@ import com.looksee.models.TestRecord;
 
 @Repository
 public interface AccountRepository extends Neo4jRepository<Account, Long> {
+	@Query("MATCH (account:Account{username:$username}) RETURN account LIMIT 1")
 	Account findByUsername(@Param("username") String username);
 
 	@Query("MATCH (account:Account{user_id:$user_id}) RETURN account")

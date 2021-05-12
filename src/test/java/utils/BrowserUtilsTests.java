@@ -87,4 +87,18 @@ public class BrowserUtilsTests {
 		System.out.println("font_families    ::     "+font_families);
 		Assert.assertTrue(font_families.size() == 2);
 	}
+	
+	public void testIsSecureCheck() throws IOException {
+		URL url = new URL("http://www.look-see.com");
+
+		boolean is_secure = BrowserUtils.checkIfSecure(url, "", "");
+		
+		assertTrue(is_secure);
+		
+		URL url_2 = new URL("http://app.look-see.com");
+
+		boolean is_secure_2 = BrowserUtils.checkIfSecure(url_2, "", "");
+		
+		assertTrue(is_secure_2);
+	}
 }

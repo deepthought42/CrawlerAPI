@@ -10,6 +10,8 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.looksee.models.audit.Audit;
+
 
 /**
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
@@ -33,8 +35,8 @@ public class Account {
 	@Relationship(type = "HAS_DOMAIN")
 	private Set<Domain> domains = new HashSet<>();
 
-	@Relationship(type = "HAS_TEST_RECORD")
-	private Set<TestRecord> test_records = new HashSet<>();
+	@Relationship(type = "HAS")
+	private Set<Audit> audits = new HashSet<>();
 
 	public Account(){}
 
@@ -155,16 +157,16 @@ public class Account {
 		}
 	}
 
-	public Set<TestRecord> getTestRecords() {
-		return test_records;
+	public Set<Audit> getAudits() {
+		return audits;
 	}
 
-	public void setTestRecords(Set<TestRecord> test_records) {
-		this.test_records = test_records;
+	public void setAudits(Set<Audit> audits) {
+		this.audits = audits;
 	}
 
-	public void addTestRecord(TestRecord record) {
-		this.test_records.add(record);
+	public void addAudit(Audit record) {
+		this.audits.add(record);
 	}
 
 	public String getSubscriptionType() {

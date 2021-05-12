@@ -20,7 +20,6 @@ import com.looksee.utils.BrowserUtils;
 public class PageSpeedInsightUtilTest {
 	private static Logger log = LoggerFactory.getLogger(PageSpeedInsightUtilTest.class.getName());
 
-	@Test
 	public void testPageSpeedInsights() throws IOException, GeneralSecurityException {
 		PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl("https://wave.webaim.org"));
 		System.out.println("page speed response length :: " + page_speed_response.toPrettyString().length());

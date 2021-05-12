@@ -110,7 +110,7 @@ public class TestService {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getEntryPath(), user_id), page, last_test_status );
+		 passing = Test.isTestPassing(getResult(test.getKey(), domain.getUrl(), user_id), page, last_test_status );
  		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 		 return test_record;

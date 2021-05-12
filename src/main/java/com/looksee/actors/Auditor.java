@@ -122,7 +122,7 @@ public class Auditor extends AbstractActor{
 			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getHost()), getSelf());
+			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
 				   	}
 				})
 				.match(MemberUp.class, mUp -> {

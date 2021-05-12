@@ -149,8 +149,8 @@ public class AuditManager extends AbstractActor{
 					Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
 					page_states_audited.put(audit_complete.getPageState().getKey(), audit_complete.getPageState());
 
-					Set<PageState> pages = domain_service.getPages(domain.getHost());
-					Set<PageState> page_states = domain_service.getPageStates(domain.getHost());
+					Set<PageState> pages = domain_service.getPages(domain.getUrl());
+					Set<PageState> page_states = domain_service.getPageStates(domain.getUrl());
 
 					if( pages.size() == page_states.size()) {						
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);

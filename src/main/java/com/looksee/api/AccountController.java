@@ -79,6 +79,7 @@ public class AccountController {
     		@RequestBody(required=true) Account account
     ) throws Exception{
     	log.warn("creating account for user :: "+account.getUsername());
+    	log.warn("creating account for user id :: "+account.getUserId());
     	Account acct = account_service.findByUsername(account.getUsername());
 
     	//create account

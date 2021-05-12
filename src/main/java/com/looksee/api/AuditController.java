@@ -121,7 +121,7 @@ public class AuditController {
 	) throws MalformedURLException {
     	URL url = new URL(BrowserUtils.sanitizeUrl(domain_host));
     	Domain domain = domain_service.findByHost(url.getHost());
-    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getHost()); 
+    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getUrl()); 
     	if(audit_record.isPresent()) {
     		return audit_record_service.getAllAudits(audit_record.get().getKey());
     	}
@@ -308,7 +308,7 @@ public class AuditController {
 	   	
 	   	PageState page_state = browser_service.buildPageState(sanitized_url);
 	   	page_service.save(page_state);
-		domain_service.addPage(domain.getHost(), page_state.getKey());
+		domain_service.addPage(domain.getUrl(), page_state.getKey());
 
 	   	//create new audit record
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state);

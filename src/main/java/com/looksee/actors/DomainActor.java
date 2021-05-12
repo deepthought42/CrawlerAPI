@@ -88,7 +88,7 @@ public class DomainActor extends AbstractActor{
 					discovery_action = message.getAction();
 					
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getEntryPath() + " WITH ACTION   :: " + message.getAction());
+					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
 					//pass message along to discovery actor

@@ -243,7 +243,7 @@ public class BrowserService {
 		String host = browser_url.getHost();
 		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
+		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getUrl(), src_checksum);
 
 		if(page_states.isEmpty()) {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
@@ -1167,7 +1167,7 @@ public class BrowserService {
 			
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, domain.getEntryPath());
+			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
 			Form form = new Form(form_tag, new ArrayList<com.looksee.models.Element>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
@@ -1181,12 +1181,12 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			Form form_record = form_service.findByKey(user_id, domain.getEntryPath(), form.getKey());
+			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}
 
-			int form_count = domain_service.getFormCount(user_id, domain.getEntryPath());
+			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
 			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 			

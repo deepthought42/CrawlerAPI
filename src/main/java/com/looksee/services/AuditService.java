@@ -74,19 +74,7 @@ public class AuditService {
 				audits_saved.add(audit_record);
 				continue;
 			}
-			log.warn("------------------------------------------------------------------------------");
-			log.warn("saving audit ;;: "+audit);
-			log.warn("Audit key :: "+audit.getKey());
-			log.warn("points :: "+audit.getPoints() + " / " + audit.getTotalPossiblePoints());
-			log.warn(" :: "+audit.getCategory());
-			log.warn(" :: "+audit.getLevel());
-			log.warn(" :: "+audit.getMessages());
-			for(UXIssueMessage issue_msg : audit.getMessages()) {
-				log.warn(" observation description :  "+issue_msg.getDescription());
-				log.warn(" observation type :  "+issue_msg.getType());
-			}
-			log.warn("Subcategory  :: "+audit.getName());
-			
+
 			try {
 				Audit saved_audit = audit_repo.save(audit);
 				audits_saved.add(saved_audit);
@@ -119,11 +107,9 @@ public class AuditService {
 	public List<PageStateAudits> groupAuditsByPage(Set<Audit> audits) {
 		Map<String, Set<Audit>> audit_url_map = new HashMap<>();
 		
-		log.warn("audit size :: "+audits.size());
 		for(Audit audit : audits) {
 			//if url of pagestate already exists 
 			if(audit_url_map.containsKey(audit.getUrl())) {
-				
 				audit_url_map.get(audit.getUrl()).add(audit);
 			}
 			else {
@@ -134,7 +120,6 @@ public class AuditService {
 			}
 		}
 		
-		log.warn("total pages :: " + audit_url_map.size());
 		List<PageStateAudits> page_audits = new ArrayList<>();
 		for(String url : audit_url_map.keySet()) {
 			//load page state by url
@@ -145,12 +130,12 @@ public class AuditService {
 											page_state.getFullPageScreenshotUrl(), 
 											page_state.getFullPageWidth(), 
 											page_state.getFullPageHeight(),
-											page_state.getSrc());
+											page_state.getSrc(),
+											page_state.getKey());
 			PageStateAudits page_state_audits = new PageStateAudits(simple_page, audit_url_map.get(url));
 			page_audits.add( page_state_audits ) ;
 		}
 		
-		log.warn("page audits :: "+page_audits.size());
 		return page_audits;
 	}
 
@@ -173,8 +158,6 @@ public class AuditService {
 			if(url.getHost().contentEquals(page_url.getHost()) 
 					&& url.getPath().contentEquals(page_url.getPath())
 			) {
-				log.warn("preparing to process audit messages :: "+audit.getMessages());
-
 				for(UXIssueMessage issue_msg : audit.getMessages()) {
 					IssueElementMap observation_element = null;
 
@@ -214,22 +197,18 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits, URL page_url) throws MalformedURLException {
-		log.warn("generating element observation map.....");
-		
+	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits, URL page_url) throws MalformedURLException {		
 		Set<ElementIssueMap> element_issues = new HashSet<>();
 		
 		Map<String, Set<UXIssueMessage>> issue_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
 		
 		for(Audit audit : audits) {
-			log.warn("checking if "+audit.getUrl()+"   matches  "+page_url);
 			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
 			
 			if(url.getHost().contentEquals(page_url.getHost()) 
 				&& url.getPath().contentEquals(page_url.getPath())
 			) {
-				log.warn("preparing to process audit messages :: "+audit.getMessages());
 				for(UXIssueMessage issue_msg : audit.getMessages()) {
 					//NOTE: color contrast is first because it inherits form EleementIssueMessage
 					if(issue_msg.getType().equals(ObservationType.COLOR_CONTRAST)) {
@@ -304,8 +283,6 @@ public class AuditService {
 		assert issue_key != null;
 		assert !issue_key.isEmpty();
 		
-		log.warn("ADD OBSERVATION KEY :: "+issue_key);
-		log.warn("ADD OBSERVATION audit key :: "+key);
 		return audit_repo.addIssueMessage(key, issue_key);
 	}
 

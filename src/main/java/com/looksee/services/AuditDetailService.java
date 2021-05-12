@@ -3,7 +3,7 @@ package com.looksee.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.experience.AuditDetail;
+import com.looksee.models.audit.performance.AuditDetail;
 import com.looksee.models.repository.AuditDetailRepository;
 
 /**

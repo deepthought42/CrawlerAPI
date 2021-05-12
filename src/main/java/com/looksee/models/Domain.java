@@ -16,9 +16,7 @@ import com.looksee.models.audit.AuditRecord;
  */
 public class Domain extends LookseeObject{
 	
-	private String host;
-	private String entry_path;
-	private String protocol;	
+	private String url;
 	private String logo_url;
 
 	@Relationship(type = "HAS")
@@ -52,11 +50,23 @@ public class Domain extends LookseeObject{
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
+	public Domain( String url){
+		setUrl(url);
+		setPages(new ArrayList<>());
+		setAuditRecords(new HashSet<>());
+		setKey(generateKey());
+	}
+	
+	/**
+	 * 
+	 * @param protocol web protocol ("http", "https", "file", etc.)
+	 * @param path landable url
+	 * @param browser name of the browser ie. chrome, firefox, etc.
+	 * @param logo_url url of logo image file
+	 */
 	public Domain( String protocol, String host, String path, String logo_url){
-		setEntryPath(path);
 		setLogoUrl(logo_url);
-		setProtocol(protocol);
-		setHost(host);
+		setUrl(host);
 		setPages(new ArrayList<>());
 		setAuditRecords(new HashSet<>());
 		setKey(generateKey());
@@ -69,36 +79,12 @@ public class Domain extends LookseeObject{
 	public boolean equals(Object o){
 		if(o instanceof Domain){
 			Domain domain = (Domain)o;
-			if(domain.getEntryPath().equals(this.getEntryPath())){
+			if(domain.getUrl().equals(this.getUrl())){
 				return true;
 			}
 		}
 		
 		return false;
-	}
-
-	public String getEntryPath() {
-		return entry_path;
-	}
-
-	public void setEntryPath(String url) {
-		this.entry_path = url;
-	}
-	
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	public void setProtocol(String protocol) {
-		this.protocol = protocol;
-	}
-
-	public String getProtocol() {
-		return this.protocol;
 	}
 
 	public String getLogoUrl() {
@@ -130,7 +116,7 @@ public class Domain extends LookseeObject{
 	 */
 	@Override
 	public String generateKey() {
-		return "domain"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getHost());
+		return "domain"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl());
 	}
 	
 	public Account getAccount() {
@@ -166,5 +152,13 @@ public class Domain extends LookseeObject{
 
 	public void setAuditRecords(Set<AuditRecord> audit_records) {
 		this.audit_records = audit_records;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

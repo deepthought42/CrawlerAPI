@@ -62,7 +62,9 @@ public class SegmentAnalyticsHelper {
    		);
 	}
 
-	public static void signupEvent(String userId, String string) {
+	public static void signupEvent(String userId) {
+		assert userId != null;
+		assert !userId.isEmpty();
 		identify(userId);
 		Map<String, String> account_signup_properties = new HashMap<String, String>();
     	account_signup_properties.put("plan", "FREE");
@@ -73,6 +75,9 @@ public class SegmentAnalyticsHelper {
 	}
 
 	public static void identify(String account_id) {
+		assert account_id != null;
+		assert !account_id.isEmpty();
+		
         buildSegment().enqueue(IdentifyMessage.builder()
     		    .userId(account_id)
     		);

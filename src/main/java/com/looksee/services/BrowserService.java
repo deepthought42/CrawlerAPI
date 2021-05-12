@@ -243,7 +243,7 @@ public class BrowserService {
 		String host = browser_url.getHost();
 		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getEntryPath(), src_checksum);
+		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getUrl(), src_checksum);
 
 		if(page_states.isEmpty()) {
 			log.warn("could not find page by source checksum ::  "+src_checksum);
@@ -274,7 +274,8 @@ public class BrowserService {
 					full_page_screenshot.getWidth(), 
 					full_page_screenshot.getHeight(), 
 					url_without_protocol,
-					browser.getDriver().getTitle());
+					browser.getDriver().getTitle(),
+					BrowserUtils.checkIfSecure(browser_url, browser.getDriver().getTitle(), page_src));
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -314,6 +315,7 @@ public class BrowserService {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				log.warn("navigating to page state url ::   "+url);
 				browser.navigateTo(url.toString());
+				url = new URL(browser.getDriver().getCurrentUrl());
 				if(page_state == null) {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
@@ -406,7 +408,8 @@ public class BrowserService {
 				full_page_screenshot.getWidth(), 
 				full_page_screenshot.getHeight(), 
 				url_without_protocol,
-				title);
+				title,
+				BrowserUtils.checkIfSecure(url, title, source));
 
 		log.warn("built page...now saving page state...");
 		return page_state;
@@ -605,6 +608,7 @@ public class BrowserService {
 				//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				String element_screenshot_url = "";
+				
 				while(element_screenshot_url == null || element_screenshot_url.isEmpty()) {
 					try {
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -634,8 +638,9 @@ public class BrowserService {
 															   element_screenshot_url);
 				
 				String bg_color_css = element_state.getRenderedCssValues().get("background-color");
-								
-				if(bg_color_css.contains("inherit") || bg_color_css.contains("rgb(255,255,255)")) {
+				String bg_image = element_state.getRenderedCssValues().get("background-image");
+	
+				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
 					log.warn("found element with '" + bg_color_css + "' setting");
 					element_state.setBackgroundColor(bg_color_css);
 				}
@@ -646,14 +651,8 @@ public class BrowserService {
 					String opacity_str = bg_color_css.substring(last_comma, last_paren);
 					//convert opacity to double
 					double opacity = Double.parseDouble( opacity_str.strip() );
-					if(opacity < 0.7) {
-						ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
-						element_state.setBackgroundColor(bkg_color.rgb());
-					}
-					else {
-						element_state.setBackgroundColor(bg_color_css);
-					}
-					
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
+					element_state.setBackgroundColor( bkg_color.rgb() );	
 				}
 				else {
 					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
@@ -1168,7 +1167,7 @@ public class BrowserService {
 			
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, domain.getEntryPath());
+			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
 			Form form = new Form(form_tag, new ArrayList<com.looksee.models.Element>(), findFormSubmitButton(user_id, form_elem, browser),
 									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
@@ -1182,12 +1181,12 @@ public class BrowserService {
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			Form form_record = form_service.findByKey(user_id, domain.getEntryPath(), form.getKey());
+			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}
 
-			int form_count = domain_service.getFormCount(user_id, domain.getEntryPath());
+			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
 			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 			

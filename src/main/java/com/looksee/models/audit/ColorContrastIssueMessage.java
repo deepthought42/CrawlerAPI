@@ -32,6 +32,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * @param category TODO
 	 * @param labels TODO
 	 * @param wcag_compliance TODO
+	 * @param title TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
 	 * @pre !recommendation.isEmpty()
@@ -52,7 +53,8 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 			ElementState element, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance
+			String wcag_compliance, 
+			String title
 	) {
 		assert priority != null;
 		assert recommendation != null;
@@ -74,6 +76,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		setLabels(labels);
 		setType(ObservationType.COLOR_CONTRAST);
 		setWcagCompliance(wcag_compliance);
+		setTitle(title);
 		setKey(this.generateKey());
 	}
 

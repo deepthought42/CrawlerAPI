@@ -102,9 +102,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			if("unknown".contentEquals(difficulty_string) || element.getAllText().split(" ").length <= 10) {
 				continue;
 			}
-			
-			String description = "Content is " + difficulty_string + " to read";
-			String recommendation = "";
+		
 			
 			Set<String> labels = new HashSet<>();
 			labels.add("written content");
@@ -130,6 +128,10 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 0;				
 			}
 			
+			String title = "Content is " + difficulty_string + " to read";
+			String description = "The text \"" + element.getAllText() + "\" is " + difficulty_string + " to read for the average consumer";
+			String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+			
 			points_earned += element_points;
 			max_points += 3;
 			
@@ -142,7 +144,8 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						element,
 						AuditCategory.CONTENT,
 						labels,
-						ada_compliance);
+						ada_compliance,
+						title);
 				issue_messages.add(issue_message);
 			}
 		}		
@@ -171,7 +174,8 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						 max_points, 
 						 page_state.getUrl(),
 						 why_it_matters, 
-						 description); 
+						 description,
+						 page_state); 
 	}
 
 

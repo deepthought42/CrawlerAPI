@@ -5,7 +5,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.looksee.models.experience.BugMessage;
+import com.looksee.models.audit.performance.BugMessage;
 
 /**
  * Spring Data interface for interacting with {@link BugMessage} objects in database

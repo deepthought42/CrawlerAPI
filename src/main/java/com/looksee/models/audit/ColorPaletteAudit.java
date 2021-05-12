@@ -150,7 +150,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
-		String description = "Sub-optimal color palette";
+		String title = "Sub-optimal color palette";
+		String description = "Your color palette has too much color and can be overwhelming for users to process";
 		String recommendation = "Color palettes with 2 main colors are perceived as most pleasant to the human eye";
 				
 		
@@ -163,7 +164,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 																color_scheme,
 																AuditCategory.AESTHETICS,
 																labels, 
-																ada_compliance);
+																ada_compliance,
+																title);
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		issue_messages.add(ux_issue_service.save(palette_issue_message));
@@ -183,7 +185,8 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 score.getMaxPossiblePoints(),
 						 page_state.getUrl(),
 						 why_it_matters, 
-						 description);
+						 description,
+						 page_state);
 	}
 	
 	/**

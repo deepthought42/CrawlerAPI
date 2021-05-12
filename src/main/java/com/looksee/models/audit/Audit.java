@@ -7,6 +7,7 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.LookseeObject;
+import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -29,7 +30,10 @@ public class Audit extends LookseeObject {
 	private String why_it_matters;
 	
 	@Relationship(type = "HAS")
-	private Set<UXIssueMessage> message;
+	private Set<UXIssueMessage> messages;
+	
+	@Relationship(type = "HAS")
+	private PageState page_states;
 	
 	private Set<String> labels;
 
@@ -53,6 +57,7 @@ public class Audit extends LookseeObject {
 	 * @param url TODO
 	 * @param why_it_matters TODO
 	 * @param description TODO
+	 * @param page_state TODO
 	 */
 	public Audit(
 			AuditCategory category, 
@@ -64,7 +69,8 @@ public class Audit extends LookseeObject {
 			int total_possible_points,
 			String url, 
 			String why_it_matters, 
-			String description
+			String description, 
+			PageState page_state
 	) {
 		super();
 		
@@ -84,11 +90,12 @@ public class Audit extends LookseeObject {
 		setUrl(url);
 		setWhyItMatters(why_it_matters);
 		setDescription(description);
+		setPageState(page_state);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription(), getPageState());
 	}
 
 	/**
@@ -189,10 +196,18 @@ public class Audit extends LookseeObject {
 
 
 	public Set<UXIssueMessage> getMessages() {
-		return message;
+		return messages;
 	}
 
-	public void setMessages(Set<UXIssueMessage> message) {
-		this.message = message;
+	public void setMessages(Set<UXIssueMessage> messages) {
+		this.messages = messages;
+	}
+	
+	public PageState getPageState() {
+		return page_states;
+	}
+
+	public void setPageState(PageState page_states) {
+		this.page_states = page_states;
 	}
 }

@@ -27,7 +27,8 @@ public class PageStateIssueMessage extends UXIssueMessage {
 				Priority priority, 
 				AuditCategory category, 
 				Set<String> labels,
-				String wcag_compliance
+				String wcag_compliance, 
+				String title
 	) {
 		setPage(page);
 		setDescription(description);
@@ -37,6 +38,7 @@ public class PageStateIssueMessage extends UXIssueMessage {
 		setLabels(labels);
 		setType(ObservationType.PAGE_STATE);
 		setWcagCompliance(wcag_compliance);
+		setTitle(title);
 		setKey(this.generateKey());
 	}
 

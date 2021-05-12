@@ -42,11 +42,11 @@ import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.PageAudits;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.experience.PerformanceInsight;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
@@ -121,7 +121,7 @@ public class AuditController {
 	) throws MalformedURLException {
     	URL url = new URL(BrowserUtils.sanitizeUrl(domain_host));
     	Domain domain = domain_service.findByHost(url.getHost());
-    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getHost()); 
+    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getUrl()); 
     	if(audit_record.isPresent()) {
     		return audit_record_service.getAllAudits(audit_record.get().getKey());
     	}
@@ -179,7 +179,8 @@ public class AuditController {
 	   									page_state.getFullPageScreenshotUrl(), 
 	   									page_state.getFullPageWidth(), 
 	   									page_state.getFullPageHeight(),
-	   									page_state.getSrc());
+	   									page_state.getSrc(), 
+	   									page_state.getKey());
 
 
     	log.warn("Audit record key :: "+audit_record.getKey());
@@ -297,7 +298,8 @@ public class AuditController {
 		   									page_state.getFullPageScreenshotUrl(), 
 		   									page_state.getFullPageWidth(), 
 		   									page_state.getFullPageHeight(),
-		   									page_state.getSrc());
+		   									page_state.getSrc(),
+		   									page_state.getKey());
 		   	
 	   		PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
 	   		page_audits.addAudits(audits);
@@ -306,7 +308,7 @@ public class AuditController {
 	   	
 	   	PageState page_state = browser_service.buildPageState(sanitized_url);
 	   	page_service.save(page_state);
-		domain_service.addPage(domain.getHost(), page_state.getKey());
+		domain_service.addPage(domain.getUrl(), page_state.getKey());
 
 	   	//create new audit record
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state);
@@ -323,9 +325,18 @@ public class AuditController {
 	   	*/
 	   	Set<Audit> audits = new HashSet<>();
 	   	
+	   	//check if page state already
+	   	//perform audit and return audit result
+	   	log.warn("?????????????????????????????????????????????????????????????????????");
+	   	log.warn("?????????????????????????????????????????????????????????????????????");
+	   	log.warn("?????????????????????????????????????????????????????????????????????");
+	   	
+	   	log.warn("requesting performance audit from performance auditor....");
+	   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+	   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+	   	performance_insight_actor.tell(page_state, ActorRef.noSender());
+
 	   	for(AuditCategory audit_category : AuditCategory.values()) {
-	   		//check if page state already
-   			//perform audit and return audit result
    			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
 
    			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
@@ -344,7 +355,7 @@ public class AuditController {
 	   	audit_record.setStatus(ExecutionStatus.COMPLETE);
 	   	audit_record.setEndTime(LocalDateTime.now());
 	   	audit_record_service.save(audit_record);
-	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null);
+	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null, null);
 	   	PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
 	   	
 	   	//if request is from www.look-see.com then return redirect response

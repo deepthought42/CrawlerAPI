@@ -1,0 +1,36 @@
+##Production
+auth0.domain:look-see.us.auth0.com
+auth0.issuer:https://look-see.us.auth0.com/
+
+#auth0 management api
+#auth0.audience:https://look-see.us.auth0.com/api/v2/
+#spring.security.oauth2.resourceserver.jwt.issuer-uri=https://look-see.us.auth0.com/
+#spring.security.oauth2.client.registration.auth0.client-id=H7N3TYC4R9dFnd9tJr6Tmw7H2xERxNge
+#spring.security.oauth2.client.registration.auth0.client-secret=bK0paNucBzr_JPIauH8uU0tJkRp3p88ySOxJto6_JHqFXq942XH9-cvEm_v3OcmP
+
+
+## custom auth0 api
+auth0.audience:https://api.look-see.com/audits
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://look-see.us.auth0.com/
+spring.security.oauth2.client.registration.auth0.client-id=aSlsPI5ENJXKSYHyxaG6oxo46peRT25N
+spring.security.oauth2.client.registration.auth0.client-secret=cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51
+
+##Staging
+#auth0.domain:staging-qanairy.auth0.com
+#auth0.issuer:https://staging-qanairy.auth0.com/
+#auth0.apiAudience:https://staging-api.qanairy.com
+#auth0.clientId:jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw
+#auth0.clientSecret:XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm
+
+##Development
+#auth0.domain:dev-qanairy.auth0.com
+#auth0.issuer:https://dev-qanairy.auth0.com/
+#auth0.apiAudience:https://dev2.qanairy.com
+#auth0.clientId:IGBRMudqLag0UKqwcEmYPAdTxQsoAMUv
+#auth0.clientSecret:5R6Uy4EhKWuavOC9DDdoENMxSlJgJ6TIOBPYvES3ajhlWqaTEKfm5lZ4z9YgIT-F
+
+auth0.securedRoute: /*
+auth0.base64EncodedSecret: false
+auth0.authorityStrategy: ROLES
+auth0.defaultAuth0ApiSecurityEnabled: true
+auth0.signingAlgorithm: RS256

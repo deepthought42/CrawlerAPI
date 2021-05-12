@@ -8,9 +8,9 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.looksee.models.audit.performance.BugMessage;
 import com.looksee.models.enums.FormStatus;
 import com.looksee.models.enums.FormType;
-import com.looksee.models.experience.BugMessage;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser

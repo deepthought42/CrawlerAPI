@@ -26,6 +26,7 @@ import com.looksee.models.message.PageStateAuditComplete;
 import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -43,6 +44,9 @@ public class Auditor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
+	
+	@Autowired
+	private ActorSystem actor_system;
 	
 	@Autowired
 	private AuditService audit_service;
@@ -81,9 +85,22 @@ public class Auditor extends AbstractActor{
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
 				   	
+				   	//check if page state already
+		   			//perform audit and return audit result
+				   	/*
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+
+			   		log.warn("requesting performance audit from performance auditor....");
+			   		ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+					performance_insight_actor.tell(page_state, getSelf());
+					*/
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
-				   		//check if page state already
-			   			//perform audit and return audit result
+				   		
+						log.warn("performing all other audits");
+						
 			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
     
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
@@ -105,7 +122,7 @@ public class Auditor extends AbstractActor{
 			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getHost()), getSelf());
+			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
 				   	}
 				})
 				.match(MemberUp.class, mUp -> {

@@ -1,4 +1,4 @@
-package com.looksee.models.experience;
+package com.looksee.models.audit.performance;
 
 /**
  * Contains {@link AuditDetail}s for the "resource-summary" performance audit in googe pagespeed api

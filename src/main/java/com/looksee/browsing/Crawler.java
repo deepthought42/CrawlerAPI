@@ -487,7 +487,7 @@ public class Crawler {
 					//browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
-					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getHost(), path, user_id);
+					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getUrl(), path, user_id);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);

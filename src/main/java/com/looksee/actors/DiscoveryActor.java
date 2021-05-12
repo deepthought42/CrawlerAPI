@@ -105,7 +105,6 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef domain_actor;
 	private ActorRef url_browser_actor;
 	private ActorRef form_discoverer;
-	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
@@ -155,13 +154,13 @@ public class DiscoveryActor extends AbstractActor{
 						return;
 					}
 					*/
-					discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
+					discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), BrowserType.CHROME.toString(), message.getAccountId());
 
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
-						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), BrowserType.CHROME.toString(), message.getAccountId());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						if(path_expansion_actor == null){
@@ -173,7 +172,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						discovery_record = getDiscoveryRecord(message.getDomain().getEntryPath(), BrowserType.CHROME.toString(), message.getAccountId());
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), BrowserType.CHROME.toString(), message.getAccountId());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
@@ -218,9 +217,9 @@ public class DiscoveryActor extends AbstractActor{
 			    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 			    		throw new PaymentDueException("Your plan has 0 generated tests left. Please upgrade to generate more tests");
 			    	}
-					discovery_record = getDiscoveryRecord(test_msg.getDomain().getEntryPath(), BrowserType.CHROME.toString(), test_msg.getAccount());
+					discovery_record = getDiscoveryRecord(test_msg.getDomain().getUrl(), BrowserType.CHROME.toString(), test_msg.getAccount());
 					Test test = test_msg.getTest();
-					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getEntryPath(), test_msg.getAccount());
+					Test existing_record = test_service.findByKey(test.getKey(), test_msg.getDomain().getUrl(), test_msg.getAccount());
 					if(existing_record == null) {
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						try {
@@ -296,16 +295,10 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					discovery_record = getDiscoveryRecord(form_msg.getDomain().getEntryPath(), BrowserType.CHROME.toString(), form_msg.getAccountId());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), BrowserType.CHROME.toString(), form_msg.getAccountId());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
-
-					if(form_test_discovery_actor == null){
-			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-			        }
-		        	form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
 
 			        discovery_service.save(discovery_record);
 				})
@@ -321,7 +314,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					
 					try {
-					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), form);
+					    form = form_service.save(form_msg.getUserId(), form_msg.getDomain().getUrl(), form);
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
@@ -336,7 +329,7 @@ public class DiscoveryActor extends AbstractActor{
 
 					
 					try {
-						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getEntryPath(), page_state_record);					    
+						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomain().getUrl(), page_state_record);					    
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
@@ -345,7 +338,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 					
-				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getHost(), form_msg.getUserId());					
+				  	MessageBroadcaster.broadcastDiscoveredForm(form, form_msg.getDomain().getUrl(), form_msg.getUserId());					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -386,11 +379,6 @@ public class DiscoveryActor extends AbstractActor{
 			path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 	    }
-		
-		if(form_test_discovery_actor == null){
-        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-        }
     
 		if(exploratory_browser_actors.isEmpty()){
 			//create multiple exploration actors for parallel execution
@@ -410,7 +398,7 @@ public class DiscoveryActor extends AbstractActor{
 		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		URL url = new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getEntryPath());
+		URL url = new URL(message.getDomain().getUrl());
 		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomain(), message.getAccountId());
 		
 		url_browser_actor.tell(url_message, getSelf() );

@@ -22,6 +22,8 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.ObservationType;
+import com.looksee.models.enums.Priority;
 import com.looksee.utils.ElementStateUtils;
 
 
@@ -112,56 +114,102 @@ public class FontAudit implements IExecutablePageStateAudit {
 			
 			if(font_sizes.size() > 1) {
 				log.warn("font sizes :: "+font_sizes);
-				score += 1;
+				String title = "Font sizes are inconsistent for "+header_tag+" elements on the page";
+				String description = "Found that " + header_tag + " headers are using font sizes of "+font_sizes+"";
+				String wcag_compliance = "";
+				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same size.";
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						new HashSet<>(),
+						why_it_matters,
+						title);
+				issue_messages.add(ux_issue);
 			}
 			else {
-				score += 3;
+				score += 1;
 			}
-			max_score +=3;
+			max_score +=1;
 			
-			if(line_heights.size() > 1) {
-				log.warn("font sizes :: "+line_heights);
-				
-				score += 1;
-			}
-			else {
-				score += 3;
-			}
-			max_score +=3;
 			
 			if(font_weights.size() > 1) {
 				log.warn("font weights:: "+font_weights);
-				score += 1;
+				String title = "Font weights are inconsistent for "+header_tag+" elements on the page";
+				String description = "Found that " + header_tag + " headers are using the following font weights. "+font_sizes+"";
+				String wcag_compliance = "";
+				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same weight.";
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						new HashSet<>(),
+						why_it_matters,
+						title);
+				issue_messages.add(ux_issue);
 			}
 			else {
-				score += 3;
-			}
-			max_score +=3;
-			
-			if(font_variants.size() > 1) {
-				log.warn("font variants:: "+font_variants);
 				score += 1;
 			}
-			else {
-				score += 3;
-			}
-			max_score +=3;
+			max_score +=1;
 			
 			log.warn("#############################################################################");
 		}
+		
+		
+		//audit for font sizes less than 12px only for elements with text
+		int font_size_score = 0;
+		int total_score = 0;
+
+		for(ElementState element : page_state.getElements()) {
+			String font_size_str = element.getRenderedCssValues().get("font-size");
+			font_size_str = font_size_str.replace("px", "");
+			double font_size = Double.parseDouble(font_size_str.strip());
+			boolean owns_text = !element.getOwnedText().isEmpty();
+			
+			if(owns_text && font_size < 12) {
+				
+				String title = "font-size is too small for mobile devices";
+				String description = "Text has a font size of " + font_size_str + " which is too small to be readable on a mobile device";
+				String wcag_compliance = "";
+				String recommendation = "Make sure to use a font that is greater than 12px. Anything smaller is impossible to read on a mobile device. On a desktop device, text smaller than 12px can be hard to reduce, especially for he visually impaired";
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						new HashSet<>(),
+						why_it_matters,
+						title);
+				issue_messages.add(ux_issue);
+			}
+			else if(owns_text && font_size >=12 ) {
+				font_size_score++;
+			}
+			total_score++;
+		}
 		String description = "";
 		
-		log.warn("FONT AUDIT SCORE   ::   "+score +" / " +max_score);
+		log.warn("FONT AUDIT SCORE   ::   "+(font_size_score + score) +" / " +(total_score + max_score));
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.FONT,
-						 score,
+						 (font_size_score + score),
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 max_score,
+						 (total_score + max_score),
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description);
+						 description,
+						 page_state);
 	}
 	
 

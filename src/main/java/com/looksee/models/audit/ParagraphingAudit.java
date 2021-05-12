@@ -130,7 +130,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 max_points, 
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description); 
+						 description,
+						 page_state); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
@@ -154,7 +155,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 
 				//return new Score(1, 1, new HashSet<>());
 				String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
-				String description = "Sentence is too long";
+				String title = "Sentence is too long";
+				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult to users to understand";
+				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.MEDIUM, 
 																description, 
@@ -162,7 +165,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																element,
 																AuditCategory.CONTENT,
 																labels,
-																ada_compliance);
+																ada_compliance,
+																title);
 				
 				issue_messages.add(issue_message);
 				

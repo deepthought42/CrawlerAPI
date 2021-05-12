@@ -219,6 +219,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 				score +=1;
 				String recommendation = "Check that the primary font is included and loaded correctly";
 				String description = "Text element rendered with a fallback typeface instead of the desired font.";
+				String title = "Text rendered with a fallback typeface";
+
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.MEDIUM, 
 																	description, 
@@ -226,7 +228,8 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 																	element,
 																	AuditCategory.AESTHETICS,
 																	labels,
-																	ada_compliance);
+																	ada_compliance,
+																	title);
 				no_fallback_font.add(issue_message);
 			}
 			
@@ -249,6 +252,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 						 total_possible_points,
 						 page_state.getUrl(),
 						 why_it_matters,
-						 description);
+						 description, 
+						 page_state);
 	}
 }

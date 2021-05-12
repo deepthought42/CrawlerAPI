@@ -2,8 +2,6 @@ package com.looksee.utils;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,7 +21,7 @@ import org.openimaj.image.analysis.colour.CIEDE2000;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.models.ElementState;
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorUsageStat;
 
@@ -152,8 +150,8 @@ public class ImageUtils {
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < buffered_image.getWidth(); x++) {
-			for(int y=0; y < buffered_image.getHeight(); y++) {
+		for(int x=0; x < buffered_image.getWidth(); x+=3) {
+			for(int y=0; y < buffered_image.getHeight(); y+=3) {
 				 int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;
 		        int green = (clr & 0x0000ff00) >> 8;
@@ -188,7 +186,9 @@ public class ImageUtils {
 	 */
 	public static ColorData extractBackgroundColor(URL screenshot_url) throws IOException {
 		List<ColorUsageStat> color_data_list = new ArrayList<>();
-		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url)) );
+		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url)) ); //LOCAL BRUTE FORCE METHOD
+		//color_data_list.addAll(CloudVisionUtils.extractImageProperties(ImageIO.read(screenshot_url)));
+
 		color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
 
 		//ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);

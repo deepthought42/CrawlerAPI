@@ -1,10 +1,9 @@
 package com.looksee.actors;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -22,47 +21,44 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
-import com.google.api.services.pagespeedonline.Pagespeedonline;
-import com.google.api.services.pagespeedonline.model.LighthouseAuditResultV5;
-import com.google.api.services.pagespeedonline.model.LighthouseCategoryV5.AuditRefs;
+import com.google.api.services.pagespeedonline.v5.model.AuditRefs;
+import com.google.api.services.pagespeedonline.v5.model.LighthouseAuditResultV5;
+import com.google.api.services.pagespeedonline.v5.model.PagespeedApiPagespeedResponseV5;
+import com.looksee.gcp.PageSpeedInsightUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.AccessibilityDetailNode;
+import com.looksee.models.audit.performance.AssetSize;
+import com.looksee.models.audit.performance.AssetSizeOpportunityDetail;
+import com.looksee.models.audit.performance.AuditDetail;
+import com.looksee.models.audit.performance.BlockingResource;
+import com.looksee.models.audit.performance.BootUpTime;
+import com.looksee.models.audit.performance.CachingDetail;
+import com.looksee.models.audit.performance.DiagnosticDetail;
+import com.looksee.models.audit.performance.DomSize;
+import com.looksee.models.audit.performance.GroupWorkBreakdown;
+import com.looksee.models.audit.performance.MetricsDetail;
+import com.looksee.models.audit.performance.NetworkRequestDetail;
+import com.looksee.models.audit.performance.PageSpeedAudit;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.audit.performance.ResourceSummary;
+import com.looksee.models.audit.performance.ScreenshotThumbnailDetails;
+import com.looksee.models.audit.performance.ThirdPartySummaryDetail;
+import com.looksee.models.audit.performance.TimingDetail;
+import com.looksee.models.audit.performance.WebPImageDetail;
+import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.CaptchaResult;
 import com.looksee.models.enums.FormFactor;
 import com.looksee.models.enums.InsightType;
-import com.looksee.models.experience.AccessibilityDetailNode;
-import com.looksee.models.experience.AssetSize;
-import com.looksee.models.experience.AssetSizeOpportunityDetail;
-import com.looksee.models.experience.AuditDetail;
-import com.looksee.models.experience.BlockingResource;
-import com.looksee.models.experience.BootUpTime;
-import com.looksee.models.experience.CachingDetail;
-import com.looksee.models.experience.DiagnosticDetail;
-import com.looksee.models.experience.DomSize;
-import com.looksee.models.experience.GroupWorkBreakdown;
-import com.looksee.models.experience.MetricsDetail;
-import com.looksee.models.experience.NetworkRequestDetail;
-import com.looksee.models.experience.PageSpeedAudit;
-import com.looksee.models.experience.PerformanceInsight;
-import com.looksee.models.experience.ResourceSummary;
-import com.looksee.models.experience.ScreenshotThumbnailDetails;
-import com.looksee.models.experience.ThirdPartySummaryDetail;
-import com.looksee.models.experience.TimingDetail;
-import com.looksee.models.experience.WebPImageDetail;
-import com.looksee.models.message.UrlMessage;
+import com.looksee.models.enums.ObservationType;
+import com.looksee.models.enums.Priority;
 import com.looksee.services.AuditDetailService;
-import com.looksee.services.BrowserService;
-import com.looksee.services.DomainService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageSpeedAuditService;
-import com.looksee.services.PageStateService;
 import com.looksee.services.PerformanceInsightService;
-import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedResponseV5;
+import com.looksee.utils.BrowserUtils;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
@@ -70,23 +66,13 @@ import com.google.api.services.pagespeedonline.model.PagespeedApiPagespeedRespon
  */
 @Component
 @Scope("prototype")
-public class PerformanceInsightActor extends AbstractActor {
-	private static Logger log = LoggerFactory.getLogger(PerformanceInsightActor.class.getName());
+public class PerformanceAuditor extends AbstractActor {
+	private static Logger log = LoggerFactory.getLogger(PerformanceAuditor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	private static String api_key = "AIzaSyD8jtPtAdC8g6gIEIidZnsDFEANE-2gSRY";
-
-	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
-	private DomainService domain_service;
 	
 	@Autowired
 	private ElementStateService element_state_service;
 
-	@Autowired
-	private PageStateService page_state_service;
-	
 	@Autowired
 	private PageSpeedAuditService audit_service;
 	
@@ -116,7 +102,7 @@ public class PerformanceInsightActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(UrlMessage.class, message -> {
+				.match(PageState.class, page -> {
 					/*
 					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
@@ -127,28 +113,30 @@ public class PerformanceInsightActor extends AbstractActor {
 						return;
 					}
 					*/
-					
-					PageState page = browser_service.buildPageState(message.getUrl());
-					
+										
 					//log.warn("page states count :: " + page.getPageStates().size());
-					PagespeedApiPagespeedResponseV5 page_speed_response = getPageInsights(page.getUrl());
+					PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl(page.getUrl()));
 					log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
+					List<UXIssueMessage> ux_issues = PageSpeedInsightUtils.extractFontSizeIssues(page_speed_response);
+
+					//List<UXIssueMessage> ux_issues = extractInsights(page_speed_response);
 					
-					PerformanceInsight performance_insight = extractInsights(message.getAccountId(), page_speed_response);
-					
+					log.warn("UX Issues found by performance issues :: "+ux_issues.size());
+					log.warn("??????????????????????????????????????????????????????????????????");
+					log.warn("??????????????????????????????????????????????????????????????????");
 					//Page page = new Page(page.getUrl());
 					//page.setPerformanceScore(performance_insight.getSpeedScore());
 					//page.setAccessibilityScore(performance_insight.getAccessibilityScore());
 					//page.setSeoScore(performance_insight.getSeoScore());
 					//page.setOverallScore(performance_insight.getOverallScore());
-					page = page_state_service.save(page);
+					//page = page_state_service.save(page);
 					
 					//domain_service.addPageState(message.getDomain().getUrl(), page_state, message.getAccount());
-					performance_insight_service.save(performance_insight);
+					//performance_insight_service.save(performance_insight);
 					
 					//TODO compile insights into ux issue messages that are then added to the current audit
 					//page_state_service.addPerformanceInsight(message.getAccountId(), message.getDomain().getEntryPath(), page.getKey(), performance_insight.getKey());
-					domain_service.addPage(message.getDomain().getEntryPath(), page.getKey());
+					//domain_service.addPage(new URL(BrowserUtils.sanitizeUrl(page.getUrl())).getHost(), page.getKey());
 
 					log.warn("creating landing page performance and SEO insights");					
 				})
@@ -167,13 +155,16 @@ public class PerformanceInsightActor extends AbstractActor {
 				.build();
 	}
 	
+	
 	/**
 	 * Extract page speed insights data and performance audits
 	 * 
 	 * @param page_speed_response
 	 * @return
 	 */
-	private PerformanceInsight extractInsights(String user_id, PagespeedApiPagespeedResponseV5 page_speed_response) {
+	public List<UXIssueMessage> extractInsights(PagespeedApiPagespeedResponseV5 page_speed_response) {
+		List<UXIssueMessage> ux_issues = new ArrayList<UXIssueMessage>();
+		
 		PerformanceInsight speed_insight = new PerformanceInsight(
 				new Date(),
 				page_speed_response.getLighthouseResult().getTiming().getTotal(),
@@ -210,8 +201,32 @@ public class PerformanceInsightActor extends AbstractActor {
 	    }
 	    
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
+    		UXIssueMessage issue_msg = new UXIssueMessage(
+    											"Recommendation goes here",
+    											Priority.HIGH, 
+    											audit_record.getDescription(), 
+    											ObservationType.PAGE_STATE, 
+    											AuditCategory.INFORMATION_ARCHITECTURE, 
+    											"wcag compliance", 
+    											new HashSet<>(),
+    											audit_record.getExplanation(),
+    											audit_record.getTitle());
+    				
+    		ux_issues.add(issue_msg);
+    		
     		InsightType insight_type = getAuditType(audit_record, audit_ref_map);
-
+    		
+    		log.warn("audit record id  ....  "+audit_record.getId());
+    		log.warn("audit record description  ....  "+audit_record.getDescription());
+    		log.warn("audit record display value  ....  "+audit_record.getDisplayValue());
+    		log.warn("audit record error msg  ....  "+audit_record.getErrorMessage());
+    		log.warn("audit record explanation  ....  "+audit_record.getExplanation());
+    		log.warn("audit record score display mode ....  "+audit_record.getScoreDisplayMode());
+    		log.warn("audit record title  ....  "+audit_record.getTitle());
+    		log.warn("audit record numeric value  ....  "+audit_record.getNumericValue());
+    		log.warn("audit record score ....  "+audit_record.getScore());
+    		log.warn("audit record warnings  ....  "+audit_record.getWarnings());
+    		
     		PageSpeedAudit audit = new PageSpeedAudit(
     				audit_record.getId(),
     				audit_record.getDescription(),
@@ -237,7 +252,7 @@ public class PerformanceInsightActor extends AbstractActor {
     	speed_insight.setSpeedScore(speed_score);
     	speed_insight.setOverallScore(calculatePageScore(speed_insight));
     	log.warn("speed insight audits found :: "+speed_insight.getAudits().size());
-    	return performance_insight_service.save(speed_insight);
+    	return ux_issues;
 	}
 
 	/**
@@ -267,69 +282,7 @@ public class PerformanceInsightActor extends AbstractActor {
 		return score_total/insight_cnt;
 	}
 	
-	/**
-	 * 
-	 * @param details
-	 * 
-	 * @return
-	 * 
-	 * @pre details != null;
-	 */
-	private List<AuditDetail> extractAccessibilityAuditDetails(String user_id, Map<String, Object> details) {
-		List<AuditDetail> audit_details = new ArrayList<>();
-		if(details != null) {
-			List<Object> items = (List)details.get("items");
-			
-			for(Object item: items) {
-				ArrayMap<String, Object> obj = (ArrayMap)item;
-				ArrayMap<String, Object> json_obj = (ArrayMap)obj.get("node");
-				String explanation = json_obj.get("explanation").toString();
-				String snippet = json_obj.get("snippet").toString();
-				snippet = snippet.replaceAll(">\\s+<","> <");
-				snippet = snippet.replace("\n", "");
-				snippet = snippet.replace("required=\"\"", "required");
-				ElementState element_state = element_state_service.findByOuterHtml(user_id, snippet);
-
-				int fix_all_idx = explanation.indexOf("Fix all of the following:");
-				int fix_any_idx = explanation.indexOf("Fix any of the following:");
-				explanation = explanation.trim();
-				
-				String optional_details = null;
-				String required_details = null;
-				if(fix_all_idx > 0 && fix_any_idx == 0) {
-					optional_details = explanation.substring(0, fix_all_idx);
-					required_details = explanation.substring(fix_all_idx);
-				}
-				else if(fix_all_idx == 0 && fix_any_idx > 0) {
-					required_details = explanation.substring(0, fix_all_idx);
-					optional_details = explanation.substring(fix_any_idx);
-				}
-				else {
-					if(fix_all_idx >= 0) {
-						required_details = explanation;
-						optional_details = "";
-					}
-					else if(fix_any_idx >= 0) {
-						optional_details = explanation;
-						required_details = "";
-					}
-				}
-
-				String[] optional_change_messages = optional_details.split("\\n");
-				String[] required_change_messages = required_details.split("\\n");
-
-				AccessibilityDetailNode detail = new AccessibilityDetailNode();
-				detail.setOptionalChangeMessages(optional_change_messages);
-				detail.setRequiredChangeMessages(required_change_messages);
-				detail = (AccessibilityDetailNode)audit_detail_service.save(detail);
-				detail.setElement(element_state);
-				detail = (AccessibilityDetailNode)audit_detail_service.save(detail);
-				audit_details.add(detail);
-			}
-		}
-		
-		return audit_details;
-	}
+	
 	
 	/**
 	 * Extracts the details object list from the JSON object and formats the data into the appropriate details object
@@ -600,7 +553,7 @@ public class PerformanceInsightActor extends AbstractActor {
 		return mime_type;
 	}
 
-	private InsightType getAuditType(
+	public static InsightType getAuditType(
 			LighthouseAuditResultV5 audit_record,
 			Map<InsightType, List<String>> audit_ref_map
 	) {
@@ -628,35 +581,5 @@ public class PerformanceInsightActor extends AbstractActor {
 		return score;
 	}
 	
-	/**
-	 * Retrieves Google PageSpeed Insights result from their API
-	 * 
-	 * @param url
-	 * 
-	 * @throws IOException
-	 * @throws GeneralSecurityException
-	 * 
-	 * @pre url != null
-	 * @pre !url.isEmpty()
-	 */
-	private PagespeedApiPagespeedResponseV5 getPageInsights(String url) throws IOException, GeneralSecurityException {
-	    assert url != null;
-	    assert !url.isEmpty();
-	    
-		JacksonFactory jsonFactory = new JacksonFactory();
-	    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-
-	    HttpRequestInitializer httpRequestInitializer = null; //this can be null here!
-	    Pagespeedonline p = new Pagespeedonline.Builder(transport, jsonFactory, httpRequestInitializer).setApplicationName("Qanairy-Selenium").build();
-	    
-	    Pagespeedonline.Pagespeedapi.Runpagespeed runpagespeed  = p.pagespeedapi().runpagespeed(url).setKey(api_key);
-	    List<String> category = new ArrayList<>();
-	    category.add("performance");
-	    category.add("accessibility");
-	    //category.add("best-practices");
-	    //category.add("pwa");
-	    category.add("seo");
-	    runpagespeed.setCategory(category);
-	    return runpagespeed.execute();
-	}
+	
 }

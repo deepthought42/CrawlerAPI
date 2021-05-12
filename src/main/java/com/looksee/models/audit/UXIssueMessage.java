@@ -12,13 +12,40 @@ import com.looksee.models.enums.Priority;
 
 @NodeEntity
 public class UXIssueMessage extends LookseeObject {
+	private String title;
+	private String description;
+	private String why_it_matters;
 	private String recommendation;
 	private String priority;
-	private String description;
 	private String type;
 	private String category;
 	private String wcag_compliance;
 	private Set<String> labels;
+	
+	public UXIssueMessage() {}
+	
+	public UXIssueMessage(
+			String recommendation,
+			Priority priority, 
+			String description,
+			ObservationType type,
+			AuditCategory category,
+			String wcag_compliance,
+			Set<String> labels, 
+			String why_it_matters, 
+			String title
+	) {
+		setRecommendation(recommendation);
+		setPriority(priority);
+		setDescription(description);
+		setType(type);
+		setCategory(category);
+		setWcagCompliance(wcag_compliance);
+		setLabels(labels);
+		setWhyItMatters(why_it_matters);
+		setTitle(title);
+		setKey(generateKey());
+	}
 	
 	public Priority getPriority() {
 		return Priority.create(this.priority);
@@ -79,5 +106,21 @@ public class UXIssueMessage extends LookseeObject {
 
 	public void setWcagCompliance(String wcag_compliance) {
 		this.wcag_compliance = wcag_compliance;
+	}
+
+	public String getWhyItMatters() {
+		return why_it_matters;
+	}
+
+	public void setWhyItMatters(String why_it_matters) {
+		this.why_it_matters = why_it_matters;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }

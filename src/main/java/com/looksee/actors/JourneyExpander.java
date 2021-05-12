@@ -146,7 +146,8 @@ public class JourneyExpander extends AbstractActor{
 										element,
 										web_element, 
 										leaf_element.getClassification(), 
-										Browser.loadCssProperties(web_element, browser.getDriver()),
+										Browser.loadCssProperties(web_element, 
+										browser.getDriver()),
 										"");
 								
 								new_element_state = element_state_service.save(new_element_state);

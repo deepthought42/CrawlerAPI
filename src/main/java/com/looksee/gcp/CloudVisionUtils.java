@@ -93,8 +93,6 @@ public class CloudVisionUtils {
 		        log.warn("text annotations list size :: "+res.getTextAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
-		        	System.out.format("Text: %s%n", annotation.getDescription());
-		        	System.out.format("Position : %s%n", annotation.getBoundingPoly());
 		        	text_values.add(annotation.getDescription());
 		        }
 	      	}
@@ -178,17 +176,8 @@ public class CloudVisionUtils {
 
 			              blockText = blockText + paraText;
 			            }
-			            log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			            log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			            log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			            log.warn("block text     :: "+blockText);
 			            pageText = pageText + blockText;
 			          }
-			          log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			          log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			          log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			          log.warn("page text ::  "+pageText);
-
 			        }
 			        
 			          

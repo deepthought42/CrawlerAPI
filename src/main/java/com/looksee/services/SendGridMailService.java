@@ -27,7 +27,7 @@ public class SendGridMailService {
         Email to = new Email("support@look-see.com");
         
       
-        Content content = new Content("text/plain", msg);
+        Content content = new Content("text/html", msg);
         Mail mail = new Mail(from, subject, to, content);
 
         Request request = new Request();
@@ -35,7 +35,7 @@ public class SendGridMailService {
             request.setMethod(Method.POST);
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
-            Response response = this.sendGrid.api(request);
+            //Response response = this.sendGrid.api(request);
             sendGrid.api(request);
 
             // ...

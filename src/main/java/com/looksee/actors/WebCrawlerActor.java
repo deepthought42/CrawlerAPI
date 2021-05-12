@@ -86,13 +86,13 @@ public class WebCrawlerActor extends AbstractActor{
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
 					Domain domain = crawl_action.getDomain();
-					String initial_url = domain.getProtocol() + "://"+domain.getHost()+domain.getEntryPath();
+					String initial_url = domain.getUrl();
 					
 					if(crawl_action.isIndividual()) {
 						PageState page_state = browser_service.buildPageState(new URL(initial_url));
 						page_state = page_state_service.save(page_state);
 						//domain.addPage(page);
-						domain_service.addPage(domain.getHost(), page_state.getKey());
+						domain_service.addPage(domain.getUrl(), page_state.getKey());
 						
 						getSender().tell(page_state, getSelf());
 					}
@@ -113,11 +113,11 @@ public class WebCrawlerActor extends AbstractActor{
 							frontier.remove(page_url_str);
 							if( BrowserUtils.isImageUrl(page_url_str) 
 									|| page_url_str.endsWith(".pdf")
-									|| !page_url_str.contains(domain.getHost())){
+									|| !page_url_str.contains(domain.getUrl())){
 								continue;
 							}
-							log.warn("domain host :: "+domain.getHost());
-							log.warn("is domain host in page url??   "+page_url_str.contains(domain.getHost()));
+							log.warn("domain host :: "+domain.getUrl());
+							log.warn("is domain host in page url??   "+page_url_str.contains(domain.getUrl()));
 							log.warn("page url string :: "+page_url_str);
 							
 							URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
@@ -129,7 +129,7 @@ public class WebCrawlerActor extends AbstractActor{
 								page_state = page_state_service.save(page_state);
 
 								pages.put(page_state.getKey(), page_state);
-								domain_service.addPage(domain.getHost(), page_state.getKey());
+								domain_service.addPage(domain.getUrl(), page_state.getKey());
 								
 								visited.put(page_url_str, page_state);
 								//send message to page data extractor
@@ -152,13 +152,13 @@ public class WebCrawlerActor extends AbstractActor{
 									href = BrowserUtils.getPageUrl(href_url);
 									
 									//check if external link
-									if( BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href) || href.startsWith("mailto:")) {
+									if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
 										log.debug("adding to external links :: "+href);
 					   					external_links.put(href, Boolean.TRUE);
 									}
 									else if( !visited.containsKey(href) 
 											&& !frontier.containsKey(href) 
-											&& !BrowserUtils.isExternalLink(domain.getHost().replace("www.", ""), href)
+											&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
 									){
 										log.warn("href after sanitize :: " + href);
 										log.warn("adding link to frontier :: " + href);

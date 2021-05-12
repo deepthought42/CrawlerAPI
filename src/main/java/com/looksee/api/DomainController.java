@@ -40,6 +40,8 @@ import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
 import com.looksee.models.Redirect;
 import com.looksee.models.TestUser;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.DiscoveryAction;
@@ -86,13 +88,12 @@ public class DomainController {
      */
     //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(HttpServletRequest request,
-    									@RequestBody(required=true) String host,
-    									@RequestBody(required=false) String logo_url) 
+    public @ResponseBody Domain create(HttpServletRequest request, 
+    									@RequestBody(required=true) Domain domain) 
     											throws UnknownAccountException, MalformedURLException {
-    	/*
+
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){
@@ -101,17 +102,15 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	*/
-    	String lowercase_url = host.toLowerCase();
-    	if(!lowercase_url.contains("http")) {
-    		lowercase_url =  "http://" + lowercase_url;
-    	}
+    	
+    	String lowercase_url = domain.getUrl().toLowerCase();
+    	
     	log.warn("domain url ::   "+lowercase_url);
     	String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url );
-    	log.warn("formatted url ::   "+formatted_url);
+    	log.warn("sanitized domain url ::   "+formatted_url);
 
+    	/*
     	URL url_obj = new URL(formatted_url);
-		/*
     	String sanitized_url = url_obj.getHost()+url_obj.getPath();
 		
 		//check if qanairy domain. prevent creating if user email isn't a qanairy.com email
@@ -119,9 +118,11 @@ public class DomainController {
 			throw new QanairyEmployeesOnlyException();
 		}
 		*/
-    	Domain domain = new Domain("http", url_obj.getHost(), url_obj.getPath(), logo_url);
+    	//Domain domain = new Domain("http", url_obj.getHost(), url_obj.getPath(), "");
 		try{
 			domain = domain_service.save(domain);
+			
+			account_service.addDomainToAccount(acct, domain);
 		}catch(Exception e){
 			domain = null;
 		}
@@ -158,7 +159,6 @@ public class DomainController {
     	
     	Domain domain = domain_service.findByKey(key, acct.getUserId());
     	domain.setLogoUrl(logo_url);
-    	domain.setProtocol(protocol);
     	
     	return domain_service.save(domain);
     }
@@ -188,7 +188,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	acct.setLastDomain(domain.getEntryPath());
+    	acct.setLastDomain(domain.getUrl());
     	account_service.save(acct);
     }
 
@@ -381,7 +381,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_service.findById(domain_id);
     	if(domain.isPresent()){
-    		return domain_service.getForms(acct.getUserId(), domain.get().getEntryPath());
+    		return domain_service.getForms(acct.getUserId(), domain.get().getUrl());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -553,16 +553,40 @@ public class DomainController {
 		*/
     	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
 
-    	if(!domain_actors.containsKey(domain.getEntryPath())){
+    	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
-			domain_actors.put(domain.getEntryPath(), domain_actor);
+			domain_actors.put(domain.getUrl(), domain_actor);
 		}
     	
 		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.CHROME);
 		domain_actors.get(url).tell(discovery_action_msg, null);
 		
 	}
+    
+    /**
+     * Retrieves list of {@link PerformanceInsight insights} with a given key
+     * 
+     * @param key account key
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @PreAuthorize("hasAuthority('read:actions')")
+    @RequestMapping(method = RequestMethod.GET, path="/audits")
+    public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
+			@PathVariable(value="host", required=true) String host
+	) throws UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+        log.info("finding all page insights :: "+host);
+        return domain_service.getMostRecentAuditRecord(host).get();
+    }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

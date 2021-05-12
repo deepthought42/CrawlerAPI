@@ -12,13 +12,16 @@ public class SimplePage {
 	private long width;
 	private long height;
 	private String html_source;
+	private String key;
 	
 	public SimplePage(
 			String url, 
 			String screenshot_url, 
 			String full_page_screenshot_url, 
 			long width, 
-			long height, String html_source
+			long height, 
+			String html_source, 
+			String page_state_key
 	) {
 		setUrl(url);
 		setScreenshotUrl(screenshot_url);
@@ -26,6 +29,7 @@ public class SimplePage {
 		setWidth(width);
 		setHeight(height);
 		setHtmlSource(html_source);
+		setKey(page_state_key);
 	}
 
 	public String getUrl() {
@@ -74,5 +78,13 @@ public class SimplePage {
 
 	public void setHtmlSource(String html_source) {
 		this.html_source = html_source;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

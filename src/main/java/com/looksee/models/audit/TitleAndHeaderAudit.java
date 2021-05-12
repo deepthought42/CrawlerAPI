@@ -72,7 +72,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page_state.getUrl(), 
 						 why_it_matters, 
-						 description);
+						 description, 
+						 page_state);
 	}
 
 	/**
@@ -219,7 +220,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			//check if resource can actually be reached
 		}
 		else {
-			String recommendation = "";
 			
 			Set<String> labels = new HashSet<>();
 			labels.add("accessibility");
@@ -229,7 +229,9 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
 			Set<UXIssueMessage> favicon_issues = new HashSet<>();
-			String description = "favicon is missing";
+			String title = "favicon is missing";
+			String description = "Your page doesn't have a favicon defined. This results in browser tabs not displaying your logo which can reduce recognition of your website when users leave your site temporarily.";
+			String recommendation = "Create an icon that is 16x16 for your brand logo and include it as your favicon by inclding the following code in your head tag <link rel=\"shortcut icon\" href=\"your_favicon.ico\" type=\"image/x-icon\"> . Don't forget to put the location of your favicon in place of the href value";
 
 			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
 															page_state, 
@@ -238,7 +240,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															Priority.HIGH, 
 															AuditCategory.INFORMATION_ARCHITECTURE,
 															labels,
-															ada_compliance);
+															ada_compliance,
+															title);
 			favicon_issues.add(favicon_issue);
 			points += 0;			
 		}
@@ -282,7 +285,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		}
 		else {
 
-			String description = "page without title";
+			String issue_title = "Page is missing a title";
+			String description = "This page doesn't have a title defined";
 			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
 			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
 			String recommendation = "Add a title to the header tag in the html. eg. <title>Page title here</title>";
@@ -303,7 +307,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															Priority.HIGH,
 															AuditCategory.INFORMATION_ARCHITECTURE,
 															labels,
-															ada_compliance);
+															ada_compliance,
+															issue_title);
 			favicon_issues.add(favicon_issue);
 			issue_messages.add(favicon_issue);
 

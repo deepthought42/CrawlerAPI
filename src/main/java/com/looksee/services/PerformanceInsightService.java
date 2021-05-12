@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.experience.PageSpeedAudit;
-import com.looksee.models.experience.PerformanceInsight;
+import com.looksee.models.audit.performance.PageSpeedAudit;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.repository.PerformanceInsightRepository;
 
 /**

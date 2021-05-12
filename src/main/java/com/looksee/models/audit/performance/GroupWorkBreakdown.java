@@ -1,4 +1,4 @@
-package com.looksee.models.experience;
+package com.looksee.models.audit.performance;
 
 /**
  * Describes the cumulative time used for different resource groups to load.

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,6 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -189,20 +197,36 @@ public class BrowserUtils {
 	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
 	 * @param url
 	 * @return
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public static boolean doesUrlExist(URL url) throws IOException {
+	public static boolean doesUrlExist(URL url) throws Exception {
 		assert(url != null);
 		
 		//perform check for http clients
-		if("http".equalsIgnoreCase(url.getProtocol()) || "https".equalsIgnoreCase(url.getProtocol())){
+		if("http".equalsIgnoreCase(url.getProtocol())){
 			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-			huc.setRequestMethod("HEAD");
 			int responseCode = huc.getResponseCode();
-
+			
 			if (responseCode != 404) {
 				return true;
 			} else {
+				return false;
+			}
+		}
+		if("https".equalsIgnoreCase(url.getProtocol())){
+			log.warn("url :: "+url);
+			HttpsURLConnection https_client = getHttpsClient(url.toString());
+
+			//HttpsURLConnection huc = (HttpsURLConnection) url.openConnection();
+			try {
+				int responseCode = https_client.getResponseCode();
+				log.warn("response code :: "+responseCode);
+				if (responseCode != 404) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch(UnknownHostException e) {
 				return false;
 			}
 		}
@@ -216,6 +240,39 @@ public class BrowserUtils {
 		return false;
 	}
 
+	private static HttpsURLConnection getHttpsClient(String url) throws Exception {
+		 
+        // Security section START
+        TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+ 
+                @Override
+                public void checkClientTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+ 
+                @Override
+                public void checkServerTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+            }};
+ 
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        // Security section END
+        
+        HttpsURLConnection client = (HttpsURLConnection) new URL(url).openConnection();
+        //add request header
+        client.setRequestProperty("User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
+        return client;
+    }
+	
 	/**
 	 * Checks if url string ends with an image suffix indicating that it points to an image file
 	 * 
@@ -416,4 +473,48 @@ public class BrowserUtils {
     	
     	return page_url.replace("www.", "");
 	}
+
+	public static boolean checkIfSecure(URL url, String title, String content) throws IOException {
+        HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
+           
+        //dumpl all cert info
+        print_https_cert(con);
+        return con.getServerCertificates().length > 0;
+        /*
+		return url.getProtocol().contains("https")
+					&& (title.contentEquals("Privacy Error")
+							|| content.contains("Insecure Connection"));
+							*/
+	}
+	
+	private static void print_https_cert(HttpsURLConnection con){
+	     
+	    if(con!=null){
+	            
+	      try {
+	                
+			    System.out.println("Response Code : " + con.getResponseCode());
+			    System.out.println("Cipher Suite : " + con.getCipherSuite());
+			    System.out.println("\n");
+			                
+			    Certificate[] certs = con.getServerCertificates();
+			    for(Certificate cert : certs){
+			       System.out.println("Cert Type : " + cert.getType());
+			       System.out.println("Cert Hash Code : " + cert.hashCode());
+			       System.out.println("Cert Public Key Algorithm : " 
+			                                    + cert.getPublicKey().getAlgorithm());
+			       System.out.println("Cert Public Key Format : " 
+			                                    + cert.getPublicKey().getFormat());
+			       System.out.println("\n");
+			    }
+		                
+		    } catch (SSLPeerUnverifiedException e) {
+		        e.printStackTrace();
+		    } catch (IOException e){
+		        e.printStackTrace();
+		    }
+
+	    }
+	    
+   }
 }

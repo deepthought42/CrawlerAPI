@@ -19,7 +19,7 @@ import com.looksee.models.TestRecord;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
-import com.looksee.models.experience.PerformanceInsight;
+import com.looksee.models.audit.performance.PerformanceInsight;
 
 /**
  * 

@@ -96,16 +96,15 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					String font_size_str = element.getRenderedCssValues().get("font-size");
 					String font_weight = element.getRenderedCssValues().get("font-weight");
 
-					//TODO clean up units from font size string
 					font_size_str = font_size_str.replace("px", "");
 					
-					//TODO convert font size to double
 					double font_size = Double.parseDouble(font_size_str.strip());
 					total_possible_points += 1;
 					//TODO if font size is greater than 18 or if greater than 14 and bold then check if contrast > 3 (A Compliance)
 					if(font_size >= 24 || (font_size >= 18.5 && BrowserUtils.isTextBold(font_weight))) {
 						if( contrast < 3 ) {
 							//low contrast header issue
+							String title = "Large text has low contrast";
 							String description = "Headline text has low contrast against the background";
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.HIGH,
@@ -117,7 +116,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									element,
 																									AuditCategory.AESTHETICS,
 																									labels, 
-																									ada_compliance);
+																									ada_compliance,
+																									title);
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
 						}
 						else if(contrast >= 3) {
@@ -128,6 +128,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					else if(font_size < 24 && !BrowserUtils.isTextBold(font_weight) ) {
 						if( contrast < 4.5 ) {
 							//fail
+							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
@@ -139,7 +140,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						element,
 																						AuditCategory.AESTHETICS, 
 																						labels, 
-																						ada_compliance);
+																						ada_compliance,
+																						title);
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
@@ -266,6 +268,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     total_possible_points,
 					     page_state.getUrl(),
 					     why_it_matters,
-					     "Text with contrast below 4.5");
+					     "Text with contrast below 4.5", 
+						 page_state);
 	}
 }

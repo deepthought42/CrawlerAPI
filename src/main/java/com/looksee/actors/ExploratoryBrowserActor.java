@@ -126,14 +126,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 						else {
 							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl())));
-							domain_service.addPage(message.getDomain().getEntryPath(), page.getKey());
+							domain_service.addPage(message.getDomain().getUrl(), page.getKey());
 
 							long start_time = System.currentTimeMillis();
 							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));
 							long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							result_page.addElements(elements);
-							result_page = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getEntryPath(), result_page);
+							result_page = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getUrl(), result_page);
 							
 							log.warn("DOM elements found :: "+elements.size());
 							

@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.experience.PerformanceInsight;
 import com.looksee.services.AccountService;
 import com.looksee.services.PageStateService;
 
@@ -67,7 +67,8 @@ public class PageController {
         								page.getFullPageScreenshotUrl(), 
         								page.getFullPageWidth(), 
         								page.getFullPageHeight(),
-        								page.getSrc());	
+        								page.getSrc(),
+        								page.getKey());	
         return simple_page;
     }
     

@@ -34,6 +34,7 @@ public class PageState extends LookseeObject {
 	private String src;
 	private String url;
 	private boolean login_required;
+	private boolean is_secure;
 
 	private LocalDateTime last_landability_check;
 
@@ -82,6 +83,7 @@ public class PageState extends LookseeObject {
 	 * @param full_page_height TODO
 	 * @param url
 	 * @param title TODO
+	 * @param is_secure TODO
 	 * @throws MalformedURLException 
 	 */
 	public PageState(String screenshot_url, 
@@ -97,7 +99,8 @@ public class PageState extends LookseeObject {
 			long full_page_width, 
 			long full_page_height, 
 			String url, 
-			String title
+			String title, 
+			boolean is_secure
 	) {
 		assert screenshot_url != null;
 		assert elements != null;
@@ -123,7 +126,8 @@ public class PageState extends LookseeObject {
 		setFullPageHeight(full_page_height);
 		setUrl(url);
 		setTitle(title);
-
+		setIsSecure(is_secure);
+		
 		setPageName( generatePageName(getUrl()) );
 		setMetadata( BrowserService.extractMetadata(src) );
 		setStylesheetUrls( BrowserService.extractStylesheets(src));
@@ -228,7 +232,8 @@ public class PageState extends LookseeObject {
 							 getFullPageWidth(), 
 							 getFullPageHeight(), 
 							 getUrl(),
-							 getTitle());
+							 getTitle(),
+							 isSecure());
 	}
 
 	@JsonIgnore
@@ -456,5 +461,13 @@ public class PageState extends LookseeObject {
 
 	public void setFaviconUrl(Set<String> favicon_url) {
 		this.favicon_url = favicon_url;
+	}
+
+	public boolean isSecure() {
+		return is_secure;
+	}
+
+	public void setIsSecure(boolean is_secure) {
+		this.is_secure = is_secure;
 	}
 }

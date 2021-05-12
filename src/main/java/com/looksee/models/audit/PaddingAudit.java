@@ -139,7 +139,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 max_points,
 						 page.getUrl(),
 						 why_it_matters,
-						 description);
+						 description,
+						 page);
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {
@@ -303,6 +304,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
+					String title = "At least one margin value isn't a multiple of 8.";
 					String description = "At least one margin value isn't a multiple of 8.";
 					Set<String> labels = new HashSet<>();
 					labels.add("whitespace");
@@ -314,7 +316,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 																	element,
 																	AuditCategory.AESTHETICS,
 																	labels, 
-																	ada_compliance);
+																	ada_compliance,
+																	title);
 					issue_messages.add(issue_message);
 				}
 				max_points++;
@@ -372,6 +375,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				max_vertical_score += 3;
 				
 				if(points_earned < 2) {
+					String title = "At least one margin value isn't a multiple of 8.";
 					String description = "At least one margin value isn't a multiple of 8.";
 					Set<String> labels = new HashSet<>();
 					labels.add("whitespace");
@@ -384,7 +388,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 							element,
 							AuditCategory.AESTHETICS,
 							labels,
-							ada_compliance);
+							ada_compliance,
+							title);
 					issue_messages.add(issue_message);
 				}
 			}

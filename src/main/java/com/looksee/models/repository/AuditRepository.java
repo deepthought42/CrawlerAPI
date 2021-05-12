@@ -15,7 +15,7 @@ import com.looksee.models.audit.UXIssueMessage;
 public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	public Audit findByKey(@Param("key") String key);
 
-	@Query("MATCH (Audit{key:$audit_key})-[:OBSERVED]-(issue) OPTIONAL MATCH y=(issue)-->() RETURN issue, y")
+	@Query("MATCH (Audit{key:$audit_key})-[:HAS]-(issue) OPTIONAL MATCH y=(issue)-->() RETURN issue, y")
 	public Set<UXIssueMessage> findIssueMessages(@Param("audit_key") String audit_key);
 
 	@Query("MATCH (audit:Audit{key:$key}),(msg:UXIssueMessage{key:$msg_key}) CREATE audit_issue=(audit)-[observed:OBSERVED]->(msg) RETURN msg")

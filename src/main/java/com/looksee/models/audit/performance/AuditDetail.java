@@ -1,4 +1,4 @@
-package com.looksee.models.experience;
+package com.looksee.models.audit.performance;
 
 import java.util.Date;
 

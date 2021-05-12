@@ -14,6 +14,7 @@ public enum ObservationType {
 	PAGE_STATE("Page"),
 	TYPEFACE("Typeface"),
 	COLOR_CONTRAST("Color Contrast"),
+	SECURITY("Security"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

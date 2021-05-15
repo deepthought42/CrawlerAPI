@@ -10,7 +10,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 
 
 /**
@@ -32,11 +32,11 @@ public class Account {
 	private String api_token;
 	private String name;
 	
-	@Relationship(type = "HAS_DOMAIN")
+	@Relationship(type = "HAS")
 	private Set<Domain> domains = new HashSet<>();
 
 	@Relationship(type = "HAS")
-	private Set<Audit> audits = new HashSet<>();
+	private Set<AuditRecord> audits = new HashSet<>();
 
 	public Account(){}
 
@@ -48,7 +48,12 @@ public class Account {
 	 *
 	 * @pre users != null
 	 */
-	public Account(String user_id, String username, String customer_token, String subscription_token){
+	public Account(
+			String user_id, 
+			String username, 
+			String customer_token, 
+			String subscription_token
+	){
 		setUserId(user_id);
 		setUsername(username);
 		setCustomerToken(customer_token);
@@ -65,7 +70,13 @@ public class Account {
 	 *
 	 * @pre users != null
 	 */
-	public Account(String user_id, String username, String customer_token, String subscription_token, String name){
+	public Account(
+			String user_id, 
+			String username, 
+			String customer_token, 
+			String subscription_token, 
+			String name
+	){
 		setUserId(user_id);
 		setUsername(username);
 		setCustomerToken(customer_token);
@@ -157,15 +168,15 @@ public class Account {
 		}
 	}
 
-	public Set<Audit> getAudits() {
+	public Set<AuditRecord> getAuditRecords() {
 		return audits;
 	}
 
-	public void setAudits(Set<Audit> audits) {
+	public void setAuditRecords(Set<AuditRecord> audits) {
 		this.audits = audits;
 	}
 
-	public void addAudit(Audit record) {
+	public void addAuditRecord(AuditRecord record) {
 		this.audits.add(record);
 	}
 
@@ -183,21 +194,21 @@ public class Account {
 
 	public void setApiToken(String api_token) {
 		this.api_token = api_token;
-  }
-
-  public String getUserId() {
-    return user_id;
-  }
-
-  public void setUserId(String user_id) {
-    this.user_id = user_id;
 	}
 
-public String getName() {
-	return name;
-}
+	public String getUserId() {
+		return user_id;
+  	}
 
-public void setName(String name) {
-	this.name = name;
-}
+  	public void setUserId(String user_id) {
+  		this.user_id = user_id;
+	}
+
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
 }

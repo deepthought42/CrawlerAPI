@@ -319,9 +319,8 @@ public class BrowserService {
 				if(page_state == null) {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
+					TimingUtils.pauseThread(5000);
 					page_state = buildPageState(url, browser);
-					page_state = page_state_service.save(page_state);
-					domain_service.addPage(url.getHost(), page_state.getKey());
 					//send RenderedPageState to sender
 				}
 				//extract all element xpaths
@@ -379,7 +378,6 @@ public class BrowserService {
 		String url_without_protocol = BrowserUtils.getPageUrl(url);
 		
 		//List<ElementState> elements = extractElementStates(source, url, browser);
-		TimingUtils.pauseThread(500);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));

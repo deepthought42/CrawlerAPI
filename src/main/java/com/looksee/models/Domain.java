@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.DomainAuditRecord;
 
 
 /**
@@ -18,7 +18,7 @@ public class Domain extends LookseeObject{
 	
 	private String url;
 	private String logo_url;
-
+	
 	@Relationship(type = "HAS")
 	private List<PageState> pages;
 
@@ -28,8 +28,8 @@ public class Domain extends LookseeObject{
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Account account;
 	
-	@Relationship(type = "HAS")
-	private Set<AuditRecord> audit_records;
+	@Relationship(type = "HAS", direction = Relationship.INCOMING)
+	private Set<DomainAuditRecord> audit_records;
 	
 	/**
 	 * 
@@ -146,11 +146,11 @@ public class Domain extends LookseeObject{
 		this.pages = pages;
 	}
 
-	public Set<AuditRecord> getAuditRecords() {
+	public Set<DomainAuditRecord> getAuditRecords() {
 		return audit_records;
 	}
 
-	public void setAuditRecords(Set<AuditRecord> audit_records) {
+	public void setAuditRecords(Set<DomainAuditRecord> audit_records) {
 		this.audit_records = audit_records;
 	}
 

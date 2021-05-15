@@ -11,6 +11,7 @@ import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.TestRecord;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.repository.AccountRepository;
 
 /**
@@ -32,7 +33,7 @@ public class AccountService {
 		}
 		
 		if(!domain_exists_for_acct){
-			account_repo.addDomain(domain.getKey(), acct.getUserId());
+			account_repo.addDomain(domain.getKey(), acct.getUsername());
 			acct.addDomain(domain);
 			account_repo.save(acct);
 		}
@@ -59,8 +60,11 @@ public class AccountService {
 		account_repo.removeDomain(username, domain_key);
 	}
 
-	public Set<Domain> getDomainsForUser(String user_id) {
-		return account_repo.getDomainsForUser(user_id);
+	public Set<Domain> getDomainsForUser(String username) {
+		assert username != null;
+		assert !username.isEmpty();
+		
+		return account_repo.getDomainsForUser(username);
 	}
 	
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {
@@ -77,5 +81,21 @@ public class AccountService {
 
 	public Optional<Account> findById(long id) {
 		return account_repo.findById(id);
+	}
+
+	public Domain findDomain(String username, String url) {
+		assert username != null;
+		assert !username.isEmpty();
+		assert url != null;
+		assert !url.isEmpty();
+		
+		return account_repo.findDomain(username, url);
+	}
+
+	public AuditRecord addAuditRecord(String username, long audit_record_id) {
+		assert username != null;
+		assert !username.isEmpty();
+		
+		return account_repo.addAuditRecord(username, audit_record_id);
 	}
 }

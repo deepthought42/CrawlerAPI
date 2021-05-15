@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.PageStateMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
@@ -85,14 +86,14 @@ public class WebCrawlerActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
-					Domain domain = crawl_action.getDomain();
+					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
 					String initial_url = domain.getUrl();
 					
 					if(crawl_action.isIndividual()) {
 						PageState page_state = browser_service.buildPageState(new URL(initial_url));
 						page_state = page_state_service.save(page_state);
 						//domain.addPage(page);
-						domain_service.addPage(domain.getUrl(), page_state.getKey());
+						domain_service.addPage(domain.getId(), page_state.getKey());
 						
 						getSender().tell(page_state, getSelf());
 					}
@@ -125,18 +126,19 @@ public class WebCrawlerActor extends AbstractActor{
 							//construct page and add page to list of page states
 							//retrieve html source for page
 							try {
-								PageState page_state = browser_service.buildPageState(new URL(initial_url));
+								PageState page_state = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(initial_url)));
 								page_state = page_state_service.save(page_state);
 
 								pages.put(page_state.getKey(), page_state);
-								domain_service.addPage(domain.getUrl(), page_state.getKey());
+								domain_service.addPage(domain.getId(), page_state.getKey());
 								
 								visited.put(page_url_str, page_state);
 								//send message to page data extractor
 								log.debug("sending page to an audit manager...");
 								
+								PageStateMessage page_msg = new PageStateMessage(page_state, crawl_action.getDomainId(), crawl_action.getAccountId(), crawl_action.getAuditRecordId());
 								//Send PageVerstion to audit manager
-								getSender().tell(page_state, getSelf());
+								getSender().tell(page_msg, getSelf());
 								
 								Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 								Elements links = doc.select("a");

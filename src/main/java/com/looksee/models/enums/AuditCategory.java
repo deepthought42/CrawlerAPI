@@ -8,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum AuditCategory {
 	CONTENT("Content"), 
 	INFORMATION_ARCHITECTURE("Information Architecture"), 
-	AESTHETICS("Aesthetics");
+	AESTHETICS("Aesthetics"),
+	ACCESSIBILITY("Accessibility");
 	
 	private String shortName;
 

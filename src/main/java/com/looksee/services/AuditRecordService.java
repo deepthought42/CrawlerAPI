@@ -1,5 +1,6 @@
            package com.looksee.services;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -67,11 +68,21 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAudits(audit_record_key);
 	}
 
+	/**
+	 * deprecated in favor or using domain id for lookup
+	 * @param host
+	 * @return
+	 */
+	@Deprecated
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
 		return audit_record_repo.findMostRecentDomainAuditRecord(host);
+	}
+	
+	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(long id) {
+		return audit_record_repo.findMostRecentDomainAuditRecord(id);
 	}
 	
 	public Optional<PageAuditRecord> findMostRecentPageAuditRecord(String page_url) {
@@ -203,16 +214,21 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageAudits(audit_record_key);
 	}
 
+	@Deprecated
 	public Set<Audit> getAllAuditsForPageAuditRecord(String page_audit_key) {
 		assert page_audit_key != null;
 		assert !page_audit_key.isEmpty();
 		
 		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_key);
 	}
+	
+	public Set<Audit> getAllAuditsForPageAuditRecord(long page_audit_id) {		
+		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_id);
+	}
 
-	public void addPageAuditToDomainAudit(String domain_audit_record_key, String page_audit_record_key) {
+	public void addPageAuditToDomainAudit(long domain_audit_record_id, String page_audit_record_key) {
 		//check if audit already exists for page state
-		audit_record_repo.addPageAuditRecord(domain_audit_record_key, page_audit_record_key);
+		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_key);
 	}
 
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
@@ -222,10 +238,36 @@ public class AuditRecordService {
 		return audit_record_repo.getMostRecentPageAuditRecord(url);
 	}
 
+	@Deprecated
 	public PageState getPageStateForAuditRecord(String page_audit_key) {
 		assert page_audit_key != null;
 		assert !page_audit_key.isEmpty();
 		
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_key);
+	}
+
+	public Set<Audit> getAllContentAudits(long id) {
+		return audit_record_repo.getAllContentAudits(id);
+	}
+
+	public Set<Audit> getAllInformationArchitectureAudits(long id) {
+		return audit_record_repo.getAllInformationArchitectureAudits(id);
+	}
+
+	public Set<Audit> getAllAccessibilityAudits(Long id) {
+		// TODO Auto-generated method stub
+		return new HashSet<>();
+	}
+
+	public Set<Audit> getAllAestheticAudits(long id) {
+		return audit_record_repo.getAllAestheticsAudits(id);
+	}
+
+	public Set<PageAuditRecord> getPageAuditRecords(long domain_audit_id) {
+		return audit_record_repo.getPageAuditRecord(domain_audit_id);
+	}
+
+	public PageState getPageStateForAuditRecord(long page_audit_id) {
+		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
 	}
 }

@@ -14,15 +14,18 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Account;
-import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditFactory;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditSet;
 import com.looksee.models.message.DomainAuditMessage;
+import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageStateAuditComplete;
+import com.looksee.models.message.PageStateMessage;
+import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
@@ -50,6 +53,9 @@ public class Auditor extends AbstractActor{
 	
 	@Autowired
 	private AuditService audit_service;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 	
 	@Autowired
 	private AuditFactory audit_factory;
@@ -81,7 +87,7 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageState.class, page_state-> {
+				.match(PageStateMessage.class, page_state_msg -> {
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
 				   	
@@ -101,16 +107,21 @@ public class Auditor extends AbstractActor{
 				   		
 						log.warn("performing all other audits");
 						
-			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
+			   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state_msg.getPageState());
     
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
 			   			audits.addAll(rendered_audits_executed);
 			   		}
 		   			
-					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state);
+					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getPageState());
 		   			getSender().tell(audit_complete, getSelf());
-		   			getSender().tell( new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state), getSelf() );
+		   			
+		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState());
+		   			audit_record = audit_record_service.save(audit_record);
+		   			
+		   			PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage((PageAuditRecord)audit_record, page_state_msg.getDomainId(), page_state_msg.getAccountId(), page_state_msg.getAuditRecordId());
+		   			getSender().tell( page_audit_msg, getSelf() );
 		   			//send message to either user or page channel containing reference to audits
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {

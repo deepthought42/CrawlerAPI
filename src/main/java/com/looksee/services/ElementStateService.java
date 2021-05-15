@@ -106,12 +106,12 @@ public class ElementStateService {
 		return element_repo.getRules(user_id, element_key);
 	}
 
-	public Set<Rule> addRuleToFormElement(String user_id, String element_key, Rule rule) {
+	public Set<Rule> addRuleToFormElement(String username, String element_key, Rule rule) {
 		//Check that rule doesn't already exist
-		Rule rule_record = element_repo.getElementRule(user_id, element_key, rule.getKey());
+		Rule rule_record = element_repo.getElementRule(username, element_key, rule.getKey());
 		if(rule_record == null) {
-			rule_record = element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
-			return element_repo.getRules(user_id, element_key);
+			rule_record = element_repo.addRuleToFormElement(username, element_key, rule.getKey());
+			return element_repo.getRules(username, element_key);
 		}
 		else {
 			throw new ExistingRuleException(rule.getType().toString());

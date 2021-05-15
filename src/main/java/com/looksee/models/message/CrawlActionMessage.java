@@ -22,9 +22,8 @@ public class CrawlActionMessage extends Message{
 							  AuditRecord record, 
 							  boolean is_individual,
 							  URL url){
-		super(domain.getUrl(), account_id);
+		super(domain.getId(), account_id, record.getId());
 		setAction(action);
-		setDomain(domain);
 		setIsIndividual(is_individual);
 		setUrl(url);
 		setAuditRecord(record);

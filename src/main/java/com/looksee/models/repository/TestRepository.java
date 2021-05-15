@@ -19,8 +19,8 @@ import com.looksee.models.TestRecord;
 public interface TestRepository extends Neo4jRepository<Test, Long> {
 	public Test findByName(@Param("name") String name);
 	
-	@Query("MATCH (:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH a=(t)-[r:HAS_PATH_OBJECT]->(p) return a")
-	public Test findByKey(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
+	@Query("MATCH (:Account{username: $username})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH a=(t)-[r:HAS_PATH_OBJECT]->(p) return a")
+	public Test findByKey(@Param("key") String key, @Param("url") String url, @Param("username") String username);
 
 	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH (t)-[r:HAS_TEST_RECORD]->(tr:TestRecord) RETURN tr ORDER BY tr.ran_at DESC LIMIT 1")
 	public TestRecord getMostRecentRecord(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);

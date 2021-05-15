@@ -45,9 +45,7 @@ import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -166,8 +164,13 @@ public class AuditController {
     	String page_url = BrowserUtils.getPageUrl(sanitized_url);
     	
     	//Get most recent audits
-    	PageAuditRecord audit_record = domain_service.getMostRecentPageAuditRecord(page_url);
+    	Optional<PageAuditRecord> audit_record_opt = domain_service.getMostRecentPageAuditRecord(page_url);
 
+    	if(!audit_record_opt.isPresent()) {
+    		return null;
+    	}
+    	
+    	PageAuditRecord audit_record = audit_record_opt.get();
    		//PageState page_state = page_state_service.findByUrl(page_url);
    		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getKey());
    		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getKey());
@@ -180,7 +183,8 @@ public class AuditController {
 	   									page_state.getFullPageWidth(), 
 	   									page_state.getFullPageHeight(),
 	   									page_state.getSrc(), 
-	   									page_state.getKey());
+	   									page_state.getKey(), 
+	   									page_state.getId());
 
 
     	log.warn("Audit record key :: "+audit_record.getKey());
@@ -197,30 +201,20 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      * @throws MalformedURLException 
      */
-    @RequestMapping(method= RequestMethod.GET, path="/elements")
+    @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
     public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
     		HttpServletRequest request,
-    		@RequestParam("page_url") String page_url
+    		@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
-    	URL url = new URL(BrowserUtils.sanitizeUrl(page_url));
-    	String page_url_without_protocol = url.getHost();
-    	if(!url.getPath().contentEquals("/")) {
-    		page_url_without_protocol += url.getPath();
-    	}
     	
-    	log.warn("page url without protocol :: "+ page_url_without_protocol);
+    	
+    	log.warn("page url without protocol :: "+ audit_record_id);
     	//Get most recent audits
-    	Optional<PageAuditRecord> page_audit = audit_record_service.getMostRecentPageAuditRecord(page_url_without_protocol);
-    	
-    	Set<Audit> audits = new HashSet<>();
-    	if( page_audit.isPresent() ) {
-    		PageAuditRecord page_audit_record = page_audit.get();
-    		audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getKey());    		
-    	}
+		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
     	log.warn("processing audits :: "+audits.size());
     	//Map audits to page states
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits, url);
-    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits, url);
+    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
     
     	//package both elements into an object definition
     	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map);
@@ -271,12 +265,14 @@ public class AuditController {
 	public @ResponseBody PageAudits startSinglePageAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) PageState page
-	) throws Exception {
+	) throws Exception {    	
     	String lowercase_url = page.getUrl().toLowerCase();
 
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
 	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
+	   	
+    	/*
+    	Domain domain = domain_service.findByHost(sanitized_url.getHost());
 	   	System.out.println("domain returned from db ...."+domain);
 	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
 	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
@@ -284,7 +280,7 @@ public class AuditController {
 	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "");
 	   		domain = domain_service.save(domain);
 	   	}
-
+	*/
    		String page_url = sanitized_url.getHost()+sanitized_url.getPath();
 	   	Optional<PageAuditRecord> audit_record_optional = audit_record_service.getMostRecentPageAuditRecord(page_url);
 	   	
@@ -299,7 +295,8 @@ public class AuditController {
 		   									page_state.getFullPageWidth(), 
 		   									page_state.getFullPageHeight(),
 		   									page_state.getSrc(),
-		   									page_state.getKey());
+		   									page_state.getKey(), 
+		   									page_state.getId());
 		   	
 	   		PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
 	   		page_audits.addAudits(audits);
@@ -307,15 +304,20 @@ public class AuditController {
 	   	}
 	   	
 	   	PageState page_state = browser_service.buildPageState(sanitized_url);
-	   	page_service.save(page_state);
-		domain_service.addPage(domain.getUrl(), page_state.getKey());
+	   	page_state = page_service.save(page_state);
+		//domain_service.addPage(domain.getId(), page_state.getKey());
 
 	   	//create new audit record
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state);
 
 	   	audit_record = audit_record_service.save(audit_record);
-	   	domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
-	   	
+	   	//domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
+	   	Principal principal = request.getUserPrincipal();
+		if(principal != null) {
+			String user_id = principal.getName();
+	    	Account account = account_service.findByUserId(user_id);
+	    	account_service.addAuditRecord(account.getUsername(), audit_record.getId());
+		}
 	   	/*
 	   	log.warn("telling audit manager about crawl action");
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -355,56 +357,12 @@ public class AuditController {
 	   	audit_record.setStatus(ExecutionStatus.COMPLETE);
 	   	audit_record.setEndTime(LocalDateTime.now());
 	   	audit_record_service.save(audit_record);
-	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null, null);
+	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null, null, page_state.getId());
 	   	PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
 	   	
 	   	//if request is from www.look-see.com then return redirect response
 	   	
    		return page_audits;
-	}
-	
-    /**
-     * 
-     * @param request
-     * @param page
-     * @return
-     * @throws Exception
-     */
-	@RequestMapping(path="/start", method = RequestMethod.POST)
-	public @ResponseBody AuditRecord startAudit(
-			HttpServletRequest request,
-			@RequestBody(required=true) PageState page
-	) throws Exception {
-    	String lowercase_url = page.getUrl().toLowerCase();
-    	if(!lowercase_url.contains("http")) {
-    		lowercase_url = "http://" + lowercase_url;
-    	}
-    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
-	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
-	   	Domain domain = domain_service.findByHost(sanitized_url.getHost());
-	   	System.out.println("domain returned from db ...."+domain);
-	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
-	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
-	   	if(domain == null) {
-	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "");
-	   		domain = domain_service.save(domain);
-	   	}
-
-	   	//create new audit record
-	   	AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
-
-	   	audit_record = audit_record_service.save(audit_record);
-	   	
-	   	domain_service.addAuditRecord(domain.getKey(), audit_record.getKey());
-	   	
-	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, false, sanitized_url);
-		audit_manager.tell(crawl_action, null);
-	   	//crawl site and retrieve all page urls/landable pages
-	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-
-	   	return audit_record;
 	}
 
 	

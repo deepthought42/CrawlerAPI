@@ -6,9 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -29,27 +27,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.looksee.api.exceptions.MissingSubscriptionException;
+import com.looksee.dto.DomainDto;
+import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;
-import com.looksee.models.Action;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
-import com.looksee.models.Form;
-import com.looksee.models.LookseeObject;
-import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
 import com.looksee.models.TestUser;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.enums.BrowserType;
-import com.looksee.models.enums.DiscoveryAction;
-import com.looksee.models.message.DiscoveryActionMessage;
+import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
-import com.looksee.services.RedirectService;
+import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
@@ -62,13 +62,12 @@ import akka.actor.ActorSystem;
 @RequestMapping("/domains")
 public class DomainController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
-	private static Map<String, ActorRef> domain_actors = new HashMap<>();
 
 	@Autowired
-	private AccountService account_service;
+	private AuditRecordService audit_record_service;
 	
 	@Autowired
-	private RedirectService redirect_service;
+	private AccountService account_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -86,17 +85,19 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    //@PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request, 
-    									@RequestBody(required=true) Domain domain) 
-    											throws UnknownAccountException, MalformedURLException {
+    									@RequestBody(required=true) Domain domain
+	) throws UnknownAccountException, MalformedURLException {
 
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName();
+    	log.warn("user id  :: "+id);
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){
+    		log.warn("account not found");
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
@@ -108,25 +109,26 @@ public class DomainController {
     	log.warn("domain url ::   "+lowercase_url);
     	String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url );
     	log.warn("sanitized domain url ::   "+formatted_url);
-
-    	/*
-    	URL url_obj = new URL(formatted_url);
-    	String sanitized_url = url_obj.getHost()+url_obj.getPath();
-		
-		//check if qanairy domain. prevent creating if user email isn't a qanairy.com email
-		if(sanitized_url.contains("qanairy.com") && !acct.getUsername().contains("qanairy.com")) {
-			throw new QanairyEmployeesOnlyException();
-		}
-		*/
-    	//Domain domain = new Domain("http", url_obj.getHost(), url_obj.getPath(), "");
+    	domain.setUrl(formatted_url.replace("http://", ""));
+    	
 		try{
-			domain = domain_service.save(domain);
-			
-			account_service.addDomainToAccount(acct, domain);
+			Domain domain_record = account_service.findDomain(acct.getUsername(), domain.getUrl());
+			if(domain_record == null) {
+				domain = domain_service.save(domain);
+				account_service.addDomainToAccount(acct, domain);
+			}
+			else {
+				throw new ExistingAccountDomainException();
+			}
 		}catch(Exception e){
 			domain = null;
 		}
     	
+		try {
+			MessageBroadcaster.sendDomainAdded(acct.getUserId(), domain);
+		} catch (JsonProcessingException e) {
+			log.error("Error occurred while sending domain message to user");
+		}
     	return domain;
     }
 
@@ -137,17 +139,17 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('create:domains')")
+    @PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(method = RequestMethod.PUT)
     public @ResponseBody Domain update(HttpServletRequest request,
-   		 								 @RequestParam(value="key", required=true) String key,
-							    		 @RequestParam(value="protocol", required=true) String protocol,
-								   		 @RequestParam(value="browser_name", required=true) String browser_name,
-								   		 @RequestParam(value="logo_url", required=false) String logo_url) 
-    											throws UnknownAccountException, 
-    													MalformedURLException {
+				 @RequestParam(value="key", required=true) String key,
+	    		 @RequestParam(value="protocol", required=true) String protocol,
+		   		 @RequestParam(value="browser_name", required=true) String browser_name,
+		   		 @RequestParam(value="logo_url", required=false) String logo_url
+								   		 
+    ) throws UnknownAccountException, MalformedURLException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
     	
     	if(acct == null){
@@ -157,7 +159,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Domain domain = domain_service.findByKey(key, acct.getUserId());
+    	Domain domain = domain_service.findByKey(key, acct.getUsername());
     	domain.setLogoUrl(logo_url);
     	
     	return domain_service.save(domain);
@@ -170,7 +172,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('create:domains')")
+    @PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
     									@RequestBody Domain domain) 
@@ -178,7 +180,7 @@ public class DomainController {
 														MalformedURLException {
 
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){
@@ -192,23 +194,61 @@ public class DomainController {
     	account_service.save(acct);
     }
 
-    //@PreAuthorize("hasAuthority('read:domains')")
+    @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
-    	/*
+    public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
-    	
     	if(acct == null){
+    		log.warn("unknwon account...");
     		throw new UnknownAccountException();
     	}
+    	/*
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
     	*/
-    	Set<Domain> domains = domain_service.getDomains();
-	    return domains;
+    	log.warn("looking up account for domains 2 ...."+acct.getUsername());
+
+    	Set<Domain> domains = account_service.getDomainsForUser(acct.getUsername());
+    	Set<DomainDto> domain_info_set = new HashSet<>();
+    	for(Domain domain: domains) {
+    		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain.getId());
+    		
+    		int page_count = 0;
+    		if(!audit_record_opt.isPresent()) {
+    			page_count = audit_record_service.getPageAuditRecords(domain.getId()).size();
+
+    			domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, 0, 0, 0, 0) );
+    			continue;
+    		}
+    		//get most recent audit record for this domain
+    		AuditRecord audit = audit_record_opt.get();
+    		log.warn("content audit found ..."+audit.getId());
+	    	//get all content audits for most recent audit record and calculate overall score
+    		Set<Audit> content_audits = audit_record_service.getAllContentAudits(audit.getId());
+    		double content_score = AuditUtils.calculateScore(content_audits);
+    		
+	    	//get all info architecture audits for most recent audit record and calculate overall score
+    		Set<Audit> info_arch_audits = audit_record_service.getAllInformationArchitectureAudits(audit.getId());
+    		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
+    		
+    		//get all accessibility audits for most recent audit record and calculate overall score
+    		//Set<Audit> accessibility_audits = audit_record_service.getAllAudits(audit.getId());
+    		//double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
+    		
+    		//get all Aesthetic audits for most recent audit record and calculate overall score
+    		Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAudits(audit.getId());
+    		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
+    		
+    		//build domain stats
+	    	//add domain stat to set
+			page_count = audit_record_service.getPageAuditRecords(domain.getId()).size();
+
+    		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, content_score, info_arch_score, 0, aesthetics_score) );
+    	}
+    	return domain_info_set;
     }
     
 	/**
@@ -225,7 +265,7 @@ public class DomainController {
 										@PathVariable(value="domain_id", required=true) long domain_id)
 								   throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 	
 		if(acct == null){
@@ -240,28 +280,56 @@ public class DomainController {
 			account_service.removeDomain(acct.getUsername(), domain.get().getKey());
 		}
 	}
-    
+	
+	/**
+	 * Retrieves pages for a given domain from the current users account
+	 * 
+	 * @param key
+	 * @param domain
+	 * @return
+	 * @throws UnknownAccountException 
+	 */
 	@PreAuthorize("hasAuthority('read:domains')")
-    @RequestMapping(method = RequestMethod.GET, path="/page_states")
-    public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
-    													  @RequestParam(value="url", required=true) String url) 
-    															throws UnknownAccountException {        
+	@RequestMapping(method = RequestMethod.GET, path="/{domain_id}/pages")
+	public @ResponseBody Set<PageStatisticDto> getPages(HttpServletRequest request,
+							@PathVariable(value="domain_id", required=true) long domain_id
+	)throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
+	
+		if(acct == null){
+			throw new UnknownAccountException();
+		}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
-    	}
+    	}		
 		
+		Set<PageStatisticDto> page_stats = new HashSet<>();
+		//get latest domain audit record
+		Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
+		
+		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
+		for(PageAuditRecord page_audit : page_audits) {
+			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+			double content_score = AuditUtils.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
+			double info_architecture_score = AuditUtils.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+			double aesthetic_score = AuditUtils.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+			double accessibility_score = AuditUtils.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
+			
+			PageStatisticDto page = new PageStatisticDto(
+										page_state.getId(), 
+										page_state.getUrl(), 
+										page_state.getViewportScreenshotUrl(), 
+										content_score, 
+										info_architecture_score,
+										aesthetic_score,
+										accessibility_score);	
+			page_stats.add(page);
+		}
 
-		Set<PageState> page_states = domain_service.getPageStates(url);
-		log.info("###### PAGE STATE COUNT :: "+page_states.size());
-		return page_states;
-    }
+		return page_stats;
+	}
 	
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
@@ -285,38 +353,6 @@ public class DomainController {
 		// TODO filter through pages to get most recent for each unique page url
 		log.info("###### PAGE STATE COUNT :: "+pages.size());
 		return pages;
-    }
-
-	@PreAuthorize("hasAuthority('read:domains')")
-    @RequestMapping(method = RequestMethod.GET, path="/path")
-    public @ResponseBody Set<LookseeObject> getAllPathObjects(HttpServletRequest request, 
-    													   @RequestParam(value="url", required=true) String url
-    ) throws UnknownAccountException {        		
-		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-		
-		Set<PageState> page_state = domain_service.getPageStates(url);
-		Set<Element> page_elem = domain_service.getElementStates(url, acct.getUserId());
-		Set<Action> actions = domain_service.getActions(acct.getUserId(), url);
-		Set<Redirect> redirects = redirect_service.getRedirects(acct.getUserId(), url);
-		Set<PageLoadAnimation> animations = domain_service.getAnimations(acct.getUserId(), url);
-		Set<LookseeObject> path_objects = new HashSet<LookseeObject>();
-		//merge(page_state, page_elem, actions);
-
-		path_objects.addAll(redirects);
-		path_objects.addAll(page_state);
-		path_objects.addAll(page_elem);
-		path_objects.addAll(actions);
-		path_objects.addAll(animations);
-		return path_objects;
     }
 	
 	@SafeVarargs
@@ -351,42 +387,11 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<Element> page_elements = domain_service.getElementStates(host, acct.getUserId());
+		Set<Element> page_elements = domain_service.getElementStates(host, acct.getUsername());
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     }
-	
-	/**
-	 * 
-	 * @param request
-	 * @param host
-	 * 
-	 * @return a unique set of {@link Element}s belonging to all page states for the {@link Domain} with the given host
-	 * @throws UnknownAccountException
-	 */
-	@PreAuthorize("hasAuthority('read:domains')")
-    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/forms")
-    public @ResponseBody Set<Form> getAllForms(HttpServletRequest request, 
-												@PathVariable(value="domain_id", required=true) long domain_id)
-														throws UnknownAccountException {        
-		Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	Optional<Domain> domain = domain_service.findById(domain_id);
-    	if(domain.isPresent()){
-    		return domain_service.getForms(acct.getUserId(), domain.get().getUrl());
-    	}
-    	else{
-    		throw new DomainNotFoundException();
-    	}
-    }
+
 	
 	
 	//USERS ENDPOINTS
@@ -429,7 +434,7 @@ public class DomainController {
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
     		log.info("domain : "+domain);
-    		Set<TestUser> test_users = domain_service.getTestUsers(account.getUserId(), domain.getKey());
+    		Set<TestUser> test_users = domain_service.getTestUsers(account.getUsername(), domain.getKey());
     		
     		log.info("Test users : "+test_users.size());
     		for(TestUser user : test_users){
@@ -476,7 +481,7 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-		domain_service.deleteTestUser(account.getUserId(), domain_key, username);
+		domain_service.deleteTestUser(account.getUsername(), domain_key, username);
     }
     
     /**
@@ -495,7 +500,7 @@ public class DomainController {
     											throws UnknownAccountException, 
 														MalformedURLException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account account = account_service.findByUserId(id);
     	
     	if(account == null){
@@ -505,7 +510,7 @@ public class DomainController {
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		Set<TestUser> users = domain_service.getTestUsers(account.getUserId(), domain.getKey());
+    		Set<TestUser> users = domain_service.getTestUsers(account.getUsername(), domain.getKey());
 
     		return users;
     	}
@@ -514,54 +519,53 @@ public class DomainController {
     	}
     }
 
-	/**
-	 *
-	 * @param request
-	 * @param account_key key of account to stop work for
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws UnknownAccountException
-	 */
-    @PreAuthorize("hasAuthority('start:discovery')")
-	@RequestMapping("{domain_id}/stop")
-	public @ResponseBody void stopDiscovery(HttpServletRequest request, @RequestParam(value="url", required=true) String url)
-			throws MalformedURLException, UnknownAccountException {
+    /**
+     * 
+     * @param request
+     * @param page
+     * @return
+     * @throws Exception
+     */
+    @PreAuthorize("hasAuthority('execute:audits')")
+	@RequestMapping(path="/{domain_id}/start", method = RequestMethod.POST)
+	public @ResponseBody AuditRecord startAudit(
+			HttpServletRequest request,
+			@PathVariable("domain_id") long domain_id
+	) throws Exception {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-
-    	if(acct == null){
+    	String user_id = principal.getName();
+    	Account account = account_service.findByUserId(user_id);
+    	
+    	if(account == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
+    	log.warn("looking for domain by id :: "+domain_id);
+    	Optional<Domain> domain_opt = domain_service.findById(domain_id);
+    	if(!domain_opt.isPresent()) {
+    		throw new DomainNotFoundException();
     	}
-
-    	/*
-    	DiscoveryRecord last_discovery_record = null;
-		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
-			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
-				started_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-
-		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
-		discovery_service.save(last_discovery_record);
-		WorkAllowanceStatus.haltWork(acct.getUsername());
-		*/
-    	Domain domain = domain_service.findByUrlAndAccountId(url, acct.getUserId());
-
-    	if(!domain_actors.containsKey(domain.getUrl())){
-			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
-			domain_actors.put(domain.getUrl(), domain_actor);
-		}
     	
-		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct.getUserId(), BrowserType.CHROME);
-		domain_actors.get(url).tell(discovery_action_msg, null);
-		
+    	Domain domain = domain_opt.get();
+    	String lowercase_url = domain.getUrl().toLowerCase();
+    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+
+	   	System.out.println("domain returned from db id ...."+domain.getId());
+	   	System.out.println("domain returned from db key ...."+domain.getKey());
+	   	System.out.println("domain returned from db url ...."+sanitized_url);
+	   	//create new audit record
+	   	AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
+	   	log.warn("audit record found ..."+audit_record.getKey());
+	   	audit_record = audit_record_service.save(audit_record);
+	   	
+	   	domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
+	   	account_service.addAuditRecord(account.getUsername(), audit_record.getId());
+	   	
+	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				.props("auditManager"), "auditManager"+UUID.randomUUID());
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, false, sanitized_url);
+		audit_manager.tell(crawl_action, null);
+	   	
+	   	return audit_record;
 	}
     
     /**
@@ -577,7 +581,7 @@ public class DomainController {
 			@PathVariable(value="host", required=true) String host
 	) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){

@@ -143,11 +143,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			try {
 				
 				URI uri = new URI(href);
-				log.warn("constructed URI .... "+uri.toString());
 				if(!uri.isAbsolute()) {
 					log.warn("URI is relative");
 					URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
-					log.warn("Page URL was created .... "+page_url.toString());
 					href.replaceAll("../", "");
 					if(href.startsWith("/") && href.length() > 1) {
 						href = href.substring(1);
@@ -155,9 +153,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					else if(href.strip().contentEquals("/")) {
 						href = "";
 					}
-					log.warn("Page url before cleanup .... "+page_url);
 					href = BrowserUtils.getPageUrl(page_url);
-					log.warn("Page url AFTER cleanup .... "+href);
 				}
 
 				//if starts with / then append host

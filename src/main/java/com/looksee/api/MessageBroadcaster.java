@@ -3,10 +3,12 @@ package com.looksee.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.looksee.dto.DomainDto;
 import com.looksee.dto.TestCreatedDto;
 import com.looksee.dto.TestDto;
 import com.looksee.dto.TestRecordDto;
 import com.looksee.models.DiscoveryRecord;
+import com.looksee.models.Domain;
 import com.looksee.models.Form;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.Test;
@@ -191,5 +193,15 @@ public class MessageBroadcaster {
 
 		String test_confirmation_json = mapper.writeValueAsString(test_created_dto);
 		pusher.trigger(username, "test-created", test_confirmation_json);
+	}
+
+	public static void sendDomainAdded(String user_id, Domain domain) throws JsonProcessingException {
+		DomainDto domain_dto = new DomainDto(domain.getId(), domain.getUrl(), domain.getPages().size(), 0,0,0,0);
+		
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+		String test_confirmation_json = mapper.writeValueAsString(domain_dto);
+		pusher.trigger(user_id.replace("|", ""), "domain-added", test_confirmation_json);
 	}
 }

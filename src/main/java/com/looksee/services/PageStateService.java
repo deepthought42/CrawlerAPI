@@ -14,6 +14,8 @@ import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.Screenshot;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.repository.PageStateRepository;
 
@@ -232,7 +234,10 @@ public class PageStateService {
 
 	public boolean addElement(String page_key, String element_key) {
 		assert page_key != null;
+		assert !page_key.isEmpty();
 		assert element_key != null;
+		assert !element_key.isEmpty();
+		
 		Optional<ElementState> element_state = getElementState(page_key, element_key);
 		
 		if(element_state.isPresent()) {
@@ -243,6 +248,16 @@ public class PageStateService {
 
 	private Optional<ElementState> getElementState(String page_key, String element_key) {
 		return page_state_repo.getElementState(page_key, element_key);
+	}
+
+	/**
+	 * Retrieves an {@link AuditRecord} for the page with the given id
+	 * @param id
+	 * @return
+	 */
+	public PageAuditRecord getAuditRecord(long id) {
+		
+		return page_state_repo.getAuditRecord(id);
 	}
 
 }

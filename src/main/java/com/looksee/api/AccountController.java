@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -75,11 +74,16 @@ public class AccountController {
     @CrossOrigin(origins = "18.232.225.224, 34.233.19.82, 52.204.128.250, 3.132.201.78, 3.19.44.88, 3.20.244.231", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Account create( 
+    public Account create(
+    		HttpServletRequest request,
     		@RequestBody(required=true) Account account
     ) throws Exception{
-    	log.warn("creating account for user :: "+account.getUsername());
-    	log.warn("creating account for user id :: "+account.getUserId());
+    	log.warn("auth key passed :: " +request.getHeader("Authorization"));
+    	/*
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName();
+    	Account acct = account_service.findByUserId(id);
+    	*/
     	Account acct = account_service.findByUsername(account.getUsername());
 
     	//create account
@@ -93,6 +97,7 @@ public class AccountController {
     	//Customer customer = this.stripeClient.createCustomer(null, username);
     	
     	acct = new Account(account.getUserId(), account.getUsername(), "stripe customer id goes here", "");
+    	
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());
     	acct.setSubscriptionType("FREE");
@@ -102,15 +107,22 @@ public class AccountController {
 
     	
 	   	SegmentAnalyticsHelper.identify(Long.toString(acct.getId()));
-	   	SegmentAnalyticsHelper.signupEvent(acct.getUserId());
+	   	//SegmentAnalyticsHelper.signupEvent(acct.getUserId());
 
         return acct;
     }
 
+    /**
+     * 
+     * @param request
+     * @param step_name
+     * @return
+     * @throws UnknownAccountException
+     */
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){
@@ -131,7 +143,7 @@ public class AccountController {
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
         if(acct == null){

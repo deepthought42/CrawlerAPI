@@ -474,6 +474,15 @@ public class BrowserUtils {
     	return page_url.replace("www.", "");
 	}
 
+	/**
+	 * Checks if the server has certificates. Expects an https protocol in the url
+	 * 
+	 * @param url
+	 * @param title
+	 * @param content
+	 * @return
+	 * @throws IOException
+	 */
 	public static boolean checkIfSecure(URL url, String title, String content) throws IOException {
         HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
            

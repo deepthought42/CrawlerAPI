@@ -14,14 +14,19 @@ public class AuditUtils {
 		System.err.println("calculating score of audits :: "+audits.size());
 		
 		for(Audit audit: audits) {
+			System.err.println("points earned is " +audit.getPoints());
+			System.err.println("total possible points is "+ audit.getTotalPossiblePoints());
+
 			if(audit.getTotalPossiblePoints() == 0) {
+				System.err.println("total possible points is 0");
 				continue;
 			}
 			audit_cnt++;
-			score += (audit.getPoints() / audit.getTotalPossiblePoints());
+			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
+			System.err.println("new score calculated :: "+score);
 		}
-		
-		return score/audit_cnt;
+		System.err.println("cumulative score :: "+(score/(double)audit_cnt));	
+		return score/(double)audit_cnt;
 	}
 	
 }

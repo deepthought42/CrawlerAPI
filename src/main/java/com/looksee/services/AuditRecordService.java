@@ -246,6 +246,22 @@ public class AuditRecordService {
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_key);
 	}
 
+	public Set<Audit> getAllContentAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllContentAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllInformationArchitectureAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllInformationArchitectureAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllAccessibilityAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllAccessibilityAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllAestheticAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllAestheticsAuditsForDomainRecord(id);
+	}
+
 	public Set<Audit> getAllContentAudits(long id) {
 		return audit_record_repo.getAllContentAudits(id);
 	}
@@ -255,14 +271,13 @@ public class AuditRecordService {
 	}
 
 	public Set<Audit> getAllAccessibilityAudits(Long id) {
-		// TODO Auto-generated method stub
-		return new HashSet<>();
+		return audit_record_repo.getAllAccessibilityAudits(id);
 	}
 
 	public Set<Audit> getAllAestheticAudits(long id) {
 		return audit_record_repo.getAllAestheticsAudits(id);
 	}
-
+	
 	public Set<PageAuditRecord> getPageAuditRecords(long domain_audit_id) {
 		return audit_record_repo.getPageAuditRecord(domain_audit_id);
 	}

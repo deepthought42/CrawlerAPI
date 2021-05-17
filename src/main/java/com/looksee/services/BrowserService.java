@@ -162,7 +162,7 @@ public class BrowserService {
 				classification,
 				element.outerHtml(),
 				web_elem.isDisplayed(),
-				element.cssSelector());
+				"");
 		
 		return element_state;
 	}
@@ -315,7 +315,7 @@ public class BrowserService {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				log.warn("navigating to page state url ::   "+url);
 				browser.navigateTo(url.toString());
-				url = new URL(browser.getDriver().getCurrentUrl());
+				//url = new URL(browser.getDriver().getCurrentUrl());
 				if(page_state == null) {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
@@ -347,7 +347,7 @@ public class BrowserService {
 				e.printStackTrace();
 			}
 			cnt++;
-		}while(rendering_incomplete && cnt < 1000);
+		}while(rendering_incomplete && cnt < 10);
 		log.warn("page url :: "+url);
 		log.warn("page state key :: "+page_state.getKey());
 		
@@ -407,7 +407,7 @@ public class BrowserService {
 				full_page_screenshot.getHeight(), 
 				url_without_protocol,
 				title,
-				BrowserUtils.checkIfSecure(url, title, source));
+				BrowserUtils.checkIfSecure(new URL("https://"+url_without_protocol), title, source));
 
 		log.warn("built page...now saving page state...");
 		return page_state;

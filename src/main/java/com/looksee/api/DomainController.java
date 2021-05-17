@@ -226,27 +226,31 @@ public class DomainController {
     		//get most recent audit record for this domain
     		AuditRecord audit = audit_record_opt.get();
     		log.warn("content audit found ..."+audit.getId());
+    		
 	    	//get all content audits for most recent audit record and calculate overall score
-    		Set<Audit> content_audits = audit_record_service.getAllContentAudits(audit.getId());
+    		Set<Audit> content_audits = audit_record_service.getAllContentAuditsForDomainRecord(audit.getId());
+    		log.warn("domain content audit record size  -    "+content_audits.size());
     		double content_score = AuditUtils.calculateScore(content_audits);
     		
 	    	//get all info architecture audits for most recent audit record and calculate overall score
-    		Set<Audit> info_arch_audits = audit_record_service.getAllInformationArchitectureAudits(audit.getId());
+    		Set<Audit> info_arch_audits = audit_record_service.getAllInformationArchitectureAuditsForDomainRecord(audit.getId());
+    		log.warn("domain info arch record size  -    "+info_arch_audits.size());
     		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
     		
     		//get all accessibility audits for most recent audit record and calculate overall score
-    		//Set<Audit> accessibility_audits = audit_record_service.getAllAudits(audit.getId());
-    		//double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
+    		Set<Audit> accessibility_audits = audit_record_service.getAllAccessibilityAuditsForDomainRecord(audit.getId());
+    		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
     		
     		//get all Aesthetic audits for most recent audit record and calculate overall score
-    		Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAudits(audit.getId());
+    		Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAuditsForDomainRecord(audit.getId());
+    		log.warn("domain aesthetic record size  -    "+aesthetics_audits.size());
     		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
     		
     		//build domain stats
 	    	//add domain stat to set
 			page_count = audit_record_service.getPageAuditRecords(domain.getId()).size();
 
-    		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, content_score, info_arch_score, 0, aesthetics_score) );
+    		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, content_score, info_arch_score, accessibility_score, aesthetics_score) );
     	}
     	return domain_info_set;
     }
@@ -312,9 +316,16 @@ public class DomainController {
 		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
 		for(PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+			log.warn("audit record size  -    "+audit_record_service.getAllContentAudits(page_audit.getId()).size());
 			double content_score = AuditUtils.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
+
+			log.warn("info arch record size  -    "+audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()).size());
 			double info_architecture_score = AuditUtils.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+			
+			log.warn("aesthetic record size  -    "+audit_record_service.getAllAestheticAudits(page_audit.getId()).size());
 			double aesthetic_score = AuditUtils.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+			
+			log.warn("accessibility record size  -    "+audit_record_service.getAllAccessibilityAudits(page_audit.getId()).size());
 			double accessibility_score = AuditUtils.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
 			
 			PageStatisticDto page = new PageStatisticDto(
@@ -323,8 +334,9 @@ public class DomainController {
 										page_state.getViewportScreenshotUrl(), 
 										content_score, 
 										info_architecture_score,
+										accessibility_score,
 										aesthetic_score,
-										accessibility_score);	
+										page_audit.getId());	
 			page_stats.add(page);
 		}
 
@@ -562,7 +574,7 @@ public class DomainController {
 	   	
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, false, sanitized_url);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, account.getUserId(), audit_record, false, sanitized_url);
 		audit_manager.tell(crawl_action, null);
 	   	
 	   	return audit_record;

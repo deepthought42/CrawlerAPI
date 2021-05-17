@@ -140,7 +140,8 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 page.getUrl(),
 						 why_it_matters,
 						 description,
-						 page);
+						 page,
+						 false);
 	}
 
 	private Score evaluateSpacingAdherenceToBaseValue(Map<Element, List<String>> elements_padding_map) {

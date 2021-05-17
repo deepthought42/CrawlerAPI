@@ -103,15 +103,30 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{key:$page_key}) MATCH (page_audit)-[]->(audit:Audit) RETURN audit")
 	public Set<Audit> getMostRecentAuditsForPage(@Param("page_key") String key);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Content'})  WHERE id(ar) = $id RETURN audit")
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Content'}) WHERE id(ar)=$id RETURN audit")
+	public Set<Audit> getAllContentAuditsForDomainRecord(@Param("id") long id);
+
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Information Architecture'})  WHERE id(ar)=$id RETURN audit")
+	public Set<Audit> getAllInformationArchitectureAuditsForDomainRecord(@Param("id") long id);
+
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar) = $id RETURN audit")
+	public Set<Audit> getAllAestheticsAuditsForDomainRecord(@Param("id") long id);
+
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Content'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllContentAudits(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Information Architecture'})  WHERE id(ar) = $id RETURN audit")
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Information Architecture'})  WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllInformationArchitectureAudits(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar) = $id RETURN audit")
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllAestheticsAudits(@Param("id") long id);
 
 	@Query("MATCH (dar:DomainAuditRecord)-[]->(par:PageAuditRecord) WHERE id(dar)=$domain_audit_id RETURN par")
 	public Set<PageAuditRecord> getPageAuditRecord(@Param("domain_audit_id") long domain_audit_id);
+
+	@Query("MATCH (dar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{is_accessibility:true}) WHERE id(dar)=$domain_audit_id RETURN audit")
+	public Set<Audit> getAllAccessibilityAuditsForDomainRecord(@Param("domain_audit_id") long domain_audit_id);
+
+	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
+	public Set<Audit> getAllAccessibilityAudits(@Param("page_audit_id") long page_audit_id);
 }

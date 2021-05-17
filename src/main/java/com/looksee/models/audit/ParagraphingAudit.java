@@ -131,7 +131,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state); 
+						 page_state,
+						 false); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}

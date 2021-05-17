@@ -8,6 +8,7 @@ package com.looksee.dto;
 public class PageStatisticDto {
 	private long id;
 	private String url;
+	private long audit_record_id;
 	private String screenshot_url;
 	private double content_score;
 	private double info_arch_score;
@@ -21,10 +22,12 @@ public class PageStatisticDto {
 			double content_score, 
 			double info_arch_score, 
 			double accessibility_score, 
-			double aesthetic_score
+			double aesthetic_score, 
+			long audit_record_id
 	) {
 		setId(id);
 		setUrl(url);
+		setAuditRecordId(id);
 		setScreenshotUrl(screenshot_url);
 		setContentScore(content_score);
 		setInfoArchScore(info_arch_score);
@@ -86,6 +89,14 @@ public class PageStatisticDto {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public long getAuditRecordId() {
+		return audit_record_id;
+	}
+
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 
 }

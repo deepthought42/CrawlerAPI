@@ -126,7 +126,7 @@ public class WebCrawlerActor extends AbstractActor{
 							//construct page and add page to list of page states
 							//retrieve html source for page
 							try {
-								PageState page_state = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(initial_url)));
+								PageState page_state = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(page_url_str)));
 								page_state = page_state_service.save(page_state);
 
 								pages.put(page_state.getKey(), page_state);
@@ -143,27 +143,28 @@ public class WebCrawlerActor extends AbstractActor{
 								Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 								Elements links = doc.select("a");
 								for (Element link : links) {
-									
+									log.warn("examining link....");
 									String href_str = link.absUrl("href");
+									log.warn("link href identified .... "+href_str);
 									if(href_str == null || href_str.isEmpty()) {
 										continue;
 									}
-									
+									log.warn("sanitizing href string");
 									String href = BrowserUtils.sanitizeUrl(href_str);
 									URL href_url = new URL(href);
 									href = BrowserUtils.getPageUrl(href_url);
 									
+									log.warn("checkinf if external link.... " +href);
 									//check if external link
 									if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
-										log.debug("adding to external links :: "+href);
+										log.warn("adding to external links :: "+href);
 					   					external_links.put(href, Boolean.TRUE);
 									}
 									else if( !visited.containsKey(href) 
 											&& !frontier.containsKey(href) 
 											&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
 									){
-										log.warn("href after sanitize :: " + href);
-										log.warn("adding link to frontier :: " + href);
+										log.warn("link isn't external...adding to frontier :: " + href);
 										//add link to frontier
 										frontier.put(href, Boolean.TRUE);
 									}

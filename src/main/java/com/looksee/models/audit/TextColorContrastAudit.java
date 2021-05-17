@@ -269,6 +269,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     page_state.getUrl(),
 					     why_it_matters,
 					     "Text with contrast below 4.5", 
-						 page_state);
+						 page_state,
+						 true);
 	}
 }

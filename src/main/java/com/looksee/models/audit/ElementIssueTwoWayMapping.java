@@ -3,26 +3,31 @@ package com.looksee.models.audit;
 import java.util.Set;
 
 public class ElementIssueTwoWayMapping {
-	private Set<IssueElementMap> issue_elements;
+	private Set<UXIssueMessage> issues;
 	private Set<ElementIssueMap> element_issues;
-
+	private AuditScore audit_score;
+	private String page_src;
 	
 	public ElementIssueTwoWayMapping(
-			Set<IssueElementMap> issue_elements,
-			Set<ElementIssueMap> element_issues
+			Set<UXIssueMessage> issues,
+			Set<ElementIssueMap> element_issues,
+			AuditScore audit_score,
+			String page_src
 	) {
-		setIssueElements(issue_elements);
+		setIssues(issues);
 		setElementIssues(element_issues);
+		setScores(audit_score);
+		setPageSrc(page_src);
 	}
 
 
-	public Set<IssueElementMap> getIssueElements() {
-		return issue_elements;
+	public Set<UXIssueMessage> getIssues() {
+		return issues;
 	}
 
 
-	public void setIssueElements(Set<IssueElementMap> issue_elements) {
-		this.issue_elements = issue_elements;
+	public void setIssues(Set<UXIssueMessage> issues) {
+		this.issues = issues;
 	}
 
 
@@ -33,6 +38,26 @@ public class ElementIssueTwoWayMapping {
 
 	public void setElementIssues(Set<ElementIssueMap> element_issues) {
 		this.element_issues = element_issues;
+	}
+
+
+	public AuditScore getScores() {
+		return audit_score;
+	}
+
+
+	public void setScores(AuditScore audit_score) {
+		this.audit_score = audit_score;
+	}
+
+
+	public String getPageSrc() {
+		return page_src;
+	}
+
+
+	public void setPageSrc(String page_src) {
+		this.page_src = page_src;
 	}
 
 }

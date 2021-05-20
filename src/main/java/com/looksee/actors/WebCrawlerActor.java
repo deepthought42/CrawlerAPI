@@ -117,10 +117,7 @@ public class WebCrawlerActor extends AbstractActor{
 									|| !page_url_str.contains(domain.getUrl())){
 								continue;
 							}
-							log.warn("domain host :: "+domain.getUrl());
-							log.warn("is domain host in page url??   "+page_url_str.contains(domain.getUrl()));
-							log.warn("page url string :: "+page_url_str);
-							
+
 							URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 							page_url_str = BrowserUtils.getPageUrl(page_url_obj);
 							//construct page and add page to list of page states
@@ -134,7 +131,6 @@ public class WebCrawlerActor extends AbstractActor{
 								
 								visited.put(page_url_str, page_state);
 								//send message to page data extractor
-								log.debug("sending page to an audit manager...");
 								
 								PageStateMessage page_msg = new PageStateMessage(page_state, crawl_action.getDomainId(), crawl_action.getAccountId(), crawl_action.getAuditRecordId());
 								//Send PageVerstion to audit manager
@@ -143,18 +139,15 @@ public class WebCrawlerActor extends AbstractActor{
 								Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
 								Elements links = doc.select("a");
 								for (Element link : links) {
-									log.warn("examining link....");
 									String href_str = link.absUrl("href");
-									log.warn("link href identified .... "+href_str);
 									if(href_str == null || href_str.isEmpty()) {
 										continue;
 									}
-									log.warn("sanitizing href string");
+
 									String href = BrowserUtils.sanitizeUrl(href_str);
 									URL href_url = new URL(href);
 									href = BrowserUtils.getPageUrl(href_url);
 									
-									log.warn("checkinf if external link.... " +href);
 									//check if external link
 									if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
 										log.warn("adding to external links :: "+href);
@@ -164,7 +157,6 @@ public class WebCrawlerActor extends AbstractActor{
 											&& !frontier.containsKey(href) 
 											&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
 									){
-										log.warn("link isn't external...adding to frontier :: " + href);
 										//add link to frontier
 										frontier.put(href, Boolean.TRUE);
 									}

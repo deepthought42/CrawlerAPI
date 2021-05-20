@@ -316,16 +316,9 @@ public class DomainController {
 		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
 		for(PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
-			log.warn("audit record size  -    "+audit_record_service.getAllContentAudits(page_audit.getId()).size());
 			double content_score = AuditUtils.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
-
-			log.warn("info arch record size  -    "+audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()).size());
 			double info_architecture_score = AuditUtils.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
-			
-			log.warn("aesthetic record size  -    "+audit_record_service.getAllAestheticAudits(page_audit.getId()).size());
 			double aesthetic_score = AuditUtils.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
-			
-			log.warn("accessibility record size  -    "+audit_record_service.getAllAccessibilityAudits(page_audit.getId()).size());
 			double accessibility_score = AuditUtils.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
 			
 			PageStatisticDto page = new PageStatisticDto(

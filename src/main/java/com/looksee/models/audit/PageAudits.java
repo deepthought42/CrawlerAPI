@@ -1,7 +1,5 @@
 package com.looksee.models.audit;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import com.looksee.models.AuditStats;
@@ -12,14 +10,12 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class PageAudits {
-	private Set<Audit> audits;
+	private ElementIssueTwoWayMapping element_issue_map;
 	private SimplePage page_state;
 	
 	private String status;
 	
-	public PageAudits() {
-		setAudits(new HashSet<>());
-	}
+	public PageAudits() {}
 	
 	/**
 	 * Constructor
@@ -31,12 +27,14 @@ public class PageAudits {
 	 */
 	public PageAudits(
 			ExecutionStatus status, 
-			Set<Audit> audits, 
+			ElementIssueTwoWayMapping element_issue_map, 
 			SimplePage page_state
 	) {
-		assert audits != null;
+		assert element_issue_map != null;
+		assert page_state != null;
+		assert status != null;
 		
-		setAudits(audits);
+		setElementIssueMap(element_issue_map);
 		setSimplePage(page_state);
 		setStatus(status);
 	}
@@ -45,20 +43,12 @@ public class PageAudits {
 		return "auditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
-	public Set<Audit> getAudits() {
-		return audits;
+	public ElementIssueTwoWayMapping getElementIssueMap() {
+		return element_issue_map;
 	}
 
-	public void setAudits(Set<Audit> audits) {
-		this.audits = audits;
-	}
-
-	public void addAudit(Audit audit) {
-		this.audits.add( audit );
-	}
-	
-	public void addAudits(Set<Audit> audits) {
-		this.audits.addAll( audits );
+	public void setElementIssueMap(ElementIssueTwoWayMapping element_issue_map) {
+		this.element_issue_map = element_issue_map;
 	}
 
 	public ExecutionStatus getStatus() {

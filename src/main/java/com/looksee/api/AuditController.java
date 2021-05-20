@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.api.exceptions.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
@@ -35,10 +36,10 @@ import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditFactory;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
-import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.PageAudits;
 import com.looksee.models.audit.UXIssueMessage;
@@ -54,8 +55,10 @@ import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
+import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import akka.actor.ActorRef;
@@ -119,7 +122,7 @@ public class AuditController {
 	) throws MalformedURLException {
     	URL url = new URL(BrowserUtils.sanitizeUrl(domain_host));
     	Domain domain = domain_service.findByHost(url.getHost());
-    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getUrl()); 
+    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getId()); 
     	if(audit_record.isPresent()) {
     		return audit_record_service.getAllAudits(audit_record.get().getKey());
     	}
@@ -139,7 +142,7 @@ public class AuditController {
     	Set<Audit> audit_set = new HashSet<Audit>();
     	
     	Audit audit = audit_service.findById(id).get();
-    	audit.setMessages( audit_service.getIssues(audit.getKey()) );
+    	audit.setMessages( audit_service.getIssues(audit.getId()) );
         
     	audit_set.add(audit);
     	
@@ -154,6 +157,7 @@ public class AuditController {
      * @return {@link Audit audit} with given ID
      * @throws MalformedURLException 
      */
+    /*
     @RequestMapping(method= RequestMethod.GET, path="/pages")
     public @ResponseBody PageAudits getAuditsByPage(
     		HttpServletRequest request,
@@ -172,8 +176,8 @@ public class AuditController {
     	
     	PageAuditRecord audit_record = audit_record_opt.get();
    		//PageState page_state = page_state_service.findByUrl(page_url);
-   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getKey());
-   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getKey());
+   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
+   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getId());
 
    		log.warn("page state found for audit record :: "+page_state.getKey());
 	   	SimplePage simple_page = new SimplePage(
@@ -193,6 +197,7 @@ public class AuditController {
     	
     	return page_audits;
     }
+    */
     
     /**
      * 
@@ -206,21 +211,23 @@ public class AuditController {
     		HttpServletRequest request,
     		@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
-    	
-    	
-    	log.warn("page url without protocol :: "+ audit_record_id);
+    	log.warn("page audit record id :: "+ audit_record_id);
     	//Get most recent audits
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
     	log.warn("processing audits :: "+audits.size());
     	//Map audits to page states
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
     	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    
+    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record_id);
+    	AuditScore score = AuditUtils.extractAuditScore(audits);
+    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
+    	
     	//package both elements into an object definition
-    	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map);
+    	return new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
     }
     
-    /**
+    
+
+	/**
      * Creates a new {@link Observation observation} 
      * 
      * @return {@link PerformanceInsight insight}
@@ -261,14 +268,19 @@ public class AuditController {
      * @return
      * @throws Exception
      */
-	@RequestMapping(path="/start-individual", method = RequestMethod.POST)
+	@RequestMapping(path="/{page_id}/start-individual", method = RequestMethod.POST)
 	public @ResponseBody PageAudits startSinglePageAudit(
 			HttpServletRequest request,
-			@RequestBody(required=true) PageState page
+			@RequestParam("page_id") long page_id
 	) throws Exception {    	
-    	String lowercase_url = page.getUrl().toLowerCase();
-
-    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+    	//String lowercase_url = page.getUrl().toLowerCase();
+		Optional<PageState> page_opt = page_service.findById(page_id);
+		if(!page_opt.isPresent()) {
+			throw new PageNotFoundError();
+		}
+		PageState page = page_opt.get();
+		
+    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(page.getUrl() ));
 	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
 	   	
     	/*
@@ -286,9 +298,19 @@ public class AuditController {
 	   	
 	   	if(audit_record_optional.isPresent()) {
 	   		PageAuditRecord audit_record = audit_record_optional.get();
-	   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getKey());
-	   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getKey());
-		   	SimplePage simple_page = new SimplePage(
+	   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
+	   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getId());
+	   		
+	    	log.warn("processing audits for page quick audit :: "+audits.size());
+	    	//Map audits to page states
+	    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
+	    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record.getId());
+	    	AuditScore score = AuditUtils.extractAuditScore(audits);
+	    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
+		   	
+	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+	   		
+	   		SimplePage simple_page = new SimplePage(
 		   									page_state.getUrl(), 
 		   									page_state.getViewportScreenshotUrl(), 
 		   									page_state.getFullPageScreenshotUrl(), 
@@ -298,9 +320,7 @@ public class AuditController {
 		   									page_state.getKey(), 
 		   									page_state.getId());
 		   	
-	   		PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
-	   		page_audits.addAudits(audits);
-	   		return page_audits;
+	   		return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page);
 	   	}
 	   	
 	   	PageState page_state = browser_service.buildPageState(sanitized_url);
@@ -358,11 +378,16 @@ public class AuditController {
 	   	audit_record.setEndTime(LocalDateTime.now());
 	   	audit_record_service.save(audit_record);
 	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null, null, page_state.getId());
-	   	PageAudits page_audits = new PageAudits( audit_record.getStatus(), audits, simple_page);
 	   	
-	   	//if request is from www.look-see.com then return redirect response
+	   	//Map audits to page states
+    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
+    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record.getId());
+    	AuditScore score = AuditUtils.extractAuditScore(audits);
+    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 	   	
-   		return page_audits;
+   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+   		
+	   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page);
 	}
 
 	
@@ -383,3 +408,17 @@ public class AuditController {
 	   	}
 	}
 }
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class PageNotFoundError extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 794045239226319408L;
+
+	public PageNotFoundError() {
+		super("Oh no! We couldn't find the page you want to audit.");
+	}
+}
+

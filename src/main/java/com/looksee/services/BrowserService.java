@@ -146,7 +146,7 @@ public class BrowserService {
 		
 		Point location = web_elem.getLocation();
 		Dimension dimension = web_elem.getSize();
-		
+		String css_selector = element.cssSelector();
 		ElementState element_state = new ElementState(
 				element.ownText().trim(),
 				element.text(),
@@ -162,7 +162,7 @@ public class BrowserService {
 				classification,
 				element.outerHtml(),
 				web_elem.isDisplayed(),
-				"");
+				css_selector);
 		
 		return element_state;
 	}
@@ -237,7 +237,6 @@ public class BrowserService {
 		
 		//retrieve landable page state associated with page with given url
 		URL browser_url = new URL(browser.getDriver().getCurrentUrl());
-		String path = browser_url.getPath();
 		
 		String url_without_protocol = BrowserUtils.getPageUrl(browser_url);
 		String host = browser_url.getHost();
@@ -300,7 +299,7 @@ public class BrowserService {
 	public PageState buildPageState(URL url) throws Exception {
 		assert url != null;
 		
-		log.warn("building page state for page version :: "+url);
+		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
 		boolean xpath_extraction_incomplete = true;
 
@@ -311,29 +310,25 @@ public class BrowserService {
 		List<String> xpaths = new ArrayList<>();
 		do {
 			try {
-				log.warn("getting browser connection....");
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				log.warn("navigating to page state url ::   "+url);
 				browser.navigateTo(url.toString());
 				//url = new URL(browser.getDriver().getCurrentUrl());
 				if(page_state == null) {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
 					TimingUtils.pauseThread(5000);
-					page_state = buildPageState(url, browser);
+					page_state = page_state_service.save(buildPageState(url, browser));
 					//send RenderedPageState to sender
 				}
 				//extract all element xpaths
 				if(xpath_extraction_incomplete) {
-					log.warn("extracting elements from body tag for page_state  ::    "+page_state.getUrl());
 					xpaths.addAll(extractAllUniqueElementXpaths(page_state.getSrc()));
 					xpath_extraction_incomplete=false;
 				}
 				
 				//for each xpath then extract element state
-				log.warn("getting element states for page state :: "+page_state.getUrl());
-				extractElementStates(page_state, xpaths, browser, elements_mapped);
-
+				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				//page_state.setElements(elements);
 				rendering_incomplete = false;
 				cnt=10000;
 				browser.close();
@@ -348,9 +343,6 @@ public class BrowserService {
 			}
 			cnt++;
 		}while(rendering_incomplete && cnt < 10);
-		log.warn("page url :: "+url);
-		log.warn("page state key :: "+page_state.getKey());
-		
 		log.warn("telling sender of Rendered Page State outcomes ....");
 		return page_state;
 	}
@@ -409,7 +401,6 @@ public class BrowserService {
 				title,
 				BrowserUtils.checkIfSecure(new URL("https://"+url_without_protocol), title, source));
 
-		log.warn("built page...now saving page state...");
 		return page_state;
 	}
 	
@@ -448,8 +439,6 @@ public class BrowserService {
 			
 		//create element state from root node
 		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
-		log.warn("page source 1 :: "+page_source.length());
-		log.warn("url 1  :: "+url);
 		Map<String, String> css_props = new HashMap<>();
 		try{
 			css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root));
@@ -458,7 +447,6 @@ public class BrowserService {
 			log.warn(e.getMessage());
 		}
 		
-		log.warn("Building element xpaths");
 		com.looksee.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
 		root_element = element_service.save(root_element);
 
@@ -552,6 +540,8 @@ public class BrowserService {
 		assert !xpaths.isEmpty();
 		assert browser != null;
 		assert element_states_map != null;
+		assert page_state != null;
+		
 		//BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl());
 
 		List<ElementState> visited_elements = new ArrayList<>();
@@ -582,12 +572,6 @@ public class BrowserService {
 					continue;
 				}
 				
-				log.debug("---------------------------------------------------------------------------");
-				log.debug("web_element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
-				log.debug("web_element location :: "+element_location.getX() + " , " + element_location.getY());
-				log.debug("browser offset :: "+browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
-				log.debug("browser size ::  + " +  browser.getViewportSize().width + " , " +  browser.getViewportSize().height);
-	
 				
 				//get child elements for element
 				Map<String, String> attributes = browser.extractAttributes(web_element);
@@ -639,16 +623,10 @@ public class BrowserService {
 				String bg_image = element_state.getRenderedCssValues().get("background-image");
 	
 				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
-					log.warn("found element with '" + bg_color_css + "' setting");
 					element_state.setBackgroundColor(bg_color_css);
 				}
 				else if(bg_color_css.contains("rgba")) {
 					//extract opacity color
-					int last_comma = bg_color_css.lastIndexOf(',')+1;
-					int last_paren = bg_color_css.lastIndexOf(')');
-					String opacity_str = bg_color_css.substring(last_comma, last_paren);
-					//convert opacity to double
-					double opacity = Double.parseDouble( opacity_str.strip() );
 					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
 					element_state.setBackgroundColor( bkg_color.rgb() );	
 				}
@@ -657,7 +635,7 @@ public class BrowserService {
 					element_state.setBackgroundColor(bkg_color.rgb());
 				}
 				element_state = element_state_service.save(element_state);
-				page_state_service.addElement(page_state.getKey(), element_state.getKey());
+				page_state_service.addElement(page_state.getId(), element_state.getKey());
 				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
 			}

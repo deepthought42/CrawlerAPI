@@ -7,11 +7,13 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
@@ -87,7 +89,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Deprecated
 	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_key") String page_audit_key);
 
-	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) MATCH y=(audit)-[]->(issue:UXIssueMessage) OPTIONAL MATCH z=(issue)-->(:ElementState) WHERE id(page_audit)=$page_audit_id RETURN audit,y,z")
+	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) WHERE id(page_audit)=$page_audit_id RETURN audit")
 	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_id") long page_audit_id);
 
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{url:$url}) RETURN page_audit ORDER BY page_audit.created_at DESC LIMIT 1")
@@ -129,4 +131,8 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
 	public Set<Audit> getAllAccessibilityAudits(@Param("page_audit_id") long page_audit_id);
+
+	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit)  MATCH (audit)-[:HAS]-(issue:UXIssueMessage) WHERE id(audit_record)=$audit_record_id OPTIONAL MATCH y=(issue)-->(element) RETURN issue, element")
+	public Set<UXIssueMessage> getIssues(@Param("audit_record_id") long audit_record_id);
+
 }

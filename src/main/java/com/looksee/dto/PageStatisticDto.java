@@ -27,7 +27,7 @@ public class PageStatisticDto {
 	) {
 		setId(id);
 		setUrl(url);
-		setAuditRecordId(id);
+		setAuditRecordId(audit_record_id);
 		setScreenshotUrl(screenshot_url);
 		setContentScore(content_score);
 		setInfoArchScore(info_arch_score);

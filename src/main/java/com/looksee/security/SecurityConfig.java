@@ -50,7 +50,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
     	http.csrf().disable().authorizeRequests()
 	        .mvcMatchers(HttpMethod.GET, "/actuator/info").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-	        .mvcMatchers(HttpMethod.POST, "/audits/start-individual").permitAll()
+	        .mvcMatchers(HttpMethod.POST, "/auditor/start-individual").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/audits/pages").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/audits/elements").permitAll()
 	        .mvcMatchers(HttpMethod.POST, "/accounts").permitAll()

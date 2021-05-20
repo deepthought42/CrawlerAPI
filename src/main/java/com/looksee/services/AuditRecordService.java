@@ -11,11 +11,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.AuditRecordRepository;
 
 /**
@@ -284,5 +286,9 @@ public class AuditRecordService {
 
 	public PageState getPageStateForAuditRecord(long page_audit_id) {
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
+	}
+
+	public Set<UXIssueMessage> getIssues(long audit_record_id) {
+		return audit_record_repo.getIssues(audit_record_id);
 	}
 }

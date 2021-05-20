@@ -21,9 +21,7 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ElementIssueMap;
-import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.ObservationType;
@@ -39,6 +37,9 @@ public class AuditService {
 
 	@Autowired
 	private AuditRepository audit_repo;
+	
+	@Autowired
+	private UXIssueMessageService ux_issue_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -89,12 +90,10 @@ public class AuditService {
 		return IterableUtils.toList(audit_repo.findAll());
 	}
 
-	public Set<UXIssueMessage> getIssues(String audit_key) {
-		assert audit_key != null;
-		assert !audit_key.isEmpty();
-		return audit_repo.findIssueMessages(audit_key);
+	public Set<UXIssueMessage> getIssues(long audit_id) {
+		return audit_repo.findIssueMessages(audit_id);
 	}
-
+	
 	/**
 	 * using a list of audits, sorts the list by page and packages results into list 
 	 * 	of {@linkplain PageStateAudits}
@@ -150,14 +149,20 @@ public class AuditService {
 	) throws MalformedURLException {
 		Set<IssueElementMap> audit_elements = new HashSet<>();
 		
-		for(Audit audit : audits) {			
-			for(UXIssueMessage issue_msg : audit.getMessages()) {
-					IssueElementMap observation_element = null;
-
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues  = getIssues(audit.getId());
+			for(UXIssueMessage issue_msg : issues ) {
+				IssueElementMap observation_element = null;
+				
 				if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
-
-					ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
 					
+					//ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
+
+					if(element == null) {
+						log.warn("issue element map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
+					}
 					SimpleElement simple_element = new SimpleElement(element.getKey(),
 															   element.getScreenshotUrl(), 
 															   element.getXLocation(), 
@@ -165,7 +170,8 @@ public class AuditService {
 															   element.getWidth(), 
 															   element.getHeight(),
 															   element.getCssSelector(),
-															  element.getAllText());
+															   element.getAllText());
+					
 					observation_element = new IssueElementMap(issue_msg, simple_element);
 				}
 				else{
@@ -193,12 +199,19 @@ public class AuditService {
 		Map<String, Set<UXIssueMessage>> issue_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
 		
-		for(Audit audit : audits) {		
-			for(UXIssueMessage issue_msg : audit.getMessages()) {
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues = getIssues(audit.getId());
+
+			for(UXIssueMessage issue_msg : issues ) {
+				
 				//NOTE: color contrast is first because it inherits form EleementIssueMessage
 				if(issue_msg.getType().equals(ObservationType.COLOR_CONTRAST)) {
-					ElementState element = ((ColorContrastIssueMessage)issue_msg).getElement();
-					
+					//ElementState element = ((ColorContrastIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
+					if(element == null) {
+						log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
+					}
 					if(!element_state_map.containsKey(element.getKey())) {
 						SimpleElement simple_element = 	new SimpleElement(element.getKey(),
 																		  element.getScreenshotUrl(), 
@@ -222,8 +235,12 @@ public class AuditService {
 					}
 				}
 				else if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
-					ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
-					
+					//ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
+					if(element == null) {
+						log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
+					}
 					if(!element_state_map.containsKey(element.getKey())) {
 						SimpleElement simple_element = 	new SimpleElement(element.getKey(),
 																		  element.getScreenshotUrl(), 

@@ -41,16 +41,6 @@ public class ElementStateIssueMessage extends UXIssueMessage {
 		setTitle(title);
 		setKey(this.generateKey());
 	}
-	
-	/*
-	@Override
-	public String generateKey() {
-		assert elements != null;
-		String key = elements.parallelStream().map(ElementState::getKey).sorted().collect(Collectors.joining(""));
-		
-		return "observation"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( key + this.getDescription() );
-	}
-*/
 
 	public ElementState getElement() {
 		return element;

@@ -12,7 +12,6 @@ import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.Screenshot;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 
 /**
@@ -72,11 +71,11 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState{url:$url}) RETURN p ORDER BY p.created_at DESC LIMIT 1")
 	public PageState findByUrl(@Param("url") String url);
 
-	@Query("MATCH (p:PageState{key:$page_key}),(element:ElementState{key:$element_key}) CREATE (p)-[h:HAS]->(element) RETURN element")
-	public ElementState addElement(@Param("page_key") String page_key, @Param("element_key") String element_key);
+	@Query("MATCH (p:PageState),(element:ElementState{key:$element_key}) WHERE id(p)=$page_id CREATE (p)-[h:HAS]->(element) RETURN element")
+	public ElementState addElement(@Param("page_id") long page_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (p:PageState{key:$page_key})-[]->(element:ElementState{key:$element_key}) RETURN element")
-	public Optional<ElementState> getElementState(@Param("page_key") String page_key, @Param("element_key") String element_key);
+	@Query("MATCH (p:PageState)-[]->(element:ElementState{key:$element_key}) WHERE id(p)=$page_id RETURN element")
+	public Optional<ElementState> getElementState(@Param("page_id") long page_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (a:PageAuditRecord)-[:HAS]->(ps:PageState) WHERE id(ps)=$id RETURN a ORDER BY a.created_at DESC LIMIT 1")
 	public PageAuditRecord getAuditRecord(@Param("id") long id);

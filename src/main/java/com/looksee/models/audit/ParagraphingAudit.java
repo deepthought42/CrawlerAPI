@@ -145,9 +145,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
-		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
-				" this category, reading level needs to be taken into consideration when" + 
-				" writing content and paragraphing. ";
+		String ada_compliance = "EThere are no ADA compliance requirements for this category.";
 		
 		for(Sentence sentence : sentences) {			
 			String[] words = sentence.getText().getContent().split(" ");
@@ -157,7 +155,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				//return new Score(1, 1, new HashSet<>());
 				String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
 				String title = "Sentence is too long";
-				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult to users to understand";
+				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult for users to understand";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.MEDIUM, 

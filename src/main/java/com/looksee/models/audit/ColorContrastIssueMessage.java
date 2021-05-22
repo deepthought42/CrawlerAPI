@@ -53,7 +53,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 			ElementState element, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance, 
+			String wcag_compliance,
 			String title
 	) {
 		assert priority != null;

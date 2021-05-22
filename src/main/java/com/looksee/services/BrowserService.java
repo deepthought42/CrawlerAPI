@@ -23,6 +23,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
@@ -149,7 +150,7 @@ public class BrowserService {
 		String css_selector = element.cssSelector();
 		ElementState element_state = new ElementState(
 				element.ownText().trim(),
-				element.text(),
+				web_elem.getText(),
 				xpath, 
 				element.tagName(), 
 				attributes, 
@@ -207,7 +208,6 @@ public class BrowserService {
 	public static String generalizeSrc(String src) {
 		assert src != null;
 		Document html_doc = Jsoup.parse(src);
-
 		html_doc.select("script").remove();
 		html_doc.select("link").remove();
 		html_doc.select("style").remove();
@@ -221,8 +221,13 @@ public class BrowserService {
 				   .removeAttr("data-id");
 		}
 		
-		return html_doc.html();
+		return removeComments(html_doc.html());
 	}
+	
+	public static String removeComments(String html) {
+		return Pattern.compile("<!--.*?-->").matcher(html).replaceAll("");
+    }
+	
 	
 	/**
 	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.

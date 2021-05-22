@@ -2,21 +2,34 @@ package com.looksee.api;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,19 +49,25 @@ import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
+import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.ObservationType;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
+import com.looksee.services.ReportService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
@@ -71,6 +90,12 @@ public class DomainController {
 	
 	@Autowired
 	private DomainService domain_service;
+	
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private UXIssueMessageService ux_issue_service;
 	
 	@Autowired
     private ActorSystem actor_system;
@@ -218,37 +243,31 @@ public class DomainController {
     		
     		int page_count = 0;
     		if(!audit_record_opt.isPresent()) {
-    			page_count = audit_record_service.getPageAuditRecords(domain.getId()).size();
-
-    			domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, 0, 0, 0, 0) );
+    			domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), 0, 0, 0, 0, 0) );
     			continue;
     		}
     		//get most recent audit record for this domain
-    		AuditRecord audit = audit_record_opt.get();
-    		log.warn("content audit found ..."+audit.getId());
+    		AuditRecord domain_audit = audit_record_opt.get();
     		
 	    	//get all content audits for most recent audit record and calculate overall score
-    		Set<Audit> content_audits = audit_record_service.getAllContentAuditsForDomainRecord(audit.getId());
-    		log.warn("domain content audit record size  -    "+content_audits.size());
+    		Set<Audit> content_audits = audit_record_service.getAllContentAuditsForDomainRecord(domain_audit.getId());
     		double content_score = AuditUtils.calculateScore(content_audits);
     		
 	    	//get all info architecture audits for most recent audit record and calculate overall score
-    		Set<Audit> info_arch_audits = audit_record_service.getAllInformationArchitectureAuditsForDomainRecord(audit.getId());
-    		log.warn("domain info arch record size  -    "+info_arch_audits.size());
+    		Set<Audit> info_arch_audits = audit_record_service.getAllInformationArchitectureAuditsForDomainRecord(domain_audit.getId());
     		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
     		
     		//get all accessibility audits for most recent audit record and calculate overall score
-    		Set<Audit> accessibility_audits = audit_record_service.getAllAccessibilityAuditsForDomainRecord(audit.getId());
+    		Set<Audit> accessibility_audits = audit_record_service.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
     		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
     		
     		//get all Aesthetic audits for most recent audit record and calculate overall score
-    		Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAuditsForDomainRecord(audit.getId());
-    		log.warn("domain aesthetic record size  -    "+aesthetics_audits.size());
+    		Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAuditsForDomainRecord(domain_audit.getId());
     		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
     		
     		//build domain stats
 	    	//add domain stat to set
-			page_count = audit_record_service.getPageAuditRecords(domain.getId()).size();
+			page_count = audit_record_service.getPageAuditRecords(domain_audit.getId()).size();
 
     		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, content_score, info_arch_score, accessibility_score, aesthetics_score) );
     	}
@@ -399,8 +418,6 @@ public class DomainController {
 
 	
 	
-	//USERS ENDPOINTS
-	
 	/**
 	 * Create a new test user and add it to the domain
 	 * @param request
@@ -463,6 +480,91 @@ public class DomainController {
 		throw new DomainNotFoundException();
     }
     
+    
+
+	/**
+	 * Get Excel file for domain with the given id
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+    //@PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/{domain_id}/excel", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
+    									@PathVariable(value="domain_id", required=true) long domain_id) 
+    											throws UnknownAccountException, 
+														FileNotFoundException, IOException {
+    	Optional<Domain> domain_opt = domain_service.findById(domain_id);
+    	if(!domain_opt.isPresent()) {
+    		throw new DomainNotFoundException();
+    	}
+    	
+    	Optional<DomainAuditRecord> domain_audit = domain_service.getMostRecentAuditRecord(domain_opt.get().getId());
+    	if(!domain_audit.isPresent()) {
+    		throw new DomainAuditsNotFound();
+    	}
+    	
+    	List<UXIssueReportDto> ux_issues = new ArrayList<>();
+    	Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
+    	for(PageAuditRecord page_audit : page_audits) {
+    		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId());
+    		PageState page = audit_record_service.getPageStateForAuditRecord(page_audit.getId());	
+	    	for(Audit audit : audits) {
+	    		log.warn("audit key :: "+audit.getKey());
+	    		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
+	    		log.warn("audit issue messages size ...."+messages.size());
+	    		
+	    		for(UXIssueMessage message : messages) {
+	    			String element_selector = "";
+	    			if(ObservationType.ELEMENT.equals(message.getType()) 
+    					|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
+	    				element_selector = ux_issue_service.getElement(message.getId()).getCssSelector();
+	    			}
+	    			else {
+	    				element_selector = "No specific element is associated with this issue";
+	    			}
+	    			
+	    			UXIssueReportDto issue_dto = new UXIssueReportDto(message.getRecommendation(),
+	    															  message.getPriority(),
+	    															  message.getDescription(),
+	    															  message.getType(),
+	    															  message.getCategory(),
+	    															  message.getWcagCompliance(),
+	    															  message.getLabels(),
+	    															  audit.getWhyItMatters(),
+	    															  message.getTitle(),
+	    															  element_selector,
+	    															  page.getUrl());
+	    			ux_issues.add(issue_dto);
+	    		}
+	    		
+	    	}
+	    	log.warn("UX audits :: "+ux_issues.size());
+    	}
+    	URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl()));
+    	XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
+        
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            workbook.write(outputStream);
+
+    		HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; " + sanitized_domain_url.getHost()+".xlsx");
+            
+            return ResponseEntity.ok()
+            		.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            		.cacheControl(CacheControl.noCache())
+            		.headers(headers)
+            		.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
+        }
+    }
     
 
 	/**
@@ -621,7 +723,11 @@ class QanairyEmployeesOnlyException extends RuntimeException {
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 class DomainNotFoundException extends RuntimeException {
 
-	private static final long serialVersionUID = 7200878662560716215L;
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3490016388183179302L;
 
 	public DomainNotFoundException() {
 		super("Domain could not be found.");
@@ -631,17 +737,39 @@ class DomainNotFoundException extends RuntimeException {
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 class FormNotFoundException extends RuntimeException {
 
-	private static final long serialVersionUID = 7200878662560716215L;
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6272761200954686735L;
 
 	public FormNotFoundException() {
 		super("Form could not be found.");
 	}
 }
 
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class DomainAuditsNotFound extends RuntimeException {
+
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7815442042430032220L;
+
+	public DomainAuditsNotFound() {
+		super("No audits were found for this domain");
+	}
+}
+
 @ResponseStatus(HttpStatus.SEE_OTHER)
 class ExistingAccountDomainException extends RuntimeException {
 
-	private static final long serialVersionUID = 7200878662560716215L;
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8549092797919036363L;
 
 	public ExistingAccountDomainException() {
 		super("This domain already exists for your account.");

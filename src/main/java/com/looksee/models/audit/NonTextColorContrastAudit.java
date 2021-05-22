@@ -182,7 +182,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					Set<String> labels = new HashSet<>();
 					labels.add("contrast");
 					String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
-
+					String why_it_matters = "";
 					
 					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
 																				Priority.HIGH,
@@ -217,11 +217,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				"familiar and captivating.</p>" + 
 				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
 				"button to have a high contrast score to create an eye-catching effect\n" + 
-				"and be evidently clickable.</p>";
+				"and be obviously clickable.</p>";
 		
-		Set<String> recommendations = new HashSet<>();
-		recommendations.add("Use colors for backgrounds of non text elements that have a contrast of at least 3:1 for ADA compliance(level AA).");
-
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("color contrast");

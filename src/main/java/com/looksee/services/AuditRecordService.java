@@ -1,6 +1,5 @@
            package com.looksee.services;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -209,11 +207,8 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllPageAudits(String audit_record_key) {
-		assert audit_record_key != null;
-		assert !audit_record_key.isEmpty();
-		
-		return audit_record_repo.getAllPageAudits(audit_record_key);
+	public Set<PageAuditRecord> getAllPageAudits(long audit_record_id) {		
+		return audit_record_repo.getAllPageAudits(audit_record_id);
 	}
 
 	@Deprecated

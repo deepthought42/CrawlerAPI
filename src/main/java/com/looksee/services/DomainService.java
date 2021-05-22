@@ -260,14 +260,6 @@ public class DomainService {
 		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
-	
-	public Set<Audit> getMostRecentPageAudits(String page_url) {
-		assert page_url != null;
-		assert !page_url.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentPageAuditRecord(page_url).get();
-		return audit_record_service.getAllPageAudits(record.getKey());
-	}
 
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String page_url) {
 		assert page_url != null;

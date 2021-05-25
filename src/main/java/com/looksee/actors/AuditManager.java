@@ -19,9 +19,14 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.Account;
+import com.looksee.models.AuditStats;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditStage;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.message.CrawlActionMessage;
@@ -116,6 +121,39 @@ public class AuditManager extends AbstractActor{
 					log.warn("Received page state :: "+page_state_msg.getPageState().getUrl());
 					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey())) {
+						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
+						
+						if( record.isPresent() ) {
+							if(record.get() instanceof DomainAuditRecord) {								
+								DomainAuditRecord audit_record = (DomainAuditRecord)record.get();
+								
+								Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(page_state_msg.getAuditRecordId());
+								//get Page Count
+								long page_count = audit_records.size();
+								
+								//get total content audit pages
+								long content_audit_pages = getAuditCount(AuditCategory.CONTENT);
+								
+								//get total information architecture audit pages
+								long info_arch_pages = getAuditCount(AuditCategory.INFORMATION_ARCHITECTURE);
+								
+								//get total aesthetic audit pages
+								long aesthetic_pages = getAuditCount(AuditCategory.AESTHETICS);
+								
+								
+								//build stats object
+								AuditStats audit_stats = new AuditStats(audit_record.getId(), 
+																		audit_record.getStartTime(), 
+																		audit_record.getEndTime(), 
+																		page_count, 
+																		content_audit_pages, 
+																		info_arch_pages, 
+																		aesthetic_pages );
+								
+								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
+							}		
+						}
+						
 						page_states_experienced.put(page_state_msg.getPageState().getKey(), page_state_msg.getPageState());
 						/*
 						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -202,7 +240,11 @@ public class AuditManager extends AbstractActor{
 				.build();
 	}
 	
-	private void stopAudit(CrawlActionMessage message) {		
+	private long getAuditCount(AuditCategory content) {
+	// TODO Auto-generated method stub
+	return 0;
+}
+private void stopAudit(CrawlActionMessage message) {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

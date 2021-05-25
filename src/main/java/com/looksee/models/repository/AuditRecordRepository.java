@@ -132,7 +132,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
 	public Set<Audit> getAllAccessibilityAudits(@Param("page_audit_id") long page_audit_id);
 
-	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit)  MATCH (audit)-[:HAS]-(issue:UXIssueMessage) WHERE id(audit_record)=$audit_record_id OPTIONAL MATCH y=(issue)-->(element) RETURN issue, element")
+	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit)  MATCH (audit)-[:HAS]-(issue:UXIssueMessage) WHERE id(audit_record)=$audit_record_id RETURN issue")
 	public Set<UXIssueMessage> getIssues(@Param("audit_record_id") long audit_record_id);
 
 }

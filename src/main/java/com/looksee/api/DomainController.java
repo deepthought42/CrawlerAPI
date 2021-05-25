@@ -134,10 +134,10 @@ public class DomainController {
     	log.warn("domain url ::   "+lowercase_url);
     	String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url );
     	log.warn("sanitized domain url ::   "+formatted_url);
-    	domain.setUrl(formatted_url.replace("http://", ""));
+    	domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
     	
 		try{
-			Domain domain_record = account_service.findDomain(acct.getUsername(), domain.getUrl());
+			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
 			if(domain_record == null) {
 				domain = domain_service.save(domain);
 				account_service.addDomainToAccount(acct, domain);
@@ -184,7 +184,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Domain domain = domain_service.findByKey(key, acct.getUsername());
+    	Domain domain = domain_service.findByKey(key, acct.getEmail());
     	domain.setLogoUrl(logo_url);
     	
     	return domain_service.save(domain);
@@ -234,9 +234,9 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	*/
-    	log.warn("looking up account for domains 2 ...."+acct.getUsername());
+    	log.warn("looking up account for domains 2 ...."+acct.getEmail());
 
-    	Set<Domain> domains = account_service.getDomainsForUser(acct.getUsername());
+    	Set<Domain> domains = account_service.getDomainsForUser(acct.getEmail());
     	Set<DomainDto> domain_info_set = new HashSet<>();
     	for(Domain domain: domains) {
     		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain.getId());
@@ -300,7 +300,7 @@ public class DomainController {
 		
 		Optional<Domain> domain = domain_service.findById(domain_id);
 		if(domain.isPresent()){
-			account_service.removeDomain(acct.getUsername(), domain.get().getKey());
+			account_service.removeDomain(acct.getEmail(), domain.get().getKey());
 		}
 	}
 	
@@ -331,7 +331,9 @@ public class DomainController {
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		//get latest domain audit record
 		Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
-		
+		if(!domain_audit_record.isPresent()) {
+			throw new DomainAuditsNotFound();
+		}
 		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
 		for(PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
@@ -411,7 +413,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<Element> page_elements = domain_service.getElementStates(host, acct.getUsername());
+		Set<Element> page_elements = domain_service.getElementStates(host, acct.getEmail());
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     }
@@ -456,7 +458,7 @@ public class DomainController {
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
     		log.info("domain : "+domain);
-    		Set<TestUser> test_users = domain_service.getTestUsers(account.getUsername(), domain.getKey());
+    		Set<TestUser> test_users = domain_service.getTestUsers(account.getEmail(), domain.getKey());
     		
     		log.info("Test users : "+test_users.size());
     		for(TestUser user : test_users){
@@ -588,7 +590,7 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-		domain_service.deleteTestUser(account.getUsername(), domain_key, username);
+		domain_service.deleteTestUser(account.getEmail(), domain_key, username);
     }
     
     /**
@@ -617,7 +619,7 @@ public class DomainController {
     	Optional<Domain> optional_domain = domain_service.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		Set<TestUser> users = domain_service.getTestUsers(account.getUsername(), domain.getKey());
+    		Set<TestUser> users = domain_service.getTestUsers(account.getEmail(), domain.getKey());
 
     		return users;
     	}
@@ -665,7 +667,7 @@ public class DomainController {
 	   	audit_record = audit_record_service.save(audit_record);
 	   	
 	   	domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
-	   	account_service.addAuditRecord(account.getUsername(), audit_record.getId());
+	   	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 	   	
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());

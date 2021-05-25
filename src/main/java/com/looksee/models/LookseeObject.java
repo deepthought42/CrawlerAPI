@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.Index;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
 
@@ -20,10 +21,12 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 @NodeEntity
 public abstract class LookseeObject {
 	
+	@Index(unique=true)
 	@GeneratedValue
     @Id
 	private Long id;
-	
+
+	@Index(unique=true)
 	@Property
 	private String key;
 	

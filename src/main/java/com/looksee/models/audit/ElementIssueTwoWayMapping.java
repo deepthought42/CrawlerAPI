@@ -3,13 +3,13 @@ package com.looksee.models.audit;
 import java.util.Set;
 
 public class ElementIssueTwoWayMapping {
-	private Set<UXIssueMessage> issues;
+	private Set<IssueElementMap> issues;
 	private Set<ElementIssueMap> element_issues;
 	private AuditScore audit_score;
 	private String page_src;
 	
 	public ElementIssueTwoWayMapping(
-			Set<UXIssueMessage> issues,
+			Set<IssueElementMap> issues,
 			Set<ElementIssueMap> element_issues,
 			AuditScore audit_score,
 			String page_src
@@ -21,12 +21,12 @@ public class ElementIssueTwoWayMapping {
 	}
 
 
-	public Set<UXIssueMessage> getIssues() {
+	public Set<IssueElementMap> getIssues() {
 		return issues;
 	}
 
 
-	public void setIssues(Set<UXIssueMessage> issues) {
+	public void setIssues(Set<IssueElementMap> issues) {
 		this.issues = issues;
 	}
 

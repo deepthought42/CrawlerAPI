@@ -202,7 +202,7 @@ public class DiscoveryActor extends AbstractActor{
 							discovery_record.setStatus(ExecutionStatus.COMPLETE);
 							
 							for(Account account: accounts){
-								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.looksee.com/discovery>Discovery panel</a> to start classifying your tests");
+								email_service.sendSimpleMessage(account.getEmail(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.looksee.com/discovery>Discovery panel</a> to start classifying your tests");
 							}
 						}
 					}

@@ -84,7 +84,7 @@ public class AccountController {
     	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
     	*/
-    	Account acct = account_service.findByUsername(account.getUsername());
+    	Account acct = account_service.findByUsername(account.getEmail());
 
     	//create account
         if(acct != null){
@@ -93,10 +93,10 @@ public class AccountController {
         }
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
-    	customerParams.put("description", "Customer for "+account.getUsername());
+    	customerParams.put("description", "Customer for "+account.getEmail());
     	//Customer customer = this.stripeClient.createCustomer(null, username);
     	
-    	acct = new Account(account.getUserId(), account.getUsername(), "stripe customer id goes here", "");
+    	acct = new Account(account.getUserId(), account.getEmail(), "stripe customer id goes here", "");
     	
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());

@@ -40,6 +40,7 @@ import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
+import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.PageAudits;
 import com.looksee.models.audit.UXIssueMessage;
@@ -217,12 +218,15 @@ public class AuditController {
     	log.warn("processing audits :: "+audits.size());
     	//Map audits to page states
     	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record_id);
+    	
+    	//generate IssueElementMap
+    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+    	
     	AuditScore score = AuditUtils.extractAuditScore(audits);
     	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
     	
     	//package both elements into an object definition
-    	return new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+    	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
     }
     
     
@@ -304,11 +308,11 @@ public class AuditController {
 	    	log.warn("processing audits for page quick audit :: "+audits.size());
 	    	//Map audits to page states
 	    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-	    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record.getId());
+	    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
 	    	AuditScore score = AuditUtils.extractAuditScore(audits);
 	    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 		   	
-	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
 	   		
 	   		SimplePage simple_page = new SimplePage(
 		   									page_state.getUrl(), 
@@ -336,7 +340,7 @@ public class AuditController {
 		if(principal != null) {
 			String user_id = principal.getName();
 	    	Account account = account_service.findByUserId(user_id);
-	    	account_service.addAuditRecord(account.getUsername(), audit_record.getId());
+	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 		}
 	   	/*
 	   	log.warn("telling audit manager about crawl action");
@@ -381,11 +385,11 @@ public class AuditController {
 	   	
 	   	//Map audits to page states
     	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record.getId());
+    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
     	AuditScore score = AuditUtils.extractAuditScore(audits);
     	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 	   	
-   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
    		
 	   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page);
 	}

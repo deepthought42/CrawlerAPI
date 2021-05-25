@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -17,13 +16,10 @@ import com.looksee.models.audit.AuditRecord;
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
 @NodeEntity
-public class Account {
-	@GeneratedValue
-    @Id
-	private Long id;
+public class Account extends LookseeObject{
 
 	private String user_id;
-	private String username;
+	private String email;
 	private String customer_token;
 	private String subscription_token;
 	private String subscription_type;
@@ -38,7 +34,9 @@ public class Account {
 	@Relationship(type = "HAS")
 	private Set<AuditRecord> audits = new HashSet<>();
 
-	public Account(){}
+	public Account(){
+		super();
+	}
 
 	/**
 	 *
@@ -50,12 +48,13 @@ public class Account {
 	 */
 	public Account(
 			String user_id, 
-			String username, 
+			String email, 
 			String customer_token, 
 			String subscription_token
 	){
+		super();
 		setUserId(user_id);
-		setUsername(username);
+		setEmail(email);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
@@ -78,23 +77,19 @@ public class Account {
 			String name
 	){
 		setUserId(user_id);
-		setUsername(username);
+		setEmail(username);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
 		setName(name);
 	}
-	
-	public long getId(){
-		return this.id;
+
+	public String getEmail() {
+		return email;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public String getCustomerToken() {
@@ -153,18 +148,16 @@ public class Account {
 	}
 
 	public void removeDomain(Domain domain) {
-		int idx = -1;
 		boolean domain_found = false;
 		for(Domain curr_domain : this.domains){
 			if(curr_domain.getKey().equals(domain.getKey())){
 				domain_found = true;
 				break;
 			}
-			idx++;
 		}
 
 		if(domain_found){
-			this.domains.remove(idx);
+			this.domains.remove(domain);
 		}
 	}
 
@@ -210,5 +203,10 @@ public class Account {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public String generateKey() {
+		return UUID.randomUUID().toString();
 	}
 }

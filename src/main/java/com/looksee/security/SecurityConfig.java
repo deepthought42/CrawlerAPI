@@ -53,6 +53,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
 	        .mvcMatchers(HttpMethod.POST, "/auditor/start-individual").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/audits/pages").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/audits/elements").permitAll()
+	        .mvcMatchers(HttpMethod.POST, "/auditrecords/{audit_record_id:[0-9]+}/report").permitAll()
 	        .mvcMatchers(HttpMethod.POST, "/accounts").permitAll()
 	        .mvcMatchers("/api/private-scoped").hasAuthority("SCOPE_read:messages") //this line is left in as future example
 	        .anyRequest()

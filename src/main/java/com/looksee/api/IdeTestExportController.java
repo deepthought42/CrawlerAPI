@@ -110,18 +110,18 @@ public class IdeTestExportController {
 		if(test_json.has("key")){
 			String test_key = test_json.getString("key");
 			
-			Test test = test_repo.findByKey(test_key, formatted_url, acct.getUsername());
+			Test test = test_repo.findByKey(test_key, formatted_url, acct.getEmail());
 			if(test != null){
 				test.setArchived(true);
 				test_repo.save(test);
 			}
 		}
 		
-    	Domain domain = domain_service.findByHostForUser(domain_url.getHost(), acct.getUsername());
+    	Domain domain = domain_service.findByHostForUser(domain_url.getHost(), acct.getEmail());
     	if(domain == null){
     		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),formatted_url, "");
     		domain = domain_service.save(domain);
-    		SegmentAnalyticsHelper.sendDomainCreatedInRecorder(acct.getUsername(), domain.getKey());
+    		SegmentAnalyticsHelper.sendDomainCreatedInRecorder(acct.getEmail(), domain.getKey());
     	}
 
     	Map<String, Object> options = new HashMap<String, Object>();

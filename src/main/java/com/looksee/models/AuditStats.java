@@ -10,24 +10,39 @@ public class AuditStats extends LookseeObject{
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
-	private String host;
+	private long audit_record_id;
+	private long pages_found;
+	private long content_pages_audited;
+	private long info_arch_pages_audited;
+	private long aesthetic_pages_audited;
 	
 	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
 	public AuditStats() {}
 	
-	public AuditStats(String host_url) {
+	public AuditStats(long audit_record_id) {
 		setStartTime(LocalDateTime.now());
-		setHost(host_url);
+		setAuditRecordId(audit_record_id);
 		setKey(generateKey());
 	}
 	
-	public AuditStats(String host_url, LocalDateTime start_time, LocalDateTime end_time, int page_count, double avg_time_per_page) {
+	public AuditStats(
+			long audit_record_id,
+			LocalDateTime start_time, 
+			LocalDateTime end_time, 
+			long page_count, 
+			long content_pages_audited,
+			long info_arch_pages_audited,
+			long aesthetic_pages_audited
+	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
-		setHost(host_url);
+		setAuditRecordId(audit_record_id);
 		setSubcategoryStats(new HashSet<>());
+		setContentPagesAudited(content_pages_audited);
+		setInfoArchPagesAudited(info_arch_pages_audited);
+		setAestheticPagesAudited(aesthetic_pages_audited);
 		setKey(generateKey());
 	}
 
@@ -55,16 +70,48 @@ public class AuditStats extends LookseeObject{
 		this.subcategory_stats = subcategory_stats;
 	}
 
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host_url) {
-		this.host = host_url;
-	}
-
 	@Override
 	public String generateKey() {
-		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + host);
+		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + "" + audit_record_id);
+	}
+
+	public long getPagesFound() {
+		return pages_found;
+	}
+
+	public void setPagesFound(long pages_found) {
+		this.pages_found = pages_found;
+	}
+
+	public long getContentPagesAudited() {
+		return content_pages_audited;
+	}
+
+	public void setContentPagesAudited(long content_pages_audited) {
+		this.content_pages_audited = content_pages_audited;
+	}
+
+	public long getInfoArchPagesAudited() {
+		return info_arch_pages_audited;
+	}
+
+	public void setInfoArchPagesAudited(long info_arch_pages_audited) {
+		this.info_arch_pages_audited = info_arch_pages_audited;
+	}
+
+	public long getAestheticpagesAudited() {
+		return aesthetic_pages_audited;
+	}
+
+	public void setAestheticPagesAudited(long aesthetic_pages_audited) {
+		this.aesthetic_pages_audited = aesthetic_pages_audited;
+	}
+
+	public long getAuditRecordId() {
+		return audit_record_id;
+	}
+
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 }

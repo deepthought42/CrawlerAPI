@@ -35,9 +35,9 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
+import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.PageAudits;
-import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
@@ -154,7 +154,7 @@ public class AuditorController {
 		if(principal != null) {
 			String user_id = principal.getName();
 	    	Account account = account_service.findByUserId(user_id);
-	    	account_service.addAuditRecord(account.getUsername(), audit_record.getId());
+	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 		}
 	   	/*
 	   	log.warn("telling audit manager about crawl action");
@@ -198,11 +198,12 @@ public class AuditorController {
 	   	
 		//Map audits to page states
     	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	Set<UXIssueMessage> issues = audit_record_service.getIssues(audit_record.getId());
+    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+
     	AuditScore score = AuditUtils.extractAuditScore(audits);
     	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 	   	
-   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues, element_issue_map, score, page_src);
+   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
    		
 	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), 
 	   											page_state.getViewportScreenshotUrl(), 

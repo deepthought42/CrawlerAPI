@@ -33,7 +33,7 @@ public class AccountService {
 		}
 		
 		if(!domain_exists_for_acct){
-			account_repo.addDomain(domain.getKey(), acct.getUsername());
+			account_repo.addDomain(domain.getKey(), acct.getEmail());
 			acct.addDomain(domain);
 			account_repo.save(acct);
 		}
@@ -97,5 +97,10 @@ public class AccountService {
 		assert !username.isEmpty();
 		
 		return account_repo.addAuditRecord(username, audit_record_id);
+	}
+	
+	public AuditRecord addAuditRecord(long id, long audit_record_id) {
+		
+		return account_repo.addAuditRecord(id, audit_record_id);
 	}
 }

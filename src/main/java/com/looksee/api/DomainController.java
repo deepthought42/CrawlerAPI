@@ -137,6 +137,8 @@ public class DomainController {
     	domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
     	
 		try{
+			log.warn("Account email :: "+acct.getEmail());
+			log.warn("domain url :: "+domain.getUrl());
 			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
 			if(domain_record == null) {
 				domain = domain_service.save(domain);

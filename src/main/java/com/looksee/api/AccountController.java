@@ -84,7 +84,7 @@ public class AccountController {
     	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
     	*/
-    	Account acct = account_service.findByUsername(account.getEmail());
+    	Account acct = account_service.findByEmail(account.getEmail());
 
     	//create account
         if(acct != null){

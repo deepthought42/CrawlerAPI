@@ -61,29 +61,6 @@ public class Account extends LookseeObject{
 		setName("");
 	}
 
-	/**
-	 *
-	 * @param username
-	 * @param customer_token
-	 * @param subscription_token
-	 *
-	 * @pre users != null
-	 */
-	public Account(
-			String user_id, 
-			String username, 
-			String customer_token, 
-			String subscription_token, 
-			String name
-	){
-		setUserId(user_id);
-		setEmail(username);
-		setCustomerToken(customer_token);
-		setSubscriptionToken(subscription_token);
-		setOnboardedSteps(new ArrayList<String>());
-		setName(name);
-	}
-
 	public String getEmail() {
 		return email;
 	}

@@ -12,28 +12,29 @@ import com.looksee.models.enums.ExecutionStatus;
 public class PageAudits {
 	private ElementIssueTwoWayMapping element_issue_map;
 	private SimplePage page_state;
-	
 	private String status;
+	private long audit_record_id;
 	
 	public PageAudits() {}
 	
 	/**
 	 * Constructor
-	 * @param audits TODO
 	 * @param page_state TODO
+	 * @param audit_record_id TODO
+	 * @param audits TODO
 	 * @param audit_stats {@link AuditStats} object with statics for audit progress
-	 * 
 	 * @pre audits != null;
 	 */
 	public PageAudits(
 			ExecutionStatus status, 
 			ElementIssueTwoWayMapping element_issue_map, 
-			SimplePage page_state
+			SimplePage page_state, long audit_record_id
 	) {
 		assert element_issue_map != null;
 		assert page_state != null;
 		assert status != null;
 		
+		setAuditRecordId(audit_record_id);
 		setElementIssueMap(element_issue_map);
 		setSimplePage(page_state);
 		setStatus(status);
@@ -65,5 +66,13 @@ public class PageAudits {
 
 	public void setSimplePage(SimplePage page_state) {
 		this.page_state = page_state;
+	}
+
+	public long getAuditRecordId() {
+		return audit_record_id;
+	}
+
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 }

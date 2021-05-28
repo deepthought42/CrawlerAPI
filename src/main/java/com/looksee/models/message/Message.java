@@ -5,11 +5,11 @@ package com.looksee.models.message;
  */
 public abstract class Message {
 	private long domain_id;
-	private String account_id;
+	private long account_id;
 	private long audit_record_id;
 	
 	Message(){
-		setAccountId("");
+		setAccountId(-1);
 	}
 	
 	/**
@@ -18,7 +18,7 @@ public abstract class Message {
 	 * @param audit_record_id TODO
 	 * @param domain eg. example.com
 	 */
-	Message(long domain_id, String account_id, long audit_record_id){
+	Message(long domain_id, long account_id, long audit_record_id){
 		setDomainId(domain_id);
 		setAccountId(account_id);
 		setAuditRecordId(audit_record_id);
@@ -32,11 +32,11 @@ public abstract class Message {
 		this.domain_id = domain;
 	}
 	
-	public String getAccountId() {
+	public long getAccountId() {
 		return account_id;
 	}
 
-	private void setAccountId(String account_id) {
+	protected void setAccountId(long account_id) {
 		this.account_id = account_id;
 	}
 

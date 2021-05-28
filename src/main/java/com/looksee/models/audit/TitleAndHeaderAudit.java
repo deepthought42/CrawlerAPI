@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
@@ -54,6 +55,9 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		issue_messages.addAll(title_score.getIssueMessages());
 		issue_messages.addAll(favicon_score.getIssueMessages());
 		issue_messages.addAll(heading_score.getIssueMessages());
+		for(UXIssueMessage issue_msg : issue_messages) {
+			MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
+		}
 		
 		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved() + heading_score.getPointsAchieved();
 		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints() + heading_score.getMaxPossiblePoints();

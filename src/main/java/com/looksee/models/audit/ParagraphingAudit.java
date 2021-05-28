@@ -74,27 +74,10 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 					points_earned += score.getPointsAchieved();
 					max_points += score.getMaxPossiblePoints();
 					issue_messages.addAll(score.getIssueMessages());
-					/*
 					
-					for(Sentence sentence : sentences) {
-						System.err.println("sentence :: " + sentence.getText().getContent());
-						
-						Score sentence_score = calculateSentenceScore(sentence.getText().getContent());
-						points_earned += sentence_score.getPointsAchieved();
-						max_points += sentence_score.getMaxPossiblePoints();
-						if(sentence_score.getPointsAchieved() == 0) {
-							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
-							String description = "Sentence is too long";
-							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																			Priority.MEDIUM, 
-																			description, 
-																			recommendation, 
-																			element,
-																			AuditCategory.CONTENT,
-																			labels,
-																			ada_compliance);
-							issue_messages.add(issue_message);
-						}						
+					/*
+					for(UXIssueMessage issue_msg : score.getIssueMessages()) {
+						MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
 					}
 					*/
 				} catch (IOException e) {

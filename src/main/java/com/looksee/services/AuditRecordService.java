@@ -61,6 +61,11 @@ public class AuditRecordService {
 		}
 	}
 
+	public void addAudit(long audit_record_id, long audit_id) {
+		//check if audit already exists for page state
+		audit_record_repo.addAudit(audit_record_id, audit_id);
+	}
+	
 	public Set<Audit> getAllAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
@@ -259,8 +264,8 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAestheticsAuditsForDomainRecord(id);
 	}
 
-	public Set<Audit> getAllContentAudits(long id) {
-		return audit_record_repo.getAllContentAudits(id);
+	public Set<Audit> getAllContentAudits(long audit_record_id) {
+		return audit_record_repo.getAllContentAudits(audit_record_id);
 	}
 
 	public Set<Audit> getAllInformationArchitectureAudits(long id) {
@@ -285,5 +290,13 @@ public class AuditRecordService {
 
 	public Set<UXIssueMessage> getIssues(long audit_record_id) {
 		return audit_record_repo.getIssues(audit_record_id);
+	}
+
+	public Set<PageState> getPageStatesForDomainAuditRecord(long audit_record_id) {
+		return audit_record_repo.getPageStatesForDomainAuditRecord(audit_record_id);
+	}
+
+	public void addPageToPageAudit(long audit_record_id, long page_state_id) {
+		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
 	}
 }

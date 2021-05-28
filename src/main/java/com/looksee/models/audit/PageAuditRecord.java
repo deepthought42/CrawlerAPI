@@ -43,7 +43,6 @@ public class PageAuditRecord extends AuditRecord {
 			PageState page_state
 	) {
 		assert audits != null;
-		assert page_state != null;
 		assert status != null;
 		
 		setAudits(audits);

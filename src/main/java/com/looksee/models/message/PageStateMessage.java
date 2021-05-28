@@ -6,7 +6,7 @@ public class PageStateMessage extends Message {
 
 	private PageState page_state;
 	
-	public PageStateMessage(PageState page_state, long domain_id, String account_id, long audit_record_id) {
+	public PageStateMessage(PageState page_state, long domain_id, long account_id, long audit_record_id) {
 		super(domain_id, account_id, audit_record_id);
 		setPageState(page_state);
 	}

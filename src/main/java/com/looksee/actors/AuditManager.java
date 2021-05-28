@@ -122,7 +122,9 @@ public class AuditManager extends AbstractActor{
 					//send URL to JourneyExplorer actor
 					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey())) {
 						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
-						
+				 		long content_audits_complete = 0;
+			    		long info_arch_audits_complete = 0;
+			    		long aesthetic_audits_complete = 0;
 						if( record.isPresent() ) {
 							if(record.get() instanceof DomainAuditRecord) {								
 								DomainAuditRecord audit_record = (DomainAuditRecord)record.get();
@@ -131,24 +133,40 @@ public class AuditManager extends AbstractActor{
 								//get Page Count
 								long page_count = audit_records.size();
 								
-								//get total content audit pages
-								long content_audit_pages = getAuditCount(AuditCategory.CONTENT);
-								
-								//get total information architecture audit pages
-								long info_arch_pages = getAuditCount(AuditCategory.INFORMATION_ARCHITECTURE);
-								
-								//get total aesthetic audit pages
-								long aesthetic_pages = getAuditCount(AuditCategory.AESTHETICS);
-								
+								for(PageAuditRecord page_audit : audit_records) {
+									//get total content audit pages
+									boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(page_audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+									if(is_content_audit_complete) {
+										content_audits_complete++;
+									}
+									
+									//get total information architecture audit pages
+									boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+									if(is_info_arch_audit_complete) {
+										info_arch_audits_complete++;
+									}
+									
+									//get total aesthetic audit pages
+									boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+									if(is_aesthetic_audit_complete) {
+										aesthetic_audits_complete++;
+									}
+								}
 								
 								//build stats object
 								AuditStats audit_stats = new AuditStats(audit_record.getId(), 
 																		audit_record.getStartTime(), 
 																		audit_record.getEndTime(), 
 																		page_count, 
-																		content_audit_pages, 
-																		info_arch_pages, 
-																		aesthetic_pages );
+																		content_audits_complete,
+																		audit_record.getContentAuditProgress(),
+																		audit_record.getContentAuditMsg(),
+																		info_arch_audits_complete, 
+																		audit_record.getInfoArchAuditProgress(),
+																		audit_record.getInfoArchMsg(),
+																		aesthetic_audits_complete,
+																		audit_record.getAestheticAuditProgress(),
+																		audit_record.getAestheticMsg());
 								
 								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
 							}		
@@ -240,11 +258,26 @@ public class AuditManager extends AbstractActor{
 				.build();
 	}
 	
-	private long getAuditCount(AuditCategory content) {
-	// TODO Auto-generated method stub
-	return 0;
-}
-private void stopAudit(CrawlActionMessage message) {		
+	private boolean isAestheticsAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
+
+	private boolean isContentAuditComplete(Set<Audit> allContentAudits) {
+		return allContentAudits.size() == 3;
+	}
+	
+	private boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
+
+	private long getAuditCount(AuditCategory content, Set<PageAuditRecord> audit_records) {
+		for(AuditRecord audit_record : audit_records) {
+		}
+		
+		return 0;
+	}
+	
+	private void stopAudit(CrawlActionMessage message) {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

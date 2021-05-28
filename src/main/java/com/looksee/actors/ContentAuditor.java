@@ -1,9 +1,7 @@
 package com.looksee.actors;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -14,22 +12,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Account;
+import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditFactory;
-import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.ImageAltTextAudit;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.message.AuditSet;
-import com.looksee.models.message.DomainAuditMessage;
-import com.looksee.models.message.PageAuditRecordMessage;
-import com.looksee.models.message.PageStateAuditComplete;
-import com.looksee.models.message.PageStateMessage;
+import com.looksee.models.audit.ParagraphingAudit;
+import com.looksee.models.audit.ReadabilityAudit;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -43,22 +35,25 @@ import akka.cluster.ClusterEvent.UnreachableMember;
  */
 @Component
 @Scope("prototype")
-public class Auditor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
+public class ContentAuditor extends AbstractActor{
+	private static Logger log = LoggerFactory.getLogger(ContentAuditor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private ActorSystem actor_system;
+	private ImageAltTextAudit image_alt_text_auditor;
+	
+	@Autowired
+	private ParagraphingAudit paragraph_auditor;
+	
+	@Autowired
+	private ReadabilityAudit readability_auditor;
 	
 	@Autowired
 	private AuditService audit_service;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private AuditFactory audit_factory;
 	
 	private Account account;
 
@@ -87,10 +82,10 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageStateMessage.class, page_state_msg -> {
+				.match(PageAuditRecord.class, page_audit_record_msg -> {
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
-				   	
+				   	PageState page = page_audit_record_msg.getPageState();
 				   	//check if page state already
 		   			//perform audit and return audit result
 				   	/*
@@ -103,34 +98,49 @@ public class Auditor extends AbstractActor{
 							.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 					performance_insight_actor.tell(page_state, getSelf());
 					*/
-				   	for(AuditCategory audit_category : AuditCategory.values()) {
-						log.warn("performing all other audits");
-						
-			   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state_msg.getPageState());
-			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
-			   			audits.addAll(rendered_audits_executed);
-			   		}
-		   			
-					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getPageState());
-		   			getSender().tell(audit_complete, getSelf());
-		   			
-		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState());
-		   			audit_record = audit_record_service.save(audit_record);
-		   			
-		   			PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage((PageAuditRecord)audit_record, page_state_msg.getDomainId(), page_state_msg.getAccountId(), page_state_msg.getAuditRecordId());
-		   			getSender().tell( page_audit_msg, getSelf() );
+				   	/* NOTE typeface audit is incomplete and currently commented out
+					 
+					Audit typeface_audit = typeface_auditor.execute(page);
+					audits.add(typeface_audit);
+					 */
+				   	log.warn("page audit record recieved :: "+page_audit_record_msg.getId());
+					Audit alt_text_audit = image_alt_text_auditor.execute(page);
+					audits.add(alt_text_audit);
+					
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record_msg.setContentAuditProgress( (1.0/3.0) );
+					page_audit_record_msg.setContentAuditMsg("Reviewing content for readability");
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);		
+					
+					Audit readability_audit = readability_auditor.execute(page);
+					audits.add(readability_audit);
+					
+					
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record_msg.setContentAuditProgress( (2.0/3.0) );
+					page_audit_record_msg.setContentAuditMsg("Reviewing paragraph structure");
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);
+
+					//Audit font_audit = font_auditor.execute(page);
+					//audits.add(font_audit);
+					
+					Audit paragraph_audit = paragraph_auditor.execute(page);
+					audits.add(paragraph_audit);	
+					
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record_msg.setContentAuditMsg("Finished content audit");
+					page_audit_record_msg.setContentAuditProgress( (3.0/3.0) ); 
+					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);		
+
+					
+					log.warn("content audits complete :: "+audits.size());
+					for(Audit audit : audits) {						
+						audit = audit_service.save(audit);
+						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
+						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
+					}
+				  
 		   			//send message to either user or page channel containing reference to audits
-				})
-				.match(DomainAuditMessage.class, domain_msg -> {
-					log.warn("audit record set message received...");
-				   	for(AuditCategory audit_category : AuditCategory.values()) {
-				   		//perform audit and return audit result
-				   		List<Audit> audits_executed = new ArrayList<>();
-			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
-				   		
-			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
-				   	}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

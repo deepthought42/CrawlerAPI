@@ -671,7 +671,7 @@ public class DomainController {
 	   	
 	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, account.getUserId(), audit_record, false, sanitized_url);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, account.getId(), audit_record, false, sanitized_url);
 		audit_manager.tell(crawl_action, null);
 	   	
 	   	return audit_record;

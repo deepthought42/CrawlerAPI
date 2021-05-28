@@ -639,6 +639,7 @@ public class BrowserService {
 					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_screenshot_url));
 					element_state.setBackgroundColor(bkg_color.rgb());
 				}
+				element_state.setForegroundColor( element_state.getRenderedCssValues().get("color") );
 				element_state = element_state_service.save(element_state);
 				page_state_service.addElement(page_state.getId(), element_state.getKey());
 				element_states_map.put(xpath, element_state);

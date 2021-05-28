@@ -9,7 +9,7 @@ public class PageAuditRecordMessage extends Message {
 	public PageAuditRecordMessage(
 			PageAuditRecord page_audit_record, 
 			long domain_id, 
-			String account_id, 
+			long account_id, 
 			long domain_audit_id) {
 		super(domain_id, account_id, domain_audit_id);
 		setPageAuditRecord(page_audit_record);

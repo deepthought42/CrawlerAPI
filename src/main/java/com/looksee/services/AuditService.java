@@ -221,6 +221,7 @@ public class AuditService {
 																		  element.getHeight(),
 																		  element.getCssSelector(),
 																		  element.getAllText());
+						
 						element_state_map.put(element.getKey(), simple_element);
 					}
 
@@ -250,6 +251,7 @@ public class AuditService {
 																		  element.getHeight(),
 																		  element.getCssSelector(),
 																		  element.getAllText());
+						
 						element_state_map.put(element.getKey(), simple_element);
 					}
 

@@ -200,35 +200,6 @@ public class AuditController {
     }
     */
     
-    /**
-     * 
-     * 
-     * @param id
-     * @return {@link Audit audit} with given ID
-     * @throws MalformedURLException 
-     */
-    @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
-    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
-    		HttpServletRequest request,
-    		@PathVariable("audit_record_id") long audit_record_id
-	) throws MalformedURLException {
-    	log.warn("page audit record id :: "+ audit_record_id);
-    	//Get most recent audits
-		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
-    	log.warn("processing audits :: "+audits.size());
-    	//Map audits to page states
-    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	
-    	//generate IssueElementMap
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
-    	
-    	AuditScore score = AuditUtils.extractAuditScore(audits);
-    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
-    	
-    	//package both elements into an object definition
-    	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
-    }
-    
     
 
 	/**
@@ -324,7 +295,7 @@ public class AuditController {
 		   									page_state.getKey(), 
 		   									page_state.getId());
 		   	
-	   		return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page);
+	   		return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
 	   	}
 	   	
 	   	PageState page_state = browser_service.buildPageState(sanitized_url);
@@ -363,7 +334,7 @@ public class AuditController {
 	   	performance_insight_actor.tell(page_state, ActorRef.noSender());
 
 	   	for(AuditCategory audit_category : AuditCategory.values()) {
-   			List<Audit> rendered_audits_executed = audit_factory.executePostRenderPageAudits(audit_category, page_state);
+   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state);
 
    			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 
@@ -391,7 +362,7 @@ public class AuditController {
 	   	
    		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
    		
-	   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page);
+	   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
 	}
 
 	

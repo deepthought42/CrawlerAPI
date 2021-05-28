@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -57,6 +58,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	 * 
 	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
+	 *   
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */
@@ -65,8 +67,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-	
-		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		
@@ -126,7 +126,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String description = "Make sure links have a url set for the href value";
 				String title = "Link url is missing";
 
-				ElementStateIssueMessage issue_Message = new ElementStateIssueMessage(
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 
 																recommendation, 
@@ -135,7 +135,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																labels,
 																ada_compliance,
 																title);
-				issue_messages.add(issue_Message);
+				issue_messages.add(issue_message);
+				MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_message);
 				continue;
 			}
 			

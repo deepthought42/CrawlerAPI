@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -198,6 +199,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				ada_compliance,
 																				title);
 					issue_messages.add(low_contrast_issue);
+					MessageBroadcaster.sendIssueMessage(page_state.getUrl(), low_contrast_issue);
+
 				}
 				else {
 					score += 1;

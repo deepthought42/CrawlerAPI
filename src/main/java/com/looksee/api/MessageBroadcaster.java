@@ -15,7 +15,7 @@ import com.looksee.models.LookseeObject;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.message.AuditMessage;
 import com.pusher.rest.Pusher;
 
@@ -207,12 +207,24 @@ public class MessageBroadcaster {
 		pusher.trigger(user_id.replace("|", ""), "domain-added", test_confirmation_json);
 	}
 
-	public static void sendAuditStatUpdate(String user_id, AuditStats audit_record) throws JsonProcessingException {
+	public static void sendAuditStatUpdate(long user_id, AuditStats audit_record) throws JsonProcessingException {
 		
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
 		String audit_record_json = mapper.writeValueAsString(audit_record);
-		pusher.trigger(user_id.replace("|", ""), "audit-stat-update", audit_record_json);
+		pusher.trigger(user_id+"", "audit-stat-update", audit_record_json);
+	}
+
+	public static void sendIssueMessage(String user_id, UXIssueMessage issue) {
+		ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+		try {
+			String audit_record_json = mapper.writeValueAsString(issue);
+			pusher.trigger(user_id.replace("|", ""), "ux-issue-added", audit_record_json);		
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 }

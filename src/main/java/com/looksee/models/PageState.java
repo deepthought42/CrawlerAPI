@@ -298,7 +298,7 @@ public class PageState extends LookseeObject {
 			key += element.getKey();
 		}
 		*/
-		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.url + BrowserService.generalizeSrc(this.getSrc()) );
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() + BrowserService.generalizeSrc(BrowserService.extractBody(this.getSrc()) ));
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {

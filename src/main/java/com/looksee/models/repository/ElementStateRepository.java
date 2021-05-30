@@ -25,11 +25,11 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[hr:HAS]->(r) RETURN r")
 	public Set<Rule> getRules(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$element_key}),(r:Rule{key:$rule_key}) CREATE element=(e)-[hr:HAS]->(r) RETURN r")
-	public Rule addRuleToFormElement(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
+	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}),(r:Rule{key:$rule_key}) CREATE element=(e)-[hr:HAS]->(r) RETURN r")
+	public Rule addRuleToFormElement(@Param("username") String username, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
-	public Rule getElementRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
+	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
+	public Rule getElementRule(@Param("username") String username, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
 
 	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{outer_html:$outer_html}) RETURN e LIMIT 1")
 	public ElementState findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);

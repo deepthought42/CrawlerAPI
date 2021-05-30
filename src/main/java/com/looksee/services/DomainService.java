@@ -43,18 +43,14 @@ public class DomainService {
 		return domain_repo.getTestUsers(user_id, domain.getKey());
 	}
 
-	public Domain findByHostForUser(String host, String user_id) {
-		return domain_repo.findByHostForUser(host, user_id);
+	public Domain findByHostForUser(String host, String username) {
+		return domain_repo.findByHostForUser(host, username);
 	}
 	
 	public Domain findByHost(String host) {
 		return domain_repo.findByHost(host);
 	}
 
-	public Domain findByUrlAndAccountId(String url, String user_id) {
-		return domain_repo.findByUrlAndAccountId(url, user_id);
-	}
-	
 	public Domain findByUrl(String url) {
 		return domain_repo.findByUrl(url);
 	}
@@ -71,36 +67,36 @@ public class DomainService {
 		return domain_repo.findById(domain_id);
 	}
 
-	public Set<TestUser> getTestUsers(String user_id, String key) {
-		return domain_repo.getTestUsers(user_id, key);
+	public Set<TestUser> getTestUsers(String username, String key) {
+		return domain_repo.getTestUsers(username, key);
 	}
 
-	public void deleteTestUser(String user_id, String domain_key, String username) {
-		domain_repo.deleteTestUser(user_id, domain_key, username);
+	public void deleteTestUser(String acct_username, String domain_key, String username) {
+		domain_repo.deleteTestUser(acct_username, domain_key, username);
 	}
 
-	public Set<Form> getForms(String user_id, String url) {
-		return domain_repo.getForms(user_id, url);
+	public Set<Form> getForms(String username, String url) {
+		return domain_repo.getForms(username, url);
 	}
 	
 	public int getFormCount(String user_id, String url) {
 		return domain_repo.getFormCount(user_id, url);
 	}
 
-	public Set<Element> getElementStates(String url, String user_id) {
-		return domain_repo.getElementStates(url, user_id);
+	public Set<Element> getElementStates(String url, String username) {
+		return domain_repo.getElementStates(url, username);
 	}
 
 	public Set<Action> getActions(String user_id, String url) {
 		return domain_repo.getActions(user_id, url);
 	}
 
-	public Set<PageState> getPageStates(String host) {
-		return domain_repo.getPageStates(host);
+	public Set<PageState> getPageStates(long domain_id) {
+		return domain_repo.getPageStates(domain_id);
 	}
 
-	public Domain findByKey(String key, String user_id) {
-		return domain_repo.findByKey(key, user_id);
+	public Domain findByKey(String key, String username) {
+		return domain_repo.findByKey(key, username);
 	}
 
 	public Set<Test> getTests(String user_id, String url) {
@@ -128,25 +124,29 @@ public class DomainService {
 	 * @pre !page_version_key.isEmpty()
 	 * 
 	 */
-	public boolean addPage(String host, String page_version_key) {
-		assert host != null;
-		assert !host.isEmpty();
+	public boolean addPage(long domain_id, String page_version_key) {
 		assert page_version_key != null;
 		assert !page_version_key.isEmpty();
 		//check if page already exists. If it does then return true;
-		Optional<PageState> page = domain_repo.getPage(host, page_version_key);
+		Optional<PageState> page = domain_repo.getPage(domain_id, page_version_key);
 		if(page.isPresent()) {
 			return true;
 		}
 		
-		return domain_repo.addPage(host, page_version_key) != null;
+		return domain_repo.addPage(domain_id, page_version_key) != null;
 	}
 
+	@Deprecated
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
 		return domain_repo.getMostRecentAuditRecord(host);
+	}
+	
+	public Optional<DomainAuditRecord> getMostRecentAuditRecord(long id) {
+		
+		return domain_repo.getMostRecentAuditRecord(id);
 	}
 
 	public Set<PageState> getPages(String domain_host) {
@@ -168,14 +168,12 @@ public class DomainService {
 	 * @pre audit_record_key != null;
 	 * @pre !audit_record_key.isEmpty();
 	 */
-	public void addAuditRecord(String domain_key, String audit_record_key) {
-		assert domain_key != null;
-		assert !domain_key.isEmpty();
+	public void addAuditRecord(long domain_id, String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
 		//check if audit record is already attached to domain
 
-		domain_repo.addAuditRecord(domain_key, audit_record_key);
+		domain_repo.addAuditRecord(domain_id, audit_record_key);
 	}
 
 	public Set<AuditRecord> getAuditRecords(String domain_key) {
@@ -262,19 +260,11 @@ public class DomainService {
 		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
         return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
-	
-	public Set<Audit> getMostRecentPageAudits(String page_url) {
-		assert page_url != null;
-		assert !page_url.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentPageAuditRecord(page_url).get();
-		return audit_record_service.getAllPageAudits(record.getKey());
-	}
 
-	public PageAuditRecord getMostRecentPageAuditRecord(String page_url) {
+	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String page_url) {
 		assert page_url != null;
 		assert !page_url.isEmpty();
 		
-		return audit_record_service.findMostRecentPageAuditRecord(page_url).get();
+		return audit_record_service.findMostRecentPageAuditRecord(page_url);
 	}
 }

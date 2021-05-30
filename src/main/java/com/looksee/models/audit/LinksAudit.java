@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -57,6 +58,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	 * 
 	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
+	 *   
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */
@@ -65,8 +67,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-	
-		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> link_elements = new ArrayList<>();
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		
@@ -126,7 +126,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String description = "Make sure links have a url set for the href value";
 				String title = "Link url is missing";
 
-				ElementStateIssueMessage issue_Message = new ElementStateIssueMessage(
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 
 																recommendation, 
@@ -135,7 +135,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																labels,
 																ada_compliance,
 																title);
-				issue_messages.add(issue_Message);
+				issue_messages.add(issue_message);
+				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 				continue;
 			}
 			
@@ -143,11 +144,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			try {
 				
 				URI uri = new URI(href);
-				log.warn("constructed URI .... "+uri.toString());
 				if(!uri.isAbsolute()) {
 					log.warn("URI is relative");
 					URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
-					log.warn("Page URL was created .... "+page_url.toString());
 					href.replaceAll("../", "");
 					if(href.startsWith("/") && href.length() > 1) {
 						href = href.substring(1);
@@ -155,9 +154,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					else if(href.strip().contentEquals("/")) {
 						href = "";
 					}
-					log.warn("Page url before cleanup .... "+page_url);
 					href = BrowserUtils.getPageUrl(page_url);
-					log.warn("Page url AFTER cleanup .... "+href);
 				}
 
 				//if starts with / then append host
@@ -332,7 +329,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
-						 page_state); 
+						 page_state,
+						 true); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 }

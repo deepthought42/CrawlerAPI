@@ -33,6 +33,7 @@ import com.looksee.models.journeys.Step;
 import com.looksee.models.journeys.StepExecutor;
 import com.looksee.services.ActionService;
 import com.looksee.services.BrowserService;
+import com.looksee.services.DomainService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.StepService;
@@ -72,6 +73,9 @@ public class JourneyExpander extends AbstractActor{
 	
 	@Autowired
 	private ActionService action_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Autowired
 	private StepExecutor step_executor;
@@ -128,6 +132,8 @@ public class JourneyExpander extends AbstractActor{
 							//build page state for baseline
 							PageState journey_result_page = browser_service.buildPageState(page_url);
 							journey_result_page = page_state_service.save(journey_result_page);
+							//domain_service.addPage(domain.getId(), journey_result_page.getKey());
+
 							Document doc = Jsoup.parse(journey_result_page.getSrc());
 							
 							//get all leaf elements 

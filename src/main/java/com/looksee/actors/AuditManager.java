@@ -19,17 +19,21 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.Account;
+import com.looksee.models.AuditStats;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditStage;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.DomainAuditMessage;
+import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageStateAuditComplete;
+import com.looksee.models.message.PageStateMessage;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
@@ -113,11 +117,62 @@ public class AuditManager extends AbstractActor{
 					}
 					
 				})
-				.match(PageState.class, page_state -> {
-					log.warn("Received page state :: "+page_state.getUrl());
+				.match(PageStateMessage.class, page_state_msg -> {
+					log.warn("Received page state :: "+page_state_msg.getPageState().getUrl());
 					//send URL to JourneyExplorer actor
-					if(!page_states_experienced.containsKey(page_state.getKey())) {
-						page_states_experienced.put(page_state.getKey(), page_state);
+					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey())) {
+						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
+				 		long content_audits_complete = 0;
+			    		long info_arch_audits_complete = 0;
+			    		long aesthetic_audits_complete = 0;
+						if( record.isPresent() ) {
+							if(record.get() instanceof DomainAuditRecord) {								
+								DomainAuditRecord audit_record = (DomainAuditRecord)record.get();
+								
+								Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(page_state_msg.getAuditRecordId());
+								//get Page Count
+								long page_count = audit_records.size();
+								
+								for(PageAuditRecord page_audit : audit_records) {
+									//get total content audit pages
+									boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(page_audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+									if(is_content_audit_complete) {
+										content_audits_complete++;
+									}
+									
+									//get total information architecture audit pages
+									boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+									if(is_info_arch_audit_complete) {
+										info_arch_audits_complete++;
+									}
+									
+									//get total aesthetic audit pages
+									boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+									if(is_aesthetic_audit_complete) {
+										aesthetic_audits_complete++;
+									}
+								}
+								
+								//build stats object
+								AuditStats audit_stats = new AuditStats(audit_record.getId(), 
+																		audit_record.getStartTime(), 
+																		audit_record.getEndTime(), 
+																		page_count, 
+																		content_audits_complete,
+																		audit_record.getContentAuditProgress(),
+																		audit_record.getContentAuditMsg(),
+																		info_arch_audits_complete, 
+																		audit_record.getInfoArchAuditProgress(),
+																		audit_record.getInfoArchMsg(),
+																		aesthetic_audits_complete,
+																		audit_record.getAestheticAuditProgress(),
+																		audit_record.getAestheticMsg());
+								
+								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
+							}		
+						}
+						
+						page_states_experienced.put(page_state_msg.getPageState().getKey(), page_state_msg.getPageState());
 						/*
 						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
@@ -127,7 +182,7 @@ public class AuditManager extends AbstractActor{
 								.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						
 						//rendered_page_state_count++;
-				   		insight_auditor.tell(page_state, getSelf());
+				   		insight_auditor.tell(page_state_msg.getPageState(), getSelf());
 						
 						log.warn("Page State Count :: "+page_states_experienced.keySet().size());
 						/*
@@ -139,10 +194,10 @@ public class AuditManager extends AbstractActor{
 								.props("auditor"), "auditor"+UUID.randomUUID());
 						
 						//rendered_page_state_count++;
-						auditor.tell(page_state, getSelf());
+						auditor.tell(page_state_msg, getSelf());
 					}
 					else {
-						log.warn("Page state already processed for audit manager ..... "+page_state.getUrl());
+						log.warn("Page state already processed for audit manager ..... "+page_state_msg.getPageState().getUrl());
 					}
 				})
 				.match(PageStateAuditComplete.class, audit_complete -> {
@@ -150,7 +205,7 @@ public class AuditManager extends AbstractActor{
 					page_states_audited.put(audit_complete.getPageState().getKey(), audit_complete.getPageState());
 
 					Set<PageState> pages = domain_service.getPages(domain.getUrl());
-					Set<PageState> page_states = domain_service.getPageStates(domain.getUrl());
+					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
 
 					if( pages.size() == page_states.size()) {						
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
@@ -160,22 +215,12 @@ public class AuditManager extends AbstractActor{
 						auditor.tell(domain_audit_msg, getSelf());
 					}
 				})
-				.match(PageAuditRecord.class, audit_record -> {
-					String url_str = BrowserUtils.sanitizeUserUrl(audit_record.getPageState().getUrl());
+				.match(PageAuditRecordMessage.class, audit_record -> {
 					
-					
-					/* NOTE:: if still exists after 4-1-2021 then remove
-					if(!url_str.contains("http")) {
-						url_str = "http://"+url_str;
-					}
-
-					URL url = new URL(url_str);
-					String host = url.getHost();
-					host.replace("www.", "");
-					if(!host.contains("www.")) {
-						host = "www."+host;
-					}
-					*/
+					log.warn("page audit :: "+audit_record.getPageAuditRecord());
+					log.warn("page audit page state :: "+audit_record.getPageAuditRecord().getPageState());
+					PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getPageAuditRecord().getId());
+					String url_str = BrowserUtils.sanitizeUserUrl(page_state.getUrl());
 					
 					URL url = new URL(url_str);
 					String host = url.getHost();
@@ -183,25 +228,20 @@ public class AuditManager extends AbstractActor{
 					log.warn("(AUDIT MANAGER) looking up audit record using host  :: "+host);
 					
 					//NOTE: Audit record can be null, need to handle that scenario
-					Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(host);
-					if(audit_record_opt.isPresent()){
-						AuditRecord domain_audit_record = audit_record_opt.get();
-						//add page audit to domain audit
-						log.warn("domain audit record key :: "+domain_audit_record.getKey());
-						log.warn("Page audit record key :: "+audit_record.getKey());
-						audit_record_service.save(audit_record);
-						audit_record_service.addPageAuditToDomainAudit(domain_audit_record.getKey(), audit_record.getKey());
+					//Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(audit_record.getDomainId());					
+					audit_record_service.save(audit_record.getPageAuditRecord());
+					log.warn("adding page audit with key = "+audit_record.getPageAuditRecord().getKey() + "   to domain audit record with id= "+audit_record.getAuditRecordId());
+					audit_record_service.addPageAuditToDomainAudit(audit_record.getAuditRecordId(), audit_record.getPageAuditRecord().getKey());
+					
+					log.warn("Audit record :: " + audit_record);
+					//save all audits in audit list to database and add them to the audit record
+					for(Audit audit : audit_record.getPageAuditRecord().getAudits()){
+						audit = audit_service.save(audit);
+						audit_record_service.addAudit( audit_record.getPageAuditRecord().getKey(), audit.getKey() );
 						
-						log.warn("Audit record :: " + audit_record);
-						//save all audits in audit list to database and add them to the audit record
-						for(Audit audit : audit_record.getAudits()){
-							audit = audit_service.save(audit);
-							audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
-							
-							//send pusher message to clients currently subscribed to domain audit channel
-							MessageBroadcaster.broadcastAudit(host, audit);
-						}						
-					}
+						//send pusher message to clients currently subscribed to domain audit channel
+						MessageBroadcaster.broadcastAudit(host, audit);
+					}						
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -216,6 +256,25 @@ public class AuditManager extends AbstractActor{
 					log.debug("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
+	}
+	
+	private boolean isAestheticsAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
+
+	private boolean isContentAuditComplete(Set<Audit> allContentAudits) {
+		return allContentAudits.size() == 3;
+	}
+	
+	private boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
+
+	private long getAuditCount(AuditCategory content, Set<PageAuditRecord> audit_records) {
+		for(AuditRecord audit_record : audit_records) {
+		}
+		
+		return 0;
 	}
 	
 	private void stopAudit(CrawlActionMessage message) {		

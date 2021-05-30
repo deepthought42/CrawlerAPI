@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditCategory;
@@ -119,6 +120,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									ada_compliance,
 																									title);
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
+							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+
 						}
 						else if(contrast >= 3) {
 							text_score += 1;
@@ -146,6 +149,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 							//No points are rewarded for low contrast text
 							issue_messages.add(issue_message_service.save(low_text_observation));
+							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_text_observation);
+
 						}
 						else if(contrast >= 4.5) {
 							text_score += 1;
@@ -269,6 +274,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     page_state.getUrl(),
 					     why_it_matters,
 					     "Text with contrast below 4.5", 
-						 page_state);
+						 page_state,
+						 true);
 	}
 }

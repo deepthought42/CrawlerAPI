@@ -32,6 +32,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private String classification;
 	private String screenshot_url;
 	private String background_color;
+	private String foreground_color;
 	private int x_location;
 	private int y_location;
 	private int width;
@@ -40,7 +41,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private double non_text_contrast;
 	
 	private boolean visible;
-
 	@Properties
 	private Map<String, String> rendered_css_values = new HashMap<>();
 	
@@ -377,5 +377,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 
 	public void setBackgroundColor(String background_color) {
 		this.background_color = background_color;
+	}
+	
+	public String getForegroundColor() {
+		return foreground_color;
+	}
+
+	public void setForegroundColor(String foreground_color) {
+		this.foreground_color = foreground_color;
 	}
 }

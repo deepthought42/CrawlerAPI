@@ -1,8 +1,10 @@
 package com.looksee.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.stereotype.Service;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.UXIssueMessageRepository;
 
@@ -76,5 +78,9 @@ public class UXIssueMessageService {
 		UXIssueMessage observation = findByKey(key);
     	//observation.setPriority(Priority.create(priority));
     	return save(observation);	
+	}
+
+	public ElementState getElement(long id) {
+		return issue_message_repo.getElement(id);
 	}
 }

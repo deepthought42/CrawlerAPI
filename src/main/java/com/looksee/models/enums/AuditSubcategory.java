@@ -17,7 +17,8 @@ public enum AuditSubcategory {
 	TYPOGRAPHY("TYPOGRAPHY"),
 	COLOR_MANAGEMENT("Color Management"),
 	WHITESPACE("Whitespace"),
-	BRANDING("Branding");
+	BRANDING("Branding"),
+	SECURITY("Security");
 	
 	private String shortName;
 

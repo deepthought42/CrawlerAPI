@@ -209,7 +209,8 @@ public class FontAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state);
+						 page_state,
+						 false);
 	}
 	
 

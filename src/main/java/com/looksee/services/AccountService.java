@@ -1,6 +1,5 @@
 package com.looksee.services;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
-import com.looksee.models.TestRecord;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.repository.AccountRepository;
 
 /**
@@ -32,14 +31,17 @@ public class AccountService {
 		}
 		
 		if(!domain_exists_for_acct){
-			account_repo.addDomain(domain.getKey(), acct.getUserId());
+			account_repo.addDomain(domain.getKey(), acct.getEmail());
 			acct.addDomain(domain);
 			account_repo.save(acct);
 		}
 	}
 
-	public Account findByUsername(String username) {
-		return account_repo.findByUsername(username);
+	public Account findByEmail(String email) {
+		assert email != null;
+		assert !email.isEmpty();
+		
+		return account_repo.findByEmail(email);
 	}
 
 	public Account save(Account acct) {
@@ -59,8 +61,11 @@ public class AccountService {
 		account_repo.removeDomain(username, domain_key);
 	}
 
-	public Set<Domain> getDomainsForUser(String user_id) {
-		return account_repo.getDomainsForUser(user_id);
+	public Set<Domain> getDomainsForUser(String email) {
+		assert email != null;
+		assert !email.isEmpty();
+		
+		return account_repo.getDomainsForUser(email);
 	}
 	
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {
@@ -70,12 +75,29 @@ public class AccountService {
 	public int getTestCountByMonth(String username, int month) {
 		return account_repo.getTestCountByMonth(username, month);
 	}
-	
-	public List<TestRecord> getTestRecords(String username, String url) {
-		return account_repo.getTestRecords(username, url);
-	}
 
 	public Optional<Account> findById(long id) {
 		return account_repo.findById(id);
+	}
+
+	public Domain findDomain(String email, String url) {
+		assert email != null;
+		assert !email.isEmpty();
+		assert url != null;
+		assert !url.isEmpty();
+		
+		return account_repo.findDomain(email, url);
+	}
+
+	public AuditRecord addAuditRecord(String username, long audit_record_id) {
+		assert username != null;
+		assert !username.isEmpty();
+		
+		return account_repo.addAuditRecord(username, audit_record_id);
+	}
+	
+	public AuditRecord addAuditRecord(long id, long audit_record_id) {
+		
+		return account_repo.addAuditRecord(id, audit_record_id);
 	}
 }

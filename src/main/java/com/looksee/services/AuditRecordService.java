@@ -15,6 +15,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.AuditRecordRepository;
 
 /**
@@ -60,6 +61,11 @@ public class AuditRecordService {
 		}
 	}
 
+	public void addAudit(long audit_record_id, long audit_id) {
+		//check if audit already exists for page state
+		audit_record_repo.addAudit(audit_record_id, audit_id);
+	}
+	
 	public Set<Audit> getAllAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
@@ -67,11 +73,21 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAudits(audit_record_key);
 	}
 
+	/**
+	 * deprecated in favor or using domain id for lookup
+	 * @param host
+	 * @return
+	 */
+	@Deprecated
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(String host) {
 		assert host != null;
 		assert !host.isEmpty();
 		
 		return audit_record_repo.findMostRecentDomainAuditRecord(host);
+	}
+	
+	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(long id) {
+		return audit_record_repo.findMostRecentDomainAuditRecord(id);
 	}
 	
 	public Optional<PageAuditRecord> findMostRecentPageAuditRecord(String page_url) {
@@ -196,23 +212,25 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllPageAudits(String audit_record_key) {
-		assert audit_record_key != null;
-		assert !audit_record_key.isEmpty();
-		
-		return audit_record_repo.getAllPageAudits(audit_record_key);
+	public Set<PageAuditRecord> getAllPageAudits(long audit_record_id) {		
+		return audit_record_repo.getAllPageAudits(audit_record_id);
 	}
 
+	@Deprecated
 	public Set<Audit> getAllAuditsForPageAuditRecord(String page_audit_key) {
 		assert page_audit_key != null;
 		assert !page_audit_key.isEmpty();
 		
 		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_key);
 	}
+	
+	public Set<Audit> getAllAuditsForPageAuditRecord(long page_audit_id) {		
+		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_id);
+	}
 
-	public void addPageAuditToDomainAudit(String domain_audit_record_key, String page_audit_record_key) {
+	public void addPageAuditToDomainAudit(long domain_audit_record_id, String page_audit_record_key) {
 		//check if audit already exists for page state
-		audit_record_repo.addPageAuditRecord(domain_audit_record_key, page_audit_record_key);
+		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_key);
 	}
 
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
@@ -222,10 +240,63 @@ public class AuditRecordService {
 		return audit_record_repo.getMostRecentPageAuditRecord(url);
 	}
 
+	@Deprecated
 	public PageState getPageStateForAuditRecord(String page_audit_key) {
 		assert page_audit_key != null;
 		assert !page_audit_key.isEmpty();
 		
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_key);
+	}
+
+	public Set<Audit> getAllContentAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllContentAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllInformationArchitectureAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllInformationArchitectureAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllAccessibilityAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllAccessibilityAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllAestheticAuditsForDomainRecord(long id) {
+		return audit_record_repo.getAllAestheticsAuditsForDomainRecord(id);
+	}
+
+	public Set<Audit> getAllContentAudits(long audit_record_id) {
+		return audit_record_repo.getAllContentAudits(audit_record_id);
+	}
+
+	public Set<Audit> getAllInformationArchitectureAudits(long id) {
+		return audit_record_repo.getAllInformationArchitectureAudits(id);
+	}
+
+	public Set<Audit> getAllAccessibilityAudits(Long id) {
+		return audit_record_repo.getAllAccessibilityAudits(id);
+	}
+
+	public Set<Audit> getAllAestheticAudits(long id) {
+		return audit_record_repo.getAllAestheticsAudits(id);
+	}
+	
+	public Set<PageAuditRecord> getPageAuditRecords(long domain_audit_id) {
+		return audit_record_repo.getPageAuditRecord(domain_audit_id);
+	}
+
+	public PageState getPageStateForAuditRecord(long page_audit_id) {
+		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
+	}
+
+	public Set<UXIssueMessage> getIssues(long audit_record_id) {
+		return audit_record_repo.getIssues(audit_record_id);
+	}
+
+	public Set<PageState> getPageStatesForDomainAuditRecord(long audit_record_id) {
+		return audit_record_repo.getPageStatesForDomainAuditRecord(audit_record_id);
+	}
+
+	public void addPageToPageAudit(long audit_record_id, long page_state_id) {
+		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
 	}
 }

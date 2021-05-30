@@ -10,7 +10,14 @@ public class SimpleElement {
 	private String text;
 	private String css_selector;
 	
-	public SimpleElement(String key, String screenshot_url, int x, int y, int width, int height, String css_selector, String text) {
+	public SimpleElement(String key, 
+						 String screenshot_url, 
+						 int x, 
+						 int y, 
+						 int width, 
+						 int height, 
+						 String css_selector, 
+						 String text) {
 		setKey(key);
 		setScreenshotUrl(screenshot_url);
 		setXLocation(x);

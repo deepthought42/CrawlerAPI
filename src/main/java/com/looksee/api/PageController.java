@@ -68,7 +68,8 @@ public class PageController {
         								page.getFullPageWidth(), 
         								page.getFullPageHeight(),
         								page.getSrc(),
-        								page.getKey());	
+        								page.getKey(), 
+        								page.getId());	
         return simple_page;
     }
     

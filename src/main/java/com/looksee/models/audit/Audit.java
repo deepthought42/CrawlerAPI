@@ -25,7 +25,7 @@ public class Audit extends LookseeObject {
 	private int points;      //scoring
 	private int total_possible_points;      //scoring
 	private String url;
-	
+	private boolean is_accessibility;
 	private String description;
 	private String why_it_matters;
 	
@@ -58,6 +58,7 @@ public class Audit extends LookseeObject {
 	 * @param why_it_matters TODO
 	 * @param description TODO
 	 * @param page_state TODO
+	 * @param isAccessibility TODO
 	 */
 	public Audit(
 			AuditCategory category, 
@@ -70,7 +71,8 @@ public class Audit extends LookseeObject {
 			String url, 
 			String why_it_matters, 
 			String description, 
-			PageState page_state
+			PageState page_state, 
+			boolean is_accessibility
 	) {
 		super();
 		
@@ -91,11 +93,12 @@ public class Audit extends LookseeObject {
 		setWhyItMatters(why_it_matters);
 		setDescription(description);
 		setPageState(page_state);
+		setAccessiblity(is_accessibility);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription(), getPageState());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription(), getPageState(), isAccessiblity());
 	}
 
 	/**
@@ -209,5 +212,13 @@ public class Audit extends LookseeObject {
 
 	public void setPageState(PageState page_states) {
 		this.page_states = page_states;
+	}
+
+	public boolean isAccessiblity() {
+		return is_accessibility;
+	}
+
+	public void setAccessiblity(boolean is_accessibility) {
+		this.is_accessibility = is_accessibility;
 	}
 }

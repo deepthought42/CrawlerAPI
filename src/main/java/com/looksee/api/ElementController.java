@@ -93,7 +93,7 @@ public class ElementController {
 		log.warn("element key :: "+element_key);
 		log.warn("rule record key :: " + rule_record.getKey());
 		
-    	element_service.addRuleToFormElement(acct.getUserId(), element_key, rule_record);
+    	element_service.addRuleToFormElement(acct.getEmail(), element_key, rule_record);
     	return element_service.findByKey(element_key);
     }
     
@@ -191,7 +191,7 @@ public class ElementController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	element_service.removeRule(acct.getUserId(), element_key, rule_key);
+    	element_service.removeRule(acct.getEmail(), element_key, rule_key);
     	return element_service.findByKey(element_key);
     }
 

@@ -74,27 +74,10 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 					points_earned += score.getPointsAchieved();
 					max_points += score.getMaxPossiblePoints();
 					issue_messages.addAll(score.getIssueMessages());
-					/*
 					
-					for(Sentence sentence : sentences) {
-						System.err.println("sentence :: " + sentence.getText().getContent());
-						
-						Score sentence_score = calculateSentenceScore(sentence.getText().getContent());
-						points_earned += sentence_score.getPointsAchieved();
-						max_points += sentence_score.getMaxPossiblePoints();
-						if(sentence_score.getPointsAchieved() == 0) {
-							String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
-							String description = "Sentence is too long";
-							ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																			Priority.MEDIUM, 
-																			description, 
-																			recommendation, 
-																			element,
-																			AuditCategory.CONTENT,
-																			labels,
-																			ada_compliance);
-							issue_messages.add(issue_message);
-						}						
+					/*
+					for(UXIssueMessage issue_msg : score.getIssueMessages()) {
+						MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
 					}
 					*/
 				} catch (IOException e) {
@@ -131,7 +114,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state); 
+						 page_state,
+						 false); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
@@ -144,9 +128,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
-		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
-				" this category, reading level needs to be taken into consideration when" + 
-				" writing content and paragraphing. ";
+		String ada_compliance = "EThere are no ADA compliance requirements for this category.";
 		
 		for(Sentence sentence : sentences) {			
 			String[] words = sentence.getText().getContent().split(" ");
@@ -156,7 +138,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				//return new Score(1, 1, new HashSet<>());
 				String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
 				String title = "Sentence is too long";
-				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult to users to understand";
+				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult for users to understand";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.MEDIUM, 

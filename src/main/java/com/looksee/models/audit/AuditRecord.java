@@ -16,6 +16,14 @@ public class AuditRecord extends LookseeObject {
 	private String level;
 	private LocalDateTime start_time;
 	private LocalDateTime end_time;
+	private double content_audit_progress;
+	private String content_audit_msg;
+	
+	private double info_arch_audit_progress;
+	private String info_arch_msg;
+	
+	private double aesthetic_audit_progress;
+	private String aesthetic_msg;
 	
 	public AuditRecord() {
 		setStartTime(LocalDateTime.now());
@@ -31,11 +39,16 @@ public class AuditRecord extends LookseeObject {
 		setKey(generateKey());
 		setStatus(status);
 		setLevel(level);
+		
+		setContentAuditProgress(0.0);
+		setInfoArchAuditProgress(0.0);
+		setAestheticAuditProgress(0.0);
+		
 		setStartTime(LocalDateTime.now());
 	}
 
 	public String generateKey() {
-		return "auditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
+		return "auditrecord:" + UUID.randomUUID().toString() + org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
 	public ExecutionStatus getStatus() {
@@ -68,5 +81,53 @@ public class AuditRecord extends LookseeObject {
 
 	public void setEndTime(LocalDateTime end_time) {
 		this.end_time = end_time;
+	}
+	
+	public double getContentAuditProgress() {
+		return content_audit_progress;
+	}
+
+	public void setContentAuditProgress(double content_audit_progress) {
+		this.content_audit_progress = content_audit_progress;
+	}
+
+	public double getInfoArchAuditProgress() {
+		return info_arch_audit_progress;
+	}
+
+	public void setInfoArchAuditProgress(double info_arch_audit_progress) {
+		this.info_arch_audit_progress = info_arch_audit_progress;
+	}
+
+	public double getAestheticAuditProgress() {
+		return aesthetic_audit_progress;
+	}
+
+	public String getContentAuditMsg() {
+		return content_audit_msg;
+	}
+
+	public void setContentAuditMsg(String content_audit_msg) {
+		this.content_audit_msg = content_audit_msg;
+	}
+
+	public void setAestheticAuditProgress(double aesthetic_audit_progress) {
+		this.aesthetic_audit_progress = aesthetic_audit_progress;
+	}
+
+	public String getInfoArchMsg() {
+		return info_arch_msg;
+	}
+
+	public void setInfoArchMsg(String info_arch_msg) {
+		this.info_arch_msg = info_arch_msg;
+	}
+
+	public String getAestheticMsg() {
+		return aesthetic_msg;
+	}
+
+	public void setAestheticMsg(String aesthetic_msg) {
+		this.aesthetic_msg = aesthetic_msg;
 	}
 }

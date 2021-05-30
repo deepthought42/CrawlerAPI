@@ -1,7 +1,5 @@
 package com.looksee.models.audit;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import com.looksee.models.AuditStats;
@@ -12,31 +10,32 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class PageAudits {
-	private Set<Audit> audits;
+	private ElementIssueTwoWayMapping element_issue_map;
 	private SimplePage page_state;
-	
 	private String status;
+	private long audit_record_id;
 	
-	public PageAudits() {
-		setAudits(new HashSet<>());
-	}
+	public PageAudits() {}
 	
 	/**
 	 * Constructor
-	 * @param audits TODO
 	 * @param page_state TODO
+	 * @param audit_record_id TODO
+	 * @param audits TODO
 	 * @param audit_stats {@link AuditStats} object with statics for audit progress
-	 * 
 	 * @pre audits != null;
 	 */
 	public PageAudits(
 			ExecutionStatus status, 
-			Set<Audit> audits, 
-			SimplePage page_state
+			ElementIssueTwoWayMapping element_issue_map, 
+			SimplePage page_state, long audit_record_id
 	) {
-		assert audits != null;
+		assert element_issue_map != null;
+		assert page_state != null;
+		assert status != null;
 		
-		setAudits(audits);
+		setAuditRecordId(audit_record_id);
+		setElementIssueMap(element_issue_map);
 		setSimplePage(page_state);
 		setStatus(status);
 	}
@@ -45,20 +44,12 @@ public class PageAudits {
 		return "auditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
-	public Set<Audit> getAudits() {
-		return audits;
+	public ElementIssueTwoWayMapping getElementIssueMap() {
+		return element_issue_map;
 	}
 
-	public void setAudits(Set<Audit> audits) {
-		this.audits = audits;
-	}
-
-	public void addAudit(Audit audit) {
-		this.audits.add( audit );
-	}
-	
-	public void addAudits(Set<Audit> audits) {
-		this.audits.addAll( audits );
+	public void setElementIssueMap(ElementIssueTwoWayMapping element_issue_map) {
+		this.element_issue_map = element_issue_map;
 	}
 
 	public ExecutionStatus getStatus() {
@@ -75,5 +66,13 @@ public class PageAudits {
 
 	public void setSimplePage(SimplePage page_state) {
 		this.page_state = page_state;
+	}
+
+	public long getAuditRecordId() {
+		return audit_record_id;
+	}
+
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 }

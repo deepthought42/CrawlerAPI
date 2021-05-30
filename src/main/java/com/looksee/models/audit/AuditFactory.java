@@ -75,7 +75,7 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
-	public List<Audit> executePostRenderPageAudits(
+	public List<Audit> executePageAudits(
 							AuditCategory category, 
 							PageState page
 	) throws MalformedURLException, URISyntaxException {
@@ -136,37 +136,6 @@ public class AuditFactory {
 
 		
 		return audits;
-	}
-	
-	
-	/**
-	 * Executes all audits for the {@link AuditCategory category} provided
-	 * 
-	 * @param category {@link AuditCategory} that we want to run audits for
-	 * @param page {@link PageState page} that audit should be executed against
-	 * 
-	 * @return {@linkplain List} of {@link Audit audits} executed 
-	 * @throws URISyntaxException 
-	 * @throws MalformedURLException 
-	 * 
-	 * @pre category != null
-	 * @pre page != null
-	 */
-	public List<Audit> executePrerenderDomainAudit(AuditCategory category, Domain domain) throws MalformedURLException, URISyntaxException {
-		assert domain != null;
-		assert category != null;
-		
-		List<Audit> domain_audits = new ArrayList<Audit>();
-		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {			
-			
-		}
-		else if(AuditCategory.AESTHETICS.equals(category)) {
-			
-		}
-		else if(AuditCategory.CONTENT.equals(category)) {
-			
-		}
-		return domain_audits;
 	}
 	
 	/**

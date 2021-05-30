@@ -1,7 +1,6 @@
 package com.looksee.services;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,14 +21,11 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ElementIssueMap;
-import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
-import com.looksee.utils.BrowserUtils;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -41,6 +37,9 @@ public class AuditService {
 
 	@Autowired
 	private AuditRepository audit_repo;
+	
+	@Autowired
+	private UXIssueMessageService ux_issue_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -91,12 +90,10 @@ public class AuditService {
 		return IterableUtils.toList(audit_repo.findAll());
 	}
 
-	public Set<UXIssueMessage> getIssues(String audit_key) {
-		assert audit_key != null;
-		assert !audit_key.isEmpty();
-		return audit_repo.findIssueMessages(audit_key);
+	public Set<UXIssueMessage> getIssues(long audit_id) {
+		return audit_repo.findIssueMessages(audit_id);
 	}
-
+	
 	/**
 	 * using a list of audits, sorts the list by page and packages results into list 
 	 * 	of {@linkplain PageStateAudits}
@@ -131,7 +128,8 @@ public class AuditService {
 											page_state.getFullPageWidth(), 
 											page_state.getFullPageHeight(),
 											page_state.getSrc(),
-											page_state.getKey());
+											page_state.getKey(), 
+											page_state.getId());
 			PageStateAudits page_state_audits = new PageStateAudits(simple_page, audit_url_map.get(url));
 			page_audits.add( page_state_audits ) ;
 		}
@@ -147,43 +145,41 @@ public class AuditService {
 	 * @throws MalformedURLException
 	 */
 	public Set<IssueElementMap> generateIssueElementMap(
-			Set<Audit> audits, 
-			URL page_url
+			Set<Audit> audits
 	) throws MalformedURLException {
 		Set<IssueElementMap> audit_elements = new HashSet<>();
 		
-		for(Audit audit : audits) {
-			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
-			
-			if(url.getHost().contentEquals(page_url.getHost()) 
-					&& url.getPath().contentEquals(page_url.getPath())
-			) {
-				for(UXIssueMessage issue_msg : audit.getMessages()) {
-					IssueElementMap observation_element = null;
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues  = getIssues(audit.getId());
+			for(UXIssueMessage issue_msg : issues ) {
+				IssueElementMap observation_element = null;
+				
+				if(ObservationType.ELEMENT.equals(issue_msg.getType()) || ObservationType.COLOR_CONTRAST.equals(issue_msg.getType())) {
+					
+					//ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
 
-					if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
-
-						ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
-						
-						SimpleElement simple_element = new SimpleElement(element.getKey(),
+					if(element == null) {
+						log.warn("issue element map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
+					}
+					SimpleElement simple_element = new SimpleElement(element.getKey(),
 																   element.getScreenshotUrl(), 
 																   element.getXLocation(), 
 																   element.getYLocation(), 
 																   element.getWidth(), 
 																   element.getHeight(),
 																   element.getCssSelector(),
-																  element.getAllText());
-						observation_element = new IssueElementMap(issue_msg, simple_element);
-					}
-					else{
-						observation_element = new IssueElementMap(issue_msg, null);
-					}
-					audit_elements.add(observation_element);
-					 
+																   element.getAllText());
+					
+					observation_element = new IssueElementMap(issue_msg, simple_element);
 				}
-			
-				
-			}
+				else{
+					observation_element = new IssueElementMap(issue_msg, null);
+				}
+				audit_elements.add(observation_element);
+				 
+			}			
 		}
 		
 		return audit_elements;
@@ -197,69 +193,76 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits, URL page_url) throws MalformedURLException {		
+	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits) throws MalformedURLException {		
 		Set<ElementIssueMap> element_issues = new HashSet<>();
 		
 		Map<String, Set<UXIssueMessage>> issue_map = new HashMap<>(); 
 		Map<String, SimpleElement> element_state_map = new HashMap<>();
 		
-		for(Audit audit : audits) {
-			URL url = new URL(BrowserUtils.sanitizeUrl(audit.getUrl()));
-			
-			if(url.getHost().contentEquals(page_url.getHost()) 
-				&& url.getPath().contentEquals(page_url.getPath())
-			) {
-				for(UXIssueMessage issue_msg : audit.getMessages()) {
-					//NOTE: color contrast is first because it inherits form EleementIssueMessage
-					if(issue_msg.getType().equals(ObservationType.COLOR_CONTRAST)) {
-						ElementState element = ((ColorContrastIssueMessage)issue_msg).getElement();
-						
-						if(!element_state_map.containsKey(element.getKey())) {
-							SimpleElement simple_element = 	new SimpleElement(element.getKey(),
-																			  element.getScreenshotUrl(), 
-																			  element.getXLocation(), 
-																			  element.getYLocation(), 
-																			  element.getWidth(), 
-																			  element.getHeight(),
-																			  element.getCssSelector(),
-																			  element.getAllText());
-							element_state_map.put(element.getKey(), simple_element);
-						}
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues = getIssues(audit.getId());
 
-							//associate issue with element
-						if(issue_map.containsKey(element.getKey())) {
-							issue_map.get(element.getKey()).add(issue_msg);
-						}
-						else {
-							Set<UXIssueMessage> issue_messages = new HashSet<>();
-							issue_messages.add(issue_msg);
-							issue_map.put(element.getKey(), issue_messages);
-						}
+			for(UXIssueMessage issue_msg : issues ) {
+				
+				//NOTE: color contrast is first because it inherits form EleementIssueMessage
+				if(issue_msg.getType().equals(ObservationType.COLOR_CONTRAST)) {
+					//ElementState element = ((ColorContrastIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
+					if(element == null) {
+						log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
 					}
-					else if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
-						ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
+					if(!element_state_map.containsKey(element.getKey())) {
+						SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																		  element.getScreenshotUrl(), 
+																		  element.getXLocation(), 
+																		  element.getYLocation(), 
+																		  element.getWidth(), 
+																		  element.getHeight(),
+																		  element.getCssSelector(),
+																		  element.getAllText());
 						
-						if(!element_state_map.containsKey(element.getKey())) {
-							SimpleElement simple_element = 	new SimpleElement(element.getKey(),
-																			  element.getScreenshotUrl(), 
-																			  element.getXLocation(), 
-																			  element.getYLocation(), 
-																			  element.getWidth(), 
-																			  element.getHeight(),
-																			  element.getCssSelector(),
-																			  element.getAllText());
-							element_state_map.put(element.getKey(), simple_element);
-						}
+						element_state_map.put(element.getKey(), simple_element);
+					}
 
-							//associate issue with element
-						if(issue_map.containsKey(element.getKey())) {
-							issue_map.get(element.getKey()).add(issue_msg);
-						}
-						else {
-							Set<UXIssueMessage> issue_messages = new HashSet<>();
-							issue_messages.add(issue_msg);
-							issue_map.put(element.getKey(), issue_messages);
-						}
+						//associate issue with element
+					if(issue_map.containsKey(element.getKey())) {
+						issue_map.get(element.getKey()).add(issue_msg);
+					}
+					else {
+						Set<UXIssueMessage> issue_messages = new HashSet<>();
+						issue_messages.add(issue_msg);
+						issue_map.put(element.getKey(), issue_messages);
+					}
+				}
+				else if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
+					//ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
+					ElementState element = ux_issue_service.getElement(issue_msg.getId());
+					if(element == null) {
+						log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+						continue;
+					}
+					if(!element_state_map.containsKey(element.getKey())) {
+						SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																		  element.getScreenshotUrl(), 
+																		  element.getXLocation(), 
+																		  element.getYLocation(), 
+																		  element.getWidth(), 
+																		  element.getHeight(),
+																		  element.getCssSelector(),
+																		  element.getAllText());
+						
+						element_state_map.put(element.getKey(), simple_element);
+					}
+
+						//associate issue with element
+					if(issue_map.containsKey(element.getKey())) {
+						issue_map.get(element.getKey()).add(issue_msg);
+					}
+					else {
+						Set<UXIssueMessage> issue_messages = new HashSet<>();
+						issue_messages.add(issue_msg);
+						issue_map.put(element.getKey(), issue_messages);
 					}
 				}
 			}

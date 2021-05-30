@@ -216,13 +216,13 @@ public class MessageBroadcaster {
 		pusher.trigger(user_id+"", "audit-stat-update", audit_record_json);
 	}
 
-	public static void sendIssueMessage(String user_id, UXIssueMessage issue) {
+	public static void sendIssueMessage(long page_id, UXIssueMessage issue) {
 		ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
 		try {
 			String audit_record_json = mapper.writeValueAsString(issue);
-			pusher.trigger(user_id.replace("|", ""), "ux-issue-added", audit_record_json);		
+			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);		
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

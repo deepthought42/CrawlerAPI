@@ -154,7 +154,7 @@ public class AuditService {
 			for(UXIssueMessage issue_msg : issues ) {
 				IssueElementMap observation_element = null;
 				
-				if(issue_msg.getType().equals(ObservationType.ELEMENT)) {
+				if(ObservationType.ELEMENT.equals(issue_msg.getType()) || ObservationType.COLOR_CONTRAST.equals(issue_msg.getType())) {
 					
 					//ElementState element = ((ElementStateIssueMessage)issue_msg).getElement();
 					ElementState element = ux_issue_service.getElement(issue_msg.getId());
@@ -164,13 +164,13 @@ public class AuditService {
 						continue;
 					}
 					SimpleElement simple_element = new SimpleElement(element.getKey(),
-															   element.getScreenshotUrl(), 
-															   element.getXLocation(), 
-															   element.getYLocation(), 
-															   element.getWidth(), 
-															   element.getHeight(),
-															   element.getCssSelector(),
-															   element.getAllText());
+																   element.getScreenshotUrl(), 
+																   element.getXLocation(), 
+																   element.getYLocation(), 
+																   element.getWidth(), 
+																   element.getHeight(),
+																   element.getCssSelector(),
+																   element.getAllText());
 					
 					observation_element = new IssueElementMap(issue_msg, simple_element);
 				}

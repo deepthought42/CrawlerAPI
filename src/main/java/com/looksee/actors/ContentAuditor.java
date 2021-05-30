@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ImageAltTextAudit;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.ParagraphingAudit;
@@ -85,41 +86,30 @@ public class ContentAuditor extends AbstractActor{
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
-				   	PageState page = page_audit_record_msg.getPageState();
-				   	//check if page state already
-		   			//perform audit and return audit result
-				   	/*
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-
-			   		log.warn("requesting performance audit from performance auditor....");
-			   		ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-					performance_insight_actor.tell(page_state, getSelf());
-					*/
-				   	/* NOTE typeface audit is incomplete and currently commented out
-					 
-					Audit typeface_audit = typeface_auditor.execute(page);
-					audits.add(typeface_audit);
-					 */
+				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+				  
+				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setContentAuditProgress( (1.0/4.0) );
+					page_audit_record.setContentAuditMsg("checking image alt text...");
+					audit_record_service.save(page_audit_record);	
+					
 				   	log.warn("page audit record recieved :: "+page_audit_record_msg.getId());
 					Audit alt_text_audit = image_alt_text_auditor.execute(page);
 					audits.add(alt_text_audit);
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setContentAuditProgress( (1.0/3.0) );
-					page_audit_record_msg.setContentAuditMsg("Reviewing content for readability");
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);		
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setContentAuditProgress( (2.0/4.0) );
+					page_audit_record.setContentAuditMsg("Reviewing content for readability...");
+					audit_record_service.save(page_audit_record);		
 					
 					Audit readability_audit = readability_auditor.execute(page);
 					audits.add(readability_audit);
 					
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setContentAuditProgress( (2.0/3.0) );
-					page_audit_record_msg.setContentAuditMsg("Reviewing paragraph structure");
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setContentAuditProgress( (3.0/4.0) );
+					page_audit_record.setContentAuditMsg("Reviewing paragraph structure...");
+					audit_record_service.save(page_audit_record);
 
 					//Audit font_audit = font_auditor.execute(page);
 					//audits.add(font_audit);
@@ -127,10 +117,10 @@ public class ContentAuditor extends AbstractActor{
 					Audit paragraph_audit = paragraph_auditor.execute(page);
 					audits.add(paragraph_audit);	
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setContentAuditMsg("Finished content audit");
-					page_audit_record_msg.setContentAuditProgress( (3.0/3.0) ); 
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);		
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setContentAuditMsg("Finished content audit");
+					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
+					page_audit_record = audit_record_service.save(page_audit_record);		
 
 					
 					log.warn("content audits complete :: "+audits.size());

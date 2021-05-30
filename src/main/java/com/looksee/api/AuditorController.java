@@ -92,27 +92,12 @@ public class AuditorController {
 
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
-    	/*
-	   	PageState page_state = browser_service.buildPageState(sanitized_url);
-	   	page_state = page_service.save(page_state);
-		//domain_service.addPage(domain.getId(), page_state.getKey());
-
 	   	//create new audit record
-	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null);
-
-	   	audit_record = audit_record_service.save(audit_record);
-	   	//domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
-	   	Principal principal = request.getUserPrincipal();
-		if(principal != null) {
-			String user_id = principal.getName();
-	    	Account account = account_service.findByUserId(user_id);
-	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
-		}
-	   */
-	   	//create new audit record
-	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null);
-
-	   	audit_record = audit_record_service.save(audit_record);
+	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null);
+	   	audit_record.setAestheticMsg("Extracting colors...");
+	   	audit_record.setContentAuditMsg("Extracting images and text...");
+	   	audit_record.setInfoArchMsg("Extracting data layers...");
+	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
 	   	
 	   	Principal principal = request.getUserPrincipal();
 		if(principal != null) {
@@ -121,64 +106,12 @@ public class AuditorController {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 		}
 		
-		PageCrawlActionMessage crawl_action = new PageCrawlActionMessage(CrawlAction.START, -1, (PageAuditRecord)audit_record, sanitized_url);
+		PageCrawlActionMessage crawl_action = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
 		log.warn("Running content audit via actor");
 		ActorRef web_crawler_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	   			.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 		web_crawler_actor.tell(crawl_action, ActorRef.noSender());
-		
-	   	
-
-	   	/*
-	   	for(AuditCategory audit_category : AuditCategory.values()) {
-   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state);
-
-   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
-
-   			audits.addAll(rendered_audits_executed);
-   		}
-	   	
-	   	for(Audit audit : audits){
-			audit = audit_service.save(audit);
-			audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
-			((PageAuditRecord)audit_record).addAudit(audit);
-			//send pusher message to clients currently subscribed to domain audit channel
-			//MessageBroadcaster.broadcastAudit(domain.getHost(), audit);
-		}		
-	   	 */
-	   	//crawl site and retrieve all page urls/landable pages
-	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-	   	
-		
-		/*
-		audit_record.setStatus(ExecutionStatus.COMPLETE);
-	   	audit_record.setEndTime(LocalDateTime.now());
-	   	audit_record_service.save(audit_record);
-	   	*/
-	   	
-		
-		/*
-
-		//Map audits to page states
-    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
-
-    	AuditScore score = AuditUtils.extractAuditScore(audits);
-    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
-	   	
-   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
-   		
-	   	SimplePage simple_page = new SimplePage(page.getUrl(), 
-									   			page.getViewportScreenshotUrl(), 
-									   			page.getFullPageScreenshotUrl(), 
-									   			page.getFullPageWidth(), 
-									   			page.getFullPageHeight(), 
-									   			page.getSrc(), 
-									   			page.getKey(), 
-									   			page.getId());
-	   	*/
-	   	//if request is from www.look-see.com then return redirect response
-	   	
+		   	
    		return audit_record;
 	}
 	
@@ -195,15 +128,6 @@ public class AuditorController {
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url
 	)  {
-    	/*
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	*/
     	PageState page = page_service.findByUrl(url);
     	
         log.info("finding page :: "+page.getKey());

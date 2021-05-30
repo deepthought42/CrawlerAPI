@@ -136,7 +136,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																ada_compliance,
 																title);
 				issue_messages.add(issue_message);
-				MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_message);
+				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 				continue;
 			}
 			

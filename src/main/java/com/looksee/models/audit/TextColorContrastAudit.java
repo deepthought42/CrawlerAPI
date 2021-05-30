@@ -120,7 +120,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									ada_compliance,
 																									title);
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
-							MessageBroadcaster.sendIssueMessage(page_state.getUrl(), low_header_contrast_observation);
+							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 
 						}
 						else if(contrast >= 3) {
@@ -149,7 +149,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 							//No points are rewarded for low contrast text
 							issue_messages.add(issue_message_service.save(low_text_observation));
-							MessageBroadcaster.sendIssueMessage(page_state.getUrl(), low_text_observation);
+							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_text_observation);
 
 						}
 						else if(contrast >= 4.5) {

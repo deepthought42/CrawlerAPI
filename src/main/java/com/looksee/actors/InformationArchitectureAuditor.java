@@ -14,11 +14,9 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.ImageAltTextAudit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.LinksAudit;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.ParagraphingAudit;
-import com.looksee.models.audit.ReadabilityAudit;
 import com.looksee.models.audit.SecurityAudit;
 import com.looksee.models.audit.TitleAndHeaderAudit;
 import com.looksee.services.AuditRecordService;
@@ -87,33 +85,39 @@ public class InformationArchitectureAuditor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
 				   	//generate audit report
+					PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
 				   	Set<Audit> audits = new HashSet<>();
-				   	PageState page = page_audit_record_msg.getPageState();
+				   	
+				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setInfoArchAuditProgress( (1.0/4.0) ); 
+					page_audit_record.setInfoArchMsg("Reviewing title and header...");
+					audit_record_service.save(page_audit_record);
+					
 				   	Audit link_audit = links_auditor.execute(page);
 					audits.add(link_audit);
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setInfoArchAuditProgress( (1.0/3.0) ); 
-					page_audit_record_msg.setInfoArchMsg("Reviewing title and header");
-					audit_record_service.save(page_audit_record_msg);
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setInfoArchAuditProgress( (2.0/4.0) ); 
+					page_audit_record.setInfoArchMsg("Reviewing title and header...");
+					audit_record_service.save(page_audit_record);
 					
 					
 					Audit title_and_headers = title_and_header_auditor.execute(page);
 					audits.add(title_and_headers);
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setInfoArchAuditProgress( (2.0/3.0) ); 
-					page_audit_record_msg.setInfoArchMsg("Checking security...");
-					audit_record_service.save(page_audit_record_msg);
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setInfoArchAuditProgress( (3.0/4.0) ); 
+					page_audit_record.setInfoArchMsg("Checking security...");
+					audit_record_service.save(page_audit_record);
 					
 					
 					Audit security = security_audit.execute(page);
 					audits.add(security);
 					
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setInfoArchAuditProgress( (3.0/3.0) ); 
-					page_audit_record_msg.setInfoArchMsg("Audit complete");
-					audit_record_service.save(page_audit_record_msg);					
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setInfoArchAuditProgress( (4.0/4.0) ); 
+					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record = audit_record_service.save(page_audit_record);					
 					
 					
 					log.warn("content audits complete :: "+audits.size());

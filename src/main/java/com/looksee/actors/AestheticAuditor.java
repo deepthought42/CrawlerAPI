@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.NonTextColorContrastAudit;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.TextColorContrastAudit;
@@ -81,21 +82,25 @@ public class AestheticAuditor extends AbstractActor{
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
-				   	PageState page = page_audit_record_msg.getPageState();
+				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
 				   	
 				   		//check if page state already
 		   			//perform audit and return audit result
 				   
 				   	//Audit color_palette_audit = color_palette_auditor.execute(page);
 					//audits.add(color_palette_audit);
-
+					AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+				   	page_audit_record.setAestheticAuditProgress( (1.0/3.0) ); 
+				   	page_audit_record.setAestheticMsg("Reviewing non-text contrast...");
+				   	page_audit_record = audit_record_service.save(page_audit_record);
+				   	
 					Audit text_contrast_audit = text_contrast_auditor.execute(page);
 					audits.add(text_contrast_audit);
 					
-				   	page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setAestheticAuditProgress( (1.0/2.0) ); 
-					page_audit_record_msg.setAestheticMsg("Reviewing non-text contrast");
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);
+				   	page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+				   	page_audit_record.setAestheticAuditProgress( (2.0/3.0) ); 
+				   	page_audit_record.setAestheticMsg("Reviewing non-text contrast...");
+				   	page_audit_record = audit_record_service.save(page_audit_record);
 					/*
 					Audit padding_audits = padding_auditor.execute(page);
 					audits.add(padding_audits);
@@ -106,10 +111,10 @@ public class AestheticAuditor extends AbstractActor{
 					Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
 					audits.add(non_text_contrast_audit);
 					
-				   	page_audit_record_msg = (PageAuditRecord)audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record_msg.setAestheticAuditProgress( (2.0/2.0) ); 
-					page_audit_record_msg.setAestheticMsg("Finished Aesthetics audit");
-					page_audit_record_msg = (PageAuditRecord)audit_record_service.save(page_audit_record_msg);
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setAestheticAuditProgress( (3.0/3.0) ); 
+					page_audit_record.setAestheticMsg("Finished Aesthetics audit");
+					page_audit_record = audit_record_service.save(page_audit_record);
 		   			//send message to either user or page channel containing reference to audits
 
 					log.warn("content audits complete :: "+audits.size());

@@ -56,7 +56,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		issue_messages.addAll(favicon_score.getIssueMessages());
 		issue_messages.addAll(heading_score.getIssueMessages());
 		for(UXIssueMessage issue_msg : issue_messages) {
-			MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
+			MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_msg);
 		}
 		
 		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved() + heading_score.getPointsAchieved();

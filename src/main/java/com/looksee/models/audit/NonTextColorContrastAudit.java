@@ -199,7 +199,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				ada_compliance,
 																				title);
 					issue_messages.add(low_contrast_issue);
-					MessageBroadcaster.sendIssueMessage(page_state.getUrl(), low_contrast_issue);
+					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
 
 				}
 				else {

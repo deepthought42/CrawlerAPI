@@ -40,10 +40,10 @@ public class DomainAuditRecord extends AuditRecord {
 		assert status != null;
 
 		setAudits(new HashSet<>());
-		setKey(generateKey());
 		setStatus(status);
 		setLevel( AuditLevel.DOMAIN);
 		setStartTime(LocalDateTime.now());
+		setKey(generateKey());
 	}
 
 	public String generateKey() {

@@ -17,7 +17,6 @@ public class AuditSet extends Message {
 	public AuditSet(List<Audit> audits, String url){
 		setAudits(audits);
 		setUrl(url);
-		
 	}
 
 	public List<Audit> getAudits() {

@@ -1,12 +1,15 @@
 package com.looksee.actors;
 
 
+import static com.looksee.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -23,12 +26,17 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.PageCrawlActionMessage;
+import com.looksee.models.message.PageStateMessage;
+import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -54,10 +62,16 @@ public class WebCrawlerActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
+	private ActorSystem actor_system;
+	
+	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -85,104 +99,126 @@ public class WebCrawlerActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
-					Domain domain = crawl_action.getDomain();
+					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
 					String initial_url = domain.getUrl();
-					
-					if(crawl_action.isIndividual()) {
-						PageState page_state = browser_service.buildPageState(new URL(initial_url));
-						page_state = page_state_service.save(page_state);
-						//domain.addPage(page);
-						domain_service.addPage(domain.getUrl(), page_state.getKey());
-						
-						getSender().tell(page_state, getSelf());
-					}
-					else {
-						Map<String, PageState> pages = new HashMap<>();
-						Map<String, Boolean> frontier = new HashMap<>();
-						Map<String, PageState> visited = new HashMap<>();
-												
-						//add link to frontier
-						frontier.put(initial_url, Boolean.TRUE);
-						
-						while(!frontier.isEmpty()) {
-							
-							Map<String, Boolean> external_links = new HashMap<>();
-							//remove link from beginning of frontier
-							String page_url_str = frontier.keySet().iterator().next();
-							
-							frontier.remove(page_url_str);
-							if( BrowserUtils.isImageUrl(page_url_str) 
-									|| page_url_str.endsWith(".pdf")
-									|| !page_url_str.contains(domain.getUrl())){
-								continue;
-							}
-							log.warn("domain host :: "+domain.getUrl());
-							log.warn("is domain host in page url??   "+page_url_str.contains(domain.getUrl()));
-							log.warn("page url string :: "+page_url_str);
-							
-							URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
-							page_url_str = BrowserUtils.getPageUrl(page_url_obj);
-							//construct page and add page to list of page states
-							//retrieve html source for page
-							try {
-								PageState page_state = browser_service.buildPageState(new URL(initial_url));
-								page_state = page_state_service.save(page_state);
 
-								pages.put(page_state.getKey(), page_state);
-								domain_service.addPage(domain.getUrl(), page_state.getKey());
-								
-								visited.put(page_url_str, page_state);
-								//send message to page data extractor
-								log.debug("sending page to an audit manager...");
-								
-								//Send PageVerstion to audit manager
-								getSender().tell(page_state, getSelf());
-								
-								Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
-								Elements links = doc.select("a");
-								for (Element link : links) {
-									
-									String href_str = link.absUrl("href");
-									if(href_str == null || href_str.isEmpty()) {
-										continue;
-									}
-									
-									String href = BrowserUtils.sanitizeUrl(href_str);
-									URL href_url = new URL(href);
-									href = BrowserUtils.getPageUrl(href_url);
-									
-									//check if external link
-									if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
-										log.debug("adding to external links :: "+href);
-					   					external_links.put(href, Boolean.TRUE);
-									}
-									else if( !visited.containsKey(href) 
-											&& !frontier.containsKey(href) 
-											&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
-									){
-										log.warn("href after sanitize :: " + href);
-										log.warn("adding link to frontier :: " + href);
-										//add link to frontier
-										frontier.put(href, Boolean.TRUE);
-									}
-								}
-							}catch(SocketTimeoutException e) {
-								log.warn("Error occurred while navigating to :: "+page_url_str);
-							}
-							catch(HttpStatusException e) {
-								log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
-								e.printStackTrace();
-							}
-							catch(IllegalArgumentException e) {
-								log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
-								e.printStackTrace();
-							}
-							catch(UnsupportedMimeTypeException e) {
-								log.warn(e.getMessage() + " : " +e.getUrl());
-							}
-						}
+					Map<String, PageState> pages = new HashMap<>();
+					Map<String, Boolean> frontier = new HashMap<>();
+					Map<String, PageState> visited = new HashMap<>();
+											
+					//add link to frontier
+					frontier.put(initial_url, Boolean.TRUE);
+					
+					while(!frontier.isEmpty()) {
 						
+						Map<String, Boolean> external_links = new HashMap<>();
+						//remove link from beginning of frontier
+						String page_url_str = frontier.keySet().iterator().next();
+						
+						frontier.remove(page_url_str);
+						if( BrowserUtils.isImageUrl(page_url_str) 
+								|| page_url_str.endsWith(".pdf")
+								|| !page_url_str.contains(domain.getUrl())){
+							continue;
+						}
+
+						URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
+						page_url_str = BrowserUtils.getPageUrl(page_url_obj);
+						//construct page and add page to list of page states
+						//retrieve html source for page
+						try {
+							PageState page_state = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(page_url_str)));
+							page_state = page_state_service.save(page_state);
+
+							pages.put(page_state.getKey(), page_state);
+							domain_service.addPage(domain.getId(), page_state.getKey());
+							
+							visited.put(page_url_str, page_state);
+							//send message to page data extractor
+							
+							PageStateMessage page_msg = new PageStateMessage(page_state, crawl_action.getDomainId(), crawl_action.getAccountId(), crawl_action.getAuditRecordId());
+							//Send PageVerstion to audit manager
+							getSender().tell(page_msg, getSelf());
+							
+							Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							Elements links = doc.select("a");
+							
+							//iterate over links and exclude external links from frontier
+							for (Element link : links) {
+								String href_str = link.absUrl("href");
+								if(href_str == null || href_str.isEmpty()) {
+									continue;
+								}
+
+								String href = BrowserUtils.sanitizeUrl(href_str);
+								URL href_url = new URL(href);
+								href = BrowserUtils.getPageUrl(href_url);
+								
+								//check if external link
+								if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
+									log.warn("adding to external links :: "+href);
+				   					external_links.put(href, Boolean.TRUE);
+								}
+								else if( !visited.containsKey(href) 
+										&& !frontier.containsKey(href) 
+										&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
+								){
+									//add link to frontier
+									frontier.put(href, Boolean.TRUE);
+								}
+							}
+						}catch(SocketTimeoutException e) {
+							log.warn("Error occurred while navigating to :: "+page_url_str);
+						}
+						catch(HttpStatusException e) {
+							log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
+							e.printStackTrace();
+						}
+						catch(IllegalArgumentException e) {
+							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
+							e.printStackTrace();
+						}
+						catch(UnsupportedMimeTypeException e) {
+							log.warn(e.getMessage() + " : " +e.getUrl());
+						}
 					}
+				})
+				.match(PageCrawlActionMessage.class, crawl_action-> {
+					
+					PageState page_state = browser_service.buildPageState(crawl_action.getUrl());
+					page_state = page_state_service.save(page_state);
+
+					audit_record_service.addPageToPageAudit(crawl_action.getAuditRecord().getId(), page_state.getId());
+					crawl_action.getAuditRecord().setPageState(page_state);
+					//domain.addPage(page);
+					//domain_service.addPage(domain.getId(), page_state.getKey());
+									   	
+				   	//check if page state already
+				   	//perform audit and return audit result
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+				   	log.warn("?????????????????????????????????????????????????????????????????????");
+				   	
+				   	log.warn("requesting performance audit from performance auditor....");
+				   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+				   	performance_insight_actor.tell(page_state, ActorRef.noSender());
+				   	
+				   	log.warn("Running information architecture audit via actor");
+					ActorRef content_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+					content_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
+				   	
+				   	log.warn("Running information architecture audit via actor");
+					ActorRef info_architecture_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
+					info_architecture_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
+					
+					log.warn("Running aesthetic audit via actor");
+					ActorRef aesthetic_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				   			.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());
+					aesthetic_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

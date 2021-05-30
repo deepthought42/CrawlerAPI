@@ -32,6 +32,14 @@ public class BrowserServiceTest {
 	@Autowired
 	private BrowserService browser_service;
 	
+	@Test
+	public void htmlCommentRemoval() {
+		String html = "<html><head></head><body><div><!-- foo --><p>bar<!-- baz --></div><!--qux--></body></html>";
+		
+		html = BrowserService.removeComments(html);
+		System.out.println("html :: "+html);
+	}
+	
 	//@Test
 	public void isElementVisibleInPanel(){
 		Browser browser = new Browser();

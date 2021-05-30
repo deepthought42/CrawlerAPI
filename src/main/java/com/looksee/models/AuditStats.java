@@ -10,24 +10,59 @@ public class AuditStats extends LookseeObject{
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
-	private String host;
+	private long audit_record_id;
+	private long pages_found;
+	private long content_pages_audited;
+	private double content_audit_progress;
+	private String content_msg;
+	
+	private long info_arch_pages_audited;
+	private double info_arch_audit_progress;
+	private String info_arch_msg;
+	
+	private long aesthetic_pages_audited;
+	private double aesthetic_audit_progress;
+	private String aesthetic_msg;
 	
 	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
 	public AuditStats() {}
 	
-	public AuditStats(String host_url) {
+	public AuditStats(long audit_record_id) {
 		setStartTime(LocalDateTime.now());
-		setHost(host_url);
+		setAuditRecordId(audit_record_id);
 		setKey(generateKey());
 	}
 	
-	public AuditStats(String host_url, LocalDateTime start_time, LocalDateTime end_time, int page_count, double avg_time_per_page) {
+	public AuditStats(
+			long audit_record_id,
+			LocalDateTime start_time, 
+			LocalDateTime end_time, 
+			long page_count, 
+			long content_pages_audited,
+			double content_audit_progress,
+			String content_msg,
+			long info_arch_pages_audited,
+			double info_arch_audit_progress,
+			String info_arch_msg,
+			long aesthetic_pages_audited,
+			double aesthetic_audit_progress,
+			String aesthetic_msg
+	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
-		setHost(host_url);
+		setAuditRecordId(audit_record_id);
 		setSubcategoryStats(new HashSet<>());
+		setContentPagesAudited(content_pages_audited);
+		setContentAuditProgress(content_audit_progress);
+		setContentMsg(content_msg);
+		setInfoArchPagesAudited(info_arch_pages_audited);
+		setInfoArchAuditProgress(info_arch_audit_progress);
+		setInfoArchMsg(info_arch_msg);
+		setAestheticPagesAudited(aesthetic_pages_audited);
+		setAestheticAuditProgress(aesthetic_audit_progress);
+		setAestheticMsg(aesthetic_msg);
 		setKey(generateKey());
 	}
 
@@ -55,16 +90,96 @@ public class AuditStats extends LookseeObject{
 		this.subcategory_stats = subcategory_stats;
 	}
 
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host_url) {
-		this.host = host_url;
-	}
-
 	@Override
 	public String generateKey() {
-		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + host);
+		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + "" + audit_record_id);
+	}
+
+	public long getPagesFound() {
+		return pages_found;
+	}
+
+	public void setPagesFound(long pages_found) {
+		this.pages_found = pages_found;
+	}
+
+	public long getContentPagesAudited() {
+		return content_pages_audited;
+	}
+
+	public void setContentPagesAudited(long content_pages_audited) {
+		this.content_pages_audited = content_pages_audited;
+	}
+
+	public long getInfoArchPagesAudited() {
+		return info_arch_pages_audited;
+	}
+
+	public void setInfoArchPagesAudited(long info_arch_pages_audited) {
+		this.info_arch_pages_audited = info_arch_pages_audited;
+	}
+
+	public long getAestheticPagesAudited() {
+		return aesthetic_pages_audited;
+	}
+
+	public void setAestheticPagesAudited(long aesthetic_pages_audited) {
+		this.aesthetic_pages_audited = aesthetic_pages_audited;
+	}
+
+	public long getAuditRecordId() {
+		return audit_record_id;
+	}
+
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
+	}
+
+	public double getContentAuditProgress() {
+		return content_audit_progress;
+	}
+
+	public void setContentAuditProgress(double content_audit_progress) {
+		this.content_audit_progress = content_audit_progress;
+	}
+
+	public double getInfoArchAuditProgress() {
+		return info_arch_audit_progress;
+	}
+
+	public void setInfoArchAuditProgress(double info_arch_audit_progress) {
+		this.info_arch_audit_progress = info_arch_audit_progress;
+	}
+
+	public double getAestheticAuditProgress() {
+		return aesthetic_audit_progress;
+	}
+
+	public void setAestheticAuditProgress(double aesthetic_audit_progress) {
+		this.aesthetic_audit_progress = aesthetic_audit_progress;
+	}
+
+	public String getContentMsg() {
+		return content_msg;
+	}
+
+	public void setContentMsg(String content_msg) {
+		this.content_msg = content_msg;
+	}
+
+	public String getInfoArchMsg() {
+		return info_arch_msg;
+	}
+
+	public void setInfoArchMsg(String info_arch_msg) {
+		this.info_arch_msg = info_arch_msg;
+	}
+
+	public String getAestheticMsg() {
+		return aesthetic_msg;
+	}
+
+	public void setAestheticMsg(String aesthetic_msg) {
+		this.aesthetic_msg = aesthetic_msg;
 	}
 }

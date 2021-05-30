@@ -80,8 +80,8 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		String description = "";
 		
 		log.warn("FONT AUDIT SCORE   ::   "+(score) +" / " +(max_score));
-		return new Audit(AuditCategory.AESTHETICS,
-						 AuditSubcategory.TYPOGRAPHY,
+		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+						 AuditSubcategory.SECURITY,
 						 AuditName.FONT,
 						 score,
 						 issue_messages,
@@ -90,7 +90,8 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state);
+						 page_state,
+						 false);
 	}
 	
 

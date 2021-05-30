@@ -14,6 +14,8 @@ import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.Screenshot;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.repository.PageStateRepository;
 
@@ -230,19 +232,34 @@ public class PageStateService {
 		return page_state_repo.findByUrl(url);
 	}
 
-	public boolean addElement(String page_key, String element_key) {
-		assert page_key != null;
+	public boolean addElement(long page_id, String element_key) {
 		assert element_key != null;
-		Optional<ElementState> element_state = getElementState(page_key, element_key);
+		assert !element_key.isEmpty();
+		
+		Optional<ElementState> element_state = getElementState(page_id, element_key);
 		
 		if(element_state.isPresent()) {
 			return true;
 		}
-		return page_state_repo.addElement(page_key, element_key) != null;
+		return page_state_repo.addElement(page_id, element_key) != null;
 	}
 
-	private Optional<ElementState> getElementState(String page_key, String element_key) {
-		return page_state_repo.getElementState(page_key, element_key);
+	private Optional<ElementState> getElementState(long page_id, String element_key) {
+		return page_state_repo.getElementState(page_id, element_key);
+	}
+
+	/**
+	 * Retrieves an {@link AuditRecord} for the page with the given id
+	 * @param id
+	 * @return
+	 */
+	public PageAuditRecord getAuditRecord(long id) {
+		
+		return page_state_repo.getAuditRecord(id);
+	}
+
+	public Optional<PageState> findById(long page_id) {
+		return page_state_repo.findById(page_id);
 	}
 
 }

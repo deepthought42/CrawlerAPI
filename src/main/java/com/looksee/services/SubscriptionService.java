@@ -107,9 +107,9 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws StripeException{
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	int test_run_cnt = account_service.getTestCountByMonth(acct.getUsername(), date.getMonth());
+    	int test_run_cnt = account_service.getTestCountByMonth(acct.getEmail(), date.getMonth());
     	//check if user has exceeded freemium plan
-    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
+    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getEmail(), date.getMonth());
     	int discovered_test_cnt = 0;
     	
     	for(DiscoveryRecord record : discovery_records){
@@ -146,7 +146,7 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws StripeException{    	
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
+    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getEmail(), date.getMonth());
     	int discovered_test_cnt = 0;
     	
     	for(DiscoveryRecord record : discovery_records){

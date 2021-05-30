@@ -117,14 +117,14 @@ public class SegmentAnalyticsHelper {
    		);
 	}
 
-	public static void sendDomainCreatedInRecorder(String userId, String key) {
-		identify(userId);
+	public static void sendDomainCreatedInRecorder(String username, String key) {
+		identify(username);
 
 		//Fire test created event
 	   	Map<String, String> domain_created_props= new HashMap<String, String>();
 	   	domain_created_props.put("key", key);
 	   	buildSegment().enqueue(TrackMessage.builder("Domain Created via Recorder")
-   		    .userId(userId)
+   		    .userId(username)
    		    .properties(domain_created_props)
    		);
 	}

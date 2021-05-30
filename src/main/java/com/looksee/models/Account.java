@@ -4,26 +4,22 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 
 
 /**
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
 @NodeEntity
-public class Account {
-	@GeneratedValue
-    @Id
-	private Long id;
+public class Account extends LookseeObject{
 
 	private String user_id;
-	private String username;
+	private String email;
 	private String customer_token;
 	private String subscription_token;
 	private String subscription_type;
@@ -32,13 +28,15 @@ public class Account {
 	private String api_token;
 	private String name;
 	
-	@Relationship(type = "HAS_DOMAIN")
+	@Relationship(type = "HAS")
 	private Set<Domain> domains = new HashSet<>();
 
 	@Relationship(type = "HAS")
-	private Set<Audit> audits = new HashSet<>();
+	private Set<AuditRecord> audits = new HashSet<>();
 
-	public Account(){}
+	public Account(){
+		super();
+	}
 
 	/**
 	 *
@@ -48,42 +46,27 @@ public class Account {
 	 *
 	 * @pre users != null
 	 */
-	public Account(String user_id, String username, String customer_token, String subscription_token){
+	public Account(
+			String user_id, 
+			String email, 
+			String customer_token, 
+			String subscription_token
+	){
+		super();
 		setUserId(user_id);
-		setUsername(username);
+		setEmail(email);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
 		setName("");
 	}
 
-	/**
-	 *
-	 * @param username
-	 * @param customer_token
-	 * @param subscription_token
-	 *
-	 * @pre users != null
-	 */
-	public Account(String user_id, String username, String customer_token, String subscription_token, String name){
-		setUserId(user_id);
-		setUsername(username);
-		setCustomerToken(customer_token);
-		setSubscriptionToken(subscription_token);
-		setOnboardedSteps(new ArrayList<String>());
-		setName(name);
-	}
-	
-	public long getId(){
-		return this.id;
+	public String getEmail() {
+		return email;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public String getCustomerToken() {
@@ -142,30 +125,28 @@ public class Account {
 	}
 
 	public void removeDomain(Domain domain) {
-		int idx = -1;
 		boolean domain_found = false;
 		for(Domain curr_domain : this.domains){
 			if(curr_domain.getKey().equals(domain.getKey())){
 				domain_found = true;
 				break;
 			}
-			idx++;
 		}
 
 		if(domain_found){
-			this.domains.remove(idx);
+			this.domains.remove(domain);
 		}
 	}
 
-	public Set<Audit> getAudits() {
+	public Set<AuditRecord> getAuditRecords() {
 		return audits;
 	}
 
-	public void setAudits(Set<Audit> audits) {
+	public void setAuditRecords(Set<AuditRecord> audits) {
 		this.audits = audits;
 	}
 
-	public void addAudit(Audit record) {
+	public void addAuditRecord(AuditRecord record) {
 		this.audits.add(record);
 	}
 
@@ -183,21 +164,26 @@ public class Account {
 
 	public void setApiToken(String api_token) {
 		this.api_token = api_token;
-  }
-
-  public String getUserId() {
-    return user_id;
-  }
-
-  public void setUserId(String user_id) {
-    this.user_id = user_id;
 	}
 
-public String getName() {
-	return name;
-}
+	public String getUserId() {
+		return user_id;
+  	}
 
-public void setName(String name) {
-	this.name = name;
-}
+  	public void setUserId(String user_id) {
+  		this.user_id = user_id;
+	}
+
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public String generateKey() {
+		return UUID.randomUUID().toString();
+	}
 }

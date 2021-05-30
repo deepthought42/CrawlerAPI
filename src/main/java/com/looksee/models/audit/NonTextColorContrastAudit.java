@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -181,13 +182,14 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					//no points are rewarded for low contrast
 					Set<String> labels = new HashSet<>();
 					labels.add("contrast");
-					String ada_compliance = "Non-text items meet the minimum required ratio level of 3:1.";
-
+					String ada_compliance = "Non-text items should have a minimum contrast ratio of 3:1.";
+					String why_it_matters = "";
+					String recommendation = "use a darker/lighter shade of "+ element.getBackgroundColor() +" to achieve a contrast of 3:1";
 					
 					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
 																				Priority.HIGH,
 																				description,
-																				"Elements with a contrast below 3.0",
+																				recommendation,
 																				highest_contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
@@ -197,6 +199,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				ada_compliance,
 																				title);
 					issue_messages.add(low_contrast_issue);
+					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
+
 				}
 				else {
 					score += 1;
@@ -217,11 +221,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				"familiar and captivating.</p>" + 
 				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
 				"button to have a high contrast score to create an eye-catching effect\n" + 
-				"and be evidently clickable.</p>";
+				"and be obviously clickable.</p>";
 		
-		Set<String> recommendations = new HashSet<>();
-		recommendations.add("Use colors for backgrounds of non text elements that have a contrast of at least 3:1 for ADA compliance(level AA).");
-
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("color contrast");
@@ -247,7 +248,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state);
+						 page_state,
+						 true);
 	}
 
 

@@ -6,6 +6,7 @@ package com.looksee.models;
  *
  */
 public class SimplePage {
+	private long id;
 	private String url;
 	private String screenshot_url;
 	private String full_page_screenshot_url;
@@ -21,8 +22,10 @@ public class SimplePage {
 			long width, 
 			long height, 
 			String html_source, 
-			String page_state_key
+			String page_state_key, 
+			long id
 	) {
+		setId(id);
 		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setFullPageScreenshotUrl(full_page_screenshot_url);
@@ -86,5 +89,13 @@ public class SimplePage {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 }

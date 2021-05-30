@@ -1,51 +1,50 @@
 package com.looksee.models.message;
 
-import com.looksee.models.Domain;
-
 /**
  * Core Message object that defines global fields that are to be used by all Message objects
  */
 public abstract class Message {
-	private String domain_host;
-	private String account_id;
-	private Domain domain;
+	private long domain_id;
+	private long account_id;
+	private long audit_record_id;
 	
 	Message(){
-		setDomainHost("");
-		setAccountId("");
+		setAccountId(-1);
 	}
 	
 	/**
 	 * 
-	 * @param domain eg. example.com
 	 * @param account_id
+	 * @param audit_record_id TODO
+	 * @param domain eg. example.com
 	 */
-	Message(String domain_host, String account_id){
-		setDomainHost(domain_host);
+	Message(long domain_id, long account_id, long audit_record_id){
+		setDomainId(domain_id);
 		setAccountId(account_id);
+		setAuditRecordId(audit_record_id);
 	}
 	
-	public String getDomainHost() {
-		return domain_host;
+	public long getDomainId() {
+		return domain_id;
 	}
 	
-	private void setDomainHost(String domain) {
-		this.domain_host = domain;
+	private void setDomainId(long domain) {
+		this.domain_id = domain;
 	}
 	
-	public String getAccountId() {
+	public long getAccountId() {
 		return account_id;
 	}
 
-	private void setAccountId(String account_id) {
+	protected void setAccountId(long account_id) {
 		this.account_id = account_id;
 	}
 
-	public Domain getDomain() {
-		return domain;
+	public long getAuditRecordId() {
+		return audit_record_id;
 	}
 
-	public void setDomain(Domain domain) {
-		this.domain = domain;
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 }

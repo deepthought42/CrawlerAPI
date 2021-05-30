@@ -77,7 +77,7 @@ public class ReportController {
     	List<UXIssueMessage> ux_issues = new ArrayList<>();
     	for(Audit audit : audits) {
     		log.warn("audit key :: "+audit.getKey());
-    		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getKey());
+    		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
     		log.warn("audit issue messages size ...."+messages.size());
     		ux_issues.addAll(messages);
     	}

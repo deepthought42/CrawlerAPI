@@ -3,7 +3,9 @@ package com.looksee.utils;
 import java.util.Set;
 
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
 
 public class AuditUtils {
@@ -84,6 +86,29 @@ public class AuditUtils {
     	
     	return new AuditScore(content_score, info_architecture_score, aesthetic_score, interactivity_score, accessibility_score);
     	
+	}
+
+	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {
+		return page_audit_record.getAestheticAuditProgress() >= 1 
+			&& page_audit_record.getContentAuditProgress() >= 1
+			&& page_audit_record.getInfoArchAuditProgress() >= 1;
+	}
+
+	public static String getExperienceRating(PageAuditRecord audit_record) {
+		double score = audit_record.getAestheticAuditProgress();
+		score += audit_record.getContentAuditProgress();
+		score += audit_record.getInfoArchAuditProgress();
+		
+		double final_score = score / 3;
+		if(final_score >= 80) {
+			return "delightful";
+		}
+		else if(final_score <80.0 && final_score >= 60) {
+			return "almost there";
+		}
+		else {
+			return "needs work";
+		}
 	}
 	
 }

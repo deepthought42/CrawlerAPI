@@ -91,17 +91,18 @@ public class AuditRecordController {
 	) throws UnknownAccountException {
     	log.warn("requesting report and saving account....");
     	//create an account
-    	acct = account_service.save(acct);
+    	Account acct_record = account_service.findByEmail(acct.getEmail());
+    	if(acct_record == null) {
+    		acct_record = account_service.save(acct);
+    	}
+    	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct_record.getId());
+    	account_service.addAuditRecord(acct_record.getId(), audit_record_id);
     	
-    	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct.getId());
-    	account_service.addAuditRecord(acct.getId(), audit_record_id);
-    	
-    	log.warn("sending email for user ...."+acct.getEmail());
+    	log.warn("sending email for user ...."+acct_record.getEmail());
     	//Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
-    	String email_msg = "A UX audit has been requested by \n\n email : " + acct.getEmail() + " \n\n audit record id = "+audit_record_id;
+    	String email_msg = "A UX audit has been requested by \n\n email : " + acct_record.getEmail() + " \n\n audit record id = "+audit_record_id;
     	sendgrid_service.sendMail(email_msg);
     	
-    	log.warn("email sent!!");
        	//send request to support@look-see.com to send email once audit is complete
     }
 

@@ -19,8 +19,11 @@ import com.looksee.models.audit.ImageAltTextAudit;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.ParagraphingAudit;
 import com.looksee.models.audit.ReadabilityAudit;
+import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.SendGridMailService;
+import com.looksee.utils.AuditUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -55,6 +58,12 @@ public class ContentAuditor extends AbstractActor{
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private SendGridMailService email_service;
 	
 	private Account account;
 
@@ -122,6 +131,14 @@ public class ContentAuditor extends AbstractActor{
 					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
 					page_audit_record = audit_record_service.save(page_audit_record);		
 
+					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
+					if(is_audit_complete) {
+						
+						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
+						for(Account account: accounts) {
+							email_service.sendAuditCompleteEmail(account.getEmail(), page.getUrl(), (PageAuditRecord)page_audit_record);
+						}
+					}
 					
 					log.warn("content audits complete :: "+audits.size());
 					for(Audit audit : audits) {						

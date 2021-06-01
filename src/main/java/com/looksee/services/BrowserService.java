@@ -150,7 +150,7 @@ public class BrowserService {
 		String css_selector = element.cssSelector();
 		ElementState element_state = new ElementState(
 				element.ownText().trim(),
-				web_elem.getText(),
+				element.text(),
 				xpath, 
 				element.tagName(), 
 				attributes, 

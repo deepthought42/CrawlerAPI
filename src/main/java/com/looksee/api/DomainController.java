@@ -166,7 +166,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('write:domains')")
+    //@PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(method = RequestMethod.PUT)
     public @ResponseBody Domain update(HttpServletRequest request,
 				 @RequestParam(value="key", required=true) String key,
@@ -199,7 +199,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('write:domains')")
+    //@PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
     									@RequestBody Domain domain) 
@@ -221,7 +221,7 @@ public class DomainController {
     	account_service.save(acct);
     }
 
-    @PreAuthorize("hasAuthority('read:domains')")
+    //@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	Principal principal = request.getUserPrincipal();
@@ -284,7 +284,7 @@ public class DomainController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-	@PreAuthorize("hasAuthority('delete:domains')")
+	//@PreAuthorize("hasAuthority('delete:domains')")
 	@RequestMapping(method = RequestMethod.DELETE, path="/{domain_id}")
 	public @ResponseBody void remove(HttpServletRequest request,
 										@PathVariable(value="domain_id", required=true) long domain_id)
@@ -359,7 +359,7 @@ public class DomainController {
 		return page_stats;
 	}
 	
-	@PreAuthorize("hasAuthority('read:domains')")
+	//@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
     public @ResponseBody Set<PageState> getAllPages(HttpServletRequest request, 
 											   @RequestParam(value="url", required=true) String url
@@ -399,7 +399,7 @@ public class DomainController {
 	 * @return a unique set of {@link Element}s belonging to all page states for the {@link Domain} with the given host
 	 * @throws UnknownAccountException
 	 */
-	@PreAuthorize("hasAuthority('read:domains')")
+	//@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_elements")
     public @ResponseBody Set<Element> getAllElementStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
@@ -435,7 +435,7 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
-    @PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/{domain_id}/users", method = RequestMethod.POST)
     public @ResponseBody TestUser addUser(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id,
@@ -578,7 +578,7 @@ public class DomainController {
 	 * @throws UnknownAccountException 
 	 * @throws UnknownUserException
 	 */
-    @PreAuthorize("hasAuthority('create:test_user')")
+    //@PreAuthorize("hasAuthority('create:test_user')")
     @RequestMapping(path="test_users/$user_id", method = RequestMethod.DELETE)
     public @ResponseBody void delete(HttpServletRequest request,
     									@RequestParam(value="domain_key", required=true) String domain_key,
@@ -604,7 +604,7 @@ public class DomainController {
      * @throws UnknownAccountException
      * @throws MalformedURLException
      */
-    @PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id) 
@@ -637,7 +637,7 @@ public class DomainController {
      * @return
      * @throws Exception
      */
-    @PreAuthorize("hasAuthority('execute:audits')")
+    //@PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path="/{domain_id}/start", method = RequestMethod.POST)
 	public @ResponseBody AuditRecord startAudit(
 			HttpServletRequest request,
@@ -686,7 +686,7 @@ public class DomainController {
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 
      */
-    @PreAuthorize("hasAuthority('read:actions')")
+    //@PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET, path="/audits")
     public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
 			@PathVariable(value="host", required=true) String host

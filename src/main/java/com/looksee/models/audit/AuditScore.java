@@ -8,10 +8,10 @@ public class AuditScore {
 	private double accessibility_score;
 	
 	public AuditScore(double content_score,
-					 double information_architecture_score,
-					 double aesthetic_score,
-					 double interactivity_score,
-					 double accessibility_score) {
+					  double information_architecture_score,
+					  double aesthetic_score,
+					  double interactivity_score,
+					  double accessibility_score) {
 		setContentScore(content_score);
 		setInformationArchitectureScore(information_architecture_score);
 		setAestheticsScore(aesthetic_score);

@@ -21,18 +21,21 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
-import com.looksee.models.AuditStats;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.Priority;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -206,51 +209,51 @@ public class AuditRecordController {
 									@PathVariable("audit_record_id") long audit_record_id
 	) throws UnknownAccountException {
     	//get audit record
-    	Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
+    	Optional<AuditRecord> audit_record_opt = audit_record_service.findById(audit_record_id);
     	
-    	if(audit_record.isPresent()) {
-    		AuditRecord audit = audit_record.get();
+    	if(audit_record_opt.isPresent()) {   
+    		AuditRecord audit_record = audit_record_opt.get();
     		long content_audits_complete = 0;
     		long info_arch_audits_complete = 0;
     		long aesthetic_audits_complete = 0;
     		
-    		if( audit instanceof PageAuditRecord ) {
+    		if( audit_record instanceof PageAuditRecord ) {
 
     	    	//get Page Count
 				long page_count = 1;
 				
 				//get total content audit pages
-				boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+				boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(audit_record_service.getAllContentAudits(audit_record.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
 				if(is_content_audit_complete) {
 					content_audits_complete++;
 				}
 				
 				//get total information architecture audit pages
-				boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(audit.getId()));
+				boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(audit_record.getId()));
 				if(is_info_arch_audit_complete) {
 					info_arch_audits_complete++;
 				}
 				
 				//get total aesthetic audit pages
-				boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(audit.getId()));
+				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(audit_record.getId()));
 				if(is_aesthetic_audit_complete) {
 					aesthetic_audits_complete++;
 				}
 
 		    	//build stats object
-				AuditStats audit_stats = new AuditStats(audit.getId(), 
-														audit.getStartTime(), 
-														audit.getEndTime(), 
+				AuditStats audit_stats = new AuditStats(audit_record.getId(), 
+														audit_record.getStartTime(), 
+														audit_record.getEndTime(), 
 														page_count, 
 														content_audits_complete,
-														audit.getContentAuditProgress(),
-														audit.getContentAuditMsg(),
+														audit_record.getContentAuditProgress(),
+														audit_record.getContentAuditMsg(),
 														info_arch_audits_complete, 
-														audit.getInfoArchAuditProgress(),
-														audit.getInfoArchMsg(),
+														audit_record.getInfoArchAuditProgress(),
+														audit_record.getInfoArchMsg(),
 														aesthetic_audits_complete,
-														audit.getAestheticAuditProgress(),
-														audit.getAestheticMsg());
+														audit_record.getAestheticAuditProgress(),
+														audit_record.getAestheticMsg());
 				return audit_stats;				
     		}
     		else {
@@ -259,40 +262,111 @@ public class AuditRecordController {
 				//get Page Count
 				long page_count = audit_records.size();
 				
+				double score = 0;
+				int audit_count = 0;
+				long high_issue_count=0;
+				long mid_issue_count=0;
+				long low_issue_count=0;
+				
 				for(PageAuditRecord page_audit : audit_records) {
 					//get total content audit pages
-					boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(page_audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+					Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+					for(Audit content_audit: content_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(content_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						
+						score += (content_audit.getPoints() / (double)content_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
 					if(is_content_audit_complete) {
 						content_audits_complete++;
 					}
 					
 					//get total information architecture audit pages
-					boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+					Set<Audit> info_architecture_audits = audit_record_service.getAllInformationArchitectureAudits(page_audit.getId());
+					for(Audit ia_audit: info_architecture_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(ia_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						score += (ia_audit.getPoints() / (double)ia_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(info_architecture_audits);
 					if(is_info_arch_audit_complete) {
 						info_arch_audits_complete++;
 					}
 					
+					
 					//get total aesthetic audit pages
-					boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+					Set<Audit> aesthetic_audits = audit_record_service.getAllAestheticAudits(page_audit.getId());
+					for(Audit aesthetic_audit: aesthetic_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(aesthetic_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						score += (aesthetic_audit.getPoints() / (double)aesthetic_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetic_audits);
 					if(is_aesthetic_audit_complete) {
 						aesthetic_audits_complete++;
 					}
 				}
 				
+				double overall_score = ( score / audit_count ) * 100 ;
+				
 				//build stats object
-				AuditStats audit_stats = new AuditStats(audit.getId(), 
-														audit.getStartTime(), 
-														audit.getEndTime(), 
-														page_count, 
-														content_audits_complete,
-														audit.getContentAuditProgress(),
-														audit.getContentAuditMsg(),
-														info_arch_audits_complete, 
-														audit.getInfoArchAuditProgress(),
-														audit.getInfoArchMsg(),
-														aesthetic_audits_complete,
-														audit.getAestheticAuditProgress(),
-														audit.getAestheticMsg());
+				AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
+															audit_record.getStartTime(),
+															audit_record.getEndTime(),
+															page_count, 
+															content_audits_complete,
+															content_audits_complete / (double)audit_records.size(),
+															audit_record.getContentAuditMsg(),
+															info_arch_audits_complete, 
+															info_arch_audits_complete / (double)audit_records.size(),
+															audit_record.getInfoArchMsg(),
+															aesthetic_audits_complete,
+															aesthetic_audits_complete / (double)audit_records.size(),
+															audit_record.getAestheticMsg(),
+															overall_score,
+															high_issue_count,
+															mid_issue_count,
+															low_issue_count);
 				
 				return audit_stats;
     		}
@@ -301,18 +375,6 @@ public class AuditRecordController {
     		throw new AuditRecordNotFoundException();
     	}
     }
-
-	private boolean isAestheticsAuditComplete(Set<Audit> audits) {
-		return audits.size() == 2;
-	}
-
-	private boolean isContentAuditComplete(Set<Audit> audits) {
-		return audits.size() == 3;
-	}
-	
-	private boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
-		return audits.size() == 3;
-	}
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

@@ -19,11 +19,11 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.Account;
-import com.looksee.models.AuditStats;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
@@ -34,9 +34,11 @@ import com.looksee.models.message.DomainAuditMessage;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageStateAuditComplete;
 import com.looksee.models.message.PageStateMessage;
+import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
+import com.looksee.services.SendGridMailService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -70,8 +72,14 @@ public class AuditManager extends AbstractActor{
 	private AuditRecordService audit_record_service;
 	
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
 	private AuditService audit_service;
 
+	@Autowired
+	private SendGridMailService mail_service;
+	
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -206,8 +214,12 @@ public class AuditManager extends AbstractActor{
 
 					Set<PageState> pages = domain_service.getPages(domain.getUrl());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
-
-					if( pages.size() == page_states.size()) {						
+					
+					//find user account
+					Account account = account_service.findById(audit_complete.getAccountId()).get();
+					if( pages.size() == page_states.size()) {
+						//send domain audit complete
+						mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						//AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)

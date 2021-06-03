@@ -72,16 +72,16 @@ public class AuditUtils {
     	}
     	
     	if(content_count > 0) {
-    		content_score = (content_score / (double)content_count) * 100;
+    		content_score = ( content_score / (double)content_count ) * 100;
     	}
     	if(info_architecture_count > 0) {
-    		info_architecture_score = (info_architecture_score / (double)info_architecture_count) * 100;
+    		info_architecture_score = ( info_architecture_score / (double)info_architecture_count ) * 100;
     	}
     	if(aesthetic_count > 0) {
-    		aesthetic_score = (aesthetic_score / (double)aesthetic_count) * 100;
+    		aesthetic_score = ( aesthetic_score / (double)aesthetic_count ) * 100;
     	}
     	if(accessibility_count > 0) {
-        	accessibility_score = (accessibility_score / (double)accessibility_count) * 100;
+        	accessibility_score = ( accessibility_score / (double)accessibility_count ) * 100;
     	}
     	
     	return new AuditScore(content_score, info_architecture_score, aesthetic_score, interactivity_score, accessibility_score);
@@ -111,4 +111,15 @@ public class AuditUtils {
 		}
 	}
 	
+	public static boolean isAestheticsAuditComplete(Set<Audit> audits) {
+		return audits.size() == 2;
+	}
+
+	public static boolean isContentAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
+	
+	public static boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
+		return audits.size() == 3;
+	}
 }

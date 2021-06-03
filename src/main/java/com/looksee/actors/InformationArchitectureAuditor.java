@@ -133,7 +133,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						
 						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
 						for(Account account: accounts) {
-							email_service.sendAuditCompleteEmail(account.getEmail(), page.getUrl(), (PageAuditRecord)page_audit_record);
+							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
 						}
 					}
 					

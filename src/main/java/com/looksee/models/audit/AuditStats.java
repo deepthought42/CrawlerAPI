@@ -1,4 +1,4 @@
-package com.looksee.models;
+package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -6,7 +6,9 @@ import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-public class AuditStats extends LookseeObject{
+import com.looksee.models.AuditSubcategoryStat;
+
+public class AuditStats {
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
@@ -24,6 +26,8 @@ public class AuditStats extends LookseeObject{
 	private double aesthetic_audit_progress;
 	private String aesthetic_msg;
 	
+	private double overall_score;
+
 	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
@@ -32,7 +36,6 @@ public class AuditStats extends LookseeObject{
 	public AuditStats(long audit_record_id) {
 		setStartTime(LocalDateTime.now());
 		setAuditRecordId(audit_record_id);
-		setKey(generateKey());
 	}
 	
 	public AuditStats(
@@ -63,9 +66,17 @@ public class AuditStats extends LookseeObject{
 		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
 		setAestheticMsg(aesthetic_msg);
-		setKey(generateKey());
 	}
 
+
+	public double getOverallScore() {
+		return overall_score;
+	}
+
+	public void setOverallScore(double overall_score) {
+		this.overall_score = overall_score;
+	}
+	
 	public LocalDateTime getStartTime() {
 		return start_time;
 	}
@@ -88,11 +99,6 @@ public class AuditStats extends LookseeObject{
 
 	public void setSubcategoryStats(Set<AuditSubcategoryStat> subcategory_stats) {
 		this.subcategory_stats = subcategory_stats;
-	}
-
-	@Override
-	public String generateKey() {
-		return "auditstat"+org.apache.commons.codec.digest.DigestUtils.sha512Hex( start_time + "" + audit_record_id);
 	}
 
 	public long getPagesFound() {

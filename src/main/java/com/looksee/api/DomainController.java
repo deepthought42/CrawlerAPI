@@ -59,6 +59,7 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
@@ -392,13 +393,33 @@ public class DomainController {
 			long mid_issue_count=0;
 			long low_issue_count=0;
 			
+    		double content_score = 0.0;
+    		double written_content_score = 0.0;
+    		double imagery_score = 0.0;
+    		double videos_score = 0.0;
+    		double audio_score = 0.0;
+    		
+    		double info_arch_score = 0.0;
+    		double seo_score = 0.0;
+    		double menu_analysis_score = 0.0;
+    		double performance_score = 0.0;
+    		
+    		double aesthetic_score = 0.0;
+    		double color_score = 0.0;
+    		double typography_score = 0.0;
+    		double whitespace_score = 0.0;
+    		double branding_score = 0.0;
+    		
 			log.warn("audit records found :: "+audit_records.size());
 			for(PageAuditRecord page_audit : audit_records) {
 				//get total content audit pages
 				Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+				written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
+				imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
+				videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
+				audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
+
 				for(Audit content_audit: content_audits) {
-					log.warn("Content audits score points  ::  "+content_audit.getPoints());
-					log.warn("Content audits total possible points ::  "+content_audit.getTotalPossiblePoints());
 					
 					//get issues
 					Set<UXIssueMessage> issues = audit_service.getIssues(content_audit.getId());
@@ -431,9 +452,11 @@ public class DomainController {
 				
 				//get total information architecture audit pages
 				Set<Audit> info_architecture_audits = audit_record_service.getAllInformationArchitectureAudits(page_audit.getId());
+				seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
+				menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
+				performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
+				
 				for(Audit ia_audit: info_architecture_audits) {
-					log.warn("Info Architecture audits score points  ::  "+ia_audit.getPoints());
-					log.warn("Info Architecture audits total possible points ::  "+ia_audit.getTotalPossiblePoints());
 					//get issues
 					Set<UXIssueMessage> issues = audit_service.getIssues(ia_audit.getId());
 					for( UXIssueMessage issue: issues ) {
@@ -454,7 +477,6 @@ public class DomainController {
 					else {
 						score += (ia_audit.getPoints() / (double)ia_audit.getTotalPossiblePoints());
 					}
-					log.warn("info arch audit score :: "+score);
 
 					audit_count++;
 				}
@@ -465,11 +487,15 @@ public class DomainController {
 				
 				
 				//get total aesthetic audit pages
-				Set<Audit> aesthetic_audits = audit_record_service.getAllAestheticAudits(page_audit.getId());
-				for(Audit aesthetic_audit: aesthetic_audits) {
-					log.warn("Aesthetic audits score points  ::  "+aesthetic_audit.getPoints());
-					log.warn("Aesthetic audits total possible points ::  "+aesthetic_audit.getTotalPossiblePoints());
+				Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAudits(page_audit.getId());
+				aesthetic_score = AuditUtils.calculateScore(aesthetics_audits);
+				color_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.COLOR_MANAGEMENT);
+				typography_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.TYPOGRAPHY);
+				whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.WHITESPACE);
+				branding_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.BRANDING);
 
+				for(Audit aesthetic_audit: aesthetics_audits) {
+				
 					//get issues
 					Set<UXIssueMessage> issues = audit_service.getIssues(aesthetic_audit.getId());
 					for( UXIssueMessage issue: issues ) {
@@ -495,14 +521,12 @@ public class DomainController {
 
 					audit_count++;
 				}
-				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetic_audits);
+				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetics_audits);
 				if(is_aesthetic_audit_complete) {
 					aesthetic_audits_complete++;
 				}
 			}
 			
-			log.warn("Score before normalizaton :: "+score);
-			log.warn("audit count :: "+audit_count);
 			double overall_score = ( score / (double)audit_count ) * 100.0 ;
 			
 			//build stats object
@@ -512,12 +536,23 @@ public class DomainController {
 														page_count, 
 														content_audits_complete,
 														content_audits_complete / (double)audit_records.size(),
+														written_content_score,
+														imagery_score, 
+														videos_score,
+														audio_score,
 														audit_record.getContentAuditMsg(),
-														info_arch_audits_complete, 
+														info_arch_audits_complete,
 														info_arch_audits_complete / (double)audit_records.size(),
+														seo_score,
+														menu_analysis_score,
+														performance_score,
 														audit_record.getInfoArchMsg(),
 														aesthetic_audits_complete,
 														aesthetic_audits_complete / (double)audit_records.size(),
+														color_score,
+														typography_score,
+														whitespace_score,
+														branding_score,
 														audit_record.getAestheticMsg(),
 														overall_score,
 														high_issue_count,

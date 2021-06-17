@@ -7,6 +7,7 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditSubcategory;
 
 public class AuditUtils {
 
@@ -121,5 +122,25 @@ public class AuditUtils {
 	
 	public static boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
 		return audits.size() == 3;
+	}
+
+	public static double calculateSubcategoryScore(Set<Audit> audits, AuditSubcategory subcategory) {
+		assert audits != null;
+		
+		double score = 0.0;
+		int audit_cnt = 0;
+	
+		for(Audit audit: audits) {
+			if(audit.getTotalPossiblePoints() == 0 || !subcategory.equals(audit.getSubcategory())) {
+				continue;
+			}
+			audit_cnt++;
+			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
+		}
+		
+		if(audit_cnt == 0) {
+			return -1.0;
+		}
+		return score / (double)audit_cnt;
 	}
 }

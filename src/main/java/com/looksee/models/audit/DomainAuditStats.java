@@ -27,20 +27,31 @@ public class DomainAuditStats extends AuditStats{
 	
 	public DomainAuditStats(
 			long audit_record_id,
-			LocalDateTime start_time, 
-			LocalDateTime end_time, 
-			long page_count, 
+			LocalDateTime start_time,
+			LocalDateTime end_time,
+			long page_count,
 			long content_pages_audited,
 			double content_audit_progress,
+			double written_content_score,
+			double imagery_score,
+			double videos_score,
+			double audio_score,
 			String content_msg,
 			long info_arch_pages_audited,
 			double info_arch_audit_progress,
+			double seo_score,
+			double menu_analysis_score,
+			double performance_score,
 			String info_arch_msg,
-			long aesthetic_pages_audited,
-			double aesthetic_audit_progress,
+			long aesthetic_pages_audited, 
+			double aesthetic_audit_progress, 
+			double color_score,
+			double typography_score, 
+			double whitespace_score, 
+			double branding_score,
 			String aesthetic_msg,
 			double overall_score,
-			long high_impact_issues,
+			long high_impact_issues, 
 			long mid_impact_issues,
 			long low_impact_issues
 	) {
@@ -50,13 +61,27 @@ public class DomainAuditStats extends AuditStats{
 		setSubcategoryStats(new HashSet<>());
 		setContentPagesAudited(content_pages_audited);
 		setContentAuditProgress(content_audit_progress);
+		setWrittenContentScore(written_content_score);
+		setImageryScore(imagery_score);
+		setVideosScore(videos_score);
+		setAudioScore(audio_score);
+
 		setContentMsg(content_msg);
 		setInfoArchPagesAudited(info_arch_pages_audited);
 		setInfoArchAuditProgress(info_arch_audit_progress);
+		setSeoScore(seo_score);
+		setMenuAnalysisScore(menu_analysis_score);
+		setPerformanceScore(performance_score);
 		setInfoArchMsg(info_arch_msg);
+		
 		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
+		setColorScore(color_score);
+		setTypographyScore(typography_score);
+		setWhitespaceScore(whitespace_score);
+		setBrandingScore(branding_score);
 		setAestheticMsg(aesthetic_msg);
+		
 		setOverallScore(overall_score);
 		setTotalPagesAudited(page_count);
 		setHighImpactIssueCount(high_impact_issues);

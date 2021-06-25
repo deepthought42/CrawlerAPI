@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.AuditStats;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.ExecutionStatus;

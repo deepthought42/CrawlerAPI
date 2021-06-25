@@ -9,3 +9,5 @@ src/main/resources/qanairy.jks
 *.p12
 .settings/org.eclipse.jdt.core.prefs
 .classpath
+
+JavaBooks.xlsx

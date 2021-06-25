@@ -100,4 +100,8 @@ public class AccountService {
 		
 		return account_repo.addAuditRecord(id, audit_record_id);
 	}
+
+	public Set<Account> findForAuditRecord(long id) {
+		return account_repo.findAllForAuditRecord(id);
+	}
 }

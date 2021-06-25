@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.AuditStats;
 import com.looksee.models.Domain;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.ExecutionStatus;
@@ -16,6 +15,7 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class DomainAuditRecord extends AuditRecord {
+
 	
 	@Relationship(type = "HAS")
 	private Set<PageAuditRecord> page_audit_records;

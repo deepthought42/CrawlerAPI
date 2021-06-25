@@ -21,18 +21,22 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
-import com.looksee.models.AuditStats;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.Priority;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -91,17 +95,18 @@ public class AuditRecordController {
 	) throws UnknownAccountException {
     	log.warn("requesting report and saving account....");
     	//create an account
-    	acct = account_service.save(acct);
+    	Account acct_record = account_service.findByEmail(acct.getEmail());
+    	if(acct_record == null) {
+    		acct_record = account_service.save(acct);
+    	}
+    	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct_record.getId());
+    	account_service.addAuditRecord(acct_record.getId(), audit_record_id);
     	
-    	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct.getId());
-    	account_service.addAuditRecord(acct.getId(), audit_record_id);
-    	
-    	log.warn("sending email for user ...."+acct.getEmail());
+    	log.warn("sending email for user ...."+acct_record.getEmail());
     	//Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
-    	String email_msg = "A UX audit has been requested by \n\n email : " + acct.getEmail() + " \n\n audit record id = "+audit_record_id;
+    	String email_msg = "A UX audit has been requested by \n\n email : " + acct_record.getEmail() + " \n\n audit record id = "+audit_record_id;
     	sendgrid_service.sendMail(email_msg);
     	
-    	log.warn("email sent!!");
        	//send request to support@look-see.com to send email once audit is complete
     }
 
@@ -205,51 +210,103 @@ public class AuditRecordController {
 									@PathVariable("audit_record_id") long audit_record_id
 	) throws UnknownAccountException {
     	//get audit record
-    	Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
+    	Optional<AuditRecord> audit_record_opt = audit_record_service.findById(audit_record_id);
     	
-    	if(audit_record.isPresent()) {
-    		AuditRecord audit = audit_record.get();
+    	if(audit_record_opt.isPresent()) {   
+    		AuditRecord audit_record = audit_record_opt.get();
     		long content_audits_complete = 0;
     		long info_arch_audits_complete = 0;
     		long aesthetic_audits_complete = 0;
     		
-    		if( audit instanceof PageAuditRecord ) {
+    		double content_score = 0.0;
+    		double written_content_score = 0.0;
+    		double imagery_score = 0.0;
+    		double videos_score = 0.0;
+    		double audio_score = 0.0;
+    		
+    		double info_arch_score = 0.0;
+    		double seo_score = 0.0;
+    		double menu_analysis_score = 0.0;
+    		double performance_score = 0.0;
+    		
+    		double aesthetic_score = 0.0;
+    		double color_score = 0.0;
+    		double typography_score = 0.0;
+    		double whitespace_score = 0.0;
+    		double branding_score = 0.0;
+    		
+    		if( audit_record instanceof PageAuditRecord ) {
 
     	    	//get Page Count
 				long page_count = 1;
 				
+				Set<Audit> content_audits = audit_record_service.getAllContentAudits(audit_record.getId());
+				content_score = AuditUtils.calculateScore(content_audits);
+				written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
+				imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
+				videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
+				audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
+
 				//get total content audit pages
-				boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+				boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
 				if(is_content_audit_complete) {
 					content_audits_complete++;
 				}
 				
+				
+				Set<Audit> info_architecture_audits = audit_record_service.getAllContentAudits(audit_record.getId());
+				content_score = AuditUtils.calculateScore(info_architecture_audits);
+				seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
+				menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
+				performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
+
 				//get total information architecture audit pages
-				boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(audit.getId()));
+				boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(info_architecture_audits);
 				if(is_info_arch_audit_complete) {
 					info_arch_audits_complete++;
 				}
 				
+				Set<Audit> aesthetic_audits = audit_record_service.getAllContentAudits(audit_record.getId());
+				content_score = AuditUtils.calculateScore(aesthetic_audits);
+				color_score = AuditUtils.calculateSubcategoryScore(aesthetic_audits, AuditSubcategory.COLOR_MANAGEMENT);
+				typography_score = AuditUtils.calculateSubcategoryScore(aesthetic_audits, AuditSubcategory.TYPOGRAPHY);
+				whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetic_audits, AuditSubcategory.WHITESPACE);
+				branding_score = AuditUtils.calculateSubcategoryScore(aesthetic_audits, AuditSubcategory.BRANDING);
+				
 				//get total aesthetic audit pages
-				boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(audit.getId()));
+				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetic_audits);
 				if(is_aesthetic_audit_complete) {
 					aesthetic_audits_complete++;
 				}
 
 		    	//build stats object
-				AuditStats audit_stats = new AuditStats(audit.getId(), 
-														audit.getStartTime(), 
-														audit.getEndTime(), 
+				AuditStats audit_stats = new AuditStats(audit_record.getId(), 
+														audit_record.getStartTime(), 
+														audit_record.getEndTime(), 
 														page_count, 
 														content_audits_complete,
-														audit.getContentAuditProgress(),
-														audit.getContentAuditMsg(),
+														audit_record.getContentAuditProgress(),
+														content_score,
+														audit_record.getContentAuditMsg(), 
+														written_content_score,
+														imagery_score,
+														videos_score,
+														audio_score,
 														info_arch_audits_complete, 
-														audit.getInfoArchAuditProgress(),
-														audit.getInfoArchMsg(),
-														aesthetic_audits_complete,
-														audit.getAestheticAuditProgress(),
-														audit.getAestheticMsg());
+														audit_record.getInfoArchAuditProgress(), 
+														info_arch_score, 
+														audit_record.getInfoArchMsg(), 
+														seo_score, 
+														menu_analysis_score, 
+														performance_score, 
+														aesthetic_audits_complete, 
+														audit_record.getAestheticAuditProgress(), 
+														aesthetic_score, 
+														audit_record.getAestheticMsg(), 
+														color_score, 
+														typography_score, 
+														whitespace_score, 
+														branding_score);
 				return audit_stats;				
     		}
     		else {
@@ -258,40 +315,136 @@ public class AuditRecordController {
 				//get Page Count
 				long page_count = audit_records.size();
 				
+				double score = 0;
+				int audit_count = 0;
+				long high_issue_count=0;
+				long mid_issue_count=0;
+				long low_issue_count=0;
+				
 				for(PageAuditRecord page_audit : audit_records) {
 					//get total content audit pages
-					boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(page_audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+					Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+					written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
+					imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
+					videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
+					audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
+
+					for(Audit content_audit: content_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(content_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						
+						score += (content_audit.getPoints() / (double)content_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
 					if(is_content_audit_complete) {
 						content_audits_complete++;
 					}
 					
 					//get total information architecture audit pages
-					boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+					Set<Audit> info_architecture_audits = audit_record_service.getAllInformationArchitectureAudits(page_audit.getId());
+					seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
+					menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
+					performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
+					
+					for(Audit ia_audit: info_architecture_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(ia_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						score += (ia_audit.getPoints() / (double)ia_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(info_architecture_audits);
 					if(is_info_arch_audit_complete) {
 						info_arch_audits_complete++;
 					}
 					
+					
 					//get total aesthetic audit pages
-					boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+					Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAudits(page_audit.getId());
+					color_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.COLOR_MANAGEMENT);
+					typography_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.TYPOGRAPHY);
+					whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.WHITESPACE);
+					branding_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.BRANDING);
+
+					for(Audit aesthetic_audit: aesthetics_audits) {
+						//get issues
+						Set<UXIssueMessage> issues = audit_service.getIssues(aesthetic_audit.getId());
+						for( UXIssueMessage issue: issues ) {
+							if(Priority.HIGH.equals(issue.getPriority())) {
+								high_issue_count++;
+							}
+							else if(Priority.MEDIUM.equals(issue.getPriority())) {
+								mid_issue_count++;
+							}
+							else if(Priority.LOW.equals(issue.getPriority())) {
+								low_issue_count++;
+							}
+						}
+						
+						score += (aesthetic_audit.getPoints() / (double)aesthetic_audit.getTotalPossiblePoints());
+						audit_count++;
+					}
+					boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetics_audits);
 					if(is_aesthetic_audit_complete) {
 						aesthetic_audits_complete++;
 					}
 				}
 				
+				double overall_score = ( score / audit_count ) * 100 ;
+				
 				//build stats object
-				AuditStats audit_stats = new AuditStats(audit.getId(), 
-														audit.getStartTime(), 
-														audit.getEndTime(), 
-														page_count, 
-														content_audits_complete,
-														audit.getContentAuditProgress(),
-														audit.getContentAuditMsg(),
-														info_arch_audits_complete, 
-														audit.getInfoArchAuditProgress(),
-														audit.getInfoArchMsg(),
-														aesthetic_audits_complete,
-														audit.getAestheticAuditProgress(),
-														audit.getAestheticMsg());
+				AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
+															audit_record.getStartTime(),
+															audit_record.getEndTime(),
+															page_count, 
+															content_audits_complete,
+															content_audits_complete / (double)audit_records.size(),
+															written_content_score,
+															imagery_score,
+															videos_score,
+															audio_score,
+															audit_record.getContentAuditMsg(),
+															info_arch_audits_complete,
+															info_arch_audits_complete / (double)audit_records.size(),
+															seo_score,
+															menu_analysis_score,
+															performance_score,
+															audit_record.getInfoArchMsg(),
+															aesthetic_audits_complete,
+															aesthetic_audits_complete / (double)audit_records.size(),
+															color_score,
+															typography_score,
+															whitespace_score,
+															branding_score,
+															audit_record.getAestheticMsg(),
+															overall_score,
+															high_issue_count,
+															mid_issue_count,
+															low_issue_count);
 				
 				return audit_stats;
     		}
@@ -300,18 +453,6 @@ public class AuditRecordController {
     		throw new AuditRecordNotFoundException();
     	}
     }
-
-	private boolean isAestheticsAuditComplete(Set<Audit> audits) {
-		return audits.size() == 2;
-	}
-
-	private boolean isContentAuditComplete(Set<Audit> audits) {
-		return audits.size() == 3;
-	}
-	
-	private boolean isInformationArchitectureAuditComplete(Set<Audit> audits) {
-		return audits.size() == 3;
-	}
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

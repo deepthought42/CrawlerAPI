@@ -118,12 +118,12 @@ public class WebCrawlerActor extends AbstractActor{
 						frontier.remove(page_url_str);
 						if( BrowserUtils.isImageUrl(page_url_str) 
 								|| page_url_str.endsWith(".pdf")
-								|| !page_url_str.contains(domain.getUrl())){
+								|| !page_url_str.contains(domain.getUrl())
+								|| visited.containsKey(page_url_str)){
 							continue;
 						}
 
 						URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
-						page_url_str = BrowserUtils.getPageUrl(page_url_obj);
 						//construct page and add page to list of page states
 						//retrieve html source for page
 						try {
@@ -133,7 +133,6 @@ public class WebCrawlerActor extends AbstractActor{
 							pages.put(page_state.getKey(), page_state);
 							domain_service.addPage(domain.getId(), page_state.getKey());
 							
-							visited.put(page_url_str, page_state);
 							//send message to page data extractor
 							
 							PageStateMessage page_msg = new PageStateMessage(page_state, crawl_action.getDomainId(), crawl_action.getAccountId(), crawl_action.getAuditRecordId());
@@ -167,6 +166,8 @@ public class WebCrawlerActor extends AbstractActor{
 									frontier.put(href, Boolean.TRUE);
 								}
 							}
+							visited.put(page_url_str, page_state);
+							
 						}catch(SocketTimeoutException e) {
 							log.warn("Error occurred while navigating to :: "+page_url_str);
 						}
@@ -199,10 +200,12 @@ public class WebCrawlerActor extends AbstractActor{
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	
+				   	/*
 				   	log.warn("requesting performance audit from performance auditor....");
 				   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 				   	performance_insight_actor.tell(page_state, ActorRef.noSender());
+				   	*/
 				   	
 				   	log.warn("Running information architecture audit via actor");
 					ActorRef content_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)

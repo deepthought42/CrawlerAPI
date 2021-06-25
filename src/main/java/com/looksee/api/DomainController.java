@@ -52,14 +52,18 @@ import com.looksee.models.TestUser;
 import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
+import com.looksee.models.enums.Priority;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
@@ -166,7 +170,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('write:domains')")
+    //@PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(method = RequestMethod.PUT)
     public @ResponseBody Domain update(HttpServletRequest request,
 				 @RequestParam(value="key", required=true) String key,
@@ -199,7 +203,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('write:domains')")
+    //@PreAuthorize("hasAuthority('write:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
     									@RequestBody Domain domain) 
@@ -221,7 +225,7 @@ public class DomainController {
     	account_service.save(acct);
     }
 
-    @PreAuthorize("hasAuthority('read:domains')")
+    //@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	Principal principal = request.getUserPrincipal();
@@ -284,7 +288,7 @@ public class DomainController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-	@PreAuthorize("hasAuthority('delete:domains')")
+	//@PreAuthorize("hasAuthority('delete:domains')")
 	@RequestMapping(method = RequestMethod.DELETE, path="/{domain_id}")
 	public @ResponseBody void remove(HttpServletRequest request,
 										@PathVariable(value="domain_id", required=true) long domain_id)
@@ -359,7 +363,210 @@ public class DomainController {
 		return page_stats;
 	}
 	
-	@PreAuthorize("hasAuthority('read:domains')")
+	/**
+     * Creates a new {@link Observation observation} 
+     * 
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.GET, value="/{domain_id}/stats")
+    public @ResponseBody AuditStats getAuditStat(
+						    		HttpServletRequest request,
+									@PathVariable("domain_id") long domain_id
+	) throws UnknownAccountException {
+       	//get most recent audit record for the domain
+    	Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain_id);
+    	
+    	if(audit_record_opt.isPresent()) {   
+    		AuditRecord audit_record = audit_record_opt.get();
+    		long content_audits_complete = 0;
+    		long info_arch_audits_complete = 0;
+    		long aesthetic_audits_complete = 0;
+    			
+			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
+			//get Page Count
+			long page_count = audit_records.size();
+			
+			double score = 0.0;
+			int audit_count = 0;
+			long high_issue_count=0;
+			long mid_issue_count=0;
+			long low_issue_count=0;
+			
+    		double content_score = 0.0;
+    		double written_content_score = 0.0;
+    		double imagery_score = 0.0;
+    		double videos_score = 0.0;
+    		double audio_score = 0.0;
+    		
+    		double info_arch_score = 0.0;
+    		double seo_score = 0.0;
+    		double menu_analysis_score = 0.0;
+    		double performance_score = 0.0;
+    		
+    		double aesthetic_score = 0.0;
+    		double color_score = 0.0;
+    		double typography_score = 0.0;
+    		double whitespace_score = 0.0;
+    		double branding_score = 0.0;
+    		
+			log.warn("audit records found :: "+audit_records.size());
+			for(PageAuditRecord page_audit : audit_records) {
+				//get total content audit pages
+				Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+				written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
+				imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
+				videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
+				audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
+
+				for(Audit content_audit: content_audits) {
+					
+					//get issues
+					Set<UXIssueMessage> issues = audit_service.getIssues(content_audit.getId());
+					for( UXIssueMessage issue: issues ) {
+						if(Priority.HIGH.equals(issue.getPriority())) {
+							high_issue_count++;
+						}
+						else if(Priority.MEDIUM.equals(issue.getPriority())) {
+							mid_issue_count++;
+						}
+						else if(Priority.LOW.equals(issue.getPriority())) {
+							low_issue_count++;
+						}
+					}
+					
+					if(content_audit.getTotalPossiblePoints() == 0) {
+						score += 1;
+					}
+					else {
+						score += ( content_audit.getPoints() / (double)content_audit.getTotalPossiblePoints());
+					}
+					
+					log.warn("content audit score :: "+score);
+					audit_count++;
+				}
+				boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+				if(is_content_audit_complete) {
+					content_audits_complete++;
+				}
+				
+				//get total information architecture audit pages
+				Set<Audit> info_architecture_audits = audit_record_service.getAllInformationArchitectureAudits(page_audit.getId());
+				seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
+				menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
+				performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
+				
+				for(Audit ia_audit: info_architecture_audits) {
+					//get issues
+					Set<UXIssueMessage> issues = audit_service.getIssues(ia_audit.getId());
+					for( UXIssueMessage issue: issues ) {
+						if(Priority.HIGH.equals(issue.getPriority())) {
+							high_issue_count++;
+						}
+						else if(Priority.MEDIUM.equals(issue.getPriority())) {
+							mid_issue_count++;
+						}
+						else if(Priority.LOW.equals(issue.getPriority())) {
+							low_issue_count++;
+						}
+					}
+					
+					if(ia_audit.getTotalPossiblePoints() == 0) {
+						score += 1;
+					}
+					else {
+						score += (ia_audit.getPoints() / (double)ia_audit.getTotalPossiblePoints());
+					}
+
+					audit_count++;
+				}
+				boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(info_architecture_audits);
+				if(is_info_arch_audit_complete) {
+					info_arch_audits_complete++;
+				}
+				
+				
+				//get total aesthetic audit pages
+				Set<Audit> aesthetics_audits = audit_record_service.getAllAestheticAudits(page_audit.getId());
+				aesthetic_score = AuditUtils.calculateScore(aesthetics_audits);
+				color_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.COLOR_MANAGEMENT);
+				typography_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.TYPOGRAPHY);
+				whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.WHITESPACE);
+				branding_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.BRANDING);
+
+				for(Audit aesthetic_audit: aesthetics_audits) {
+				
+					//get issues
+					Set<UXIssueMessage> issues = audit_service.getIssues(aesthetic_audit.getId());
+					for( UXIssueMessage issue: issues ) {
+						if(Priority.HIGH.equals(issue.getPriority())) {
+							high_issue_count++;
+						}
+						else if(Priority.MEDIUM.equals(issue.getPriority())) {
+							mid_issue_count++;
+						}
+						else if(Priority.LOW.equals(issue.getPriority())) {
+							low_issue_count++;
+						}
+					}
+					
+					if(aesthetic_audit.getTotalPossiblePoints() == 0) {
+						score += 1;
+					}
+					else {
+						score += (aesthetic_audit.getPoints() / (double)aesthetic_audit.getTotalPossiblePoints());
+					}
+					
+					log.warn("aesthetic audit score :: "+score);
+
+					audit_count++;
+				}
+				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetics_audits);
+				if(is_aesthetic_audit_complete) {
+					aesthetic_audits_complete++;
+				}
+			}
+			
+			double overall_score = ( score / (double)audit_count ) * 100.0 ;
+			
+			//build stats object
+			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
+														audit_record.getStartTime(),
+														audit_record.getEndTime(),
+														page_count, 
+														content_audits_complete,
+														content_audits_complete / (double)audit_records.size(),
+														written_content_score,
+														imagery_score, 
+														videos_score,
+														audio_score,
+														audit_record.getContentAuditMsg(),
+														info_arch_audits_complete,
+														info_arch_audits_complete / (double)audit_records.size(),
+														seo_score,
+														menu_analysis_score,
+														performance_score,
+														audit_record.getInfoArchMsg(),
+														aesthetic_audits_complete,
+														aesthetic_audits_complete / (double)audit_records.size(),
+														color_score,
+														typography_score,
+														whitespace_score,
+														branding_score,
+														audit_record.getAestheticMsg(),
+														overall_score,
+														high_issue_count,
+														mid_issue_count,
+														low_issue_count);
+			
+			return audit_stats;
+    	}
+    	else {
+    		throw new AuditRecordNotFoundException();
+    	}
+    }
+	
+	//@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/pages")
     public @ResponseBody Set<PageState> getAllPages(HttpServletRequest request, 
 											   @RequestParam(value="url", required=true) String url
@@ -399,7 +606,7 @@ public class DomainController {
 	 * @return a unique set of {@link Element}s belonging to all page states for the {@link Domain} with the given host
 	 * @throws UnknownAccountException
 	 */
-	@PreAuthorize("hasAuthority('read:domains')")
+	//@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_elements")
     public @ResponseBody Set<Element> getAllElementStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
@@ -435,7 +642,7 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
-    @PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/{domain_id}/users", method = RequestMethod.POST)
     public @ResponseBody TestUser addUser(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id,
@@ -578,7 +785,7 @@ public class DomainController {
 	 * @throws UnknownAccountException 
 	 * @throws UnknownUserException
 	 */
-    @PreAuthorize("hasAuthority('create:test_user')")
+    //@PreAuthorize("hasAuthority('create:test_user')")
     @RequestMapping(path="test_users/$user_id", method = RequestMethod.DELETE)
     public @ResponseBody void delete(HttpServletRequest request,
     									@RequestParam(value="domain_key", required=true) String domain_key,
@@ -604,7 +811,7 @@ public class DomainController {
      * @throws UnknownAccountException
      * @throws MalformedURLException
      */
-    @PreAuthorize("hasAuthority('create:domains')")
+    //@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id) 
@@ -637,7 +844,7 @@ public class DomainController {
      * @return
      * @throws Exception
      */
-    @PreAuthorize("hasAuthority('execute:audits')")
+    //@PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path="/{domain_id}/start", method = RequestMethod.POST)
 	public @ResponseBody AuditRecord startAudit(
 			HttpServletRequest request,
@@ -686,7 +893,7 @@ public class DomainController {
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 
      */
-    @PreAuthorize("hasAuthority('read:actions')")
+    //@PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET, path="/audits")
     public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
 			@PathVariable(value="host", required=true) String host

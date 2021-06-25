@@ -2,10 +2,15 @@ package com.looksee.api;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -14,10 +19,13 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +41,7 @@ import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
+import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditFactory;
 import com.looksee.models.audit.AuditRecord;
@@ -48,6 +57,7 @@ import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.ObservationType;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -55,12 +65,16 @@ import com.looksee.services.AuditService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -109,6 +123,9 @@ public class AuditController {
     @Autowired
 	private AuditFactory audit_factory;
     
+	@Autowired
+	private UXIssueMessageService ux_issue_service;
+    
     /**
      * Retrieves list of {@link PerformanceInsight insights} with a given key
      * 
@@ -149,57 +166,6 @@ public class AuditController {
     	
         return audit_set;
     }
-    
-    
-    /**
-     * Retrieves set of {@link Audit audits} for the most recent page with a given page url
-     * 
-     * @param id
-     * @return {@link Audit audit} with given ID
-     * @throws MalformedURLException 
-     */
-    /*
-    @RequestMapping(method= RequestMethod.GET, path="/pages")
-    public @ResponseBody PageAudits getAuditsByPage(
-    		HttpServletRequest request,
-    		@RequestParam("url") String url
-	) throws MalformedURLException {
-    	URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(url));
-    	
-    	String page_url = BrowserUtils.getPageUrl(sanitized_url);
-    	
-    	//Get most recent audits
-    	Optional<PageAuditRecord> audit_record_opt = domain_service.getMostRecentPageAuditRecord(page_url);
-
-    	if(!audit_record_opt.isPresent()) {
-    		return null;
-    	}
-    	
-    	PageAuditRecord audit_record = audit_record_opt.get();
-   		//PageState page_state = page_state_service.findByUrl(page_url);
-   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
-   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getId());
-
-   		log.warn("page state found for audit record :: "+page_state.getKey());
-	   	SimplePage simple_page = new SimplePage(
-	   									page_state.getUrl(), 
-	   									page_state.getViewportScreenshotUrl(), 
-	   									page_state.getFullPageScreenshotUrl(), 
-	   									page_state.getFullPageWidth(), 
-	   									page_state.getFullPageHeight(),
-	   									page_state.getSrc(), 
-	   									page_state.getKey(), 
-	   									page_state.getId());
-
-
-    	log.warn("Audit record key :: "+audit_record.getKey());
-
-   		PageAudits page_audits = new PageAudits( ExecutionStatus.COMPLETE, audits, simple_page);
-    	
-    	return page_audits;
-    }
-    */
-    
     
 
 	/**
@@ -382,6 +348,82 @@ public class AuditController {
 	   		throw new MissingSubscriptionException();
 	   	}
 	}
+	
+	/**
+	 * Get Excel file for {@link AuditRecord} with the given id
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+    @RequestMapping(path="/{audit_id}/excel", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
+    									@PathVariable(value="audit_id", required=true) long audit_id) 
+    											throws UnknownAccountException, 
+														FileNotFoundException, IOException {
+    	Optional<AuditRecord> audit_opt = audit_record_service.findById(audit_id);
+    	if(!audit_opt.isPresent()) {
+    		throw new AuditRecordNotFoundException();
+    	}
+    	
+    	List<UXIssueReportDto> ux_issues = new ArrayList<>();
+		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_opt.get().getId());
+		PageState page = audit_record_service.getPageStateForAuditRecord(audit_opt.get().getId());	
+    	for(Audit audit : audits) {
+    		log.warn("audit key :: "+audit.getKey());
+    		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
+    		log.warn("audit issue messages size ...."+messages.size());
+    		
+    		for(UXIssueMessage message : messages) {
+    			String element_selector = "";
+    			if(ObservationType.ELEMENT.equals(message.getType()) 
+					|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
+    				element_selector = ux_issue_service.getElement(message.getId()).getCssSelector();
+    			}
+    			else {
+    				element_selector = "No specific element is associated with this issue";
+    			}
+    			
+    			UXIssueReportDto issue_dto = new UXIssueReportDto(message.getRecommendation(),
+    															  message.getPriority(),
+    															  message.getDescription(),
+    															  message.getType(),
+    															  message.getCategory(),
+    															  message.getWcagCompliance(),
+    															  message.getLabels(),
+    															  audit.getWhyItMatters(),
+    															  message.getTitle(),
+    															  element_selector,
+    															  page.getUrl());
+    			ux_issues.add(issue_dto);
+    		}
+    		
+    	}
+    	log.warn("UX audits :: "+ux_issues.size());
+
+    	URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(page.getUrl()));
+    	XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
+        
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            workbook.write(outputStream);
+
+    		HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; " + sanitized_domain_url.getHost()+".xlsx");
+            
+            return ResponseEntity.ok()
+            		.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            		.cacheControl(CacheControl.noCache())
+            		.headers(headers)
+            		.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
+        }
+    }
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

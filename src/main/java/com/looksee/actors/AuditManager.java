@@ -19,24 +19,28 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.Account;
-import com.looksee.models.AuditStats;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditStage;
+import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.DomainAuditMessage;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageStateAuditComplete;
 import com.looksee.models.message.PageStateMessage;
+import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
+import com.looksee.services.SendGridMailService;
+import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -70,8 +74,14 @@ public class AuditManager extends AbstractActor{
 	private AuditRecordService audit_record_service;
 	
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
 	private AuditService audit_service;
 
+	@Autowired
+	private SendGridMailService mail_service;
+	
 	private ActorRef web_crawler_actor;
 	private Account account;
 	
@@ -125,6 +135,24 @@ public class AuditManager extends AbstractActor{
 				 		long content_audits_complete = 0;
 			    		long info_arch_audits_complete = 0;
 			    		long aesthetic_audits_complete = 0;
+			    		
+			    		double content_score = 0.0;
+			    		double written_content_score = 0.0;
+			    		double imagery_score = 0.0;
+			    		double videos_score = 0.0;
+			    		double audio_score = 0.0;
+			    		
+			    		double info_arch_score = 0.0;
+			    		double seo_score = 0.0;
+			    		double menu_analysis_score = 0.0;
+			    		double performance_score = 0.0;
+			    		
+			    		double aesthetic_score = 0.0;
+			    		double color_score = 0.0;
+			    		double typography_score = 0.0;
+			    		double whitespace_score = 0.0;
+			    		double branding_score = 0.0;
+			    		
 						if( record.isPresent() ) {
 							if(record.get() instanceof DomainAuditRecord) {								
 								DomainAuditRecord audit_record = (DomainAuditRecord)record.get();
@@ -134,20 +162,38 @@ public class AuditManager extends AbstractActor{
 								long page_count = audit_records.size();
 								
 								for(PageAuditRecord page_audit : audit_records) {
+									Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+									content_score = AuditUtils.calculateScore(content_audits);
+									written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
+									imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
+									videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
+									audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
 									//get total content audit pages
-									boolean is_content_audit_complete = isContentAuditComplete(audit_record_service.getAllContentAudits(page_audit.getId())); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
+									boolean is_content_audit_complete = isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
 									if(is_content_audit_complete) {
 										content_audits_complete++;
 									}
 									
+									Set<Audit> info_architecture_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+									info_arch_score = AuditUtils.calculateScore(info_architecture_audits);
+									seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
+									menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
+									performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
 									//get total information architecture audit pages
-									boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+									boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(info_architecture_audits);
 									if(is_info_arch_audit_complete) {
 										info_arch_audits_complete++;
 									}
 									
+									Set<Audit> aesthetics_audits = audit_record_service.getAllContentAudits(page_audit.getId());
+									aesthetic_score = AuditUtils.calculateScore(aesthetics_audits);
+									color_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.COLOR_MANAGEMENT);
+									typography_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.TYPOGRAPHY);
+									whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.WHITESPACE);
+									branding_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.BRANDING);
+
 									//get total aesthetic audit pages
-									boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+									boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(aesthetics_audits);
 									if(is_aesthetic_audit_complete) {
 										aesthetic_audits_complete++;
 									}
@@ -160,13 +206,27 @@ public class AuditManager extends AbstractActor{
 																		page_count, 
 																		content_audits_complete,
 																		audit_record.getContentAuditProgress(),
-																		audit_record.getContentAuditMsg(),
+																		content_score,
+																		audit_record.getContentAuditMsg(), 
+																		written_content_score,
+																		imagery_score,
+																		videos_score,
+																		audio_score,
 																		info_arch_audits_complete, 
-																		audit_record.getInfoArchAuditProgress(),
-																		audit_record.getInfoArchMsg(),
+																		audit_record.getInfoArchAuditProgress(), 
+																		info_arch_score, 
+																		audit_record.getInfoArchMsg(), 
+																		seo_score,
+																		menu_analysis_score,
+																		performance_score,
 																		aesthetic_audits_complete,
 																		audit_record.getAestheticAuditProgress(),
-																		audit_record.getAestheticMsg());
+																		aesthetic_score,
+																		audit_record.getAestheticMsg(),
+																		color_score,
+																		typography_score,
+																		whitespace_score,
+																		branding_score);
 								
 								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
 							}		
@@ -206,8 +266,12 @@ public class AuditManager extends AbstractActor{
 
 					Set<PageState> pages = domain_service.getPages(domain.getUrl());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
-
-					if( pages.size() == page_states.size()) {						
+					
+					//find user account
+					Account account = account_service.findById(audit_complete.getAccountId()).get();
+					if( pages.size() == page_states.size()) {
+						//send domain audit complete
+						mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						//AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)

@@ -59,6 +59,9 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (t:Account{username:$username}),(a:AuditRecord) WHERE id(a)=$audit_record_id CREATE (t)-[r:HAS]->(a) RETURN r")
 	public AuditRecord addAuditRecord(@Param("username") String username, @Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (t:Account),(a:AuditRecord) WHERE id(a)=$audit_record_id AND id(t)=$account_id CREATE (t)-[r:HAS]->(a) RETURN r")
+	@Query("MATCH (t:Account),(a:AuditRecord) WHERE id(a)=$audit_record_id AND id(t)=$account_id CREATE (t)-[r:HAS]->(a) RETURN a")
 	public AuditRecord addAuditRecord(@Param("account_id") long account_id, @Param("audit_record_id") long audit_record_id);
+
+	@Query("MATCH (account:Account)-[]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account")
+	public Set<Account> findAllForAuditRecord(@Param("audit_record_id") long id);
 }

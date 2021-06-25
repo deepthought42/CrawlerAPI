@@ -301,11 +301,14 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		}
 		
 		
-		
+		/*
 		String why_it_matters = "Dead links are links whose source can't be found. When users encounter dead links"
 				+ " they perceive the validity of what you have to say as less valuable. Often, after experiencing a"
-				+ " dead link, users bounce in search of a mord()e reputable source.";
-		
+				+ " dead link, users bounce in search of a more reputable source.";
+		*/
+		String why_it_matters = "Links without text are less accessible as well as generally impacting usability. "
+				+ "When links don't have text, users that rely on screen readers are unable to understand what links without text are meant to accomplish."
+				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";
 		
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");

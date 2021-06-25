@@ -350,7 +350,7 @@ public class AuditController {
 	}
 	
 	/**
-	 * Get Excel file for domain with the given id
+	 * Get Excel file for {@link AuditRecord} with the given id
 	 * @param request
 	 * @param domain_id
 	 * @param username

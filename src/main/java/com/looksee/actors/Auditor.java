@@ -49,9 +49,6 @@ public class Auditor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private ActorSystem actor_system;
-	
-	@Autowired
 	private AuditService audit_service;
 	
 	@Autowired
@@ -106,12 +103,16 @@ public class Auditor extends AbstractActor{
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 						log.warn("performing all other audits");
 						
-			   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state_msg.getPageState());
+			   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits( audit_category, 
+			   																					page_state_msg.getPageState());
 			   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
 			   			audits.addAll(rendered_audits_executed);
 			   		}
 		   			
-					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getPageState());
+					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getDomainId(), 
+																					   page_state_msg.getAccountId(), 
+																					   page_state_msg.getAuditRecordId(), 
+																					   page_state_msg.getPageState());
 		   			getSender().tell(audit_complete, getSelf());
 		   			
 		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState());
@@ -123,10 +124,10 @@ public class Auditor extends AbstractActor{
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
+					
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//perform audit and return audit result
 				   		List<Audit> audits_executed = new ArrayList<>();
-			   			audits_executed.addAll(audit_factory.executePostRenderDomainAudit(audit_category, domain_msg.getDomain()));
 				   		
 			   			audits_executed = audit_service.saveAll(audits_executed);
 			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());

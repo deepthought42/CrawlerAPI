@@ -18,8 +18,11 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.NonTextColorContrastAudit;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.TextColorContrastAudit;
+import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.SendGridMailService;
+import com.looksee.utils.AuditUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -51,6 +54,13 @@ public class AestheticAuditor extends AbstractActor{
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	
+	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private SendGridMailService email_service;
 	
 	private Account account;
 
@@ -123,6 +133,17 @@ public class AestheticAuditor extends AbstractActor{
 						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
 						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
 					}
+					
+
+					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
+					if(is_audit_complete) {
+						
+						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
+						for(Account account: accounts) {
+							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
+						}
+					}
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

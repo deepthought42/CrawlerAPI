@@ -150,7 +150,7 @@ public class BrowserService {
 		String css_selector = element.cssSelector();
 		ElementState element_state = new ElementState(
 				element.ownText().trim(),
-				web_elem.getText(),
+				element.text(),
 				xpath, 
 				element.tagName(), 
 				attributes, 
@@ -215,10 +215,25 @@ public class BrowserService {
 		
 		//html_doc.attr("id","");
 		for(Element element : html_doc.getAllElements()) {
+			/*
 			element.removeAttr("id")
 				   .removeAttr("name")
 				   .removeAttr("style")
 				   .removeAttr("data-id");
+			*/
+		    List<String>  attToRemove = new ArrayList<>();
+			for (Attribute a : element.attributes()) {
+				if(element.tagName().contentEquals("img") && a.getKey().contentEquals("src")) {
+					continue;
+				}
+		        // transfer it into a list -
+		        // to be sure ALL data-attributes will be removed!!!
+		        attToRemove.add(a.getKey());
+		    }
+
+		    for(String att : attToRemove) {
+		        element.removeAttr(att);
+		   }
 		}
 		
 		return removeComments(html_doc.html());

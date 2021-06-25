@@ -5,7 +5,10 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import com.looksee.models.audit.AuditRecord;
+
 @Service
+@Deprecated
 public class EmailServiceImpl implements EmailService{
   
     @Autowired
@@ -20,4 +23,5 @@ public class EmailServiceImpl implements EmailService{
         message.setText(text);
         emailSender.send(message);
     }
+
 }

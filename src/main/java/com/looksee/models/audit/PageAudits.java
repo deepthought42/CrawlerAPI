@@ -2,7 +2,6 @@ package com.looksee.models.audit;
 
 import java.util.UUID;
 
-import com.looksee.models.AuditStats;
 import com.looksee.models.SimplePage;
 import com.looksee.models.enums.ExecutionStatus;
 

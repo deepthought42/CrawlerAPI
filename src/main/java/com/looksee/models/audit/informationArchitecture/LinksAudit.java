@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.informationArchitecture;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -25,6 +25,10 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;

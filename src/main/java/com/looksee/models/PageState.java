@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +56,7 @@ public class PageState extends LookseeObject {
 	private Set<String> stylesheet_urls;
 	private Set<String> metadata;	
 	private Set<String> favicon_url;
+	private Set<String> keywords;
 	
 	
 	@Relationship(type = "HAS")
@@ -64,6 +66,7 @@ public class PageState extends LookseeObject {
 	public PageState() {
 		super();
 		setElements(new ArrayList<>());
+		setKeywords(new HashSet<>());
 	}
 	
 	/**
@@ -134,6 +137,8 @@ public class PageState extends LookseeObject {
 		setScriptUrls( BrowserService.extractScriptUrls(src));
 		setFaviconUrl(BrowserService.extractIconLinks(src));
 
+		setKeywords(new HashSet<>());
+		
 		setKey(generateKey());
 	}
 
@@ -233,7 +238,7 @@ public class PageState extends LookseeObject {
 							 getFullPageHeight(), 
 							 getUrl(),
 							 getTitle(),
-							 isSecure());
+							 isSecure() );
 	}
 
 	@JsonIgnore
@@ -469,5 +474,13 @@ public class PageState extends LookseeObject {
 
 	public void setIsSecure(boolean is_secure) {
 		this.is_secure = is_secure;
+	}
+
+	public Set<String> getKeywords() {
+		return keywords;
+	}
+
+	public void setKeywords(Set<String> keywords) {
+		this.keywords = keywords;
 	}
 }

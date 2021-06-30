@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.content;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -16,6 +16,10 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -45,7 +49,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state) { 
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages =  new HashSet<>();
@@ -100,6 +104,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			if(element.attr("alt").isEmpty()) {
 				String title = "Image alternative text value is empty";
 				String description = "Image alternative text value is empty";
+				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 

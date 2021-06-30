@@ -11,3 +11,5 @@ src/main/resources/qanairy.jks
 .classpath
 
 JavaBooks.xlsx
+
+*.gz

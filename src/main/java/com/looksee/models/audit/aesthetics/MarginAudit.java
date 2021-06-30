@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.aesthetics;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +28,10 @@ import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
+import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;

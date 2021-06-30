@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.informationArchitecture;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -16,6 +16,11 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.PageStateIssueMessage;
+import com.looksee.models.audit.Score;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -303,9 +308,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
-			Set<UXIssueMessage> favicon_issues = new HashSet<>();
 
-			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
+			PageStateIssueMessage title_issue = new PageStateIssueMessage(
 															page_state, 
 															description, 
 															recommendation,
@@ -314,8 +318,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															labels,
 															ada_compliance,
 															issue_title);
-			favicon_issues.add(favicon_issue);
-			issue_messages.add(favicon_issue);
+			issue_messages.add(title_issue);
 
 			points += 0;				
 		}

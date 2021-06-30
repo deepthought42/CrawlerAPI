@@ -11,6 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.PageState;
+import com.looksee.models.audit.aesthetics.ColorPaletteAudit;
+import com.looksee.models.audit.aesthetics.FontAudit;
+import com.looksee.models.audit.aesthetics.MarginAudit;
+import com.looksee.models.audit.aesthetics.NonTextColorContrastAudit;
+import com.looksee.models.audit.aesthetics.PaddingAudit;
+import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
+import com.looksee.models.audit.aesthetics.TypefacesAudit;
+import com.looksee.models.audit.content.ImageAltTextAudit;
+import com.looksee.models.audit.content.ReadabilityAudit;
+import com.looksee.models.audit.informationArchitecture.LinksAudit;
+import com.looksee.models.audit.informationArchitecture.SecurityAudit;
+import com.looksee.models.audit.informationArchitecture.TitleAndHeaderAudit;
 import com.looksee.models.enums.AuditCategory;
 
 /**

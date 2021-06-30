@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.aesthetics;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -19,6 +19,11 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ColorContrastIssueMessage;
+import com.looksee.models.audit.ColorData;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;

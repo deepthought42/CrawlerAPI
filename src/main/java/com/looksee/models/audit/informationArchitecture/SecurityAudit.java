@@ -64,15 +64,15 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 				String wcag_compliance = "";
 				String recommendation = "Setup ssl for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that is serving your site.";
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
-						Priority.HIGH,
-						description,
-						ObservationType.SECURITY,
-						AuditCategory.INFORMATION_ARCHITECTURE,
-						wcag_compliance,
-						new HashSet<>(),
-						why_it_matters,
-						title);
+												recommendation,
+												Priority.HIGH,
+												description,
+												ObservationType.SECURITY,
+												AuditCategory.INFORMATION_ARCHITECTURE,
+												wcag_compliance,
+												new HashSet<>(),
+												why_it_matters,
+												title);
 				issue_messages.add(ux_issue);
 		}
 		else {

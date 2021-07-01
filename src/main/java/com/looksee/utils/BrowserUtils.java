@@ -488,7 +488,15 @@ public class BrowserUtils {
            
         //dumpl all cert info
         print_https_cert(con);
-        return con.getServerCertificates().length > 0;
+        boolean is_secure = false;
+        try{
+        	is_secure = con.getServerCertificates().length > 0;
+        }
+        catch(Exception e) {
+        	return is_secure;
+        }
+        
+        return is_secure;
         /*
 		return url.getProtocol().contains("https")
 					&& (title.contentEquals("Privacy Error")

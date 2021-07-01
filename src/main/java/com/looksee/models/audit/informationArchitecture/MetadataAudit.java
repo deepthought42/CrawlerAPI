@@ -70,13 +70,13 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		int points = title_score.getPointsAchieved() + description_score.getPointsAchieved() + refresh_score.getPointsAchieved();
 		int max_points = title_score.getMaxPossiblePoints() + description_score.getMaxPossiblePoints() + refresh_score.getMaxPossiblePoints();
 		
-		log.warn("METADATRA AUDIT SCORE   ::   "+points +" / " +max_points);
+		log.warn("METADATA AUDIT SCORE   ::   "+points +" / " +max_points);
 		String why_it_matters = "Metadata tells search engines what your web page has to offer. By using metadata correctly, you can boost your relevancy in search results. Metadata provides search engines with the most important information about your web pages, including titles and descriptions.";
 		String description = "";
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
-						 AuditName.TITLES,
+						 AuditName.METADATA,
 						 points,
 						 issue_messages,
 						 AuditLevel.PAGE,
@@ -146,7 +146,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String why_it_matters = "When your title is too short or too long then users aren't able to easily identify what to expect from a page.";
 			
 			
-			new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+			issue_messages.add(new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title));
 		}
 		max_points++;
 		
@@ -267,6 +267,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		int score = 0;
 		int max_points = 0;
 		
+		int description_count = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		Document html_doc = Jsoup.parse(page_state.getSrc());
@@ -277,6 +278,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			//if element has attribute name="description" then add 1 to score
 			if(element.attr("name").contentEquals("description")) {
 				score++;
+				description_count++;
 				//if element with type description contains text then add 1 to score
 				if(!element.text().isEmpty()) {
 					score++;
@@ -360,9 +362,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			}
 			max_points += 5;
 		}
-		max_points++;
 
-		if(score == 0) {
+		if(description_count == 0) {
+			max_points = 1;
 			String recommendation = "Add a meta html element with a description of the purpose of your page. Example : <meta name='description'>your description here</meta>";
 			Priority priority = Priority.MEDIUM;
 			String description = "Meta html tags allow you to provide a description that can be used by search engines to help users easily understand what they can accomplish with each page";
@@ -376,6 +378,22 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
 			issue_messages.add(issue_msg);
 			
+		}
+		if(description_count > 1) {
+			score = score / description_count;
+			
+			String recommendation = "Remove extraneous meta description tags";
+			Priority priority = Priority.LOW;
+			String description = description_count + " meta description tags were found.";
+			ObservationType type = ObservationType.SEO;
+			AuditCategory category = AuditCategory.INFORMATION_ARCHITECTURE;
+			String wcag_compliance = "There are no WCAG requirements for this";
+			Set<String> labels = new HashSet<>();
+			String why_it_matters = "Search engines will only show one meta description to users. Having more than 1 meta description doesn't help, and may actually hurt your search ranking";
+			String title= "Too many meta descriptions found";
+			
+			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+			issue_messages.add(issue_msg);
 		}
 		
 		return new Score(score, max_points, issue_messages);
@@ -402,6 +420,19 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		
 		if(refresh_element_count == 0) {
 			score += 1;
+		}
+		else {
+			String recommendation = "Remove the meta tag with the attribute name='refresh'";
+			Priority priority = Priority.HIGH;
+			String description = "Meta tag with name=\"refresh\" was found";
+			ObservationType type = ObservationType.SEO;
+			AuditCategory category = AuditCategory.INFORMATION_ARCHITECTURE;
+			String wcag_compliance = "There are no WCAG requirements for this";
+			Set<String> labels = new HashSet<>();
+			String why_it_matters = "Meta html tags with name=\"refresh\" are discouraged because consistent page refreshes can be disruptive to the experience as well as making a page highly difficult to interact with for people that rely on assistive technologies";
+			String title= "Meta refresh tag found";
+			
+			issue_messages.add(new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title));
 		}
 		max_points++;
 		

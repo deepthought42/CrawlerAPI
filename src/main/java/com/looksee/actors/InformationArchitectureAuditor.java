@@ -123,7 +123,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchMsg("Checking security...");
 					audit_record_service.save(page_audit_record);
 					
-					/*
+					
 					Audit security = security_audit.execute(page);
 					audits.add(security);
 					
@@ -131,7 +131,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Audit complete");
 					page_audit_record = audit_record_service.save(page_audit_record);
-					*/
+					
 					
 					Audit metadata = metadata_auditor.execute(page);
 					audits.add(metadata);

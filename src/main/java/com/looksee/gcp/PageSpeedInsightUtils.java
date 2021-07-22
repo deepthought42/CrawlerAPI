@@ -59,6 +59,7 @@ public class PageSpeedInsightUtils {
 	    //category.add("pwa");
 	    category.add("seo");
 	    runpagespeed.setCategory(category);
+	    
 	    return runpagespeed.execute();
 	}
 	

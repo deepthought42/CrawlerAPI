@@ -240,8 +240,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	*/
-    	log.warn("looking up account for domains 2 ...."+acct.getEmail());
-
+    	
     	Set<Domain> domains = account_service.getDomainsForUser(acct.getEmail());
     	Set<DomainDto> domain_info_set = new HashSet<>();
     	for(Domain domain: domains) {
@@ -249,7 +248,7 @@ public class DomainController {
     		
     		int page_count = 0;
     		if(!audit_record_opt.isPresent()) {
-    			domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), 0, 0, 0, 0, 0) );
+    			domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), 0, 0, 0.0, 0, 0.0, 0, 0.0, 0, 0.0, false) );
     			continue;
     		}
     		//get most recent audit record for this domain
@@ -275,7 +274,20 @@ public class DomainController {
 	    	//add domain stat to set
 			page_count = audit_record_service.getPageAuditRecords(domain_audit.getId()).size();
 
-    		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, content_score, info_arch_score, accessibility_score, aesthetics_score) );
+			//check if there is a current audit running
+			boolean is_audit_running = audit_record_opt.get().getAestheticAuditProgress() < 100 
+										|| audit_record_opt.get().getContentAuditProgress() < 100
+										|| audit_record_opt.get().getInfoArchAuditProgress() < 100;
+    		domain_info_set.add( new DomainDto(domain.getId(), domain.getUrl(), page_count, 
+    											content_score, 
+    											audit_record_opt.get().getContentAuditProgress(), 
+    											info_arch_score, 
+    											audit_record_opt.get().getInfoArchAuditProgress(), 
+    											accessibility_score, 
+    											100.0, 
+    											aesthetics_score, 
+    											audit_record_opt.get().getAestheticAuditProgress(),
+    											is_audit_running) );
     	}
     	return domain_info_set;
     }
@@ -442,7 +454,6 @@ public class DomainController {
 						score += ( content_audit.getPoints() / (double)content_audit.getTotalPossiblePoints());
 					}
 					
-					log.warn("content audit score :: "+score);
 					audit_count++;
 				}
 				boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
@@ -517,8 +528,6 @@ public class DomainController {
 						score += (aesthetic_audit.getPoints() / (double)aesthetic_audit.getTotalPossiblePoints());
 					}
 					
-					log.warn("aesthetic audit score :: "+score);
-
 					audit_count++;
 				}
 				boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetics_audits);

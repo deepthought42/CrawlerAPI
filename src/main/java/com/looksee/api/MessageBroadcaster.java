@@ -198,7 +198,7 @@ public class MessageBroadcaster {
 	}
 
 	public static void sendDomainAdded(String user_id, Domain domain) throws JsonProcessingException {
-		DomainDto domain_dto = new DomainDto(domain.getId(), domain.getUrl(), domain.getPages().size(), 0,0,0,0);
+		DomainDto domain_dto = new DomainDto(domain.getId(), domain.getUrl(), domain.getPages().size(), 0, 0.0, 0, 0.0, 0, 0.0, 0, 0.0, false);
 		
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());

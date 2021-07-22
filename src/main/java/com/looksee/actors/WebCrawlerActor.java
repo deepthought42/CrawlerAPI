@@ -99,6 +99,7 @@ public class WebCrawlerActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
+					/* perform site wide crawl */
 					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
 					String initial_url = domain.getUrl();
 
@@ -110,16 +111,26 @@ public class WebCrawlerActor extends AbstractActor{
 					frontier.put(initial_url, Boolean.TRUE);
 					
 					while(!frontier.isEmpty()) {
-						
 						Map<String, Boolean> external_links = new HashMap<>();
 						//remove link from beginning of frontier
-						String page_url_str = frontier.keySet().iterator().next();
+						String raw_url = frontier.keySet().iterator().next();
+						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(raw_url));
+						String page_url_str = BrowserUtils.getPageUrl(sanitized_url);
 						
-						frontier.remove(page_url_str);
+						frontier.remove(raw_url);
+						if(visited.containsKey(page_url_str)) {
+							continue;
+						}
+						
 						if( BrowserUtils.isImageUrl(page_url_str) 
 								|| page_url_str.endsWith(".pdf")
-								|| !page_url_str.contains(domain.getUrl())
-								|| visited.containsKey(page_url_str)){
+								|| !page_url_str.contains(domain.getUrl())){
+							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(page_url_str));
+							log.warn("does url end with .pdf??   ::  "+ page_url_str.endsWith(".pdf"));
+							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
+							log.warn("contains domain url?  :: "+ page_url_str.contains(domain.getUrl()));
+							log.warn("WebCrawler skipping url :: "+page_url_str);
+							visited.compute(page_url_str, null);
 							continue;
 						}
 
@@ -127,11 +138,15 @@ public class WebCrawlerActor extends AbstractActor{
 						//construct page and add page to list of page states
 						//retrieve html source for page
 						try {
-							PageState page_state = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(page_url_str)));
+							PageState page_state = browser_service.buildPageState(page_url_obj);
 							page_state = page_state_service.save(page_state);
-
+							log.warn("http status =  "+page_state.getHttpStatus());
 							pages.put(page_state.getKey(), page_state);
 							domain_service.addPage(domain.getId(), page_state.getKey());
+							
+							if(page_state.getHttpStatus() == 404) {
+								continue;
+							}
 							
 							//send message to page data extractor
 							
@@ -139,12 +154,23 @@ public class WebCrawlerActor extends AbstractActor{
 							//Send PageVerstion to audit manager
 							getSender().tell(page_msg, getSelf());
 							
-							Document doc = Jsoup.connect(page_url_obj.toString()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get();
+							Document doc = Jsoup.parse(page_state.getSrc());
+									
+									/*Jsoup.connect(page_url_obj.toString())
+												.ignoreHttpErrors(true)
+												.timeout(5000)
+												.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+												.get();
+												*/
 							Elements links = doc.select("a");
 							
 							//iterate over links and exclude external links from frontier
 							for (Element link : links) {
 								String href_str = link.absUrl("href");
+								
+								if(!link.attr("href").isEmpty() && href_str.isEmpty()) {
+									href_str = domain.getUrl() + link.attr("href");
+								}
 								if(href_str == null || href_str.isEmpty()) {
 									continue;
 								}
@@ -152,16 +178,18 @@ public class WebCrawlerActor extends AbstractActor{
 								String href = BrowserUtils.sanitizeUrl(href_str);
 								URL href_url = new URL(href);
 								href = BrowserUtils.getPageUrl(href_url);
-								
+								boolean isExternalLink = BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href);
 								//check if external link
-								if( BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href) || href.startsWith("mailto:")) {
+								if( isExternalLink || href.startsWith("mailto:")) {
 									log.warn("adding to external links :: "+href);
 				   					external_links.put(href, Boolean.TRUE);
 								}
 								else if( !visited.containsKey(href) 
 										&& !frontier.containsKey(href) 
-										&& !BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href)
+										&& !isExternalLink
 								){
+									log.warn("adding to internal links :: "+href);
+
 									//add link to frontier
 									frontier.put(href, Boolean.TRUE);
 								}
@@ -174,6 +202,7 @@ public class WebCrawlerActor extends AbstractActor{
 						catch(HttpStatusException e) {
 							log.warn("HTTP Status Exception occurred while navigating to :: "+page_url_str);
 							e.printStackTrace();
+							visited.put(page_url_str, null);
 						}
 						catch(IllegalArgumentException e) {
 							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);

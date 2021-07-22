@@ -2,13 +2,11 @@ package com.looksee.gcp;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.util.Collections;
 
 import javax.imageio.ImageIO;
 
@@ -25,9 +23,12 @@ import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.looksee.models.enums.BrowserType;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Handles uploading files to Google Cloud Storage
  */
+@Retry(name = "gcp")
 public class GoogleCloudStorage {
 	
 	@SuppressWarnings("unused")

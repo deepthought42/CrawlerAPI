@@ -130,7 +130,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 1;
 			}
 			else if(ease_of_reading_score < 30) {
-				element_points = 0;				
+				element_points = 0;
 			}
 			
 			String title = "Content is " + difficulty_string + " to read";

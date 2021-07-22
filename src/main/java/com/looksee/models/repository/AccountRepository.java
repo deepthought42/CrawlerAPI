@@ -12,7 +12,10 @@ import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Repository
+@Retry(name = "neo4j")
 public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{email:$email}) RETURN account LIMIT 1")
 	Account findByEmail(@Param("email") String username);

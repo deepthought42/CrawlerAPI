@@ -14,10 +14,13 @@ import com.looksee.models.Screenshot;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.PageAuditRecord;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * 
  */
 @Repository
+@Retry(name = "neo4j")
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$key}) RETURN p LIMIT 1")
 	public PageState findByKeyAndUsername(@Param("user_id") String user_id, @Param("key") String key);

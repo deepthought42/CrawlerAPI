@@ -67,8 +67,12 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_msg);
 		}
 		
-		int points = title_score.getPointsAchieved() + description_score.getPointsAchieved() + refresh_score.getPointsAchieved();
-		int max_points = title_score.getMaxPossiblePoints() + description_score.getMaxPossiblePoints() + refresh_score.getMaxPossiblePoints();
+		int normalized_title_score = (title_score.getPointsAchieved()/title_score.getMaxPossiblePoints())*100;
+		int normalized_description_score = (description_score.getPointsAchieved()/description_score.getMaxPossiblePoints())*100;
+		int normalized_refresh_score = (refresh_score.getPointsAchieved()/refresh_score.getMaxPossiblePoints())*100;
+
+		int points = normalized_title_score + normalized_description_score + normalized_refresh_score;
+		int max_points = 300;
 		
 		log.warn("METADATA AUDIT SCORE   ::   "+points +" / " +max_points);
 		String why_it_matters = "Metadata tells search engines what your web page has to offer. By using metadata correctly, you can boost your relevancy in search results. Metadata provides search engines with the most important information about your web pages, including titles and descriptions.";
@@ -170,11 +174,11 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		}
 		else {
 			String recommendation = "Change title to more accurately reflect the content of the page";
-			String title = "Title doesn't reflect content of page";
+			String title = "Description doesn't reflect content of page";
 			
 			Priority priority = Priority.MEDIUM;
 			
-			String description = "It's important that your title accurately describe the content on a page.";
+			String description = "It's important that your title accurately describe the content on the page.";
 			ObservationType type = ObservationType.SEO;
 			AuditCategory category = AuditCategory.INFORMATION_ARCHITECTURE;
 			

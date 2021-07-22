@@ -58,6 +58,7 @@ public class PageState extends LookseeObject {
 	private Set<String> favicon_url;
 	private Set<String> keywords;
 	
+	private int http_status;
 	
 	@Relationship(type = "HAS")
 	private List<ElementState> elements;
@@ -87,6 +88,7 @@ public class PageState extends LookseeObject {
 	 * @param url
 	 * @param title TODO
 	 * @param is_secure TODO
+	 * @param http_status_code TODO
 	 * @throws MalformedURLException 
 	 */
 	public PageState(String screenshot_url, 
@@ -103,7 +105,8 @@ public class PageState extends LookseeObject {
 			long full_page_height, 
 			String url, 
 			String title, 
-			boolean is_secure
+			boolean is_secure, 
+			int http_status_code
 	) {
 		assert screenshot_url != null;
 		assert elements != null;
@@ -130,6 +133,7 @@ public class PageState extends LookseeObject {
 		setUrl(url);
 		setTitle(title);
 		setIsSecure(is_secure);
+		setHttpStatus(http_status_code);
 		
 		setPageName( generatePageName(getUrl()) );
 		setMetadata( BrowserService.extractMetadata(src) );
@@ -238,7 +242,8 @@ public class PageState extends LookseeObject {
 							 getFullPageHeight(), 
 							 getUrl(),
 							 getTitle(),
-							 isSecure() );
+							 isSecure(),
+							 getHttpStatus());
 	}
 
 	@JsonIgnore
@@ -482,5 +487,13 @@ public class PageState extends LookseeObject {
 
 	public void setKeywords(Set<String> keywords) {
 		this.keywords = keywords;
+	}
+
+	public int getHttpStatus() {
+		return http_status;
+	}
+
+	public void setHttpStatus(int http_status) {
+		this.http_status = http_status;
 	}
 }

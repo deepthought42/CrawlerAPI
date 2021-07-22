@@ -1,6 +1,7 @@
 package com.looksee.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private double non_text_contrast;
 	
 	private boolean visible;
+	
 	@Properties
 	private Map<String, String> rendered_css_values = new HashMap<>();
 	
@@ -63,6 +65,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @param css_map
 	 * @param outer_html TODO
 	 * @param css_selector TODO
+	 * @param font_color TODO
+	 * @param background_color TODO
 	 * @param text
 	 * @pre xpath != null
 	 * @pre name != null
@@ -85,9 +89,14 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 						ElementClassification classification, 
 						String outer_html, 
 						boolean isVisible, 
-						String css_selector){
+						String css_selector, 
+						String font_color, 
+						String background_color){
 		assert name != null;
 		assert xpath != null;
+		assert !xpath.isEmpty();
+		assert css_selector != null;
+		assert !css_selector.isEmpty();
 		assert outer_html != null;
 		assert !outer_html.isEmpty();
 		
@@ -106,6 +115,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setClassification(classification);
 		setXpath(xpath);
 		setVisible(isVisible);
+		setForegroundColor(font_color);
+		setBackgroundColor(background_color);
 		setKey(generateKey());
 	}
 	
@@ -119,24 +130,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 			System.out.print( attributes.get(attribute) + " ");
 		}
 		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
-	}
-
-	/**
-	 * checks if css properties match between {@link WebElement elements}
-	 * 
-	 * @param elem
-	 * @return whether attributes match or not
-	 */
-	public boolean cssMatches(ElementState elem){
-		for(String propertyName : rendered_css_values.keySet()){
-			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
-				continue;
-			}
-			if(!rendered_css_values.get(propertyName).equals(elem.getRenderedCssValues().get(propertyName))){
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	/** GETTERS AND SETTERS  **/
@@ -204,15 +197,15 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @return
 	 */
 	public String generateKey() {
-		/*
+		
 		String key = "";
 		List<String> properties = new ArrayList<>(getRenderedCssValues().keySet());
 		Collections.sort(properties);
 		for(String style : properties) {
 			key += getRenderedCssValues().get(style);
 		}
-		*/
-		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getScreenshotUrl());
+		
+		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+getScreenshotUrl()+getOuterHtml());
 	}
 	
 	/**

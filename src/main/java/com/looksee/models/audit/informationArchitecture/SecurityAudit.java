@@ -62,7 +62,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 				String title = "Page isn't secure";
 				String description = page_state.getUrl() + " doesn't use https";
 				String wcag_compliance = "";
-				String recommendation = "Setup ssl for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that is serving your site.";
+				String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
 				UXIssueMessage ux_issue = new UXIssueMessage(
 												recommendation,
 												Priority.HIGH,

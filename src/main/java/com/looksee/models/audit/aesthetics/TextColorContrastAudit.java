@@ -1,5 +1,6 @@
 package com.looksee.models.audit.aesthetics;
 
+import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ImageUtils;
 
 
 /**
@@ -88,12 +90,31 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
 			try {
-				String color = element.getRenderedCssValues().get("color");
-				ColorData text_color = new ColorData(color);
+				String bg_color_css = element.getRenderedCssValues().get("background-color");
+				String bg_image = element.getRenderedCssValues().get("background-image");
+				String bg_color = "255,255,255";
+				
+				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
+					bg_color = bg_color_css;
+				}
+				else if(bg_color_css.contains("rgba") && !element.getScreenshotUrl().isEmpty()) {
+					//extract opacity color
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					bg_color = bkg_color.rgb();	
+				}
+				else if(!element.getScreenshotUrl().isEmpty()) {
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					bg_color = bkg_color.rgb();
+				}
+				
+				ColorData text_color = new ColorData(element.getRenderedCssValues().get("color"));
 				
 				//Identify background color by getting largest color used in picture
 				//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
-				ColorData background_color = new ColorData(element.getBackgroundColor());
+				ColorData background_color = new ColorData(bg_color);
+				element.setBackgroundColor(background_color.rgb());
+				element.setForegroundColor(text_color.rgb());
+				
 				double contrast = ColorData.computeContrast(background_color, text_color);
 				element.setTextContrast(contrast);
 				element = element_state_service.save(element);

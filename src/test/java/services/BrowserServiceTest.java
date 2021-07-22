@@ -11,16 +11,11 @@ import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import com.looksee.api.EntryPoint;
 import com.looksee.browsing.Browser;
-import com.looksee.models.ElementState;
-import com.looksee.models.PageState;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.services.BrowserService;
 import com.looksee.utils.ImageUtils;
@@ -40,27 +35,56 @@ public class BrowserServiceTest {
 		System.out.println("html :: "+html);
 	}
 	
-	//@Test
+	@Test
 	public void isElementVisibleInPanel(){
 		Browser browser = new Browser();
-		browser.setXScrollOffset(0);
-		browser.setYScrollOffset(0);
 		browser.setViewportSize(new Dimension(1224, 844));
 		
-		ElementState element = new ElementState();
-		element.setXLocation(1132);
-		element.setYLocation(0);
-		element.setWidth(80);
-		element.setHeight(56);
+		Point location = new Point(1132, 0);
+		Dimension dimension = new Dimension(80, 56);
 		
-		boolean is_visible = BrowserService.isElementVisibleInPane(browser, element);
+		boolean is_visible = BrowserService.isElementVisibleInPane(browser, location, dimension);
 		assertTrue(is_visible);
+		
+		browser.setXScrollOffset(0);
+		browser.setYScrollOffset(0);
+		browser.setViewportSize(new Dimension(1359, 903));
+		
+		location = new Point(852, 106);
+		dimension = new Dimension(1344, 14);
+		
+		is_visible = BrowserService.isElementVisibleInPane(browser, location, dimension);
+		assertTrue(!is_visible);
 	}
 	
 	public void screenshotFromUrl() throws MalformedURLException, IOException{
 		String checksum = ImageUtils.getChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
 	
 		System.err.println("Checksum :: " + checksum);
+	}
+	
+
+	@Test
+	public void verifyTransformXpathSelectorToCss() {
+		String xpath = "section[2]";
+		String css_selector = BrowserService.transformXpathSelectorToCss(xpath);
+		assertTrue("section:nth-child(2)".contentEquals(css_selector));
+		
+		String xpath2 = "header[1]";
+		String css_selector2 = BrowserService.transformXpathSelectorToCss(xpath2);
+		assertTrue("header:nth-child(1)".contentEquals(css_selector2));
+	}
+	
+	@Test
+	public void verifyGenerateCssSelectorFromXpath() {		
+		String xpath = "//body/section[2]/div[1]";
+		String css_selector = BrowserService.generateCssSelectorFromXpath(xpath);
+		assertTrue("body section:nth-child(2) div:nth-child(1)".contentEquals(css_selector));
+
+		String xpath2 = "//body/header[1]/section[1]/div[1]/div[1]/div[1]";
+		String css_selector2 = BrowserService.generateCssSelectorFromXpath(xpath2);
+		assertTrue("body header:nth-child(1) section:nth-child(1) div:nth-child(1) div:nth-child(1) div:nth-child(1)".contentEquals(css_selector2));
+
 	}
 	
 	//@Test 

@@ -20,6 +20,7 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.repository.PageStateRepository;
 
 
+
 /**
  * Service layer object for interacting with {@link PageState} database layer
  *
@@ -133,11 +134,11 @@ public class PageStateService {
 
 			page_state_record = page_state_repo.save(page_state);
 		}
-		/*
 		else {
-			page_state_record.setElements(getElementStates(page_state_record.getKey()));
+			page_state_record.setHttpStatus(page_state.getHttpStatus());
+			page_state_record = page_state_repo.save(page_state_record);
 		}
-		*/
+		
 		return page_state_record;
 	}
 	

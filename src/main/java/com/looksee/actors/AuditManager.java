@@ -130,7 +130,8 @@ public class AuditManager extends AbstractActor{
 				.match(PageStateMessage.class, page_state_msg -> {
 					log.warn("Received page state :: "+page_state_msg.getPageState().getUrl());
 					//send URL to JourneyExplorer actor
-					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey())) {
+					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey()) 
+							&& page_state_msg.getPageState().getHttpStatus() != 404) {
 						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
 				 		long content_audits_complete = 0;
 			    		long info_arch_audits_complete = 0;
@@ -238,11 +239,17 @@ public class AuditManager extends AbstractActor{
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
 						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
 						*/
+						
+						/**
+						 * NOTE: Performance is disabled because of issue with pages that are not found
+						 * 
 				   		ActorRef insight_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						
 						//rendered_page_state_count++;
 				   		insight_auditor.tell(page_state_msg.getPageState(), getSelf());
+						
+						 */
 						
 						log.warn("Page State Count :: "+page_states_experienced.keySet().size());
 						/*
@@ -268,8 +275,8 @@ public class AuditManager extends AbstractActor{
 					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
 					
 					//find user account
-					Account account = account_service.findById(audit_complete.getAccountId()).get();
 					if( pages.size() == page_states.size()) {
+						Account account = account_service.findById(audit_complete.getAccountId()).get();
 						//send domain audit complete
 						mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);

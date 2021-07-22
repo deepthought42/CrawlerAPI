@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,7 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
+import com.looksee.utils.ImageUtils;
 
 
 /**
@@ -124,7 +126,27 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 							//parent = element_state;
 							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
 							
-							parent_bkg = new ColorData(element_state.getBackgroundColor());
+							String bg_color_css = element_state.getRenderedCssValues().get("background-color");
+							String bg_image = element_state.getRenderedCssValues().get("background-image");
+							String bg_color = "255,255,255";
+							
+							if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
+								bg_color = bg_color_css;
+							}
+							else if(bg_color_css.contains("rgba") && !element_state.getScreenshotUrl().isEmpty()) {
+								//extract opacity color
+								ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_state.getScreenshotUrl()));
+								bg_color = bkg_color.rgb();	
+							}
+							else if(!element_state.getScreenshotUrl().isEmpty()) {
+								ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_state.getScreenshotUrl()));
+								bg_color = bkg_color.rgb();
+							}
+							
+							element_state.setBackgroundColor(bg_color);
+							element_state = element_state_service.save(element_state);
+							
+							parent_bkg = new ColorData(bg_color);
 						}
 					}
 				}
@@ -134,6 +156,26 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
 				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
+				String bg_color_css = element.getRenderedCssValues().get("background-color");
+				String bg_image = element.getRenderedCssValues().get("background-image");
+				String bg_color = "255,255,255";
+				
+				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
+					bg_color = bg_color_css;
+				}
+				else if(bg_color_css.contains("rgba") && !element.getScreenshotUrl().isEmpty()) {
+					//extract opacity color
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					bg_color = bkg_color.rgb();	
+				}
+				else if(!element.getScreenshotUrl().isEmpty()) {
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					bg_color = bkg_color.rgb();
+				}
+				
+				element.setBackgroundColor(bg_color);
+				element = element_state_service.save(element);
+				
 				ColorData element_bkg = new ColorData(element.getBackgroundColor());
 				String border_color_rgb = element_bkg.rgb();
 				if(element.getRenderedCssValues().get("border-inline-start-width") != "0px") {

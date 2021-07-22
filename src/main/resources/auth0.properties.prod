@@ -1,0 +1,15 @@
+##Production
+auth0.domain:auth.look-see.com/
+auth0.issuer:https://auth.look-see.com/
+
+## custom auth0 api
+auth0.audience:https://api.look-see.com/audits
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.look-see.com/
+spring.security.oauth2.client.registration.auth0.client-id=aSlsPI5ENJXKSYHyxaG6oxo46peRT25N
+spring.security.oauth2.client.registration.auth0.client-secret=cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51
+
+auth0.securedRoute: /*
+auth0.base64EncodedSecret: false
+auth0.authorityStrategy: ROLES
+auth0.defaultAuth0ApiSecurityEnabled: true
+auth0.signingAlgorithm: RS256

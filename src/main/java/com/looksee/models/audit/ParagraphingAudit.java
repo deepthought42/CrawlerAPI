@@ -128,7 +128,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
-		String ada_compliance = "EThere are no ADA compliance requirements for this category.";
+		String ada_compliance = "There are no ADA compliance requirements for this category.";
 		
 		for(Sentence sentence : sentences) {			
 			String[] words = sentence.getText().getContent().split(" ");

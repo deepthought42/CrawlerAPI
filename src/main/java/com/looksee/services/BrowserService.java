@@ -50,7 +50,6 @@ import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
-import com.looksee.models.audit.ColorData;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
@@ -642,8 +641,15 @@ public class BrowserService {
 				
 				
 				String element_screenshot_url = "";
-				if( isElementVisibleInPane(browser, element_location, element_size)) {
+				
+				//only grab a screenshot if the element has rgba with transparency less than 1 or element does not have text color set or element is an image or element has a background image set
+				if( isElementVisibleInPane(browser, element_location, element_size)
+						&& (BrowserUtils.isElementBackgroundImageSet(web_element)
+							|| !(BrowserUtils.doesElementHaveBackgroundColor(web_element)
+								&& BrowserUtils.doesElementHaveFontColor(web_element)
+								&& !hasTransparency(web_element.getCssValue("background-color")))) ) {
 					try {
+						log.warn("capturing element screenshot with background color .... "+web_element.getCssValue("background-color"));
 						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 						//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 						String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
@@ -666,12 +672,15 @@ public class BrowserService {
 						log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 						log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 						e.printStackTrace();
-						continue;
 					}
 				}
 				//get child elements for element
-				Map<String, String> attributes = new HashMap<>(); //browser.extractAttributes(web_element);
+				log.warn("Starting attribute extraction....");
+				Map<String, String> attributes = browser.extractAttributes(web_element);
+				log.warn("Attribute extraction complete!");
+				log.warn("loading css properties...");
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
+				log.warn("loading css properties complete!");
 				
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
@@ -709,34 +718,27 @@ public class BrowserService {
 	}
 
 	/**
-	 * Checks if {@link WebElement element} is a link, image, an icon without text, or owns text
-	 * 
-	 * @param web_element
+	 * Retrieves transparency value from rgba string
+	 * @param css_value
 	 * @return
-	 * 
 	 */
-	private boolean isElementAuditable(Element element) {
-		boolean is_link = element.tagName().contentEquals("a");
-		boolean is_button = element.tagName().contentEquals("button");
-		boolean is_input = element.tagName().contentEquals("input");
-		boolean is_image = element.tagName().contentEquals("img");
-		boolean is_icon = (element.tagName().contentEquals("i") 
-							|| element.tagName().contentEquals("fa-icon"))
-							&& !element.hasText();
-		boolean owns_text = !element.ownText().isEmpty();
-		return is_link || is_button || is_image || is_icon || owns_text;
-	}
+	private boolean hasTransparency(String css_value) {
+		assert css_value != null;
+		assert !css_value.isEmpty();
+		
+		assert css_value.startsWith("rgba(");
+		if(css_value.startsWith("rgb(")) {
+			return false;
+		}
+		
+		log.warn("Checking "+css_value+ " for transparency....");
+		css_value = css_value.replace("rgba(", "");
+		css_value = css_value.replace(")", "");
+		String[] rgba = css_value.split(",");
+		double transparency_value = Double.parseDouble(rgba[3].trim());
+		log.warn(css_value+ " has transparancy ??    "+ (transparency_value < 1.0 && transparency_value > 0.0));
 
-	/**
-	 * Checks if {@link Dimension dimension1} is greater than {@link Dimension dimension2} for either height or width
-	 *
-	 * @param dimension The {@link Dimension dimension} of the object
-	 * @param dimension2 The {@link Browser browser} to use for the comparing the viewport
-	 * @return
-	 */
-	private boolean isLarger(Dimension dimension1, Dimension dimension2) {
-		return dimension1.getHeight() > dimension2.getHeight()
-				|| dimension1.getWidth() > dimension2.getWidth();
+		return transparency_value < 1.0 && transparency_value > 0.0;
 	}
 
 	/**

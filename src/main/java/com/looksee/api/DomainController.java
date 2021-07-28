@@ -542,11 +542,12 @@ public class DomainController {
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														audit_record.getStartTime(),
 														audit_record.getEndTime(),
-														page_count, 
+														-1, 
+														page_count,
 														content_audits_complete,
 														content_audits_complete / (double)audit_records.size(),
-														written_content_score,
-														imagery_score, 
+														written_content_score, 
+														imagery_score,
 														videos_score,
 														audio_score,
 														audit_record.getContentAuditMsg(),
@@ -565,8 +566,7 @@ public class DomainController {
 														audit_record.getAestheticMsg(),
 														overall_score,
 														high_issue_count,
-														mid_issue_count,
-														low_issue_count);
+														mid_issue_count, low_issue_count, 0, 0);
 			
 			return audit_stats;
     	}

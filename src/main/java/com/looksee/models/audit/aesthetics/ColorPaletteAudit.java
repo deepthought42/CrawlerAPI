@@ -40,7 +40,6 @@ import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ImageUtils;
-import com.sun.accessibility.internal.resources.accessibility;
 
 
 /**
@@ -57,8 +56,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
 		
-	public ColorPaletteAudit() {}
-
 	/**
 	 * {@inheritDoc}
 	 * 

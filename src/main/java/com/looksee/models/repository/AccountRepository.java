@@ -11,6 +11,7 @@ import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -67,4 +68,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (account:Account)-[]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account")
 	public Set<Account> findAllForAuditRecord(@Param("audit_record_id") long id);
+
+	@Query("MATCH (account:Account)-[]->(audit_record:PageAuditRecord) WHERE id(account)=$account_id RETURN audit_record ORDER BY audit_record.created_at DESC LIMIT 5")
+	public Set<PageAuditRecord> findMostRecentAuditsByAccount(long account_id);
 }

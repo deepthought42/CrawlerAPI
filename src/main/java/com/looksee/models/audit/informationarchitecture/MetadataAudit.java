@@ -1,4 +1,4 @@
-package com.looksee.models.audit.informationArchitecture;
+package com.looksee.models.audit.informationarchitecture;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -37,8 +37,6 @@ import io.whelk.flesch.kincaid.ReadabilityCalculator;
 public class MetadataAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(MetadataAudit.class);
 	
-	public MetadataAudit() {}
-
 	/**
 	 * {@inheritDoc}
 	 * 

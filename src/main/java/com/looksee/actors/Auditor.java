@@ -117,7 +117,7 @@ public class Auditor extends AbstractActor{
 																					   page_state_msg.getPageState());
 		   			getSender().tell(audit_complete, getSelf());
 		   			
-		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState());
+		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState(), true);
 		   			audit_record = audit_record_service.save(audit_record);
 		   			
 		   			PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage((PageAuditRecord)audit_record, page_state_msg.getDomainId(), page_state_msg.getAccountId(), page_state_msg.getAuditRecordId());

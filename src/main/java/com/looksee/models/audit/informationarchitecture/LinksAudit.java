@@ -1,4 +1,4 @@
-package com.looksee.models.audit.informationArchitecture;
+package com.looksee.models.audit.informationarchitecture;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

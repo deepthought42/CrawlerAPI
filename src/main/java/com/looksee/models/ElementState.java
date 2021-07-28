@@ -205,7 +205,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 			key += getRenderedCssValues().get(style);
 		}
 		
-		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key+getScreenshotUrl()+getOuterHtml());
+		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(key+getScreenshotUrl()+getOuterHtml());
 	}
 	
 	/**

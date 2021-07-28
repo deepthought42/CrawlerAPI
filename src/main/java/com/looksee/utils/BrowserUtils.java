@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -568,4 +567,19 @@ public class BrowserUtils {
 	    }
 	    
    }
+
+	public static boolean doesElementHaveBackgroundColor(WebElement web_element) {
+		String background_color = web_element.getCssValue("background-color");
+		return background_color != null && !background_color.isEmpty();
+	}
+
+	public static boolean doesElementHaveFontColor(WebElement web_element) {
+		String font_color = web_element.getCssValue("color");
+		return font_color != null && !font_color.isEmpty();
+	}
+
+	public static boolean isElementBackgroundImageSet(WebElement web_element) {
+		String background_image = web_element.getCssValue("background-image");
+		return background_image != null && !background_image.isEmpty();
+	}
 }

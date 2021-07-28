@@ -61,9 +61,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.looksee.models.ElementState;
-import com.looksee.models.Form;
-import com.looksee.models.PageState;
-import com.looksee.utils.TimingUtils;
 
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
@@ -802,7 +799,7 @@ public class Browser {
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, String> extractAttributes(WebElement element) {
-		String outer_html = element.getAttribute("outerHTML");
+		//String outer_html = element.getAttribute("outerHTML");
 		//extract first tag from html
 		//extract attributes
 		

@@ -20,9 +20,9 @@ import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
 import com.looksee.models.audit.aesthetics.TypefacesAudit;
 import com.looksee.models.audit.content.ImageAltTextAudit;
 import com.looksee.models.audit.content.ReadabilityAudit;
-import com.looksee.models.audit.informationArchitecture.LinksAudit;
-import com.looksee.models.audit.informationArchitecture.SecurityAudit;
-import com.looksee.models.audit.informationArchitecture.TitleAndHeaderAudit;
+import com.looksee.models.audit.informationarchitecture.LinksAudit;
+import com.looksee.models.audit.informationarchitecture.SecurityAudit;
+import com.looksee.models.audit.informationarchitecture.TitleAndHeaderAudit;
 import com.looksee.models.enums.AuditCategory;
 
 /**

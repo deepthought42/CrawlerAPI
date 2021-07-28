@@ -236,9 +236,6 @@ public class AuditRecordController {
     		double branding_score = 0.0;
     		
     		if( audit_record instanceof PageAuditRecord ) {
-
-    	    	//get Page Count
-				long page_count = 1;
 				
 				Set<Audit> content_audits = audit_record_service.getAllContentAudits(audit_record.getId());
 				content_score = AuditUtils.calculateScore(content_audits);
@@ -283,7 +280,6 @@ public class AuditRecordController {
 				AuditStats audit_stats = new AuditStats(audit_record.getId(), 
 														audit_record.getStartTime(), 
 														audit_record.getEndTime(), 
-														page_count, 
 														content_audits_complete,
 														audit_record.getContentAuditProgress(),
 														content_score,
@@ -306,22 +302,31 @@ public class AuditRecordController {
 														color_score, 
 														typography_score, 
 														whitespace_score, 
-														branding_score);
+														branding_score,
+														0,
+														0);
 				return audit_stats;				
     		}
     		else {
     			
     			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record_id);
 				//get Page Count
-				long page_count = audit_records.size();
-				
+				long pages_found = audit_records.size();
+				long pages_reviewed = 0;//getCompletedPageAuditCount(audit_records);
+
 				double score = 0;
 				int audit_count = 0;
 				long high_issue_count=0;
 				long mid_issue_count=0;
 				long low_issue_count=0;
 				
+				long elements_reviewed = 0;
+				long elements_found = 0;
+				
 				for(PageAuditRecord page_audit : audit_records) {
+					elements_reviewed += page_audit.getElementsReviewed();
+					elements_found += page_audit.getElementsFound();
+					
 					//get total content audit pages
 					Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
 					written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
@@ -416,11 +421,14 @@ public class AuditRecordController {
 				
 				double overall_score = ( score / audit_count ) * 100 ;
 				
+
+				
 				//build stats object
 				AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 															audit_record.getStartTime(),
 															audit_record.getEndTime(),
-															page_count, 
+															pages_reviewed, 
+															pages_found,
 															content_audits_complete,
 															content_audits_complete / (double)audit_records.size(),
 															written_content_score,
@@ -444,7 +452,9 @@ public class AuditRecordController {
 															overall_score,
 															high_issue_count,
 															mid_issue_count,
-															low_issue_count);
+															low_issue_count, 
+															elements_reviewed,
+															elements_found);
 				
 				return audit_stats;
     		}

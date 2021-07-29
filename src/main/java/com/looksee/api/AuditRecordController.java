@@ -134,8 +134,8 @@ public class AuditRecordController {
     			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
     													 page_state.getViewportScreenshotUrl(), 
     													 page_state.getFullPageScreenshotUrl(), 
-    													 page_state.getViewportWidth(),
-    													 page_state.getViewportHeight(), 
+    													 page_state.getFullPageWidth(),
+    													 page_state.getFullPageHeight(), 
     													 page_state.getSrc(),
     													 page_state.getKey(), 
     													 page_state.getId());
@@ -153,8 +153,8 @@ public class AuditRecordController {
 	    			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
 	    													 page_state.getViewportScreenshotUrl(), 
 	    													 page_state.getFullPageScreenshotUrl(), 
-	    													 page_state.getViewportWidth(),
-	    													 page_state.getViewportHeight(), 
+	    													 page_state.getFullPageWidth(),
+	    													 page_state.getFullPageHeight(),
 	    													 page_state.getSrc(),
 	    													 page_state.getKey(), 
 	    													 page_state.getId());

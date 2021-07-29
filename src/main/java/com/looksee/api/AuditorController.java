@@ -93,7 +93,7 @@ public class AuditorController {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
 	   	//create new audit record
-	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null);
+	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
 	   	audit_record.setAestheticMsg("Extracting colors...");
 	   	audit_record.setContentAuditMsg("Extracting images and text...");
 	   	audit_record.setInfoArchMsg("Extracting data layers...");

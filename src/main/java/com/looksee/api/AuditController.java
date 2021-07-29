@@ -127,7 +127,7 @@ public class AuditController {
 	private UXIssueMessageService ux_issue_service;
     
     /**
-     * Retrieves list of {@link PerformanceInsight insights} with a given key
+     * Retrieves list of audits {@link Audit audits} from last 30 days
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
@@ -135,18 +135,22 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<Audit> getAudits(HttpServletRequest request,
-										@RequestParam(value="domain_host", required=true) String domain_host
-	) throws MalformedURLException {
-    	URL url = new URL(BrowserUtils.sanitizeUrl(domain_host));
-    	Domain domain = domain_service.findByHost(url.getHost());
-    	Optional<DomainAuditRecord> audit_record = domain_service.getMostRecentAuditRecord(domain.getId()); 
-    	if(audit_record.isPresent()) {
-    		return audit_record_service.getAllAudits(audit_record.get().getKey());
+    public @ResponseBody Set<PageAuditRecord> getAudits(HttpServletRequest request) throws MalformedURLException, UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName();
+    	Account acct = account_service.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
     	}
-    	return new HashSet<>();
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}    	
+    	
+    	return account_service.findMostRecentPageAudits(acct.getId()); 
     }
 
+    
     /**
      * Retrieves {@link Audit audit} with given ID
      * 
@@ -213,7 +217,7 @@ public class AuditController {
 	public @ResponseBody PageAudits startSinglePageAudit(
 			HttpServletRequest request,
 			@RequestParam("page_id") long page_id
-	) throws Exception {    	
+	) throws Exception {
     	//String lowercase_url = page.getUrl().toLowerCase();
 		Optional<PageState> page_opt = page_service.findById(page_id);
 		if(!page_opt.isPresent()) {
@@ -222,18 +226,7 @@ public class AuditController {
 		PageState page = page_opt.get();
 		
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(page.getUrl() ));
-	   //	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl("http://"+page.getUrl()));
-	   	
-    	/*
-    	Domain domain = domain_service.findByHost(sanitized_url.getHost());
-	   	System.out.println("domain returned from db ...."+domain);
-	   	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
-	   	//Basically backwards compatibility. if they are still here after June 2020 then remove it
-	   	if(domain == null) {
-	   		domain = new Domain(sanitized_url.getProtocol(), sanitized_url.getHost(), sanitized_url.getPath(), "");
-	   		domain = domain_service.save(domain);
-	   	}
-	*/
+	  
    		String page_url = sanitized_url.getHost()+sanitized_url.getPath();
 	   	Optional<PageAuditRecord> audit_record_optional = audit_record_service.getMostRecentPageAuditRecord(page_url);
 	   	
@@ -269,7 +262,7 @@ public class AuditController {
 		//domain_service.addPage(domain.getId(), page_state.getKey());
 
 	   	//create new audit record
-	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state);
+	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state, false);
 
 	   	audit_record = audit_record_service.save(audit_record);
 	   	//domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
@@ -279,13 +272,7 @@ public class AuditController {
 	    	Account account = account_service.findByUserId(user_id);
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 		}
-	   	/*
-	   	log.warn("telling audit manager about crawl action");
-	   	ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("auditManager"), "auditManager"+UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, "temp-account", audit_record, true, sanitized_url);
-		audit_manager.tell(crawl_action, null);
-	   	*/
+	   	
 	   	Set<Audit> audits = new HashSet<>();
 	   	
 	   	//check if page state already

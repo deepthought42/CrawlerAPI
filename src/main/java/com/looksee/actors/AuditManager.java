@@ -130,7 +130,8 @@ public class AuditManager extends AbstractActor{
 				.match(PageStateMessage.class, page_state_msg -> {
 					log.warn("Received page state :: "+page_state_msg.getPageState().getUrl());
 					//send URL to JourneyExplorer actor
-					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey())) {
+					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey()) 
+							&& page_state_msg.getPageState().getHttpStatus() != 404) {
 						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
 				 		long content_audits_complete = 0;
 			    		long info_arch_audits_complete = 0;
@@ -160,8 +161,13 @@ public class AuditManager extends AbstractActor{
 								Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(page_state_msg.getAuditRecordId());
 								//get Page Count
 								long page_count = audit_records.size();
+								long elements_reviewed = 0;
+								long elements_found = 0;
 								
 								for(PageAuditRecord page_audit : audit_records) {
+									elements_reviewed += page_audit.getElementsReviewed();
+									elements_found += page_audit.getElementsFound();
+									
 									Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
 									content_score = AuditUtils.calculateScore(content_audits);
 									written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
@@ -203,19 +209,18 @@ public class AuditManager extends AbstractActor{
 								AuditStats audit_stats = new AuditStats(audit_record.getId(), 
 																		audit_record.getStartTime(), 
 																		audit_record.getEndTime(), 
-																		page_count, 
 																		content_audits_complete,
 																		audit_record.getContentAuditProgress(),
-																		content_score,
-																		audit_record.getContentAuditMsg(), 
+																		content_score, 
+																		audit_record.getContentAuditMsg(),
 																		written_content_score,
 																		imagery_score,
 																		videos_score,
-																		audio_score,
+																		audio_score, 
 																		info_arch_audits_complete, 
 																		audit_record.getInfoArchAuditProgress(), 
 																		info_arch_score, 
-																		audit_record.getInfoArchMsg(), 
+																		audit_record.getInfoArchMsg(),
 																		seo_score,
 																		menu_analysis_score,
 																		performance_score,
@@ -225,8 +230,9 @@ public class AuditManager extends AbstractActor{
 																		audit_record.getAestheticMsg(),
 																		color_score,
 																		typography_score,
-																		whitespace_score,
-																		branding_score);
+																		whitespace_score, branding_score, 
+																		elements_reviewed, 
+																		elements_found);
 								
 								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
 							}		
@@ -238,11 +244,17 @@ public class AuditManager extends AbstractActor{
 								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
 						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
 						*/
+						
+						/**
+						 * NOTE: Performance is disabled because of issue with pages that are not found
+						 * 
 				   		ActorRef insight_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						
 						//rendered_page_state_count++;
 				   		insight_auditor.tell(page_state_msg.getPageState(), getSelf());
+						
+						 */
 						
 						log.warn("Page State Count :: "+page_states_experienced.keySet().size());
 						/*
@@ -268,8 +280,8 @@ public class AuditManager extends AbstractActor{
 					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
 					
 					//find user account
-					Account account = account_service.findById(audit_complete.getAccountId()).get();
 					if( pages.size() == page_states.size()) {
+						Account account = account_service.findById(audit_complete.getAccountId()).get();
 						//send domain audit complete
 						mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);

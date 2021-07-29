@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.content;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -16,6 +16,10 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -45,7 +49,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state) { 
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages =  new HashSet<>();
@@ -59,6 +63,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		List<ElementState> image_elements = new ArrayList<>();
 		for(ElementState element : page_state.getElements()) {
 			if(element.getName().equalsIgnoreCase(tag_name)) {
+				log.warn("Image element found :: "+ element.getCssSelector());
 				image_elements.add(element);
 			}
 		}
@@ -69,6 +74,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				" ‘Alt’ text for images present on the website.";
 	
+		log.warn("Total image elements found :: "+image_elements.size());
 		
 		//score each link element
 		int score = 0;
@@ -77,9 +83,31 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			Document jsoup_doc = Jsoup.parseBodyFragment(image_element.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag(tag_name).first();
 			
+			log.warn("is ALT text set?   "+element.hasAttr("alt"));
 			//Check if element has "alt" attribute present
 			if(element.hasAttr("alt")) {
 				score++;
+				
+				log.warn("is ALT text empty?   "+element.attr("alt").isEmpty());
+
+				if(element.attr("alt").isEmpty()) {
+					String title = "Image alternative text value is empty";
+					String description = "Image alternative text value is empty";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.HIGH, 
+																	description, 
+																	"Images without alternative text defined as a non empty string value", 
+																	image_element,
+																	AuditCategory.CONTENT,
+																	labels,
+																	ada_compliance,
+																	title);
+					issue_messages.add(issue_message);
+				}
+				else {
+					score++;
+				}
 			}
 			else {
 				String title= "Images without alternative text attribute";
@@ -90,30 +118,14 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																description, 
 																"Images without alternative text attribute", 
 																image_element,
-																AuditCategory.INFORMATION_ARCHITECTURE, 
+																AuditCategory.CONTENT, 
 																labels,
 																ada_compliance,
 																title);
 				issue_messages.add(issue_message);
 			}
 			
-			if(element.attr("alt").isEmpty()) {
-				String title = "Image alternative text value is empty";
-				String description = "Image alternative text value is empty";
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																Priority.HIGH, 
-																description, 
-																"Images without alternative text defined as a non empty string value", 
-																image_element,
-																AuditCategory.INFORMATION_ARCHITECTURE,
-																labels,
-																ada_compliance,
-																title);
-				issue_messages.add(issue_message);
-			}
-			else {
-				score++;
-			}
+			
 		}
 		
 		Set<String> categories = new HashSet<>();

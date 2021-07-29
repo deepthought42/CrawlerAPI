@@ -15,6 +15,10 @@ public class DomainAuditStats extends AuditStats{
 	private long mid_impact_issue_count;
 	private long low_impact_issue_count;
 	
+	//crawler tracking
+	private long pages_examined;
+	private long pages_found;
+	
 	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
 	
@@ -29,6 +33,7 @@ public class DomainAuditStats extends AuditStats{
 			long audit_record_id,
 			LocalDateTime start_time,
 			LocalDateTime end_time,
+			long pages_examined,
 			long page_count,
 			long content_pages_audited,
 			double content_audit_progress,
@@ -42,18 +47,17 @@ public class DomainAuditStats extends AuditStats{
 			double seo_score,
 			double menu_analysis_score,
 			double performance_score,
-			String info_arch_msg,
+			String info_arch_msg, 
 			long aesthetic_pages_audited, 
-			double aesthetic_audit_progress, 
-			double color_score,
+			double aesthetic_audit_progress,
+			double color_score, 
 			double typography_score, 
-			double whitespace_score, 
+			double whitespace_score,
 			double branding_score,
 			String aesthetic_msg,
-			double overall_score,
-			long high_impact_issues, 
-			long mid_impact_issues,
-			long low_impact_issues
+			double overall_score, 
+			long high_impact_issues,
+			long mid_impact_issues, long low_impact_issues, long elements_examined, long elements_found
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -120,5 +124,21 @@ public class DomainAuditStats extends AuditStats{
 
 	public void setLowImpactIssueCount(long low_impact_issue_count) {
 		this.low_impact_issue_count = low_impact_issue_count;
+	}
+
+	public long getPagesExamined() {
+		return pages_examined;
+	}
+
+	public void setPagesExamined(long pages_examined) {
+		this.pages_examined = pages_examined;
+	}
+
+	public long getPagesFound() {
+		return pages_found;
+	}
+
+	public void setPagesFound(long pages_found) {
+		this.pages_found = pages_found;
 	}
 }

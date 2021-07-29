@@ -8,7 +8,7 @@ public class ContentUtils {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ContentUtils.class);
 
-	public static String getGradeLevel(double ease_of_reading_score) {
+	public static String getReadingGradeLevel(double ease_of_reading_score) {
 		if(ease_of_reading_score >= 90) {
 			return "5th grade";
 		}
@@ -36,7 +36,7 @@ public class ContentUtils {
 		return "unknown";
 	}
 	
-	public static String getDifficultyRating(double ease_of_reading_score) {
+	public static String getReadingDifficultyRating(double ease_of_reading_score) {
 		if(ease_of_reading_score >= 90) {
 			return "very easy";
 		}

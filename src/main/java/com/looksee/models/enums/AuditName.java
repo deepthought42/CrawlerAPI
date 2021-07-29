@@ -19,6 +19,7 @@ public enum AuditName {
 	TITLES("Titles"),
 	ALT_TEXT("Alt Text"),
 	PARAGRAPHING("Paragraphing"),
+	METADATA("Metadata"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

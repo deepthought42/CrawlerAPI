@@ -29,7 +29,6 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -88,7 +87,10 @@ public class Auditor extends AbstractActor{
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
 				   	
-				   	//check if page state already
+				   	//check if page state has valid status code
+				   	if(page_state_msg.getPageState().getHttpStatus() == 404) {
+				   		return;
+				   	}
 		   			//perform audit and return audit result
 				   	/*
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
@@ -115,7 +117,7 @@ public class Auditor extends AbstractActor{
 																					   page_state_msg.getPageState());
 		   			getSender().tell(audit_complete, getSelf());
 		   			
-		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState());
+		   			AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, audits, page_state_msg.getPageState(), true);
 		   			audit_record = audit_record_service.save(audit_record);
 		   			
 		   			PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage((PageAuditRecord)audit_record, page_state_msg.getDomainId(), page_state_msg.getAccountId(), page_state_msg.getAuditRecordId());

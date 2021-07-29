@@ -426,6 +426,8 @@ public class BrowserUtils {
         
         return settings;
 	}
+
+	
 	/**
 	 * Converts hexadecimal colors to RGB format
 	 * @param color_str e.g. "#FFFFFF"
@@ -483,17 +485,57 @@ public class BrowserUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static boolean checkIfSecure(URL url, String title, String content) throws IOException {
-        HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
-           
+	public static int getHttpStatus(URL url) {
+		int status_code = 0;
+		try {
+			if(url.getProtocol().contentEquals("http")) {
+				HttpURLConnection con = (HttpURLConnection)url.openConnection();
+				status_code = con.getResponseCode();
+				log.warn("HTTP status code = "+status_code);
+				return status_code;
+			}
+			else if(url.getProtocol().contentEquals("https")) {
+				HttpURLConnection con = (HttpURLConnection)url.openConnection();
+				status_code = con.getResponseCode();
+				log.warn("HTTPS status code = "+status_code);
+				return status_code;		
+			}
+			else {
+				log.warn("URL Protocol not found :: "+url.getProtocol());
+			}
+		}
+	    catch(IOException e) {
+	    	status_code = 404;
+	    	e.printStackTrace();
+	    }
+		return 500;
+	}
+	
+	/**
+	 * Checks if the server has certificates. Expects an https protocol in the url
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	public static boolean checkIfSecure(URL url) {
+        log.warn("Checking if page is secure...."+url.toString());
         //dumpl all cert info
-        print_https_cert(con);
-        return con.getServerCertificates().length > 0;
-        /*
-		return url.getProtocol().contains("https")
-					&& (title.contentEquals("Privacy Error")
-							|| content.contains("Insecure Connection"));
-							*/
+        //print_https_cert(con);
+        boolean is_secure = false;
+        try{
+        	HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
+        	con.connect();
+        	log.warn("certificate count ...  " + con.getServerCertificates().length);
+        	is_secure = con.getServerCertificates().length > 0;
+        	log.warn("Is connection secure??   "+is_secure);
+        }
+        catch(Exception e) {
+        	log.warn("an error was encountered while checking for SSL!!!!");
+        	e.printStackTrace();
+        }
+        
+        return is_secure;
 	}
 	
 	private static void print_https_cert(HttpsURLConnection con){
@@ -502,7 +544,6 @@ public class BrowserUtils {
 	            
 	      try {
 	                
-			    System.out.println("Response Code : " + con.getResponseCode());
 			    System.out.println("Cipher Suite : " + con.getCipherSuite());
 			    System.out.println("\n");
 			                
@@ -526,4 +567,19 @@ public class BrowserUtils {
 	    }
 	    
    }
+
+	public static boolean doesElementHaveBackgroundColor(WebElement web_element) {
+		String background_color = web_element.getCssValue("background-color");
+		return background_color != null && !background_color.isEmpty();
+	}
+
+	public static boolean doesElementHaveFontColor(WebElement web_element) {
+		String font_color = web_element.getCssValue("color");
+		return font_color != null && !font_color.isEmpty();
+	}
+
+	public static boolean isElementBackgroundImageSet(WebElement web_element) {
+		String background_image = web_element.getCssValue("background-image");
+		return background_image != null && !background_image.isEmpty();
+	}
 }

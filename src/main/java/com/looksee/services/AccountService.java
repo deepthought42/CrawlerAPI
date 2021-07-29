@@ -10,6 +10,7 @@ import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.repository.AccountRepository;
 
 /**
@@ -103,5 +104,9 @@ public class AccountService {
 
 	public Set<Account> findForAuditRecord(long id) {
 		return account_repo.findAllForAuditRecord(id);
+	}
+
+	public Set<PageAuditRecord> findMostRecentPageAudits(long account_id) {
+		return account_repo.findMostRecentAuditsByAccount(account_id);
 	}
 }

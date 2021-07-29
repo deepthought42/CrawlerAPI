@@ -6,11 +6,16 @@ import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.rules.Rule;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
+@Repository
+@Retry(name = "neo4j")
 public interface ElementStateRepository extends Neo4jRepository<ElementState, Long> {
 	
 	@Query("MATCH (e:ElementState{key:$key}) RETURN e LIMIT 1")

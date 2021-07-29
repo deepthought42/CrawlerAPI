@@ -42,19 +42,12 @@ public class ElementStateService {
 			
 			element_record = element_repo.save(element);
 		}
-		/*
 		else {
-			element_record.setRenderedCssValues(element.getRenderedCssValues());
-			if(element.getScreenshotUrl() != null && !element.getScreenshotUrl().isEmpty()) {
-				element_record.setScreenshotUrl(element.getScreenshotUrl());
-				element_record.setXLocation(element.getXLocation());
-				element_record.setYLocation(element.getYLocation());
-				element_record.setWidth(element.getWidth());
-				element_record.setHeight(element.getHeight());
-				element_record = element_repo.save(element_record);
-			}
+			element_record.setBackgroundColor(element.getBackgroundColor());
+			element_record.setForegroundColor(element.getForegroundColor());
+			element_repo.save(element_record);
 		}
-	*/
+	
 		return element_record;
 	}
 	

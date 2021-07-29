@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.aesthetics;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -22,6 +22,15 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ColorData;
+import com.looksee.models.audit.ColorPaletteIssueMessage;
+import com.looksee.models.audit.ColorPaletteUtils;
+import com.looksee.models.audit.ColorUsageStat;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.PaletteColor;
+import com.looksee.models.audit.Score;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -31,7 +40,6 @@ import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ImageUtils;
-import com.sun.accessibility.internal.resources.accessibility;
 
 
 /**
@@ -48,8 +56,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
 		
-	public ColorPaletteAudit() {}
-
 	/**
 	 * {@inheritDoc}
 	 * 

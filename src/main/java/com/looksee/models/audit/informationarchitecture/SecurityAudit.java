@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.informationarchitecture;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -15,6 +15,9 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -59,17 +62,17 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 				String title = "Page isn't secure";
 				String description = page_state.getUrl() + " doesn't use https";
 				String wcag_compliance = "";
-				String recommendation = "Setup ssl for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that is serving your site.";
+				String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
-						Priority.HIGH,
-						description,
-						ObservationType.SECURITY,
-						AuditCategory.INFORMATION_ARCHITECTURE,
-						wcag_compliance,
-						new HashSet<>(),
-						why_it_matters,
-						title);
+												recommendation,
+												Priority.HIGH,
+												description,
+												ObservationType.SECURITY,
+												AuditCategory.INFORMATION_ARCHITECTURE,
+												wcag_compliance,
+												new HashSet<>(),
+												why_it_matters,
+												title);
 				issue_messages.add(ux_issue);
 		}
 		else {

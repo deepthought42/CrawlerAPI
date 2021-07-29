@@ -5,13 +5,18 @@ import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.UXIssueMessage;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
  */
+@Repository
+@Retry(name = "neo4j")
 public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	public Audit findByKey(@Param("key") String key);
 

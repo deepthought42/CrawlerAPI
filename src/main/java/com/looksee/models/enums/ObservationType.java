@@ -15,6 +15,7 @@ public enum ObservationType {
 	TYPEFACE("Typeface"),
 	COLOR_CONTRAST("Color Contrast"),
 	SECURITY("Security"),
+	SEO("SEO"),
 	UNKNOWN("Unknown");
 	
 	private String shortName;

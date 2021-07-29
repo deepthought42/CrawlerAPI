@@ -15,9 +15,9 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.NonTextColorContrastAudit;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.TextColorContrastAudit;
+import com.looksee.models.audit.aesthetics.NonTextColorContrastAudit;
+import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
@@ -122,7 +122,7 @@ public class AestheticAuditor extends AbstractActor{
 					audits.add(non_text_contrast_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setAestheticAuditProgress( (3.0/3.0) ); 
+					page_audit_record.setAestheticAuditProgress( 1 ); 
 					page_audit_record.setAestheticMsg("Finished Aesthetics audit");
 					page_audit_record = audit_record_service.save(page_audit_record);
 		   			//send message to either user or page channel containing reference to audits

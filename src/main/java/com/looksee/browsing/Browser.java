@@ -61,8 +61,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.looksee.models.ElementState;
-import com.looksee.models.Form;
-import com.looksee.models.PageState;
 
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
@@ -397,14 +395,8 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
-		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		log.debug("element screenshot :: "+element.getLocation().getX() + " , " + element.getLocation().getY());
-		log.debug("element screenshot size :: "+element.getSize().getWidth() + " , " + element.getSize().getHeight());
-		log.debug("viewport scroll offset  :  " + this.getXScrollOffset() + " , " + this.getYScrollOffset());
-		log.debug("viewport size ::  " + this.getViewportSize().getWidth() + " , " + this.getViewportSize().getHeight());
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
-		
+
 		//calculate element position within screen
 		return Shutterbug.shootElementVerticallyCentered(driver, element, true).getImage();
 	}
@@ -428,10 +420,7 @@ public class Browser {
 		
 		return page_screenshot.getSubimage(point_x, point_y, width, height);
 	}
-	
-	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
-		return null;
-	}
+
 	
 	public static ElementState findLabelFor(Set<ElementState> elements, String for_id){
 		for(ElementState elem : elements){
@@ -638,8 +627,6 @@ public class Browser {
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
 	 * 
-	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
-	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element, WebDriver driver){
@@ -667,6 +654,64 @@ public class Browser {
 				css_map.put(prop1, prop2);
 			}
 		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	@Deprecated
+	public static Map<String, String> loadCssProperties(WebElement element){
+		Map<String, String> css_map = new HashMap<String, String>();
+		css_map.put("color", element.getCssValue("color"));
+		
+		//background color and image
+		css_map.put("background-color", element.getCssValue("background-color"));
+		css_map.put("background-image", element.getCssValue("background-image"));
+		
+		//font/text
+		css_map.put("font-size", element.getCssValue("font-size"));
+		css_map.put("font-weight", element.getCssValue("font-weight"));
+		css_map.put("font-variant", element.getCssValue("font-variant"));
+		css_map.put("font-family", element.getCssValue("font-family"));
+		css_map.put("line-height", element.getCssValue("line-height"));
+		
+		
+		//border colors
+		css_map.put("border-top-color", element.getCssValue("border-top-color"));
+		css_map.put("border-right-color", element.getCssValue("border-right-color"));
+		css_map.put("border-bottom-color", element.getCssValue("border-bottom-color"));
+		css_map.put("border-left-color", element.getCssValue("border-left-color"));
+
+		//border inline/block colors
+		css_map.put("border-inline-start-color", element.getCssValue("border-inline-start-color"));
+		css_map.put("border-inline-end-color", element.getCssValue("border-inline-end-color"));
+		css_map.put("border-block-start-color", element.getCssValue("border-block-start-color"));
+		css_map.put("border-block-end-color", element.getCssValue("border-block-end-color"));
+
+		//border dimensions
+		css_map.put("border-inline-start-width", element.getCssValue("border-inline-start-width"));
+		css_map.put("border-inline-end-width", element.getCssValue("border-inline-end-width"));
+		css_map.put("border-block-start-width", element.getCssValue("border-block-start-width"));
+		css_map.put("border-block-end-width", element.getCssValue("border-block-end-width"));
+
+		//margins
+		css_map.put("margin-top", element.getCssValue("margin-top"));
+		css_map.put("margin-right", element.getCssValue("margin-right"));
+		css_map.put("margin-bottom", element.getCssValue("margin-bottom"));
+		css_map.put("margin-left", element.getCssValue("margin-left"));
+
+		//padding
+		css_map.put("padding-top", element.getCssValue("padding-top"));
+		css_map.put("padding-right", element.getCssValue("padding-right"));
+		css_map.put("padding-bottom", element.getCssValue("padding-bottom"));
+		css_map.put("padding-left", element.getCssValue("padding-left"));
+
 		
 		return css_map;
 	}
@@ -754,6 +799,10 @@ public class Browser {
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, String> extractAttributes(WebElement element) {
+		//String outer_html = element.getAttribute("outerHTML");
+		//extract first tag from html
+		//extract attributes
+		
 		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
 	}
@@ -804,6 +853,12 @@ public class Browser {
 		else if(objy instanceof Long){
 			y_offset = ((Long)objy).intValue(); 
 		}
+		else if(objy instanceof Integer) {
+			y_offset = ((Integer)objy).intValue(); 
+		}
+		else {
+			y_offset = Integer.parseInt(objy.toString());
+		}
 		
 		if(objx instanceof Double){
 			x_offset = ((Double)objx).intValue(); 
@@ -811,22 +866,14 @@ public class Browser {
 		else if(objx instanceof Long){
 			x_offset = ((Long)objx).intValue(); 
 		}
+		else if(objx instanceof Integer) {
+			x_offset = ((Integer)objx).intValue(); 
+		}
+		else {
+			x_offset = Integer.parseInt(objx.toString());
+		}
 		
 		return new Point(x_offset, y_offset);
-	}
-	
-	/**
-	 * Retrieve coordinates of {@link WebElement} in the current viewport
-	 * 
-	 * @param element {@link WebElement}
-	 * @return {@link Point} coordinates
-	 */
-	private static Point getLocationInViewport(WebElement element, int x_offset, int y_offset) {
-		Point location = element.getLocation();
-		int y_coord = calculateYCoordinate(y_offset, location);
-		int x_coord = calculateXCoordinate(x_offset, location);
-       
-		return new Point(x_coord, y_coord);
 	}
 	
 	/**

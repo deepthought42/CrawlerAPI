@@ -15,10 +15,11 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.LinksAudit;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.SecurityAudit;
-import com.looksee.models.audit.TitleAndHeaderAudit;
+import com.looksee.models.audit.informationarchitecture.LinksAudit;
+import com.looksee.models.audit.informationarchitecture.MetadataAudit;
+import com.looksee.models.audit.informationarchitecture.SecurityAudit;
+import com.looksee.models.audit.informationarchitecture.TitleAndHeaderAudit;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
@@ -46,6 +47,9 @@ public class InformationArchitectureAuditor extends AbstractActor{
 	
 	@Autowired
 	private LinksAudit links_auditor;
+	
+	@Autowired
+	private MetadataAudit metadata_auditor;
 	
 	@Autowired
 	private AuditService audit_service;
@@ -98,7 +102,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 				   	Set<Audit> audits = new HashSet<>();
 				   	
 				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (1.0/4.0) ); 
+					page_audit_record.setInfoArchAuditProgress( (1.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Reviewing title and header...");
 					audit_record_service.save(page_audit_record);
 					
@@ -106,7 +110,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audits.add(link_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (2.0/4.0) ); 
+					page_audit_record.setInfoArchAuditProgress( (2.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Reviewing title and header...");
 					audit_record_service.save(page_audit_record);
 					
@@ -115,7 +119,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audits.add(title_and_headers);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (3.0/4.0) ); 
+					page_audit_record.setInfoArchAuditProgress( (3.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Checking security...");
 					audit_record_service.save(page_audit_record);
 					
@@ -124,9 +128,18 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audits.add(security);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (4.0/4.0) ); 
+					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Audit complete");
-					page_audit_record = audit_record_service.save(page_audit_record);					
+					page_audit_record = audit_record_service.save(page_audit_record);
+					
+					
+					Audit metadata = metadata_auditor.execute(page);
+					audits.add(metadata);
+					
+					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
+					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record = audit_record_service.save(page_audit_record);		
 					
 					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
 					if(is_audit_complete) {

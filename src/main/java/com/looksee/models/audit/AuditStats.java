@@ -13,7 +13,10 @@ public class AuditStats {
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
 	private long audit_record_id;
-	private long pages_found;
+	
+	//crawl progress trackers
+	private long elements_examined;
+	private long elements_found;
 	
 	private long content_pages_audited;
 	private double content_score;
@@ -59,8 +62,7 @@ public class AuditStats {
 	public AuditStats(
 			long audit_record_id,
 			LocalDateTime start_time, 
-			LocalDateTime end_time, 
-			long page_count, 
+			LocalDateTime end_time,
 			long content_pages_audited,
 			double content_audit_progress,
 			double content_score,
@@ -68,14 +70,14 @@ public class AuditStats {
 			double written_content_score,
 			double imagery_score,
 			double videos_score,
-			double audio_score,
+			double audio_score, 
 			long info_arch_pages_audited, 
 			double info_arch_audit_progress, 
 			double info_arch_score, 
 			String info_arch_msg, 
-			double seo_score, 
+			double seo_score,
 			double menu_analysis_score,
-			double performance_score,
+			double performance_score, 
 			long aesthetic_pages_audited, 
 			double aesthetic_audit_progress, 
 			double aesthetic_score, 
@@ -83,7 +85,9 @@ public class AuditStats {
 			double color_score, 
 			double typography_score, 
 			double whitespace_score, 
-			double branding_score
+			double branding_score, 
+			long elements_examined, 
+			long elements_found
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -110,6 +114,8 @@ public class AuditStats {
 		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
 		setAestheticMsg(aesthetic_msg);
+		setElementsExamined(elements_examined);
+		setElementsFound(elements_found);
 	}
 
 
@@ -143,14 +149,6 @@ public class AuditStats {
 
 	public void setSubcategoryStats(Set<AuditSubcategoryStat> subcategory_stats) {
 		this.subcategory_stats = subcategory_stats;
-	}
-
-	public long getPagesFound() {
-		return pages_found;
-	}
-
-	public void setPagesFound(long pages_found) {
-		this.pages_found = pages_found;
 	}
 
 	public long getContentPagesAudited() {
@@ -343,5 +341,21 @@ public class AuditStats {
 
 	public void setBrandingScore(double branding_score) {
 		this.branding_score = branding_score;
+	}
+
+	public long getElementsExamined() {
+		return elements_examined;
+	}
+
+	public void setElementsExamined(long elements_examined) {
+		this.elements_examined = elements_examined;
+	}
+
+	public long getElementsFound() {
+		return elements_found;
+	}
+
+	public void setElementsFound(long elements_found) {
+		this.elements_found = elements_found;
 	}
 }

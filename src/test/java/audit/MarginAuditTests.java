@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.looksee.api.EntryPoint;
-import com.looksee.models.audit.MarginAudit;
+import com.looksee.models.audit.aesthetics.MarginAudit;
 
 public class MarginAuditTests {
 

@@ -9,9 +9,14 @@ public class DomainDto {
 	private String url;
 	private int page_count;
 	private double content_score;
+	private double content_progress;
 	private double info_architecture_score;
+	private double info_architecture_progress;
 	private double accessibility_score;
+	private double accessibility_progress;
 	private double aesthetics_score;
+	private double aesthetics_progress;
+	private boolean is_audit_running;
 
 	public DomainDto(){}
 
@@ -20,16 +25,26 @@ public class DomainDto {
 			String url,
 			int page_count,
 			double content_score,
+			double content_progress,
 			double info_architecture_score,
+			double info_architecture_progress,
 			double accessibility_score,
-			double aesthetics_score){
+			double accessibility_progress,
+			double aesthetics_score,
+			double aesthetics_progress,
+			boolean is_audit_running){
 		setId(id);
 		setUrl(url);
 		setPageCount(page_count);
 		setContentScore(content_score);
+		setContentProgress(content_progress);
 		setInfoArchitectureScore(info_architecture_score);
+		setInfoArchitectureProgress(info_architecture_progress);
 		setAccessibilityScore(accessibility_score);
+		setAccessibilityProgress(accessibility_progress);
 		setAestheticsScore(aesthetics_score);
+		setAestheticsProgress(aesthetics_progress);
+		setIsAuditRunning(is_audit_running);
 	}
 
 	public long getId() {
@@ -86,6 +101,46 @@ public class DomainDto {
 
 	public void setPageCount(int page_count) {
 		this.page_count = page_count;
+	}
+
+	public boolean getIsAuditRunning() {
+		return is_audit_running;
+	}
+
+	public void setIsAuditRunning(boolean is_audit_running) {
+		this.is_audit_running = is_audit_running;
+	}
+
+	public double getContentProgress() {
+		return content_progress;
+	}
+
+	public void setContentProgress(double content_progress) {
+		this.content_progress = content_progress;
+	}
+
+	public double getInfoArchitectureProgress() {
+		return info_architecture_progress;
+	}
+
+	public void setInfoArchitectureProgress(double info_architecture_progress) {
+		this.info_architecture_progress = info_architecture_progress;
+	}
+
+	public double getAccessibilityProgress() {
+		return accessibility_progress;
+	}
+
+	public void setAccessibilityProgress(double accessibility_progress) {
+		this.accessibility_progress = accessibility_progress;
+	}
+
+	public double getAestheticsProgress() {
+		return aesthetics_progress;
+	}
+
+	public void setAestheticsProgress(double aesthetics_progress) {
+		this.aesthetics_progress = aesthetics_progress;
 	}
 
 	

@@ -1,4 +1,4 @@
-package com.looksee.models.audit;
+package com.looksee.models.audit.content;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
+import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.Score;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -97,7 +102,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
-			String difficulty_string = ContentUtils.getDifficultyRating(ease_of_reading_score);
+			String difficulty_string = ContentUtils.getReadingDifficultyRating(ease_of_reading_score);
 			
 			if("unknown".contentEquals(difficulty_string) || element.getAllText().split(" ").length <= 10) {
 				continue;
@@ -125,7 +130,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 1;
 			}
 			else if(ease_of_reading_score < 30) {
-				element_points = 0;				
+				element_points = 0;
 			}
 			
 			String title = "Content is " + difficulty_string + " to read";
@@ -136,7 +141,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			max_points += 4;
 			
 			if(element_points < 4) {
-				recommendation = "Content is written at a " + ContentUtils.getGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
+				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 						Priority.LOW, 
 						description,

@@ -146,6 +146,8 @@ public class JourneyExpander extends AbstractActor{
 								action_factory.execAction(web_element, "", "mouseover");
 		
 								Element element = Xsoup.compile(leaf_element.getXpath()).evaluate(doc).getElements().get(0);
+								String css_selector = "";//generateXpathUsingJsoup(element, doc, attributes, xpath_cnt);
+
 								ElementState new_element_state = BrowserService.buildElementState(
 										leaf_element.getXpath(), 
 										browser.extractAttributes(web_element), 
@@ -154,7 +156,8 @@ public class JourneyExpander extends AbstractActor{
 										leaf_element.getClassification(), 
 										Browser.loadCssProperties(web_element, 
 										browser.getDriver()),
-										"");
+										"",
+										css_selector);
 								
 								new_element_state = element_state_service.save(new_element_state);
 								//if page url is not the same as journey result page url then load new page for this

@@ -8,6 +8,7 @@ resilience4j.retry:
                 - java.util.concurrent.TimeoutException
                 - java.io.IOException
                 - org.neo4j.ogm.exception.ConnectionException
+                - org.neo4j.driver.exceptions.SessionExpiredException
                 - java.net.SocketException
                 - org.openqa.selenium.WebDriverException
     instances:

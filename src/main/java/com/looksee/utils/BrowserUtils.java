@@ -580,6 +580,6 @@ public class BrowserUtils {
 
 	public static boolean isElementBackgroundImageSet(WebElement web_element) {
 		String background_image = web_element.getCssValue("background-image");
-		return background_image != null && !background_image.isEmpty();
+		return background_image != null && !background_image.trim().isEmpty() && !background_image.trim().contentEquals("none");
 	}
 }

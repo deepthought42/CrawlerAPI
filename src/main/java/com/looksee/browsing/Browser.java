@@ -763,11 +763,35 @@ public class Browser {
 	}
 	
 	public void scrollToElement(WebElement elem) 
-    { 
-		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
-		Point offsets = getViewportScrollOffset();
-		this.setXScrollOffset(offsets.getX());
-		this.setYScrollOffset(offsets.getY());
+    {
+		Point offsets = elem.getLocation();
+		int offsets_y = -9999999;
+		int cnt = 0; //count added to prevent infinite loops
+				
+		offsets = elem.getLocation();
+
+		boolean does_element_move = false;
+		while(offsets_y != offsets.getY()) {
+			offsets_y = offsets.getY();
+			scrollDown();
+
+			offsets = elem.getLocation();
+
+			cnt++;
+		}
+
+		if(cnt > 1) {
+			does_element_move = true;
+		}
+		
+		if(!does_element_move) {
+			((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
+		}
+		/*
+		Point viewport_offset = getViewportScrollOffset();
+		this.setXScrollOffset(viewport_offset.getX());
+		this.setYScrollOffset(viewport_offset.getY());
+		*/
     }
 	
 	public void scrollToElement(com.looksee.models.Element element) 
@@ -779,16 +803,13 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollTo(long x_offset, long y_offset) 
-    {
-		//only scroll to position if it isn't the same position
-		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		//Timing.pauseThread(1000);
-		Point offsets = getViewportScrollOffset();
-		this.setXScrollOffset(offsets.getX());
-		this.setYScrollOffset(offsets.getY());
-    }
-	
+	public void removeElement(String class_name) {
+		JavascriptExecutor js;
+		if (this.getDriver() instanceof JavascriptExecutor) {
+		    js = (JavascriptExecutor) driver;
+		    js.executeScript("return document.getElementsByClassName('" + class_name + "')[0].remove();");
+		}
+	}
 	
 	/**
 	 * Extract all attributes from a given {@link WebElement}
@@ -1102,5 +1123,10 @@ public class Browser {
 	public void scrollToBottomOfPage() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+	}
+	
+	public void scrollDown() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollBy(0, window.innerHeight)");
 	}
 }

@@ -762,36 +762,22 @@ public class Browser {
 		this.x_scroll_offset = x_scroll_offset;
 	}
 	
-	public void scrollToElement(WebElement elem) 
+	public void scrollToElement(String xpath, WebElement elem) 
     {
 		Point offsets = elem.getLocation();
 		int offsets_y = -9999999;
-		int cnt = 0; //count added to prevent infinite loops
-				
-		offsets = elem.getLocation();
-
-		boolean does_element_move = false;
+		
+		if(xpath.contains("nav") || xpath.startsWith("//body/header")) {
+			log.warn("xpath :: "+xpath);
+			scrollToTopOfPage();
+			return;
+		}
 		while(offsets_y != offsets.getY()) {
 			offsets_y = offsets.getY();
 			scrollDown();
 
 			offsets = elem.getLocation();
-
-			cnt++;
 		}
-
-		if(cnt > 1) {
-			does_element_move = true;
-		}
-		
-		if(!does_element_move) {
-			((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
-		}
-		/*
-		Point viewport_offset = getViewportScrollOffset();
-		this.setXScrollOffset(viewport_offset.getX());
-		this.setYScrollOffset(viewport_offset.getY());
-		*/
     }
 	
 	public void scrollToElement(com.looksee.models.Element element) 
@@ -1123,6 +1109,11 @@ public class Browser {
 	public void scrollToBottomOfPage() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+	}
+	
+	public void scrollToTopOfPage() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollTo(0, 0)");
 	}
 	
 	public void scrollDown() {

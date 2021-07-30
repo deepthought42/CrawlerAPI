@@ -618,7 +618,7 @@ public class BrowserService {
 					continue;
 				}
 				*/
-				browser.scrollToElement(web_element); 
+				browser.scrollToElement(xpath, web_element); 
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
 				String css_selector = generateCssSelectorFromXpath(xpath);

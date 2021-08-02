@@ -72,11 +72,13 @@ import cz.vutbr.web.csskit.RuleFontFaceImpl;
 import cz.vutbr.web.csskit.RuleKeyframesImpl;
 import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
+import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 @Component
+@Retry(name="webdriver")
 public class Browser {
 	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
@@ -768,7 +770,6 @@ public class Browser {
 		int offsets_y = -9999999;
 		
 		if(xpath.contains("nav") || xpath.startsWith("//body/header")) {
-			log.warn("xpath :: "+xpath);
 			scrollToTopOfPage();
 			return;
 		}

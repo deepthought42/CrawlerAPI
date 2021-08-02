@@ -27,6 +27,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
@@ -366,7 +367,7 @@ public class BrowserService {
 				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt=10000;
+				cnt=100000;
 				break;
 			
 			}
@@ -378,18 +379,19 @@ public class BrowserService {
 				e.printStackTrace();
 			}
 			catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.warn("An exception occurred while building page state ... "+e.getMessage());
 			}
 			
-			try {
-				browser.close();
-			}
-			catch (WebDriverException e) {
-				e.printStackTrace();
+			if(browser != null) {
+				try {
+					browser.close();
+				}
+				catch (WebDriverException | GridException e) {
+					log.warn("There was an error while closing the browser during buildPageState : " + e.getLocalizedMessage());
+				}
 			}
 			cnt++;
-		}while(rendering_incomplete && cnt < 50);
+		}while(rendering_incomplete && cnt < 1000);
 		log.warn("telling sender of Rendered Page State outcomes ....");
 		return page_state;
 	}

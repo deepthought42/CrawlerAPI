@@ -44,6 +44,7 @@ public class BrowserUtils {
 		assert url != null;
 		assert !url.isEmpty();
 		
+		url.replace(";", "");
 		if(!url.contains("://")) {
 			url = "http://"+url;
 		}
@@ -67,7 +68,6 @@ public class BrowserUtils {
 		if(hash_index > 0) {
 			domain = domain.substring(0, hash_index);
 		}
-		
 		return domain;
 	}
 	

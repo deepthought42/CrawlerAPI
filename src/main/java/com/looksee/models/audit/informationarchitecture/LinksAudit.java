@@ -199,7 +199,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			
 			//Does link have a valid URL? yes(1) / No(0)
-			try {
+			try {						
 				URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
 				
 				if(BrowserUtils.doesUrlExist(url_href)) {
@@ -236,6 +236,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title);
 				issue_messages.add(issue_message);
 				log.warn("IO error occurred while auditing links ...."+e.getMessage());
+				log.warn("href value :: "+href);
 				e.printStackTrace();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

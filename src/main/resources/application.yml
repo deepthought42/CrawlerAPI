@@ -2,19 +2,29 @@ resilience4j.retry:
     configs:
         default:
             maxAttempts: 20
-            waitDuration: 10000
+            waitDuration: 1000
             retryExceptions:
                 - org.springframework.web.client.HttpServerErrorException
                 - java.util.concurrent.TimeoutException
                 - java.io.IOException
+                - java.net.SocketException
+        selenium:
+            maxAttempts: 100
+            waitDuration: 5000
+            retryExceptions:
+                - org.openqa.selenium.WebDriverException
+                - org.openqa.grid.common.exception.GridException
+        neo4j:
+            maxAttempts: 10
+            waitDuration: 1000
+            retryExceptions:
                 - org.neo4j.ogm.exception.ConnectionException
                 - org.neo4j.driver.exceptions.SessionExpiredException
-                - java.net.SocketException
-                - org.openqa.selenium.WebDriverException
+                - org.neo4j.driver.exceptions.DiscoveryException
     instances:
         neo4j:
-            baseConfig: default
+            baseConfig: neo4j
         webdriver:
-            baseConfig: default
+            baseConfig: selenium
         gcp:
             baseConfig: default

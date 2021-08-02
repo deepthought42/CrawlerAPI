@@ -73,9 +73,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				" stands out to the user." + 
 				" A good contrast ratio makes your content easy to read and navigate" + 
 				" through, creating a comfortable and engaging experience for your user. ";
-		
-		String ada_compliance = "Most items meet the minimum required contrast ratio. However, the" + 
-				" small text items in grey do not meet the minimum contrast ratio of 4.5:1.";
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		String recommendation = "Use colors for text and images of text with background colors that have a contrast of at least 4.5:1 for ADA compliance";
@@ -89,23 +86,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {			
-			try {
-				String bg_color_css = element.getRenderedCssValues().get("background-color");
-				String bg_image = element.getRenderedCssValues().get("background-image");
-				String bg_color = "255,255,255";
-				
-				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
-					bg_color = bg_color_css;
-				}
-				else if(bg_color_css.contains("rgba") && !element.getScreenshotUrl().isEmpty()) {
-					//extract opacity color
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
-					bg_color = bkg_color.rgb();	
-				}
-				else if(!element.getScreenshotUrl().isEmpty()) {
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
-					bg_color = bkg_color.rgb();
-				}
+			try {	
+				//extract opacity color
+				ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+				String bg_color = bkg_color.rgb();	
 				
 				ColorData text_color = new ColorData(element.getRenderedCssValues().get("color"));
 				
@@ -127,11 +111,13 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					
 					double font_size = Double.parseDouble(font_size_str.strip());
 					total_possible_points += 1;
-					//TODO if font size is greater than 18 or if greater than 14 and bold then check if contrast > 3 (A Compliance)
-					if(font_size >= 24 || (font_size >= 18.5 && BrowserUtils.isTextBold(font_weight))) {
+					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 (A Compliance)
+					//NOTE: The following measures of font size are in pixels not font points
+					if(font_size >= 24 || (font_size >= 18.6667 && BrowserUtils.isTextBold(font_weight))) {
 						if( contrast < 3 ) {
 							//low contrast header issue
 							String title = "Large text has low contrast";
+							String ada_compliance = "Text that is larger than 18 point or larger than 14 point and bold should meet the minimum contrast ratio of 3:1.";
 							String description = "Headline text has low contrast against the background";
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.HIGH,
@@ -154,11 +140,12 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//100% score
 						}
 					}
-					else if(font_size < 24 && !BrowserUtils.isTextBold(font_weight) ) {
+					else if((font_size < 24 && font_size >= 18.6667 && !BrowserUtils.isTextBold(font_weight)) || font_size < 18.6667 ) {
 						if( contrast < 4.5 ) {
 							//fail
 							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
+							String ada_compliance = "Text that is smaller than 18 point and larger than 14 point but not bolded or just smaller than 14 point fonts should meet the minimum contrast ratio of 4.5:1.";
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
 																						description,

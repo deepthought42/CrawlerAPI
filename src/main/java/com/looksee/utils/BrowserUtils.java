@@ -67,7 +67,6 @@ public class BrowserUtils {
 		if(hash_index > 0) {
 			domain = domain.substring(0, hash_index);
 		}
-		
 		return domain;
 	}
 	
@@ -168,7 +167,7 @@ public class BrowserUtils {
 		Elements elements = document.getElementsByTag("a");
 		
 		for(Element element : elements) {
-			String url = element.absUrl("href");
+			String url = element.attr("href");
 			if(!url.isEmpty()) {
 				link_urls.add(url);
 			}
@@ -214,13 +213,11 @@ public class BrowserUtils {
 			}
 		}
 		if("https".equalsIgnoreCase(url.getProtocol())){
-			log.warn("url :: "+url);
 			HttpsURLConnection https_client = getHttpsClient(url.toString());
 
-			//HttpsURLConnection huc = (HttpsURLConnection) url.openConnection();
 			try {
 				int responseCode = https_client.getResponseCode();
-				log.warn("response code :: "+responseCode);
+
 				if (responseCode != 404) {
 					return true;
 				} else {
@@ -580,6 +577,6 @@ public class BrowserUtils {
 
 	public static boolean isElementBackgroundImageSet(WebElement web_element) {
 		String background_image = web_element.getCssValue("background-image");
-		return background_image != null && !background_image.isEmpty();
+		return background_image != null && !background_image.trim().isEmpty() && !background_image.trim().contentEquals("none");
 	}
 }

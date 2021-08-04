@@ -35,7 +35,7 @@ public class BrowserServiceTest {
 		System.out.println("html :: "+html);
 	}
 	
-	@Test
+	//@Test
 	public void isElementVisibleInPanel(){
 		Browser browser = new Browser();
 		browser.setViewportSize(new Dimension(1224, 844));

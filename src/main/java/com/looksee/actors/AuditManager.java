@@ -232,7 +232,9 @@ public class AuditManager extends AbstractActor{
 																		typography_score,
 																		whitespace_score, branding_score, 
 																		elements_reviewed, 
-																		elements_found);
+																		elements_found, 
+																		audit_record.getDataExtractionProgress(), 
+																		audit_record.getDataExtractionMsg());
 								
 								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
 							}		

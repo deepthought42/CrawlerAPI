@@ -7,4 +7,4 @@ COPY api_key.p12 /etc/certs/api_key.p12
 COPY gmail_credentials.json /etc/creds/gmail_credentials.json
 EXPOSE 443
 EXPOSE 80
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-ea","-jar", "look-see.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar", "look-see.jar"]

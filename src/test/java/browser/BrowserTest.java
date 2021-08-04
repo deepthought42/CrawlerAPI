@@ -73,12 +73,16 @@ public class BrowserTest {
 		}
 	}
 	
+	//@Test
+	//NOTE: Commented out because testbed url is not correct anymore
 	public void scrollToElementInChrome() throws MalformedURLException{
 		Browser browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");
-		WebElement element = browser.getDriver().findElement(By.xpath("//button"));
+
+		String xpath = "//button";
+		WebElement element = browser.getDriver().findElement(By.xpath(xpath));
 		
-		browser.scrollToElement(element);
+		browser.scrollToElement(xpath, element);
 		
 		assertEquals(0, browser.getXScrollOffset());
 		assertEquals(553, browser.getYScrollOffset());

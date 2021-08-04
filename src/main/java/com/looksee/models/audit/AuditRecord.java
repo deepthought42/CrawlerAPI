@@ -25,6 +25,9 @@ public class AuditRecord extends LookseeObject {
 	private double aesthetic_audit_progress;
 	private String aesthetic_msg;
 	
+	private double data_extraction_progress;
+	private String data_extraction_msg;
+	
 	public AuditRecord() {
 		setStartTime(LocalDateTime.now());
 	}
@@ -129,5 +132,21 @@ public class AuditRecord extends LookseeObject {
 
 	public void setAestheticMsg(String aesthetic_msg) {
 		this.aesthetic_msg = aesthetic_msg;
+	}
+
+	public double getDataExtractionProgress() {
+		return data_extraction_progress;
+	}
+
+	public void setDataExtractionProgress(double data_extraction_progress) {
+		this.data_extraction_progress = data_extraction_progress;
+	}
+
+	public String getDataExtractionMsg() {
+		return data_extraction_msg;
+	}
+
+	public void setDataExtractionMsg(String data_extraction_msg) {
+		this.data_extraction_msg = data_extraction_msg;
 	}
 }

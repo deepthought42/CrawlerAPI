@@ -18,11 +18,14 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.AuditRecordRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Contains business logic for interacting with and managing audits
  *
  */
 @Service
+@Retry(name = "neo4j")
 public class AuditRecordService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);

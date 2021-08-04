@@ -4,6 +4,7 @@ package com.looksee.actors;
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
@@ -138,7 +139,7 @@ public class WebCrawlerActor extends AbstractActor{
 						//construct page and add page to list of page states
 						//retrieve html source for page
 						try {
-							PageState page_state = browser_service.buildPageState(page_url_obj);
+							PageState page_state = browser_service.buildPageState(page_url_obj, crawl_action.getAuditRecord());
 							page_state = page_state_service.save(page_state);
 							log.warn("http status =  "+page_state.getHttpStatus());
 							pages.put(page_state.getKey(), page_state);
@@ -166,8 +167,9 @@ public class WebCrawlerActor extends AbstractActor{
 							
 							//iterate over links and exclude external links from frontier
 							for (Element link : links) {
-								String href_str = link.absUrl("href");
-								
+								String href_str = link.attr("href");
+								href_str = href_str.replaceAll(";", "");
+
 								if(!link.attr("href").isEmpty() && href_str.isEmpty()) {
 									href_str = domain.getUrl() + link.attr("href");
 								}
@@ -175,23 +177,28 @@ public class WebCrawlerActor extends AbstractActor{
 									continue;
 								}
 
-								String href = BrowserUtils.sanitizeUrl(href_str);
-								URL href_url = new URL(href);
-								href = BrowserUtils.getPageUrl(href_url);
-								boolean isExternalLink = BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href);
-								//check if external link
-								if( isExternalLink || href.startsWith("mailto:")) {
-									log.warn("adding to external links :: "+href);
-				   					external_links.put(href, Boolean.TRUE);
+								try {
+									URL href_url = new URL( BrowserUtils.sanitizeUrl(href_str));
+									String href = BrowserUtils.getPageUrl(href_url);
+									boolean isExternalLink = BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href);
+									//check if external link
+									if( isExternalLink || href.startsWith("mailto:")) {
+										log.warn("adding to external links :: "+href);
+					   					external_links.put(href, Boolean.TRUE);
+									}
+									else if( !visited.containsKey(href) 
+											&& !frontier.containsKey(href) 
+											&& !isExternalLink
+									){
+										log.warn("adding to internal links :: "+href);
+	
+										//add link to frontier
+										frontier.put(href, Boolean.TRUE);
+									}
 								}
-								else if( !visited.containsKey(href) 
-										&& !frontier.containsKey(href) 
-										&& !isExternalLink
-								){
-									log.warn("adding to internal links :: "+href);
-
-									//add link to frontier
-									frontier.put(href, Boolean.TRUE);
+								catch(MalformedURLException e) {
+									log.warn("malformed href value ....  "+href_str);
+									e.printStackTrace();
 								}
 							}
 							visited.put(page_url_str, page_state);
@@ -215,7 +222,7 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.match(PageCrawlActionMessage.class, crawl_action-> {
 					
-					PageState page_state = browser_service.buildPageState(crawl_action.getUrl());
+					PageState page_state = browser_service.buildPageState(crawl_action.getUrl(), crawl_action.getAuditRecord());
 					page_state = page_state_service.save(page_state);
 
 					audit_record_service.addPageToPageAudit(crawl_action.getAuditRecord().getId(), page_state.getId());

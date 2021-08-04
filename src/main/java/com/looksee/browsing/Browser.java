@@ -72,11 +72,13 @@ import cz.vutbr.web.csskit.RuleFontFaceImpl;
 import cz.vutbr.web.csskit.RuleKeyframesImpl;
 import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
+import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 @Component
+@Retry(name="webdriver")
 public class Browser {
 	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
@@ -762,12 +764,21 @@ public class Browser {
 		this.x_scroll_offset = x_scroll_offset;
 	}
 	
-	public void scrollToElement(WebElement elem) 
-    { 
-		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
-		Point offsets = getViewportScrollOffset();
-		this.setXScrollOffset(offsets.getX());
-		this.setYScrollOffset(offsets.getY());
+	public void scrollToElement(String xpath, WebElement elem) 
+    {
+		Point offsets = elem.getLocation();
+		int offsets_y = -9999999;
+		
+		if(xpath.contains("nav") || xpath.startsWith("//body/header")) {
+			scrollToTopOfPage();
+			return;
+		}
+		while(offsets_y != offsets.getY()) {
+			offsets_y = offsets.getY();
+			scrollDown();
+
+			offsets = elem.getLocation();
+		}
     }
 	
 	public void scrollToElement(com.looksee.models.Element element) 
@@ -779,16 +790,13 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollTo(long x_offset, long y_offset) 
-    {
-		//only scroll to position if it isn't the same position
-		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		//Timing.pauseThread(1000);
-		Point offsets = getViewportScrollOffset();
-		this.setXScrollOffset(offsets.getX());
-		this.setYScrollOffset(offsets.getY());
-    }
-	
+	public void removeElement(String class_name) {
+		JavascriptExecutor js;
+		if (this.getDriver() instanceof JavascriptExecutor) {
+		    js = (JavascriptExecutor) driver;
+		    js.executeScript("return document.getElementsByClassName('" + class_name + "')[0].remove();");
+		}
+	}
 	
 	/**
 	 * Extract all attributes from a given {@link WebElement}
@@ -1102,5 +1110,15 @@ public class Browser {
 	public void scrollToBottomOfPage() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+	}
+	
+	public void scrollToTopOfPage() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollTo(0, 0)");
+	}
+	
+	public void scrollDown() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollBy(0, window.innerHeight)");
 	}
 }

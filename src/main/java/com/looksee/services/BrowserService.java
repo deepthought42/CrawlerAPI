@@ -1,7 +1,6 @@
 package com.looksee.services;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +27,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
@@ -40,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.assertthat.selenium_shutterbug.utils.web.ElementOutsideViewportException;
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.gcp.GoogleCloudStorage;
@@ -50,6 +50,7 @@ import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
@@ -84,6 +85,9 @@ public class BrowserService {
 	@Autowired
 	private PageStateService page_state_service;
 
+	@Autowired
+	private AuditRecordService audit_record_service;
+	
 	@Autowired
 	private FormService form_service;
 
@@ -327,12 +331,13 @@ public class BrowserService {
 	 * Process used by the web crawler to build {@link PageState} from {@link PageVersion}
 	 * 
 	 * @param url
+	 * @param audit_record TODO
 	 * @return
 	 * @throws Exception
 	 */
-	public PageState buildPageState(URL url) {
+	public PageState buildPageState(URL url, AuditRecord audit_record) {
 		assert url != null;
-		
+
 		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
 		boolean xpath_extraction_incomplete = true;
@@ -342,6 +347,7 @@ public class BrowserService {
 		Browser browser = null;
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		List<String> xpaths = new ArrayList<>();
+		audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
@@ -352,7 +358,11 @@ public class BrowserService {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
 					page_state = page_state_service.save(buildPageState(url, browser));
-					//send RenderedPageState to sender
+					
+					//update audit record with progress
+					audit_record.setDataExtractionProgress(1.0/3.0);
+					audit_record = audit_record_service.save(audit_record);
+					
 				}
 				
 				log.warn("extracting all xpaths for url ::  "+url);
@@ -360,14 +370,22 @@ public class BrowserService {
 				if(xpath_extraction_incomplete) {
 					xpaths.addAll(extractAllUniqueElementXpaths(page_state.getSrc()));
 					xpath_extraction_incomplete=false;
+					
+					//update audit record with progress
+					audit_record.setDataExtractionProgress(2.0/3.0);
+					audit_record = audit_record_service.save(audit_record);
 				}
 				
 				log.warn("extracting all element states for url :: "+url);
 				//for each xpath then extract element state
 				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				//update audit record with progress
+				audit_record.setDataExtractionProgress(3.0/3.0);
+				audit_record = audit_record_service.save(audit_record);
+				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt=10000;
+				cnt=100000;
 				break;
 			
 			}
@@ -379,18 +397,19 @@ public class BrowserService {
 				e.printStackTrace();
 			}
 			catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.warn("An exception occurred while building page state ... "+e.getMessage());
 			}
 			
-			try {
-				browser.close();
-			}
-			catch (WebDriverException e) {
-				e.printStackTrace();
+			if(browser != null) {
+				try {
+					browser.close();
+				}
+				catch (WebDriverException | GridException e) {
+					log.warn("There was an error while closing the browser during buildPageState : " + e.getLocalizedMessage());
+				}
 			}
 			cnt++;
-		}while(rendering_incomplete && cnt < 50);
+		}while(rendering_incomplete && cnt < 1000);
 		log.warn("telling sender of Rendered Page State outcomes ....");
 		return page_state;
 	}
@@ -604,7 +623,9 @@ public class BrowserService {
 		
 		String body_src = extractBody(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
-		
+		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrl()));
+		Document html_doc = Jsoup.parse(body_src);
+
 		for(String xpath : xpaths) {
 			try {
 				if(element_states_map.containsKey(xpath)) {
@@ -617,20 +638,11 @@ public class BrowserService {
 					continue;
 				}
 				*/
-				browser.scrollToElement(web_element);
+				browser.scrollToElement(xpath, web_element); 
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
 				String css_selector = generateCssSelectorFromXpath(xpath);
 
-				Document html_doc = Jsoup.parse(body_src);
-
-				//load json element
-				Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
-				if(elements.size() == 0) {
-					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
-				}
-				
-				Element element = elements.first();
 				
 				//check if element is visible in pane and if not then continue to next element xpath
 				if( !web_element.isDisplayed()
@@ -639,48 +651,28 @@ public class BrowserService {
 					continue;
 				}
 				
-				
 				String element_screenshot_url = "";
 				
-				//only grab a screenshot if the element has rgba with transparency less than 1 or element does not have text color set or element is an image or element has a background image set
-				if( isElementVisibleInPane(browser, element_location, element_size)
-						&& (BrowserUtils.isElementBackgroundImageSet(web_element)
-							|| !(BrowserUtils.doesElementHaveBackgroundColor(web_element)
-								&& BrowserUtils.doesElementHaveFontColor(web_element)
-								&& !hasTransparency(web_element.getCssValue("background-color")))) ) {
-					try {
-						log.warn("capturing element screenshot with background color .... "+web_element.getCssValue("background-color"));
-						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-						//BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
-						String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
-						
-						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-						element_screenshot.flush();
-					}
-					catch(ElementOutsideViewportException | RasterFormatException e) {
-						log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-						log.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-						log.warn("element location :: "+element_location.getX() + " , " + element_location.getY());
-						log.warn("element size :: "+element_size.getWidth() + " , " + element_size.getHeight());
-						log.warn("element screenshot :: "+web_element.getLocation().getX() + " , " + web_element.getLocation().getY());
-						log.warn("element screenshot size :: "+web_element.getSize().getWidth() + " , " + web_element.getSize().getHeight());
-						log.warn("viewport scroll offset  :  " + browser.getXScrollOffset() + " , " + browser.getYScrollOffset());
-						log.warn("viewport size ::  " + browser.getViewportSize().getWidth() + " , " + browser.getViewportSize().getHeight());
-						log.warn("Does element have negative position ... "+doesElementHaveNegativePosition(web_element.getLocation()));
-						log.warn("Is element within viewport ... "+isElementVisibleInPane(browser, element_location, element_size));
-						log.warn("Is og element location and dimension within viewport ... "+isElementVisibleInPane(browser, web_element.getLocation(), web_element.getSize()));
-						log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-						log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-						e.printStackTrace();
-					}
+				int width = element_size.getWidth();
+				if((element_size.getWidth() + element_location.getX()) > page_screenshot.getWidth()) {
+					width = page_screenshot.getWidth()-element_location.getX();
 				}
+				
+				int height = element_size.getHeight();
+				if((element_size.getHeight() + element_location.getY()) > page_screenshot.getHeight()) {
+					height = page_screenshot.getHeight()-element_location.getY();
+				}
+				
+				//extract element screenshot from full page screenshot
+				BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
+				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
+				
+				element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+				element_screenshot.flush();
+
 				//get child elements for element
-				log.warn("Starting attribute extraction....");
 				Map<String, String> attributes = browser.extractAttributes(web_element);
-				log.warn("Attribute extraction complete!");
-				log.warn("loading css properties...");
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
-				log.warn("loading css properties complete!");
 				
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
@@ -690,7 +682,12 @@ public class BrowserService {
 				else {
 					classification = ElementClassification.ANCESTOR;
 				}
-
+				//load json element
+				Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
+				if(elements.size() == 0) {
+					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
+				}
+				Element element = elements.first();
 				ElementState element_state = buildElementState(xpath, 
 															   attributes, 
 															   element, 
@@ -731,14 +728,12 @@ public class BrowserService {
 			return false;
 		}
 		
-		log.warn("Checking "+css_value+ " for transparency....");
 		css_value = css_value.replace("rgba(", "");
 		css_value = css_value.replace(")", "");
 		String[] rgba = css_value.split(",");
 		double transparency_value = Double.parseDouble(rgba[3].trim());
-		log.warn(css_value+ " has transparancy ??    "+ (transparency_value < 1.0 && transparency_value > 0.0));
 
-		return transparency_value < 1.0 && transparency_value > 0.0;
+		return transparency_value < 1.0;
 	}
 
 	/**
@@ -885,6 +880,10 @@ public class BrowserService {
 		assert location != null;
 		assert size != null;
 
+		Point offsets = browser.getViewportScrollOffset();
+		browser.setXScrollOffset(offsets.getX());
+		browser.setYScrollOffset(offsets.getY());
+		
 		long y_offset = browser.getYScrollOffset();
 		long x_offset = browser.getXScrollOffset();
 
@@ -974,7 +973,8 @@ public class BrowserService {
 				String attribute_values =attributes.get(attr);
 				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
-				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
+				if(trimmed_values.length() > 0 
+						&& !trimmed_values.contains("javascript:void()")){
 					attributeChecks.add("contains(@" + attr + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}

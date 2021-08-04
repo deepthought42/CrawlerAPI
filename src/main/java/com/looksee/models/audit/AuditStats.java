@@ -14,9 +14,12 @@ public class AuditStats {
 	private LocalDateTime end_time;
 	private long audit_record_id;
 	
+	
 	//crawl progress trackers
 	private long elements_examined;
 	private long elements_found;
+	private double data_extraction_progress;
+	private String data_extraction_message;
 	
 	private long content_pages_audited;
 	private double content_score;
@@ -87,7 +90,9 @@ public class AuditStats {
 			double whitespace_score, 
 			double branding_score, 
 			long elements_examined, 
-			long elements_found
+			long elements_found, 
+			double data_extraction_progress, 
+			String data_extraction_msg
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -116,6 +121,8 @@ public class AuditStats {
 		setAestheticMsg(aesthetic_msg);
 		setElementsExamined(elements_examined);
 		setElementsFound(elements_found);
+		setDataExtractionProgress(data_extraction_progress);
+		setDataExtractionMessage(data_extraction_msg);
 	}
 
 
@@ -357,5 +364,21 @@ public class AuditStats {
 
 	public void setElementsFound(long elements_found) {
 		this.elements_found = elements_found;
+	}
+
+	public double getDataExtractionProgress() {
+		return data_extraction_progress;
+	}
+
+	public void setDataExtractionProgress(double data_extraction_progress) {
+		this.data_extraction_progress = data_extraction_progress;
+	}
+
+	public String getDataExtractionMessage() {
+		return data_extraction_message;
+	}
+
+	public void setDataExtractionMessage(String data_extraction_message) {
+		this.data_extraction_message = data_extraction_message;
 	}
 }

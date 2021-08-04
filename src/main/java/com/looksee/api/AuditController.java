@@ -257,14 +257,17 @@ public class AuditController {
 	   		return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
 	   	}
 	   	
-	   	PageState page_state = browser_service.buildPageState(sanitized_url);
+	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+	   	audit_record = audit_record_service.save(audit_record);
+
+	   	PageState page_state = browser_service.buildPageState(sanitized_url, audit_record);
 	   	page_state = page_service.save(page_state);
 		//domain_service.addPage(domain.getId(), page_state.getKey());
 
 	   	//create new audit record
-	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), page_state, false);
-
+	   	audit_record_service.addPageToPageAudit(audit_record.getId(), page_state.getId());
 	   	audit_record = audit_record_service.save(audit_record);
+
 	   	//domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 	   	Principal principal = request.getUserPrincipal();
 		if(principal != null) {

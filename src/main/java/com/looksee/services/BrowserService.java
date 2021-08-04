@@ -50,6 +50,7 @@ import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
@@ -84,6 +85,9 @@ public class BrowserService {
 	@Autowired
 	private PageStateService page_state_service;
 
+	@Autowired
+	private AuditRecordService audit_record_service;
+	
 	@Autowired
 	private FormService form_service;
 
@@ -327,12 +331,13 @@ public class BrowserService {
 	 * Process used by the web crawler to build {@link PageState} from {@link PageVersion}
 	 * 
 	 * @param url
+	 * @param audit_record TODO
 	 * @return
 	 * @throws Exception
 	 */
-	public PageState buildPageState(URL url) {
+	public PageState buildPageState(URL url, AuditRecord audit_record) {
 		assert url != null;
-		
+
 		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
 		boolean xpath_extraction_incomplete = true;
@@ -342,6 +347,7 @@ public class BrowserService {
 		Browser browser = null;
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		List<String> xpaths = new ArrayList<>();
+		audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
@@ -352,7 +358,11 @@ public class BrowserService {
 					log.warn("getting browser for rendered page state extraction...");
 					//navigate to page url
 					page_state = page_state_service.save(buildPageState(url, browser));
-					//send RenderedPageState to sender
+					
+					//update audit record with progress
+					audit_record.setDataExtractionProgress(1.0/3.0);
+					audit_record = audit_record_service.save(audit_record);
+					
 				}
 				
 				log.warn("extracting all xpaths for url ::  "+url);
@@ -360,11 +370,19 @@ public class BrowserService {
 				if(xpath_extraction_incomplete) {
 					xpaths.addAll(extractAllUniqueElementXpaths(page_state.getSrc()));
 					xpath_extraction_incomplete=false;
+					
+					//update audit record with progress
+					audit_record.setDataExtractionProgress(2.0/3.0);
+					audit_record = audit_record_service.save(audit_record);
 				}
 				
 				log.warn("extracting all element states for url :: "+url);
 				//for each xpath then extract element state
 				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				//update audit record with progress
+				audit_record.setDataExtractionProgress(3.0/3.0);
+				audit_record = audit_record_service.save(audit_record);
+				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
 				cnt=100000;
@@ -635,8 +653,18 @@ public class BrowserService {
 				
 				String element_screenshot_url = "";
 				
+				int width = element_size.getWidth();
+				if((element_size.getWidth() + element_location.getX()) > page_screenshot.getWidth()) {
+					width = page_screenshot.getWidth()-element_location.getX();
+				}
+				
+				int height = element_size.getHeight();
+				if((element_size.getHeight() + element_location.getY()) > page_screenshot.getHeight()) {
+					height = page_screenshot.getHeight()-element_location.getY();
+				}
+				
 				//extract element screenshot from full page screenshot
-				BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), (element_size.getWidth()+5), element_size.getHeight());
+				BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
 				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 				
 				element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -852,6 +880,10 @@ public class BrowserService {
 		assert location != null;
 		assert size != null;
 
+		Point offsets = browser.getViewportScrollOffset();
+		browser.setXScrollOffset(offsets.getX());
+		browser.setYScrollOffset(offsets.getY());
+		
 		long y_offset = browser.getYScrollOffset();
 		long x_offset = browser.getXScrollOffset();
 
@@ -941,7 +973,8 @@ public class BrowserService {
 				String attribute_values =attributes.get(attr);
 				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
-				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
+				if(trimmed_values.length() > 0 
+						&& !trimmed_values.contains("javascript:void()")){
 					attributeChecks.add("contains(@" + attr + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}

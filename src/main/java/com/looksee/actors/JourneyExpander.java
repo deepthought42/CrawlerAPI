@@ -25,6 +25,7 @@ import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Action;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.journeys.ElementInteractionStep;
@@ -130,7 +131,7 @@ public class JourneyExpander extends AbstractActor{
 							URL page_url = new URL(current_url);							
 		
 							//build page state for baseline
-							PageState journey_result_page = browser_service.buildPageState(page_url);
+							PageState journey_result_page = browser_service.buildPageState(page_url, new AuditRecord());
 							journey_result_page = page_state_service.save(journey_result_page);
 							//domain_service.addPage(domain.getId(), journey_result_page.getKey());
 

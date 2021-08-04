@@ -150,7 +150,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				URI uri = new URI(href);
 				if(!uri.isAbsolute()) {
 					log.warn("URI is relative");
-					URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
 					href.replaceAll("../", "");
 					if(href.startsWith("/") && href.length() > 1) {
 						href = href.substring(1);
@@ -158,7 +157,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					else if(href.strip().contentEquals("/")) {
 						href = "";
 					}
-					href = BrowserUtils.getPageUrl(page_url);
+					
+					href = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl())).getHost() + href;
+					href = BrowserUtils.getPageUrl(new URL(BrowserUtils.sanitizeUrl(href)));
 				}
 
 				//if starts with / then append host
@@ -200,25 +201,33 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 			//Does link have a valid URL? yes(1) / No(0)
 			try {						
-				URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
-				
-				if(BrowserUtils.doesUrlExist(url_href)) {
+				if(href.contains("javascript:")) {
+					log.warn("href value (before sanitizing) :: "+href);
 					score++;
 				}
-				else {
-					String recommendation = "Make sure links point to valid locations";
-					String description = "Link destination could not be found - "+href;
-					String title = "Invalid link url";
-
-					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																	Priority.HIGH,
-																	description,
-																	recommendation, link,
-																	AuditCategory.INFORMATION_ARCHITECTURE,
-																	labels,
-																	ada_compliance,
-																	title);
-					issue_messages.add(issue_message);
+				
+				if(!href.contains("javascript:")) {
+					
+					URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
+					
+					if(BrowserUtils.doesUrlExist(url_href)) {
+						score++;
+					}
+					else {
+						String recommendation = "Make sure links point to valid locations";
+						String description = "Link destination could not be found - "+href;
+						String title = "Invalid link url";
+	
+						ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																		Priority.HIGH,
+																		description,
+																		recommendation, link,
+																		AuditCategory.INFORMATION_ARCHITECTURE,
+																		labels,
+																		ada_compliance,
+																		title);
+						issue_messages.add(issue_message);
+					}
 				}
 			} catch (IOException e) {
 				String recommendation = "Make sure links point to a valid url";

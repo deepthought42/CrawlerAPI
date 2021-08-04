@@ -44,7 +44,6 @@ public class BrowserUtils {
 		assert url != null;
 		assert !url.isEmpty();
 		
-		url.replace(";", "");
 		if(!url.contains("://")) {
 			url = "http://"+url;
 		}
@@ -168,7 +167,7 @@ public class BrowserUtils {
 		Elements elements = document.getElementsByTag("a");
 		
 		for(Element element : elements) {
-			String url = element.absUrl("href");
+			String url = element.attr("href");
 			if(!url.isEmpty()) {
 				link_urls.add(url);
 			}
@@ -214,13 +213,11 @@ public class BrowserUtils {
 			}
 		}
 		if("https".equalsIgnoreCase(url.getProtocol())){
-			log.warn("url :: "+url);
 			HttpsURLConnection https_client = getHttpsClient(url.toString());
 
-			//HttpsURLConnection huc = (HttpsURLConnection) url.openConnection();
 			try {
 				int responseCode = https_client.getResponseCode();
-				log.warn("response code :: "+responseCode);
+
 				if (responseCode != 404) {
 					return true;
 				} else {

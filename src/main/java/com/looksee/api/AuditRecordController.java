@@ -303,8 +303,10 @@ public class AuditRecordController {
 														typography_score, 
 														whitespace_score, 
 														branding_score,
-														0,
-														0);
+														((PageAuditRecord) audit_record).getElementsReviewed(),
+														((PageAuditRecord) audit_record).getElementsFound(),
+														audit_record.getDataExtractionProgress(),
+														audit_record.getDataExtractionMsg());
 				return audit_stats;				
     		}
     		else {

@@ -143,7 +143,7 @@ public class BrowserService {
 			WebElement web_elem,
 			ElementClassification classification, 
 			Map<String, String> rendered_css_values, 
-			String screenshot_url, 
+			String screenshot_url,
 			String css_selector
 	) throws MalformedURLException, IOException {
 		assert xpath != null && !xpath.isEmpty();
@@ -340,13 +340,10 @@ public class BrowserService {
 
 		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
-		boolean xpath_extraction_incomplete = true;
 		
 		int cnt = 0;
 		PageState page_state = null;
 		Browser browser = null;
-		Map<String, ElementState> elements_mapped = new HashMap<>();
-		List<String> xpaths = new ArrayList<>();
 		audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
@@ -354,17 +351,15 @@ public class BrowserService {
 				
 				browser.navigateTo(url.toString());
 				//url = new URL(browser.getDriver().getCurrentUrl());
-				if(page_state == null) {
-					log.warn("getting browser for rendered page state extraction...");
-					//navigate to page url
-					page_state = page_state_service.save(buildPageState(url, browser));
-					
-					//update audit record with progress
-					audit_record.setDataExtractionProgress(1.0/3.0);
-					audit_record = audit_record_service.save(audit_record);
-					
-				}
+				log.warn("getting browser for rendered page state extraction...");
+				//navigate to page url
+				page_state = page_state_service.save(buildPageState(url, browser));
 				
+				//update audit record with progress
+				audit_record.setDataExtractionProgress(1.0/3.0);
+				audit_record = audit_record_service.save(audit_record);
+
+				/*
 				log.warn("extracting all xpaths for url ::  "+url);
 				//extract all element xpaths
 				if(xpath_extraction_incomplete) {
@@ -377,12 +372,15 @@ public class BrowserService {
 				}
 				
 				log.warn("extracting all element states for url :: "+url);
+				
+				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
 				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				
 				//update audit record with progress
 				audit_record.setDataExtractionProgress(3.0/3.0);
 				audit_record = audit_record_service.save(audit_record);
-				
+				*/
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
 				cnt=100000;
@@ -392,21 +390,17 @@ public class BrowserService {
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-			catch (XPathExpressionException e) {
-				log.warn("error occurred with xpath expression ");
-				e.printStackTrace();
-			}
 			catch (Exception e) {
 				log.warn("An exception occurred while building page state ... "+e.getMessage());
 			}
 			
-			if(browser != null) {
-				try {
+			try {
+				if(browser != null) {   
 					browser.close();
 				}
-				catch (WebDriverException | GridException e) {
-					log.warn("There was an error while closing the browser during buildPageState : " + e.getLocalizedMessage());
-				}
+			}
+			catch (WebDriverException | GridException e) {
+				log.warn("There was an error while closing the browser during buildPageState : " + e.getLocalizedMessage());
 			}
 			cnt++;
 		}while(rendering_incomplete && cnt < 1000);
@@ -475,6 +469,84 @@ public class BrowserService {
 				status_code);
 
 		return page_state;
+	}
+	
+	/**
+	 * Process used by the web crawler to build {@link PageElement} list based on the xpaths on the page
+	 * @param audit_record TODO
+	 * @param xpaths TODO
+	 * @param url
+	 * 
+	 * @return
+	 * @throws MalformedURLException 
+	 * @throws Exception
+	 */
+	public List<ElementState> buildPageElements(PageState page_state, AuditRecord audit_record, List<String> xpaths) throws MalformedURLException {
+		assert page_state != null;
+
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(page_state.getUrl() ));
+		  
+   		String page_url = sanitized_url.getHost()+sanitized_url.getPath();
+   		
+		log.warn("building page elements for page with url :: "+page_url);
+		boolean rendering_incomplete = true;
+		
+		List<ElementState> elements = new ArrayList<>();
+		
+		int cnt = 0;
+		Browser browser = null;
+		Map<String, ElementState> elements_mapped = new HashMap<>();
+		
+		audit_record = audit_record_service.findById(audit_record.getId()).get();
+		//extract all element xpaths
+
+		do {
+			try {
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				
+				log.warn("navigating to url ::  "+page_url);
+				browser.navigateTo(page_url);
+				//url = new URL(browser.getDriver().getCurrentUrl());				
+				
+				
+				log.warn("extracting all element states for url :: "+page_url);
+				
+				//get ElementState List by asking multiple bots to build xpaths in parallel
+				//for each xpath then extract element state
+				elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				
+				//update audit record with progress
+				audit_record.setDataExtractionProgress(3.0/3.0);
+				audit_record = audit_record_service.save(audit_record);
+				
+				//page_state.setElements(elements);
+				rendering_incomplete = false;
+				return elements;
+			
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			catch (XPathExpressionException e) {
+				log.warn("error occurred with xpath expression ");
+				e.printStackTrace();
+			}
+			catch (Exception e) {
+				log.warn("An exception occurred while building page elements ... "+e.getMessage());
+				e.printStackTrace();
+			}
+			
+			if(browser != null) {
+				try {
+					browser.close();
+				}
+				catch (WebDriverException | GridException e) {
+					log.warn("There was an error while closing the browser during buildPageState : " + e.getLocalizedMessage());
+				}
+			}
+			cnt++;
+		}while(rendering_incomplete && cnt < 1000);
+		return elements;
 	}
 	
 	private static String calculateSha256(String value) {
@@ -641,7 +713,6 @@ public class BrowserService {
 				browser.scrollToElement(xpath, web_element); 
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
-				String css_selector = generateCssSelectorFromXpath(xpath);
 
 				
 				//check if element is visible in pane and if not then continue to next element xpath
@@ -651,6 +722,7 @@ public class BrowserService {
 					continue;
 				}
 				
+				String css_selector = generateCssSelectorFromXpath(xpath);
 				String element_screenshot_url = "";
 				
 				int width = element_size.getWidth();
@@ -663,15 +735,16 @@ public class BrowserService {
 					height = page_screenshot.getHeight()-element_location.getY();
 				}
 				
-				//extract element screenshot from full page screenshot
-				BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
-				String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
-				
-				element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-				element_screenshot.flush();
-
+				if(width <= 0 || height <= 0) {
+					//extract element screenshot from full page screenshot
+					BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
+					String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
+					
+					element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+					element_screenshot.flush();
+				}
 				//get child elements for element
-				Map<String, String> attributes = browser.extractAttributes(web_element);
+				//Map<String, String> attributes = browser.extractAttributes(web_element);
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				
 				ElementClassification classification = null;
@@ -689,7 +762,7 @@ public class BrowserService {
 				}
 				Element element = elements.first();
 				ElementState element_state = buildElementState(xpath, 
-															   attributes, 
+															   new HashMap<>(), 
 															   element, 
 															   web_element, 
 															   classification, 

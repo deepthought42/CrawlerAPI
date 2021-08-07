@@ -39,6 +39,7 @@ import com.looksee.api.exceptions.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.UXIssueReportDto;
@@ -259,16 +260,24 @@ public class AuditController {
 	   	
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
 	   	audit_record = audit_record_service.save(audit_record);
-
+		
 	   	PageState page_state = browser_service.buildPageState(sanitized_url, audit_record);
 	   	page_state = page_service.save(page_state);
-		//domain_service.addPage(domain.getId(), page_state.getKey());
+	   	audit_record_service.addPageToPageAudit(audit_record.getId(), page_state.getId());
+	   	
+	   	//generate unique xpaths for all elements on page
+	   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+		
+		//update audit record with progress
+		audit_record.setDataExtractionProgress(2.0/3.0);
+		audit_record = audit_record_service.save(audit_record);
+		
+		List<ElementState> elements = browser_service.buildPageElements(page_state, audit_record, xpaths);
+		page_state.addElements(elements);
 
 	   	//create new audit record
-	   	audit_record_service.addPageToPageAudit(audit_record.getId(), page_state.getId());
 	   	audit_record = audit_record_service.save(audit_record);
 
-	   	//domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 	   	Principal principal = request.getUserPrincipal();
 		if(principal != null) {
 			String user_id = principal.getName();

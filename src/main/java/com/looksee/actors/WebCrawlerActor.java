@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Domain;
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
@@ -141,6 +143,11 @@ public class WebCrawlerActor extends AbstractActor{
 						try {
 							PageState page_state = browser_service.buildPageState(page_url_obj, crawl_action.getAuditRecord());
 							page_state = page_state_service.save(page_state);
+							
+						   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+							List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
+							page_state.addElements(elements);
+							
 							log.warn("http status =  "+page_state.getHttpStatus());
 							pages.put(page_state.getKey(), page_state);
 							domain_service.addPage(domain.getId(), page_state.getKey());
@@ -227,9 +234,13 @@ public class WebCrawlerActor extends AbstractActor{
 
 					audit_record_service.addPageToPageAudit(crawl_action.getAuditRecord().getId(), page_state.getId());
 					crawl_action.getAuditRecord().setPageState(page_state);
+				   	
+				   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+					List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
+					page_state.addElements(elements);
 					//domain.addPage(page);
 					//domain_service.addPage(domain.getId(), page_state.getKey());
-									   	
+					
 				   	//check if page state already
 				   	//perform audit and return audit result
 				   	log.warn("?????????????????????????????????????????????????????????????????????");

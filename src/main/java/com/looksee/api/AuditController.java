@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.looksee.api.exceptions.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
-import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
@@ -47,7 +46,6 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditFactory;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
-import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.IssueElementMap;
@@ -64,7 +62,6 @@ import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.BrowserService;
-import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
@@ -99,9 +96,6 @@ public class AuditController {
 	
 	@Autowired
 	private AccountService account_service;
-	
-    @Autowired
-    private DomainService domain_service;
     
     @Autowired
     protected SecurityConfig appConfig;
@@ -259,75 +253,128 @@ public class AuditController {
 	   	}
 	   	
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
-	   	audit_record = audit_record_service.save(audit_record);
+	   	audit_record_service.save(audit_record);
 		
 	   	PageState page_state = browser_service.buildPageState(sanitized_url, audit_record);
-	   	page_state = page_service.save(page_state);
-	   	audit_record_service.addPageToPageAudit(audit_record.getId(), page_state.getId());
+	   	PageState page_state_record = page_service.save(page_state);
+	   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state_record.getId());
 	   	
 	   	//generate unique xpaths for all elements on page
-	   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+	   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 		
 		//update audit record with progress
 		audit_record.setDataExtractionProgress(2.0/3.0);
-		audit_record = audit_record_service.save(audit_record);
+		audit_record_service.save(audit_record);
+	   	int start_xpath_index = 0;
+	   	int last_xpath_index = 0;
+
+		//List<CompletableFuture<List<ElementState>>> futures_list = new ArrayList<>();
+		List<List<String>> xpath_lists = new ArrayList<>();
+	   	while(start_xpath_index < (xpaths.size()-1)) {
+	   		last_xpath_index = (start_xpath_index + 100);
+	   		if(last_xpath_index >= xpaths.size()) {
+	   			last_xpath_index = xpaths.size()-1;
+	   		}
+	   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
+	   		xpath_lists.add(xpath_subset);
+	   		/*	
+	   		ElementExtractionMessage element_extraction_msg = 
+		   								new ElementExtractionMessage(page_state_record, 
+		   															 audit_record, 
+		   															 xpath_subset);
+			log.warn("Running element extraction from page state");
+			ActorRef element_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+		   		.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+			CompletableFuture<List<ElementState>> fut = browser_service.buildPageElementFuture(page_state, audit_record, xpath_subset);					
+			futures_list.add(fut);
+	   		 */
+			start_xpath_index = last_xpath_index;
+	   	}
 		
-		List<ElementState> elements = browser_service.buildPageElements(page_state, audit_record, xpaths);
-		page_state.addElements(elements);
-
-	   	//create new audit record
-	   	audit_record = audit_record_service.save(audit_record);
-
-	   	Principal principal = request.getUserPrincipal();
-		if(principal != null) {
-			String user_id = principal.getName();
-	    	Account account = account_service.findByUserId(user_id);
-	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
-		}
-	   	
-	   	Set<Audit> audits = new HashSet<>();
-	   	
-	   	//check if page state already
-	   	//perform audit and return audit result
-	   	log.warn("?????????????????????????????????????????????????????????????????????");
-	   	log.warn("?????????????????????????????????????????????????????????????????????");
-	   	log.warn("?????????????????????????????????????????????????????????????????????");
-	   	
-	   	log.warn("requesting performance audit from performance auditor....");
-	   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-	   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-	   	performance_insight_actor.tell(page_state, ActorRef.noSender());
-
-	   	for(AuditCategory audit_category : AuditCategory.values()) {
-   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state);
-
-   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
-
-   			audits.addAll(rendered_audits_executed);
-   		}
-	   	
-	   	for(Audit audit : audits){
-			audit = audit_service.save(audit);
-			audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
-			((PageAuditRecord)audit_record).addAudit(audit);
-			//send pusher message to clients currently subscribed to domain audit channel
-			//MessageBroadcaster.broadcastAudit(domain.getHost(), audit);
-		}		//crawl site and retrieve all page urls/landable pages
-	    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
-	   	audit_record.setStatus(ExecutionStatus.COMPLETE);
-	   	audit_record.setEndTime(LocalDateTime.now());
-	   	audit_record_service.save(audit_record);
-	   	SimplePage simple_page = new SimplePage(page_state.getUrl(), page_state.getViewportScreenshotUrl(), page_state.getFullPageScreenshotUrl(), page_state.getFullPageWidth(), page_state.getFullPageHeight(), null, null, page_state.getId());
-	   	
-	   	//Map audits to page states
-    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
-    	AuditScore score = AuditUtils.extractAuditScore(audits);
-    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
-	   	
-   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
-   		
-	   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
+	   	//parallel stream get all elements since order doesn't matter
+	   	xpath_lists.parallelStream().forEach(xpath_list -> {
+	   		try {
+				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list);
+				page_state.addElements(elements);
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	   	});
+	   	/*
+	   	CompletableFuture<Void> combinedFuture 
+	   		= CompletableFuture.allOf(futures_list.toArray(new CompletableFuture[futures_list.size()]));
+	   	combinedFuture.thenApply(s -> {
+	   		for(CompletableFuture<List<ElementState>> future : futures_list) {
+	   			try {
+					List<ElementState> elements = future.get();
+					log.warn("result of element extractor future ....    "+elements);
+					page_state_record.addElements(elements);
+					log.warn("Element state list length   =   "+elements.size());
+				} catch (InterruptedException | ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	   		}
+	   	 */
+			//List<ElementState> elements = browser_service.buildPageElements(page_state, audit_record, xpaths);
+			//page_state.addElements(elements);
+			audit_record.setDataExtractionProgress(3.0/3.0);
+			audit_record_service.save(audit_record);
+			
+		   	Principal principal = request.getUserPrincipal();
+			if(principal != null) {
+				String user_id = principal.getName();
+		    	Account account = account_service.findByUserId(user_id);
+		    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
+			}
+		   	
+		   	Set<Audit> audits = new HashSet<>();
+		   	
+		   	//check if page state already
+		   	//perform audit and return audit result
+		   	log.warn("?????????????????????????????????????????????????????????????????????");
+		   	log.warn("?????????????????????????????????????????????????????????????????????");
+		   	log.warn("?????????????????????????????????????????????????????????????????????");
+		   	
+		   	log.warn("requesting performance audit from performance auditor....");
+		   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+		   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+		   	performance_insight_actor.tell(page_state_record, ActorRef.noSender());
+	
+		   	for(AuditCategory audit_category : AuditCategory.values()) {
+	   			List<Audit> rendered_audits_executed = audit_factory.executePageAudits(audit_category, page_state_record);
+	
+	   			rendered_audits_executed = audit_service.saveAll(rendered_audits_executed);
+	
+	   			audits.addAll(rendered_audits_executed);
+	   		}
+		   	
+		   	for(Audit audit : audits){
+				audit = audit_service.save(audit);
+				audit_record_service.addAudit( audit_record.getKey(), audit.getKey() );
+				((PageAuditRecord)audit_record).addAudit(audit);
+				//send pusher message to clients currently subscribed to domain audit channel
+				//MessageBroadcaster.broadcastAudit(domain.getHost(), audit);
+			}		//crawl site and retrieve all page urls/landable pages
+		    //Map<String, Page> page_state_audits = crawler.crawlAndExtractData(domain);
+		   	audit_record.setStatus(ExecutionStatus.COMPLETE);
+		   	audit_record.setEndTime(LocalDateTime.now());
+		   	audit_record_service.save(audit_record);
+		   	//NOTE: nulls are present because they are no longer needed and being phased out
+		   	SimplePage simple_page = new SimplePage(page_state_record.getUrl(), page_state_record.getViewportScreenshotUrl(), page_state_record.getFullPageScreenshotUrl(), page_state_record.getFullPageWidth(), page_state_record.getFullPageHeight(), null, null, page_state_record.getId());
+		   	
+		   	//Map audits to page states
+	    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
+	    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+	    	AuditScore score = AuditUtils.extractAuditScore(audits);
+	    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
+		   	
+	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
+	   		
+		   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
+		//});
+		//return null;
 	}
 
 	

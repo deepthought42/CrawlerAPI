@@ -85,12 +85,21 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		//analyze screenshots of all text images for contrast
-		for(ElementState element : element_list) {			
+		for(ElementState element : element_list) {
+			ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
+
 			try {	
 				//extract opacity color
-				ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+				ColorData bkg_color = null;
+				if(element.getScreenshotUrl().trim().isEmpty()) {
+					bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
+				}
+				else {
+					bkg_color = ImageUtils.extractBackgroundColor( 
+													new URL(element.getScreenshotUrl()),
+													font_color); 
+				}
 				String bg_color = bkg_color.rgb();	
-				
 				ColorData text_color = new ColorData(element.getRenderedCssValues().get("color"));
 				
 				//Identify background color by getting largest color used in picture
@@ -119,6 +128,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String title = "Large text has low contrast";
 							String ada_compliance = "Text that is larger than 18 point or larger than 14 point and bold should meet the minimum contrast ratio of 3:1.";
 							String description = "Headline text has low contrast against the background";
+							recommendation = "Increase the contrast by either making the text darker or the background lighter";
+
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.HIGH,
 																									description,

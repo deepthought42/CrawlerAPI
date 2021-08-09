@@ -88,7 +88,7 @@ public class AuditFactory {
 	public List<Audit> executePageAudits(
 							AuditCategory category, 
 							PageState page
-	) throws MalformedURLException, URISyntaxException {
+	) {
 		assert category != null;
 		assert page != null;
 		

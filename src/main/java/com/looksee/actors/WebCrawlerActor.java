@@ -7,11 +7,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -28,7 +31,9 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.models.message.PageStateMessage;
 import com.looksee.services.AuditRecordService;
@@ -145,8 +150,11 @@ public class WebCrawlerActor extends AbstractActor{
 							page_state = page_state_service.save(page_state);
 							
 						   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
-							List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
+							List<ElementState> elements = browser_service.buildPageElements(page_state, 
+																							xpaths);
 							page_state.addElements(elements);
+							crawl_action.getAuditRecord().setDataExtractionProgress(3.0/3.0);
+							audit_record_service.save(crawl_action.getAuditRecord());
 							
 							log.warn("http status =  "+page_state.getHttpStatus());
 							pages.put(page_state.getKey(), page_state);
@@ -163,13 +171,6 @@ public class WebCrawlerActor extends AbstractActor{
 							getSender().tell(page_msg, getSelf());
 							
 							Document doc = Jsoup.parse(page_state.getSrc());
-									
-									/*Jsoup.connect(page_url_obj.toString())
-												.ignoreHttpErrors(true)
-												.timeout(5000)
-												.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-												.get();
-												*/
 							Elements links = doc.select("a");
 							
 							//iterate over links and exclude external links from frontier
@@ -229,15 +230,46 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.match(PageCrawlActionMessage.class, crawl_action-> {
 					
-					PageState page_state = browser_service.buildPageState(crawl_action.getUrl(), crawl_action.getAuditRecord());
-					page_state = page_state_service.save(page_state);
+					ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 
-					audit_record_service.addPageToPageAudit(crawl_action.getAuditRecord().getId(), page_state.getId());
-					crawl_action.getAuditRecord().setPageState(page_state);
+					page_state_builder.tell(crawl_action, getSelf());					
+				
+					
+				   	/*
 				   	
-				   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
-					List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
+					List<List<? extends Object>> element_lists = xpath_lists.parallelStream()
+												   .map(xpath_list -> {
+												   		try {
+															return browser_service.buildPageElements(page_state, xpath_list);
+															//page_state.addElements(elements);
+														} catch (MalformedURLException e) {
+															// TODO Auto-generated catch block
+															e.printStackTrace();
+														}
+												   		return new ArrayList<>();
+												   	})
+												   	.collect(Collectors.toList());
+					
+					//unroll element lists
+					List<ElementState> elements = new ArrayList<>();
+					for(List<? extends Object> element_list: element_lists) {
+						for(Object element_obj : element_list) {
+							elements.add((ElementState)element_obj);
+							page_state_service.addElement(page_state.getId(), ((ElementState)element_obj).getKey());
+						}
+					}
+					
+					log.warn("element list size : "+elements.size());
 					page_state.addElements(elements);
+					*/
+			   		//List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
+					//update audit record with progress
+					/*
+					AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
+					audit_record.setDataExtractionProgress(3.0/3.0);
+					audit_record_service.save(audit_record);
+					*/
 					//domain.addPage(page);
 					//domain_service.addPage(domain.getId(), page_state.getKey());
 					
@@ -253,22 +285,22 @@ public class WebCrawlerActor extends AbstractActor{
 				   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 				   	performance_insight_actor.tell(page_state, ActorRef.noSender());
 				   	*/
-				   	
+				   	/*
 				   	log.warn("Running information architecture audit via actor");
 					ActorRef content_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-					content_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
+					content_auditor.tell(crawl_action.getAuditRecord(), getSelf());
 				   	
 				   	log.warn("Running information architecture audit via actor");
 					ActorRef info_architecture_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
-					info_architecture_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
+					info_architecture_auditor.tell(crawl_action.getAuditRecord(), getSelf());
 					
 					log.warn("Running aesthetic audit via actor");
 					ActorRef aesthetic_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				   			.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());
-					aesthetic_auditor.tell(crawl_action.getAuditRecord(), ActorRef.noSender());
-					
+					aesthetic_auditor.tell(crawl_action.getAuditRecord(), getSelf());
+					*/
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

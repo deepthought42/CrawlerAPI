@@ -33,7 +33,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element){
+	public synchronized ElementState save(ElementState element){
 		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());

@@ -481,12 +481,14 @@ public class BrowserService {
 	 * @throws MalformedURLException 
 	 * @throws Exception
 	 */
-	public List<ElementState> buildPageElements(PageState page_state, AuditRecord audit_record, List<String> xpaths) throws MalformedURLException {
+	public List<ElementState> buildPageElements(PageState page_state, 
+												List<String> xpaths
+	) throws MalformedURLException {
 		assert page_state != null;
 
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(page_state.getUrl() ));
 		  
-   		String page_url = sanitized_url.getHost()+sanitized_url.getPath();
+   		String page_url = sanitized_url.toString();
    		
 		log.warn("building page elements for page with url :: "+page_url);
 		boolean rendering_incomplete = true;
@@ -497,27 +499,18 @@ public class BrowserService {
 		Browser browser = null;
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		
-		audit_record = audit_record_service.findById(audit_record.getId()).get();
 		//extract all element xpaths
 
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				
-				log.warn("navigating to url ::  "+page_url);
 				browser.navigateTo(page_url);
-				//url = new URL(browser.getDriver().getCurrentUrl());				
-				
-				
+
 				log.warn("extracting all element states for url :: "+page_url);
 				
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
 				elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
-				
-				//update audit record with progress
-				audit_record.setDataExtractionProgress(3.0/3.0);
-				audit_record = audit_record_service.save(audit_record);
 				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
@@ -549,6 +542,7 @@ public class BrowserService {
 		return elements;
 	}
 	
+	
 	private static String calculateSha256(String value) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
@@ -563,7 +557,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	public synchronized List<com.looksee.models.Element> getDomElements(
+	public List<com.looksee.models.Element> getDomElements(
 			String page_source, 
 			URL url,
 			List<RuleSet> rule_sets
@@ -675,7 +669,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws XPathExpressionException 
 	 */
-	private synchronized List<ElementState> getDomElementStates(
+	private List<ElementState> getDomElementStates(
 			PageState page_state, 
 			List<String> xpaths, 
 			Browser browser, 
@@ -735,13 +729,16 @@ public class BrowserService {
 					height = page_screenshot.getHeight()-element_location.getY();
 				}
 				
-				if(width <= 0 || height <= 0) {
+				try {
 					//extract element screenshot from full page screenshot
 					BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
 					String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 					
 					element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 					element_screenshot.flush();
+				}
+				catch(Exception e) {
+					e.printStackTrace();
 				}
 				//get child elements for element
 				//Map<String, String> attributes = browser.extractAttributes(web_element);

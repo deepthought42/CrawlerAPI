@@ -97,7 +97,7 @@ public class PageStateBuilder extends AbstractActor{
 					total_dispatches = 0;
 					total_dispatch_responses = 0;
 					
-					int XPATH_CHUNK_SIZE = 50;
+					int XPATH_CHUNK_SIZE = 100;
 				   	while(start_xpath_index < (xpaths.size()-1)) {
 				   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
 				   		if(last_xpath_index >= xpaths.size()) {

@@ -188,7 +188,6 @@ public class BrowserService {
  	 * 
 	 * @param xpath
 	 * @param attributes
-	 * @param css_values
 	 * @param element
 	 * @param classification
 	 * @param rendered_css_values
@@ -200,7 +199,6 @@ public class BrowserService {
 	 * @pre element != null;
 	 * @pre classification != null
 	 * @pre rendered_css_values != null
-	 * @pre css_values != null;
 	 */
 	public static com.looksee.models.Element buildElement(
 			String xpath, 
@@ -323,7 +321,7 @@ public class BrowserService {
 		
 		PageState page_state = page_states.get(0);
 		page_state.setElements(page_state_service.getElementStatesForUser(user_id, page_states.get(0).getKey()));
-		log.warn("loaded page elements from db :: " +page_state.getElements().size());
+		
 		return page_state;
 	}
 	
@@ -337,7 +335,8 @@ public class BrowserService {
 	 */
 	public PageState buildPageState(URL url, AuditRecord audit_record) {
 		assert url != null;
-
+		assert audit_record != null;
+		
 		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
 		
@@ -348,9 +347,7 @@ public class BrowserService {
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				
 				browser.navigateTo(url.toString());
-				//url = new URL(browser.getDriver().getCurrentUrl());
 				log.warn("getting browser for rendered page state extraction...");
 				//navigate to page url
 				page_state = page_state_service.save(buildPageState(url, browser));
@@ -359,29 +356,6 @@ public class BrowserService {
 				audit_record.setDataExtractionProgress(1.0/3.0);
 				audit_record = audit_record_service.save(audit_record);
 
-				/*
-				log.warn("extracting all xpaths for url ::  "+url);
-				//extract all element xpaths
-				if(xpath_extraction_incomplete) {
-					xpaths.addAll(extractAllUniqueElementXpaths(page_state.getSrc()));
-					xpath_extraction_incomplete=false;
-					
-					//update audit record with progress
-					audit_record.setDataExtractionProgress(2.0/3.0);
-					audit_record = audit_record_service.save(audit_record);
-				}
-				
-				log.warn("extracting all element states for url :: "+url);
-				
-				//get ElementState List by asking multiple bots to build xpaths in parallel
-				//for each xpath then extract element state
-				List<ElementState> elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
-				
-				//update audit record with progress
-				audit_record.setDataExtractionProgress(3.0/3.0);
-				audit_record = audit_record_service.save(audit_record);
-				*/
-				//page_state.setElements(elements);
 				rendering_incomplete = false;
 				cnt=100000;
 				break;
@@ -514,6 +488,7 @@ public class BrowserService {
 				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
+				browser.close();
 				return elements;
 			
 			}
@@ -699,11 +674,7 @@ public class BrowserService {
 				}
 	
 				WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
-				/*
-				if(isLarger(web_element.getSize(), browser.getViewportSize())) {
-					continue;
-				}
-				*/
+
 				browser.scrollToElement(xpath, web_element); 
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
@@ -713,6 +684,9 @@ public class BrowserService {
 				if( !web_element.isDisplayed()
 						|| !hasWidthAndHeight(element_size)
 						|| doesElementHaveNegativePosition(element_location)) {
+					continue;
+				}
+				if(element_location.getY() >= page_screenshot.getHeight() || element_size.getHeight() >= page_screenshot.getHeight()) {
 					continue;
 				}
 				
@@ -729,6 +703,7 @@ public class BrowserService {
 					height = page_screenshot.getHeight()-element_location.getY();
 				}
 				
+				
 				try {
 					//extract element screenshot from full page screenshot
 					BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
@@ -738,6 +713,9 @@ public class BrowserService {
 					element_screenshot.flush();
 				}
 				catch(Exception e) {
+					log.warn("element height :: "+element_size.getHeight());
+					log.warn("Element Y location ::  "+ element_location.getY());
+					
 					e.printStackTrace();
 				}
 				//get child elements for element

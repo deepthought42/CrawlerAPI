@@ -150,7 +150,7 @@ public class ImageUtils {
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < buffered_image.getWidth(); x++) {
+		for(int x=0; x < buffered_image.getWidth(); x+=2) {
 			for(int y=0; y < buffered_image.getHeight(); y++) {
 				 int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;
@@ -184,9 +184,9 @@ public class ImageUtils {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	public static ColorData extractBackgroundColor(URL screenshot_url) throws IOException {
+	public static ColorData extractBackgroundColor(URL screenshot_url, ColorData font_color) throws IOException {
 		List<ColorUsageStat> color_data_list = new ArrayList<>();
-		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url)) ); //LOCAL BRUTE FORCE METHOD
+		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url))); //LOCAL BRUTE FORCE METHOD
 		//color_data_list.addAll(CloudVisionUtils.extractImageProperties(ImageIO.read(screenshot_url)));
 
 		color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
@@ -194,12 +194,14 @@ public class ImageUtils {
 		//ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
 		//ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
 		//ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
-		float largest_pixel_percent = -1f;
+		float largest_pixel_percent = -1.0f;
 	    ColorUsageStat largest_color = null;
 		//extract background colors
 		for(ColorUsageStat color_stat : color_data_list) {
 			//get color most used for background color
-			if(color_stat.getPixelPercent() > largest_pixel_percent) {
+			if(color_stat.getPixelPercent() >= largest_pixel_percent 
+				&& !color_stat.getRGB().equals(font_color.rgb())
+			) {
 				largest_pixel_percent = color_stat.getPixelPercent();
 				largest_color = color_stat;
 			}

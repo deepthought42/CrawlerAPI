@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.looksee.api.exceptions.DomainNotOwnedByAccountException;
+import com.looksee.api.exception.DomainNotOwnedByAccountException;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.dto.exceptions.UnknownAccountException;

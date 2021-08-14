@@ -3,7 +3,6 @@ package com.looksee.models.message;
 import java.net.URL;
 
 import com.looksee.models.Domain;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.CrawlAction;
 

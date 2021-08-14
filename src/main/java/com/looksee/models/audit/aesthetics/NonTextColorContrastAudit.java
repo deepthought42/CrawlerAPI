@@ -21,6 +21,7 @@ import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.IExecutablePageStateAudit;
@@ -58,7 +59,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		//get all button elements
@@ -106,6 +107,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		for(ElementState element : non_text_elements) {
+			ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
 			//get parent element of button
 			try {
 				//retrieve all elements for page state
@@ -116,7 +118,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					if(element_state.getKey().contentEquals(element.getKey())) {
 						continue;
 					}
-					
+
 					//log.warn("checking if element is parent ::  "+element_state.getXpath());
 					if(element.getXpath().contains(element_state.getXpath())) {
 						int element_area = element.getWidth() * element.getHeight();
@@ -125,21 +127,29 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						if(parent_area > (element_area * 3)) {
 							//parent = element_state;
 							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
-							
 							String bg_color_css = element_state.getRenderedCssValues().get("background-color");
 							String bg_image = element_state.getRenderedCssValues().get("background-image");
 							String bg_color = "255,255,255";
 							
-							if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
+							if(!bg_color_css.contains("inherit") 
+								&& !bg_color_css.contains("rgba") 
+								&& (bg_image == null || bg_image.isEmpty() ) 
+							) {
 								bg_color = bg_color_css;
 							}
-							else if(bg_color_css.contains("rgba") && !element_state.getScreenshotUrl().isEmpty()) {
+							else if(bg_color_css.contains("rgba") 
+									&& !element_state.getScreenshotUrl().isEmpty()
+							) {
 								//extract opacity color
-								ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_state.getScreenshotUrl()));
+								ColorData bkg_color = ImageUtils.extractBackgroundColor( 
+																			new URL(element_state.getScreenshotUrl()), 
+																			font_color);
 								bg_color = bkg_color.rgb();	
 							}
 							else if(!element_state.getScreenshotUrl().isEmpty()) {
-								ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element_state.getScreenshotUrl()));
+								ColorData bkg_color = ImageUtils.extractBackgroundColor( 
+																			new URL(element_state.getScreenshotUrl()), 
+																			font_color);
 								bg_color = bkg_color.rgb();
 							}
 							
@@ -159,17 +169,21 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				String bg_color_css = element.getRenderedCssValues().get("background-color");
 				String bg_image = element.getRenderedCssValues().get("background-image");
 				String bg_color = "255,255,255";
-				
+
 				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
 					bg_color = bg_color_css;
 				}
 				else if(bg_color_css.contains("rgba") && !element.getScreenshotUrl().isEmpty()) {
 					//extract opacity color
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( 
+																new URL(element.getScreenshotUrl()),
+																font_color);
 					bg_color = bkg_color.rgb();	
 				}
 				else if(!element.getScreenshotUrl().isEmpty()) {
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()));
+					ColorData bkg_color = ImageUtils.extractBackgroundColor( 
+																new URL(element.getScreenshotUrl()),
+																font_color);
 					bg_color = bkg_color.rgb();
 				}
 				

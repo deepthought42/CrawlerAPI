@@ -104,7 +104,7 @@ public class AestheticAuditor extends AbstractActor{
 				   	page_audit_record.setAestheticMsg("Reviewing non-text contrast...");
 				   	page_audit_record = audit_record_service.save(page_audit_record);
 				   	
-					Audit text_contrast_audit = text_contrast_auditor.execute(page);
+					Audit text_contrast_audit = text_contrast_auditor.execute(page, null);
 					audits.add(text_contrast_audit);
 					
 				   	page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -118,7 +118,7 @@ public class AestheticAuditor extends AbstractActor{
 					Audit margin_audits = margin_auditor.execute(page);
 					audits.add(margin_audits);
 					 */
-					Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
+					Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, null);
 					audits.add(non_text_contrast_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();

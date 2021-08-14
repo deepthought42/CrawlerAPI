@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.looksee.analytics.SegmentAnalyticsHelper;
-import com.looksee.api.exceptions.MissingSubscriptionException;
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.models.Account;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.security.SecurityConfig;

@@ -159,7 +159,6 @@ public class Browser {
 	public void navigateTo(String url) {
 		getDriver().get(url);
 		
-		
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
@@ -915,7 +914,7 @@ public class Browser {
 	 * Waits for the document ready state to be complete, then observes page transition if it exists
 	 */
 	public void waitForPageToLoad() {
-		new WebDriverWait(driver, 60).until(
+		new WebDriverWait(driver, 15).until(
 				webDriver -> ((JavascriptExecutor) webDriver)
 					.executeScript("return document.readyState")
 					.equals("complete"));

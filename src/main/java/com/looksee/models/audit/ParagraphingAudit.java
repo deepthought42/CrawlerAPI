@@ -48,7 +48,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();

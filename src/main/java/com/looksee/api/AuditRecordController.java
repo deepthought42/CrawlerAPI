@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -32,6 +33,7 @@ import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.TargetAudienceSettings;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
@@ -196,6 +198,27 @@ public class AuditRecordController {
     	
     	//package both elements into an object definition
     	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
+    }
+    
+    /**
+     * 
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     * @throws MalformedURLException 
+     */
+    @RequestMapping(method= RequestMethod.POST, path="/{audit_record_id}/persona/education")
+    public @ResponseBody void updateTargetUserEducation(
+    		HttpServletRequest request,
+    		@PathVariable("audit_record_id") long audit_record_id,
+    		@RequestBody TargetAudienceSettings audit_record_education
+	) throws MalformedURLException {
+    	log.warn("page audit record id :: "+ audit_record_id);
+    	log.warn("education level :: "+audit_record_education.getTargetUserEducation());
+    	//Get most recent audits
+    	AuditRecord audit_record = audit_record_service.findById(audit_record_id).get();
+    	audit_record.setTargetUserEducation(audit_record_education.getTargetUserEducation());
+    	audit_record_service.save(audit_record);
     }
     
     /**

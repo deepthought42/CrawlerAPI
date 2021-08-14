@@ -26,6 +26,7 @@ import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
@@ -67,7 +68,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
@@ -150,12 +151,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				URI uri = new URI(href);
 				if(!uri.isAbsolute()) {
 					log.warn("URI is relative");
-					href.replaceAll("../", "");
-					if(href.startsWith("/") && href.length() > 1) {
+					href.replaceAll("../", "").strip();
+					if(href.startsWith("//")) {
 						href = href.substring(1);
 					}
-					else if(href.strip().contentEquals("/")) {
+					
+					if(href.contentEquals("/") || href.isEmpty()) {
 						href = "";
+					}
+					else if(!href.startsWith("/") && href.length() > 1){
+						href = "/"+href;
 					}
 					
 					href = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl())).getHost() + href;

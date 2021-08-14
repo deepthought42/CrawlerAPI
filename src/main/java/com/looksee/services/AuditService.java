@@ -146,7 +146,7 @@ public class AuditService {
 	 */
 	public Set<IssueElementMap> generateIssueElementMap(
 			Set<Audit> audits
-	) throws MalformedURLException {
+	) {
 		Set<IssueElementMap> audit_elements = new HashSet<>();
 		
 		for(Audit audit : audits) {	
@@ -193,7 +193,7 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits) throws MalformedURLException {		
+	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits)  {		
 		Set<ElementIssueMap> element_issues = new HashSet<>();
 		
 		Map<String, Set<UXIssueMessage>> issue_map = new HashMap<>(); 

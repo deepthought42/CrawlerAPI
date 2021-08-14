@@ -307,7 +307,7 @@ public class AuditManager extends AbstractActor{
 					
 					//NOTE: Audit record can be null, need to handle that scenario
 					//Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(audit_record.getDomainId());					
-					audit_record_service.save(audit_record.getPageAuditRecord());
+					//audit_record_service.save(audit_record.getPageAuditRecord());
 					log.warn("adding page audit with key = "+audit_record.getPageAuditRecord().getKey() + "   to domain audit record with id= "+audit_record.getAuditRecordId());
 					audit_record_service.addPageAuditToDomainAudit(audit_record.getAuditRecordId(), audit_record.getPageAuditRecord().getKey());
 					

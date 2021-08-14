@@ -103,7 +103,7 @@ public class ContentAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);	
 					
 				   	log.warn("page audit record recieved :: "+page_audit_record_msg.getId());
-					Audit alt_text_audit = image_alt_text_auditor.execute(page);
+					Audit alt_text_audit = image_alt_text_auditor.execute(page, page_audit_record);
 					audits.add(alt_text_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -111,7 +111,7 @@ public class ContentAuditor extends AbstractActor{
 					page_audit_record.setContentAuditMsg("Reviewing content for readability...");
 					audit_record_service.save(page_audit_record);		
 					
-					Audit readability_audit = readability_auditor.execute(page);
+					Audit readability_audit = readability_auditor.execute(page, page_audit_record);
 					audits.add(readability_audit);
 					
 					
@@ -123,7 +123,7 @@ public class ContentAuditor extends AbstractActor{
 					//Audit font_audit = font_auditor.execute(page);
 					//audits.add(font_audit);
 					
-					Audit paragraph_audit = paragraph_auditor.execute(page);
+					Audit paragraph_audit = paragraph_auditor.execute(page, page_audit_record);
 					audits.add(paragraph_audit);	
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();

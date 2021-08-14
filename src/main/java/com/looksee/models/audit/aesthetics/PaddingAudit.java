@@ -21,6 +21,7 @@ import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
@@ -59,7 +60,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page) {
+	public Audit execute(PageState page, AuditRecord audit_record) {
 		assert page != null;
 
 		

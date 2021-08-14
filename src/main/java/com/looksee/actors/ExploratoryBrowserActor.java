@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.exceptions.DiscoveryStoppedException;
+import com.looksee.api.exception.DiscoveryStoppedException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.ElementState;
 import com.looksee.models.LookseeObject;

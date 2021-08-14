@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.looksee.api.exceptions.MissingSubscriptionException;
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;

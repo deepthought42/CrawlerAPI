@@ -21,6 +21,7 @@ import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.TypefacesIssue;
@@ -65,7 +66,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		List<String> font_families = new ArrayList<>();

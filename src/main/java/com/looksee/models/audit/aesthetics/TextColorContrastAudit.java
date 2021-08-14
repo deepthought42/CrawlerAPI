@@ -14,6 +14,7 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.IExecutablePageStateAudit;
@@ -58,7 +59,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	 * 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		int total_possible_points = 0;
@@ -156,7 +157,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//fail
 							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
-							String ada_compliance = "Text that is smaller than 18 point and larger than 14 point but not bolded or just smaller than 14 point fonts should meet the minimum contrast ratio of 4.5:1.";
+							String ada_compliance = "Text that is smaller than 18 point and larger than 14 point but not bold or just smaller than 14 point fonts should meet the minimum contrast ratio of 4.5:1.";
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
 																						description,

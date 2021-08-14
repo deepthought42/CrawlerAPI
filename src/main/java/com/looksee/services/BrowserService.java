@@ -351,10 +351,6 @@ public class BrowserService {
 				log.warn("getting browser for rendered page state extraction...");
 				//navigate to page url
 				page_state = page_state_service.save(buildPageState(url, browser));
-				
-				//update audit record with progress
-				audit_record.setDataExtractionProgress(1.0/3.0);
-				audit_record = audit_record_service.save(audit_record);
 
 				rendering_incomplete = false;
 				cnt=100000;
@@ -400,6 +396,10 @@ public class BrowserService {
 		boolean is_secure = BrowserUtils.checkIfSecure(new URL("https://"+url_without_protocol));
         int status_code = BrowserUtils.getHttpStatus(url);
 
+        //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
+        browser.scrollToBottomOfPage();
+        browser.scrollToTopOfPage();
+        
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
 

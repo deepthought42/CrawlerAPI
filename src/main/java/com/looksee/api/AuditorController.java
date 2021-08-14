@@ -2,11 +2,9 @@ package com.looksee.api;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,12 +26,7 @@ import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
-import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.AuditScore;
-import com.looksee.models.audit.ElementIssueMap;
-import com.looksee.models.audit.ElementIssueTwoWayMapping;
-import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
@@ -44,7 +37,6 @@ import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.PageStateService;
-import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.ActorRef;

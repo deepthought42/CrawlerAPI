@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.looksee.api.exceptions.MissingSubscriptionException;
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.ElementState;
@@ -255,8 +255,14 @@ public class AuditController {
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
 	   	audit_record_service.save(audit_record);
 		
+
+		//update audit record with progress
 	   	PageState page_state = browser_service.buildPageState(sanitized_url, audit_record);
 	   	PageState page_state_record = page_service.save(page_state);
+	   	
+	   	audit_record = audit_record_service.findById(audit_record.getId()).get();
+	   	audit_record.setDataExtractionProgress(1.0/3.0);
+	   	audit_record = audit_record_service.save(audit_record);
 	   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state_record.getId());
 	   	
 	   	//generate unique xpaths for all elements on page

@@ -82,9 +82,16 @@ public class PageStateBuilder extends AbstractActor{
 		return receiveBuilder()
 				.match(PageCrawlActionMessage.class, crawl_action-> {
 					log.warn("building page state in page state builder actor ....");
+					
+
+					//update audit record with progress
+					
 					PageState page_state = browser_service.buildPageState(crawl_action.getUrl(), crawl_action.getAuditRecord());
 					final PageState page_state_record = page_state_service.save(page_state);
 
+					AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
+					audit_record.setDataExtractionProgress(1.0/3.0);
+					audit_record = audit_record_service.save(audit_record);
 					audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
 					//crawl_action.getAuditRecord().setPageState(page_state_record);
 				   	
@@ -136,6 +143,7 @@ public class PageStateBuilder extends AbstractActor{
 					
 					if(this.total_dispatch_responses == this.total_dispatches) {
 						log.warn("ALL PAGE ELEMENT STATES HAVE BEEN MAPPED SUCCESSFULLY!!!!!");
+						audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 						audit_record.setDataExtractionProgress(1.0);
 						audit_record = audit_record_service.save(audit_record);
 					/*

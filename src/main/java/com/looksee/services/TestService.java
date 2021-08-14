@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.exceptions.PagesAreNotMatchingException;
+import com.looksee.api.exception.PagesAreNotMatchingException;
 import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Action;

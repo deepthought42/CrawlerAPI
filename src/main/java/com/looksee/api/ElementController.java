@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.looksee.api.exception.ExistingRuleException;
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.api.exception.RuleValueRequiredException;
-import com.looksee.api.exceptions.ExistingRuleException;
-import com.looksee.api.exceptions.MissingSubscriptionException;
 import com.looksee.models.Account;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;

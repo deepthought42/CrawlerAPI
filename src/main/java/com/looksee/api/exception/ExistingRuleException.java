@@ -1,4 +1,4 @@
-package com.looksee.api.exceptions;
+package com.looksee.api.exception;
 
 public class ExistingRuleException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;

@@ -27,6 +27,10 @@ public class AuditRecord extends LookseeObject {
 	
 	private double data_extraction_progress;
 	private String data_extraction_msg;
+
+	private String favorite_audit_category;
+	private String target_user_age;
+	private String target_user_education;
 	
 	public AuditRecord() {
 		setStartTime(LocalDateTime.now());
@@ -148,5 +152,29 @@ public class AuditRecord extends LookseeObject {
 
 	public void setDataExtractionMsg(String data_extraction_msg) {
 		this.data_extraction_msg = data_extraction_msg;
+	}
+
+	public String getFavoriteAuditCategory() {
+		return favorite_audit_category;
+	}
+
+	public void setFavoriteAuditCategory(String favorite_audit_category) {
+		this.favorite_audit_category = favorite_audit_category;
+	}
+
+	public String getTargetUserAge() {
+		return target_user_age;
+	}
+
+	public void setTargetUserAge(String target_user_age) {
+		this.target_user_age = target_user_age;
+	}
+
+	public String getTargetUserEducation() {
+		return target_user_education;
+	}
+
+	public void setTargetUserEducation(String target_user_education) {
+		this.target_user_education = target_user_education;
 	}
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
@@ -24,6 +25,7 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.ContentUtils;
 
@@ -40,6 +42,9 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private PageStateService page_state_service;
 	
+	@Autowired
+	private AuditRecordService audit_record_service;
+	
 	public ReadabilityAudit() {
 	}
 
@@ -52,7 +57,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
@@ -113,35 +118,22 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			labels.add("written content");
 			labels.add("readability");
 
-			int element_points = 0;
-			if(ease_of_reading_score >= 80 ) {
-				element_points = 4;
-			}
-			else if(ease_of_reading_score < 80 && ease_of_reading_score >= 70) {
-				element_points = 4;
-			}
-			else if(ease_of_reading_score < 70 && ease_of_reading_score >= 60) {
-				element_points = 3;
-			}
-			else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
-				element_points = 2;
-			}
-			else if(ease_of_reading_score < 50 && ease_of_reading_score >= 30) {
-				element_points = 1;
-			}
-			else if(ease_of_reading_score < 30) {
-				element_points = 0;
-			}
+			
+			
+			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
+			log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
+			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
+			
 			
 			String title = "Content is " + difficulty_string + " to read";
-			String description = "The text \"" + element.getAllText() + "\" is " + difficulty_string + " to read for the average consumer";
+			String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
 			String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
 			
 			points_earned += element_points;
 			max_points += 4;
 			
 			if(element_points < 4) {
-				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
+				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most of your target consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 						Priority.LOW, 
 						description,
@@ -182,6 +174,149 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						 description,
 						 page_state,
 						 false); 
+	}
+
+
+	private String generateIssueDescription(ElementState element, 
+											String difficulty_string,
+											double ease_of_reading_score, 
+											String targetUserEducation) {
+		String description = "The text \"" + element.getAllText() + "\" is " + difficulty_string + " to read for "+getConsumerType(targetUserEducation);
+		
+		return description;
+	}
+
+
+	private String getConsumerType(String targetUserEducation) {
+		String consumer_label = "the average consumer";
+		
+		if(targetUserEducation != null) {
+			consumer_label = "users with a "+targetUserEducation + " education";
+		}
+		
+		return consumer_label;
+	}
+
+
+	private int getPointsForEducationLevel(double ease_of_reading_score, String target_user_education) {
+		int element_points = 0;
+		
+		log.warn("Target user education value :: "+target_user_education);
+		//TODO : Make scoring dependant on targetUserEducation
+		
+		if(ease_of_reading_score >= 90 ) {
+			if(target_user_education == null) {
+				element_points = 4;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else {
+				element_points = 4;
+			}
+		}
+		else if(ease_of_reading_score < 90 && ease_of_reading_score >= 80 ) {
+			if(target_user_education == null) {
+				element_points = 4;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else {
+				element_points = 4;
+			}
+		}
+		else if(ease_of_reading_score < 80 && ease_of_reading_score >= 70) {
+			if(target_user_education == null) {
+				element_points = 3;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else {
+				element_points = 3;
+			}
+		}
+		else if(ease_of_reading_score < 70 && ease_of_reading_score >= 60) {
+			if(target_user_education == null) {
+				element_points = 2;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 2;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+		}
+		else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
+			if(target_user_education == null) {
+				element_points = 1;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 1;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 2;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else {
+				element_points = 1;
+			}
+		}
+		else if(ease_of_reading_score < 50 && ease_of_reading_score >= 30) {
+			if(target_user_education == null) {
+				element_points = 0;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 0;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 1;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 2;
+			}
+			else {
+				element_points = 0;
+			}		
+		}
+		else if(ease_of_reading_score < 30) {
+			if(target_user_education == null) {
+				element_points = 0;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 1;
+			}
+			else {
+				element_points = 0;
+			}	
+			element_points = 0;
+		}
+		
+		return element_points;
 	}
 
 

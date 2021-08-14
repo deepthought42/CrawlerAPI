@@ -7,7 +7,8 @@ public interface IExecutablePageStateAudit {
 	 * Executes audit on {@link PageState page}
 	 * 
 	 * @param page_state
+	 * @param audit_record TODO
 	 * @return
 	 */
-	public Audit execute(PageState page_state);
+	public Audit execute(PageState page_state, AuditRecord audit_record);
 }

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.api.exceptions.ExistingRuleException;
+import com.looksee.api.exception.ExistingRuleException;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.repository.ElementRepository;

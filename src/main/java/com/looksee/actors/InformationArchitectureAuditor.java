@@ -106,7 +106,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchMsg("Reviewing title and header...");
 					audit_record_service.save(page_audit_record);
 					
-				   	Audit link_audit = links_auditor.execute(page);
+				   	Audit link_audit = links_auditor.execute(page, null);
 					audits.add(link_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -115,7 +115,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);
 					
 					
-					Audit title_and_headers = title_and_header_auditor.execute(page);
+					Audit title_and_headers = title_and_header_auditor.execute(page, null);
 					audits.add(title_and_headers);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -124,7 +124,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);
 					
 					
-					Audit security = security_audit.execute(page);
+					Audit security = security_audit.execute(page, null);
 					audits.add(security);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -133,7 +133,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record = audit_record_service.save(page_audit_record);
 					
 					
-					Audit metadata = metadata_auditor.execute(page);
+					Audit metadata = metadata_auditor.execute(page, null);
 					audits.add(metadata);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();

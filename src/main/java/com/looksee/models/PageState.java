@@ -408,7 +408,7 @@ public class PageState extends LookseeObject {
 		this.full_page_height = full_page_height;
 	}
 
-	public void addElements(List<ElementState> elements) {
+	public synchronized void addElements(List<ElementState> elements) {
 		//check for duplicates before adding
 		for(ElementState element : elements) {
 			if(!this.elements.contains(element)) {				

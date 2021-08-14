@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorPaletteIssueMessage;
 import com.looksee.models.audit.ColorPaletteUtils;
@@ -65,7 +66,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
 		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 

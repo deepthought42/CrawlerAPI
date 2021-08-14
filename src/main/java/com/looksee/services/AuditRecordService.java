@@ -39,6 +39,9 @@ public class AuditRecordService {
 	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
 		
+		log.warn("saving audit record with id ::   "+audit.getId());
+		log.warn("saving audit record ::   " + audit.toString());
+
 		return audit_record_repo.save(audit);
 	}
 
@@ -299,7 +302,7 @@ public class AuditRecordService {
 		return audit_record_repo.getPageStatesForDomainAuditRecord(audit_record_id);
 	}
 
-	public void addPageToPageAudit(long audit_record_id, long page_state_id) {
+	public void addPageToAuditRecord(long audit_record_id, long page_state_id) {
 		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
 	}
 }

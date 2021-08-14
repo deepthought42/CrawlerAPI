@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.api.exceptions.ExistingRuleException;
+import com.looksee.api.exception.ExistingRuleException;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
@@ -33,7 +33,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element){
+	public synchronized ElementState save(ElementState element){
 		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());

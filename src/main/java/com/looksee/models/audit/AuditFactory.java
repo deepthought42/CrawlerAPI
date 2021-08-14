@@ -88,20 +88,20 @@ public class AuditFactory {
 	public List<Audit> executePageAudits(
 							AuditCategory category, 
 							PageState page
-	) throws MalformedURLException, URISyntaxException {
+	) {
 		assert category != null;
 		assert page != null;
 		
 		List<Audit> audits = new ArrayList<Audit>();
 		if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			
-			Audit link_audit = links_auditor.execute(page);
+			Audit link_audit = links_auditor.execute(page, null);
 			audits.add(link_audit);
 			
-			Audit title_and_headers = title_and_header_auditor.execute(page);
+			Audit title_and_headers = title_and_header_auditor.execute(page, null);
 			audits.add(title_and_headers);
 			
-			Audit security = security_audit.execute(page);
+			Audit security = security_audit.execute(page, null);
 			audits.add(security);
 			
 			//Audit performance = 
@@ -112,7 +112,7 @@ public class AuditFactory {
 			//Audit color_palette_audit = color_palette_auditor.execute(page);
 			//audits.add(color_palette_audit);
 
-			Audit text_contrast_audit = text_contrast_auditor.execute(page);
+			Audit text_contrast_audit = text_contrast_auditor.execute(page, null);
 			audits.add(text_contrast_audit);
 			/*
 			Audit padding_audits = padding_auditor.execute(page);
@@ -121,7 +121,7 @@ public class AuditFactory {
 			Audit margin_audits = margin_auditor.execute(page);
 			audits.add(margin_audits);
 			 */
-			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page);
+			Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, null);
 			audits.add(non_text_contrast_audit);
 		}
 		else if(AuditCategory.CONTENT.equals(category)) {
@@ -131,16 +131,16 @@ public class AuditFactory {
 			audits.add(typeface_audit);
 			 */
 			
-			Audit alt_text_audit = image_alt_text_auditor.execute(page);
+			Audit alt_text_audit = image_alt_text_auditor.execute(page, null);
 			audits.add(alt_text_audit);
 			
-			Audit readability_audit = readability_auditor.execute(page);
+			Audit readability_audit = readability_auditor.execute(page, null);
 			audits.add(readability_audit);
 			
 			//Audit font_audit = font_auditor.execute(page);
 			//audits.add(font_audit);
 			
-			Audit paragraph_audit = paragraph_auditor.execute(page);
+			Audit paragraph_audit = paragraph_auditor.execute(page, null);
 			audits.add(paragraph_audit);	
 		}
 

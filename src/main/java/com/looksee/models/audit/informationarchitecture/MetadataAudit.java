@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
 import com.looksee.models.audit.UXIssueMessage;
@@ -46,7 +47,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state) {
+	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		//List<PageVersion> pages = domain_service.getPages(domain.getHost());

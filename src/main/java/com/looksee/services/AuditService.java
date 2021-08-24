@@ -2,6 +2,7 @@ package com.looksee.services;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -144,8 +145,10 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
+	@Deprecated
 	public Set<IssueElementMap> generateIssueElementMap(
-			Set<Audit> audits
+			Set<Audit> audits,
+			String useless_var
 	) {
 		Set<IssueElementMap> audit_elements = new HashSet<>();
 		
@@ -193,6 +196,7 @@ public class AuditService {
 	 * @return
 	 * @throws MalformedURLException
 	 */
+	@Deprecated
 	public Set<ElementIssueMap> generateElementIssueMap(Set<Audit> audits)  {		
 		Set<ElementIssueMap> element_issues = new HashSet<>();
 		
@@ -277,6 +281,78 @@ public class AuditService {
 		
 		return element_issues;
 	}
+	
+	/**
+	 * Generates a {@linkplain Map} with element keys for it's keys and a set of issue keys associated 
+	 * 	with each element as the values
+	 * 
+	 * @param audits
+	 * @param page_url
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public Map<String, Set<String>> generateElementIssuesMap(Set<Audit> audits)  {		
+		Map<String, Set<String>> element_issues = new HashMap<>();
+				
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues = getIssues(audit.getId());
+
+			for(UXIssueMessage issue_msg : issues ) {
+				
+				ElementState element = ux_issue_service.getElement(issue_msg.getId());
+				if(element == null) {
+					log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+					continue;
+				}
+				
+				//associate issue with element
+				if(!element_issues.containsKey(element.getKey())) {
+					
+					Set<String> issue_keys = new HashSet<>();
+					issue_keys.add(issue_msg.getKey());
+					
+					element_issues.put(element.getKey(), issue_keys);
+				}
+				else {
+					element_issues.get(element.getKey()).add(issue_msg.getKey());
+				}
+
+			}
+		}
+
+		return element_issues;
+	}
+	
+	/**
+	 * WIP
+	 * 
+	 * @param audits
+	 * @param page_url
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public Map<String, String> generateIssueElementMap(Set<Audit> audits)  {		
+		Map<String, String> issue_element_map = new HashMap<>();
+				
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issues = getIssues(audit.getId());
+
+			for(UXIssueMessage issue_msg : issues ) {
+				
+				ElementState element = ux_issue_service.getElement(issue_msg.getId());
+				if(element == null) {
+					log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
+					continue;
+				}
+				
+				//associate issue with element
+				issue_element_map.put(issue_msg.getKey(), element.getKey());
+			
+			}
+		}
+
+		return issue_element_map;
+	}
 
 	public UXIssueMessage addIssue(
 			String key, 
@@ -287,6 +363,45 @@ public class AuditService {
 		assert !issue_key.isEmpty();
 		
 		return audit_repo.addIssueMessage(key, issue_key);
+	}
+
+	/**
+	 * 
+	 * @param audits
+	 * @return
+	 */
+	public Map<String, UXIssueMessage> retrieveUXIssues(Set<Audit> audits) {
+		Map<String, UXIssueMessage> issues = new HashMap<>();
+		
+		for(Audit audit : audits) {	
+			Set<UXIssueMessage> issue_set = getIssues(audit.getId());
+			
+			for(UXIssueMessage ux_issue: issue_set) {
+				issues.put(ux_issue.getKey(), ux_issue);
+			}
+		}
+		return issues;
+	}
+
+	public Map<String, SimpleElement> retrieveElementSet(Collection<UXIssueMessage> issue_set) {
+		Map<String, SimpleElement> element_map = new HashMap<>();
+		
+		for(UXIssueMessage ux_issue: issue_set) {	
+			ElementState element = ux_issue_service.getElement(ux_issue.getId());
+			
+			SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+															  element.getScreenshotUrl(), 
+															  element.getXLocation(), 
+															  element.getYLocation(), 
+															  element.getWidth(), 
+															  element.getHeight(),
+															  element.getCssSelector(),
+															  element.getAllText());
+			
+			element_map.put(element.getKey(), simple_element);
+				
+		}
+		return element_map;
 	}
 
 }

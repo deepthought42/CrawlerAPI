@@ -2,6 +2,8 @@ package com.looksee.models.audit;
 
 import com.looksee.models.SimpleElement;
 
+//deprecated on 8-24-2021
+@Deprecated
 public class IssueElementMap {
 	private UXIssueMessage issue;
 	private SimpleElement element;

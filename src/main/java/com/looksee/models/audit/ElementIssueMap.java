@@ -4,6 +4,8 @@ import java.util.Set;
 
 import com.looksee.models.SimpleElement;
 
+//deprecated on 8-24-2021
+@Deprecated
 public class ElementIssueMap {
 	private Set<UXIssueMessage> issues;
 	private SimpleElement element;

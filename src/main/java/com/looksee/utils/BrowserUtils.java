@@ -579,4 +579,9 @@ public class BrowserUtils {
 		String background_image = web_element.getCssValue("background-image");
 		return background_image != null && !background_image.trim().isEmpty() && !background_image.trim().contentEquals("none");
 	}
+
+	public static double convertPxToPt(double pixel_size) {
+		
+		return pixel_size * 0.75;
+	}
 }

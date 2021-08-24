@@ -150,7 +150,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						}
 					}
 					
-					log.warn("content audits complete :: "+audits.size());
 					for(Audit audit : audits) {						
 						audit = audit_service.save(audit);
 						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );

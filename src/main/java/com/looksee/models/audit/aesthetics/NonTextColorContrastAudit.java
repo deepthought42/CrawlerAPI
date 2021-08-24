@@ -258,7 +258,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
-																				title);
+																				title, null);
 					issue_messages.add(low_contrast_issue);
 					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
 

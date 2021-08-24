@@ -656,11 +656,7 @@ public class BrowserService {
 		assert element_states_map != null;
 		assert page_state != null;
 		
-		//BufferedImage full_page_screenshot = GoogleCloudStorage.getImage(page_state.getFullPageScreenshotUrl());
-
 		List<ElementState> visited_elements = new ArrayList<>();
-		
-		//WebElement web_root = browser.getDriver().findElement(By.tagName("body"));
 		
 		String body_src = extractBody(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
@@ -693,6 +689,7 @@ public class BrowserService {
 				String css_selector = generateCssSelectorFromXpath(xpath);
 				String element_screenshot_url = "";
 				
+				/*
 				int width = element_size.getWidth();
 				if((element_size.getWidth() + element_location.getX()) > page_screenshot.getWidth()) {
 					width = page_screenshot.getWidth()-element_location.getX();
@@ -702,11 +699,12 @@ public class BrowserService {
 				if((element_size.getHeight() + element_location.getY()) > page_screenshot.getHeight()) {
 					height = page_screenshot.getHeight()-element_location.getY();
 				}
-				
+				*/
 				
 				try {
 					//extract element screenshot from full page screenshot
-					BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
+					BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+					//BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
 					String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 					
 					element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));

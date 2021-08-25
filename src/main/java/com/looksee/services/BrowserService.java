@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -447,16 +448,17 @@ public class BrowserService {
 	
 	/**
 	 * Process used by the web crawler to build {@link PageElement} list based on the xpaths on the page
-	 * @param audit_record TODO
 	 * @param xpaths TODO
+	 * @param audit_id TODO
+	 * @param audit_record TODO
 	 * @param url
-	 * 
 	 * @return
 	 * @throws MalformedURLException 
 	 * @throws Exception
 	 */
 	public List<ElementState> buildPageElements(PageState page_state, 
-												List<String> xpaths
+												List<String> xpaths, 
+												long audit_id
 	) throws MalformedURLException {
 		assert page_state != null;
 
@@ -484,7 +486,7 @@ public class BrowserService {
 				
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
-				elements = extractElementStates(page_state, xpaths, browser, elements_mapped);
+				elements = extractElementStates(page_state, xpaths, browser, elements_mapped, audit_id);
 				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
@@ -635,11 +637,12 @@ public class BrowserService {
 	
 	/**
 	 * identify and collect data for elements within the Document Object Model 
-	 * 
+	 * @param audit_record_id TODO
 	 * @param page_source
 	 * @param url
 	 * @param rule_sets TODO
 	 * @param reviewed_xpaths
+	 * 
 	 * @return
 	 * @throws IOException
 	 * @throws XPathExpressionException 
@@ -648,7 +651,8 @@ public class BrowserService {
 			PageState page_state, 
 			List<String> xpaths, 
 			Browser browser, 
-			Map<String, ElementState> element_states_map
+			Map<String, ElementState> element_states_map, 
+			long audit_record_id
 	) throws IOException, XPathExpressionException {
 		assert xpaths != null;
 		assert !xpaths.isEmpty();
@@ -668,7 +672,7 @@ public class BrowserService {
 				if(element_states_map.containsKey(xpath)) {
 					continue;
 				}
-	
+				
 				WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
 
 				browser.scrollToElement(xpath, web_element); 
@@ -689,17 +693,6 @@ public class BrowserService {
 				String css_selector = generateCssSelectorFromXpath(xpath);
 				String element_screenshot_url = "";
 				
-				/*
-				int width = element_size.getWidth();
-				if((element_size.getWidth() + element_location.getX()) > page_screenshot.getWidth()) {
-					width = page_screenshot.getWidth()-element_location.getX();
-				}
-				
-				int height = element_size.getHeight();
-				if((element_size.getHeight() + element_location.getY()) > page_screenshot.getHeight()) {
-					height = page_screenshot.getHeight()-element_location.getY();
-				}
-				*/
 				
 				try {
 					//extract element screenshot from full page screenshot
@@ -748,6 +741,14 @@ public class BrowserService {
 				page_state_service.addElement(page_state.getId(), element_state.getKey());
 				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
+				
+				AuditRecord audit_record = audit_record_service.findById(audit_record_id).get();
+				double element_progress = visited_elements.size() / (double)xpaths.size();
+				if(element_progress > audit_record.getDataExtractionProgress()) {
+					audit_record.setDataExtractionProgress(element_progress);
+				}
+				audit_record.setDataExtractionMsg(generateDataExtractionMessage());
+				audit_record = audit_record_service.save(audit_record);
 			}
 			catch(NoSuchElementException e) {
 				log.warn("No such element found :: "+xpath);
@@ -760,6 +761,69 @@ public class BrowserService {
 		return visited_elements;
 	}
 
+	/** MESSAGE GENERATION METHODS **/
+	static String[] data_extraction_messages = {
+			"Locating elements",
+			"Create an account to get results faster",
+			"Looking for content",
+			"Having a look-see",
+			"Create an account to get results faster",
+			"Extracting colors",
+			"Checking fonts",
+			"Pssst. Get results faster by logging in",
+			"Mapping page structure",
+			"Locating links",
+			"Create an account to get results faster",
+			"Extracting navigation",
+			"Create an account to get results faster",
+			"Pssst. Get results faster by logging in",
+			"Mapping CSS styles",
+			"Generating unique CSS selector",
+			"Mapping forms",
+			"Measuring whitespace",
+			"Pssst. Get results faster by logging in",
+			"Create an account to get results faster",
+			"Mapping attributes",
+			"Where's the color palette!? Oh there it is",
+			"Looking for headers",
+			"Mapping content structure",
+			"Create an account to get results faster",
+			"Wow! There's a lot of elements here",
+			"Crunching the numbers",
+			"Pssst. Get results faster by logging in",
+			"Searching for areas of interest",
+			"Create an account to get results faster",
+			"Evaluating purpose of webpage",
+			"Just a single page audit? Login to audit a domain",
+			"Labeling icons",
+			"Labeling images",
+			"Labeling logos",
+			"Applying customizations",
+			"Checking for overfancification",
+			"Grouping by proximity",
+			"Almost there!",
+			"Create an account to get results faster",
+			"Create an account to get results faster",
+			"Labeling text elements",
+			"Labeling links",
+			"Pssst. Get results faster by logging in",
+			"Labeling images",
+			"Pssst. Get results faster by logging in",
+			"Create an account to get results faster",
+			"Pssst. Get results faster by logging in",
+			"Mapping form fields",
+			"Extracting templates",
+			"Contemplating the meaning of the universe",
+			"I like some of these colors",
+			"Checking template structure"
+			};
+	private String generateDataExtractionMessage() {		
+		int random_idx = (int) (Math.random() * (data_extraction_messages.length-1));
+		return data_extraction_messages[random_idx];
+	}
+
+	/** MESSAGE GENERATION METHODS **/
+	
 	/**
 	 * Retrieves transparency value from rgba string
 	 * @param css_value
@@ -1673,7 +1737,8 @@ public class BrowserService {
 			PageState page_state,
 			List<String> xpaths, 
 			Browser browser, 
-			Map<String, ElementState> elements
+			Map<String, ElementState> elements, 
+			long audit_record_id
 	) throws IOException, XPathExpressionException {
 		assert page_state != null;
 		assert xpaths != null;
@@ -1681,7 +1746,7 @@ public class BrowserService {
 		assert browser != null;
 		assert elements != null;
 		
-		return getDomElementStates(page_state, xpaths, browser, elements);
+		return getDomElementStates(page_state, xpaths, browser, elements, audit_record_id);
 	}
 	
 	/**

@@ -11,6 +11,7 @@ import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -202,6 +203,7 @@ public class AuditController {
     }
 
     /**
+     * Performs a single page audit on a page with the given page_id
      * 
      * @param request
      * @param page
@@ -227,16 +229,17 @@ public class AuditController {
 	   	
 	   	if(audit_record_optional.isPresent()) {
 	   		PageAuditRecord audit_record = audit_record_optional.get();
+	   		
 	   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 	   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getId());
 	   		
 	    	log.warn("processing audits for page quick audit :: "+audits.size());
 	    	//Map audits to page states
 	    	//retrieve element set
-	    	Map<String, UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+	    	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
 	    	
 	    	//retrieve issue set
-	    	Map<String, SimpleElement> elements = audit_service.retrieveElementSet(issues.values());
+	    	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
 
 	    	//Map audits to page states
 	    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
@@ -268,6 +271,7 @@ public class AuditController {
 	   	}
 	   	
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+   		long audit_record_id = audit_record.getId();
 	   	audit_record_service.save(audit_record);
 		
 
@@ -315,7 +319,7 @@ public class AuditController {
 	   	//parallel stream get all elements since order doesn't matter
 	   	xpath_lists.parallelStream().forEach(xpath_list -> {
 	   		try {
-				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list);
+				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list, audit_record_id);
 				page_state.addElements(elements);
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -394,10 +398,10 @@ public class AuditController {
 		   	
 		   	//Map audits to page states
 	    	//retrieve element set
-	    	Map<String, UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+		   	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
 	    	
 	    	//retrieve issue set
-	    	Map<String, SimpleElement> elements = audit_service.retrieveElementSet(issues.values());
+		   	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
 
 	    	//Map audits to page states
 	    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);

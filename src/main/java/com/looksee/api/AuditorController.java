@@ -86,9 +86,9 @@ public class AuditorController {
     	
 	   	//create new audit record
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
-	   	audit_record.setAestheticMsg("Extracting colors...");
-	   	audit_record.setContentAuditMsg("Extracting images and text...");
-	   	audit_record.setInfoArchMsg("Extracting data layers...");
+	   	audit_record.setAestheticMsg("Waiting for data extraction ...");
+	   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
+	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
 	   	
 	   	Principal principal = request.getUserPrincipal();

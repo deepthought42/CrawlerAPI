@@ -1,13 +1,14 @@
 package com.looksee.models.audit;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import com.looksee.models.SimpleElement;
 
 public class ElementIssueTwoWayMapping {
-	private Map<String, UXIssueMessage> issues;
-	private Map<String, SimpleElement> elements;
+	private Collection<UXIssueMessage> issues;
+	private Collection<SimpleElement> elements;
 	
 	private Map<String, String> issues_element_map; // 1 to 1 correlation
 	private Map<String, Set<String>> element_issues; // 1 to many correlation
@@ -16,8 +17,8 @@ public class ElementIssueTwoWayMapping {
 	private String page_src;
 	
 	public ElementIssueTwoWayMapping(
-			Map<String, UXIssueMessage> issues,
-			Map<String, SimpleElement> elements,
+			Collection<UXIssueMessage> issues,
+			Collection<SimpleElement> elements,
 			Map<String, String> issue_element_map,
 			Map<String, Set<String>> element_issues, 
 			AuditScore audit_score, 
@@ -25,29 +26,29 @@ public class ElementIssueTwoWayMapping {
 	) {
 		setIssues(issues);
 		setElements(elements);
-		setIssuesElementMap(issues_element_map);
+		setIssueElementMap(issue_element_map);
 		setElementIssues(element_issues);
 		setScores(audit_score);
 		setPageSrc(page_src);
 	}
 
 
-	public Map<String, UXIssueMessage> getIssues() {
+	public Collection<UXIssueMessage> getIssues() {
 		return issues;
 	}
 
 
-	public void setIssues(Map<String, UXIssueMessage> issues) {
+	public void setIssues(Collection<UXIssueMessage> issues) {
 		this.issues = issues;
 	}
 
 
-	public Map<String, SimpleElement> getElements() {
+	public Collection<SimpleElement> getElements() {
 		return elements;
 	}
 
 
-	public void setElements(Map<String, SimpleElement> elements) {
+	public void setElements(Collection<SimpleElement> elements) {
 		this.elements = elements;
 	}
 
@@ -72,12 +73,12 @@ public class ElementIssueTwoWayMapping {
 	}
 
 
-	public Map<String, String> getIssuesElementMap() {
+	public Map<String, String> getIssueElementMap() {
 		return issues_element_map;
 	}
 
 
-	public void setIssuesElementMap(Map<String, String> issues_element_map) {
+	public void setIssueElementMap(Map<String, String> issues_element_map) {
 		this.issues_element_map = issues_element_map;
 	}
 

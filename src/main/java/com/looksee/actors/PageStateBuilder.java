@@ -85,17 +85,22 @@ public class PageStateBuilder extends AbstractActor{
 					
 
 					//update audit record with progress
+					AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
+					audit_record.setDataExtractionProgress(1.0/3.0);
+					audit_record.setDataExtractionMsg("Scanning webpage");
+					audit_record = audit_record_service.save(audit_record);
 					
 					PageState page_state = browser_service.buildPageState(crawl_action.getUrl(), crawl_action.getAuditRecord());
 					final PageState page_state_record = page_state_service.save(page_state);
-
-					AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
-					audit_record.setDataExtractionProgress(1.0/3.0);
-					audit_record = audit_record_service.save(audit_record);
 					audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
 					//crawl_action.getAuditRecord().setPageState(page_state_record);
 				   	
-				   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
+					audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
+					audit_record.setDataExtractionProgress(1.0/4.0);
+					audit_record.setDataExtractionMsg("Mapping HTML elements");
+					audit_record = audit_record_service.save(audit_record);
+				   	
+					List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 				   	int start_xpath_index = 0;
 				   	int last_xpath_index = 0;
 					List<List<String>> xpath_lists = new ArrayList<>();
@@ -115,7 +120,7 @@ public class PageStateBuilder extends AbstractActor{
 					   
 				   		ElementExtractionMessage element_extraction_msg = 
 					   								new ElementExtractionMessage(page_state_record, 
-					   															 crawl_action.getAuditRecord(), 
+					   															 crawl_action.getAuditRecordId(), 
 					   															 xpath_subset);
 						log.warn("Sending page for element extraction.....");
 						ActorRef element_extractor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -135,16 +140,24 @@ public class PageStateBuilder extends AbstractActor{
 					log.warn("dispatch responses ....   "+this.total_dispatch_responses);
 					log.warn("total dispatched... "+ this.total_dispatches);
 					
-					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-					audit_record.setDataExtractionProgress((double)total_dispatch_responses/(double)total_dispatches);
-					audit_record = audit_record_service.save(audit_record);
+					
 					//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
 					//       system is done extracting element data and the page is ready for auditing
 					
 					if(this.total_dispatch_responses == this.total_dispatches) {
 						log.warn("ALL PAGE ELEMENT STATES HAVE BEEN MAPPED SUCCESSFULLY!!!!!");
-						audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+						audit_record.setDataExtractionMsg("Done!");
 						audit_record.setDataExtractionProgress(1.0);
+						audit_record.setAestheticAuditProgress(1/20.0);
+						audit_record.setAestheticMsg("Starting visual design audit");
+
+						audit_record.setContentAuditProgress(1/20.0);
+						audit_record.setContentAuditMsg("Starting content audit");
+
+						audit_record.setInfoArchAuditProgress(1/20.0);
+						audit_record.setInfoArchMsg("Starting Information Architecture audit");
+						
 						audit_record = audit_record_service.save(audit_record);
 					/*
 				   	log.warn("requesting performance audit from performance auditor....");

@@ -1,6 +1,7 @@
 package com.looksee.api;
 
 import java.net.MalformedURLException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -188,10 +189,10 @@ public class AuditRecordController {
     	log.warn("processing audits :: "+audits.size());
     	
     	//retrieve element set
-    	Map<String, UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+    	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
     	
     	//retrieve issue set
-    	Map<String, SimpleElement> elements = audit_service.retrieveElementSet(issues.values());
+    	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
 
     	//Map audits to page states
     	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);

@@ -129,7 +129,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record.setInfoArchMsg("Reviewing SEO");
 					page_audit_record = audit_record_service.save(page_audit_record);
 					
 					
@@ -138,7 +138,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record.setInfoArchMsg("Done!");
 					page_audit_record = audit_record_service.save(page_audit_record);		
 					
 					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);

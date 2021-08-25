@@ -581,7 +581,6 @@ public class BrowserUtils {
 	}
 
 	public static double convertPxToPt(double pixel_size) {
-		
 		return pixel_size * 0.75;
 	}
 }

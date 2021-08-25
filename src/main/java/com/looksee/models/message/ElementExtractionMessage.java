@@ -3,18 +3,17 @@ package com.looksee.models.message;
 import java.util.List;
 
 import com.looksee.models.PageState;
-import com.looksee.models.audit.AuditRecord;
 
 public class ElementExtractionMessage {
 	private PageState page_state;
-	private AuditRecord audit_record;
+	private long audit_record_id;
 	private List<String> xpaths;
 	
 	public ElementExtractionMessage( PageState page,
-									 AuditRecord record,
+									 long audit_id,
 									 List<String> xpaths) {
 		setPageState(page);
-		setAuditRecord(record);
+		setAuditRecordId(audit_id);
 		setXpaths(xpaths);
 	}
 	
@@ -24,11 +23,11 @@ public class ElementExtractionMessage {
 	public void setPageState(PageState page_state) {
 		this.page_state = page_state;
 	}
-	public AuditRecord getAuditRecord() {
-		return audit_record;
+	public long getAuditRecordId() {
+		return audit_record_id;
 	}
-	public void setAuditRecord(AuditRecord audit_record) {
-		this.audit_record = audit_record;
+	public void setAuditRecordId(long audit_record_id) {
+		this.audit_record_id = audit_record_id;
 	}
 	public List<String> getXpaths() {
 		return xpaths;

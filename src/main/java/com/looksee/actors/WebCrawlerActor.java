@@ -154,8 +154,13 @@ public class WebCrawlerActor extends AbstractActor{
 							audit_record = audit_record_service.save(audit_record);
 							
 						   	List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+						   	audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
+							audit_record.setDataExtractionProgress(2.0/3.0);
+							audit_record = audit_record_service.save(audit_record);
+							
 							List<ElementState> elements = browser_service.buildPageElements(page_state, 
-																							xpaths);
+																							xpaths,
+																							audit_record.getId());
 							page_state.addElements(elements);
 							crawl_action.getAuditRecord().setDataExtractionProgress(3.0/3.0);
 							audit_record_service.save(crawl_action.getAuditRecord());

@@ -2,7 +2,6 @@ package com.looksee.actors;
 
 
 import java.io.IOException;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
@@ -11,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.ElementState;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
@@ -65,11 +63,13 @@ public class ElementStateExtractor extends AbstractActor{
 				.match(ElementExtractionMessage.class, message-> {
 					log.warn("Extracting element states from page");
 
-					List<ElementState> element_list =
-			                  browser_service.buildPageElements(message.getPageState(), 
-			                		  							message.getXpaths());
+					browser_service.buildPageElements(message.getPageState(), 
+			                		  							message.getXpaths(),
+			                		  							message.getAuditRecordId());
 					log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
-					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecord().getId(), message.getPageState().getId(), message.getXpaths());
+					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
+																						message.getPageState().getId(), 
+																						message.getXpaths());
 					getSender().tell(element_message, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {

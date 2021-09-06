@@ -82,12 +82,6 @@ public class ContentAuditor extends AbstractActor{
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
-	 * 		 is also a Test and thus if the order is reversed, then the ExploratoryPath code never runs when it should
-	 * @throws NullPointerException
-	 * @throws IOException
-	 * @throws NoSuchElementException
 	 */
 	@Override
 	public Receive createReceive() {
@@ -127,7 +121,7 @@ public class ContentAuditor extends AbstractActor{
 					audits.add(paragraph_audit);	
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setContentAuditMsg("Finished content audit");
+					page_audit_record.setContentAuditMsg("Done!");
 					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
 					page_audit_record = audit_record_service.save(page_audit_record);		
 

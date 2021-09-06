@@ -103,7 +103,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 				   	
 				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (1.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Reviewing title and header...");
+					page_audit_record.setInfoArchMsg("Reviewing links...");
 					audit_record_service.save(page_audit_record);
 					
 				   	Audit link_audit = links_auditor.execute(page, null);
@@ -129,7 +129,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record.setInfoArchMsg("Reviewing SEO");
 					page_audit_record = audit_record_service.save(page_audit_record);
 					
 					
@@ -138,7 +138,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Audit complete");
+					page_audit_record.setInfoArchMsg("Done!");
 					page_audit_record = audit_record_service.save(page_audit_record);		
 					
 					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
@@ -150,7 +150,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						}
 					}
 					
-					log.warn("content audits complete :: "+audits.size());
 					for(Audit audit : audits) {						
 						audit = audit_service.save(audit);
 						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );

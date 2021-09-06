@@ -104,26 +104,22 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 
 		
 		for(ElementState element : og_text_elements) {
+			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
+			log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
-			String difficulty_string = ContentUtils.getReadingDifficultyRating(ease_of_reading_score);
+			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
 			
-			if("unknown".contentEquals(difficulty_string) || element.getAllText().split(" ").length <= 10) {
+			if("unknown".contentEquals(difficulty_string)) {
 				continue;
 			}
-		
 			
 			Set<String> labels = new HashSet<>();
 			labels.add("written content");
 			labels.add("readability");
 
-			
-			
-			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
-			log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
 			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			
 			
 			String title = "Content is " + difficulty_string + " to read";
 			String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
@@ -240,10 +236,10 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		}
 		else if(ease_of_reading_score < 80 && ease_of_reading_score >= 70) {
 			if(target_user_education == null) {
-				element_points = 3;
+				element_points = 4;
 			}
 			else if("HS".contentEquals(target_user_education)) {				
-				element_points = 3;
+				element_points = 4;
 			}
 			else if("College".contentEquals(target_user_education)) {				
 				element_points = 4;
@@ -257,6 +253,23 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		}
 		else if(ease_of_reading_score < 70 && ease_of_reading_score >= 60) {
 			if(target_user_education == null) {
+				element_points = 3;
+			}
+			else if("HS".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else if("College".contentEquals(target_user_education)) {				
+				element_points = 3;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 4;
+			}
+			else {
+				element_points = 2;
+			}
+		}
+		else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
+			if(target_user_education == null) {
 				element_points = 2;
 			}
 			else if("HS".contentEquals(target_user_education)) {				
@@ -268,8 +281,11 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			else if("Advanced".contentEquals(target_user_education)) {				
 				element_points = 4;
 			}
+			else {
+				element_points = 1;
+			}
 		}
-		else if(ease_of_reading_score < 60 && ease_of_reading_score >= 50) {
+		else if(ease_of_reading_score < 50 && ease_of_reading_score >= 30) {
 			if(target_user_education == null) {
 				element_points = 1;
 			}
@@ -283,23 +299,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 3;
 			}
 			else {
-				element_points = 1;
-			}
-		}
-		else if(ease_of_reading_score < 50 && ease_of_reading_score >= 30) {
-			if(target_user_education == null) {
-				element_points = 0;
-			}
-			else if("HS".contentEquals(target_user_education)) {				
-				element_points = 0;
-			}
-			else if("College".contentEquals(target_user_education)) {				
-				element_points = 1;
-			}
-			else if("Advanced".contentEquals(target_user_education)) {				
-				element_points = 2;
-			}
-			else {
 				element_points = 0;
 			}		
 		}
@@ -307,8 +306,11 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			if(target_user_education == null) {
 				element_points = 0;
 			}
-			else if("Advanced".contentEquals(target_user_education)) {				
+			else if("College".contentEquals(target_user_education)) {				
 				element_points = 1;
+			}
+			else if("Advanced".contentEquals(target_user_education)) {				
+				element_points = 2;
 			}
 			else {
 				element_points = 0;

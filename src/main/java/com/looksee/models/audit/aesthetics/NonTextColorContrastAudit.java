@@ -244,7 +244,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					Set<String> labels = new HashSet<>();
 					labels.add("contrast");
 					String ada_compliance = "Non-text items should have a minimum contrast ratio of 3:1.";
-					String why_it_matters = "";
+					
 					String recommendation = "use a darker/lighter shade of "+ element.getBackgroundColor() +" to achieve a contrast of 3:1";
 					
 					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
@@ -258,10 +258,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
-																				title);
+																				title, 
+																				null);
 					issue_messages.add(low_contrast_issue);
 					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
-
 				}
 				else {
 					score += 1;

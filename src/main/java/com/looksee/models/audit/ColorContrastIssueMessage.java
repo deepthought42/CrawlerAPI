@@ -16,6 +16,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	private double contrast;
 	private String foreground_color;
 	private String background_color;
+	private String font_size;
 	
 	public ColorContrastIssueMessage() {}
 	
@@ -33,6 +34,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * @param labels TODO
 	 * @param wcag_compliance TODO
 	 * @param title TODO
+	 * @param font_size TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
 	 * @pre !recommendation.isEmpty()
@@ -54,7 +56,8 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 			AuditCategory category, 
 			Set<String> labels, 
 			String wcag_compliance,
-			String title
+			String title, 
+			String font_size
 	) {
 		assert priority != null;
 		assert recommendation != null;
@@ -77,6 +80,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		setType(ObservationType.COLOR_CONTRAST);
 		setWcagCompliance(wcag_compliance);
 		setTitle(title);
+		setFontSize(font_size);
 		setKey(this.generateKey());
 	}
 
@@ -102,5 +106,13 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 
 	public void setBackgroundColor(String background_color) {
 		this.background_color = background_color;
+	}
+
+	public String getFontSize() {
+		return font_size;
+	}
+
+	public void setFontSize(String font_size) {
+		this.font_size = font_size;
 	}
 }

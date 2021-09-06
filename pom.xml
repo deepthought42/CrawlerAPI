@@ -587,17 +587,19 @@
 		    <artifactId>whelk-flesch-kincaid</artifactId>
 		    <version>0.1.6</version>
 		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
 		<dependency>
 		    <groupId>edu.stanford.nlp</groupId>
 		    <artifactId>stanford-corenlp</artifactId>
-		    <version>4.2.0</version>
+		    <version>4.2.2</version>
 		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-pos-tagger -->
 		<dependency>
 		    <groupId>edu.stanford.nlp</groupId>
 		    <artifactId>stanford-corenlp</artifactId>
-			<version>4.2.0</version>
+			<version>4.2.2</version>
 		    <classifier>models</classifier>
 		</dependency>
 

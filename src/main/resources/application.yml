@@ -21,10 +21,17 @@ resilience4j.retry:
                 - org.neo4j.ogm.exception.ConnectionException
                 - org.neo4j.driver.exceptions.SessionExpiredException
                 - org.neo4j.driver.exceptions.DiscoveryException
+                - java.net.SocketException
+        gcp:
+            maxAttempts: 10
+            waitDuration: 500
+            retryExceptions:
+                - java.io.IOException
+                - com.google.cloud.storage.StorageException
     instances:
         neo4j:
             baseConfig: neo4j
         webdriver:
             baseConfig: selenium
         gcp:
-            baseConfig: default
+            baseConfig: gcp

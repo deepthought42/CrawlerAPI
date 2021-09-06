@@ -11,8 +11,10 @@ import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -40,15 +42,14 @@ import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditFactory;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
-import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
-import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.PageAudits;
 import com.looksee.models.audit.UXIssueMessage;
@@ -202,6 +203,7 @@ public class AuditController {
     }
 
     /**
+     * Performs a single page audit on a page with the given page_id
      * 
      * @param request
      * @param page
@@ -227,17 +229,33 @@ public class AuditController {
 	   	
 	   	if(audit_record_optional.isPresent()) {
 	   		PageAuditRecord audit_record = audit_record_optional.get();
+	   		
 	   		PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 	   		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record.getId());
 	   		
 	    	log.warn("processing audits for page quick audit :: "+audits.size());
 	    	//Map audits to page states
-	    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-	    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+	    	//retrieve element set
+	    	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+	    	
+	    	//retrieve issue set
+	    	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
+
+	    	//Map audits to page states
+	    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
+	    	
+	    	//generate IssueElementMap
+	    	Map<String, String> issue_element_map = audit_service.generateIssueElementMap(audits);
+	    	
 	    	AuditScore score = AuditUtils.extractAuditScore(audits);
 	    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 		   	
-	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
+	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues,
+	   																					 elements,
+	   																					 issue_element_map, 
+	   																					 element_issue_map, 
+	   																					 score, 
+	   																					 page_src);
 	   		
 	   		SimplePage simple_page = new SimplePage(
 		   									page_state.getUrl(), 
@@ -253,6 +271,7 @@ public class AuditController {
 	   	}
 	   	
 	   	AuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+   		long audit_record_id = audit_record.getId();
 	   	audit_record_service.save(audit_record);
 		
 
@@ -300,7 +319,7 @@ public class AuditController {
 	   	//parallel stream get all elements since order doesn't matter
 	   	xpath_lists.parallelStream().forEach(xpath_list -> {
 	   		try {
-				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list);
+				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list, audit_record_id);
 				page_state.addElements(elements);
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -368,15 +387,36 @@ public class AuditController {
 		   	audit_record.setEndTime(LocalDateTime.now());
 		   	audit_record_service.save(audit_record);
 		   	//NOTE: nulls are present because they are no longer needed and being phased out
-		   	SimplePage simple_page = new SimplePage(page_state_record.getUrl(), page_state_record.getViewportScreenshotUrl(), page_state_record.getFullPageScreenshotUrl(), page_state_record.getFullPageWidth(), page_state_record.getFullPageHeight(), null, null, page_state_record.getId());
+		   	SimplePage simple_page = new SimplePage(page_state_record.getUrl(), 
+		   											page_state_record.getViewportScreenshotUrl(), 
+		   											page_state_record.getFullPageScreenshotUrl(), 
+		   											page_state_record.getFullPageWidth(), 
+		   											page_state_record.getFullPageHeight(), 
+		   											null, 
+		   											null, 
+		   											page_state_record.getId());
 		   	
 		   	//Map audits to page states
-	    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
-	    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+	    	//retrieve element set
+		   	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+	    	
+	    	//retrieve issue set
+		   	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
+
+	    	//Map audits to page states
+	    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
+	    	
+	    	//generate IssueElementMap
+	    	Map<String, String> issue_element_map = audit_service.generateIssueElementMap(audits);
+	    	
 	    	AuditScore score = AuditUtils.extractAuditScore(audits);
 	    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record.getId()).getSrc();
 		   	
-	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
+	   		ElementIssueTwoWayMapping element_issues_map = new ElementIssueTwoWayMapping(issues,
+	   																					 elements,
+	   																					 issue_element_map, 
+	   																					 element_issue_map, 
+	   																					 score, page_src);
 	   		
 		   	return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
 		//});

@@ -150,7 +150,7 @@ public class ImageUtils {
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < buffered_image.getWidth(); x+=2) {
+		for(int x=0; x < buffered_image.getWidth(); x++) {
 			for(int y=0; y < buffered_image.getHeight(); y++) {
 				 int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;

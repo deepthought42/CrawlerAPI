@@ -114,16 +114,16 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				element = element_state_service.save(element);
 				
 				if(!element.getOwnedText().isEmpty()){
-					String font_size_str = element.getRenderedCssValues().get("font-size");
+					String og_font_size_str = element.getRenderedCssValues().get("font-size");
 					String font_weight = element.getRenderedCssValues().get("font-weight");
 
-					font_size_str = font_size_str.replace("px", "");
+					String font_size_str = og_font_size_str.replace("px", "");
 					
-					double font_size = Double.parseDouble(font_size_str.strip());
+					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.strip()));
 					total_possible_points += 1;
 					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 (A Compliance)
 					//NOTE: The following measures of font size are in pixels not font points
-					if(font_size >= 24 || (font_size >= 18.6667 && BrowserUtils.isTextBold(font_weight))) {
+					if(font_size >= 18 || (font_size >= 14 && BrowserUtils.isTextBold(font_weight))) {
 						if( contrast < 3 ) {
 							//low contrast header issue
 							String title = "Large text has low contrast";
@@ -142,7 +142,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									AuditCategory.AESTHETICS,
 																									labels, 
 																									ada_compliance,
-																									title);
+																									title, 
+																									font_size+"");
+							
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 
@@ -152,7 +154,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//100% score
 						}
 					}
-					else if((font_size < 24 && font_size >= 18.6667 && !BrowserUtils.isTextBold(font_weight)) || font_size < 18.6667 ) {
+					else if((font_size < 18 && font_size >= 14 && !BrowserUtils.isTextBold(font_weight)) || font_size < 14 ) {
 						if( contrast < 4.5 ) {
 							//fail
 							String title = "Text has low contrast";
@@ -169,7 +171,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						AuditCategory.AESTHETICS, 
 																						labels, 
 																						ada_compliance,
-																						title);
+																						title,
+																						font_size+"");
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text

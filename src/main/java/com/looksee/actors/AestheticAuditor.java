@@ -101,7 +101,7 @@ public class AestheticAuditor extends AbstractActor{
 					//audits.add(color_palette_audit);
 					AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 				   	page_audit_record.setAestheticAuditProgress( (1.0/3.0) ); 
-				   	page_audit_record.setAestheticMsg("Reviewing non-text contrast...");
+				   	page_audit_record.setAestheticMsg("Reviewing text contrast...");
 				   	page_audit_record = audit_record_service.save(page_audit_record);
 				   	
 					Audit text_contrast_audit = text_contrast_auditor.execute(page, null);
@@ -123,7 +123,7 @@ public class AestheticAuditor extends AbstractActor{
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setAestheticAuditProgress( 1 ); 
-					page_audit_record.setAestheticMsg("Finished Aesthetics audit");
+					page_audit_record.setAestheticMsg("Done!");
 					page_audit_record = audit_record_service.save(page_audit_record);
 		   			//send message to either user or page channel containing reference to audits
 

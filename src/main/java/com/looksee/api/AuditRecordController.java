@@ -1,7 +1,9 @@
 package com.looksee.api;
 
 import java.net.MalformedURLException;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -16,22 +18,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
+import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditStats;
-import com.looksee.models.audit.ElementIssueMap;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
-import com.looksee.models.audit.IssueElementMap;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.TargetAudienceSettings;
 import com.looksee.models.audit.UXIssueMessage;
@@ -194,24 +194,37 @@ public class AuditRecordController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
     public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
-    		HttpServletRequest request,
-    		@PathVariable("audit_record_id") long audit_record_id
+											    		HttpServletRequest request,
+											    		@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
     	log.warn("page audit record id :: "+ audit_record_id);
     	//Get most recent audits
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
     	log.warn("processing audits :: "+audits.size());
+    	
+    	//retrieve element set
+    	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+    	
+    	//retrieve issue set
+    	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
+
     	//Map audits to page states
-    	Set<ElementIssueMap> element_issue_map = audit_service.generateElementIssueMap(audits);
+    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
     	
     	//generate IssueElementMap
-    	Set<IssueElementMap> issue_element_map = audit_service.generateIssueElementMap(audits);
+    	Map<String, String> issue_element_map = audit_service.generateIssueElementMap(audits);
     	
+
     	AuditScore score = AuditUtils.extractAuditScore(audits);
     	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
     	
     	//package both elements into an object definition
-    	return new ElementIssueTwoWayMapping(issue_element_map, element_issue_map, score, page_src);
+    	return new ElementIssueTwoWayMapping(issues, 
+    										 elements, 
+    										 issue_element_map, 
+    										 element_issue_map, 
+    										 score, 
+    										 page_src);
     }
     
     /**

@@ -131,14 +131,6 @@ public class ContentAuditor extends AbstractActor{
 					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
 					page_audit_record = audit_record_service.save(page_audit_record);		
 
-					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
-					if(is_audit_complete) {
-						
-						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
-						for(Account account: accounts) {
-							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
-						}
-					}
 					
 					log.warn("content audits complete :: "+audits.size());
 					for(Audit audit : audits) {						

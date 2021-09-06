@@ -280,7 +280,7 @@ public class SendGridMailService {
 
 	public void sendDomainAuditCompleteEmail(String account_email, String domain_url, long domain_id) {
 		Email to = new Email(account_email);
-		Email from = new Email("support@look-see.com");
+		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for your domain: "+domain_url;
 		/*
 		String email_msg = "Your audit results for " + page_url + " are ready!"

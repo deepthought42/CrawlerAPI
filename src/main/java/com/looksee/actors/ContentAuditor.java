@@ -82,12 +82,6 @@ public class ContentAuditor extends AbstractActor{
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
-	 * 		 is also a Test and thus if the order is reversed, then the ExploratoryPath code never runs when it should
-	 * @throws NullPointerException
-	 * @throws IOException
-	 * @throws NoSuchElementException
 	 */
 	@Override
 	public Receive createReceive() {

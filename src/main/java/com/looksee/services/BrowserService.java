@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -398,8 +397,6 @@ public class BrowserService {
         int status_code = BrowserUtils.getHttpStatus(url);
 
         //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
-        browser.scrollToBottomOfPage();
-        browser.scrollToTopOfPage();
         
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
@@ -407,13 +404,11 @@ public class BrowserService {
 		//Element root = html_doc.getElementsByTag("body").get(0);	
 		log.warn("url for page state:  "+url);
 		
-		
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
-		
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
@@ -424,7 +419,7 @@ public class BrowserService {
 		Dimension size = browser.getDriver().manage().window().getSize();
 
         log.warn("status code received .... " + status_code);
-
+        log.warn("Full page screenshot url ....   "+full_page_screenshot_url);
 		PageState page_state = new PageState(
 				viewport_screenshot_url,
 				new ArrayList<>(),
@@ -664,6 +659,9 @@ public class BrowserService {
 		
 		String body_src = extractBody(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
+		
+		log.warn("full page screenshot ...."+page_state.getFullPageHeight());
+		
 		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrl()));
 		Document html_doc = Jsoup.parse(body_src);
 
@@ -692,12 +690,11 @@ public class BrowserService {
 				
 				String css_selector = generateCssSelectorFromXpath(xpath);
 				String element_screenshot_url = "";
-				
-				
+
 				try {
 					//extract element screenshot from full page screenshot
-					BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 					//BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
+					BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 					String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 					
 					element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -706,7 +703,8 @@ public class BrowserService {
 				catch(Exception e) {
 					log.warn("element height :: "+element_size.getHeight());
 					log.warn("Element Y location ::  "+ element_location.getY());
-					
+					log.warn("element width :: "+element_size.getWidth());
+					log.warn("Element X location ::  "+ element_location.getX());
 					e.printStackTrace();
 				}
 				//get child elements for element
@@ -767,16 +765,14 @@ public class BrowserService {
 			"Create an account to get results faster",
 			"Looking for content",
 			"Having a look-see",
-			"Create an account to get results faster",
 			"Extracting colors",
 			"Checking fonts",
 			"Pssst. Get results faster by logging in",
 			"Mapping page structure",
 			"Locating links",
-			"Create an account to get results faster",
 			"Extracting navigation",
-			"Create an account to get results faster",
 			"Pssst. Get results faster by logging in",
+			"Create an account to get results faster",
 			"Mapping CSS styles",
 			"Generating unique CSS selector",
 			"Mapping forms",
@@ -784,15 +780,28 @@ public class BrowserService {
 			"Pssst. Get results faster by logging in",
 			"Create an account to get results faster",
 			"Mapping attributes",
-			"Where's the color palette!? Oh there it is",
+			"Mapping attributes",
+			"Mapping attributes",
+			"Mapping attributes",
+			"Mapping attributes",
+			"Mapping attributes",
+			"Extracting color palette",
 			"Looking for headers",
 			"Mapping content structure",
 			"Create an account to get results faster",
 			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
+			"Wow! There's a lot of elements here",
 			"Crunching the numbers",
 			"Pssst. Get results faster by logging in",
-			"Searching for areas of interest",
 			"Create an account to get results faster",
+			"Searching for areas of interest",
 			"Evaluating purpose of webpage",
 			"Just a single page audit? Login to audit a domain",
 			"Labeling icons",
@@ -803,18 +812,13 @@ public class BrowserService {
 			"Grouping by proximity",
 			"Almost there!",
 			"Create an account to get results faster",
-			"Create an account to get results faster",
 			"Labeling text elements",
 			"Labeling links",
 			"Pssst. Get results faster by logging in",
 			"Labeling images",
-			"Pssst. Get results faster by logging in",
-			"Create an account to get results faster",
-			"Pssst. Get results faster by logging in",
 			"Mapping form fields",
 			"Extracting templates",
 			"Contemplating the meaning of the universe",
-			"I like some of these colors",
 			"Checking template structure"
 			};
 	private String generateDataExtractionMessage() {		

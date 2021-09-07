@@ -243,73 +243,13 @@ public class WebCrawlerActor extends AbstractActor{
 				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 
 					page_state_builder.tell(crawl_action, getSelf());					
-				
-					
-				   	/*
-				   	
-					List<List<? extends Object>> element_lists = xpath_lists.parallelStream()
-												   .map(xpath_list -> {
-												   		try {
-															return browser_service.buildPageElements(page_state, xpath_list);
-															//page_state.addElements(elements);
-														} catch (MalformedURLException e) {
-															// TODO Auto-generated catch block
-															e.printStackTrace();
-														}
-												   		return new ArrayList<>();
-												   	})
-												   	.collect(Collectors.toList());
-					
-					//unroll element lists
-					List<ElementState> elements = new ArrayList<>();
-					for(List<? extends Object> element_list: element_lists) {
-						for(Object element_obj : element_list) {
-							elements.add((ElementState)element_obj);
-							page_state_service.addElement(page_state.getId(), ((ElementState)element_obj).getKey());
-						}
-					}
-					
-					log.warn("element list size : "+elements.size());
-					page_state.addElements(elements);
-					*/
-			   		//List<ElementState> elements = browser_service.buildPageElements(page_state, crawl_action.getAuditRecord(), xpaths);
-					//update audit record with progress
-					/*
-					AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();
-					audit_record.setDataExtractionProgress(3.0/3.0);
-					audit_record_service.save(audit_record);
-					*/
-					//domain.addPage(page);
-					//domain_service.addPage(domain.getId(), page_state.getKey());
-					
+
 				   	//check if page state already
 				   	//perform audit and return audit result
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
-				   	
-				   	/*
-				   	log.warn("requesting performance audit from performance auditor....");
-				   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-				   	performance_insight_actor.tell(page_state, ActorRef.noSender());
-				   	*/
-				   	/*
-				   	log.warn("Running information architecture audit via actor");
-					ActorRef content_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-					content_auditor.tell(crawl_action.getAuditRecord(), getSelf());
-				   	
-				   	log.warn("Running information architecture audit via actor");
-					ActorRef info_architecture_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
-					info_architecture_auditor.tell(crawl_action.getAuditRecord(), getSelf());
-					
-					log.warn("Running aesthetic audit via actor");
-					ActorRef aesthetic_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());
-					aesthetic_auditor.tell(crawl_action.getAuditRecord(), getSelf());
-					*/
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

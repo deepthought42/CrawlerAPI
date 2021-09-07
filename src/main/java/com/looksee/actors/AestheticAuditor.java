@@ -94,7 +94,7 @@ public class AestheticAuditor extends AbstractActor{
 				   	Set<Audit> audits = new HashSet<>();
 				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
 				   	
-				   		//check if page state already
+				   	//check if page state already
 		   			//perform audit and return audit result
 				   
 				   	//Audit color_palette_audit = color_palette_auditor.execute(page);
@@ -132,7 +132,20 @@ public class AestheticAuditor extends AbstractActor{
 						audit = audit_service.save(audit);
 						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
 						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}					
+					}
+
+					//NOTE: SEND DATA TO AUDIT MANAGER
+					//getSender().tell(msg, getSelf());
+					
+
+					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
+					if(is_audit_complete) {
+						
+						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
+						for(Account account: accounts) {
+							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
+						}
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

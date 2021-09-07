@@ -197,7 +197,7 @@ public class SendGridMailService {
 				"    <tbody>\n" + 
 				"      <tr>\n" + 
 				"        <td style=\"font-size:6px; line-height:10px; padding:0px 0px 0px 0px;\" valign=\"top\" align=\"center\">\n" + 
-				"          <img class=\"max-width\" border=\"0\" style=\"display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px; max-width:30% !important; width:30%; height:auto !important;\" width=\"180\" alt=\"\" data-proportionally-constrained=\"true\" data-responsive=\"true\" src=\"http://cdn.mcauto-images-production.sendgrid.net/096106beea9422a2/d5dd3e1e-1814-4178-88fd-b02f4492876b/2000x1421.png\">\n" + 
+				"          <img class=\"max-width\" border=\"0\" style=\"display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px; max-width:30% !important; width:20%; height:auto !important;\" width=\"150\" alt=\"\" data-proportionally-constrained=\"true\" data-responsive=\"true\" src=\"http://cdn.mcauto-images-production.sendgrid.net/096106beea9422a2/d5dd3e1e-1814-4178-88fd-b02f4492876b/2000x1421.png\">\n" + 
 				"        </td>\n" + 
 				"      </tr>\n" + 
 				"    </tbody>\n" + 

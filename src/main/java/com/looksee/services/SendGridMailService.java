@@ -28,6 +28,7 @@ public class SendGridMailService {
         sendMail(to, from, subject, msg);
     }
     
+    @Deprecated
     public void sendMail(Email to, Email from, String subject, String msg) {      
         Content content = new Content("text/html", msg);
         Mail mail = new Mail(from, subject, to, content);
@@ -51,19 +52,7 @@ public class SendGridMailService {
 		Email to = new Email(account_email);
 		Email from = new Email("support@look-see.com");
 		String subject = "UX audit complete for "+page_url;
-		/*
-		String email_msg = "Your audit results for " + page_url + " are ready!"
-				+ "<div>"
-				+ "<h1>"
-				+ "This page experience is "+ AuditUtils.getExperienceRating(audit_record)
-				+ "</h1>"
-				+ "</div>"
-				+ "<div>"
-				+ "<a href='https://app.look-see.com/quick-audit/"+audit_record.getId()+"'>"
-				+ "<button>View results</button>"
-				+ "</a>"
-				+ "</div>";
-		*/
+
 		String email_msg = "<html data-editor-version=\"2\" class=\"sg-campaigns\" xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n" + 
 				"      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" + 
 				"      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1\">\n" + 
@@ -282,19 +271,7 @@ public class SendGridMailService {
 		Email to = new Email(account_email);
 		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for your domain: "+domain_url;
-		/*
-		String email_msg = "Your audit results for " + page_url + " are ready!"
-				+ "<div>"
-				+ "<h1>"
-				+ "This page experience is "+ AuditUtils.getExperienceRating(audit_record)
-				+ "</h1>"
-				+ "</div>"
-				+ "<div>"
-				+ "<a href='https://app.look-see.com/quick-audit/"+audit_record.getId()+"'>"
-				+ "<button>View results</button>"
-				+ "</a>"
-				+ "</div>";
-		*/
+
 		String email_msg = "<html data-editor-version=\"2\" class=\"sg-campaigns\" xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n" + 
 				"      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" + 
 				"      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1\">\n" + 

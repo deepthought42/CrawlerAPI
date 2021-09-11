@@ -81,6 +81,8 @@ public class FontAudit implements IExecutablePageStateAudit {
 				" been used across the pages.";
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
+		Set<String> labels = new HashSet<>();
+		labels.add("aesthetics");
 		
 		int score = 0;
 		int max_score = 0;
@@ -129,9 +131,11 @@ public class FontAudit implements IExecutablePageStateAudit {
 						ObservationType.TYPOGRAPHY,
 						AuditCategory.AESTHETICS,
 						wcag_compliance,
-						new HashSet<>(),
+						labels,
 						why_it_matters,
-						title);
+						title, 
+						0,
+						1);
 				issue_messages.add(ux_issue);
 			}
 			else {
@@ -153,9 +157,11 @@ public class FontAudit implements IExecutablePageStateAudit {
 						ObservationType.TYPOGRAPHY,
 						AuditCategory.AESTHETICS,
 						wcag_compliance,
-						new HashSet<>(),
+						labels,
 						why_it_matters,
-						title);
+						title,
+						0,
+						1);
 				issue_messages.add(ux_issue);
 			}
 			else {
@@ -190,9 +196,11 @@ public class FontAudit implements IExecutablePageStateAudit {
 						ObservationType.TYPOGRAPHY,
 						AuditCategory.AESTHETICS,
 						wcag_compliance,
-						new HashSet<>(),
+						labels,
 						why_it_matters,
-						title);
+						title,
+						0,
+						1);
 				issue_messages.add(ux_issue);
 			}
 			else if(owns_text && font_size >=12 ) {

@@ -73,7 +73,9 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 												wcag_compliance,
 												new HashSet<>(),
 												why_it_matters,
-												title);
+												title, 
+												0, 
+												1);
 				issue_messages.add(ux_issue);
 		}
 		else {

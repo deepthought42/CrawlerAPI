@@ -149,7 +149,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String why_it_matters = "When your title is too short or too long then users aren't able to easily identify what to expect from a page.";
 			
 			
-			issue_messages.add(new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title));
+			issue_messages.add(new UXIssueMessage(recommendation, 
+												  priority, 
+												  description, 
+												  type, 
+												  category, 
+												  wcag_compliance, 
+												  labels, 
+												  why_it_matters, 
+												  title, 
+												  points_achieved, 
+												  1));
 		}
 		max_points++;
 		
@@ -301,7 +311,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 						String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Meta descriptions that are longer than 160 characters get cut off by Search engines and won't be shown to the user";
 						String title= "Meta description is too long";
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+																	  priority, 
+																	  description, 
+																	  type, 
+																	  category, 
+																	  wcag_compliance, 
+																	  labels, 
+																	  why_it_matters, 
+																	  title, 
+																	  score, 
+																	  5);
 						issue_messages.add(issue_msg);
 					}
 					
@@ -320,7 +340,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 						String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Meta descriptions that are too short often lack enough information to know if the content within a search result is going to be helpful.";
 						String title= "Meta description is too short";
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+																	  priority, 
+																	  description, 
+																	  type, 
+																	  category, 
+																	  wcag_compliance, 
+																	  labels, 
+																	  why_it_matters, 
+																	  title, 
+																	  score, 
+																	  5);
 						issue_messages.add(issue_msg);
 					}
 				
@@ -344,7 +374,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												+ "This often results on the user choosing another option that with a better meta description";
 						String title= "Meta description is " + ContentUtils.getReadingDifficultyRating(ease_of_reading_score) + " to read";
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+																	  priority, 
+																	  description, 
+																	  type, 
+																	  category, 
+																	  wcag_compliance, 
+																	  labels, 
+																	  why_it_matters, 
+																	  title, 
+																	  score, 
+																	  5);
 						issue_messages.add(issue_msg);
 					}
 				}
@@ -359,7 +399,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 					String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Having a description helps users understand if they can find what they are looking for on any given webpage.";
 					String title= "Meta description is empty";
 					
-					UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+					UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+																  priority, 
+																  description, 
+																  type, 
+																  category, 
+																  wcag_compliance, 
+																  labels, 
+																  why_it_matters, 
+																  title, 
+																  score, 
+																  5);
 					issue_messages.add(issue_msg);
 				}
 			}
@@ -378,7 +428,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Having a description helps users understand if they can find what they are looking for on any given webpage.";
 			String title= "Meta description not found";
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+														  priority, 
+														  description, 
+														  type, 
+														  category, 
+														  wcag_compliance, 
+														  labels, 
+														  why_it_matters, 
+														  title, 
+														  score, 
+														  5);
 			issue_messages.add(issue_msg);
 			
 		}
@@ -395,7 +455,17 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String why_it_matters = "Search engines will only show one meta description to users. Having more than 1 meta description doesn't help, and may actually hurt your search ranking";
 			String title= "Too many meta descriptions found";
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title);
+			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
+														  priority, 
+														  description, 
+														  type, 
+														  category, 
+														  wcag_compliance, 
+														  labels, 
+														  why_it_matters, 
+														  title, 
+														  score, 
+														  5);
 			issue_messages.add(issue_msg);
 		}
 		
@@ -435,9 +505,19 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String why_it_matters = "Meta html tags with name=\"refresh\" are discouraged because consistent page refreshes can be disruptive to the experience as well as making a page highly difficult to interact with for people that rely on assistive technologies";
 			String title= "Meta refresh tag found";
 			
-			issue_messages.add(new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title));
+			issue_messages.add(new UXIssueMessage(recommendation, 
+												  priority, 
+												  description, 
+												  type, 
+												  category, 
+												  wcag_compliance, 
+												  labels, 
+												  why_it_matters, 
+												  title, 
+												  score, 
+												  1));
 		}
-		max_points++;
+		//max_points++;
 		
 		return new Score(score, max_points, issue_messages);
 	}

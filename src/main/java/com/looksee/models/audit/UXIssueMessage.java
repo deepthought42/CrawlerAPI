@@ -21,6 +21,8 @@ public class UXIssueMessage extends LookseeObject {
 	private String category;
 	private String wcag_compliance;
 	private Set<String> labels;
+	private int points;
+	private int max_points;
 	
 	public UXIssueMessage() {}
 	
@@ -33,7 +35,7 @@ public class UXIssueMessage extends LookseeObject {
 			String wcag_compliance,
 			Set<String> labels, 
 			String why_it_matters, 
-			String title
+			String title, int points, int max_points
 	) {
 		setRecommendation(recommendation);
 		setPriority(priority);
@@ -122,5 +124,21 @@ public class UXIssueMessage extends LookseeObject {
 
 	public void setTitle(String title) {
 		this.title = title;
+	}
+
+	public int getPoints() {
+		return points;
+	}
+
+	public void setPoints(int points) {
+		this.points = points;
+	}
+
+	public int getMaxPoints() {
+		return max_points;
+	}
+
+	public void setMaxPoints(int max_points) {
+		this.max_points = max_points;
 	}
 }

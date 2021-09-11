@@ -8,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum Priority {
 	HIGH("high"), 
 	MEDIUM("medium"), 
-	LOW("low");
+	LOW("low"),
+	NONE("none");
 	
 
 	private String shortName;

@@ -801,20 +801,20 @@ public class Browser {
 	 * Extract all attributes from a given {@link WebElement}
 	 * 
 	 * @param element {@link WebElement} to have attributes loaded for
-	 * @param javascriptDriver - 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, String> extractAttributes(WebElement element) {
-		//String outer_html = element.getAttribute("outerHTML");
-		//extract first tag from html
-		//extract attributes
-		
 		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
 	}
 	
-
+	/**
+	 * Remove Drift.com chat app
+	 */
+	public void removeDriftChat() {
+		((JavascriptExecutor)driver).executeScript("var element=document.getElementById(\"drift-frame-chat\");if(typeof(element)!='undefined' && element != null){document.getElementById(\"drift-frame-chat\").remove();document.getElementById(\"drift-frame-controller\").remove();}");
+	}
 	
 	/**
 	 * Loads attributes for this element into a list of {@link Attribute}s

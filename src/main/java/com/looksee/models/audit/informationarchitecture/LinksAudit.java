@@ -403,7 +403,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		*/
 		String why_it_matters = "Links without text are less accessible as well as generally impacting usability. "
 				+ "When links don't have text, users that rely on screen readers are unable to understand what links without text are meant to accomplish."
-				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";
+				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";		
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());

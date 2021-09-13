@@ -281,11 +281,16 @@ public class AuditManager extends AbstractActor{
 					Set<PageState> pages = domain_service.getPages(domain.getUrl());
 					Set<PageState> page_states = domain_service.getPageStates(domain.getId());
 					
+					mail_service.sendPageAuditCompleteEmail(account.getEmail(), audit_complete.getPageState().getUrl(), audit_complete.getAuditRecordId());
+					
 					//find user account
 					if( pages.size() == page_states.size()) {
 						Account account = account_service.findById(audit_complete.getAccountId()).get();
 						//send domain audit complete
 						mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
+						
+
+						
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						//AuditSet audit_record_set = new AuditSet(audits);
 						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -308,8 +313,9 @@ public class AuditManager extends AbstractActor{
 					//NOTE: Audit record can be null, need to handle that scenario
 					//Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(audit_record.getDomainId());					
 					//audit_record_service.save(audit_record.getPageAuditRecord());
-					log.warn("adding page audit with key = "+audit_record.getPageAuditRecord().getKey() + "   to domain audit record with id= "+audit_record.getAuditRecordId());
+					log.warn("adding page audit with key = "+audit_record.getPageAuditRecord().getKey() + " to domain audit record with id= "+audit_record.getAuditRecordId());
 					audit_record_service.addPageAuditToDomainAudit(audit_record.getAuditRecordId(), audit_record.getPageAuditRecord().getKey());
+
 					
 					log.warn("Audit record :: " + audit_record);
 					//save all audits in audit list to database and add them to the audit record
@@ -319,7 +325,7 @@ public class AuditManager extends AbstractActor{
 						
 						//send pusher message to clients currently subscribed to domain audit channel
 						MessageBroadcaster.broadcastAudit(host, audit);
-					}						
+					}	
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

@@ -29,6 +29,7 @@ import com.looksee.models.enums.AuditCategory;
  * Executes various {@link Audit audits}
  */
 @Component
+@Deprecated
 public class AuditFactory {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditFactory.class);
@@ -85,6 +86,7 @@ public class AuditFactory {
 	 * @pre category != null
 	 * @pre page != null
 	 */
+	@Deprecated
 	public List<Audit> executePageAudits(
 							AuditCategory category, 
 							PageState page

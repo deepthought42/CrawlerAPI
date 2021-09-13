@@ -159,12 +159,13 @@ public class PageStateBuilder extends AbstractActor{
 						audit_record.setInfoArchMsg("Starting Information Architecture audit");
 						
 						audit_record = audit_record_service.save(audit_record);
-					/*
-				   	log.warn("requesting performance audit from performance auditor....");
-				   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-				   	performance_insight_actor.tell(page_state, ActorRef.noSender());
-				   	*/
+					
+						/*
+					   	log.warn("requesting performance audit from performance auditor....");
+					   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+					   	performance_insight_actor.tell(page_state, ActorRef.noSender());
+					   	*/
 				   						
 					   	log.warn("Running information architecture audit via actor");
 						ActorRef content_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)

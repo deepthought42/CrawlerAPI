@@ -1,7 +1,6 @@
 package com.looksee.models.journeys;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
 import com.looksee.services.StepService;
+import com.looksee.utils.TimingUtils;
 
 @Service
 public class StepExecutor {
@@ -36,6 +36,7 @@ public class StepExecutor {
 		else if (step instanceof NavigationStep) {
 			log.warn("navigation step url   :: "+((NavigationStep) step).getUrl());
 			browser.navigateTo(((NavigationStep) step).getUrl());
+			browser.removeDriftChat();
 		}
 	}
 }

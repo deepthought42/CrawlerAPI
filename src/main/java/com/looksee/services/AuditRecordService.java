@@ -38,10 +38,6 @@ public class AuditRecordService {
 
 	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
-		
-		log.warn("saving audit record with id ::   "+audit.getId());
-		log.warn("saving audit record ::   " + audit.toString());
-
 		return audit_record_repo.save(audit);
 	}
 

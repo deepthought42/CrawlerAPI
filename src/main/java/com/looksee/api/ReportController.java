@@ -100,28 +100,4 @@ public class ReportController {
             		.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
         }
     }
-    
-    
-    @RequestMapping(method = RequestMethod.GET)
-    public String getReport(HttpServletRequest request,
-    		@RequestParam("url") String url
-	) throws  GeneralSecurityException, IOException {
-    	URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(url));
-    	
-    	String token = request.getHeader("Authorization").split(" ")[1];
-    	Auth0Client auth_client = new Auth0Client();
-    	//Auth0ManagementApi auth0_mgmt = new Auth0ManagementApi(token);
-    	//auth_client.getUsername(principal.getName());
-
-    	String user_email = auth_client.getEmail(token);
-    	log.warn("user email :: "+user_email);
-    	
-    	String email_msg = "A UX audit has been requested by \n\n email : " + user_email + " \n\n webpage url : <a href='"+sanitized_url + "'>"+sanitized_url+"</a>";
-    	sendgrid_service.sendMail(email_msg);
-    	//send email with user email and url that they want to have audited
-    
-    	
-    	
-    	return sanitized_url.toString();
-    }
 }

@@ -28,6 +28,7 @@ public class SendGridMailService {
         sendMail(to, from, subject, msg);
     }
     
+    @Deprecated
     public void sendMail(Email to, Email from, String subject, String msg) {      
         Content content = new Content("text/html", msg);
         Mail mail = new Mail(from, subject, to, content);
@@ -49,21 +50,9 @@ public class SendGridMailService {
 
 	public void sendPageAuditCompleteEmail(String account_email, String page_url, long audit_record_id) {
 		Email to = new Email(account_email);
-		Email from = new Email("support@look-see.com");
+		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for "+page_url;
-		/*
-		String email_msg = "Your audit results for " + page_url + " are ready!"
-				+ "<div>"
-				+ "<h1>"
-				+ "This page experience is "+ AuditUtils.getExperienceRating(audit_record)
-				+ "</h1>"
-				+ "</div>"
-				+ "<div>"
-				+ "<a href='https://app.look-see.com/quick-audit/"+audit_record.getId()+"'>"
-				+ "<button>View results</button>"
-				+ "</a>"
-				+ "</div>";
-		*/
+
 		String email_msg = "<html data-editor-version=\"2\" class=\"sg-campaigns\" xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n" + 
 				"      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" + 
 				"      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1\">\n" + 
@@ -208,7 +197,7 @@ public class SendGridMailService {
 				"    <tbody>\n" + 
 				"      <tr>\n" + 
 				"        <td style=\"font-size:6px; line-height:10px; padding:0px 0px 0px 0px;\" valign=\"top\" align=\"center\">\n" + 
-				"          <img class=\"max-width\" border=\"0\" style=\"display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px; max-width:30% !important; width:30%; height:auto !important;\" width=\"180\" alt=\"\" data-proportionally-constrained=\"true\" data-responsive=\"true\" src=\"http://cdn.mcauto-images-production.sendgrid.net/096106beea9422a2/d5dd3e1e-1814-4178-88fd-b02f4492876b/2000x1421.png\">\n" + 
+				"          <img class=\"max-width\" border=\"0\" style=\"display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px; max-width:30% !important; width:20%; height:auto !important;\" width=\"150\" alt=\"\" data-proportionally-constrained=\"true\" data-responsive=\"true\" src=\"http://cdn.mcauto-images-production.sendgrid.net/096106beea9422a2/d5dd3e1e-1814-4178-88fd-b02f4492876b/2000x1421.png\">\n" + 
 				"        </td>\n" + 
 				"      </tr>\n" + 
 				"    </tbody>\n" + 
@@ -280,21 +269,9 @@ public class SendGridMailService {
 
 	public void sendDomainAuditCompleteEmail(String account_email, String domain_url, long domain_id) {
 		Email to = new Email(account_email);
-		Email from = new Email("support@look-see.com");
+		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for your domain: "+domain_url;
-		/*
-		String email_msg = "Your audit results for " + page_url + " are ready!"
-				+ "<div>"
-				+ "<h1>"
-				+ "This page experience is "+ AuditUtils.getExperienceRating(audit_record)
-				+ "</h1>"
-				+ "</div>"
-				+ "<div>"
-				+ "<a href='https://app.look-see.com/quick-audit/"+audit_record.getId()+"'>"
-				+ "<button>View results</button>"
-				+ "</a>"
-				+ "</div>";
-		*/
+
 		String email_msg = "<html data-editor-version=\"2\" class=\"sg-campaigns\" xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n" + 
 				"      <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" + 
 				"      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1\">\n" + 

@@ -82,7 +82,9 @@ public class AuditRecordController {
     @Autowired
     protected SendGridMailService sendgrid_service;
     
-
+	@Autowired
+	private SendGridMailService email_service;
+	
 	/**
      * Creates a new {@link Observation observation} 
      * 
@@ -104,10 +106,27 @@ public class AuditRecordController {
     	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct_record.getId());
     	account_service.addAuditRecord(acct_record.getId(), audit_record_id);
     	
+    	PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record_id);
     	log.warn("sending email for user ...."+acct_record.getEmail());
     	//Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
-    	String email_msg = "A UX audit has been requested by \n\n email : " + acct_record.getEmail() + " \n\n audit record id = "+audit_record_id;
-    	sendgrid_service.sendMail(email_msg);
+    	/*
+    	String email_msg = "<html>"
+    			+ "<body>"
+    			+ "Hey there!"
+    			+ "<br />"
+    			+ "Your UX audit results for "+ page_state.getUrl() + " are ready."
+    			+ "<br /><br />"
+    			+ "You can <a href='https://app.look-see.com/quick-audit?audit_record_id="+ audit_record_id +"'>access the results here</a>."
+    			+ "</body>"
+    			+ "</html>";
+    	
+    	Email from = new Email("bkindred@look-see.com");
+    	String subject = "Requesting audit report";
+    	Email to = new Email("support@look-see.com");
+    	*/
+    	//sendgrid_service.sendMail(to, from, subject, email_msg);
+    	//sendgrid_service.sendMail(email_msg);
+    	
     	
        	//send request to support@look-see.com to send email once audit is complete
     }

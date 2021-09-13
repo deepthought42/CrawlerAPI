@@ -118,14 +118,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		log.warn("Font families found  :::   "+primary_typefaces.size());
 	
 		//evaluate typefaces
-		if(primary_typefaces.size() ==  2) {
-			score += 2;
-			//Set<String> recommendations = new HashSet<>();
-
-			//TypefacesObservation observation = new  TypefacesObservation(primary_typefaces, "2 typefaces are used, which is the preferred amount of typefaces. Well done!", why_it_matters, ada_compliance, recommendations);
-			//observations.add(observation_service.save(observation));
-		}
-		else if(primary_typefaces.size() < 2) {
+		if(primary_typefaces.size() <= 2) {
 			score += 1;
 			String recommendation = "You might want to consider using 2 typefaces for the best experience";
 			TypefacesIssue observation = new TypefacesIssue(
@@ -135,7 +128,9 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														Priority.LOW,
 														AuditCategory.AESTHETICS,
 														labels,
-														ada_compliance);
+														ada_compliance, 
+														1,
+														1);
 			
 			issue_messages.add(issue_message_service.save(observation));
 		}
@@ -150,10 +145,12 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														Priority.LOW,
 														AuditCategory.AESTHETICS,
 														labels,
-														ada_compliance);
+														ada_compliance,
+														0,
+														1);
 			issue_messages.add(issue_message_service.save(observation));
 		}
-		total_possible_points += 2;		
+		total_possible_points++;		
 		
 		
 		//SCORE TYPEFACE SEQUENCE CONSISTENCY - TYPEFACES SHOULD ALWAYS APPEAR WITH THE SAME TYPEFACES.
@@ -186,7 +183,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 		for(String font : forward_connection_graph.keySet() ) {
 			//if connected set has more than 1 element then an inconsistency exists
 			if(forward_connection_graph.get(font).size() > 1){
-				score += 1;
+				score += 0;
 				String recommendation = "Typefaces that are listed for font cascading should always appear in the same order. We found fonts that are competing for the same position in the cascading list. This can create an inconsistent experience and should be avoided.";
 				String description = "Too many typefaces used";
 				TypefacesIssue issue = new TypefacesIssue(forward_connection_graph.get(font), 
@@ -195,14 +192,28 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 															Priority.LOW,
 															AuditCategory.AESTHETICS,
 															labels,
-															ada_compliance);
+															ada_compliance,
+															0,
+															1);
 				issue_messages.add(issue_message_service.save(issue));
 			}
 			else {
-				score += 2;
+				score += 1;
+				String recommendation = "";
+				String description = "Typefaces are consistently used and you are using just the right number of typefaces to keep the interface interesting without being too busy";
+				TypefacesIssue issue = new TypefacesIssue(forward_connection_graph.get(font), 
+															description,
+															recommendation,
+															Priority.LOW,
+															AuditCategory.AESTHETICS,
+															labels,
+															ada_compliance,
+															1,
+															1);
+				issue_messages.add(issue_message_service.save(issue));
 			}
 			
-			total_possible_points += 2;
+			total_possible_points++;
 		}
 		
 		//END TYPEFACE SEQUENCE CONSISTENCY SCORING
@@ -219,10 +230,25 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 			
 			String font_family = element.getRenderedCssValues().get("font-family");
 			if(primary_typefaces.contains(font_family) ) {
-				score +=2;
+				score +=1;
+				String recommendation = "";
+				String description = "Text element rendered using the primary typeface.";
+				String title = "Text rendered with a primary typeface";
+
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM, 
+																	description, 
+																	recommendation, 
+																	element,
+																	AuditCategory.AESTHETICS,
+																	labels,
+																	ada_compliance,
+																	title,
+																	1,
+																	1);
+				no_fallback_font.add(issue_message);
 			}
 			else {
-				score +=1;
 				String recommendation = "Check that the primary font is included and loaded correctly";
 				String description = "Text element rendered with a fallback typeface instead of the desired font.";
 				String title = "Text rendered with a fallback typeface";
@@ -235,11 +261,13 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 																	AuditCategory.AESTHETICS,
 																	labels,
 																	ada_compliance,
-																	title);
+																	title,
+																	0,
+																	1);
 				no_fallback_font.add(issue_message);
 			}
 			
-			total_possible_points += 2;
+			total_possible_points += 1;
 			
 			observed_fonts.add(font_family);
 		}

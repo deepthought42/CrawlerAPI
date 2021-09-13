@@ -120,7 +120,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 			
 			if(font_sizes.size() > 1) {
 				log.warn("font sizes :: "+font_sizes);
-				String title = "Font sizes are inconsistent for "+header_tag+" elements on the page";
+				String title = "Font sizes are inconsistent for "+header_tag+" headers on the page";
 				String description = "Found that " + header_tag + " headers are using font sizes of "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same size.";
@@ -140,13 +140,30 @@ public class FontAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				score += 1;
+				String title = "Font sizes are consistent for "+header_tag+" headers on the page";
+				String description = "Found that " + header_tag + " headers are using font sizes of "+font_sizes+"";
+				String wcag_compliance = "";
+				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same size.";
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						labels,
+						why_it_matters,
+						title, 
+						1,
+						1);
+				issue_messages.add(ux_issue);
 			}
 			max_score +=1;
 			
 			
 			if(font_weights.size() > 1) {
 				log.warn("font weights:: "+font_weights);
-				String title = "Font weights are inconsistent for "+header_tag+" elements on the page";
+				String title = "Font weights are inconsistent for "+header_tag+" headers on the page";
 				String description = "Found that " + header_tag + " headers are using the following font weights. "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same weight.";
@@ -166,6 +183,24 @@ public class FontAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				score += 1;
+				log.warn("font weights:: "+font_weights);
+				String title = "Font weights are consistent for "+header_tag+" headers on the page";
+				String description = "Found that " + header_tag + " headers are using the following font weights. "+font_sizes+"";
+				String wcag_compliance = "";
+				String recommendation = "";
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						labels,
+						why_it_matters,
+						title,
+						1,
+						1);
+				issue_messages.add(ux_issue);
 			}
 			max_score +=1;
 			
@@ -204,6 +239,23 @@ public class FontAudit implements IExecutablePageStateAudit {
 				issue_messages.add(ux_issue);
 			}
 			else if(owns_text && font_size >=12 ) {
+				String title = "font-size is properly sized for mobile devices";
+				String description = "Text has a font size of " + font_size_str + " which is properly sized to be readable on a mobile device";
+				String wcag_compliance = "";
+				String recommendation = "Well done!";
+				
+				UXIssueMessage ux_issue = new UXIssueMessage(
+						recommendation,
+						Priority.HIGH,
+						description,
+						ObservationType.TYPOGRAPHY,
+						AuditCategory.AESTHETICS,
+						wcag_compliance,
+						labels,
+						why_it_matters,
+						title,
+						1,
+						1);
 				font_size_score++;
 			}
 			total_score++;

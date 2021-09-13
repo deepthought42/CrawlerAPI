@@ -83,6 +83,12 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("information architecture");
+		labels.add("accessibility");
+		labels.add("navigation");
+		labels.add("links");
+
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {			
@@ -96,9 +102,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String recommendation = "Make sure links have a url set for the href value.";
 				String description = "Link missing href attribute";
 				String title = "Link missing href attribute";
-
-				Set<String> labels = new HashSet<>();
-				labels.add("information architecture");
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
@@ -108,7 +111,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																0,
+																4);
 				issue_messages.add(issue_message);
 				continue;
 			}
@@ -117,10 +122,24 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			//if href is a mailto link then give score full remaining value and continue
 			if(href.startsWith("mailto:")) {
 				score += 4;
+				String recommendation = "";
+				String description = "Link uses mailto: protocol to allow users to send email";
+				String title = "Link uses mailto: protocol";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH,
+																description,
+																recommendation, 
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels,
+																ada_compliance,
+																title,
+																4,
+																4);
+				issue_messages.add(issue_message);
 				continue;
 			}
-			Set<String> labels = new HashSet<>();
-			labels.add("information architecture");
 			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
@@ -139,7 +158,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																1,
+																4);
 				issue_messages.add(issue_message);
 				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 				continue;
@@ -183,7 +204,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																2,
+																4);
 				issue_messages.add(issue_message);
 				e.printStackTrace();
 			} catch (URISyntaxException e) {
@@ -199,16 +222,33 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																2,
+																4);
 				issue_messages.add(issue_message);
 				e.printStackTrace();
 			}
 			
 			//Does link have a valid URL? yes(1) / No(0)
 			try {						
-				if(href.contains("javascript:")) {
+				if(href.contains("javascript:void(0)") || href.contains("javascript:")) {
 					log.warn("href value (before sanitizing) :: "+href);
 					score++;
+					String recommendation = "Links should have a valid URL in them. We suggest avoiding the use of the javascript protocol, expecially if you are going to use it to crete a non working link";
+					String description = "This link has the href value set to 'javascript:void(0)', which causes the link to appear to users as if it doesn't work.";
+					String title = "Invalid link url";
+
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.HIGH,
+																	description,
+																	recommendation, link,
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	labels,
+																	ada_compliance,
+																	title,
+																	3,
+																	4);
+					issue_messages.add(issue_message);
 				}
 				
 				if(!href.contains("javascript:")) {
@@ -230,7 +270,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		labels,
 																		ada_compliance,
-																		title);
+																		title,
+																		3,
+																		4);
 						issue_messages.add(issue_message);
 					}
 				}
@@ -247,7 +289,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																AuditCategory.INFORMATION_ARCHITECTURE, 
 																labels,
 																ada_compliance,
-																title);
+																title, 
+																3,
+																4);
 				issue_messages.add(issue_message);
 				log.warn("IO error occurred while auditing links ...."+e.getMessage());
 				log.warn("href value :: "+href);
@@ -260,6 +304,22 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			//Does link contain a text label inside it
 			 if(!link.getAllText().isEmpty()) {
 				 score++;
+				 
+				String recommendation = "";
+				String description = "Link contains text and is setup correctly. Well done!";
+				String title = "Link is setup correctly and considered accessible";
+
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.HIGH,
+																description, 
+																recommendation, 
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels,
+																ada_compliance,
+																title, 
+																4,
+																4);
 			 }
 			 else {
 				 boolean element_includes_text = false;
@@ -285,7 +345,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				}
 				
 				 
-				 if(!element_includes_text) {
+				if(!element_includes_text) {
 					String recommendation = "For best usability make sure links include text. You can assign text to a link by entering text within the link tag or by using an image with text";
 					String description = "Link doesn't contain any text";
 					String title = "Link is missing text";
@@ -298,12 +358,28 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	AuditCategory.INFORMATION_ARCHITECTURE,
 																	labels,
 																	ada_compliance,
-																	title);
+																	title, 
+																	3,
+																	4);
 					 //does element use image as links?
-					issue_messages.add(issue_message);
+					 issue_messages.add(issue_message);
 				 }
 				 else {
 					 score++;
+					 String recommendation = "";
+					 String description = "Link contains text and is setup correctly. Well done!";
+					 String title = "Link is setup correctly and considered accessible";
+
+					 ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.HIGH,
+																							description, 
+																							recommendation, 
+																							link,
+																							AuditCategory.INFORMATION_ARCHITECTURE,
+																							labels,
+																							ada_compliance,
+																							title, 
+																							4,
+																							4);
 				 }
 			}
 			 
@@ -328,11 +404,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		String why_it_matters = "Links without text are less accessible as well as generally impacting usability. "
 				+ "When links don't have text, users that rely on screen readers are unable to understand what links without text are meant to accomplish."
 				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";
-		
-		Set<String> labels = new HashSet<>();
-		labels.add("accessibility");
-		labels.add("information architecture");
-		labels.add("navigation");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());

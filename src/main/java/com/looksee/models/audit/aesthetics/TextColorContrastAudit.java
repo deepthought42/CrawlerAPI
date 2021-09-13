@@ -143,7 +143,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									labels, 
 																									ada_compliance,
 																									title, 
-																									font_size+"");
+																									font_size+"", 
+																									0, 
+																									1);
 							
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
@@ -152,6 +154,30 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 						else if(contrast >= 3) {
 							text_score += 1;
 							//100% score
+							//low contrast header issue
+							String title = "Text has appropriate contrast";
+							String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 3.";
+							String description = "Headline text has recommended contrast against the background";
+							recommendation = "";
+
+							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
+																									Priority.HIGH,
+																									description,
+																									recommendation,
+																									contrast,
+																									text_color.rgb(),
+																									background_color.rgb(), 
+																									element,
+																									AuditCategory.AESTHETICS,
+																									labels, 
+																									ada_compliance,
+																									title, 
+																									font_size+"",
+																									1,
+																									1);
+							
+							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
+							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 						}
 					}
 					else if((font_size < 18 && font_size >= 14 && !BrowserUtils.isTextBold(font_weight)) || font_size < 14 ) {
@@ -172,7 +198,9 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						labels, 
 																						ada_compliance,
 																						title,
-																						font_size+"");
+																						font_size+"",
+																						0, 
+																						1);
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
@@ -183,6 +211,24 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 						else if(contrast >= 4.5) {
 							text_score += 1;
 							//100% score
+							String title = "Text has appropriate contrast";
+							String description = "Text has recommended contrast against the background";
+							String ada_compliance = "Text contrast meets WCAG 2.1 guidelines.";
+							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
+																						Priority.HIGH,
+																						description,
+																						recommendation,
+																						contrast,
+																						text_color.rgb(),
+																						background_color.rgb(), 
+																						element,
+																						AuditCategory.AESTHETICS, 
+																						labels, 
+																						ada_compliance,
+																						title,
+																						font_size+"",
+																						1, 
+																						1);
 						}
 					}
 				}

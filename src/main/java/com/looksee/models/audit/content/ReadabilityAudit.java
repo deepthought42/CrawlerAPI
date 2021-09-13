@@ -65,7 +65,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		//filter elements that aren't text elements
 		int points_earned = 0;
 		int max_points = 0;
-
+		int max_possible_points = 4;
 		//get all element states
 		//filter any element state whose text exists within another element
 		List<ElementState> og_text_elements = new ArrayList<>();
@@ -130,15 +130,16 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			
 			if(element_points < 4) {
 				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most of your target consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-						Priority.LOW, 
-						description,
-						recommendation,
-						element,
-						AuditCategory.CONTENT,
-						labels,
-						ada_compliance,
-						title);
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
+																					  description,
+																					  recommendation,
+																					  element,
+																					  AuditCategory.CONTENT,
+																					  labels,
+																					  ada_compliance,
+																					  title,
+																					  element_points,
+																					  4);
 				issue_messages.add(issue_message);
 			}
 		}		

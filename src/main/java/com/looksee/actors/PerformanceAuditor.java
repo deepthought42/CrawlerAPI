@@ -208,9 +208,11 @@ public class PerformanceAuditor extends AbstractActor {
     											ObservationType.PAGE_STATE, 
     											AuditCategory.INFORMATION_ARCHITECTURE, 
     											"wcag compliance", 
-    											labels,
+    											new HashSet<>(),
     											audit_record.getExplanation(),
-    											audit_record.getTitle(), -1, -1);
+    											audit_record.getTitle(), 
+    											0, 
+    											1);
     				
     		ux_issues.add(issue_msg);
     		

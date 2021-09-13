@@ -148,7 +148,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																AuditCategory.CONTENT,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																0,
+																1);
 				
 				issue_messages.add(issue_message);
 				
@@ -158,6 +160,23 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			else {
 				points_earned += 1;
 				max_points += 1;
+				String recommendation = "";
+				String title = "Sentence meets EU and US governmental standards for sentence length";
+				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has less than 25 words which is the standard for governmental documentation in the European Union(EU) and the United States(US)";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.MEDIUM, 
+																description, 
+																recommendation, 
+																element,
+																AuditCategory.CONTENT,
+																labels,
+																ada_compliance,
+																title,
+																1,
+																1);
+				issue_messages.add(issue_message);
+
 			}
 		}
 		return new Score(points_earned, max_points, issue_messages);					

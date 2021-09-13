@@ -103,11 +103,28 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
-																	title);
+																	title,
+																	1,
+																	2);
 					issue_messages.add(issue_message);
 				}
 				else {
 					score++;
+					String title = "Image has alt text value set!";
+					String description = "Well done! By providing an alternative text value, you are providing a more inclusive experience";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.HIGH, 
+																	description, 
+																	"Images without alternative text defined as a non empty string value", 
+																	image_element,
+																	AuditCategory.CONTENT,
+																	labels,
+																	ada_compliance,
+																	title,
+																	2,
+																	2);
+					issue_messages.add(issue_message);
 				}
 			}
 			else {
@@ -122,7 +139,9 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																AuditCategory.CONTENT, 
 																labels,
 																ada_compliance,
-																title);
+																title,
+																0,
+																2);
 				issue_messages.add(issue_message);
 			}
 			

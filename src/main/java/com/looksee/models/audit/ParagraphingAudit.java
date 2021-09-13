@@ -98,7 +98,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 
 		Set<String> labels = new HashSet<>();
 		labels.add("content");
-		labels.add("readability");
+		labels.add("paragraphs");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.CONTENT.getShortName());

@@ -50,7 +50,7 @@ public class SendGridMailService {
 
 	public void sendPageAuditCompleteEmail(String account_email, String page_url, long audit_record_id) {
 		Email to = new Email(account_email);
-		Email from = new Email("support@look-see.com");
+		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for "+page_url;
 
 		String email_msg = "<html data-editor-version=\"2\" class=\"sg-campaigns\" xmlns=\"http://www.w3.org/1999/xhtml\"><head>\n" + 

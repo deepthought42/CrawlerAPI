@@ -242,7 +242,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					String description = "Element background has low contrast against the surrounding background";
 					//no points are rewarded for low contrast
 					Set<String> labels = new HashSet<>();
-					labels.add("contrast");
+					labels.add("color contrast");
+					labels.add("accessibility");
+
 					String ada_compliance = "Non-text items should have a minimum contrast ratio of 3:1.";
 					
 					String recommendation = "use a darker/lighter shade of "+ element.getBackgroundColor() +" to achieve a contrast of 3:1";

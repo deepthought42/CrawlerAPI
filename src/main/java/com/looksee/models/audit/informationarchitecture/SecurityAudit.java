@@ -57,7 +57,10 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		int score = 0;
 		int max_score = 0;
 		String why_it_matters = "Sites that don't use HTTPS are highly insecure and are more likley to leak personal identifiable information(PII). Modern users are keenly aware of this fact and are less likely to trust sites that aren't secured.";
-
+		Set<String> labels = new HashSet<>();
+		labels.add("information_architecture");
+		labels.add("security");
+		
 		boolean is_secure = page_state.isSecure();
 		if(!is_secure) {
 				String title = "Page isn't secure";
@@ -71,7 +74,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 												ObservationType.SECURITY,
 												AuditCategory.INFORMATION_ARCHITECTURE,
 												wcag_compliance,
-												new HashSet<>(),
+												labels,
 												why_it_matters,
 												title);
 				issue_messages.add(ux_issue);

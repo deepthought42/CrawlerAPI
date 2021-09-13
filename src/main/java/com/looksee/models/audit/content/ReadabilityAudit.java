@@ -259,7 +259,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 3;
 			}
 			else if("College".contentEquals(target_user_education)) {				
-				element_points = 3;
+				element_points = 4;
 			}
 			else if("Advanced".contentEquals(target_user_education)) {				
 				element_points = 4;

@@ -83,6 +83,13 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
+
+		Set<String> labels = new HashSet<>();
+		labels.add("accessibility");
+		labels.add("information architecture");
+		labels.add("links");		
+		labels.add("navigation");
+		
 		//score each link element
 		int score = 0;
 		for(ElementState link : link_elements) {			
@@ -97,8 +104,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String description = "Link missing href attribute";
 				String title = "Link missing href attribute";
 
-				Set<String> labels = new HashSet<>();
-				labels.add("information architecture");
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
@@ -119,8 +124,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				score += 4;
 				continue;
 			}
-			Set<String> labels = new HashSet<>();
-			labels.add("information architecture");
 			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {
@@ -327,12 +330,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		*/
 		String why_it_matters = "Links without text are less accessible as well as generally impacting usability. "
 				+ "When links don't have text, users that rely on screen readers are unable to understand what links without text are meant to accomplish."
-				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";
-		
-		Set<String> labels = new HashSet<>();
-		labels.add("accessibility");
-		labels.add("information architecture");
-		labels.add("navigation");
+				+ "Links without text also affect how usable your site seems, because users may not be familiar with any images or icons used as links.";		
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.INFORMATION_ARCHITECTURE.getShortName());

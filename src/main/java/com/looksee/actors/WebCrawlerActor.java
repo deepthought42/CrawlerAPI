@@ -138,7 +138,7 @@ public class WebCrawlerActor extends AbstractActor{
 							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
 							log.warn("contains domain url?  :: "+ page_url_str.contains(domain.getUrl()));
 							log.warn("WebCrawler skipping url :: "+page_url_str);
-							visited.compute(page_url_str, null);
+							visited.put(page_url_str, null);
 							continue;
 						}
 

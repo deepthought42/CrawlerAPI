@@ -23,6 +23,7 @@ import com.looksee.models.rules.Rule;
 import com.looksee.services.BrowserService;
 import com.looksee.services.FormService;
 import com.looksee.utils.PathUtils;
+import com.looksee.utils.TimingUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -92,6 +93,8 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser = BrowserConnectionHelper.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 					  		log.warning("FORM  Navigating to url    ::        "+url);
 					  		browser.navigateTo(url);
+							browser.removeDriftChat();
+
 					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
 					  		//crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host, message.getAccountId());
 

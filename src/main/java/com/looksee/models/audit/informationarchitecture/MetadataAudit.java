@@ -145,11 +145,22 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String wcag_compliance = "There is no WCAG requirement for SEO techniques";
 			
 			Set<String> labels = new HashSet<>();
-			
+			labels.add("information_architecture");
+			labels.add("metadata");
+			labels.add("seo");
+
 			String why_it_matters = "When your title is too short or too long then users aren't able to easily identify what to expect from a page.";
 			
 			
-			issue_messages.add(new UXIssueMessage(recommendation, priority, description, type, category, wcag_compliance, labels, why_it_matters, title));
+			issue_messages.add(new UXIssueMessage(recommendation, 
+												  priority, 
+												  description, 
+												  type, 
+												  category, 
+												  wcag_compliance,
+												  labels, 
+												  why_it_matters, 
+												  title));
 		}
 		max_points++;
 		

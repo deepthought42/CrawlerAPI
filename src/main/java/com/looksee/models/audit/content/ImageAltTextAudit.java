@@ -58,6 +58,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("images");
+		labels.add("alt-text");
 		
 		String tag_name = "img";
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());

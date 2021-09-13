@@ -59,6 +59,7 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
+import com.looksee.utils.TimingUtils;
 
 import cz.vutbr.web.css.RuleSet;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -348,6 +349,8 @@ public class BrowserService {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url.toString());
+				browser.removeDriftChat();
+
 				log.warn("getting browser for rendered page state extraction...");
 				//navigate to page url
 				page_state = page_state_service.save(buildPageState(url, browser));
@@ -396,6 +399,9 @@ public class BrowserService {
 		boolean is_secure = BrowserUtils.checkIfSecure(new URL("https://"+url_without_protocol));
         int status_code = BrowserUtils.getHttpStatus(url);
 
+        //remove 3rd party chat apps such as drift, and ...(NB: fill in as more identified)
+        //browser.removeDriftChat();
+        
         //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
         
 		String source = browser.getDriver().getPageSource();
@@ -476,7 +482,7 @@ public class BrowserService {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_url);
-
+				browser.removeDriftChat();
 				log.warn("extracting all element states for url :: "+page_url);
 				
 				//get ElementState List by asking multiple bots to build xpaths in parallel
@@ -659,8 +665,6 @@ public class BrowserService {
 		
 		String body_src = extractBody(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
-		
-		log.warn("full page screenshot ...."+page_state.getFullPageHeight());
 		
 		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrl()));
 		Document html_doc = Jsoup.parse(body_src);

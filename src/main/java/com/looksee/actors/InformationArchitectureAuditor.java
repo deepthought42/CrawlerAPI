@@ -139,7 +139,13 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Done!");
-					page_audit_record = audit_record_service.save(page_audit_record);		
+					page_audit_record = audit_record_service.save(page_audit_record);
+					
+					for(Audit audit : audits) {						
+						audit = audit_service.save(audit);
+						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
+						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
+					}
 					
 					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
 					if(is_audit_complete) {
@@ -148,12 +154,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						for(Account account: accounts) {
 							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
 						}
-					}
-					
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
 					}
 				})
 				.match(MemberUp.class, mUp -> {

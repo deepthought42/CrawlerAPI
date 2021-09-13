@@ -299,12 +299,12 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			String issue_title = "Page is missing a title";
 			String description = "This page doesn't have a title defined";
 			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
-			String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
+			String ada_compliance = "Each page should have a title defined to be compliant WCAG 2.1 standards";
 			String recommendation = "Add a title to the header tag in the html. eg. <title>Page title here</title>";
 			
 			Set<String> labels = new HashSet<>();
+			labels.add("information_architecture");
 			labels.add("accessibility");
-			labels.add("color");
 			labels.add("seo");
 			
 			Set<String> categories = new HashSet<>();

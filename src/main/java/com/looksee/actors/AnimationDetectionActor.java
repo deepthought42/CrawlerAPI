@@ -25,6 +25,7 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.message.PathMessage;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
+import com.looksee.utils.TimingUtils;
 
 /**
  * Handles the saving of records into orientDB
@@ -70,6 +71,8 @@ public class AnimationDetectionActor extends AbstractActor{
 							
 							log.warning("navigating to url :: " + first_page_state.getUrl());
 							browser.navigateTo(first_page_state.getUrl());
+							browser.removeDriftChat();
+
 							log.warning("crawling path without building result");
 							//crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, first_page_state.getUrl(), msg.getAccountId());
 							log.warning("getting animation...");

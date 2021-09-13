@@ -1,8 +1,6 @@
 package com.looksee.actors;
 
-import java.io.IOException;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -125,14 +123,6 @@ public class ContentAuditor extends AbstractActor{
 					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
 					page_audit_record = audit_record_service.save(page_audit_record);		
 
-					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
-					if(is_audit_complete) {
-						
-						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
-						for(Account account: accounts) {
-							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
-						}
-					}
 					
 					log.warn("content audits complete :: "+audits.size());
 					for(Audit audit : audits) {						
@@ -141,7 +131,14 @@ public class ContentAuditor extends AbstractActor{
 						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
 					}
 				  
-		   			//send message to either user or page channel containing reference to audits
+					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
+					if(is_audit_complete) {
+						
+						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
+						for(Account account: accounts) {
+							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
+						}
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

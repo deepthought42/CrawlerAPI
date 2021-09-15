@@ -114,7 +114,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchMsg("Reviewing title and header...");
 					audit_record_service.save(page_audit_record);
 					
-					
 					Audit title_and_headers = title_and_header_auditor.execute(page, null);
 					audits.add(title_and_headers);
 					
@@ -123,7 +122,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchMsg("Checking security...");
 					audit_record_service.save(page_audit_record);
 					
-					
 					Audit security = security_audit.execute(page, null);
 					audits.add(security);
 					
@@ -131,7 +129,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Reviewing SEO");
 					page_audit_record = audit_record_service.save(page_audit_record);
-					
 					
 					Audit metadata = metadata_auditor.execute(page, null);
 					audits.add(metadata);

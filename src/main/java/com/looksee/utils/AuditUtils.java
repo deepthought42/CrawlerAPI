@@ -6,6 +6,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditSubcategory;
 
@@ -43,9 +44,6 @@ public class AuditUtils {
 		double aesthetic_score = 0;
 		int aesthetic_count = 0;
 		
-		double accessibility_score = 0;
-		int accessibility_count = 0;
-		
 		double interactivity_score = 0;
 		int interactivity_count = 0;
 		
@@ -66,10 +64,6 @@ public class AuditUtils {
     			aesthetic_score += (audit.getPoints()/(double)audit.getTotalPossiblePoints());
     			aesthetic_count++;
     		}
-    		else if(AuditCategory.ACCESSIBILITY.equals(audit.getCategory())) {
-    			accessibility_score += (audit.getPoints())/(double)audit.getTotalPossiblePoints();
-    			accessibility_count++;
-    		}
     	}
     	
     	if(content_count > 0) {
@@ -81,12 +75,53 @@ public class AuditUtils {
     	if(aesthetic_count > 0) {
     		aesthetic_score = ( aesthetic_score / (double)aesthetic_count ) * 100;
     	}
-    	if(accessibility_count > 0) {
-        	accessibility_score = ( accessibility_score / (double)accessibility_count ) * 100;
+    	
+    	double readability = extractLabelScore(audits, "readability");
+    	double spelling_grammar = extractLabelScore(audits, "spelling");
+    	double image_quality = extractLabelScore(audits, "images");
+    	double alt_text = extractLabelScore(audits, "alt_text");
+    	double links = extractLabelScore(audits, "links");
+    	double metadata = extractLabelScore(audits, "metadata");
+    	double seo = extractLabelScore(audits, "seo");
+    	double security = extractLabelScore(audits, "security");
+    	double color_contrast = extractLabelScore(audits, "color contrast");
+    	double whitespace = extractLabelScore(audits, "whitespace");
+    	double accessibility = extractLabelScore(audits, "accessibility");
+    	
+    	return new AuditScore(content_score,
+    							readability,
+    							spelling_grammar,
+    							image_quality,
+    							alt_text,
+    							info_architecture_score,
+    							links,
+    							metadata,
+    							seo,
+    							security,
+    							aesthetic_score,
+    							color_contrast, 
+    							whitespace, 
+    							interactivity_score, 
+    							accessibility);
+    	
+	}
+
+	private static double extractLabelScore(Set<Audit> audits, String label) {
+		double score = 0.0;
+		int count = 0;
+    	for(Audit audit: audits) {
+    		for(UXIssueMessage msg: audit.getMessages()) {
+    			if(msg.getLabels().contains(label)) {
+    				score += ((double)msg.getPoints() / (double)msg.getMaxPoints());
+    				count++;
+    			}
+    		}
     	}
     	
-    	return new AuditScore(content_score, info_architecture_score, aesthetic_score, interactivity_score, accessibility_score);
-    	
+    	if(count == 0) {
+    		return 0.0;
+    	}
+    	return score / count;
 	}
 
 	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {

@@ -90,7 +90,16 @@ public class AuditService {
 	}
 
 	public Set<UXIssueMessage> getIssues(long audit_id) {
-		return audit_repo.findIssueMessages(audit_id);
+		Set<UXIssueMessage> raw_issue_set = audit_repo.findIssueMessages(audit_id);
+		Set<UXIssueMessage> filtered_issue_set = new HashSet<>();
+		
+		for(UXIssueMessage issue: raw_issue_set) {
+			if(issue.getPoints() != issue.getMaxPoints()) {
+				filtered_issue_set.add(issue);
+			}
+		}
+		
+		return filtered_issue_set;
 	}
 	
 	/**

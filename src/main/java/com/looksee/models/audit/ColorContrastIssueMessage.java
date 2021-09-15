@@ -65,7 +65,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	) {
 		assert priority != null;
 		assert recommendation != null;
-		assert !recommendation.isEmpty();
 		assert element != null;
 		assert foreground_color != null;
 		assert !foreground_color.isEmpty();

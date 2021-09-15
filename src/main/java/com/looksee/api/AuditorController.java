@@ -99,7 +99,7 @@ public class AuditorController {
 		}
 		
 		PageCrawlActionMessage crawl_action = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
-		log.warn("Running content audit via actor");
+		log.warn("Initiating audit via page state guilder actor");
 		ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 		page_state_builder.tell(crawl_action, ActorRef.noSender());

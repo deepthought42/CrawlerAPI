@@ -78,15 +78,16 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		String recommendation = "Use colors for text and images of text with background colors that have a contrast of at least 4.5:1 for ADA compliance";
 		
-		Set<String> labels = new HashSet<>();
-		labels.add("accessibility");
-		labels.add("color contrast");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
+			Set<String> labels = new HashSet<>();
+			labels.add("accessibility");
+			labels.add("color contrast");
+			
 			ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
 
 			try {	
@@ -250,7 +251,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 							labels.add("WCAG 2.1 AA");
 							
-							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
+							ColorContrastIssueMessage med_contrast_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
 																						description,
 																						recommendation,
@@ -265,6 +266,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						font_size+"",
 																						1, 
 																						1);
+							issue_messages.add(issue_message_service.save(med_contrast_text_observation));
 						}
 						else if(contrast >= 7) {
 							text_score += 1;
@@ -275,7 +277,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							recommendation = "";
 							labels.add("WCAG 2.1 AAA");
 							
-							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
+							ColorContrastIssueMessage high_contrast_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
 																						description,
 																						recommendation,
@@ -290,6 +292,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						font_size+"",
 																						1, 
 																						1);
+							
+							issue_messages.add(issue_message_service.save(high_contrast_text_observation));
 						}
 					}
 				}

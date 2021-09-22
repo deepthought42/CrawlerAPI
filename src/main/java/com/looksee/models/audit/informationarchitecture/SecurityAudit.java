@@ -63,26 +63,43 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		
 		boolean is_secure = page_state.isSecure();
 		if(!is_secure) {
-				String title = "Page isn't secure";
-				String description = page_state.getUrl() + " doesn't use https";
-				String wcag_compliance = "";
-				String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
-				UXIssueMessage ux_issue = new UXIssueMessage(
-												recommendation,
-												Priority.HIGH,
-												description,
-												ObservationType.SECURITY,
-												AuditCategory.INFORMATION_ARCHITECTURE,
-												wcag_compliance,
-												labels,
-												why_it_matters,
-												title, 
-												0, 
-												1);
-				issue_messages.add(ux_issue);
+			String title = "Page isn't secure";
+			String description = page_state.getUrl() + " doesn't use https";
+			String wcag_compliance = "";
+			String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
+			UXIssueMessage ux_issue = new UXIssueMessage(
+											recommendation,
+											Priority.HIGH,
+											description,
+											ObservationType.SECURITY,
+											AuditCategory.INFORMATION_ARCHITECTURE,
+											wcag_compliance,
+											labels,
+											why_it_matters,
+											title, 
+											0, 
+											1);
+			issue_messages.add(ux_issue);
 		}
 		else {
 			score++;
+			String title = "Page is secure";
+			String description = page_state.getUrl() + " uses https protocol to provide a secure connection";
+			String wcag_compliance = "";
+			String recommendation = "";
+			UXIssueMessage ux_issue = new UXIssueMessage(
+											recommendation,
+											Priority.NONE,
+											description,
+											ObservationType.SECURITY,
+											AuditCategory.INFORMATION_ARCHITECTURE,
+											wcag_compliance,
+											labels,
+											why_it_matters,
+											title, 
+											1, 
+											1);
+			issue_messages.add(ux_issue);
 		}
 		max_score++;
 		
@@ -97,7 +114,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 						 AuditLevel.PAGE,
 						 max_score,
 						 page_state.getUrl(), 
-						 why_it_matters, 
+						 why_it_matters,
 						 description,
 						 page_state,
 						 false);
@@ -107,5 +124,4 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	public static List<String> makeDistinct(List<String> from){
 		return from.stream().distinct().sorted().collect(Collectors.toList());
 	}
-	
 }

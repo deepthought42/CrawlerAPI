@@ -73,7 +73,11 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
 				" this category, reading level needs to be taken into consideration when" + 
 				" writing content and paragraphing. ";
-			
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("written content");
+		labels.add("readability");
+		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		for(ElementState element: elements) {
 			if(element.getName().contentEquals("button") || element.getName().contentEquals("a") || element.getOwnedText().isEmpty() || element.getAllText().split(" ").length <= 3) {
@@ -110,27 +114,50 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
 			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
+			String grade_level = ContentUtils.getReadingGradeLevel(ease_of_reading_score);
 			
 			if("unknown".contentEquals(difficulty_string)) {
 				continue;
 			}
-			
-			Set<String> labels = new HashSet<>();
-			labels.add("written content");
-			labels.add("readability");
 
 			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			
-			String title = "Content is " + difficulty_string + " to read";
-			String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+
+			if(element.getAllText().split(" ").length < 10) {
+				element_points = 4;
+			}
 			
 			points_earned += element_points;
 			max_points += 4;
 			
 			if(element_points < 4) {
-				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most of your target consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
+				String title = "Content is written at " + grade_level + " reading level";
+				String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
+				String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
+																					  description,
+																					  recommendation,
+																					  element,
+																					  AuditCategory.CONTENT,
+																					  labels,
+																					  ada_compliance,
+																					  title,
+																					  element_points,
+																					  4);
+				issue_messages.add(issue_message);
+			}
+			else {
+				String recommendation = "";
+				String description = "";
+				if(element.getAllText().split(" ").length < 10) {
+					element_points = 4;
+					description = "Content is short enough to be easily understood by all users";
+				}
+				else {					
+					description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
+				}
+				String title = "Content is easy to read";
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
 																					  description,
 																					  recommendation,
 																					  element,
@@ -148,11 +175,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				" Attention spans are shorter, and users skim through most information." + 
 				" Presenting information in small, easy to digest chunks makes their" + 
 				" experience easy and convenient. ";
-		
-
-		Set<String> labels = new HashSet<>();
-		labels.add("content");
-		labels.add("readability");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.CONTENT.getShortName());

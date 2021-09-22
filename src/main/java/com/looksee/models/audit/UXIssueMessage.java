@@ -35,7 +35,9 @@ public class UXIssueMessage extends LookseeObject {
 			String wcag_compliance,
 			Set<String> labels, 
 			String why_it_matters, 
-			String title, int points, int max_points
+			String title, 
+			int points, 
+			int max_points
 	) {
 		setRecommendation(recommendation);
 		setPriority(priority);
@@ -46,6 +48,8 @@ public class UXIssueMessage extends LookseeObject {
 		setLabels(labels);
 		setWhyItMatters(why_it_matters);
 		setTitle(title);
+		setPoints(points);
+		setMaxPoints(max_points);
 		setKey(generateKey());
 	}
 	

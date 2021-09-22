@@ -173,7 +173,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 																AuditCategory.AESTHETICS,
 																labels, 
 																ada_compliance,
-																title);
+																title, 0, 0);
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		issue_messages.add(ux_issue_service.save(palette_issue_message));

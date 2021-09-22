@@ -96,10 +96,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" experience easy and convenient. ";
 
 
-		Set<String> labels = new HashSet<>();
-		labels.add("content");
-		labels.add("paragraphs");
-		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.CONTENT.getShortName());
 		
@@ -128,6 +124,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
+		labels.add("paragraphs");
+		labels.add("readability");
+		
 		String ada_compliance = "There are no ADA compliance requirements for this category.";
 		
 		for(Sentence sentence : sentences) {			

@@ -62,6 +62,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String tag_name = "img";
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> image_elements = new ArrayList<>();
+		log.warn("------------------------------------------------");
+		log.warn("page elements size :: "+page_state.getElements());
 		for(ElementState element : page_state.getElements()) {
 			if(element.getName().equalsIgnoreCase(tag_name)) {
 				log.warn("Image element found :: "+ element.getCssSelector());
@@ -104,8 +106,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	labels,
 																	ada_compliance,
 																	title,
-																	1,
-																	2);
+																	0,
+																	1);
 					issue_messages.add(issue_message);
 				}
 				else {
@@ -114,7 +116,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					String description = "Well done! By providing an alternative text value, you are providing a more inclusive experience";
 					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																	Priority.HIGH, 
+																	Priority.NONE, 
 																	description, 
 																	"Images without alternative text defined as a non empty string value", 
 																	image_element,
@@ -122,8 +124,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	labels,
 																	ada_compliance,
 																	title,
-																	2,
-																	2);
+																	1,
+																	1);
 					issue_messages.add(issue_message);
 				}
 			}
@@ -141,7 +143,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																ada_compliance,
 																title,
 																0,
-																2);
+																1);
 				issue_messages.add(issue_message);
 			}
 			
@@ -160,7 +162,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		}
 		*/
 		
-		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
+		log.warn("ALT TEXT AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
 		String description = "Images without alternative text defined as a non empty string value";
 		
 		return new Audit(AuditCategory.CONTENT,

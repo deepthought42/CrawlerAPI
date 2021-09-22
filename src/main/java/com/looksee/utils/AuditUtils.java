@@ -2,6 +2,10 @@ package com.looksee.utils;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.looksee.actors.InformationArchitectureAuditor;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
@@ -11,6 +15,8 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditSubcategory;
 
 public class AuditUtils {
+	private static Logger log = LoggerFactory.getLogger(AuditUtils.class.getName());
+
 
 	public static double calculateScore(Set<Audit> audits) {
 		assert audits != null;
@@ -112,16 +118,17 @@ public class AuditUtils {
     	for(Audit audit: audits) {
     		for(UXIssueMessage msg: audit.getMessages()) {
     			if(msg.getLabels().contains(label)) {
-    				score += ((double)msg.getPoints() / (double)msg.getMaxPoints());
     				count++;
-    			}
+    				score += (msg.getPoints() / (double)msg.getMaxPoints());
+       			}
     		}
     	}
     	
-    	if(count == 0) {
+    	if(count <= 0) {
     		return 0.0;
     	}
-    	return score / count;
+    	
+    	return score / (double)count;
 	}
 
 	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {

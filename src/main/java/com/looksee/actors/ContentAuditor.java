@@ -20,6 +20,7 @@ import com.looksee.models.audit.content.ReadabilityAudit;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.utils.AuditUtils;
 
@@ -55,6 +56,9 @@ public class ContentAuditor extends AbstractActor{
 	private AuditService audit_service;
 	
 	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private AuditRecordService audit_record_service;
 	
 	@Autowired
@@ -88,7 +92,7 @@ public class ContentAuditor extends AbstractActor{
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
 				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
-				  
+				   	page.setElements(page_state_service.getElementStates(page.getKey()));
 				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setContentAuditProgress( (1.0/4.0) );
 					page_audit_record.setContentAuditMsg("checking image alt text...");

@@ -80,7 +80,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(), 
+						 page_state.getUrl(),
 						 why_it_matters, 
 						 description, 
 						 page_state,
@@ -221,8 +221,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		int max_points = 1;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
-		labels.add("accessibility");
-		labels.add("color");
+		labels.add("information_architecture");
+		labels.add("branding");
 		labels.add("seo");
 		
 		//score title of page state
@@ -306,10 +306,9 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		String title = BrowserUtils.getTitle(page_state);
 		
 		Set<String> labels = new HashSet<>();
-		labels.add("accessibility");
-		labels.add("color");
 		labels.add("seo");
-		
+		labels.add("information_architecture");
+
 		//score title of page state
 		if( title != null && !title.isEmpty()) {
 			points += 1;

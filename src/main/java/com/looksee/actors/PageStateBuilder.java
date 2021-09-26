@@ -90,7 +90,7 @@ public class PageStateBuilder extends AbstractActor{
 					audit_record.setDataExtractionMsg("Scanning webpage");
 					audit_record = audit_record_service.save(audit_record);
 					
-					PageState page_state = browser_service.buildPageState(crawl_action.getUrl(), crawl_action.getAuditRecord());
+					PageState page_state = browser_service.buildPageState(crawl_action.getUrl());
 					final PageState page_state_record = page_state_service.save(page_state);
 					audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
 					//crawl_action.getAuditRecord().setPageState(page_state_record);

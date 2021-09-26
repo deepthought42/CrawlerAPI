@@ -58,9 +58,11 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.assertthat.selenium_shutterbug.core.Capture;
+import com.assertthat.selenium_shutterbug.core.CaptureElement;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
-import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.looksee.models.ElementState;
+import com.looksee.utils.TimingUtils;
 
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
@@ -173,9 +175,6 @@ public class Browser {
 			}
 			 */
 		}
-		
-		//waitForPageToLoad();
-		//log.debug("successfully navigated to "+url);
 	}
 
 	/**
@@ -372,7 +371,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
-		return Shutterbug.shootPage(driver, ScrollStrategy.WHOLE_PAGE, 1000).getImage();
+		return Shutterbug.shootPage(driver, Capture.FULL).getImage();
 	}
 	
 	/**
@@ -381,7 +380,8 @@ public class Browser {
 	 * @param elem
 	 * @return
 	 * @throws IOException
-	 */	
+	 */
+	@Deprecated
 	public BufferedImage getElementScreenshot(com.looksee.models.Element element) throws IOException{
 		//calculate element position within screen
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
@@ -399,7 +399,7 @@ public class Browser {
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 
 		//calculate element position within screen
-		return Shutterbug.shootElementVerticallyCentered(driver, element, true).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
 	}
 	
 	/**
@@ -500,9 +500,6 @@ public class Browser {
 		assert url != null;
 		assert xpath != null;
 		
-		log.warn("-----------------------------------------------------------------------------");
-		log.warn("-----------------------------------------------------------------------------");
-		log.warn("loading post render css properties");
 		Map<String, String> css_map = new HashMap<>();
 
 		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS

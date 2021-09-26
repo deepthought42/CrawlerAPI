@@ -6,10 +6,10 @@ public class ColorUsageStat {
 	private float green;
 	private float blue;
 
-	private float pixel_percent;
+	private double pixel_percent;
 	private float score;
 	
-	public ColorUsageStat(float red, float green, float blue, float pixel_percent, float score) {
+	public ColorUsageStat(float red, float green, float blue, double pixel_percent, float score) {
 		setRed(red);
 		setGreen(green);
 		setBlue(blue);
@@ -41,11 +41,11 @@ public class ColorUsageStat {
 		this.blue = blue;
 	}
 
-	public float getPixelPercent() {
+	public double getPixelPercent() {
 		return pixel_percent;
 	}
 
-	public void setPixelPercent(float pixel_percent) {
+	public void setPixelPercent(double pixel_percent) {
 		this.pixel_percent = pixel_percent;
 	}
 
@@ -58,6 +58,6 @@ public class ColorUsageStat {
 	}
 
 	public String getRGB() {
-		return red+","+green+","+blue;
+		return ((int)red)+","+((int)green)+","+((int)blue);
 	}
 }

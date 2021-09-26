@@ -87,7 +87,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		try {
-			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrl()), elements));
+			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrlOnload()), elements));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

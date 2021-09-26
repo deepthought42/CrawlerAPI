@@ -82,4 +82,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (a:PageAuditRecord)-[:HAS]->(ps:PageState) WHERE id(ps)=$id RETURN a ORDER BY a.created_at DESC LIMIT 1")
 	public PageAuditRecord getAuditRecord(@Param("id") long id);
+
+	@Query("MATCH (ps:PageState) WHERE id(ps)=$id SET ps.fullPageScreenshotUrlComposite = $composite_img_url RETURN ps")
+	public void updateCompositeImageUrl(@Param("id") long id, @Param("composite_img_url") String composite_img_url);
 }

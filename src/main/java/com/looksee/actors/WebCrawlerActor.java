@@ -146,7 +146,7 @@ public class WebCrawlerActor extends AbstractActor{
 						//construct page and add page to list of page states
 						//retrieve html source for page
 						try {
-							PageState page_state = browser_service.buildPageState(page_url_obj, crawl_action.getAuditRecord());
+							PageState page_state = browser_service.buildPageState(page_url_obj);
 							page_state = page_state_service.save(page_state);
 							
 							AuditRecord audit_record = audit_record_service.findById(crawl_action.getAuditRecordId()).get();

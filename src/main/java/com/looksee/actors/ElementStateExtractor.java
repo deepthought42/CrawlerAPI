@@ -1,8 +1,13 @@
 package com.looksee.actors;
 
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URL;
+import java.util.List;
 import java.util.NoSuchElementException;
+
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.models.ElementState;
+import com.looksee.models.enums.BrowserType;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
+import com.looksee.services.PageStateService;
+import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorSystem;
@@ -31,6 +41,9 @@ public class ElementStateExtractor extends AbstractActor{
 
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -63,13 +76,20 @@ public class ElementStateExtractor extends AbstractActor{
 				.match(ElementExtractionMessage.class, message-> {
 					log.warn("Extracting element states from page");
 
-					browser_service.buildPageElements(message.getPageState(), 
-			                		  							message.getXpaths(),
-			                		  							message.getAuditRecordId());
+					List<ElementState> element_states = browser_service.buildPageElements(message.getPageState(), 
+							message.getXpaths(),
+							message.getAuditRecordId());
+					
+					BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
+					String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
+					
 					log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
 					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
 																						message.getPageState().getId(), 
-																						message.getXpaths());
+																		message.getXpaths());
+					//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), composite_img_url);
+					message.getPageState().setFullPageScreenshotUrlComposite(composite_img_url);
+					page_state_service.save(message.getPageState());
 					getSender().tell(element_message, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {

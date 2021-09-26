@@ -80,7 +80,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		log.warn("Total image elements found :: "+image_elements.size());
 		
 		//score each link element
-		int score = 0;
 		for(ElementState image_element : image_elements) {
 	
 			Document jsoup_doc = Jsoup.parseBodyFragment(image_element.getOuterHtml(), page_state.getUrl());
@@ -88,9 +87,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			
 			log.warn("is ALT text set?   "+element.hasAttr("alt"));
 			//Check if element has "alt" attribute present
-			if(element.hasAttr("alt")) {
-				score++;
-				
+			if(element.hasAttr("alt")) {				
 				log.warn("is ALT text empty?   "+element.attr("alt").isEmpty());
 
 				if(element.attr("alt").isEmpty()) {
@@ -111,7 +108,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 					issue_messages.add(issue_message);
 				}
 				else {
-					score++;
 					String title = "Image has alt text value set!";
 					String description = "Well done! By providing an alternative text value, you are providing a more inclusive experience";
 					
@@ -146,32 +142,25 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																1);
 				issue_messages.add(issue_message);
 			}
-			
-			
 		}
 		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.toString());
-		
-		/*
-		if(!images_with_alt_text_defined.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(
-					images_with_alt_text_defined, 
-					"Images that have alternative text defined as a non empty string value");
-			observations.add(observation_service.save(observation));
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
 		}
-		*/
 		
-		log.warn("ALT TEXT AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
+		log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
 		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 image_elements.size()*2,
+						 max_points,
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,

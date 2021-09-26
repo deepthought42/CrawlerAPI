@@ -75,10 +75,7 @@ public class CloudVisionUtils {
 	    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
 	    	List<AnnotateImageResponse> responses = response.getResponsesList();
 	    	
-	    	log.warn("#########################################################################");
-	    	log.warn("#########################################################################");
-		      	
-    		for (AnnotateImageResponse res : responses) {
+	    	for (AnnotateImageResponse res : responses) {
 	      		/*
     			log.warn("response label annotations :: " +res.getLabelAnnotationsList());
 	      		log.warn("Full Text annotation :: " +res.getFullTextAnnotation());
@@ -86,11 +83,10 @@ public class CloudVisionUtils {
 */
     			
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return new ArrayList<>();
+		        	log.warn("Error: %s%n", res.getError().getMessage());
+		        	return new ArrayList<>();
 		        }
 		        
-		        log.warn("text annotations list size :: "+res.getTextAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
 		        	text_values.add(annotation.getDescription());
@@ -129,10 +125,7 @@ public class CloudVisionUtils {
 		    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
 		    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
 		    	List<AnnotateImageResponse> responses = response.getResponsesList();
-		    	
-		    	log.warn("#########################################################################");
-		    	log.warn("#########################################################################");
-			      	
+		    	    	
 	    		for (AnnotateImageResponse res : responses) {
 		      		/*
 	    			log.warn("response label annotations :: " +res.getLabelAnnotationsList());
@@ -181,7 +174,6 @@ public class CloudVisionUtils {
 			        }
 			        
 			          
-			        log.warn("text annotations list size :: "+res.getTextAnnotationsList().size());
 			        // For full list of available annotations, see http://g.co/cloud/vision/docs
 			        /*
 			        for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
@@ -229,7 +221,6 @@ public class CloudVisionUtils {
 		          return;
 		        }
 		
-		        log.warn("annotations list size :: "+res.getLabelAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        log.warn("-----------------------Label Annotation list ----------------------------");
 		        for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
@@ -275,7 +266,6 @@ public class CloudVisionUtils {
 		          return;
 		        }
 		
-		        log.warn("annotations list size :: "+res.getLandmarkAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLandmarkAnnotationsList()) {
 		          LocationInfo info = annotation.getLocationsList().listIterator().next();
@@ -319,7 +309,6 @@ public class CloudVisionUtils {
 		          return;
 		        }
 		
-		        log.warn("annotations list size :: "+res.getFaceAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (FaceAnnotation annotation : res.getFaceAnnotationsList()) {
 		          System.out.format(
@@ -367,7 +356,6 @@ public class CloudVisionUtils {
 		          return;
 		        }
 		
-		        log.warn("annotations list size :: "+res.getLogoAnnotationsList().size());
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLogoAnnotationsList()) {
 		          System.out.println(annotation.getDescription());

@@ -55,7 +55,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		int score = 0;
-		int max_score = 0;
+
 		String why_it_matters = "Sites that don't use HTTPS are highly insecure and are more likley to leak personal identifiable information(PII). Modern users are keenly aware of this fact and are less likely to trust sites that aren't secured.";
 		Set<String> labels = new HashSet<>();
 		labels.add("information_architecture");
@@ -101,18 +101,24 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											1);
 			issue_messages.add(ux_issue);
 		}
-		max_score++;
 		
 		String description = "";
 		
-		log.warn("FONT AUDIT SCORE   ::   "+(score) +" / " +(max_score));
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
+		
+		log.warn("FONT AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SECURITY,
 						 AuditName.FONT,
 						 score,
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 max_score,
+						 max_points,
 						 page_state.getUrl(), 
 						 why_it_matters,
 						 description,

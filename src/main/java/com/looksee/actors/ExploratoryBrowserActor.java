@@ -20,7 +20,6 @@ import com.looksee.browsing.Crawler;
 import com.looksee.models.ElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.message.PathMessage;
 import com.looksee.models.message.TestCandidateMessage;
@@ -126,7 +125,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							return;
 						}
 						else {
-							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl())), new AuditRecord());
+							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl())));
 							domain_service.addPage(message.getDomain().getId(), page.getKey());
 
 							long start_time = System.currentTimeMillis();

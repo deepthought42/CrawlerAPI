@@ -154,12 +154,12 @@ public class AuditRecordController {
     			
     			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
     													 page_state.getViewportScreenshotUrl(), 
-    													 page_state.getFullPageScreenshotUrl(), 
-    													 page_state.getFullPageWidth(),
-    													 page_state.getFullPageHeight(), 
-    													 page_state.getSrc(),
-    													 page_state.getKey(), 
-    													 page_state.getId());
+    													 page_state.getFullPageScreenshotUrlOnload(), 
+    													 page_state.getFullPageScreenshotUrlComposite(),
+    													 page_state.getFullPageWidth(), 
+    													 page_state.getFullPageHeight(),
+    													 page_state.getSrc(), 
+    													 page_state.getKey(), page_state.getId());
     			pages.add(simple_page);
     			return pages;
     		}
@@ -173,12 +173,12 @@ public class AuditRecordController {
     			for(PageState page_state: page_states) {
 	    			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
 	    													 page_state.getViewportScreenshotUrl(), 
-	    													 page_state.getFullPageScreenshotUrl(), 
+	    													 page_state.getFullPageScreenshotUrlOnload(), 
+	    													 page_state.getFullPageScreenshotUrlComposite(),
 	    													 page_state.getFullPageWidth(),
 	    													 page_state.getFullPageHeight(),
-	    													 page_state.getSrc(),
-	    													 page_state.getKey(), 
-	    													 page_state.getId());
+	    													 page_state.getSrc(), 
+	    													 page_state.getKey(), page_state.getId());
 	    			pages.add(simple_page);
     			}
     			

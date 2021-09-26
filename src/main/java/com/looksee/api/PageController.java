@@ -64,10 +64,11 @@ public class PageController {
         SimplePage simple_page = new SimplePage(
         								page.getUrl(), 
         								page.getViewportScreenshotUrl(), 
-        								page.getFullPageScreenshotUrl(), 
-        								page.getFullPageWidth(), 
+        								page.getFullPageScreenshotUrlOnload(), 
+        								page.getFullPageScreenshotUrlComposite(), 
+        								page.getFullPageWidth(),
         								page.getFullPageHeight(),
-        								page.getSrc(),
+        								page.getSrc(), 
         								page.getKey(), 
         								page.getId());	
         return simple_page;

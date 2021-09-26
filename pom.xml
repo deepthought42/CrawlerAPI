@@ -423,11 +423,11 @@
 		</dependency>
 				
 		<!-- https://mvnrepository.com/artifact/com.assertthat/selenium-shutterbug -->
-		<!-- 
+		
 		<dependency>
 		    <groupId>com.assertthat</groupId>
 		    <artifactId>selenium-shutterbug</artifactId>
-		    <version>0.9.3</version>
+		    <version>1.5</version>
 		    <exclusions>
 		        <exclusion>
 				    <groupId>org.seleniumhq.selenium</groupId>
@@ -435,7 +435,7 @@
 				</exclusion>
 	     	</exclusions>
 		</dependency>
-		-->
+		
 		<!--  SHUTTERBUG DEPENDENCIES -->
 		<dependency>
             <groupId>commons-io</groupId>

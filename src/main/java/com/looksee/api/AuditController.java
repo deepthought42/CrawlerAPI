@@ -260,12 +260,12 @@ public class AuditController {
 	   		SimplePage simple_page = new SimplePage(
 		   									page_state.getUrl(), 
 		   									page_state.getViewportScreenshotUrl(), 
-		   									page_state.getFullPageScreenshotUrl(), 
-		   									page_state.getFullPageWidth(), 
+		   									page_state.getFullPageScreenshotUrlOnload(), 
+		   									page_state.getFullPageScreenshotUrlComposite(), 
+		   									page_state.getFullPageWidth(),
 		   									page_state.getFullPageHeight(),
-		   									page_state.getSrc(),
-		   									page_state.getKey(), 
-		   									page_state.getId());
+		   									page_state.getSrc(), 
+		   									page_state.getKey(), page_state.getId());
 		   	
 	   		return new PageAudits( audit_record.getStatus(), element_issues_map, simple_page, audit_record.getId());
 	   	}
@@ -276,7 +276,7 @@ public class AuditController {
 		
 
 		//update audit record with progress
-	   	PageState page_state = browser_service.buildPageState(sanitized_url, audit_record);
+	   	PageState page_state = browser_service.buildPageState(sanitized_url);
 	   	PageState page_state_record = page_service.save(page_state);
 	   	
 	   	audit_record = audit_record_service.findById(audit_record.getId()).get();
@@ -389,11 +389,12 @@ public class AuditController {
 		   	//NOTE: nulls are present because they are no longer needed and being phased out
 		   	SimplePage simple_page = new SimplePage(page_state_record.getUrl(), 
 		   											page_state_record.getViewportScreenshotUrl(), 
-		   											page_state_record.getFullPageScreenshotUrl(), 
+		   											page_state_record.getFullPageScreenshotUrlOnload(), 
+		   											page_state_record.getFullPageScreenshotUrlComposite(), 
 		   											page_state_record.getFullPageWidth(), 
 		   											page_state_record.getFullPageHeight(), 
 		   											null, 
-		   											null, 
+		   											page_state_record.getKey(),
 		   											page_state_record.getId());
 		   	
 		   	//Map audits to page states

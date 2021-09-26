@@ -480,13 +480,20 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		String description = "Making sure your links are setup correctly is incredibly important";
 		
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
+		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.PERFORMANCE,
 						 AuditName.LINKS,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 link_elements.size() * MAX_POINTS_EACH,
+						 max_points,
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,

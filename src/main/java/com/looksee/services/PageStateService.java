@@ -116,11 +116,12 @@ public class PageStateService {
 		log.warn("----------------------------------------------------------------------------");
 		log.warn("Saving page state...");
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
-
+		
 		if(page_state_record == null) {
 			log.warn("page state wasn't found in database. Saving new page state to neo4j");
 
 			//iterate over page elements
+			/*
 			List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 			for(ElementState element : page_state.getElements()){
 				try{
@@ -129,13 +130,15 @@ public class PageStateService {
 					log.warn("error saving element to new page state :  "+e.getMessage());
 				}
 			}
-				
 			page_state.setElements(element_records);
+			 */
 
 			page_state_record = page_state_repo.save(page_state);
 		}
 		else {
 			page_state_record.setHttpStatus(page_state.getHttpStatus());
+			page_state_record.setFullPageScreenshotUrlOnload(page_state.getFullPageScreenshotUrlOnload());
+			page_state_record.setFullPageScreenshotUrlComposite(page_state.getFullPageScreenshotUrlComposite());
 			page_state_record = page_state_repo.save(page_state_record);
 		}
 		
@@ -261,6 +264,10 @@ public class PageStateService {
 
 	public Optional<PageState> findById(long page_id) {
 		return page_state_repo.findById(page_id);
+	}
+
+	public void updateCompositeImageUrl(Long id, String composite_img_url) {
+		page_state_repo.updateCompositeImageUrl(id, composite_img_url);
 	}
 
 }

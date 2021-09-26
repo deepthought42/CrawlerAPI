@@ -102,10 +102,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		assert non_text_elements != null;
 		
-		int score = 0;
 		int max_points = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
+		labels.add(AuditCategory.AESTHETICS.toString().toLowerCase());
 		labels.add("color contrast");
 		labels.add("accessibility");
 		
@@ -122,7 +122,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						continue;
 					}
 
-					//log.warn("checking if element is parent ::  "+element_state.getXpath());
 					if(element.getXpath().contains(element_state.getXpath())) {
 						int element_area = element.getWidth() * element.getHeight();
 						int parent_area = element_state.getWidth() * element_state.getHeight();
@@ -208,13 +207,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					border_color_rgb = element.getRenderedCssValues().get("border-block-end-color");
 				}
 
-				log.warn("------------------------------------------------------------");
-				log.warn("------------------------------------------------------------");
-				log.warn("border color string :: "+border_color_rgb);
 				ColorData border_color = new ColorData(border_color_rgb);
-				log.warn("Border color :: "+border_color);
-				log.warn("------------------------------------------------------------");
-				log.warn("------------------------------------------------------------");
+				
 				//if element has border color different than element then set element_bkg to border color
 				if(!element.getName().contentEquals("input")
 						&& hasContinuousBorder(element) 
@@ -268,7 +262,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
 				}
 				else {
-					score += 1;
 					String title = "Element contrast is accessisible";
 					String description = "Element background has appropriate contrast for accessibility";
 					//no points are rewarded for low contrast
@@ -311,16 +304,20 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				"<p>Bright colors have higher conversion rates, so it is important for your\n" + 
 				"button to have a high contrast score to create an eye-catching effect\n" + 
 				"and be obviously clickable.</p>";
+
+		int points_earned = 0;
+		max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
 		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.toString());
-				
 
 		String description = "Color contrast of text";
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,

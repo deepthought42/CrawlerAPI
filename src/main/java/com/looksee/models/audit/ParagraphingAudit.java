@@ -58,9 +58,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		int points_earned = 0;
-		int max_points = 0;
-		
 		for(ElementState element : element_list) {
 			String text_block = element.getOwnedText();
 			
@@ -71,15 +68,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				try {
 					List<Sentence> sentences = CloudNLPUtils.extractSentences(paragraph);
 					Score score = calculateSentenceScore(sentences, element);
-					points_earned += score.getPointsAchieved();
-					max_points += score.getMaxPossiblePoints();
-					issue_messages.addAll(score.getIssueMessages());
-					
-					/*
-					for(UXIssueMessage issue_msg : score.getIssueMessages()) {
-						MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
-					}
-					*/
+
+					issue_messages.addAll(score.getIssueMessages());					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -96,8 +86,12 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				" experience easy and convenient. ";
 
 
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.CONTENT.getShortName());
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
 		
 		String description = "";
 		return new Audit(AuditCategory.CONTENT,

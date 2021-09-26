@@ -59,7 +59,6 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
-import com.looksee.utils.TimingUtils;
 
 import cz.vutbr.web.css.RuleSet;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -311,7 +310,7 @@ public class BrowserService {
 					url_without_protocol,
 					browser.getDriver().getTitle(),
 					BrowserUtils.checkIfSecure(browser_url),
-					status_code);
+					status_code, null);
 
 			//page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.setFullPageWidth(full_page_screenshot.getWidth());
@@ -330,13 +329,12 @@ public class BrowserService {
 	 * Process used by the web crawler to build {@link PageState} from {@link PageVersion}
 	 * 
 	 * @param url
-	 * @param audit_record TODO
 	 * @return
 	 * @throws Exception
 	 */
-	public PageState buildPageState(URL url, AuditRecord audit_record) {
+	public PageState buildPageState(URL url) {
 		assert url != null;
-		assert audit_record != null;
+		//assert audit_record != null;
 		
 		log.warn("building page state for page with url :: "+url);
 		boolean rendering_incomplete = true;
@@ -344,7 +342,7 @@ public class BrowserService {
 		int cnt = 0;
 		PageState page_state = null;
 		Browser browser = null;
-		audit_record = audit_record_service.findById(audit_record.getId()).get();
+		//audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
@@ -442,7 +440,7 @@ public class BrowserService {
 				url_without_protocol,
 				title,
 				is_secure,
-				status_code);
+				status_code, null);
 
 		return page_state;
 	}
@@ -666,7 +664,7 @@ public class BrowserService {
 		String body_src = extractBody(page_state.getSrc());
 		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
 		
-		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrl()));
+		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrlOnload()));
 		Document html_doc = Jsoup.parse(body_src);
 
 		for(String xpath : xpaths) {
@@ -677,10 +675,9 @@ public class BrowserService {
 				
 				WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
 
-				browser.scrollToElement(xpath, web_element); 
+				browser.scrollToElement(xpath, web_element);
 				Dimension element_size = web_element.getSize();
 				Point element_location = web_element.getLocation();
-
 				
 				//check if element is visible in pane and if not then continue to next element xpath
 				if( !web_element.isDisplayed()

@@ -63,9 +63,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		//filter elements that aren't text elements
-		int points_earned = 0;
-		int max_points = 0;
-		int max_possible_points = 4;
 		//get all element states
 		//filter any element state whose text exists within another element
 		List<ElementState> og_text_elements = new ArrayList<>();
@@ -126,9 +123,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_points = 4;
 			}
 			
-			points_earned += element_points;
-			max_points += 4;
-			
 			if(element_points < 4) {
 				String title = "Content is written at " + grade_level + " reading level";
 				String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
@@ -176,9 +170,12 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				" Presenting information in small, easy to digest chunks makes their" + 
 				" experience easy and convenient. ";
 		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.CONTENT.getShortName());
-		
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
 
 		String description = "";
 		return new Audit(AuditCategory.CONTENT,

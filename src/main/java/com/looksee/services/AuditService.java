@@ -132,12 +132,12 @@ public class AuditService {
 			SimplePage simple_page = new SimplePage(
 											page_state.getUrl(), 
 											page_state.getViewportScreenshotUrl(), 
-											page_state.getFullPageScreenshotUrl(), 
-											page_state.getFullPageWidth(), 
+											page_state.getFullPageScreenshotUrlOnload(), 
+											page_state.getFullPageScreenshotUrlComposite(), 
+											page_state.getFullPageWidth(),
 											page_state.getFullPageHeight(),
-											page_state.getSrc(),
-											page_state.getKey(), 
-											page_state.getId());
+											page_state.getSrc(), 
+											page_state.getKey(), page_state.getId());
 			PageStateAudits page_state_audits = new PageStateAudits(simple_page, audit_url_map.get(url));
 			page_audits.add( page_state_audits ) ;
 		}

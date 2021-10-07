@@ -156,6 +156,33 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				issue_messages.add(issue_message);
 				continue;
 			}
+			//if href is a telephone link then give score full remaining value and continue
+			else if(href.startsWith("tel:")) {
+				score += 4;
+				String recommendation = "";
+				String description = "Link uses tel: protocol to allow users to call";
+				String title = "Link uses mailto: protocol";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.NONE,
+																description,
+																recommendation, 
+																link,
+																AuditCategory.INFORMATION_ARCHITECTURE,
+																labels,
+																ada_compliance,
+																title,
+																1,
+																1);
+				issue_messages.add(issue_message);
+				continue;
+			}
+			else if(element.hasAttr("role") 
+					&& ("presentation".contentEquals(element.attr("role")) 
+							|| "none".contentEquals(element.attr("role")))){
+				//Skip this element because the prensentation/none role removes all semantic meaning from element
+				continue;
+			}
 			
 			//does element have an href value?
 			if(href != null && !href.isEmpty()) {

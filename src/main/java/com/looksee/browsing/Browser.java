@@ -163,6 +163,7 @@ public class Browser {
 		
 		try {
 			waitForPageToLoad();
+			TimingUtils.pauseThread(5000);
 		}catch(Exception e) {
 			e.printStackTrace();
 			/*
@@ -371,7 +372,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
-		return Shutterbug.shootPage(driver, Capture.FULL).getImage();
+		return Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
 	}
 	
 	/**
@@ -399,7 +400,8 @@ public class Browser {
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 
 		//calculate element position within screen
-		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
+		//return Shutterbug.shootElementVerticallyCentered(driver, element).getImage(); 
+		return Shutterbug.shootElement(driver, element, CaptureElement.FULL_SCROLL).getImage();
 	}
 	
 	/**
@@ -1116,5 +1118,14 @@ public class Browser {
 	public void scrollDown() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollBy(0, window.innerHeight)");
+	}
+
+	/**
+	 * Retrieve HTML source form webpage
+	 * 
+	 * @return HTML source
+	 */
+	public String getSource() {
+		return this.getDriver().getPageSource();
 	}
 }

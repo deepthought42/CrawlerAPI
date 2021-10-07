@@ -57,7 +57,10 @@ public class DomainAuditStats extends AuditStats{
 			String aesthetic_msg,
 			double overall_score, 
 			long high_impact_issues,
-			long mid_impact_issues, long low_impact_issues, long elements_examined, long elements_found
+			long mid_impact_issues, 
+			long low_impact_issues, 
+			long elements_examined, 
+			long elements_found
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -87,10 +90,13 @@ public class DomainAuditStats extends AuditStats{
 		setAestheticMsg(aesthetic_msg);
 		
 		setOverallScore(overall_score);
-		setTotalPagesAudited(page_count);
 		setHighImpactIssueCount(high_impact_issues);
 		setMidImpactIssueCount(mid_impact_issues);
 		setLowImpactIssueCount(low_impact_issues);
+		
+		setTotalPagesAudited(page_count);
+		setPagesFound(page_count);
+		setPagesExamined(pages_examined);
 	}
 
 

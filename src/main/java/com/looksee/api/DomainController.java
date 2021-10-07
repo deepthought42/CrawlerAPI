@@ -30,7 +30,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -230,9 +229,10 @@ public class DomainController {
     public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName();
+
     	Account acct = account_service.findByUserId(id);
     	if(acct == null){
-    		log.warn("unknwon account...");
+    		log.warn("unknown account...");
     		throw new UnknownAccountException();
     	}
     	/*
@@ -330,7 +330,7 @@ public class DomainController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-	@PreAuthorize("hasAuthority('read:domains')")
+	//@PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET, path="/{domain_id}/pages")
 	public @ResponseBody Set<PageStatisticDto> getPages(HttpServletRequest request,
 							@PathVariable(value="domain_id", required=true) long domain_id
@@ -355,6 +355,9 @@ public class DomainController {
 		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
 		for(PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+			if(page_state == null) {
+				continue;
+			}
 			double content_score = AuditUtils.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
 			double info_architecture_score = AuditUtils.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
 			double aesthetic_score = AuditUtils.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
@@ -398,6 +401,7 @@ public class DomainController {
 			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
 			//get Page Count
 			long page_count = audit_records.size();
+			long pages_audited = 0;
 			
 			double score = 0.0;
 			int audit_count = 0;
@@ -421,9 +425,14 @@ public class DomainController {
     		double typography_score = 0.0;
     		double whitespace_score = 0.0;
     		double branding_score = 0.0;
-    		
+    		    		
 			log.warn("audit records found :: "+audit_records.size());
 			for(PageAuditRecord page_audit : audit_records) {
+				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+				if(page_state != null) {
+					pages_audited++;
+				}
+				
 				//get total content audit pages
 				Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
 				written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
@@ -542,7 +551,7 @@ public class DomainController {
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														audit_record.getStartTime(),
 														audit_record.getEndTime(),
-														-1, 
+														pages_audited, 
 														page_count,
 														content_audits_complete,
 														content_audits_complete / (double)audit_records.size(),
@@ -595,7 +604,6 @@ public class DomainController {
 		Set<PageState> pages = domain_service.getPages(url_obj.getHost());
 		
 		// TODO filter through pages to get most recent for each unique page url
-		log.info("###### PAGE STATE COUNT :: "+pages.size());
 		return pages;
     }
 	

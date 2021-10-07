@@ -18,6 +18,8 @@ public class Domain extends LookseeObject{
 	
 	private String url;
 	private String logo_url;
+	private String entrypoint_url;
+	private List<String> sitemap;
 	
 	@Relationship(type = "HAS")
 	private List<PageState> pages;
@@ -41,20 +43,7 @@ public class Domain extends LookseeObject{
 		setTestUsers( new HashSet<>() );
 		setPages( new ArrayList<>() );
 		setAuditRecords(new HashSet<>());
-	}
-	
-	/**
-	 * 
-	 * @param protocol web protocol ("http", "https", "file", etc.)
-	 * @param path landable url
-	 * @param browser name of the browser ie. chrome, firefox, etc.
-	 * @param logo_url url of logo image file
-	 */
-	public Domain( String url){
-		setUrl(url);
-		setPages(new ArrayList<>());
-		setAuditRecords(new HashSet<>());
-		setKey(generateKey());
+		setSitemap(new ArrayList<>());
 	}
 	
 	/**
@@ -67,6 +56,8 @@ public class Domain extends LookseeObject{
 	public Domain( String protocol, String host, String path, String logo_url){
 		setLogoUrl(logo_url);
 		setUrl(host);
+		setEntrypointUrl(host+path);
+		setLogoUrl(logo_url);
 		setPages(new ArrayList<>());
 		setAuditRecords(new HashSet<>());
 		setKey(generateKey());
@@ -160,5 +151,21 @@ public class Domain extends LookseeObject{
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public List<String> getSitemap() {
+		return sitemap;
+	}
+
+	public void setSitemap(List<String> sitemap) {
+		this.sitemap = sitemap;
+	}
+
+	public String getEntrypointUrl() {
+		return entrypoint_url;
+	}
+
+	public void setEntrypointUrl(String entrypoint_url) {
+		this.entrypoint_url = entrypoint_url;
 	}
 }

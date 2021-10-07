@@ -109,7 +109,7 @@ public class BrowserService {
 	 */
 	public Browser getConnection(BrowserType browser, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser != null;
-		
+		log.warn("getting browser connection");
 		return BrowserConnectionHelper.getConnection(browser, browser_env);
 	}
 
@@ -345,7 +345,9 @@ public class BrowserService {
 		//audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
+				log.warn("getting browser connection for build page state");
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				log.warn("navigating to url :: "+url.toString());
 				browser.navigateTo(url.toString());
 				browser.removeDriftChat();
 
@@ -405,9 +407,6 @@ public class BrowserService {
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
 
-		//Element root = html_doc.getElementsByTag("body").get(0);	
-		log.warn("url for page state:  "+url);
-		
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
@@ -422,8 +421,7 @@ public class BrowserService {
 		long y_offset = browser.getYScrollOffset();
 		Dimension size = browser.getDriver().manage().window().getSize();
 
-        log.warn("status code received .... " + status_code);
-        log.warn("Full page screenshot url ....   "+full_page_screenshot_url);
+        log.debug("status code received .... " + status_code);
 		PageState page_state = new PageState(
 				viewport_screenshot_url,
 				new ArrayList<>(),
@@ -1881,5 +1879,11 @@ public class BrowserService {
 			}
 		}
 		return icon_urls;
+	}
+
+	public String getPageSource(BrowserType browser_type, BrowserEnvironment environment, URL sanitized_url) throws MalformedURLException {
+		Browser browser = BrowserConnectionHelper.getConnection(browser_type, environment);
+		browser.navigateTo(sanitized_url.toString());
+		return browser.getSource();
 	}
 }

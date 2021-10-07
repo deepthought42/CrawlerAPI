@@ -1,15 +1,12 @@
 package utils;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 
 import org.jsoup.Jsoup;
-import org.junit.Assert;
 import org.junit.Test;
 
-import com.looksee.utils.ContentUtils;
-
-import edu.stanford.nlp.simple.Document;
-import edu.stanford.nlp.simple.Sentence;
 import io.whelk.flesch.kincaid.ReadabilityCalculator;
 
 public class ContentUtilsTest {
@@ -17,10 +14,10 @@ public class ContentUtilsTest {
 	@Test
 	public void testExtractArticle() throws IOException {
 		//marketing page url
-		String url = "http://www.look-see.com";
+		String url = "https://www.look-see.com";
 		
 		//CRUX library to extract article data
-		String all_page_text = Jsoup.connect(url).get().text();
+		//String all_page_text = Jsoup.connect(url).get().text();
 
         
 		String content = 
@@ -34,8 +31,8 @@ public class ContentUtilsTest {
 			      "brought two daughters into the house with her. They were beautiful, with fair faces, " +
 			      "but evil and dark hearts. Times soon grew very bad for the poor stepchild.";
 
-	      double result = ReadabilityCalculator.calculateReadingEase(all_page_text);
-
+	      double result = ReadabilityCalculator.calculateReadingEase(content);
+	      assertTrue( result == 80.13934306569344 );
 	      System.out.println(result);  // 93.55913669064749
 
 	      
@@ -50,9 +47,10 @@ public class ContentUtilsTest {
 	    	      "brought two daughters into the house with her. They were beautiful, with fair faces, " +
 	    	      "but evil and dark hearts. Times soon grew very bad for the poor stepchild.";
 
-	    	      double result1 = ReadabilityCalculator.calculateGradeLevel(all_page_text);
+	    	      double result1 = ReadabilityCalculator.calculateGradeLevel(content);
 
 	    	      System.out.println(result1);  // 5.142774922918807
+	    	      assertTrue(result1 == 6.943587069864442);
 		
 		
 	}

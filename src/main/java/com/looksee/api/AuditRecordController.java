@@ -381,6 +381,11 @@ public class AuditRecordController {
 				long elements_found = 0;
 				
 				for(PageAuditRecord page_audit : audit_records) {
+					PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+					if(page_state != null) {
+						pages_reviewed++;
+					}
+					
 					elements_reviewed += page_audit.getElementsReviewed();
 					elements_found += page_audit.getElementsFound();
 					

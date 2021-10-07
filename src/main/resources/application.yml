@@ -10,7 +10,7 @@ resilience4j.retry:
                 - java.net.SocketException
         selenium:
             maxAttempts: 200
-            waitDuration: 2000
+            waitDuration: 1000
             retryExceptions:
                 - org.openqa.selenium.WebDriverException
                 - org.openqa.grid.common.exception.GridException

@@ -21,7 +21,6 @@ import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
-import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
@@ -77,8 +76,8 @@ public class ElementStateExtractor extends AbstractActor{
 					log.warn("Extracting element states from page");
 
 					List<ElementState> element_states = browser_service.buildPageElements(message.getPageState(), 
-							message.getXpaths(),
-							message.getAuditRecordId());
+																						  message.getXpaths(),
+																						  message.getAuditRecordId());
 					
 					BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
 					String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
@@ -86,7 +85,7 @@ public class ElementStateExtractor extends AbstractActor{
 					log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
 					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
 																						message.getPageState().getId(), 
-																		message.getXpaths());
+																						message.getXpaths());
 					//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), composite_img_url);
 					message.getPageState().setFullPageScreenshotUrlComposite(composite_img_url);
 					page_state_service.save(message.getPageState());

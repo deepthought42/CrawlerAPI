@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.cert.Certificate;
@@ -153,6 +155,11 @@ public class BrowserUtils {
 	 */
 	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException {
 		return !url.contains(domain_host);
+	}
+	
+	public static boolean isRelativeLink(String link_url) throws URISyntaxException {
+		URI uri = new URI(link_url);
+		return !uri.isAbsolute();
 	}
 	
 	/**

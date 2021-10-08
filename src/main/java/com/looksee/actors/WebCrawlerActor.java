@@ -35,6 +35,7 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -108,22 +109,29 @@ public class WebCrawlerActor extends AbstractActor{
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
+					Map<String, Boolean> external_links = new HashMap<>();
+					
 					
 					while(!frontier.isEmpty()) {
-						Map<String, Boolean> external_links = new HashMap<>();
 						//remove link from beginning of frontier
 						String raw_url = frontier.keySet().iterator().next();
+						frontier.remove(raw_url);
+
+						if(raw_url.trim().isEmpty()) {
+							continue;
+						}
+						
 						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(raw_url));
 						String page_url_str = BrowserUtils.getPageUrl(sanitized_url);
 						
-						frontier.remove(raw_url);
 						if(visited.containsKey(page_url_str)) {
 							continue;
 						}
 						
 						if( BrowserUtils.isImageUrl(page_url_str) 
 								|| page_url_str.endsWith(".pdf")
-								|| !page_url_str.contains(domain.getUrl())){
+								|| page_url_str.startsWith("#")
+								|| BrowserUtils.isExternalLink(domain.getUrl(), page_url_str)){
 							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(page_url_str));
 							log.warn("does url end with .pdf??   ::  "+ page_url_str.endsWith(".pdf"));
 							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
@@ -136,79 +144,90 @@ public class WebCrawlerActor extends AbstractActor{
 						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 						//construct page and add page to list of page states
 						//retrieve html source for page
-						
+						log.warn("Creating audit record ... ");
 						PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
 					   	audit_record.setAestheticMsg("Waiting for data extraction ...");
 					   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
 					   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 					   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
 					   	
+					   	log.warn("adding page audit to domain audit ...");
 					   	audit_record_service.addPageAuditToDomainAudit(crawl_action.getAuditRecordId(), audit_record.getKey());
 					   	
-						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
-						log.warn("Initiating audit via page state guilder actor");
-						ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					   	ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_state_builder.tell(crawl_action_msg, ActorRef.noSender());
 						
+						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
+						page_state_builder.tell(crawl_action_msg, ActorRef.noSender());
 						
 						try {
 							int http_status = BrowserUtils.getHttpStatus(sanitized_url);
 
 							if(http_status == 404) {
+								log.warn("Recieved 404 status for link :: "+sanitized_url);
 								continue;
 							}
-							domain = domain_service.findById(domain.getId()).get();
-							domain.getSitemap().add(sanitized_url.toString());
-							domain = domain_service.save(domain);
-							
-							String page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
+							log.warn("http status = "+http_status);
+							String page_source = "";
+							int attempt_cnt = 0;
+							do {
+								try {
+									log.warn("Looking up page source for link "+sanitized_url);
+									page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
+								}
+								catch(Exception e) {
+									log.warn("failed to obtain page source during crawl");
+									attempt_cnt++;
+									TimingUtils.pauseThread(5000L);
+								}
+							}while (page_source.trim().isEmpty() && attempt_cnt < 100);
+
 							//Document doc = Jsoup.connect(sanitized_url.toString()).get();
 							Document doc = Jsoup.parse(page_source);
 							Elements links = doc.select("a");
 							
+							log.warn(links.size()+ " links found for "+domain.getUrl());
 							//iterate over links and exclude external links from frontier
 							for (Element link : links) {
 								String href_str = link.attr("href");
-								href_str = href_str.replaceAll(";", "");
-
-								if(!link.attr("href").isEmpty() && href_str.isEmpty()) {
-									href_str = domain.getUrl() + link.attr("href");
-								}
-								if(href_str == null || href_str.isEmpty()) {
+								href_str = href_str.replaceAll(";", "").trim();
+								if(href_str == null || href_str.isEmpty() || href_str.startsWith("#")) {
 									continue;
 								}
-
+								
 								try {
 									URL href_url = new URL( BrowserUtils.sanitizeUrl(href_str));
 									String href = BrowserUtils.getPageUrl(href_url);
 									boolean isExternalLink = BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href);
-									boolean isRelativeLink = BrowserUtils.isRelativeLink(href);
+									boolean isRelativeLink = BrowserUtils.isRelativeLink(href, domain.getUrl());
 									
 									//check if external link
-									if( isExternalLink || href.startsWith("mailto:") && !isRelativeLink) {
-										log.warn("adding to external links :: "+href);
+									if( (isExternalLink && !isRelativeLink)
+											|| href.startsWith("mailto:")
+									) {
 					   					external_links.put(href, Boolean.TRUE);
 									}
-									else if( !visited.containsKey(href) 
-											&& !frontier.containsKey(href) 
-											&& !isExternalLink
-									){
-										log.warn("adding to internal links :: "+href);
-	
+									else if( !visited.containsKey(href) ){
+										if(isRelativeLink) {
+											href = domain.getUrl() + href;
+										}
 										//add link to frontier
 										frontier.put(href, Boolean.TRUE);
 									}
 								}
 								catch(MalformedURLException e) {
-									log.warn("malformed href value ....  "+href_str);
+									log.error("malformed href value ....  "+href_str);
 									e.printStackTrace();
 								}
 							}
 							visited.put(page_url_str, null);
-							
+
 						}catch(IllegalArgumentException e) {
 							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
+							e.printStackTrace();
+						}
+						catch(Exception e) {
+							log.error("Something went wrong while crawling page "+sanitized_url);
 							e.printStackTrace();
 						}
 					}

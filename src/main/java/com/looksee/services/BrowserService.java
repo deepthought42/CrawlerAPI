@@ -1884,6 +1884,14 @@ public class BrowserService {
 	public String getPageSource(BrowserType browser_type, BrowserEnvironment environment, URL sanitized_url) throws MalformedURLException {
 		Browser browser = BrowserConnectionHelper.getConnection(browser_type, environment);
 		browser.navigateTo(sanitized_url.toString());
-		return browser.getSource();
+		String page_src = browser.getSource();
+		try {
+			browser.close();
+		}
+		catch(Exception e){
+			
+		}
+		
+		return page_src;
 	}
 }

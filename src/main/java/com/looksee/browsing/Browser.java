@@ -400,8 +400,8 @@ public class Browser {
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 
 		//calculate element position within screen
-		//return Shutterbug.shootElementVerticallyCentered(driver, element).getImage(); 
-		return Shutterbug.shootElement(driver, element, CaptureElement.FULL_SCROLL).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage(); 
+		//return Shutterbug.shootElement(driver, element).getImage();
 	}
 	
 	/**

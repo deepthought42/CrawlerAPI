@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,17 +89,39 @@ public class BrowserUtilsTests {
 		Assert.assertTrue(font_families.size() == 2);
 	}
 	
+	@Test
 	public void testIsSecureCheck() throws IOException {
 		URL url = new URL("http://www.look-see.com");
 
 		boolean is_secure = BrowserUtils.checkIfSecure(url);
 		
-		assertTrue(is_secure);
+		assertFalse(is_secure);
 		
-		URL url_2 = new URL("http://app.look-see.com");
+		URL url_2 = new URL("https://app.look-see.com");
 
 		boolean is_secure_2 = BrowserUtils.checkIfSecure(url_2);
 		
 		assertTrue(is_secure_2);
+	}
+	
+	@Test
+	public void isRelativeLinkTest() throws URISyntaxException {
+		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("https://look-see.com", "look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("look-see.com/product", "look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("app.look-see.com", "app.look-see.com"));
+		
+		assertTrue( BrowserUtils.isRelativeLink("/products", "look-see.com"));
+	}
+	
+	@Test
+	public void isExternalLinkTest() throws URISyntaxException, MalformedURLException {
+		assertFalse( BrowserUtils.isExternalLink("look-see.com", "look-see.com"));
+		assertFalse( BrowserUtils.isExternalLink("look-see.com", "/products"));
+		assertFalse( BrowserUtils.isExternalLink("app.look-see.com", "look-see.com"));
+		assertFalse( BrowserUtils.isExternalLink("app.look-see.com", "app.look-see.com"));
+		assertFalse( BrowserUtils.isExternalLink("look-see.com", "app.look-see.com"));
+
+		assertTrue( BrowserUtils.isExternalLink("look-see.com", "wikipedia.com"));
 	}
 }

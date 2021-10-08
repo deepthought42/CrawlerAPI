@@ -152,14 +152,21 @@ public class BrowserUtils {
 	 * @return true if url is external, otherwise false
 	 * 
 	 * @throws MalformedURLException
+	 * @throws URISyntaxException 
 	 */
-	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException {
-		return !url.contains(domain_host);
+	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
+		return (!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host);
 	}
 	
-	public static boolean isRelativeLink(String link_url) throws URISyntaxException {
-		URI uri = new URI(link_url);
-		return !uri.isAbsolute();
+	public static boolean isRelativeLink(String link_url, String domain_host) throws URISyntaxException {
+		assert domain_host != null;
+		
+		URI uri = new URI(link_url);	
+		String host = uri.getHost();
+		if(host == null) {
+			host = uri.getPath();
+		}
+		return !uri.isAbsolute() && !host.contains(domain_host) && (!link_url.isEmpty() && link_url.charAt(0) == '/');
 	}
 	
 	/**

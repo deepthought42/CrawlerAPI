@@ -106,7 +106,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		
 		for(ElementState element : og_text_elements) {
 			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
-			log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
+			//log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());

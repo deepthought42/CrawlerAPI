@@ -80,14 +80,14 @@ public class ElementStateExtractor extends AbstractActor{
 																						  message.getAuditRecordId());
 					
 					BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
-					String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
+					//String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
 					
 					log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
 					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
 																						message.getPageState().getId(), 
 																						message.getXpaths());
 					//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), composite_img_url);
-					message.getPageState().setFullPageScreenshotUrlComposite(composite_img_url);
+					message.getPageState().setFullPageScreenshotUrlComposite(message.getPageState().getFullPageScreenshotUrlOnload());
 					page_state_service.save(message.getPageState());
 					getSender().tell(element_message, getSelf());
 				})

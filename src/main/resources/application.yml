@@ -9,14 +9,19 @@ resilience4j.retry:
                 - java.io.IOException
                 - java.net.SocketException
         selenium:
-            maxAttempts: 200
-            waitDuration: 1000
+            maxAttempts: 10000
+            waitDuration: 100
             retryExceptions:
                 - org.openqa.selenium.WebDriverException
                 - org.openqa.grid.common.exception.GridException
+                - org.openqa.selenium.remote.UnreachableBrowserException
+                - org.openqa.selenium.NoSuchSessionException
+                - java.io.IOException
+                - java.net.ConnectException
+                - java.lang.Exception
         neo4j:
-            maxAttempts: 10
-            waitDuration: 1000
+            maxAttempts: 10000
+            waitDuration: 100
             retryExceptions:
                 - org.neo4j.ogm.exception.ConnectionException
                 - org.neo4j.driver.exceptions.SessionExpiredException

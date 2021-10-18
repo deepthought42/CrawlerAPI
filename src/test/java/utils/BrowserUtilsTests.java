@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -63,6 +64,24 @@ public class BrowserUtilsTests {
 	}
 	
 	@Test
+	public void httpStatusVerification() throws MalformedURLException {
+		URL url = new URL("http://spotify.come/us/account/your-services");
+		int status = BrowserUtils.getHttpStatus(url);
+		
+		assertTrue(status == 404);
+		
+		URL url1 = new URL("http://look-see.com");
+		int status1 = BrowserUtils.getHttpStatus(url1);
+		
+		assertTrue(status1 == 301);
+		
+		URL url2 = new URL("https://look-see.com");
+		int status2 = BrowserUtils.getHttpStatus(url2);
+		
+		assertTrue(status2 == 200);
+	}
+	
+	@Test
 	public void verifyUrlExists() throws Exception {
 		URL valid_url = new URL("https://www.google.com");
 		boolean does_exist = BrowserUtils.doesUrlExist(valid_url);
@@ -107,21 +126,43 @@ public class BrowserUtilsTests {
 	@Test
 	public void isRelativeLinkTest() throws URISyntaxException {
 		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "look-see.com"));
-		assertFalse( BrowserUtils.isRelativeLink("https://look-see.com", "look-see.com"));
-		assertFalse( BrowserUtils.isRelativeLink("look-see.com/product", "look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "https://look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "look-see.com/product"));
 		assertFalse( BrowserUtils.isRelativeLink("app.look-see.com", "app.look-see.com"));
 		
-		assertTrue( BrowserUtils.isRelativeLink("/products", "look-see.com"));
+		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "//look-see.com.com/images/example.png"));
+		assertTrue( BrowserUtils.isRelativeLink("apple.com", "/105/media/us/mac/2019/36178e80-30fd-441c-9a5b-349c6365bb36/ar/mac-pro/case-on.usdz"));
+		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "/products"));
 	}
 	
 	@Test
 	public void isExternalLinkTest() throws URISyntaxException, MalformedURLException {
 		assertFalse( BrowserUtils.isExternalLink("look-see.com", "look-see.com"));
 		assertFalse( BrowserUtils.isExternalLink("look-see.com", "/products"));
-		assertFalse( BrowserUtils.isExternalLink("app.look-see.com", "look-see.com"));
 		assertFalse( BrowserUtils.isExternalLink("app.look-see.com", "app.look-see.com"));
+		
+		assertTrue( BrowserUtils.isExternalLink("app.look-see.com", "look-see.com"));
 		assertFalse( BrowserUtils.isExternalLink("look-see.com", "app.look-see.com"));
-
 		assertTrue( BrowserUtils.isExternalLink("look-see.com", "wikipedia.com"));
+	}
+	
+	@Test
+	public void isSubdomain() throws URISyntaxException, MalformedURLException {
+		assertFalse( BrowserUtils.isSubdomain("look-see.com", "look-see.com"));
+		assertFalse( BrowserUtils.isSubdomain("look-see.com", "look-see.com/products"));
+		assertFalse( BrowserUtils.isSubdomain("app.look-see.com", "app.look-see.com"));
+		assertFalse(  BrowserUtils.isSubdomain("app.look-see.com", "apple.com"));
+		
+		assertTrue( BrowserUtils.isSubdomain("app.look-see.com", "look-see.com"));
+		assertTrue( BrowserUtils.isSubdomain("look-see.com", "app.look-see.com"));
+	}
+	
+	@Test
+	public void isFile() throws URISyntaxException, MalformedURLException {
+		assertFalse( BrowserUtils.isFile("look-see.com"));
+		assertFalse( BrowserUtils.isFile("look-see.com/products"));
+		assertFalse( BrowserUtils.isFile("app.look-see.com"));
+
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.jpg"));
 	}
 }

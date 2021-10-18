@@ -308,7 +308,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			
 			//Does link have a valid URL? yes(1) / No(0)
 			try {						
-				if(href.contains("javascript:void(0)") || href.contains("javascript:")) {
+				if(BrowserUtils.isJavascript(href)) {
 					log.warn("href value (before sanitizing) :: "+href);
 					score++;
 					String recommendation = "Links should have a valid URL in them. We suggest avoiding the use of the javascript protocol, expecially if you are going to use it to crete a non working link";
@@ -328,8 +328,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	1);
 					issue_messages.add(issue_message);
 				}
-				
-				if(!href.contains("javascript:")) {
+				else {
 					
 					URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
 					

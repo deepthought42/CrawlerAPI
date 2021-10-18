@@ -113,8 +113,6 @@ public class PageStateService {
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
 
-		log.warn("----------------------------------------------------------------------------");
-		log.warn("Saving page state...");
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 		
 		if(page_state_record == null) {

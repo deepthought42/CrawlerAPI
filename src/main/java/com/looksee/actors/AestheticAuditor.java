@@ -105,6 +105,8 @@ public class AestheticAuditor extends AbstractActor{
 				   	page_audit_record = audit_record_service.save(page_audit_record);
 				   	
 					Audit text_contrast_audit = text_contrast_auditor.execute(page, null);
+					text_contrast_audit = audit_service.save(text_contrast_audit);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), text_contrast_audit.getId() );
 					audits.add(text_contrast_audit);
 					
 				   	page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -119,6 +121,8 @@ public class AestheticAuditor extends AbstractActor{
 					audits.add(margin_audits);
 					 */
 					Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, null);
+					non_text_contrast_audit = audit_service.save(non_text_contrast_audit);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), non_text_contrast_audit.getId() );
 					audits.add(non_text_contrast_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -128,11 +132,6 @@ public class AestheticAuditor extends AbstractActor{
 		   			//send message to either user or page channel containing reference to audits
 
 					log.warn("content audits complete :: "+audits.size());
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}
 
 					//NOTE: SEND DATA TO AUDIT MANAGER
 					//getSender().tell(msg, getSelf());

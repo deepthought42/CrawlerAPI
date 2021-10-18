@@ -111,7 +111,6 @@ public class WebCrawlerActor extends AbstractActor{
 					frontier.put(initial_url, Boolean.TRUE);
 					Map<String, Boolean> external_links = new HashMap<>();
 					
-					
 					while(!frontier.isEmpty()) {
 						//remove link from beginning of frontier
 						String raw_url = frontier.keySet().iterator().next();
@@ -128,12 +127,14 @@ public class WebCrawlerActor extends AbstractActor{
 							continue;
 						}
 						
-						if( BrowserUtils.isImageUrl(page_url_str) 
-								|| page_url_str.endsWith(".pdf")
+						if( BrowserUtils.isFile(page_url_str)
 								|| page_url_str.startsWith("#")
+								|| BrowserUtils.isJavascript(page_url_str)
+								|| page_url_str.startsWith("itms-apps:")
+								|| page_url_str.startsWith("snap:")
 								|| BrowserUtils.isExternalLink(domain.getUrl(), page_url_str)){
 							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(page_url_str));
-							log.warn("does url end with .pdf??   ::  "+ page_url_str.endsWith(".pdf"));
+							log.warn("isFile??   ::  "+ BrowserUtils.isFile(page_url_str));
 							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
 							log.warn("contains domain url?  :: "+ page_url_str.contains(domain.getUrl()));
 							log.warn("WebCrawler skipping url :: "+page_url_str);
@@ -144,88 +145,109 @@ public class WebCrawlerActor extends AbstractActor{
 						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 						//construct page and add page to list of page states
 						//retrieve html source for page
-						log.warn("Creating audit record ... ");
 						PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
 					   	audit_record.setAestheticMsg("Waiting for data extraction ...");
 					   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
 					   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 					   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
-					   	
-					   	log.warn("adding page audit to domain audit ...");
 					   	audit_record_service.addPageAuditToDomainAudit(crawl_action.getAuditRecordId(), audit_record.getKey());
-					   	
-					   	ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						
 						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
+						
+						ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+						
 						page_state_builder.tell(crawl_action_msg, ActorRef.noSender());
 						
-						try {
-							int http_status = BrowserUtils.getHttpStatus(sanitized_url);
+						visited.put(page_url_str, null);
 
-							if(http_status == 404) {
-								log.warn("Recieved 404 status for link :: "+sanitized_url);
-								continue;
+						int http_status = BrowserUtils.getHttpStatus(sanitized_url);
+
+						//usually code 301 is returned which is a redirect, which is usually transferring to https
+						if(http_status == 404) {
+							log.warn("Recieved 404 status for link :: "+sanitized_url);
+							continue;
+						}
+						
+						String page_source = "";
+						int attempt_cnt = 0;
+						do {
+							try {
+								page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
+								break;
 							}
-							log.warn("http status = "+http_status);
-							String page_source = "";
-							int attempt_cnt = 0;
-							do {
-								try {
-									log.warn("Looking up page source for link "+sanitized_url);
-									page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
-								}
-								catch(Exception e) {
-									log.warn("failed to obtain page source during crawl");
-									attempt_cnt++;
-									TimingUtils.pauseThread(5000L);
-								}
-							}while (page_source.trim().isEmpty() && attempt_cnt < 100);
+							catch(Exception e) {
+								log.warn("failed to obtain page source during crawl");
+								//e.printStackTrace();
+								attempt_cnt++;
+							}
+							TimingUtils.pauseThread(5000L);
+						}while (page_source.trim().isEmpty() && attempt_cnt < 100000);
+
+						
+						try {
+							
 
 							//Document doc = Jsoup.connect(sanitized_url.toString()).get();
 							Document doc = Jsoup.parse(page_source);
 							Elements links = doc.select("a");
+							String domain_host = domain.getUrl().replace("www.", "");
 							
-							log.warn(links.size()+ " links found for "+domain.getUrl());
 							//iterate over links and exclude external links from frontier
 							for (Element link : links) {
 								String href_str = link.attr("href");
 								href_str = href_str.replaceAll(";", "").trim();
-								if(href_str == null || href_str.isEmpty() || href_str.startsWith("#")) {
+								if(href_str == null 
+										|| href_str.isEmpty() 
+										|| href_str.startsWith("#") 
+										|| BrowserUtils.isJavascript(href_str)
+										|| href_str.startsWith("itms-apps:")
+										|| href_str.startsWith("snap:")
+										|| href_str.startsWith("tel:")
+										|| BrowserUtils.isFile(href_str)
+								) {
 									continue;
 								}
 								
 								try {
 									URL href_url = new URL( BrowserUtils.sanitizeUrl(href_str));
 									String href = BrowserUtils.getPageUrl(href_url);
-									boolean isExternalLink = BrowserUtils.isExternalLink(domain.getUrl().replace("www.", ""), href);
-									boolean isRelativeLink = BrowserUtils.isRelativeLink(href, domain.getUrl());
-									
 									//check if external link
-									if( (isExternalLink && !isRelativeLink)
-											|| href.startsWith("mailto:")
+									if( href.startsWith("mailto:") 
+											|| href.startsWith("tel:")
 									) {
-					   					external_links.put(href, Boolean.TRUE);
+										log.warn("Starts with mailto protocol");
+										external_links.put(href, Boolean.TRUE);
 									}
-									else if( !visited.containsKey(href) ){
-										if(isRelativeLink) {
-											href = domain.getUrl() + href;
+									else {
+										if(BrowserUtils.isRelativeLink(domain_host, href)) {
+											href = sanitized_url.getHost() + href;
 										}
-										//add link to frontier
-										frontier.put(href, Boolean.TRUE);
+										href = href.replace("http://","").replace("https://", "");
+										URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
+										page_url_str = BrowserUtils.getPageUrl(sanitized_href);
+										boolean is_external_link = BrowserUtils.isExternalLink(domain_host, page_url_str);
+										boolean is_subdomain = BrowserUtils.isSubdomain(domain_host, sanitized_href.getHost());
+										if( is_external_link || is_subdomain) {
+											
+											external_links.put(page_url_str, Boolean.TRUE);
+										}
+										else if(!visited.containsKey(page_url_str)) {											
+											//add link to frontier
+											frontier.put(page_url_str, Boolean.TRUE);
+										}
 									}
 								}
 								catch(MalformedURLException e) {
 									log.error("malformed href value ....  "+href_str);
-									e.printStackTrace();
+									//e.printStackTrace();
 								}
 							}
-							visited.put(page_url_str, null);
-
-						}catch(IllegalArgumentException e) {
+						} 
+						catch(IllegalArgumentException e) {
 							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
 							e.printStackTrace();
-						}
+						} 
 						catch(Exception e) {
 							log.error("Something went wrong while crawling page "+sanitized_url);
 							e.printStackTrace();

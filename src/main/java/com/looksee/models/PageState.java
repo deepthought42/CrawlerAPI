@@ -131,6 +131,7 @@ public class PageState extends LookseeObject {
 		setScrollYOffset(scroll_y_offset);
 	    setLoginRequired(false);
 		setFullPageScreenshotUrlOnload(full_page_screenshot_url_onload);
+		setFullPageScreenshotUrlComposite(full_page_screenshot_url_composite);
 		setFullPageWidth(full_page_width);
 		setFullPageHeight(full_page_height);
 		setUrl(url);
@@ -412,7 +413,7 @@ public class PageState extends LookseeObject {
 		this.full_page_height = full_page_height;
 	}
 
-	public synchronized void addElements(List<ElementState> elements) {
+	public void addElements(List<ElementState> elements) {
 		//check for duplicates before adding
 		for(ElementState element : elements) {
 			if(!this.elements.contains(element)) {				

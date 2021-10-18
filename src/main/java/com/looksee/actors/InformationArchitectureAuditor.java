@@ -107,6 +107,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);
 					
 				   	Audit link_audit = links_auditor.execute(page, null);
+				   	link_audit = audit_service.save(link_audit);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), link_audit.getId() );
 					audits.add(link_audit);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -115,6 +117,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);
 					
 					Audit title_and_headers = title_and_header_auditor.execute(page, null);
+					title_and_headers = audit_service.save(title_and_headers);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), title_and_headers.getId() );
 					audits.add(title_and_headers);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -123,6 +127,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					audit_record_service.save(page_audit_record);
 					
 					Audit security = security_audit.execute(page, null);
+					security = audit_service.save(security);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), security.getId() );
 					audits.add(security);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
@@ -131,18 +137,14 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					page_audit_record = audit_record_service.save(page_audit_record);
 					
 					Audit metadata = metadata_auditor.execute(page, null);
+					metadata = audit_service.save(metadata);
+					audit_record_service.addAudit( page_audit_record_msg.getId(), metadata.getId() );
 					audits.add(metadata);
 					
 					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
 					page_audit_record.setInfoArchMsg("Done!");
 					page_audit_record = audit_record_service.save(page_audit_record);
-					
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}
 					
 					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
 					if(is_audit_complete) {

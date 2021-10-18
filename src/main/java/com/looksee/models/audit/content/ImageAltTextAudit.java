@@ -62,11 +62,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String tag_name = "img";
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> image_elements = new ArrayList<>();
-		log.warn("------------------------------------------------");
-		log.warn("page elements size :: "+page_state.getElements());
 		for(ElementState element : page_state.getElements()) {
 			if(element.getName().equalsIgnoreCase(tag_name)) {
-				log.warn("Image element found :: "+ element.getCssSelector());
 				image_elements.add(element);
 			}
 		}
@@ -77,7 +74,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				" ‘Alt’ text for images present on the website.";
 	
-		log.warn("Total image elements found :: "+image_elements.size());
 		
 		//score each link element
 		for(ElementState image_element : image_elements) {
@@ -85,10 +81,8 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			Document jsoup_doc = Jsoup.parseBodyFragment(image_element.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag(tag_name).first();
 			
-			log.warn("is ALT text set?   "+element.hasAttr("alt"));
 			//Check if element has "alt" attribute present
 			if(element.hasAttr("alt")) {				
-				log.warn("is ALT text empty?   "+element.attr("alt").isEmpty());
 
 				if(element.attr("alt").isEmpty()) {
 					String title = "Image alternative text value is empty";

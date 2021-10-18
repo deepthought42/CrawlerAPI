@@ -80,7 +80,6 @@ import io.github.resilience4j.retry.annotation.Retry;
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 @Component
-@Retry(name="webdriver")
 public class Browser {
 	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
@@ -163,7 +162,6 @@ public class Browser {
 		
 		try {
 			waitForPageToLoad();
-			TimingUtils.pauseThread(5000);
 		}catch(Exception e) {
 			e.printStackTrace();
 			/*
@@ -396,7 +394,7 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
+	public BufferedImage getElementScreenshot(WebElement element) throws Exception{
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 
 		//calculate element position within screen

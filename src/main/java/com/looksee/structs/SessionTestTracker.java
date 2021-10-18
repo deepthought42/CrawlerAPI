@@ -39,7 +39,7 @@ public class SessionTestTracker {
 	/**
 	 * @return singleton instance of session sequence tracker
 	 */
-	public synchronized static SessionTestTracker getInstance() {
+	public static SessionTestTracker getInstance() {
       if(instance == null) {
          instance = new SessionTestTracker();
       }

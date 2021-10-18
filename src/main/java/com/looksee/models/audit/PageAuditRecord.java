@@ -104,4 +104,12 @@ public class PageAuditRecord extends AuditRecord {
 	public void setElementsReviewed(long elements_reviewed) {
 		this.elements_reviewed = elements_reviewed;
 	}
+
+	public boolean isComplete() {
+		return this.getAestheticAuditProgress() >= 1.0
+				&& this.getContentAuditProgress() >= 1.0
+				&& this.getDataExtractionProgress() >= 1.0
+				&& this.getInfoArchAuditProgress() >= 1.0
+				&& this.getElementsReviewed() == this.getElementsFound();
+	}
 }

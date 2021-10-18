@@ -5,7 +5,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.actors.InformationArchitectureAuditor;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
@@ -15,6 +14,7 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditSubcategory;
 
 public class AuditUtils {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditUtils.class.getName());
 
 
@@ -134,7 +134,8 @@ public class AuditUtils {
 	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {
 		return page_audit_record.getAestheticAuditProgress() >= 1 
 			&& page_audit_record.getContentAuditProgress() >= 1
-			&& page_audit_record.getInfoArchAuditProgress() >= 1;
+			&& page_audit_record.getInfoArchAuditProgress() >= 1
+			&& page_audit_record.getDataExtractionProgress() >= 1;
 	}
 
 	public static String getExperienceRating(PageAuditRecord audit_record) {

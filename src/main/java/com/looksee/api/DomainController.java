@@ -364,14 +364,16 @@ public class DomainController {
 			double accessibility_score = AuditUtils.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
 			
 			PageStatisticDto page = new PageStatisticDto(
-										page_state.getId(), 
-										page_state.getUrl(), 
-										page_state.getViewportScreenshotUrl(), 
-										content_score, 
-										info_architecture_score,
-										accessibility_score,
-										aesthetic_score,
-										page_audit.getId());	
+											page_state.getId(), 
+											page_state.getUrl(), 
+											page_state.getViewportScreenshotUrl(), 
+											content_score, 
+											info_architecture_score,
+											accessibility_score,
+											aesthetic_score,
+											page_audit.getId(), 
+											page_audit.getElementsReviewed(),
+											page_audit.getElementsFound());	
 			page_stats.add(page);
 		}
 
@@ -428,8 +430,7 @@ public class DomainController {
     		    		
 			log.warn("audit records found :: "+audit_records.size());
 			for(PageAuditRecord page_audit : audit_records) {
-				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
-				if(page_state != null) {
+				if(page_audit.isComplete()) {
 					pages_audited++;
 				}
 				

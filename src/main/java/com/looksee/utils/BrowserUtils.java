@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -27,6 +26,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -155,19 +155,47 @@ public class BrowserUtils {
 	 * @throws URISyntaxException 
 	 */
 	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
-		return (!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host);
+		//return ((!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host)) || url.contains("////");
+		return (!url.contains(domain_host) && !isRelativeLink(domain_host, url) ) || url.contains("////");
 	}
 	
-	public static boolean isRelativeLink(String link_url, String domain_host) throws URISyntaxException {
+	/**
+	 * Returns true if link is empty or if it starts with a '/' and doesn't contain the domain host
+	 * @param domain_host host (example: google.com)
+	 * @param link_url link href value to be evaluated
+	 * 
+	 * @return true if link is empty or if it starts with a '/' and doesn't contain the domain host, otherwise false
+	 * @throws URISyntaxException
+	 */
+	public static boolean isRelativeLink(String domain_host, String link_url) throws URISyntaxException {
 		assert domain_host != null;
+		assert link_url != null;
 		
-		URI uri = new URI(link_url);	
-		String host = uri.getHost();
-		if(host == null) {
-			host = uri.getPath();
-		}
-		return !uri.isAbsolute() && !host.contains(domain_host) && (!link_url.isEmpty() && link_url.charAt(0) == '/');
+		return link_url.isEmpty() || (link_url.charAt(0) == '/' && !link_url.contains(domain_host));
 	}
+	
+
+	public static boolean isSubdomain(String domain_host, String new_host) throws URISyntaxException {
+		assert domain_host != null;
+		assert new_host != null;
+		
+		boolean is_contained = new_host.contains(domain_host) || domain_host.contains(new_host);
+		boolean is_equal = new_host.equals(domain_host);
+		boolean ends_with = new_host.endsWith(domain_host) || domain_host.endsWith(new_host);
+		return is_contained && !is_equal && ends_with;
+	}
+	
+	public static boolean isFile(String url) throws URISyntaxException {
+		assert url != null;
+		
+		return url.endsWith(".zip") 
+				|| url.endsWith(".usdt") 
+				|| url.endsWith(".rss") 
+				|| url.endsWith(".svg") 
+				|| url.endsWith(".pdf")
+				|| isImageUrl(url);
+	}
+	
 	
 	/**
 	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
@@ -488,7 +516,7 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Checks if the server has certificates. Expects an https protocol in the url
+	 * Checks the http status codes received when visiting the given url
 	 * 
 	 * @param url
 	 * @param title
@@ -497,12 +525,12 @@ public class BrowserUtils {
 	 * @throws IOException
 	 */
 	public static int getHttpStatus(URL url) {
-		int status_code = 0;
+		int status_code = 500;
 		try {
 			if(url.getProtocol().contentEquals("http")) {
 				HttpURLConnection con = (HttpURLConnection)url.openConnection();
 				status_code = con.getResponseCode();
-				log.warn("HTTP status code = "+status_code);
+				//log.warn("HTTP status code = "+status_code);
 				return status_code;
 			}
 			else if(url.getProtocol().contentEquals("https")) {
@@ -519,7 +547,7 @@ public class BrowserUtils {
 	    	status_code = 404;
 	    	e.printStackTrace();
 	    }
-		return 500;
+		return status_code;
 	}
 	
 	/**
@@ -537,9 +565,7 @@ public class BrowserUtils {
         try{
         	HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
         	con.connect();
-        	log.warn("certificate count ...  " + con.getServerCertificates().length);
         	is_secure = con.getServerCertificates().length > 0;
-        	log.warn("Is connection secure??   "+is_secure);
         }
         catch(Exception e) {
         	log.warn("an error was encountered while checking for SSL!!!!");
@@ -571,12 +597,8 @@ public class BrowserUtils {
 		                
 		    } catch (SSLPeerUnverifiedException e) {
 		        e.printStackTrace();
-		    } catch (IOException e){
-		        e.printStackTrace();
 		    }
-
-	    }
-	    
+	    }	    
    }
 
 	public static boolean doesElementHaveBackgroundColor(WebElement web_element) {
@@ -596,5 +618,13 @@ public class BrowserUtils {
 
 	public static double convertPxToPt(double pixel_size) {
 		return pixel_size * 0.75;
+	}
+
+	public static boolean isJavascript(String href) {
+		return href.startsWith("javascript:");
+	}
+
+	public static boolean isLargerThanViewport(Dimension element_size, int viewportWidth, int viewportHeight) {
+		return element_size.getWidth() > viewportWidth || element_size.getHeight() > viewportHeight;
 	}
 }

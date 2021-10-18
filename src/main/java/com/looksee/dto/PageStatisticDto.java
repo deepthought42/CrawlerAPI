@@ -14,6 +14,8 @@ public class PageStatisticDto {
 	private double info_arch_score;
 	private double accessibility_score;
 	private double aesthetic_score;
+	private long elements_extracted;
+	private long elements_reviewed;
 	
 	public PageStatisticDto(
 			long id, 
@@ -23,7 +25,9 @@ public class PageStatisticDto {
 			double info_arch_score, 
 			double accessibility_score, 
 			double aesthetic_score, 
-			long audit_record_id
+			long audit_record_id, 
+			long elements_reviewed, 
+			long elements_extracted
 	) {
 		setId(id);
 		setUrl(url);
@@ -33,6 +37,8 @@ public class PageStatisticDto {
 		setInfoArchScore(info_arch_score);
 		setAccessibilityScore(accessibility_score);
 		setAestheticScore(aesthetic_score);
+		setElementsExtracted(elements_extracted);
+		setElementsReviewed(elements_reviewed);
 	}
 
 	public String getUrl() {
@@ -97,6 +103,22 @@ public class PageStatisticDto {
 
 	public void setAuditRecordId(long audit_record_id) {
 		this.audit_record_id = audit_record_id;
+	}
+
+	public long getElementsExtracted() {
+		return elements_extracted;
+	}
+
+	public void setElementsExtracted(long elements_extracted) {
+		this.elements_extracted = elements_extracted;
+	}
+
+	public long getElementsReviewed() {
+		return elements_reviewed;
+	}
+
+	public void setElementsReviewed(long elements_reviewed) {
+		this.elements_reviewed = elements_reviewed;
 	}
 
 }

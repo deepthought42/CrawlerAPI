@@ -21,6 +21,7 @@ import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
+import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
@@ -74,22 +75,30 @@ public class ElementStateExtractor extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementExtractionMessage.class, message-> {
 					log.warn("Extracting element states from page");
-
-					List<ElementState> element_states = browser_service.buildPageElements(message.getPageState(), 
-																						  message.getXpaths(),
-																						  message.getAuditRecordId());
-					
-					BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
-					//String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
-					
-					log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
-					ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
-																						message.getPageState().getId(), 
-																						message.getXpaths());
-					//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), composite_img_url);
-					message.getPageState().setFullPageScreenshotUrlComposite(message.getPageState().getFullPageScreenshotUrlOnload());
-					page_state_service.save(message.getPageState());
-					getSender().tell(element_message, getSelf());
+					try {
+						URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(message.getPageState().getUrl() ));
+						BufferedImage page_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
+						List<ElementState> element_states = browser_service.buildPageElements(message.getPageState(), 
+								message.getXpaths(),
+								message.getAuditRecordId(), 
+								sanitized_url,
+								page_screenshot.getHeight());
+						
+						//BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
+						//String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
+						
+						log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
+						ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
+								message.getPageState().getId(), 
+								message.getXpaths());
+						
+						//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), message.getPageState().getFullPageScreenshotUrlOnload());
+//						message.getPageState().setFullPageScreenshotUrlComposite(message.getPageState().getFullPageScreenshotUrlOnload());
+//						page_state_service.save(message.getPageState());
+						getSender().tell(element_message, getSelf());
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

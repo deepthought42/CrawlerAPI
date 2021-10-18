@@ -2,6 +2,7 @@ package com.looksee.api;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -315,16 +317,12 @@ public class AuditController {
 	   		 */
 			start_xpath_index = last_xpath_index;
 	   	}
-		
+		BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrlOnload()));
+
 	   	//parallel stream get all elements since order doesn't matter
 	   	xpath_lists.parallelStream().forEach(xpath_list -> {
-	   		try {
-				List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list, audit_record_id);
-				page_state.addElements(elements);
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	   		List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list, audit_record_id, sanitized_url, page_screenshot.getHeight());
+			page_state.addElements(elements);
 	   	});
 	   	/*
 	   	CompletableFuture<Void> combinedFuture 

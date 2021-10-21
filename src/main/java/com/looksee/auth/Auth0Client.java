@@ -15,7 +15,8 @@ public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	//@Value(value = "${auth0.client_id}")
-	/* PRODUCTION VALUES
+	/* PRODUCTION VALUES */
+	/*
 	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
 	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
 	private static String domain = "look-see.us.auth0.com";

@@ -27,6 +27,7 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
 
 import io.whelk.flesch.kincaid.ReadabilityCalculator;
@@ -44,6 +45,9 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public ReadabilityAudit() {
 	}
@@ -106,7 +110,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		
 		for(ElementState element : og_text_elements) {
 			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
-			//log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
@@ -138,7 +141,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 																					  title,
 																					  element_points,
 																					  4);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 			}
 			else {
 				String recommendation = "";
@@ -161,7 +164,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 																					  title,
 																					  element_points,
 																					  4);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 			}
 		}		
 
@@ -178,6 +181,8 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		}
 
 		String description = "";
+		page_state = page_state_service.findById(page_state.getId()).get();
+
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT,
 						 AuditName.PARAGRAPHING,
@@ -216,10 +221,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 
 	private int getPointsForEducationLevel(double ease_of_reading_score, String target_user_education) {
 		int element_points = 0;
-		
-		log.warn("Target user education value :: "+target_user_education);
-		//TODO : Make scoring dependant on targetUserEducation
-		
+				
 		if(ease_of_reading_score >= 90 ) {
 			if(target_user_education == null) {
 				element_points = 4;

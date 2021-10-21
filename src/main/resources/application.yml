@@ -1,14 +1,16 @@
 resilience4j.retry:
     configs:
         default:
-            maxAttempts: 20
-            waitDuration: 1000
+            maxAttempts: 5
+            waitDuration: 5000
             retryExceptions:
                 - org.springframework.web.client.HttpServerErrorException
                 - java.util.concurrent.TimeoutException
                 - java.io.IOException
                 - java.net.SocketException
-        selenium:
+                - java.net.ConnectException
+                - java.lang.Exception
+        webdriver:
             maxAttempts: 10000
             waitDuration: 100
             retryExceptions:
@@ -19,14 +21,17 @@ resilience4j.retry:
                 - java.io.IOException
                 - java.net.ConnectException
                 - java.lang.Exception
-        neo4j:
-            maxAttempts: 10000
-            waitDuration: 100
+        neoforj:
+            maxAttempts: 1000
+            waitDuration: 500
             retryExceptions:
                 - org.neo4j.ogm.exception.ConnectionException
                 - org.neo4j.driver.exceptions.SessionExpiredException
                 - org.neo4j.driver.exceptions.DiscoveryException
+                - org.neo4j.driver.exceptions.TransientException
+                - org.neo4j.ogm.exception.TransactionException
                 - java.net.SocketException
+                - java.lang.Exception
         gcp:
             maxAttempts: 10
             waitDuration: 500
@@ -34,9 +39,11 @@ resilience4j.retry:
                 - java.io.IOException
                 - com.google.cloud.storage.StorageException
     instances:
-        neo4j:
-            baseConfig: neo4j
+        neoforj:
+            baseConfig: neoforj
         webdriver:
-            baseConfig: selenium
+            baseConfig: webdriver
         gcp:
             baseConfig: gcp
+        default:
+            baseConfig: default

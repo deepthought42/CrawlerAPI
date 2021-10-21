@@ -16,16 +16,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
-import com.looksee.models.enums.BrowserType;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
-import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -41,12 +37,6 @@ public class ElementStateExtractor extends AbstractActor{
 
 	@Autowired
 	private BrowserService browser_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
-	private ActorSystem actor_system;
 	
 	//subscribe to cluster changes
 	@Override
@@ -74,8 +64,8 @@ public class ElementStateExtractor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(ElementExtractionMessage.class, message-> {
-					log.warn("Extracting element states from page");
 					try {
+						log.warn("Extracting elements from "+message.getPageState().getUrl());
 						URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(message.getPageState().getUrl() ));
 						BufferedImage page_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
 						List<ElementState> element_states = browser_service.buildPageElements(message.getPageState(), 
@@ -84,17 +74,11 @@ public class ElementStateExtractor extends AbstractActor{
 								sanitized_url,
 								page_screenshot.getHeight());
 						
-						//BufferedImage onload_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
-						//String composite_img_url = ImageUtils.createComposite(onload_screenshot, element_states, message.getPageState(), BrowserType.CHROME);
-						
 						log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
 						ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
 								message.getPageState().getId(), 
 								message.getXpaths());
 						
-						//page_state_service.updateCompositeImageUrl(message.getPageState().getId(), message.getPageState().getFullPageScreenshotUrlOnload());
-//						message.getPageState().setFullPageScreenshotUrlComposite(message.getPageState().getFullPageScreenshotUrlOnload());
-//						page_state_service.save(message.getPageState());
 						getSender().tell(element_message, getSelf());
 					} catch(Exception e) {
 						e.printStackTrace();

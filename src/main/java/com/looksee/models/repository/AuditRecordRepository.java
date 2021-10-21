@@ -21,18 +21,21 @@ import io.github.resilience4j.retry.annotation.Retry;
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
  */
 @Repository
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long> {
 	public AuditRecord findByKey(@Param("key") String key);
 	
 	@Query("MATCH (:AuditRecord{key:$audit_record_key})-[:HAS]->(a:Audit{key:$audit_key}) RETURN a")
 	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 
+	@Query("MATCH (ar:AuditRecord)-[:HAS]->(a:Audit) WHERE id(ar)=$audit_record_id AND id(a)=$audit_id RETURN a")
+	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_id") long audit_record_id, @Param("audit_id") long audit_id);
+
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key}),(a:Audit{key:$audit_key}) CREATE (ar)-[h:HAS]->(a) RETURN ar")
 	public void addAudit(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 	
-	@Query("MATCH (ar:AuditRecord),(a:Audit) WHERE id(ar)=$audit_record_key AND id(a)=$audit_id CREATE (ar)-[h:HAS]->(a) RETURN ar")
-	public void addAudit(@Param("audit_record_key") long audit_record_id, @Param("audit_id") long audit_id);
+	@Query("MATCH (ar:AuditRecord),(a:Audit) WHERE id(ar)=$audit_record_id AND id(a)=$audit_id CREATE (ar)-[h:HAS]->(a) RETURN ar")
+	public void addAudit(@Param("audit_record_id") long audit_record_id, @Param("audit_id") long audit_id);
 	
 	@Query("MATCH (dar:DomainAuditRecord),(par:PageAuditRecord{key:$page_audit_key}) WHERE id(dar)=$domain_audit_record_id CREATE (dar)-[h:HAS]->(par) RETURN dar")
 	public void addPageAuditRecord(@Param("domain_audit_record_id") long domain_audit_record_id, @Param("page_audit_key") String page_audit_key);

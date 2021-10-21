@@ -25,7 +25,7 @@ import io.github.resilience4j.retry.annotation.Retry;
  *
  */
 @Service
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public class AuditRecordService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
@@ -36,7 +36,7 @@ public class AuditRecordService {
 	@Autowired
 	private PageStateService page_state_service;
 
-	public AuditRecord save(AuditRecord audit) {
+	public synchronized AuditRecord save(AuditRecord audit) {
 		assert audit != null;
 		return audit_record_repo.save(audit);
 	}
@@ -64,8 +64,13 @@ public class AuditRecordService {
 	}
 
 	public void addAudit(long audit_record_id, long audit_id) {
+		assert audit_record_id != audit_id;
+		
 		//check if audit already exists for page state
-		audit_record_repo.addAudit(audit_record_id, audit_id);
+		Optional<Audit> audit = audit_record_repo.getAuditForAuditRecord(audit_record_id, audit_id);
+		if(!audit.isPresent()) {
+			audit_record_repo.addAudit(audit_record_id, audit_id);
+		}
 	}
 	
 	public Set<Audit> getAllAudits(String audit_record_key) {

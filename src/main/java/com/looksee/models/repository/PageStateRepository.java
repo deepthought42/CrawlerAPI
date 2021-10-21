@@ -20,7 +20,7 @@ import io.github.resilience4j.retry.annotation.Retry;
  * 
  */
 @Repository
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$key}) RETURN p LIMIT 1")
 	public PageState findByKeyAndUsername(@Param("user_id") String user_id, @Param("key") String key);
@@ -77,7 +77,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState),(element:ElementState{key:$element_key}) WHERE id(p)=$page_id CREATE (p)-[h:HAS]->(element) RETURN element")
 	public ElementState addElement(@Param("page_id") long page_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (p:PageState)-[]->(element:ElementState{key:$element_key}) WHERE id(p)=$page_id RETURN element")
+	@Query("MATCH (p:PageState)-[]->(element:ElementState{key:$element_key}) WHERE id(p)=$page_id RETURN element ORDER BY p.created_at DESC LIMIT 1")
 	public Optional<ElementState> getElementState(@Param("page_id") long page_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (a:PageAuditRecord)-[:HAS]->(ps:PageState) WHERE id(ps)=$id RETURN a ORDER BY a.created_at DESC LIMIT 1")

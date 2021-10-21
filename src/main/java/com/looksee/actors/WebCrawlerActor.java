@@ -35,7 +35,6 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -128,16 +127,18 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 						
 						if( BrowserUtils.isFile(page_url_str)
-								|| page_url_str.startsWith("#")
 								|| BrowserUtils.isJavascript(page_url_str)
 								|| page_url_str.startsWith("itms-apps:")
 								|| page_url_str.startsWith("snap:")
+								|| page_url_str.startsWith("tel:")
+								|| page_url_str.startsWith("mailto:")
 								|| BrowserUtils.isExternalLink(domain.getUrl(), page_url_str)){
 							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(page_url_str));
 							log.warn("isFile??   ::  "+ BrowserUtils.isFile(page_url_str));
 							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
 							log.warn("contains domain url?  :: "+ page_url_str.contains(domain.getUrl()));
 							log.warn("WebCrawler skipping url :: "+page_url_str);
+
 							visited.put(page_url_str, null);
 							continue;
 						}
@@ -181,7 +182,6 @@ public class WebCrawlerActor extends AbstractActor{
 								//e.printStackTrace();
 								attempt_cnt++;
 							}
-							TimingUtils.pauseThread(5000L);
 						}while (page_source.trim().isEmpty() && attempt_cnt < 100000);
 
 						
@@ -199,43 +199,36 @@ public class WebCrawlerActor extends AbstractActor{
 								href_str = href_str.replaceAll(";", "").trim();
 								if(href_str == null 
 										|| href_str.isEmpty() 
-										|| href_str.startsWith("#") 
 										|| BrowserUtils.isJavascript(href_str)
 										|| href_str.startsWith("itms-apps:")
 										|| href_str.startsWith("snap:")
 										|| href_str.startsWith("tel:")
+										|| href_str.startsWith("mailto:")
 										|| BrowserUtils.isFile(href_str)
 								) {
 									continue;
 								}
 								
 								try {
-									URL href_url = new URL( BrowserUtils.sanitizeUrl(href_str));
+									URL href_url = new URL( BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), href_str)));
 									String href = BrowserUtils.getPageUrl(href_url);
 									//check if external link
-									if( href.startsWith("mailto:") 
-											|| href.startsWith("tel:")
-									) {
-										log.warn("Starts with mailto protocol");
-										external_links.put(href, Boolean.TRUE);
+									
+									if(BrowserUtils.isRelativeLink(domain_host, href)) {
+										href = sanitized_url.getHost() + href;
 									}
-									else {
-										if(BrowserUtils.isRelativeLink(domain_host, href)) {
-											href = sanitized_url.getHost() + href;
-										}
-										href = href.replace("http://","").replace("https://", "");
-										URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
-										page_url_str = BrowserUtils.getPageUrl(sanitized_href);
-										boolean is_external_link = BrowserUtils.isExternalLink(domain_host, page_url_str);
-										boolean is_subdomain = BrowserUtils.isSubdomain(domain_host, sanitized_href.getHost());
-										if( is_external_link || is_subdomain) {
-											
-											external_links.put(page_url_str, Boolean.TRUE);
-										}
-										else if(!visited.containsKey(page_url_str)) {											
-											//add link to frontier
-											frontier.put(page_url_str, Boolean.TRUE);
-										}
+									href = href.replace("http://","").replace("https://", "");
+									URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
+									page_url_str = BrowserUtils.getPageUrl(sanitized_href);
+									boolean is_external_link = BrowserUtils.isExternalLink(domain_host, page_url_str);
+									boolean is_subdomain = BrowserUtils.isSubdomain(domain_host, sanitized_href.getHost());
+									if( is_external_link || is_subdomain) {
+										
+										external_links.put(page_url_str, Boolean.TRUE);
+									}
+									else if(!visited.containsKey(page_url_str)) {											
+										//add link to frontier
+										frontier.put(page_url_str, Boolean.TRUE);
 									}
 								}
 								catch(MalformedURLException e) {
@@ -259,14 +252,7 @@ public class WebCrawlerActor extends AbstractActor{
 					ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 
-					page_state_builder.tell(crawl_action, getSelf());					
-
-				   	//check if page state already
-				   	//perform audit and return audit result
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-				   	log.warn("?????????????????????????????????????????????????????????????????????");
-
+					page_state_builder.tell(crawl_action, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

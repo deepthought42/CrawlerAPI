@@ -59,10 +59,8 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.assertthat.selenium_shutterbug.core.Capture;
-import com.assertthat.selenium_shutterbug.core.CaptureElement;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.looksee.models.ElementState;
-import com.looksee.utils.TimingUtils;
 
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
@@ -74,7 +72,6 @@ import cz.vutbr.web.csskit.RuleFontFaceImpl;
 import cz.vutbr.web.csskit.RuleKeyframesImpl;
 import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
-import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -1125,5 +1122,9 @@ public class Browser {
 	 */
 	public String getSource() {
 		return this.getDriver().getPageSource();
+	}
+
+	public boolean is503Error() {
+		return this.getSource().contains("503 Service Temporarily Unavailable");
 	}
 }

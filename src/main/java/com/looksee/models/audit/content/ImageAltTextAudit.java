@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
@@ -26,6 +27,8 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 
 /**
  * Responsible for executing an audit on the images on a page to determine adherence to alternate text best practices 
@@ -35,6 +38,12 @@ import com.looksee.models.enums.Priority;
 public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ImageAltTextAudit.class);
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public ImageAltTextAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -99,7 +108,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	title,
 																	0,
 																	1);
-					issue_messages.add(issue_message);
+					issue_messages.add(issue_message_service.save(issue_message));
 				}
 				else {
 					String title = "Image has alt text value set!";
@@ -116,7 +125,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	title,
 																	1,
 																	1);
-					issue_messages.add(issue_message);
+					issue_messages.add(issue_message_service.save(issue_message));
 				}
 			}
 			else {
@@ -134,7 +143,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																title,
 																0,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 			}
 		}
 		
@@ -148,6 +157,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
 		
+		page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,

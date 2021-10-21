@@ -4,7 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -97,6 +96,11 @@ public class BrowserUtilsTests {
 		boolean does_exist3 = BrowserUtils.doesUrlExist(valid_url3);
 		
 		assertFalse(does_exist3);
+		
+		URL valid_url4 = new URL("https://www.mirakl.com");
+		boolean does_exist4 = BrowserUtils.doesUrlExist(valid_url4);
+		
+		assertTrue(does_exist4);
 	}
 	
 	@Test
@@ -129,10 +133,13 @@ public class BrowserUtilsTests {
 		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "https://look-see.com"));
 		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "look-see.com/product"));
 		assertFalse( BrowserUtils.isRelativeLink("app.look-see.com", "app.look-see.com"));
-		
 		assertFalse( BrowserUtils.isRelativeLink("look-see.com", "//look-see.com.com/images/example.png"));
+		
+		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "?hsLang=en"));
 		assertTrue( BrowserUtils.isRelativeLink("apple.com", "/105/media/us/mac/2019/36178e80-30fd-441c-9a5b-349c6365bb36/ar/mac-pro/case-on.usdz"));
 		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "/products"));
+		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "#products"));
+
 	}
 	
 	@Test
@@ -164,5 +171,24 @@ public class BrowserUtilsTests {
 		assertFalse( BrowserUtils.isFile("app.look-see.com"));
 
 		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.jpg"));
+	}
+	
+	@Test
+	public void formatUrlTest() throws MalformedURLException {
+		String url = "https://www.zaelab.com/blogs/using-a-continuous-delivery-model-to-innovate-faster/";
+		String formatted_url = BrowserUtils.formatUrl(null, "zaelab.com", url);
+		assertTrue(formatted_url.contentEquals("https://www.zaelab.com/blogs/using-a-continuous-delivery-model-to-innovate-faster/"));
+		
+		String url2 = "/products";
+		String formatted_url2 = BrowserUtils.formatUrl("https", "look-see.com", url2);
+		assertTrue(formatted_url2.contentEquals("https://look-see.com/products"));
+		
+		String url3 = "?lang=en";
+		String formatted_url3 = BrowserUtils.formatUrl("https", "look-see.com", url3);
+		assertTrue(formatted_url3.contentEquals("https://look-see.com?lang=en"));
+		
+		String url4 = "#products";
+		String formatted_url4 = BrowserUtils.formatUrl("https", "look-see.com", url4);
+		assertTrue(formatted_url4.contentEquals("https://look-see.com#products"));
 	}
 }

@@ -33,7 +33,7 @@ import io.github.resilience4j.retry.annotation.Retry;
  *
  */
 @Service
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public class AuditService {
 	private static Logger log = LoggerFactory.getLogger(AuditService.class);
 
@@ -46,8 +46,9 @@ public class AuditService {
 	@Autowired
 	private PageStateService page_state_service;
 
-	public Audit save(Audit audit) {
+	public synchronized Audit save(Audit audit) {
 		assert audit != null;
+		
 		Audit audit_record = audit_repo.findByKey(audit.getKey());
 		if(audit_record != null) {
 			audit_record.setPoints(audit.getPoints());
@@ -60,12 +61,11 @@ public class AuditService {
 			audit_record.setLevel(audit.getLevel());
 			audit_record.setMessages(audit.getMessages());
 			audit_record.setName(audit.getName());
-			audit_record.setPageState(audit.getPageState());
 			audit_record.setPoints(audit.getPoints());
 			audit_record.setSubcategory(audit.getSubcategory());
 			audit_record.setUrl(audit.getUrl());
 			audit_record.setWhyItMatters(audit.getWhyItMatters());
-			return audit_repo.save(audit);
+			return audit_repo.save(audit_record);
 		}
 		return audit_repo.save(audit);
 	}

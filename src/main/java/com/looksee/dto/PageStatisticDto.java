@@ -37,8 +37,8 @@ public class PageStatisticDto {
 		setInfoArchScore(info_arch_score);
 		setAccessibilityScore(accessibility_score);
 		setAestheticScore(aesthetic_score);
-		setElementsExtracted(elements_extracted);
 		setElementsReviewed(elements_reviewed);
+		setElementsExtracted(elements_extracted);
 	}
 
 	public String getUrl() {

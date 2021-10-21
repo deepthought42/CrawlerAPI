@@ -15,7 +15,7 @@ import com.looksee.models.rules.Rule;
 import io.github.resilience4j.retry.annotation.Retry;
 
 @Repository
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	
 	@Query("MATCH (e:Element{key:$key}) RETURN e LIMIT 1")

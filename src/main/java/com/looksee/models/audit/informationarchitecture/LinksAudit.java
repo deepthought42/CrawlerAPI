@@ -3,7 +3,6 @@ package com.looksee.models.audit.informationarchitecture;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 
 /**
@@ -45,13 +45,12 @@ import com.looksee.utils.BrowserUtils;
 public class LinksAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(LinksAudit.class);
-	
-	private static final int MAX_POINTS_EACH = 5;
-	
+		
 	@Autowired
 	private PageStateService page_state_service;
 	
-	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -112,7 +111,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 			}
 			else {
 				String recommendation = "Make sure links have a url set for the href value.";
@@ -130,7 +129,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																0,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				continue;
 			}
 			String href = element.attr("href");
@@ -153,7 +152,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				continue;
 			}
 			//if href is a telephone link then give score full remaining value and continue
@@ -174,7 +173,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				continue;
 			}
 			else if(element.hasAttr("role") 
@@ -202,7 +201,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 			}
 			else {
@@ -221,14 +220,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																0,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 				continue;
 			}
 			
+			String sanitized_href = "";
 			//is element link a valid url?
 			try {
 				
+				/*
 				URI uri = new URI(href);
 				if(!uri.isAbsolute()) {
 					log.warn("URI is relative");
@@ -247,13 +248,38 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					href = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl())).getHost() + href;
 					href = BrowserUtils.getPageUrl(new URL(BrowserUtils.sanitizeUrl(href)));
 				}
+				
+				String page_state_host = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl())).getHost()
+				if( BrowserUtils.isRelativeLink(page_state_host, href)) {
+					
+				}
+				 */
+				URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
+				String page_state_host = page_url.getHost();
+				String protocol = page_url.getProtocol();
 
+				sanitized_href = BrowserUtils.formatUrl(protocol, page_state_host, href);
+				
+				if( BrowserUtils.isJavascript(href)
+					|| href.startsWith("itms-apps:")
+					|| href.startsWith("snap:")
+					|| href.startsWith("tel:")
+					|| href.startsWith("mailto:")
+				) {
+					//do something here
+					
+				}else {					
+					//if href is external then try creating URL object, else if it's not external then check for page state
+					URL href_url = new URL(sanitized_href);
+				}
+				
+				
 				//if starts with / then append host
 			
 				score++;
 				
 				String recommendation = "";
-				String description = "Link URL is properly formatted : "+href;
+				String description = "Link URL is properly formatted : "+sanitized_href;
 				String title = "Link URL is properly formatted";
 
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
@@ -267,7 +293,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				
+				issue_messages.add(issue_message_service.save(issue_message));
 			} catch (MalformedURLException e) {
 				String recommendation = "Make sure link url format is valid. For example \"https://www.google.com\"";
 				String description = "link url is not a valid format "+href;
@@ -284,26 +311,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title,
 																0,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				e.printStackTrace();
-			} catch (URISyntaxException e) {
-				String recommendation = "Make sure link url format is valid. For example \"https://www.google.com\"";
-				String description = "Invalid link uri syntax - "+href;
-				String title = "Invalid link url";
-
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																Priority.HIGH, 
-																description, 
-																recommendation, 
-																link,
-																AuditCategory.INFORMATION_ARCHITECTURE,
-																labels,
-																ada_compliance,
-																title,
-																0,
-																1);
-				issue_messages.add(issue_message);
-				e.printStackTrace();
+				continue;
 			}
 			
 			//Does link have a valid URL? yes(1) / No(0)
@@ -326,13 +336,13 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	title,
 																	0,
 																	1);
-					issue_messages.add(issue_message);
+					issue_messages.add(issue_message_service.save(issue_message));
 				}
 				else {
 					
-					URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
-					
-					if(BrowserUtils.doesUrlExist(url_href)) {
+					log.warn("checking if URL exists ...   "+sanitized_href);
+					//URL url_href = new URL(BrowserUtils.sanitizeUrl(href));
+					if(BrowserUtils.doesUrlExist(sanitized_href)) {
 						score++;
 						String recommendation = "";
 						String description = "Link points to valid location - "+href;
@@ -349,7 +359,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																		title,
 																		1,
 																		1);
-						issue_messages.add(issue_message);
+						issue_messages.add(issue_message_service.save(issue_message));
 					}
 					else {
 						String recommendation = "Make sure links point to valid locations";
@@ -367,7 +377,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																		title,
 																		0,
 																		1);
-						issue_messages.add(issue_message);
+						issue_messages.add(issue_message_service.save(issue_message));
 					}
 				}
 			} catch (IOException e) {
@@ -386,13 +396,13 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title, 
 																3,
 																4);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				log.warn("IO error occurred while auditing links ...."+e.getMessage());
 				log.warn("href value :: "+href);
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.warn("Exception thrown during links audit :: "+e.getMessage());
+				//e.printStackTrace();
 			}
 			
 			//Does link contain a text label inside it
@@ -414,6 +424,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																title, 
 																4,
 																4);
+				issue_messages.add(issue_message_service.save(issue_message));
 			 }
 			 else {
 				 boolean element_includes_text = false;
@@ -456,7 +467,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	3,
 																	4);
 					 //does element use image as links?
-					 issue_messages.add(issue_message);
+					issue_messages.add(issue_message_service.save(issue_message));
 				 }
 				 else {
 					 score++;
@@ -474,6 +485,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																							title, 
 																							4,
 																							4);
+					issue_messages.add(issue_message_service.save(issue_message));
 				 }
 			}
 			 
@@ -513,6 +525,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
+		page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.PERFORMANCE,
 						 AuditName.LINKS,

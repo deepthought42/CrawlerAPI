@@ -22,6 +22,7 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 
 /**
@@ -34,6 +35,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private	PageStateService page_state_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public ParagraphingAudit() {
 	}
@@ -94,6 +98,8 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		}
 		
 		String description = "";
+		page_state = page_state_service.findById(page_state.getId()).get();
+
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT, 
 						 AuditName.PARAGRAPHING, 
@@ -111,7 +117,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	}
 
 
-	public static Score calculateSentenceScore(List<Sentence> sentences, ElementState element) {
+	public Score calculateSentenceScore(List<Sentence> sentences, ElementState element) {
 		//    		for each sentence check that sentence is no longer than 20 words
 		int points_earned = 0;
 		int max_points = 0;
@@ -145,7 +151,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																0,
 																1);
 				
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 				
 				points_earned += 0;
 				max_points += 1;
@@ -168,7 +174,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message_service.save(issue_message));
 
 			}
 		}

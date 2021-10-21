@@ -62,9 +62,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		
-		int total_possible_points = 0;
-		int text_score = 0;
-
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
@@ -117,7 +114,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					String font_size_str = og_font_size_str.replace("px", "");
 					
 					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.strip()));
-					total_possible_points += 1;
 					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 (A Compliance)
 					//NOTE: The following measures of font size are in pixels not font points
 					if(font_size >= 18 || (font_size >= 14 && BrowserUtils.isTextBold(font_weight))) {
@@ -143,13 +139,12 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									font_size+"", 
 																									0, 
 																									2);
-							
+
 							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 
 						}
 						else if(contrast >= 3 && contrast < 4.5) {
-							text_score += 1;
 							//100% score
 							//AA WCAG 2.1
 							String title = "Large text meets minimum contrast for WCAG 2.1 compliance";
@@ -180,7 +175,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 						}
 						else if(contrast >= 4.5) {
-							text_score += 1;
 							//100% score
 							//low contrast header issue
 							String title = "Large text complies with WCAG 2.1 AAA standard";
@@ -241,7 +235,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 						}
 						else if(contrast >= 4.50 && contrast < 7.0) {
-							text_score += 1;
 							//100% score
 							String title = "Text has minimum contrast for WCAG 2.1 AA standards";
 							String description = "Text has minimum contrast against the background";
@@ -268,7 +261,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							issue_messages.add(issue_message_service.save(med_contrast_text_observation));
 						}
 						else if(contrast >= 7.0) {
-							text_score += 1;
 							//100% score
 							String title = "Text has appropriate contrast";
 							String description = "Text has recommended contrast against the background";
@@ -329,6 +321,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + points_earned + " : " + max_points);
 	
+		page_state = page_state_service.findById(page_state.getId()).get();
+
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 					     AuditName.TEXT_BACKGROUND_CONTRAST,

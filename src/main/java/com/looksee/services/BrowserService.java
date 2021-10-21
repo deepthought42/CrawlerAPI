@@ -58,6 +58,7 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
+
 import us.codecraft.xsoup.Xsoup;
 
 /**
@@ -348,18 +349,28 @@ public class BrowserService {
 		//audit_record = audit_record_service.findById(audit_record.getId()).get();
 		do {
 			try {
-				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.TEST);
 				browser.navigateTo(url.toString());
+			} catch(Exception e) {
+				log.warn("Unable to get browser connection");
+				continue;
+			}
+			
+			try {
+				if(browser.is503Error()) {
+					throw new Exception("503 Error encountered. Starting over..");
+				}
 				browser.removeDriftChat();
 
 				//navigate to page url
 				page_state = buildPageState(url, browser);
 
 				rendering_incomplete = false;
-				cnt=100000;
+				cnt=10000000;
 				break;
 			}
 			catch (IOException e) {
+				log.warn("An IO exception occurred while building page state");
 				e.printStackTrace();
 			}
 			catch (Exception e) {
@@ -475,6 +486,15 @@ public class BrowserService {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_url);
+			} catch(Exception e) {
+				log.warn("Unable to get browser connection");
+				continue;
+			}
+			
+			try {
+				if(browser.is503Error()) {
+					throw new Exception("503 Error encountered. Starting over..");
+				}
 				browser.removeDriftChat();
 				
 				//get ElementState List by asking multiple bots to build xpaths in parallel
@@ -483,10 +503,11 @@ public class BrowserService {
 				
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt = 100000000;
+				cnt = 10000000;
+				break;
 			}
 			catch (Exception e) {
-				log.warn("An exception occurred while building page elements");
+				log.warn("An exception occurred while building page elements ... "+e.getMessage());
 				//e.printStackTrace();
 			}
 			finally {
@@ -631,13 +652,15 @@ public class BrowserService {
 				audit_record = audit_record_service.save(audit_record);
 			}
 			catch(NoSuchElementException e) {
-				log.warn("No such element found :: "+xpath+"       ;;    on page : "+url);
+				log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());
+				element_states_map.put(xpath, null);
 			}
 			catch (StaleElementReferenceException e) {
-				log.warn("Stale element exception thrown while retrieving element with xpath :: "+xpath +"; On page with url ::  "+url);
+				log.warn("Stale element exception thrown while retrieving element with xpath :: "+xpath +"; On page with url ::  "+page_state.getUrl());
+				element_states_map.put(xpath, null);
 			}
 			catch(NullPointerException e) {
-				log.warn("There was an error finding element with xpath .... "+xpath + "   ;;   ON page :: "+url);
+				log.warn("There was an error finding element with xpath .... "+xpath + "   ;;   ON page :: "+page_state.getUrl());
 				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

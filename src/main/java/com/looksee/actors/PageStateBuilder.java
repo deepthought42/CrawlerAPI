@@ -117,9 +117,8 @@ public class PageStateBuilder extends AbstractActor{
 	
 					   //	List<CompletableFuture<Void>> futures_list = new ArrayList<>();
 						long total_dispatches = 0;
-						total_dispatch_responses.put(page_state.getUrl(), 0L);
 						
-						int XPATH_CHUNK_SIZE = 50;
+						int XPATH_CHUNK_SIZE = 100;
 					   	while(start_xpath_index < (xpaths.size()-1)) {
 					   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
 					   		if(last_xpath_index >= xpaths.size()) {
@@ -143,9 +142,12 @@ public class PageStateBuilder extends AbstractActor{
 							start_xpath_index = last_xpath_index;
 					   	}
 					   	this.total_dispatches.put(page_state.getUrl(), total_dispatches);
-					   	
+						this.total_dispatch_responses.put(page_state.getUrl(), 0L);
+
 						PageAuditRecord page_audit_record = (PageAuditRecord)audit_record;
 						page_audit_record.setElementsFound(total_dispatches);
+						audit_record_service.save(audit_record);
+
 					}catch(Exception e) {
 						log.error("An exception occurred that bubbled up to the page state builder");
 						e.printStackTrace();
@@ -160,11 +162,11 @@ public class PageStateBuilder extends AbstractActor{
 						log.warn("dispatch responses ....   "+this.total_dispatch_responses);
 						log.warn("total dispatched... "+ this.total_dispatches);
 						
-						
+						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+
 						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
 						//       system is done extracting element data and the page is ready for auditing
 						
-						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 						if(this.total_dispatch_responses.get(page_state.getUrl()) == this.total_dispatches.get(page_state.getUrl())) {
 							log.warn("ALL PAGE ELEMENT STATES HAVE BEEN MAPPED SUCCESSFULLY!!!!!");
 							audit_record.setDataExtractionMsg("Done!");
@@ -177,8 +179,8 @@ public class PageStateBuilder extends AbstractActor{
 	
 							audit_record.setInfoArchAuditProgress(1/20.0);
 							audit_record.setInfoArchMsg("Starting Information Architecture audit");
-							
-							audit_record = audit_record_service.save(audit_record);
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(page_state.getUrl()) );
+							audit_record = (PageAuditRecord) audit_record_service.save(audit_record);
 						
 							/*
 						   	log.warn("requesting performance audit from performance auditor....");
@@ -201,15 +203,10 @@ public class PageStateBuilder extends AbstractActor{
 							ActorRef aesthetic_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 						   			.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());
 							aesthetic_auditor.tell(audit_record, getSelf());
-							
-							postStop();
 						}
 						else {
-							PageAuditRecord page_audit_record = (PageAuditRecord)audit_record;
-	
-							page_audit_record.setElementsFound(this.total_dispatches.get(page_state.getUrl()));
-							page_audit_record.setElementsReviewed(this.total_dispatch_responses.get(page_state.getUrl()) );
-							audit_record_service.save(page_audit_record);
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(page_state.getUrl()) );
+							audit_record_service.save(audit_record);
 						}
 					}catch(Exception e) {
 						log.error("AN exception occurred while page state builder processed ElementProgressMessage!!");

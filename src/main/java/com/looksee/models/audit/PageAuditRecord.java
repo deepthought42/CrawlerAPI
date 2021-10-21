@@ -41,7 +41,8 @@ public class PageAuditRecord extends AuditRecord {
 	public PageAuditRecord(
 			ExecutionStatus status, 
 			Set<Audit> audits, 
-			PageState page_state, boolean is_part_of_domain_audit
+			PageState page_state, 
+			boolean is_part_of_domain_audit
 	) {
 		assert audits != null;
 		assert status != null;
@@ -108,7 +109,6 @@ public class PageAuditRecord extends AuditRecord {
 	public boolean isComplete() {
 		return this.getAestheticAuditProgress() >= 1.0
 				&& this.getContentAuditProgress() >= 1.0
-				&& this.getDataExtractionProgress() >= 1.0
 				&& this.getInfoArchAuditProgress() >= 1.0
 				&& this.getElementsReviewed() == this.getElementsFound();
 	}

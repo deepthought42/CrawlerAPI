@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Element;
@@ -25,6 +26,8 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 
 
 /**
@@ -37,6 +40,12 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	
 	@Relationship(type="FLAGGED")
 	List<Element> flagged_elements = new ArrayList<>();
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public SecurityAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
@@ -79,7 +88,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title, 
 											0, 
 											1);
-			issue_messages.add(ux_issue);
+			issue_messages.add(issue_message_service.save(ux_issue));
 		}
 		else {
 			score++;
@@ -99,7 +108,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title, 
 											1, 
 											1);
-			issue_messages.add(ux_issue);
+			issue_messages.add(issue_message_service.save(ux_issue));
 		}
 		
 		String description = "";
@@ -112,6 +121,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		}
 		
 		log.warn("FONT AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
+		page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SECURITY,
 						 AuditName.FONT,

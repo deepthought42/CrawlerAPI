@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
@@ -27,6 +28,8 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ElementStateUtils;
 
@@ -40,6 +43,12 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	
 	public TitleAndHeaderAudit() {}
 
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -76,7 +85,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
 		String description = "";
 		
-		
+		page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.TITLES,
@@ -247,10 +256,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															title,
 															1,
 															1);
-			//check if favicon is valid by having a valid href value defined
-			 //&& !element.attr("href").isEmpty()
 			
-			//check if resource can actually be reached
+			issue_messages.add(issue_message_service.save(favicon_issue));
 		}
 		else {
 			
@@ -271,7 +278,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															title,
 															0,
 															1);
-			issue_messages.add(favicon_issue);
+			issue_messages.add(issue_message_service.save(favicon_issue));
 			points += 0;			
 		}
 		
@@ -336,7 +343,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															1,
 															1);
-			issue_messages.add(title_issue);
+			issue_messages.add(issue_message_service.save(title_issue));
 		}
 		else {
 
@@ -361,7 +368,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															0,
 															1);
-			issue_messages.add(title_issue);
+			issue_messages.add(issue_message_service.save(title_issue));
 
 			points += 0;				
 		}

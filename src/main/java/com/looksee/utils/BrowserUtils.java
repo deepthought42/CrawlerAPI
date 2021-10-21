@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -38,7 +39,9 @@ import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 
+import io.github.resilience4j.retry.annotation.Retry;
 
+@Retry(name = "default")
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 	
@@ -167,11 +170,14 @@ public class BrowserUtils {
 	 * @return true if link is empty or if it starts with a '/' and doesn't contain the domain host, otherwise false
 	 * @throws URISyntaxException
 	 */
-	public static boolean isRelativeLink(String domain_host, String link_url) throws URISyntaxException {
+	public static boolean isRelativeLink(String domain_host, String link_url) {
 		assert domain_host != null;
 		assert link_url != null;
 		
-		return link_url.isEmpty() || (link_url.charAt(0) == '/' && !link_url.contains(domain_host));
+		return link_url.isEmpty() 
+				|| (link_url.charAt(0) == '/' && !link_url.contains(domain_host)) 
+				|| (link_url.charAt(0) == '?' && !link_url.contains(domain_host))
+				|| (link_url.charAt(0) == '#' && !link_url.contains(domain_host));
 	}
 	
 
@@ -185,7 +191,7 @@ public class BrowserUtils {
 		return is_contained && !is_equal && ends_with;
 	}
 	
-	public static boolean isFile(String url) throws URISyntaxException {
+	public static boolean isFile(String url) {
 		assert url != null;
 		
 		return url.endsWith(".zip") 
@@ -268,9 +274,70 @@ public class BrowserUtils {
 			} catch(UnknownHostException e) {
 				return false;
 			}
+			catch(SSLException e) {
+				log.warn("SSL Exception occurred while checking if URL exists");
+				return false;
+			}
 		}
 		else if("mailto".equalsIgnoreCase(url.getProtocol())) {
 			//TODO check if mailto address is vailid
+		}
+		else {
+			// TODO handle image links
+		}
+		
+		return false;
+	}
+	
+	/**
+	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
+	 * @param url
+	 * @return
+	 * @throws Exception 
+	 */
+	public static boolean doesUrlExist(String url_str) throws Exception {
+		assert(url_str != null);
+		
+		if(url_str.startsWith("#") 
+			|| BrowserUtils.isJavascript(url_str)
+			|| url_str.startsWith("itms-apps:")
+			|| url_str.startsWith("snap:")
+			|| url_str.startsWith("tel:")
+			|| url_str.startsWith("mailto:")
+		) {
+			return true;
+		}
+	
+		URL url = new URL(url_str);
+		//perform check for http clients
+		if("http".equalsIgnoreCase(url.getProtocol())){
+			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			int responseCode = huc.getResponseCode();
+			
+			if (responseCode != 404) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		if("https".equalsIgnoreCase(url.getProtocol())){
+			HttpsURLConnection https_client = getHttpsClient(url.toString());
+
+			try {
+				int responseCode = https_client.getResponseCode();
+
+				if (responseCode != 404) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch(UnknownHostException e) {
+				return false;
+			}
+			catch(SSLException e) {
+				log.warn("SSL Exception occurred while checking if URL exists");
+				return false;
+			}
 		}
 		else {
 			// TODO handle image links
@@ -626,5 +693,36 @@ public class BrowserUtils {
 
 	public static boolean isLargerThanViewport(Dimension element_size, int viewportWidth, int viewportHeight) {
 		return element_size.getWidth() > viewportWidth || element_size.getHeight() > viewportHeight;
+	}
+
+	/**
+	 * Handles extra formatting for relative links
+	 * @param protocol TODO
+	 * @param host
+	 * @param href
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	public static String formatUrl(String protocol, String host, String href) throws MalformedURLException {
+		href = href.replaceAll(";", "").trim();
+		if(href == null 
+			|| href.isEmpty() 
+			|| BrowserUtils.isJavascript(href)
+			|| href.startsWith("itms-apps:")
+			|| href.startsWith("snap:")
+			|| href.startsWith("tel:")
+			|| href.startsWith("mailto:")
+		) {
+			return href;
+		}
+		
+		//URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
+		//href = BrowserUtils.getPageUrl(sanitized_href);
+		//check if external link
+		if(BrowserUtils.isRelativeLink(host, href)) {
+			href = protocol + "://" + host + href;
+		}
+		
+		return href;
 	}
 }

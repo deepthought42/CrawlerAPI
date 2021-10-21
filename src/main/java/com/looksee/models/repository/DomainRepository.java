@@ -28,7 +28,7 @@ import io.github.resilience4j.retry.annotation.Retry;
  * 
  */
 @Repository
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	
 	@Query("MATCH (a:Account{username:$username})-[:HAS_DOMAIN]->(d:Domain{key:$key}) RETURN d LIMIT 1")

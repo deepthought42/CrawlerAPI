@@ -116,7 +116,7 @@ public class AuditRecordController {
     			+ "<br />"
     			+ "Your UX audit results for "+ page_state.getUrl() + " are ready."
     			+ "<br /><br />"
-    			+ "You can <a href='https://app.look-see.com/quick-audit?audit_record_id="+ audit_record_id +"'>access the results here</a>."
+    			+ "You can <a href='https://app.look-see.com/?audit_record_id="+ audit_record_id +"'>access the results here</a>."
     			+ "</body>"
     			+ "</html>";
     	

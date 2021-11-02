@@ -109,7 +109,6 @@ public class PageAuditRecord extends AuditRecord {
 	public boolean isComplete() {
 		return this.getAestheticAuditProgress() >= 1.0
 				&& this.getContentAuditProgress() >= 1.0
-				&& this.getInfoArchAuditProgress() >= 1.0
-				&& this.getElementsReviewed() == this.getElementsFound();
+				&& this.getInfoArchAuditProgress() >= 1.0;
 	}
 }

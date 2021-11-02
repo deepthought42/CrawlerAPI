@@ -30,7 +30,7 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}) MATCH (e)-[hr:HAS]->(r) RETURN r")
 	public Set<Rule> getRules(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}),(r:Rule{key:$rule_key}) CREATE element=(e)-[hr:HAS]->(r) RETURN r")
+	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}),(r:Rule{key:$rule_key}) MERGE element=(e)-[hr:HAS]->(r) RETURN r")
 	public Rule addRuleToFormElement(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
 
 	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
@@ -57,6 +57,6 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (p:PageVersion{key:$page_state_key})-[*]->(parent_elem:Element) MATCH (parent_elem)-[:HAS_CHILD]->(e:Element{key:$element_state_key}) RETURN parent_elem LIMIT 1")
 	public Element getParentElement(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 
-	@Query("MATCH (parent:Element{key:$parent_key}),(child:Element{key:$child_key}) CREATE (parent)-[:HAS_CHILD]->(child) RETURN parent")
+	@Query("MATCH (parent:Element{key:$parent_key}),(child:Element{key:$child_key}) MERGE (parent)-[:HAS_CHILD]->(child) RETURN parent")
 	public void addChildElement(@Param("parent_key") String parent_key, @Param("child_key") String child_key);
 }

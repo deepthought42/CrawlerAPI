@@ -130,13 +130,10 @@ public class Auditor extends AbstractActor{
 				})
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
-					
+					List<Audit> audits_executed = new ArrayList<>();
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//perform audit and return audit result
-				   		List<Audit> audits_executed = new ArrayList<>();
-				   		
-			   			audits_executed = audit_service.saveAll(audits_executed);
-			   			getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
+				   		getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
 				   	}
 				})
 				.match(MemberUp.class, mUp -> {

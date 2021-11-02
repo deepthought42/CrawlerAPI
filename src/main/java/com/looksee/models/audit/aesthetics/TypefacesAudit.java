@@ -287,7 +287,6 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters,
 						 description, 
-						 page_state,
 						 false);
 	}
 }

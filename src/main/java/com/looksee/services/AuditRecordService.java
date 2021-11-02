@@ -1,4 +1,4 @@
-           package com.looksee.services;
+package com.looksee.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +36,9 @@ public class AuditRecordService {
 	@Autowired
 	private PageStateService page_state_service;
 
-	public synchronized AuditRecord save(AuditRecord audit) {
+	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
+		
 		return audit_record_repo.save(audit);
 	}
 
@@ -73,11 +74,8 @@ public class AuditRecordService {
 		}
 	}
 	
-	public Set<Audit> getAllAudits(String audit_record_key) {
-		assert audit_record_key != null;
-		assert !audit_record_key.isEmpty();
-		
-		return audit_record_repo.getAllAudits(audit_record_key);
+	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
+		return audit_record_repo.getAllAuditsAndIssues(audit_id);
 	}
 
 	/**
@@ -305,5 +303,9 @@ public class AuditRecordService {
 
 	public void addPageToAuditRecord(long audit_record_id, long page_state_id) {
 		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
+	}
+
+	public long getIssueCountBySeverity(Long id, String severity) {
+		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
 }

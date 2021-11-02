@@ -49,7 +49,6 @@ import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
@@ -58,6 +57,7 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
+import com.looksee.utils.TimingUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -71,18 +71,12 @@ public class BrowserService {
 
 	@Autowired
 	private ElementRuleExtractor extractor;
-
-	@Autowired
-	private ElementStateService element_state_service;
 	
 	@Autowired
 	private ElementService element_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
-
-	@Autowired
-	private AuditRecordService audit_record_service;
 	
 	@Autowired
 	private FormService form_service;
@@ -371,11 +365,11 @@ public class BrowserService {
 			}
 			catch (IOException e) {
 				log.warn("An IO exception occurred while building page state");
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			catch (Exception e) {
 				log.warn("An exception occurred while building page state");
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally {
 				if(browser != null) {   
@@ -383,6 +377,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
+			TimingUtils.pauseThread(5000L);
 		}while(rendering_incomplete && cnt < 1000000);
 		return page_state;
 	}
@@ -506,6 +501,10 @@ public class BrowserService {
 				cnt = 10000000;
 				break;
 			}
+			catch (NullPointerException e) {
+				log.warn("NPE thrown during element state extraction");
+				//e.printStackTrace();
+			}
 			catch (Exception e) {
 				log.warn("An exception occurred while building page elements ... "+e.getMessage());
 				//e.printStackTrace();
@@ -516,6 +515,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
+			TimingUtils.pauseThread(5000L);
 		}while(rendering_incomplete && cnt < 1000000);
 
 		return elements;
@@ -547,7 +547,7 @@ public class BrowserService {
 			long audit_record_id, 
 			URL url, 
 			int page_height
-	) {
+	) throws NullPointerException {
 		assert xpaths != null;
 		assert !xpaths.isEmpty();
 		assert browser != null;
@@ -562,12 +562,12 @@ public class BrowserService {
 		String host = url.getHost();
 		
 		for(String xpath : xpaths) {
+			if(element_states_map.containsKey(xpath)) {
+				continue;
+			}
+			
 			try {
-				if(element_states_map.containsKey(xpath)) {
-					continue;
-				}
-				
-				WebElement web_element = browser.getDriver().findElement(By.xpath(xpath));
+				WebElement web_element = browser.findElement(xpath);
 				if(web_element == null) {
 					continue;
 				}
@@ -637,22 +637,11 @@ public class BrowserService {
 															   element_screenshot_url,
 															   css_selector);
 				
-				
-				element_state = element_state_service.save(element_state);
-				page_state_service.addElement(page_state.getId(), element_state.getKey());
 				element_states_map.put(xpath, element_state);
 				visited_elements.add(element_state);
-				
-				AuditRecord audit_record = audit_record_service.findById(audit_record_id).get();
-				double element_progress = visited_elements.size() / (double)xpaths.size();
-				if(element_progress > audit_record.getDataExtractionProgress()) {
-					audit_record.setDataExtractionProgress(element_progress);
-				}
-				audit_record.setDataExtractionMsg(generateDataExtractionMessage());
-				audit_record = audit_record_service.save(audit_record);
 			}
 			catch(NoSuchElementException e) {
-				log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());
+				//log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());
 				element_states_map.put(xpath, null);
 			}
 			catch (StaleElementReferenceException e) {
@@ -660,11 +649,12 @@ public class BrowserService {
 				element_states_map.put(xpath, null);
 			}
 			catch(NullPointerException e) {
-				log.warn("There was an error finding element with xpath .... "+xpath + "   ;;   ON page :: "+page_state.getUrl());
+				log.warn("There was an NPE error finding element with xpath .... "+xpath + "   ;;   ON page :: "+page_state.getUrl());
 				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.warn("IOException occurred while building elements");
+				//e.printStackTrace();
 			}
 		}
 		return visited_elements;
@@ -732,6 +722,11 @@ public class BrowserService {
 			"Contemplating the meaning of the universe",
 			"Checking template structure"
 			};
+	/**
+	 * Select random message from list of data extraction messages. 
+	 * 
+	 * @return
+	 */
 	private String generateDataExtractionMessage() {		
 		int random_idx = (int) (Math.random() * (data_extraction_messages.length-1));
 		return data_extraction_messages[random_idx];
@@ -1656,7 +1651,7 @@ public class BrowserService {
 			long audit_record_id, 
 			URL url, 
 			int height
-	) {
+	) throws NullPointerException {
 		assert page_state != null;
 		assert xpaths != null;
 		assert !xpaths.isEmpty();
@@ -1780,11 +1775,29 @@ public class BrowserService {
 	}
 
 	public String getPageSource(BrowserType browser_type, BrowserEnvironment environment, URL sanitized_url) throws MalformedURLException {
-		Browser browser = BrowserConnectionHelper.getConnection(browser_type, environment);
-		browser.navigateTo(sanitized_url.toString());
-		String page_src = browser.getSource();
-		browser.close();
-		
+		int attempt_cnt = 0;
+		Browser browser = null;
+		String page_src = "";
+		do {
+			try {
+				browser = BrowserConnectionHelper.getConnection(browser_type, environment);
+				browser.navigateTo(sanitized_url.toString());
+				page_src = browser.getSource();
+				attempt_cnt = 1000000;
+			}
+			catch(Exception e) {
+				log.warn("failed to obtain page source during crawl");
+				//e.printStackTrace();
+				attempt_cnt++;
+			}
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			TimingUtils.pauseThread(5000L);
+		}while (page_src.trim().isEmpty() && attempt_cnt < 10000);
+
 		return page_src;
 	}
 }

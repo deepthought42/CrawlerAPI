@@ -11,34 +11,49 @@ public class PageStatisticDto {
 	private long audit_record_id;
 	private String screenshot_url;
 	private double content_score;
+	private double content_progress;
 	private double info_arch_score;
+	private double info_arch_progress;
 	private double accessibility_score;
+	private double accessibility_progress;
 	private double aesthetic_score;
+	private double aesthetic_progress;
 	private long elements_extracted;
 	private long elements_reviewed;
+	private boolean is_complete;
 	
 	public PageStatisticDto(
 			long id, 
 			String url, 
 			String screenshot_url, 
 			double content_score, 
+			double content_progress, 
 			double info_arch_score, 
+			double info_arch_progress, 
 			double accessibility_score, 
+			double accessibility_progress, 
 			double aesthetic_score, 
+			double aesthetic_progress, 
 			long audit_record_id, 
 			long elements_reviewed, 
-			long elements_extracted
+			long elements_extracted, 
+			boolean is_complete
 	) {
 		setId(id);
 		setUrl(url);
 		setAuditRecordId(audit_record_id);
 		setScreenshotUrl(screenshot_url);
 		setContentScore(content_score);
+		setContentProgress(content_progress);
 		setInfoArchScore(info_arch_score);
+		setInfoArchProgress(info_arch_progress);
 		setAccessibilityScore(accessibility_score);
+		setAccessibilityProgress(accessibility_progress);
 		setAestheticScore(aesthetic_score);
+		setAestheticProgress(aesthetic_progress);
 		setElementsReviewed(elements_reviewed);
 		setElementsExtracted(elements_extracted);
+		setComplete(is_complete);
 	}
 
 	public String getUrl() {
@@ -119,6 +134,46 @@ public class PageStatisticDto {
 
 	public void setElementsReviewed(long elements_reviewed) {
 		this.elements_reviewed = elements_reviewed;
+	}
+
+	public double getContentProgress() {
+		return content_progress;
+	}
+
+	public void setContentProgress(double content_progress) {
+		this.content_progress = content_progress;
+	}
+
+	public double getInfoArchProgress() {
+		return info_arch_progress;
+	}
+
+	public void setInfoArchProgress(double info_arch_progress) {
+		this.info_arch_progress = info_arch_progress;
+	}
+
+	public double getAccessibilityProgress() {
+		return accessibility_progress;
+	}
+
+	public void setAccessibilityProgress(double accessibility_progress) {
+		this.accessibility_progress = accessibility_progress;
+	}
+
+	public double getAestheticProgress() {
+		return aesthetic_progress;
+	}
+
+	public void setAestheticProgress(double aesthetic_progress) {
+		this.aesthetic_progress = aesthetic_progress;
+	}
+
+	public boolean isComplete() {
+		return is_complete;
+	}
+
+	public void setComplete(boolean is_complete) {
+		this.is_complete = is_complete;
 	}
 
 }

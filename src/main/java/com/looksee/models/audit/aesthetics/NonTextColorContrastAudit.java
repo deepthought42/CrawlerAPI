@@ -33,7 +33,6 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
-import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ImageUtils;
 
 
@@ -50,9 +49,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private ElementStateService element_state_service;
-	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -263,7 +259,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				0, 
 																				1);
 					
-					issue_messages.add(issue_message_service.save(low_contrast_issue));
+					issue_messages.add(low_contrast_issue);
 					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
 				}
 				else {
@@ -291,7 +287,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				1, 
 																				1);
 					
-					issue_messages.add(issue_message_service.save(low_contrast_issue));
+					issue_messages.add(low_contrast_issue);
 				}
 				max_points+=1;
 			}
@@ -322,6 +318,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		String description = "Color contrast of text";		
 		page_state = page_state_service.findById(page_state.getId()).get();
 
+		/*
+		Set<UXIssueMessage> issue_set = new HashSet<>();
+		for(UXIssueMessage issue : issue_messages) {
+			issue_set.add(issue_message_service.save(issue));
+		}
+		*/
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
@@ -329,10 +331,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(), 
-						 why_it_matters, 
+						 page_state.getUrl(),
+						 why_it_matters,
 						 description,
-						 page_state,
 						 true);
 	}
 

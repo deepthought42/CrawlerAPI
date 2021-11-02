@@ -40,7 +40,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	@Query("MATCH (:Test{key:$key})-[:HAS_GROUP]-(g) RETURN g")
 	public Set<Group> getGroups(@Param("key") String key);
 	
-	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test),(tr:TestRecord{key:$test_record_key}) CREATE (t)-[r:HAS_TEST_RECORD]->(tr) RETURN r")
+	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test),(tr:TestRecord{key:$test_record_key}) MERGE (t)-[r:HAS_TEST_RECORD]->(tr) RETURN r")
 	public void addTestRecord(@Param("key") String key, @Param("test_record_key") String test_record_key);
 	
 	@Query("MATCH (a:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$test_key}) MATCH (t)-[:HAS_RESULT]->(p:PageState) RETURN p")
@@ -49,6 +49,6 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) WHERE {path_obj_key} in t.path_keys RETURN t")
 	public Set<Test> findAllTestRecordsContainingKey(@Param("path_obj_key") String path_object_key, @Param("url") String url, @Param("user_id") String user_id);
 	
-	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$test_key}),(g:Group{key:$group_key}) CREATE (t)-[r:HAS_GROUP]->(g) RETURN r")
+	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$test_key}),(g:Group{key:$group_key}) MERGE (t)-[r:HAS_GROUP]->(g) RETURN r")
 	public void addGroup(@Param("test_key") String test_key, @Param("group_key") String group_key, @Param("url") String url, @Param("user_id") String user_id);
 }

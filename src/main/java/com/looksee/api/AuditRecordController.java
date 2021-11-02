@@ -381,8 +381,7 @@ public class AuditRecordController {
 				long elements_found = 0;
 				
 				for(PageAuditRecord page_audit : audit_records) {
-					PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
-					if(page_state != null) {
+					if(page_audit.isComplete()) {
 						pages_reviewed++;
 					}
 					
@@ -415,8 +414,8 @@ public class AuditRecordController {
 						score += (content_audit.getPoints() / (double)content_audit.getTotalPossiblePoints());
 						audit_count++;
 					}
-					boolean is_content_audit_complete = AuditUtils.isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
-					if(is_content_audit_complete) {
+
+					if(page_audit.getContentAuditProgress() >= 1.0) {
 						content_audits_complete++;
 					}
 					
@@ -444,8 +443,8 @@ public class AuditRecordController {
 						score += (ia_audit.getPoints() / (double)ia_audit.getTotalPossiblePoints());
 						audit_count++;
 					}
-					boolean is_info_arch_audit_complete = AuditUtils.isInformationArchitectureAuditComplete(info_architecture_audits);
-					if(is_info_arch_audit_complete) {
+
+					if(page_audit.getInfoArchAuditProgress() >= 1.0) {
 						info_arch_audits_complete++;
 					}
 					
@@ -475,8 +474,8 @@ public class AuditRecordController {
 						score += (aesthetic_audit.getPoints() / (double)aesthetic_audit.getTotalPossiblePoints());
 						audit_count++;
 					}
-					boolean is_aesthetic_audit_complete = AuditUtils.isAestheticsAuditComplete(aesthetics_audits);
-					if(is_aesthetic_audit_complete) {
+
+					if(page_audit.getAestheticAuditProgress() >= 1.0) {
 						aesthetic_audits_complete++;
 					}
 				}

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -29,7 +28,6 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
-import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ElementStateUtils;
 
@@ -45,9 +43,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -70,9 +65,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		issue_messages.addAll(title_score.getIssueMessages());
 		issue_messages.addAll(favicon_score.getIssueMessages());
 		issue_messages.addAll(heading_score.getIssueMessages());
-		for(UXIssueMessage issue_msg : issue_messages) {
-			MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_msg);
-		}
 		
 		int points_earned = 0;
 		int max_points = 0;
@@ -81,7 +73,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-		log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);
+		//log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);
 		String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
 		String description = "";
 		
@@ -96,7 +88,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description, 
-						 page_state,
 						 true);
 	}
 
@@ -213,8 +204,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		}
 		
 		
-		log.warn("Headings score ::    "+score);
-		log.warn("Headings max score :::  "+max_points);
+		//log.warn("Headings score ::    "+score);
+		//log.warn("Headings max score :::  "+max_points);
 		return new Score(score, max_points, new HashSet<>());
 	}
 
@@ -257,7 +248,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															1,
 															1);
 			
-			issue_messages.add(issue_message_service.save(favicon_issue));
+			issue_messages.add(favicon_issue);
 		}
 		else {
 			
@@ -278,7 +269,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															title,
 															0,
 															1);
-			issue_messages.add(issue_message_service.save(favicon_issue));
+			issue_messages.add(favicon_issue);
 			points += 0;			
 		}
 		
@@ -343,7 +334,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															1,
 															1);
-			issue_messages.add(issue_message_service.save(title_issue));
+			issue_messages.add(title_issue);
 		}
 		else {
 
@@ -368,7 +359,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															0,
 															1);
-			issue_messages.add(issue_message_service.save(title_issue));
+			issue_messages.add(title_issue);
 
 			points += 0;				
 		}

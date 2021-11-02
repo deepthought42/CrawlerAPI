@@ -178,9 +178,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				  			}
 				  		}
 						cnt++;
-					}					  	
-					postStop();
-
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

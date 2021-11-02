@@ -88,7 +88,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title, 
 											0, 
 											1);
-			issue_messages.add(issue_message_service.save(ux_issue));
+			issue_messages.add(ux_issue);
 		}
 		else {
 			score++;
@@ -108,7 +108,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title, 
 											1, 
 											1);
-			issue_messages.add(issue_message_service.save(ux_issue));
+			issue_messages.add(ux_issue);
 		}
 		
 		String description = "";
@@ -120,7 +120,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-		log.warn("FONT AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
+		//log.warn("SECURITY AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
 		page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SECURITY,
@@ -132,7 +132,6 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters,
 						 description,
-						 page_state,
 						 false);
 	}
 	

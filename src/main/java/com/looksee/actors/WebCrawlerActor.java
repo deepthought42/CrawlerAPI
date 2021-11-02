@@ -1,16 +1,11 @@
 package com.looksee.actors;
 
-
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,21 +19,15 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.enums.CrawlAction;
-import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.CrawlActionMessage;
-import com.looksee.models.message.PageCrawlActionMessage;
-import com.looksee.services.AuditRecordService;
+import com.looksee.models.message.PageCandidateFound;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -59,24 +48,20 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class WebCrawlerActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(WebCrawlerActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	
-	@Autowired
-	private ActorSystem actor_system;
-	
+
 	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private BrowserService browser_service;
 	
-	@Autowired
-	private AuditRecordService audit_record_service;
 	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
+		
 	}
 
 	//re-subscribe when restart
@@ -109,6 +94,8 @@ public class WebCrawlerActor extends AbstractActor{
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
 					Map<String, Boolean> external_links = new HashMap<>();
+
+					
 					
 					while(!frontier.isEmpty()) {
 						//remove link from beginning of frontier
@@ -146,19 +133,8 @@ public class WebCrawlerActor extends AbstractActor{
 						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 						//construct page and add page to list of page states
 						//retrieve html source for page
-						PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
-					   	audit_record.setAestheticMsg("Waiting for data extraction ...");
-					   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
-					   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
-					   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
-					   	audit_record_service.addPageAuditToDomainAudit(crawl_action.getAuditRecordId(), audit_record.getKey());
-						
-						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, sanitized_url);
-						
-						ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						
-						page_state_builder.tell(crawl_action_msg, ActorRef.noSender());
+						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAuditRecordId(), sanitized_url);
+						getSender().tell(candidate, getSelf());
 						
 						visited.put(page_url_str, null);
 
@@ -171,23 +147,10 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 						
 						String page_source = "";
-						int attempt_cnt = 0;
-						do {
-							try {
-								page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
-								break;
-							}
-							catch(Exception e) {
-								log.warn("failed to obtain page source during crawl");
-								//e.printStackTrace();
-								attempt_cnt++;
-							}
-						}while (page_source.trim().isEmpty() && attempt_cnt < 100000);
-
+						
+						page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
 						
 						try {
-							
-
 							//Document doc = Jsoup.connect(sanitized_url.toString()).get();
 							Document doc = Jsoup.parse(page_source);
 							Elements links = doc.select("a");
@@ -247,13 +210,6 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 					}
 				})
-				.match(PageCrawlActionMessage.class, crawl_action-> {
-					
-					ActorRef page_state_builder = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-
-					page_state_builder.tell(crawl_action, getSelf());
-				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
 				})
@@ -268,6 +224,4 @@ public class WebCrawlerActor extends AbstractActor{
 				})
 				.build();
 	}
-
-	
 }

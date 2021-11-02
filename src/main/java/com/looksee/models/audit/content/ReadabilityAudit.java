@@ -25,7 +25,6 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
-import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
@@ -42,9 +41,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private AuditRecordService audit_record_service;
 	
 	@Autowired
 	private UXIssueMessageService issue_message_service;
@@ -105,22 +101,18 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		log.warn("identified   "+og_text_elements.size() + "  og text states");
-
-		
 		for(ElementState element : og_text_elements) {
-			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
 			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
-			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
+			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
 			String grade_level = ContentUtils.getReadingGradeLevel(ease_of_reading_score);
 			
 			if("unknown".contentEquals(difficulty_string)) {
 				continue;
 			}
 
-			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
+			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
 
 			if(element.getAllText().split(" ").length < 10) {
 				element_points = 4;
@@ -128,7 +120,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			
 			if(element_points < 4) {
 				String title = "Content is written at " + grade_level + " reading level";
-				String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
+				String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
 				String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
@@ -141,7 +133,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 																					  title,
 																					  element_points,
 																					  4);
-				issue_messages.add(issue_message_service.save(issue_message));
+				issue_messages.add(issue_message);
 			}
 			else {
 				String recommendation = "";
@@ -151,7 +143,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 					description = "Content is short enough to be easily understood by all users";
 				}
 				else {					
-					description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
+					description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
 				}
 				String title = "Content is easy to read";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
@@ -164,7 +156,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 																					  title,
 																					  element_points,
 																					  4);
-				issue_messages.add(issue_message_service.save(issue_message));
+				issue_messages.add(issue_message);
 			}
 		}		
 
@@ -183,6 +175,13 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		String description = "";
 		page_state = page_state_service.findById(page_state.getId()).get();
 
+		/*
+		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
+		Set<UXIssueMessage> issue_set = StreamSupport
+											  .stream(issues.spliterator(), true)
+											  .collect(Collectors.toSet());
+		*/
+		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT,
 						 AuditName.PARAGRAPHING,
@@ -193,7 +192,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 false); 
 	}
 

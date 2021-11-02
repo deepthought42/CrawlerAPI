@@ -1,13 +1,13 @@
 package com.looksee.actors;
 
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import javax.imageio.ImageIO;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +16,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
-import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
-import com.looksee.services.BrowserService;
-import com.looksee.utils.BrowserUtils;
+import com.looksee.models.message.ElementsSaved;
+import com.looksee.services.ElementStateService;
+import com.looksee.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -31,12 +31,15 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 @Component
 @Scope("prototype")
-public class ElementStateExtractor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(ElementStateExtractor.class);
+public class DataExtractionSupervisor extends AbstractActor{
+	private static Logger log = LoggerFactory.getLogger(DataExtractionSupervisor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
+	
 	@Autowired
-	private BrowserService browser_service;
+	private ElementStateService element_state_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -63,28 +66,13 @@ public class ElementStateExtractor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(ElementExtractionMessage.class, message-> {
+				.match(ElementProgressMessage.class, message-> {
 					try {
-						log.warn("Extracting elements from "+message.getPageState().getUrl());
-						URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(message.getPageState().getUrl() ));
-						BufferedImage page_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
-						List<ElementState> element_states = browser_service.buildPageElements(	message.getPageState(), 
-																								message.getXpaths(),
-																								message.getAuditRecordId(), 
-																								sanitized_url,
-																								page_screenshot.getHeight());
-																						
+						saveNewElements(message.getPageStateId(),
+										message.getElementStates());
 						
-						//tell page state builder of element states
-						log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
-						ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
-																							message.getPageState().getId(), 
-																							message.getXpaths(), 
-																							element_states,
-																							0L,
-																							0L,
-																							message.getPageState().getUrl());
-						getContext().parent().tell(element_message, getSelf());
+						ElementsSaved elements = new ElementsSaved(message.getPageUrl(), message.getAuditRecordId());
+						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {
 						e.printStackTrace();
 					}
@@ -93,14 +81,38 @@ public class ElementStateExtractor extends AbstractActor{
 					log.info("Member is Up: {}", mUp.member());
 				})
 				.match(UnreachableMember.class, mUnreachable -> {
-					log.info("Member detected as unreachable: {}", mUnreachable.member());
+					log.warn("Member detected as unreachable: {}", mUnreachable.member());
 				})
 				.match(MemberRemoved.class, mRemoved -> {
-					log.info("Member is Removed: {}", mRemoved.member());
+					log.warn("Member is Removed: {}", mRemoved.member());
 				})
 				.matchAny(o -> {
-					log.info("received unknown message of type :: "+o.getClass().getName());
+					log.warn("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
 	}
+	
+	private void saveNewElements(long page_state_id, List<ElementState> element_states) {
+		List<Long> element_ids = new ArrayList<>();
+		List<String> element_keys = new ArrayList<>();
+
+		for(ElementState element : element_states){
+			element_keys.add(element.getKey());
+	   	}
+		
+		Set<String> existing_keys = new HashSet<>();
+		existing_keys.addAll(element_state_service.getAllExistingKeys(element_keys));
+		
+		List<ElementState> new_element_states = element_states
+												   .stream()
+												   .filter(f -> !existing_keys.contains(f.getKey()))
+												   .collect(Collectors.toList());
+		
+		for(ElementState element : new_element_states){
+			ElementState element_record = element_state_service.save(element);
+			element_ids.add(element_record.getId());
+	   	}
+		
+		page_state_service.addAllElements(page_state_id, element_ids);
+	}	
 }

@@ -44,7 +44,7 @@ import com.looksee.utils.ImageUtils;
  */
 public class CloudVisionUtils {
 	private static Logger log = LoggerFactory.getLogger(CloudVisionUtils.class);
-
+	
     /**
 	 * Detects image properties such as color frequency from the specified local image.
 	 * 
@@ -440,11 +440,10 @@ public class CloudVisionUtils {
 	 */
 	public static List<ColorUsageStat> extractImageProperties(BufferedImage buffered_image) throws IOException {
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
-
+		 
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    //InputStream url_input_stream = new URL(image_url).openStream();
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
 	    
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
@@ -470,14 +469,17 @@ public class CloudVisionUtils {
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        DominantColorsAnnotation colors = res.getImagePropertiesAnnotation().getDominantColors();
+		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (ColorInfo color : colors.getColorsList()) {
-		          System.out.format(
+		          /*
+	        		System.out.format(
 		              "fraction: %f%nr: %f, g: %f, b: %f, score: %f%n",
 		              color.getPixelFraction(),
 		              color.getColor().getRed(),
 		              color.getColor().getGreen(),
 		              color.getColor().getBlue(),
 		          	  color.getScore());
+		          	  */
 		          ColorUsageStat color_stat = new ColorUsageStat(color.getColor().getRed(), color.getColor().getGreen(), color.getColor().getBlue(), color.getPixelFraction(), color.getScore());
 		          color_usage_stats.add(color_stat);
 		        }
@@ -485,5 +487,5 @@ public class CloudVisionUtils {
 	    }
 	    
 	    return color_usage_stats;
-	}
+	}	
 }

@@ -42,9 +42,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private PageStateService page_state_service;
 	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
-	
 	public ImageAltTextAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
 	}
@@ -62,7 +59,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record) { 
 		assert page_state != null;
 		
-		Set<UXIssueMessage> issue_messages =  new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
@@ -108,7 +105,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	title,
 																	0,
 																	1);
-					issue_messages.add(issue_message_service.save(issue_message));
+					issue_messages.add(issue_message);
 				}
 				else {
 					String title = "Image has alt text value set!";
@@ -125,7 +122,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	title,
 																	1,
 																	1);
-					issue_messages.add(issue_message_service.save(issue_message));
+					issue_messages.add(issue_message);
 				}
 			}
 			else {
@@ -143,7 +140,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																title,
 																0,
 																1);
-				issue_messages.add(issue_message_service.save(issue_message));
+				issue_messages.add(issue_message);
 			}
 		}
 		
@@ -154,10 +151,17 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-		log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
+		//log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
 		
 		page_state = page_state_service.findById(page_state.getId()).get();
+
+		/*
+		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
+		Set<UXIssueMessage> issue_set = StreamSupport
+											  .stream(issues.spliterator(), true)
+											  .collect(Collectors.toSet());
+		*/
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
@@ -168,7 +172,6 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 true);
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit

@@ -19,6 +19,8 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.repository.PageStateRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 
 
 /**
@@ -26,6 +28,7 @@ import com.looksee.models.repository.PageStateRepository;
  *
  */
 @Service
+@Retry(name = "neoforj")
 public class PageStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageStateService.class.getName());
@@ -112,24 +115,11 @@ public class PageStateService {
 	 */
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
-
+		
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 		
 		if(page_state_record == null) {
 			log.warn("page state wasn't found in database. Saving new page state to neo4j");
-
-			//iterate over page elements
-			/*
-			List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
-			for(ElementState element : page_state.getElements()){
-				try{
-					element_records.add(element_state_service.save(element));
-				}catch(Exception e){
-					log.warn("error saving element to new page state :  "+e.getMessage());
-				}
-			}
-			page_state.setElements(element_records);
-			 */
 
 			page_state_record = page_state_repo.save(page_state);
 		}
@@ -234,20 +224,17 @@ public class PageStateService {
 		return page_state_repo.findByUrl(url);
 	}
 
-	public boolean addElement(long page_id, String element_key) {
-		assert element_key != null;
-		assert !element_key.isEmpty();
-		
-		Optional<ElementState> element_state = getElementState(page_id, element_key);
+	public boolean addElement(long page_id, long element_id) {		
+		Optional<ElementState> element_state = getElementState(page_id, element_id);
 		
 		if(element_state.isPresent()) {
 			return true;
 		}
-		return page_state_repo.addElement(page_id, element_key) != null;
+		return page_state_repo.addElement(page_id, element_id) != null;
 	}
 
-	private Optional<ElementState> getElementState(long page_id, String element_key) {
-		return page_state_repo.getElementState(page_id, element_key);
+	private Optional<ElementState> getElementState(long page_id, long element_id) {
+		return page_state_repo.getElementState(page_id, element_id);
 	}
 
 	/**
@@ -266,6 +253,10 @@ public class PageStateService {
 
 	public void updateCompositeImageUrl(Long id, String composite_img_url) {
 		page_state_repo.updateCompositeImageUrl(id, composite_img_url);
+	}
+
+	public void addAllElements(long page_state_id, List<Long> element_ids) {
+		page_state_repo.addAllElements(page_state_id, element_ids);
 	}
 
 }

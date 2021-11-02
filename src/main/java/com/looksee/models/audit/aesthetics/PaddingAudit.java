@@ -144,7 +144,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 page.getUrl(),
 						 why_it_matters,
 						 description,
-						 page,
 						 false);
 	}
 

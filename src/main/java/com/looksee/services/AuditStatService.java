@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.repository.AuditStatsRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Service
+@Retry(name = "neoforj")
 public class AuditStatService {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

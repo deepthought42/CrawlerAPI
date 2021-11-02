@@ -1,8 +1,10 @@
 package com.looksee.utils;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -21,18 +23,25 @@ import org.openimaj.image.analysis.colour.CIEDE2000;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorUsageStat;
 import com.looksee.models.enums.BrowserType;
+import com.twelvemonkeys.image.ResampleOp;
 
 public class ImageUtils {
 	private static Logger log = LoggerFactory.getLogger(ImageUtils.class);
 
 	 public static BufferedImage resize(BufferedImage img, int height, int width) {
-        Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		 /* 
+		 BufferedImageOp resampler = new ResampleOp(width, height, ResampleOp.FILTER_LANCZOS); // A good default filter, see class documentation for more info
+		 BufferedImage scaledImage = resampler.filter(img, null);
+		 return scaledImage;
+		  */
+		Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         BufferedImage resized = new BufferedImage(width, height, img.getType());
         Graphics2D g2d = resized.createGraphics();
         g2d.drawImage(tmp, 0, 0, null);
@@ -107,27 +116,27 @@ public class ImageUtils {
 	    zr = Z/Zr;
 
 	    if ( xr > eps )
-	        fx =  (float) Math.pow(xr, 1/3.);
+	        fx =  (float) Math.pow(xr, 1/3.0);
 	    else
-	        fx = (float) ((k * xr + 16.) / 116.);
+	        fx = (float) ((k * xr + 16.0) / 116.0);
 
 	    if ( yr > eps )
-	        fy =  (float) Math.pow(yr, 1/3.);
+	        fy =  (float) Math.pow(yr, 1/3.0);
 	    else
-	    fy = (float) ((k * yr + 16.) / 116.);
+	    fy = (float) ((k * yr + 16.0) / 116.0);
 
 	    if ( zr > eps )
-	        fz =  (float) Math.pow(zr, 1/3.);
+	        fz =  (float) Math.pow(zr, 1/3.0);
 	    else
-	        fz = (float) ((k * zr + 16.) / 116);
+	        fz = (float) ((k * zr + 16.0) / 116);
 
 	    Ls = ( 116 * fy ) - 16;
 	    as = 500*(fx-fy);
 	    bs = 200*(fy-fz);
 	    int[] lab = new int[3];
-	    lab[0] = (int) (2.55*Ls + .5);
-	    lab[1] = (int) (as + .5); 
-	    lab[2] = (int) (bs + .5);       
+	    lab[0] = (int) (2.55*Ls + 0.5);
+	    lab[1] = (int) (as + 0.5); 
+	    lab[2] = (int) (bs + 0.5);       
 	    
 	    return lab;
 	}
@@ -139,22 +148,38 @@ public class ImageUtils {
 	 * @throws IOException
 	 */
 	public static List<ColorUsageStat> extractImageProperties(BufferedImage buffered_image) throws IOException {
+		int width = buffered_image.getWidth();
+		int height = buffered_image.getHeight();		
+		
+		int desired_width = 768;
+		int desired_height = 1024;
+		
+
+		//scale down
+		double w_scale = Math.ceil(desired_width / (double)width);
+		double h_scale = Math.ceil(desired_height / (double)height);
+		
+		if(h_scale > w_scale) {
+			desired_width = (int)(h_scale * width);
+			desired_height = (int)(h_scale * height);
+		}
+		else {
+			desired_width = (int)(w_scale * width);
+			desired_height = (int)(w_scale * height);
+		}
+		
+		ImageUtils.resize(buffered_image, desired_width, desired_height);
+		//return CloudVisionUtils.extractImageProperties(buffered_image);
+		
+		
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
 		
-		int width = buffered_image.getWidth();
-		int height = buffered_image.getHeight();
-		//BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-		//AffineTransform at = new AffineTransform();
-		//at.scale(0.5, 0.5);
-		/*AffineTransformOp scaleOp = 
-		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-		after = scaleOp.filter(buffered_image, after);
-		*/
+		
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < width; x++) {
-			for(int y=0; y < height; y++) {
+		for(int x=0; x < width; x+=3) {
+			for(int y=0; y < height; y+=3) {
 				int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;
 		        int green = (clr & 0x0000ff00) >> 8;
@@ -175,8 +200,8 @@ public class ImageUtils {
 			ColorUsageStat color_stat = new ColorUsageStat(color.getRed(), color.getGreen(), color.getBlue(), percent, 0);
 			color_usage_stats.add(color_stat);
 		}
-        
 	    return color_usage_stats;
+	    
 	}
 
 	/**
@@ -203,6 +228,12 @@ public class ImageUtils {
 				largest_color = color_stat;
 			}
 		}
+	    
+	    if(largest_color == null) {
+	    	log.debug("Couldn't Identify largest color used, color data list size when extractBackgroundColor()  :  "+color_data_list.size());
+	    	largest_color = new ColorUsageStat(255, 255, 255, 1, 1);
+	    }
+	    
 		return new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
 		
 	}

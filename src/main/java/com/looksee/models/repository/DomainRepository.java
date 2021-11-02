@@ -88,7 +88,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) ORDER BY pi.executed_at DESC LIMIT 1")
 	public PerformanceInsight getMostRecentPerformanceInsight(@Param("user_id") String user_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH (d:Domain),(p:PageState{key:$page_key}) WHERE id(d)=$domain_id CREATE (d)-[:HAS]->(p) RETURN p")
+	@Query("MATCH (d:Domain),(p:PageState{key:$page_key}) WHERE id(d)=$domain_id MERGE (d)-[:HAS]->(p) RETURN p")
 	public PageState addPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
 	
 	@Query("MATCH (:Account{user_id:$user_id})-[]-(d:Domain{url:$url}) MATCH (d)-[]-(p:PageState) RETURN p")
@@ -103,7 +103,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:$page_state_key}) RETURN d LIMIT 1")
 	public Domain findByPageState(@Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (d:Domain),(audit:AuditRecord{key:$audit_record_key}) WHERE id(d) = $domain_id CREATE (d)<-[:HAS]-(audit) RETURN audit")
+	@Query("MATCH (d:Domain),(audit:AuditRecord{key:$audit_record_key}) WHERE id(d) = $domain_id MERGE (d)<-[:HAS]-(audit) RETURN audit")
 	public void addAuditRecord(@Param("domain_id") long domain_id, @Param("audit_record_key") String audit_record_key);
 
 	@Query("MATCH (d:Domain{key:$domain_key})-[]->(audit:AuditRecord) RETURN audit")

@@ -65,6 +65,7 @@ import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.BrowserService;
+import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
@@ -108,6 +109,12 @@ public class AuditController {
     
     @Autowired
     protected UXIssueMessageService issue_message_service;
+    
+    @Autowired
+    protected PageStateService page_state_service;
+    
+    @Autowired
+    protected ElementStateService element_state_service;
     
     @Autowired
     protected AuditRecordService audit_record_service;
@@ -200,8 +207,8 @@ public class AuditController {
     	issue_message.setKey(issue_message.generateKey());
 		issue_message = issue_message_service.save( issue_message );
 		audit_service.addIssue(key, issue_message.getKey());
-		return issue_message;
 
+		return issue_message;
     }
 
     /**
@@ -322,26 +329,14 @@ public class AuditController {
 	   	//parallel stream get all elements since order doesn't matter
 	   	xpath_lists.parallelStream().forEach(xpath_list -> {
 	   		List<ElementState> elements = browser_service.buildPageElements(page_state, xpath_list, audit_record_id, sanitized_url, page_screenshot.getHeight());
-			page_state.addElements(elements);
+			for(ElementState element: elements) {
+				element = element_state_service.save(element);
+				page_state_service.addElement(page_state.getId(), element.getId());
+			}
+	   		page_state.addElements(elements);
 	   	});
-	   	/*
-	   	CompletableFuture<Void> combinedFuture 
-	   		= CompletableFuture.allOf(futures_list.toArray(new CompletableFuture[futures_list.size()]));
-	   	combinedFuture.thenApply(s -> {
-	   		for(CompletableFuture<List<ElementState>> future : futures_list) {
-	   			try {
-					List<ElementState> elements = future.get();
-					log.warn("result of element extractor future ....    "+elements);
-					page_state_record.addElements(elements);
-					log.warn("Element state list length   =   "+elements.size());
-				} catch (InterruptedException | ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	   		}
-	   	 */
-			//List<ElementState> elements = browser_service.buildPageElements(page_state, audit_record, xpaths);
-			//page_state.addElements(elements);
+	   	
+	   	
 			audit_record.setDataExtractionProgress(3.0/3.0);
 			audit_record_service.save(audit_record);
 			

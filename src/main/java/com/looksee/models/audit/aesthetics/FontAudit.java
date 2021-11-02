@@ -203,8 +203,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 				issue_messages.add(ux_issue);
 			}
 			max_score +=1;
-			
-			log.warn("#############################################################################");
 		}
 		
 		
@@ -262,7 +260,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		}
 		String description = "";
 		
-		log.warn("FONT AUDIT SCORE   ::   "+(font_size_score + score) +" / " +(total_score + max_score));
+		//log.warn("FONT AUDIT SCORE   ::   "+(font_size_score + score) +" / " +(total_score + max_score));
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.TYPOGRAPHY,
 						 AuditName.FONT,
@@ -273,7 +271,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 false);
 	}
 	

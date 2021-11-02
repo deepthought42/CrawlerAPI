@@ -72,11 +72,13 @@ import cz.vutbr.web.csskit.RuleFontFaceImpl;
 import cz.vutbr.web.csskit.RuleKeyframesImpl;
 import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
+import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 @Component
+@Retry(name="webdriver")
 public class Browser {
 	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
@@ -160,8 +162,8 @@ public class Browser {
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
-			e.printStackTrace();
 			/*
+			e.printStackTrace();
 			Alert alert = isAlertPresent();
 			if(alert != null){
 				log.debug("Alert was encountered during navigation page load!!!");
@@ -209,6 +211,7 @@ public class Browser {
 	 */
 	public void close(){
 		try{
+			//driver.close();
 			driver.quit();
 		}
 		catch(Exception e){
@@ -1126,5 +1129,9 @@ public class Browser {
 
 	public boolean is503Error() {
 		return this.getSource().contains("503 Service Temporarily Unavailable");
+	}
+
+	public WebElement findElement(String xpath) throws WebDriverException{
+		return getDriver().findElement(By.xpath(xpath));
 	}
 }

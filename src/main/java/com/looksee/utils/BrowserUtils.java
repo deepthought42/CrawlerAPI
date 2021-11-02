@@ -63,7 +63,7 @@ public class BrowserUtils {
 		domain = domain.replace("index.html", "");
 		domain = domain.replace("index.htm", "");
 
-		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/'){
+		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/' && !domain.startsWith("//")){
 			domain = domain.substring(0, domain.length()-1);
 		}
 		
@@ -175,7 +175,7 @@ public class BrowserUtils {
 		assert link_url != null;
 		
 		return link_url.isEmpty() 
-				|| (link_url.charAt(0) == '/' && !link_url.contains(domain_host)) 
+				|| (link_url.charAt(0) == '/' && !link_url.startsWith("//") && !link_url.contains(domain_host)) 
 				|| (link_url.charAt(0) == '?' && !link_url.contains(domain_host))
 				|| (link_url.charAt(0) == '#' && !link_url.contains(domain_host));
 	}
@@ -625,8 +625,7 @@ public class BrowserUtils {
 	 * @throws IOException
 	 */
 	public static boolean checkIfSecure(URL url) {
-        log.warn("Checking if page is secure...."+url.toString());
-        //dumpl all cert info
+        //dump all cert info
         //print_https_cert(con);
         boolean is_secure = false;
         try{

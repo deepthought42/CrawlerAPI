@@ -1,6 +1,5 @@
 package com.looksee.models.audit;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -35,9 +34,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private	PageStateService page_state_service;
-	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
 	
 	public ParagraphingAudit() {
 	}
@@ -74,7 +70,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 					Score score = calculateSentenceScore(sentences, element);
 
 					issue_messages.addAll(score.getIssueMessages());					
-				} catch (IOException e) {
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -83,7 +79,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			// validate that spacing between paragraphs is at least 2x the font size within the paragraphs
 		}
 		
-
 		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
 				" Attention spans are shorter, and users skim through most information." + 
 				" Presenting information in small, easy to digest chunks makes their" + 
@@ -97,6 +92,12 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
+		/*
+		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
+		Set<UXIssueMessage> issue_set = StreamSupport
+											  .stream(issues.spliterator(), true)
+											  .collect(Collectors.toSet());
+		*/
 		String description = "";
 		page_state = page_state_service.findById(page_state.getId()).get();
 
@@ -110,7 +111,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 false); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
@@ -151,7 +151,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																0,
 																1);
 				
-				issue_messages.add(issue_message_service.save(issue_message));
+				issue_messages.add(issue_message);
 				
 				points_earned += 0;
 				max_points += 1;
@@ -174,7 +174,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																title,
 																1,
 																1);
-				issue_messages.add(issue_message_service.save(issue_message));
+				issue_messages.add(issue_message);
 
 			}
 		}

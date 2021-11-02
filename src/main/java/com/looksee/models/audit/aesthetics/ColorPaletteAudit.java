@@ -194,7 +194,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 true);
 	}
 	

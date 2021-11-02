@@ -46,27 +46,9 @@ public class AuditService {
 	@Autowired
 	private PageStateService page_state_service;
 
-	public synchronized Audit save(Audit audit) {
+	public Audit save(Audit audit) {
 		assert audit != null;
 		
-		Audit audit_record = audit_repo.findByKey(audit.getKey());
-		if(audit_record != null) {
-			audit_record.setPoints(audit.getPoints());
-			audit_record.setTotalPossiblePoints(audit.getTotalPossiblePoints());
-			audit_record.setAccessiblity(audit.isAccessiblity());
-			audit_record.setCategory(audit.getCategory());
-			audit_record.setCreatedAt(audit.getCreatedAt());
-			audit_record.setDescription(audit.getDescription());
-			audit_record.setLabels(audit.getLabels());
-			audit_record.setLevel(audit.getLevel());
-			audit_record.setMessages(audit.getMessages());
-			audit_record.setName(audit.getName());
-			audit_record.setPoints(audit.getPoints());
-			audit_record.setSubcategory(audit.getSubcategory());
-			audit_record.setUrl(audit.getUrl());
-			audit_record.setWhyItMatters(audit.getWhyItMatters());
-			return audit_repo.save(audit_record);
-		}
 		return audit_repo.save(audit);
 	}
 
@@ -95,12 +77,8 @@ public class AuditService {
 				continue;
 			}
 
-			try {
-				Audit saved_audit = audit_repo.save(audit);
-				audits_saved.add(saved_audit);
-			}catch(Exception e) {
-				e.printStackTrace();
-			}
+			Audit saved_audit = audit_repo.save(audit);
+			audits_saved.add(saved_audit);
 		}
 		
 		return audits_saved;

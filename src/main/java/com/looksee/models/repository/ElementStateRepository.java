@@ -30,7 +30,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[hr:HAS]->(r) RETURN r")
 	public Set<Rule> getRules(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
-	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}),(r:Rule{key:$rule_key}) CREATE element=(e)-[hr:HAS]->(r) RETURN r")
+	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}),(r:Rule{key:$rule_key}) MERGE element=(e)-[hr:HAS]->(r) RETURN r")
 	public Rule addRuleToFormElement(@Param("username") String username, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
 
 	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
@@ -57,7 +57,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (p:PageState{key:$page_state_key})-[*]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS_CHILD]->(e:ElementState{key:$element_state_key}) RETURN parent_elem LIMIT 1")
 	public ElementState getParentElement(@Param("page_state_key") String page_state_key, @Param("element_state_key") String element_state_key);
 
-	@Query("MATCH (parent:ElementState{key:$parent_key}),(child:ElementState{key:$child_key}) CREATE (parent)-[:HAS_CHILD]->(child) RETURN parent")
+	@Query("MATCH (parent:ElementState{key:$parent_key}),(child:ElementState{key:$child_key}) MERGE (parent)-[:HAS_CHILD]->(child) RETURN parent")
 	public void addChildElement(@Param("parent_key") String parent_key, @Param("child_key") String child_key);
 
 	@Query("MATCH (p:PageState{key:$page_state_key})-[*]->(parent_elem:ElementState) MATCH (parent_elem)-[:HAS_CHILD]->(e:ElementState{key:$element_state_key}) RETURN parent_elem LIMIT 1")
@@ -65,4 +65,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 
 	@Query("MATCH (p:PageState{key:$page_state_key})-[*]->(element:ElementState{xpath:$xpath}) RETURN element LIMIT 1")
 	public ElementState findByPageStateAndXpath(@Param("page_state_key") String page_state_key, @Param("xpath") String xpath);
+
+	@Query("MATCH (e:ElementState) WHERE e.key IN $element_keys RETURN e.key")
+	public List<String> getAllExistingKeys(@Param("element_keys") List<String> element_keys);
 }

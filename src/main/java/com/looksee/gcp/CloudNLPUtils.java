@@ -15,6 +15,9 @@ import com.google.cloud.language.v1.Sentence;
 import com.google.cloud.language.v1.Sentiment;
 import com.google.cloud.language.v1.Token;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
+@Retry(name="gcp")
 public class CloudNLPUtils {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(CloudNLPUtils.class);

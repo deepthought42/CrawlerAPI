@@ -22,7 +22,7 @@ public class BrowserConnectionHelper {
 	//private static final String[] CHROME_DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
 	//private static final String[] FIREFOX_DISCOVERY_HUB_IP_ADDRESS = {"35.239.245.6:4444", "173.255.118.118:4444"};
 
-    private static final String[] RESOURCE_HEAVY_REQUEST_HUB_IP_ADDRESS = {"35.224.152.230:4444", "35.224.152.230:4444" , "35.224.152.230:4444"};
+    private static final String[] RESOURCE_HEAVY_REQUEST_HUB_IP_ADDRESS = {"35.224.152.230:4444", "104.154.227.131:4444" , "35.224.152.230:4444", "104.154.227.131:4444"};
     private static final String RAPID_REQUEST_HUB_IP_ADDRESS = "34.121.191.15:4444";
 
 	// PRODUCTION HUB ADDRESS

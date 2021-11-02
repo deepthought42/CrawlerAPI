@@ -141,7 +141,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 "",
 						 "",
-						 page_state,
 						 false);
 	}
 

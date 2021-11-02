@@ -26,7 +26,6 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
-import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
 
@@ -44,9 +43,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired 
 	private ElementStateService element_state_service;
-	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
 	
 	public TextColorContrastAudit() {}
 
@@ -91,9 +87,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
 				}
 				else {
-					bkg_color = ImageUtils.extractBackgroundColor( 
-													new URL(element.getScreenshotUrl()),
-													font_color); 
+					bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
+																   font_color); 
 				}
 				String bg_color = bkg_color.rgb();	
 				
@@ -140,7 +135,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									0, 
 																									2);
 
-							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
+							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 
 						}
@@ -171,7 +166,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									1,
 																									2);
 							
-							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
+							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 						}
 						else if(contrast >= 4.5) {
@@ -200,7 +195,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									2,
 																									2);
 							
-							issue_messages.add(issue_message_service.save(low_header_contrast_observation));
+							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 						}
 					}
@@ -230,7 +225,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
-							issue_messages.add(issue_message_service.save(low_text_observation));
+							issue_messages.add(low_text_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_text_observation);
 
 						}
@@ -258,7 +253,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						font_size+"",
 																						1, 
 																						2);
-							issue_messages.add(issue_message_service.save(med_contrast_text_observation));
+							issue_messages.add(med_contrast_text_observation);
 						}
 						else if(contrast >= 7.0) {
 							//100% score
@@ -284,14 +279,15 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																						2, 
 																						2);
 							
-							issue_messages.add(issue_message_service.save(high_contrast_text_observation));
+							issue_messages.add(high_contrast_text_observation);
 						}
 					}
 				}
-				
+			} catch(NullPointerException e) {
+				log.warn("NPE thrown during text color contrast audit");
+				e.printStackTrace();
 			} catch (Exception e) {
 				log.warn("element screenshot url  :: "+element.getScreenshotUrl());
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -305,7 +301,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			issues.add(observation_service.save(high_header_contrast_observation));
 		}
 		*/
-		
 		int points_earned = 0;
 		int max_points = 0;
 		for(UXIssueMessage issue_msg : issue_messages) {
@@ -318,11 +313,15 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-		
-		log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + points_earned + " : " + max_points);
-	
+		//log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + points_earned + " : " + max_points);	
 		page_state = page_state_service.findById(page_state.getId()).get();
 
+		/*
+		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
+		Set<UXIssueMessage> issue_set = StreamSupport
+											  .stream(issues.spliterator(), true)
+											  .collect(Collectors.toSet());
+		*/
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 					     AuditName.TEXT_BACKGROUND_CONTRAST,
@@ -333,7 +332,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     page_state.getUrl(),
 					     why_it_matters,
 					     "Text with contrast below 4.5", 
-						 page_state,
 						 true);
 	}
 }

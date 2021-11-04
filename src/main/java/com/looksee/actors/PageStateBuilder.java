@@ -33,6 +33,8 @@ import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.MemberExited;
+import akka.cluster.ClusterEvent.MemberLeft;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -178,6 +180,12 @@ public class PageStateBuilder extends AbstractActor{
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
+				})
+				.match(MemberLeft.class, mRemoved -> {
+					log.info("Member Left cluster: {}", mRemoved.member());
+				})
+				.match(MemberExited.class, mRemoved -> {
+					log.info("Member exited: {}", mRemoved.member());
 				})
 				.matchAny(o -> {
 					log.info("received unknown message of type :: "+o.getClass().getName());

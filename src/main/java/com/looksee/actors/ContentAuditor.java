@@ -17,10 +17,8 @@ import com.looksee.models.audit.content.ReadabilityAudit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.message.AuditProgressUpdate;
-import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
-import com.looksee.services.SendGridMailService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -79,14 +77,16 @@ public class ContentAuditor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
 					try {
-						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+						AuditRecord audit_record = page_audit_record_msg;//audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 					   	//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
 					   	page.setElements(page_state_service.getElementStates(page.getKey()));
-					   	
+					   	if(page.getUrl().contentEquals("look-see.com")) {					   		
+					   		log.warn(page.getElements().size()+" elements found for content audit of "+page.getUrl());
+					   	}
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
-					   												page_audit_record_msg.getId(),
+					   												audit_record.getId(),
 					   												(1.0/4.0),
 					   												"checking images for alt text",
 					   												AuditCategory.CONTENT,
@@ -96,9 +96,8 @@ public class ContentAuditor extends AbstractActor{
 					   	getSender().tell(audit_update, getSelf());
 					   							
 						Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
-						
 						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	audit_record.getId(),
 																	(2.0/4.0),
 																	"Reviewing content for readability",
 																	AuditCategory.CONTENT,
@@ -108,9 +107,8 @@ public class ContentAuditor extends AbstractActor{
 						getSender().tell(audit_update2, getSelf());
 						
 						Audit readability_audit = readability_auditor.execute(page, audit_record);
-						
 						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	audit_record.getId(),
 																	(3.0/4.0),
 																	"Reviewing paragraph length",
 																	AuditCategory.CONTENT,
@@ -122,9 +120,8 @@ public class ContentAuditor extends AbstractActor{
 						//audits.add(font_audit);
 						
 						Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
-						
 						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	audit_record.getId(),
 																	(1.0),
 																	"Content Audit Compelete!",
 																	AuditCategory.CONTENT,
@@ -132,7 +129,7 @@ public class ContentAuditor extends AbstractActor{
 																	paragraph_audit);
 
 						getSender().tell(audit_update4, getSelf());					
-						//log.warn("content audits complete :: "+audits.size());
+						log.warn("content audits complete :: ");
 					}catch(Exception e) {
 						log.error("exception caught during content audit");
 						e.printStackTrace();

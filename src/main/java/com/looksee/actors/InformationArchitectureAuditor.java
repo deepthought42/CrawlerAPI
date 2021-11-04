@@ -86,9 +86,12 @@ public class InformationArchitectureAuditor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
 					try {
-						log.warn("Staring info architecture audit for "+page_audit_record_msg.getPageState().getUrl());
 						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
 						PageState page = page_audit_record_msg.getPageState(); //audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("Starting info architecture audit for "+page_audit_record_msg.getPageState().getUrl());
+						}
 						//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
 						
@@ -101,7 +104,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																	null);
 
 						getSender().tell(audit_update, getSelf());
-				   	
+
 					   	Audit link_audit = links_auditor.execute(page, audit_record);
 					   	
 						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
@@ -112,6 +115,9 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																	AuditLevel.PAGE,
 																	link_audit);
 
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing title and header audit for page "+page.getUrl());
+						}
 						getSender().tell(audit_update2, getSelf());
 						
 						Audit title_and_headers = title_and_header_auditor.execute(page, audit_record);
@@ -126,6 +132,9 @@ public class InformationArchitectureAuditor extends AbstractActor{
 
 						getSender().tell(audit_update3, getSelf());
 						
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing security audit for page "+page.getUrl());
+						}
 						Audit security = security_audit.execute(page, audit_record);
 						
 						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
@@ -138,6 +147,9 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						
 						getSender().tell(audit_update4, getSelf());
 						
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing metadata audit for page "+page.getUrl());
+						}
 						Audit metadata = metadata_auditor.execute(page, audit_record);
 						
 						AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
@@ -150,6 +162,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						
 						getSender().tell(audit_update5, getSelf());
 						
+						log.warn("COMPLETE INFORMATION ARCHITECTURE audit for page "+page.getUrl());						
 					} catch(Exception e) {
 						log.warn("exception caught during Information Architecture audit");
 						e.printStackTrace();
@@ -177,13 +190,13 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					log.debug("Member is Up: {}", mUp.member());
 				})
 				.match(UnreachableMember.class, mUnreachable -> {
-					log.debug("Member detected as unreachable: {}", mUnreachable.member());
+					log.warn("Member detected as unreachable: {}", mUnreachable.member());
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.debug("Member is Removed: {}", mRemoved.member());
 				})
 				.matchAny(o -> {
-					log.debug("received unknown message of type :: "+o.getClass().getName());
+					log.warn("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
 	}

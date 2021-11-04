@@ -191,4 +191,19 @@ public class BrowserUtilsTests {
 		String formatted_url4 = BrowserUtils.formatUrl("https", "look-see.com", url4);
 		assertTrue(formatted_url4.contentEquals("https://look-see.com#products"));
 	}
+	
+	@Test
+	public void doesUrlExistTest() throws Exception {
+		String url1 = "https://www.look-see.com";
+		
+		assertTrue(BrowserUtils.doesUrlExist(url1));
+		
+		String url2 = "https://www.businesswire.com/";
+		
+		assertFalse(BrowserUtils.doesUrlExist(url2));
+		
+		String url3 = "https://www.look-see.com/product";
+		
+		assertTrue(BrowserUtils.doesUrlExist(url3));
+	}
 }

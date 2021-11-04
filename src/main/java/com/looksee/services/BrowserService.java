@@ -377,7 +377,6 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-			TimingUtils.pauseThread(5000L);
 		}while(rendering_incomplete && cnt < 1000000);
 		return page_state;
 	}
@@ -515,7 +514,6 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-			TimingUtils.pauseThread(5000L);
 		}while(rendering_incomplete && cnt < 1000000);
 
 		return elements;
@@ -1795,7 +1793,6 @@ public class BrowserService {
 					browser.close();
 				}
 			}
-			TimingUtils.pauseThread(5000L);
 		}while (page_src.trim().isEmpty() && attempt_cnt < 10000);
 
 		return page_src;

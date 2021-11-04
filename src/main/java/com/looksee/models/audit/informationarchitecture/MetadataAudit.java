@@ -78,15 +78,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		//log.warn("METADATA AUDIT SCORE   ::   "+points_earned +" / " +max_points);
 		String why_it_matters = "Metadata tells search engines what your web page has to offer. By using metadata correctly, you can boost your relevancy in search results. Metadata provides search engines with the most important information about your web pages, including titles and descriptions.";
 		String description = "";
-		
-		/*
-		page_state = page_state_service.findById(page_state.getId()).get();
 
-		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
-		Set<UXIssueMessage> issue_set = StreamSupport
-											  .stream(issues.spliterator(), true)
-											  .collect(Collectors.toSet());
-		*/
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.METADATA,

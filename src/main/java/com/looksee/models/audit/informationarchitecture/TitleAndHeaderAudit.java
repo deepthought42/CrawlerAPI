@@ -12,7 +12,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.PageState;
@@ -27,7 +26,6 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
-import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ElementStateUtils;
 
@@ -40,9 +38,6 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(TitleAndHeaderAudit.class);
 	
 	public TitleAndHeaderAudit() {}
-
-	@Autowired
-	private PageStateService page_state_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -55,8 +50,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
+
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		//List<PageVersion> pages = domain_service.getPages(domain.getHost());
 
 		Score title_score = scorePageTitles(page_state);
 		Score favicon_score = scoreFavicon(page_state);
@@ -76,8 +71,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		//log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);
 		String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
 		String description = "";
-		
-		page_state = page_state_service.findById(page_state.getId()).get();
+
+		//page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.TITLES,

@@ -41,12 +41,6 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	@Relationship(type="FLAGGED")
 	List<Element> flagged_elements = new ArrayList<>();
 	
-	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
-	private UXIssueMessageService issue_message_service;
-	
 	public SecurityAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
 	}
@@ -63,7 +57,6 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		int score = 0;
 
 		String why_it_matters = "Sites that don't use HTTPS are highly insecure and are more likley to leak personal identifiable information(PII). Modern users are keenly aware of this fact and are less likely to trust sites that aren't secured.";
 		Set<String> labels = new HashSet<>();
@@ -91,7 +84,6 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 			issue_messages.add(ux_issue);
 		}
 		else {
-			score++;
 			String title = "Page is secure";
 			String description = page_state.getUrl() + " uses https protocol to provide a secure connection";
 			String wcag_compliance = "";
@@ -121,11 +113,11 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		}
 		
 		//log.warn("SECURITY AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
-		page_state = page_state_service.findById(page_state.getId()).get();
+		//page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SECURITY,
 						 AuditName.FONT,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,

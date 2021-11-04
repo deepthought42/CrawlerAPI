@@ -71,6 +71,7 @@ public class DataExtractionSupervisor extends AbstractActor{
 						saveNewElements(message.getPageStateId(),
 										message.getElementStates());
 						
+						log.warn("saved "+message.getElementStates().size()+" elements to neo4j to page state id : "+message.getPageStateId());
 						ElementsSaved elements = new ElementsSaved(message.getPageUrl(), message.getAuditRecordId());
 						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {
@@ -103,12 +104,13 @@ public class DataExtractionSupervisor extends AbstractActor{
 		Set<String> existing_keys = new HashSet<>();
 		existing_keys.addAll(element_state_service.getAllExistingKeys(element_keys));
 		
+		/*
 		List<ElementState> new_element_states = element_states
 												   .stream()
 												   .filter(f -> !existing_keys.contains(f.getKey()))
 												   .collect(Collectors.toList());
-		
-		for(ElementState element : new_element_states){
+		*/
+		for(ElementState element : element_states){
 			ElementState element_record = element_state_service.save(element);
 			element_ids.add(element_record.getId());
 	   	}

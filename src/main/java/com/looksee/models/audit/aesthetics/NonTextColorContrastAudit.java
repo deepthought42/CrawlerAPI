@@ -316,14 +316,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		
 
 		String description = "Color contrast of text";		
-		page_state = page_state_service.findById(page_state.getId()).get();
-
-		/*
-		Set<UXIssueMessage> issue_set = new HashSet<>();
-		for(UXIssueMessage issue : issue_messages) {
-			issue_set.add(issue_message_service.save(issue));
-		}
-		*/
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,

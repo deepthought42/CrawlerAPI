@@ -21,7 +21,6 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
-import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 
 /**
@@ -92,14 +91,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-		/*
-		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
-		Set<UXIssueMessage> issue_set = StreamSupport
-											  .stream(issues.spliterator(), true)
-											  .collect(Collectors.toSet());
-		*/
 		String description = "";
-		page_state = page_state_service.findById(page_state.getId()).get();
 
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT, 

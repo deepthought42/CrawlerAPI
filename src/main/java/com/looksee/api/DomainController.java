@@ -477,11 +477,11 @@ public class DomainController {
 				whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
 				branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
 
-				high_issue_count = audit_record_service.getIssueCountBySeverity(page_audit.getId(),
+				high_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.HIGH.toString());
-				mid_issue_count = audit_record_service.getIssueCountBySeverity(page_audit.getId(),
+				mid_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.MEDIUM.toString());
-				low_issue_count = audit_record_service.getIssueCountBySeverity(page_audit.getId(),
+				low_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.LOW.toString());
 
 				for (Audit audit : audits) {
@@ -597,15 +597,37 @@ public class DomainController {
 			double overall_score = (score / (double) audit_count) * 100.0;
 
 			// build stats object
-			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(), audit_record.getStartTime(),
-					audit_record.getEndTime(), pages_audited, page_count, content_audits_complete,
-					content_audits_complete / (double) audit_records.size(), written_content_score, imagery_score,
-					videos_score, audio_score, audit_record.getContentAuditMsg(), info_arch_audits_complete,
-					info_arch_audits_complete / (double) audit_records.size(), seo_score, menu_analysis_score,
-					performance_score, audit_record.getInfoArchMsg(), aesthetic_audits_complete,
-					aesthetic_audits_complete / (double) audit_records.size(), color_score, typography_score,
-					whitespace_score, branding_score, audit_record.getAestheticMsg(), overall_score, high_issue_count,
-					mid_issue_count, low_issue_count, elements_reviewed, elements_found);
+			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(), 
+														  audit_record.getStartTime(),
+														  audit_record.getEndTime(), 
+														  pages_audited, 
+														  page_count, 
+														  content_audits_complete,
+														  content_audits_complete / (double) audit_records.size(), 
+														  written_content_score, 
+														  imagery_score,
+														  videos_score, 
+														  audio_score, 
+														  audit_record.getContentAuditMsg(), 
+														  info_arch_audits_complete,
+														  info_arch_audits_complete / (double) audit_records.size(),
+														  seo_score, 
+														  menu_analysis_score,
+														  performance_score,
+														  audit_record.getInfoArchMsg(),
+														  aesthetic_audits_complete,
+														  aesthetic_audits_complete / (double) audit_records.size(),
+														  color_score,
+														  typography_score,
+														  whitespace_score,
+														  branding_score,
+														  audit_record.getAestheticMsg(),
+														  overall_score,
+														  high_issue_count,
+														  mid_issue_count,
+														  low_issue_count,
+														  elements_reviewed,
+														  elements_found);
 
 			return audit_stats;
 		} else {

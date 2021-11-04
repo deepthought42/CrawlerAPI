@@ -68,10 +68,7 @@ public class AuditRecordService {
 		assert audit_record_id != audit_id;
 		
 		//check if audit already exists for page state
-		Optional<Audit> audit = audit_record_repo.getAuditForAuditRecord(audit_record_id, audit_id);
-		if(!audit.isPresent()) {
-			audit_record_repo.addAudit(audit_record_id, audit_id);
-		}
+		audit_record_repo.addAudit(audit_record_id, audit_id);
 	}
 	
 	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
@@ -305,7 +302,7 @@ public class AuditRecordService {
 		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
 	}
 
-	public long getIssueCountBySeverity(Long id, String severity) {
+	public long getIssueCountBySeverity(long id, String severity) {
 		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
 }

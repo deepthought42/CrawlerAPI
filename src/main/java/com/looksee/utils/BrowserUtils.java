@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -39,9 +40,9 @@ import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 
-import io.github.resilience4j.retry.annotation.Retry;
-
-@Retry(name = "default")
+/**
+ * 
+ */
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 	
@@ -261,7 +262,7 @@ public class BrowserUtils {
 			}
 		}
 		if("https".equalsIgnoreCase(url.getProtocol())){
-			HttpsURLConnection https_client = getHttpsClient(url.toString());
+			HttpsURLConnection https_client = getHttpsClient(url);
 
 			try {
 				int responseCode = https_client.getResponseCode();
@@ -293,10 +294,12 @@ public class BrowserUtils {
 	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
 	 * @param url
 	 * @return
+	 * 
+	 * @pre url_str != null
 	 * @throws Exception 
 	 */
 	public static boolean doesUrlExist(String url_str) throws Exception {
-		assert(url_str != null);
+		assert url_str != null;
 		
 		if(url_str.startsWith("#") 
 			|| BrowserUtils.isJavascript(url_str)
@@ -307,46 +310,55 @@ public class BrowserUtils {
 		) {
 			return true;
 		}
-	
+		
 		URL url = new URL(url_str);
 		//perform check for http clients
 		if("http".equalsIgnoreCase(url.getProtocol())){
 			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
 			int responseCode = huc.getResponseCode();
-			
-			if (responseCode != 404) {
-				return true;
-			} else {
+			huc.disconnect();
+			if (responseCode == 404) {
 				return false;
+			} else {
+				return true;
 			}
 		}
-		if("https".equalsIgnoreCase(url.getProtocol())){
-			HttpsURLConnection https_client = getHttpsClient(url.toString());
-
+		else if("https".equalsIgnoreCase(url.getProtocol())){
 			try {
+				HttpsURLConnection https_client = getHttpsClient(url);
+				https_client.setConnectTimeout(10000);
+				https_client.setReadTimeout(10000);
+				https_client.setInstanceFollowRedirects(true);
+
 				int responseCode = https_client.getResponseCode();
 
-				if (responseCode != 404) {
-					return true;
-				} else {
+				if (responseCode == 404) {
 					return false;
+				} else {
+					return true;
 				}
 			} catch(UnknownHostException e) {
+				e.printStackTrace();
 				return false;
 			}
 			catch(SSLException e) {
 				log.warn("SSL Exception occurred while checking if URL exists");
+				e.printStackTrace();
+				return false;
+			}
+			catch(Exception e) {
 				return false;
 			}
 		}
 		else {
+			log.warn("neither protocol is present");
 			// TODO handle image links
 		}
 		
 		return false;
 	}
 
-	private static HttpsURLConnection getHttpsClient(String url) throws Exception {
+	private static HttpsURLConnection getHttpsClient(URL url) throws Exception {
 		 
         // Security section START
         TrustManager[] trustAllCerts = new TrustManager[]{
@@ -372,7 +384,8 @@ public class BrowserUtils {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         // Security section END
         
-        HttpsURLConnection client = (HttpsURLConnection) new URL(url).openConnection();
+        HttpsURLConnection client = (HttpsURLConnection) url.openConnection();
+        client.setSSLSocketFactory(sc.getSocketFactory());
         //add request header
         client.setRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
@@ -699,10 +712,18 @@ public class BrowserUtils {
 	 * @param protocol TODO
 	 * @param host
 	 * @param href
+	 * 
+	 * @pre host != null
+	 * @pre !host.isEmpty
+	 * 
 	 * @return
+	 * 
 	 * @throws MalformedURLException
 	 */
 	public static String formatUrl(String protocol, String host, String href) throws MalformedURLException {
+		assert host != null;
+		assert !host.isEmpty();
+		
 		href = href.replaceAll(";", "").trim();
 		if(href == null 
 			|| href.isEmpty() 

@@ -286,4 +286,8 @@ public class AuditService {
 		return element_map.values();
 	}
 
+	public void addAllIssues(long id, List<Long> issue_ids) {
+		audit_repo.addAllIssues(id, issue_ids);
+	}
+
 }

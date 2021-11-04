@@ -28,7 +28,6 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
-import com.looksee.services.UXIssueMessageService;
 
 /**
  * Responsible for executing an audit on the images on a page to determine adherence to alternate text best practices 
@@ -38,9 +37,6 @@ import com.looksee.services.UXIssueMessageService;
 public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ImageAltTextAudit.class);
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	public ImageAltTextAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
@@ -80,7 +76,9 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				" ‘Alt’ text for images present on the website.";
 	
-		
+		if(page_state.getUrl().contentEquals("look-see.com")) {
+			log.warn(image_elements.size()+" images found for evaluation on "+page_state.getUrl());
+		}
 		//score each link element
 		for(ElementState image_element : image_elements) {
 	
@@ -153,15 +151,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		
 		//log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
-		
-		page_state = page_state_service.findById(page_state.getId()).get();
 
-		/*
-		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
-		Set<UXIssueMessage> issue_set = StreamSupport
-											  .stream(issues.spliterator(), true)
-											  .collect(Collectors.toSet());
-		*/
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,

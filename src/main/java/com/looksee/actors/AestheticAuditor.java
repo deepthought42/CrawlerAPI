@@ -20,7 +20,6 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -46,9 +45,6 @@ public class AestheticAuditor extends AbstractActor{
 
 	@Autowired
 	private NonTextColorContrastAudit non_text_contrast_auditor;
-	
-	@Autowired
-	private AuditService audit_service;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
@@ -84,9 +80,9 @@ public class AestheticAuditor extends AbstractActor{
 					try {
 					   	//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
-						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					   	//PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
-					   	PageState page = page_audit_record_msg.getPageState();
+						AuditRecord audit_record = page_audit_record_msg; //audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+					   	//PageState page = page_audit_record_msg.getPageState();
 					   	//check if page state already
 			   			//perform audit and return audit result
 					   
@@ -136,7 +132,7 @@ public class AestheticAuditor extends AbstractActor{
 						getSender().tell(audit_update3, getSelf());
 						
 			   			//send message to either user or page channel containing reference to audits
-	
+						log.warn("Aesthetic audit compelte ");
 						//NOTE: SEND DATA TO AUDIT MANAGER
 					}catch(Exception e) {
 						log.warn("exception caught during aesthetic audit");

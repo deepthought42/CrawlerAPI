@@ -314,14 +314,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		
 		//log.warn("TEXT COLOR CONTRAST AUDIT SCORE   ::   " + points_earned + " : " + max_points);	
-		page_state = page_state_service.findById(page_state.getId()).get();
 
-		/*
-		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
-		Set<UXIssueMessage> issue_set = StreamSupport
-											  .stream(issues.spliterator(), true)
-											  .collect(Collectors.toSet());
-		*/
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
 					     AuditName.TEXT_BACKGROUND_CONTRAST,

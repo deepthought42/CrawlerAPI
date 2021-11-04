@@ -209,6 +209,7 @@ public class AuditRecordController {
     	
     	//retrieve element set
     	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+    	log.warn("issues retrieved :: "+issues.size());
     	
     	//retrieve issue set
     	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
@@ -267,7 +268,95 @@ public class AuditRecordController {
     	//get audit record
     	Optional<AuditRecord> audit_record_opt = audit_record_service.findById(audit_record_id);
     	
-    	if(audit_record_opt.isPresent()) {   
+    	if(audit_record_opt.isPresent()) {
+    		PageAuditRecord audit_record = (PageAuditRecord)audit_record_opt.get();
+			long content_audits_complete = 0;
+			long info_arch_audits_complete = 0;
+			long aesthetic_audits_complete = 0;
+
+			//Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
+			// get Page Count
+			long page_count = 1;
+			long pages_audited = 0;
+
+			double score = 0.0;
+			int audit_count = 0;
+			long high_issue_count = 0;
+			long mid_issue_count = 0;
+			long low_issue_count = 0;
+
+			double content_score = 0.0;
+			double written_content_score = 0.0;
+			double imagery_score = 0.0;
+			double videos_score = 0.0;
+			double audio_score = 0.0;
+
+			double info_arch_score = 0.0;
+			double seo_score = 0.0;
+			double menu_analysis_score = 0.0;
+			double performance_score = 0.0;
+
+			double aesthetic_score = 0.0;
+			double color_score = 0.0;
+			double typography_score = 0.0;
+			double whitespace_score = 0.0;
+			double branding_score = 0.0;
+
+			long elements_reviewed = 0;
+			long elements_found = 0;
+
+			//for (PageAuditRecord page_audit : audit_records) {
+			if (audit_record.isComplete()) {
+				pages_audited++;
+			}
+
+			elements_reviewed += audit_record.getElementsReviewed();
+			elements_found += audit_record.getElementsFound();
+
+			Set<Audit> audits = audit_record_service.getAllAuditsAndIssues(audit_record.getId());
+			written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
+			imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
+			videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
+			audio_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
+
+			seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
+			menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
+			performance_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
+
+			aesthetic_score = AuditUtils.calculateScore(audits);
+			color_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
+			typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
+			whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
+			branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
+
+			high_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
+					Priority.HIGH.toString());
+			mid_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
+					Priority.MEDIUM.toString());
+			low_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
+					Priority.LOW.toString());
+
+			for (Audit audit : audits) {
+				// get issues
+				if (audit.getTotalPossiblePoints() == 0) {
+					score += 1;
+				} else {
+					score += (audit.getPoints() / (double) audit.getTotalPossiblePoints());
+				}
+			}
+			audit_count += audits.size();
+
+			if (audit_record.getInfoArchAuditProgress() >= 1.0) {
+				info_arch_audits_complete++;
+			}
+			if (audit_record.getContentAuditProgress() >= 1.0) {
+				content_audits_complete++;
+			}
+			if (audit_record.getAestheticAuditProgress() >= 1.0) {
+				aesthetic_audits_complete++;
+			}
+			//}
+			/*
     		AuditRecord audit_record = audit_record_opt.get();
     		long content_audits_complete = 0;
     		long info_arch_audits_complete = 0;
@@ -479,7 +568,7 @@ public class AuditRecordController {
 						aesthetic_audits_complete++;
 					}
 				}
-				
+				*/
 				double overall_score = ( score / audit_count ) * 100 ;
 				
 
@@ -488,23 +577,23 @@ public class AuditRecordController {
 				AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 															audit_record.getStartTime(),
 															audit_record.getEndTime(),
-															pages_reviewed, 
-															pages_found,
+															pages_audited, 
+															page_count,
 															content_audits_complete,
-															content_audits_complete / (double)audit_records.size(),
+															content_audits_complete / (double)page_count,
 															written_content_score,
 															imagery_score,
 															videos_score,
 															audio_score,
 															audit_record.getContentAuditMsg(),
 															info_arch_audits_complete,
-															info_arch_audits_complete / (double)audit_records.size(),
+															info_arch_audits_complete / (double)page_count,
 															seo_score,
 															menu_analysis_score,
 															performance_score,
 															audit_record.getInfoArchMsg(),
 															aesthetic_audits_complete,
-															aesthetic_audits_complete / (double)audit_records.size(),
+															aesthetic_audits_complete / (double)page_count,
 															color_score,
 															typography_score,
 															whitespace_score,
@@ -518,7 +607,6 @@ public class AuditRecordController {
 															elements_found);
 				
 				return audit_stats;
-    		}
     	}
     	else {
     		throw new AuditRecordNotFoundException();

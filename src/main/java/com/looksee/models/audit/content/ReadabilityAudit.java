@@ -104,59 +104,63 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		for(ElementState element : og_text_elements) {
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
-			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
-			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
-			String grade_level = ContentUtils.getReadingGradeLevel(ease_of_reading_score);
-			
-			if("unknown".contentEquals(difficulty_string)) {
-				continue;
-			}
-
-			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
-
-			if(element.getAllText().split(" ").length < 10) {
-				element_points = 4;
-			}
-			
-			if(element_points < 4) {
-				String title = "Content is written at " + grade_level + " reading level";
-				String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
-				String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+			try {
+				double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
+				String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
+				String grade_level = ContentUtils.getReadingGradeLevel(ease_of_reading_score);
 				
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
-																					  description,
-																					  recommendation,
-																					  element,
-																					  AuditCategory.CONTENT,
-																					  labels,
-																					  ada_compliance,
-																					  title,
-																					  element_points,
-																					  4);
-				issue_messages.add(issue_message);
-			}
-			else {
-				String recommendation = "";
-				String description = "";
+				if("unknown".contentEquals(difficulty_string)) {
+					continue;
+				}
+	
+				int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
+	
 				if(element.getAllText().split(" ").length < 10) {
 					element_points = 4;
-					description = "Content is short enough to be easily understood by all users";
 				}
-				else {					
-					description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
+				
+				if(element_points < 4) {
+					String title = "Content is written at " + grade_level + " reading level";
+					String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
+					String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
+																						  description,
+																						  recommendation,
+																						  element,
+																						  AuditCategory.CONTENT,
+																						  labels,
+																						  ada_compliance,
+																						  title,
+																						  element_points,
+																						  4);
+					issue_messages.add(issue_message);
 				}
-				String title = "Content is easy to read";
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
-																					  description,
-																					  recommendation,
-																					  element,
-																					  AuditCategory.CONTENT,
-																					  labels,
-																					  ada_compliance,
-																					  title,
-																					  element_points,
-																					  4);
-				issue_messages.add(issue_message);
+				else {
+					String recommendation = "";
+					String description = "";
+					if(element.getAllText().split(" ").length < 10) {
+						element_points = 4;
+						description = "Content is short enough to be easily understood by all users";
+					}
+					else {					
+						description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
+					}
+					String title = "Content is easy to read";
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
+																						  description,
+																						  recommendation,
+																						  element,
+																						  AuditCategory.CONTENT,
+																						  labels,
+																						  ada_compliance,
+																						  title,
+																						  element_points,
+																						  4);
+					issue_messages.add(issue_message);
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		}		
 
@@ -172,16 +176,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 		}
 
-		String description = "";
-		page_state = page_state_service.findById(page_state.getId()).get();
-
-		/*
-		Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
-		Set<UXIssueMessage> issue_set = StreamSupport
-											  .stream(issues.spliterator(), true)
-											  .collect(Collectors.toSet());
-		*/
-		
+		String description = "";		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT,
 						 AuditName.PARAGRAPHING,

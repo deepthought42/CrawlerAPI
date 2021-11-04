@@ -33,7 +33,12 @@ public class ReportServiceTest {
 				ObservationType.COLOR_CONTRAST,
 				AuditCategory.AESTHETICS,
 				"buttons should have a minimum color contrast ratio of 3:1 with the background surrounding the button",
-				new HashSet<>(), null, null);
+				new HashSet<>(), 
+				null, 
+				null, 
+				0, 
+				1);
+		
 		messages.add(issue_msg_1);
 		
 		UXIssueMessage issue_msg_2 = new UXIssueMessage("Overall, the Miso website uses an active voice and scored well on our\n" + 
@@ -47,7 +52,12 @@ public class ReportServiceTest {
 				AuditCategory.CONTENT,
 				"The grammar should be consistent with respect to the language used\n" + 
 				"(English UK / US).",
-				new HashSet<>(), null, null);
+				new HashSet<>(), 
+				null, 
+				null, 
+				0, 
+				1);
+		
 		messages.add(issue_msg_2);
 		
 		UXIssueMessage issue_msg_3 = new UXIssueMessage("The meta-title and meta-description provide the user with a concise, easy to digest summary of what your page is about. A user is more likely to click on your website and visit your page if they are attracted by a title and\n" + 
@@ -57,7 +67,12 @@ public class ReportServiceTest {
 				ObservationType.ELEMENT,
 				AuditCategory.INFORMATION_ARCHITECTURE,
 				"meta title exceeds the recommended 70 character limit",
-				new HashSet<>(), null, null);
+				new HashSet<>(), 
+				null, 
+				null, 
+				0, 
+				1);
+		
 		messages.add(issue_msg_3);
 		
 		UXIssueMessage issue_msg_4 = new UXIssueMessage("Clean typography, with the use of only 1 to 2 typefaces, invites users to the text on your website. It plays an important role in how clear, distinct and legible the textual content is. Sticking to 1-2 typefaces keeps your website clean, making users more likely to read it.",
@@ -66,7 +81,12 @@ public class ReportServiceTest {
 				ObservationType.ELEMENT,
 				AuditCategory.AESTHETICS,
 				"meta title exceeds the recommended 70 character limit",
-				new HashSet<>(), null, null);
+				new HashSet<>(), 
+				null, 
+				null, 
+				0, 
+				1);
+		
 		messages.add(issue_msg_4);
 		
 		

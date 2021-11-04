@@ -87,7 +87,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		List<ColorUsageStat> color_usage_list = new ArrayList<>();
 		
 		try {
-			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrl()), elements));
+			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrlOnload()), elements));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -173,7 +173,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 																AuditCategory.AESTHETICS,
 																labels, 
 																ada_compliance,
-																title);
+																title, 0, 0);
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		issue_messages.add(ux_issue_service.save(palette_issue_message));
@@ -194,7 +194,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 true);
 	}
 	

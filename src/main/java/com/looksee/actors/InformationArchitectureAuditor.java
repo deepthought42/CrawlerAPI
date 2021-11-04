@@ -1,9 +1,7 @@
 package com.looksee.actors;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +18,10 @@ import com.looksee.models.audit.informationarchitecture.LinksAudit;
 import com.looksee.models.audit.informationarchitecture.MetadataAudit;
 import com.looksee.models.audit.informationarchitecture.SecurityAudit;
 import com.looksee.models.audit.informationarchitecture.TitleAndHeaderAudit;
-import com.looksee.services.AccountService;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
-import com.looksee.services.SendGridMailService;
-import com.looksee.utils.AuditUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -52,9 +49,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 	private MetadataAudit metadata_auditor;
 	
 	@Autowired
-	private AuditService audit_service;
-	
-	@Autowired
 	private AuditRecordService audit_record_service;
 	
 	@Autowired
@@ -62,12 +56,6 @@ public class InformationArchitectureAuditor extends AbstractActor{
 
 	@Autowired
 	private SecurityAudit security_audit;
-	
-	@Autowired
-	private AccountService account_service;
-	
-	@Autowired
-	private SendGridMailService email_service;
 	
 	private Account account;
 
@@ -97,76 +85,118 @@ public class InformationArchitectureAuditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
-				   	//generate audit report
-					PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
-				   	Set<Audit> audits = new HashSet<>();
-				   	
-				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (1.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Reviewing links...");
-					audit_record_service.save(page_audit_record);
-					
-				   	Audit link_audit = links_auditor.execute(page, null);
-					audits.add(link_audit);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (2.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Reviewing title and header...");
-					audit_record_service.save(page_audit_record);
-					
-					
-					Audit title_and_headers = title_and_header_auditor.execute(page, null);
-					audits.add(title_and_headers);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (3.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Checking security...");
-					audit_record_service.save(page_audit_record);
-					
-					
-					Audit security = security_audit.execute(page, null);
-					audits.add(security);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (4.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Reviewing SEO");
-					page_audit_record = audit_record_service.save(page_audit_record);
-					
-					
-					Audit metadata = metadata_auditor.execute(page, null);
-					audits.add(metadata);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setInfoArchAuditProgress( (5.0/5.0) ); 
-					page_audit_record.setInfoArchMsg("Done!");
-					page_audit_record = audit_record_service.save(page_audit_record);
-					
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}
-					
-					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
-					if(is_audit_complete) {
-						
-						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
-						for(Account account: accounts) {
-							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
+					try {
+						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = page_audit_record_msg.getPageState(); //audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("Starting info architecture audit for "+page_audit_record_msg.getPageState().getUrl());
 						}
+						//generate audit report
+					   	//Set<Audit> audits = new HashSet<>();
+						
+						AuditProgressUpdate audit_update = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(1.0/5.0),
+																	"Reviewing links",
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	AuditLevel.PAGE,
+																	null);
+
+						getSender().tell(audit_update, getSelf());
+
+					   	Audit link_audit = links_auditor.execute(page, audit_record);
+					   	
+						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(2.0/5.0),
+																	"Reviewing title and header page title and header",
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	AuditLevel.PAGE,
+																	link_audit);
+
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing title and header audit for page "+page.getUrl());
+						}
+						getSender().tell(audit_update2, getSelf());
+						
+						Audit title_and_headers = title_and_header_auditor.execute(page, audit_record);
+						
+						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(3.0/5.0),
+																	"Checking that page is secure",
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	AuditLevel.PAGE,
+																	title_and_headers);
+
+						getSender().tell(audit_update3, getSelf());
+						
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing security audit for page "+page.getUrl());
+						}
+						Audit security = security_audit.execute(page, audit_record);
+						
+						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(4.0/5.0),
+																	"Reviewing SEO",
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	AuditLevel.PAGE,
+																	security);
+						
+						getSender().tell(audit_update4, getSelf());
+						
+						if(page.getUrl().contains("acacia-research")) {
+							log.warn("executing metadata audit for page "+page.getUrl());
+						}
+						Audit metadata = metadata_auditor.execute(page, audit_record);
+						
+						AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	1.0,
+																	"Completed information architecture audit",
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	AuditLevel.PAGE,
+																	metadata);
+						
+						getSender().tell(audit_update5, getSelf());
+						
+						log.warn("COMPLETE INFORMATION ARCHITECTURE audit for page "+page.getUrl());						
+					} catch(Exception e) {
+						log.warn("exception caught during Information Architecture audit");
+						e.printStackTrace();
+						log.warn("-------------------------------------------------------------");
+						log.warn("-------------------------------------------------------------");
+						log.warn("THERE WAS AN ISSUE DURING INFO ARCHITECTURE AUDIT");
+						log.warn("-------------------------------------------------------------");
+						log.warn("-------------------------------------------------------------");
+						
+					}
+					finally {
+
+						AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
+								page_audit_record_msg.getId(),
+								1.0,
+								"Completed information architecture audit",
+								AuditCategory.INFORMATION_ARCHITECTURE,
+								AuditLevel.PAGE,
+								null);
+
+						getSender().tell(audit_update5, getSelf());
 					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
 				})
 				.match(UnreachableMember.class, mUnreachable -> {
-					log.debug("Member detected as unreachable: {}", mUnreachable.member());
+					log.warn("Member detected as unreachable: {}", mUnreachable.member());
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.debug("Member is Removed: {}", mRemoved.member());
 				})
 				.matchAny(o -> {
-					log.debug("received unknown message of type :: "+o.getClass().getName());
+					log.warn("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
 	}

@@ -8,6 +8,7 @@ public class DomainDto {
 	private long id;
 	private String url;
 	private int page_count;
+	private int pages_audited;
 	private double content_score;
 	private double content_progress;
 	private double info_architecture_score;
@@ -16,6 +17,7 @@ public class DomainDto {
 	private double accessibility_progress;
 	private double aesthetics_score;
 	private double aesthetics_progress;
+	private double data_extraction_progress;
 	private boolean is_audit_running;
 
 	public DomainDto(){}
@@ -24,6 +26,7 @@ public class DomainDto {
 			long id,
 			String url,
 			int page_count,
+			int audited_page_count,
 			double content_score,
 			double content_progress,
 			double info_architecture_score,
@@ -31,8 +34,9 @@ public class DomainDto {
 			double accessibility_score,
 			double accessibility_progress,
 			double aesthetics_score,
-			double aesthetics_progress,
-			boolean is_audit_running){
+			double aesthetics_progress, 
+			boolean is_audit_running, 
+			double data_extraction_progress){
 		setId(id);
 		setUrl(url);
 		setPageCount(page_count);
@@ -45,6 +49,8 @@ public class DomainDto {
 		setAestheticsScore(aesthetics_score);
 		setAestheticsProgress(aesthetics_progress);
 		setIsAuditRunning(is_audit_running);
+		setPagesAudited(audited_page_count);
+		setDataExtractionProgress(data_extraction_progress);
 	}
 
 	public long getId() {
@@ -141,6 +147,22 @@ public class DomainDto {
 
 	public void setAestheticsProgress(double aesthetics_progress) {
 		this.aesthetics_progress = aesthetics_progress;
+	}
+
+	public int getPagesAudited() {
+		return pages_audited;
+	}
+
+	public void setPagesAudited(int pages_audited) {
+		this.pages_audited = pages_audited;
+	}
+
+	public double getDataExtractionProgress() {
+		return data_extraction_progress;
+	}
+
+	public void setDataExtractionProgress(double data_extraction_progress) {
+		this.data_extraction_progress = data_extraction_progress;
 	}
 
 	

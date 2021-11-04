@@ -144,7 +144,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 						 page.getUrl(),
 						 why_it_matters,
 						 description,
-						 page,
 						 false);
 	}
 
@@ -300,19 +299,15 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "There are no ADA requirements for use of padding";
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
 		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					//multiple_of_8.add(element);
-				}
-				//else create observation that element is unlikely to scale gracefully
-				else {
-					String title = "At least one margin value isn't a multiple of 8.";
-					String description = "At least one margin value isn't a multiple of 8.";
-					Set<String> labels = new HashSet<>();
-					labels.add("whitespace");
+					String title = "All margins for element are multiple of 8.";
+					String description = "All margins for element are multiple of 8.";
 					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage( 
 																	Priority.MEDIUM,
@@ -322,7 +317,27 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 																	AuditCategory.AESTHETICS,
 																	labels, 
 																	ada_compliance,
-																	title);
+																	title,
+																	1,
+																	1);
+					issue_messages.add(issue_message);
+				}
+				//else create observation that element is unlikely to scale gracefully
+				else {
+					String title = "At least one margin value isn't a multiple of 8.";
+					String description = "At least one margin value isn't a multiple of 8.";
+
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage( 
+																	Priority.MEDIUM,
+																	description, 
+																	"For best responsiveness make sure margin values are a multiple of 8.", 
+																	element,
+																	AuditCategory.AESTHETICS,
+																	labels, 
+																	ada_compliance,
+																	title,
+																	0,
+																	1);
 					issue_messages.add(issue_message);
 				}
 				max_points++;
@@ -370,7 +385,10 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 		int max_vertical_score = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		String ada_compliance = "There are no ADA requirements for use of padding";
-
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		labels.add("responsiveness");
+		
 		for(ElementState element : element_padding_map.keySet()) {
 			for(String padding_value : element_padding_map.get(element)) {
 				//determine unit measure
@@ -382,9 +400,6 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				if(points_earned < 2) {
 					String title = "At least one margin value isn't a multiple of 8.";
 					String description = "At least one margin value isn't a multiple of 8.";
-					Set<String> labels = new HashSet<>();
-					labels.add("whitespace");
-					labels.add("responsiveness");
 					
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 							Priority.MEDIUM,
@@ -394,7 +409,26 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 							AuditCategory.AESTHETICS,
 							labels,
 							ada_compliance,
-							title);
+							title,
+							0,
+							1);
+					issue_messages.add(issue_message);
+				}
+				else {
+					String title = "All margins for element are multiple of 8";
+					String description = "All margins for element are multiple of 8.";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+							Priority.MEDIUM,
+							description, 
+							"For best responsiveness make sure margin values are a multiple of 8.", 
+							element,
+							AuditCategory.AESTHETICS,
+							labels,
+							ada_compliance,
+							title, 
+							0,
+							1);
 					issue_messages.add(issue_message);
 				}
 			}

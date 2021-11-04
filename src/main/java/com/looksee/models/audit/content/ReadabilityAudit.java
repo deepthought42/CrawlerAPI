@@ -25,8 +25,8 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
-import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
 
 import io.whelk.flesch.kincaid.ReadabilityCalculator;
@@ -43,7 +43,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private AuditRecordService audit_record_service;
+	private UXIssueMessageService issue_message_service;
 	
 	public ReadabilityAudit() {
 	}
@@ -63,9 +63,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		//filter elements that aren't text elements
-		int points_earned = 0;
-		int max_points = 0;
-
 		//get all element states
 		//filter any element state whose text exists within another element
 		List<ElementState> og_text_elements = new ArrayList<>();
@@ -73,7 +70,11 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
 				" this category, reading level needs to be taken into consideration when" + 
 				" writing content and paragraphing. ";
-			
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("written content");
+		labels.add("readability");
+		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		for(ElementState element: elements) {
 			if(element.getName().contentEquals("button") || element.getName().contentEquals("a") || element.getOwnedText().isEmpty() || element.getAllText().split(" ").length <= 3) {
@@ -100,46 +101,66 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			}
 		}
 		
-		log.warn("identified   "+og_text_elements.size() + "  og text states");
-
-		
 		for(ElementState element : og_text_elements) {
-			AuditRecord audit_record_record = audit_record_service.findById(audit_record.getId()).get();
-			log.warn("Target user education level :: "+audit_record_record.getTargetUserEducation());
 			//List<Sentence> sentences = CloudNLPUtils.extractSentences(all_page_text);
 			//Score paragraph_score = calculateParagraphScore(sentences.size());
-			double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
-			String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			
-			if("unknown".contentEquals(difficulty_string)) {
-				continue;
-			}
-			
-			Set<String> labels = new HashSet<>();
-			labels.add("written content");
-			labels.add("readability");
-
-			int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			
-			String title = "Content is " + difficulty_string + " to read";
-			String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record_record.getTargetUserEducation());
-			String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
-			
-			points_earned += element_points;
-			max_points += 4;
-			
-			if(element_points < 4) {
-				recommendation = "Content is written at a " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level, which is considered " + difficulty_string + " to read for most of your target consumers. You can use simpler words and reduce the length of your sentences to make this content more accessible";
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-						Priority.LOW, 
-						description,
-						recommendation,
-						element,
-						AuditCategory.CONTENT,
-						labels,
-						ada_compliance,
-						title);
-				issue_messages.add(issue_message);
+			try {
+				double ease_of_reading_score = ReadabilityCalculator.calculateReadingEase(element.getAllText());
+				String difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
+				String grade_level = ContentUtils.getReadingGradeLevel(ease_of_reading_score);
+				
+				if("unknown".contentEquals(difficulty_string)) {
+					continue;
+				}
+	
+				int element_points = getPointsForEducationLevel(ease_of_reading_score, audit_record.getTargetUserEducation());
+	
+				if(element.getAllText().split(" ").length < 10) {
+					element_points = 4;
+				}
+				
+				if(element_points < 4) {
+					String title = "Content is written at " + grade_level + " reading level";
+					String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
+					String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
+																						  description,
+																						  recommendation,
+																						  element,
+																						  AuditCategory.CONTENT,
+																						  labels,
+																						  ada_compliance,
+																						  title,
+																						  element_points,
+																						  4);
+					issue_messages.add(issue_message);
+				}
+				else {
+					String recommendation = "";
+					String description = "";
+					if(element.getAllText().split(" ").length < 10) {
+						element_points = 4;
+						description = "Content is short enough to be easily understood by all users";
+					}
+					else {					
+						description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
+					}
+					String title = "Content is easy to read";
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
+																						  description,
+																						  recommendation,
+																						  element,
+																						  AuditCategory.CONTENT,
+																						  labels,
+																						  ada_compliance,
+																						  title,
+																						  element_points,
+																						  4);
+					issue_messages.add(issue_message);
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		}		
 
@@ -148,16 +169,14 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				" Presenting information in small, easy to digest chunks makes their" + 
 				" experience easy and convenient. ";
 		
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
 
-		Set<String> labels = new HashSet<>();
-		labels.add("content");
-		labels.add("readability");
-		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.CONTENT.getShortName());
-		
-
-		String description = "";
+		String description = "";		
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT,
 						 AuditName.PARAGRAPHING,
@@ -168,7 +187,6 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 false); 
 	}
 
@@ -196,10 +214,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 
 	private int getPointsForEducationLevel(double ease_of_reading_score, String target_user_education) {
 		int element_points = 0;
-		
-		log.warn("Target user education value :: "+target_user_education);
-		//TODO : Make scoring dependant on targetUserEducation
-		
+				
 		if(ease_of_reading_score >= 90 ) {
 			if(target_user_education == null) {
 				element_points = 4;

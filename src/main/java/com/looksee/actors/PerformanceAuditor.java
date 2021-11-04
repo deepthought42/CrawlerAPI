@@ -210,7 +210,9 @@ public class PerformanceAuditor extends AbstractActor {
     											"wcag compliance", 
     											new HashSet<>(),
     											audit_record.getExplanation(),
-    											audit_record.getTitle());
+    											audit_record.getTitle(), 
+    											0, 
+    											1);
     				
     		ux_issues.add(issue_msg);
     		

@@ -21,24 +21,30 @@ import io.github.resilience4j.retry.annotation.Retry;
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
  */
 @Repository
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long> {
 	public AuditRecord findByKey(@Param("key") String key);
 	
 	@Query("MATCH (:AuditRecord{key:$audit_record_key})-[:HAS]->(a:Audit{key:$audit_key}) RETURN a")
 	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key}),(a:Audit{key:$audit_key}) CREATE (ar)-[h:HAS]->(a) RETURN ar")
+	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(a:Audit) WHERE id(ar)=$audit_record_id AND id(a)=$audit_id RETURN a")
+	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_id") long audit_record_id, @Param("audit_id") long audit_id);
+
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key}),(a:Audit{key:$audit_key}) MERGE (ar)-[h:HAS]->(a) RETURN ar")
 	public void addAudit(@Param("audit_record_key") String audit_record_key, @Param("audit_key") String audit_key);
 	
-	@Query("MATCH (ar:AuditRecord),(a:Audit) WHERE id(ar)=$audit_record_key AND id(a)=$audit_id CREATE (ar)-[h:HAS]->(a) RETURN ar")
-	public void addAudit(@Param("audit_record_key") long audit_record_id, @Param("audit_id") long audit_id);
+	@Query("MATCH (ar:PageAuditRecord),(a:Audit) WHERE id(ar)=$audit_record_id AND id(a)=$audit_id MERGE (ar)-[h:HAS]->(a) RETURN ar")
+	public void addAudit(@Param("audit_record_id") long audit_record_id, @Param("audit_id") long audit_id);
 	
-	@Query("MATCH (dar:DomainAuditRecord),(par:PageAuditRecord{key:$page_audit_key}) WHERE id(dar)=$domain_audit_record_id CREATE (dar)-[h:HAS]->(par) RETURN dar")
+	@Query("MATCH (dar:DomainAuditRecord),(par:PageAuditRecord{key:$page_audit_key}) WHERE id(dar)=$domain_audit_record_id MERGE (dar)-[h:HAS]->(par) RETURN dar")
 	public void addPageAuditRecord(@Param("domain_audit_record_id") long domain_audit_record_id, @Param("page_audit_key") String page_audit_key);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit) OPTIONAL MATCH y=(audit)-->(e) OPTIONAL MATCH z=(e)-->(f) RETURN audit,y,z")
 	public Set<Audit> getAllAudits(@Param("audit_record_key") String audit_record_key);
+
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
+	public Set<Audit> getAllAuditsAndIssues(@Param("audit_record_id") long audit_record_id);
 
 	@Query("MATCH (d:Domain{host:$domain_host})-[]-(ar:DomainAuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
 	@Deprecated
@@ -96,7 +102,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Deprecated
 	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_key") String page_audit_key);
 
-	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) WHERE id(page_audit)=$page_audit_id RETURN audit")
+	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) OPTIONAL MATCH auditsAndMessages=(audit)-->(:UXIssueMessage) WHERE id(page_audit)=$page_audit_id RETURN auditsAndMessages")
 	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_id") long page_audit_id);
 
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{url:$url}) RETURN page_audit ORDER BY page_audit.created_at DESC LIMIT 1")
@@ -145,6 +151,9 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit)  MATCH (audit)-[:HAS]-(issue:UXIssueMessage) WHERE id(audit_record)=$audit_record_id RETURN issue")
 	public Set<UXIssueMessage> getIssues(@Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (ar:AuditRecord),(page:PageState) WHERE id(ar)=$audit_record_id AND id(page)=$page_state_id CREATE (ar)-[h:HAS]->(page) RETURN ar")
+	@Query("MATCH (ar:AuditRecord),(page:PageState) WHERE id(ar)=$audit_record_id AND id(page)=$page_state_id MERGE (ar)-[h:HAS]->(page) RETURN ar")
 	public void addPageToAuditRecord(@Param("audit_record_id") long audit_record_id, @Param("page_state_id") long page_state_id);
+
+	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit) MATCH (audit)-[:HAS]-(issue:UXIssueMessage{priority:$severity}) WHERE id(audit_record)=$audit_record_id RETURN count(issue) as count")
+	public long getIssueCountBySeverity(@Param("audit_record_id") long id, @Param("severity") String severity);
 }

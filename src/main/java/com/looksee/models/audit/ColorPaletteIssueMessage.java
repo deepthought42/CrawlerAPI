@@ -38,6 +38,8 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 	 * @param labels TODO
 	 * @param wcag_compliance TODO
 	 * @param title TODO
+	 * @param points_earned TODO
+	 * @param max_points TODO
 	 * @pre priority != null;
 	 * @pre recommendation != null;
 	 * @pre !recommendation.isEmpty();
@@ -55,7 +57,9 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 			AuditCategory category, 
 			Set<String> labels, 
 			String wcag_compliance, 
-			String title
+			String title, 
+			int points_earned, 
+			int max_points
 	) {
 		assert priority != null;
 		assert recommendation != null;
@@ -77,6 +81,8 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 		setType(ObservationType.COLOR_PALETTE);
 		setWcagCompliance(wcag_compliance);
 		setTitle(title);
+		setPoints(points_earned);
+		setMaxPoints(max_points);
 		setKey(this.generateKey());
 	}
 

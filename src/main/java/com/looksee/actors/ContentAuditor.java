@@ -1,8 +1,5 @@
 package com.looksee.actors;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +14,11 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.ParagraphingAudit;
 import com.looksee.models.audit.content.ImageAltTextAudit;
 import com.looksee.models.audit.content.ReadabilityAudit;
-import com.looksee.services.AccountService;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
-import com.looksee.services.SendGridMailService;
-import com.looksee.utils.AuditUtils;
+import com.looksee.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -52,16 +49,10 @@ public class ContentAuditor extends AbstractActor{
 	private ReadabilityAudit readability_auditor;
 	
 	@Autowired
-	private AuditService audit_service;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private AccountService account_service;
-	
-	@Autowired
-	private SendGridMailService email_service;
 	
 	private Account account;
 
@@ -85,59 +76,81 @@ public class ContentAuditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
-				   	//generate audit report
-				   	Set<Audit> audits = new HashSet<>();
-				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
-				  
-				   	AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setContentAuditProgress( (1.0/4.0) );
-					page_audit_record.setContentAuditMsg("checking image alt text...");
-					audit_record_service.save(page_audit_record);	
-					
-				   	log.warn("page audit record recieved :: "+page_audit_record_msg.getId());
-					Audit alt_text_audit = image_alt_text_auditor.execute(page, page_audit_record);
-					audits.add(alt_text_audit);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setContentAuditProgress( (2.0/4.0) );
-					page_audit_record.setContentAuditMsg("Reviewing content for readability...");
-					audit_record_service.save(page_audit_record);		
-					
-					Audit readability_audit = readability_auditor.execute(page, page_audit_record);
-					audits.add(readability_audit);
-					
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setContentAuditProgress( (3.0/4.0) );
-					page_audit_record.setContentAuditMsg("Reviewing paragraph structure...");
-					audit_record_service.save(page_audit_record);
+					try {
+						AuditRecord audit_record = page_audit_record_msg;//audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
+					   	//generate audit report
+					   	//Set<Audit> audits = new HashSet<>();
+					   	page.setElements(page_state_service.getElementStates(page.getKey()));
+					   	if(page.getUrl().contentEquals("look-see.com")) {					   		
+					   		log.warn(page.getElements().size()+" elements found for content audit of "+page.getUrl());
+					   	}
+					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
+					   												audit_record.getId(),
+					   												(1.0/4.0),
+					   												"checking images for alt text",
+					   												AuditCategory.CONTENT,
+					   												AuditLevel.PAGE, 
+					   												null);
+					   	
+					   	getSender().tell(audit_update, getSelf());
+					   							
+						Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
+						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																	audit_record.getId(),
+																	(2.0/4.0),
+																	"Reviewing content for readability",
+																	AuditCategory.CONTENT,
+																	AuditLevel.PAGE,
+																	alt_text_audit);
 
-					//Audit font_audit = font_auditor.execute(page);
-					//audits.add(font_audit);
-					
-					Audit paragraph_audit = paragraph_auditor.execute(page, page_audit_record);
-					audits.add(paragraph_audit);	
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setContentAuditMsg("Done!");
-					page_audit_record.setContentAuditProgress( (4.0/4.0) ); 
-					page_audit_record = audit_record_service.save(page_audit_record);		
-
-					
-					log.warn("content audits complete :: "+audits.size());
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}
-				  
-					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
-					if(is_audit_complete) {
+						getSender().tell(audit_update2, getSelf());
 						
-						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
-						for(Account account: accounts) {
-							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
-						}
+						Audit readability_audit = readability_auditor.execute(page, audit_record);
+						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																	audit_record.getId(),
+																	(3.0/4.0),
+																	"Reviewing paragraph length",
+																	AuditCategory.CONTENT,
+																	AuditLevel.PAGE,
+																	readability_audit);
+
+						getSender().tell(audit_update3, getSelf());
+						//Audit font_audit = font_auditor.execute(page);
+						//audits.add(font_audit);
+						
+						Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
+						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																	audit_record.getId(),
+																	(1.0),
+																	"Content Audit Compelete!",
+																	AuditCategory.CONTENT,
+																	AuditLevel.PAGE,
+																	paragraph_audit);
+
+						getSender().tell(audit_update4, getSelf());					
+						log.warn("content audits complete :: ");
+					}catch(Exception e) {
+						log.error("exception caught during content audit");
+						e.printStackTrace();
+						log.error("-------------------------------------------------------------");
+						log.error("-------------------------------------------------------------");
+						log.error("THERE WAS AN ISSUE DURING CONTENT AUDIT");
+						log.error("-------------------------------------------------------------");
+						log.error("-------------------------------------------------------------");
+					}
+					finally {
+						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+								page_audit_record_msg.getId(),
+								(1.0),
+								"Content Audit Compelete!",
+								AuditCategory.CONTENT,
+								AuditLevel.PAGE,
+								null);
+
+						getSender().tell(audit_update4, getSelf());
+						
+						postStop();
 					}
 				})
 				.match(MemberUp.class, mUp -> {

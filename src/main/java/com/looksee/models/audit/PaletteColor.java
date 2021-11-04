@@ -17,14 +17,14 @@ import com.looksee.models.LookseeObject;
 public class PaletteColor extends LookseeObject {
 
 	private String primary_color;
-	private float primary_color_percent;
+	private double primary_color_percent;
 	
 	@Properties
 	private Map<String, String> tints_shades_tones = new HashMap<>();
 	
 	public PaletteColor() {}
 	
-	public PaletteColor(String primary_color, float primary_color_percent, Map<String, String> tints_shades_tones) {
+	public PaletteColor(String primary_color, double primary_color_percent, Map<String, String> tints_shades_tones) {
 		setPrimaryColor(primary_color.trim());
 		setPrimaryColorPercent(primary_color_percent);
 		addTintsShadesTones(tints_shades_tones);
@@ -39,11 +39,11 @@ public class PaletteColor extends LookseeObject {
 		this.primary_color = primary_color;
 	}
 
-	public float getPrimaryColorPercent() {
+	public double getPrimaryColorPercent() {
 		return primary_color_percent;
 	}
 
-	private void setPrimaryColorPercent(float primary_color_percent) {
+	private void setPrimaryColorPercent(double primary_color_percent) {
 		this.primary_color_percent = primary_color_percent;
 	}
 

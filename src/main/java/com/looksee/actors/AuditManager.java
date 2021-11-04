@@ -4,10 +4,12 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,23 +25,29 @@ import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.AuditStats;
-import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditStage;
-import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.DomainAuditMessage;
+import com.looksee.models.message.ElementProgressMessage;
+import com.looksee.models.message.ElementsSaved;
 import com.looksee.models.message.PageAuditRecordMessage;
+import com.looksee.models.message.PageCandidateFound;
+import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.models.message.PageStateAuditComplete;
-import com.looksee.models.message.PageStateMessage;
+import com.looksee.models.message.StartSinglePageAudit;
+import com.looksee.models.message.UpdatePageElementDispatches;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
 import com.looksee.services.SendGridMailService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
@@ -64,6 +72,11 @@ public class AuditManager extends AbstractActor{
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	private Map<String, Long> total_dispatches;
+	private Map<String, Long> total_dispatch_responses;
+	private ActorRef web_crawler_actor;
+	private Account account;
+	
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -82,8 +95,10 @@ public class AuditManager extends AbstractActor{
 	@Autowired
 	private SendGridMailService mail_service;
 	
-	private ActorRef web_crawler_actor;
-	private Account account;
+	@Autowired
+	private UXIssueMessageService issue_message_service;
+	
+	
 	
 	Map<String, PageState> page_states_experienced = new HashMap<>();
 	Map<String, PageState> page_states_audited = new HashMap<>();
@@ -93,6 +108,8 @@ public class AuditManager extends AbstractActor{
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
+		this.total_dispatch_responses = new HashMap<>();
+		this.total_dispatches = new HashMap<>();
 	}
 
 	//re-subscribe when restart
@@ -118,7 +135,7 @@ public class AuditManager extends AbstractActor{
 						log.warn("Starting crawler");
 						
 						//send message to page data extractor
-						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						web_crawl_actor.tell(message, getSelf());
 					}
@@ -127,152 +144,27 @@ public class AuditManager extends AbstractActor{
 					}
 					
 				})
-				.match(PageStateMessage.class, page_state_msg -> {
-					log.warn("Received page state :: "+page_state_msg.getPageState().getUrl());
-					//send URL to JourneyExplorer actor
-					if(!page_states_experienced.containsKey(page_state_msg.getPageState().getKey()) 
-							&& page_state_msg.getPageState().getHttpStatus() != 404) {
-						Optional<AuditRecord> record = audit_record_service.findById(page_state_msg.getAuditRecordId());
-				 		long content_audits_complete = 0;
-			    		long info_arch_audits_complete = 0;
-			    		long aesthetic_audits_complete = 0;
-			    		
-			    		double content_score = 0.0;
-			    		double written_content_score = 0.0;
-			    		double imagery_score = 0.0;
-			    		double videos_score = 0.0;
-			    		double audio_score = 0.0;
-			    		
-			    		double info_arch_score = 0.0;
-			    		double seo_score = 0.0;
-			    		double menu_analysis_score = 0.0;
-			    		double performance_score = 0.0;
-			    		
-			    		double aesthetic_score = 0.0;
-			    		double color_score = 0.0;
-			    		double typography_score = 0.0;
-			    		double whitespace_score = 0.0;
-			    		double branding_score = 0.0;
-			    		
-						if( record.isPresent() ) {
-							if(record.get() instanceof DomainAuditRecord) {								
-								DomainAuditRecord audit_record = (DomainAuditRecord)record.get();
-								
-								Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(page_state_msg.getAuditRecordId());
-								//get Page Count
-								long page_count = audit_records.size();
-								long elements_reviewed = 0;
-								long elements_found = 0;
-								
-								for(PageAuditRecord page_audit : audit_records) {
-									elements_reviewed += page_audit.getElementsReviewed();
-									elements_found += page_audit.getElementsFound();
-									
-									Set<Audit> content_audits = audit_record_service.getAllContentAudits(page_audit.getId());
-									content_score = AuditUtils.calculateScore(content_audits);
-									written_content_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.WRITTEN_CONTENT);
-									imagery_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.IMAGERY);
-									videos_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.VIDEOS);
-									audio_score = AuditUtils.calculateSubcategoryScore(content_audits, AuditSubcategory.AUDIO);
-									//get total content audit pages
-									boolean is_content_audit_complete = isContentAuditComplete(content_audits); // getContentAudit(audit_record.getId(), page_state_msg.getAuditRecordId()).size();//getAuditCount(AuditCategory.CONTENT, audit_records);
-									if(is_content_audit_complete) {
-										content_audits_complete++;
-									}
-									
-									Set<Audit> info_architecture_audits = audit_record_service.getAllContentAudits(page_audit.getId());
-									info_arch_score = AuditUtils.calculateScore(info_architecture_audits);
-									seo_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.SEO);
-									menu_analysis_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.MENU_ANALYSIS);
-									performance_score = AuditUtils.calculateSubcategoryScore(info_architecture_audits, AuditSubcategory.PERFORMANCE);
-									//get total information architecture audit pages
-									boolean is_info_arch_audit_complete = isInformationArchitectureAuditComplete(info_architecture_audits);
-									if(is_info_arch_audit_complete) {
-										info_arch_audits_complete++;
-									}
-									
-									Set<Audit> aesthetics_audits = audit_record_service.getAllContentAudits(page_audit.getId());
-									aesthetic_score = AuditUtils.calculateScore(aesthetics_audits);
-									color_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.COLOR_MANAGEMENT);
-									typography_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.TYPOGRAPHY);
-									whitespace_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.WHITESPACE);
-									branding_score = AuditUtils.calculateSubcategoryScore(aesthetics_audits, AuditSubcategory.BRANDING);
-
-									//get total aesthetic audit pages
-									boolean is_aesthetic_audit_complete = isAestheticsAuditComplete(aesthetics_audits);
-									if(is_aesthetic_audit_complete) {
-										aesthetic_audits_complete++;
-									}
-								}
-								
-								//build stats object
-								AuditStats audit_stats = new AuditStats(audit_record.getId(), 
-																		audit_record.getStartTime(), 
-																		audit_record.getEndTime(), 
-																		content_audits_complete,
-																		audit_record.getContentAuditProgress(),
-																		content_score, 
-																		audit_record.getContentAuditMsg(),
-																		written_content_score,
-																		imagery_score,
-																		videos_score,
-																		audio_score, 
-																		info_arch_audits_complete, 
-																		audit_record.getInfoArchAuditProgress(), 
-																		info_arch_score, 
-																		audit_record.getInfoArchMsg(),
-																		seo_score,
-																		menu_analysis_score,
-																		performance_score,
-																		aesthetic_audits_complete,
-																		audit_record.getAestheticAuditProgress(),
-																		aesthetic_score,
-																		audit_record.getAestheticMsg(),
-																		color_score,
-																		typography_score,
-																		whitespace_score, branding_score, 
-																		elements_reviewed, 
-																		elements_found, 
-																		audit_record.getDataExtractionProgress(), 
-																		audit_record.getDataExtractionMsg());
-								
-								MessageBroadcaster.sendAuditStatUpdate(page_state_msg.getAccountId(), audit_stats);
-							}		
-						}
-						
-						page_states_experienced.put(page_state_msg.getPageState().getKey(), page_state_msg.getPageState());
-						/*
-						ActorRef journeyMapper = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("journeyMappingManager"), "journeyMappingManager"+UUID.randomUUID());
-						journeyMapper.tell(new URL(page_state.getUrl()), getSelf());
-						*/
-						
-						/**
-						 * NOTE: Performance is disabled because of issue with pages that are not found
-						 * 
-				   		ActorRef insight_auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-						
-						//rendered_page_state_count++;
-				   		insight_auditor.tell(page_state_msg.getPageState(), getSelf());
-						
-						 */
-						
-						log.warn("Page State Count :: "+page_states_experienced.keySet().size());
-						/*
-						ActorRef web_crawl_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
-						web_crawl_actor.tell(page_state, getSelf());
-						*/
-						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								.props("auditor"), "auditor"+UUID.randomUUID());
-						
-						//rendered_page_state_count++;
-						auditor.tell(page_state_msg, getSelf());
-					}
-					else {
-						log.warn("Page state already processed for audit manager ..... "+page_state_msg.getPageState().getUrl());
-					}
+				.match(PageCandidateFound.class, message -> {					
+					PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+				   	audit_record.setAestheticMsg("Waiting for data extraction ...");
+				   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
+				   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
+				   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
+				   	
+				   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), audit_record.getKey());
+					
+					PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, audit_record, message.getUrl());
+					ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+					page_state_builder.tell(crawl_action_msg, getSelf());
+					
+				})
+				.match(StartSinglePageAudit.class, message -> {		
+					PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, -1, message.getAuditRecord(), message.getUrl());
+					ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+				   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+					page_state_builder.tell(crawl_action_msg, getSelf());
+					
 				})
 				.match(PageStateAuditComplete.class, audit_complete -> {
 					Domain domain = domain_service.findByPageState(audit_complete.getPageState().getKey());
@@ -293,15 +185,12 @@ public class AuditManager extends AbstractActor{
 						
 						DomainAuditMessage domain_audit_msg = new DomainAuditMessage( domain, AuditStage.RENDERED);
 						//AuditSet audit_record_set = new AuditSet(audits);
-						ActorRef auditor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						ActorRef auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 								.props("auditor"), "auditor"+UUID.randomUUID());
 						auditor.tell(domain_audit_msg, getSelf());
 					}
 				})
 				.match(PageAuditRecordMessage.class, audit_record -> {
-					
-					log.warn("page audit :: "+audit_record.getPageAuditRecord());
-					log.warn("page audit page state :: "+audit_record.getPageAuditRecord().getPageState());
 					PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record.getPageAuditRecord().getId());
 					String url_str = BrowserUtils.sanitizeUserUrl(page_state.getUrl());
 					
@@ -318,14 +207,140 @@ public class AuditManager extends AbstractActor{
 
 					
 					log.warn("Audit record :: " + audit_record);
+					
+					List<Audit> audit_list = new ArrayList<>(audit_record.getPageAuditRecord().getAudits());
 					//save all audits in audit list to database and add them to the audit record
-					for(Audit audit : audit_record.getPageAuditRecord().getAudits()){
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( audit_record.getPageAuditRecord().getKey(), audit.getKey() );
+					for(Audit audit : audit_list){
+						Audit saved_audit = audit_service.save(audit);
+						audit_record_service.addAudit( audit_record.getPageAuditRecord().getKey(), saved_audit.getKey() );
 						
 						//send pusher message to clients currently subscribed to domain audit channel
 						MessageBroadcaster.broadcastAudit(host, audit);
 					}	
+				})
+				.match(ElementProgressMessage.class, message -> {
+					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
+					data_extraction_supervisor.tell(message, getSelf());
+					this.total_dispatches.put(message.getPageUrl(), message.getTotalDispatches());
+					
+				})
+				.match(ElementsSaved.class, message -> {
+					long response_count = 0L;
+
+					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
+						response_count = this.total_dispatch_responses.get(message.getPageUrl());
+					}
+										
+					this.total_dispatch_responses.put(message.getPageUrl(), ++response_count);
+					try {
+						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
+						//       system is done extracting element data and the page is ready for auditing
+						
+						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						if(this.total_dispatch_responses.get(message.getPageUrl()) == this.total_dispatches.get(message.getPageUrl())) {
+							//log.warn("ALL PAGE ELEMENT STATES HAVE BEEN MAPPED SUCCESSFULLY!!!!!");
+							audit_record.setDataExtractionMsg("Done!");
+							audit_record.setDataExtractionProgress(1.0);
+							audit_record.setAestheticAuditProgress(1/20.0);
+							audit_record.setAestheticMsg("Starting visual design audit");
+	
+							audit_record.setContentAuditProgress(1/20.0);
+							audit_record.setContentAuditMsg("Starting content audit");
+	
+							audit_record.setInfoArchAuditProgress(1/20.0);
+							audit_record.setInfoArchMsg("Starting Information Architecture audit");
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()) );
+							audit_record = (PageAuditRecord) audit_record_service.save(audit_record);
+						
+							/*
+						   	log.warn("requesting performance audit from performance auditor....");
+						   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+						   	performance_insight_actor.tell(page_state, getSelf());
+						   	*/
+							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+						
+							content_auditor.tell(audit_record, getSelf());							
+
+							ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
+							info_architecture_auditor.tell(audit_record, getSelf());
+
+							ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+										.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
+							aesthetic_auditor.tell(audit_record, getSelf());
+						}
+						else {
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()));
+							audit_record_service.save(audit_record);
+						}
+					}catch(Exception e) {
+						log.error("Exception occurred while page state builder processed ElementProgressMessage!!");
+						e.printStackTrace();
+					}
+				})
+				.match(UpdatePageElementDispatches.class, message -> {
+					//log.warn("initializing dispatches for "+message.getUrl());
+					this.total_dispatches.put(message.getUrl(), message.getTotalDispatches());
+					this.total_dispatch_responses.put(message.getUrl(), 0L);
+				})
+				.match(AuditProgressUpdate.class, message -> {
+					try {
+						AuditRecord page_audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+						
+						if(AuditCategory.CONTENT.equals(message.getCategory())) {
+							page_audit_record.setContentAuditProgress( message.getProgress() );
+							page_audit_record.setContentAuditMsg( message.getMessage());
+						}
+						else if(AuditCategory.AESTHETICS.equals(message.getCategory())) {
+							page_audit_record.setAestheticAuditProgress( message.getProgress() );
+							page_audit_record.setAestheticMsg(message.getMessage());
+						}
+						else if(AuditCategory.INFORMATION_ARCHITECTURE.equals(message.getCategory())) {
+							page_audit_record.setInfoArchAuditProgress( message.getProgress() );
+							page_audit_record.setInfoArchMsg(message.getMessage());
+						}
+						page_audit_record =  audit_record_service.save(page_audit_record);	
+	
+						if(message.getAudit() != null) {
+							
+							Set<UXIssueMessage> issue_set = new HashSet<UXIssueMessage>();
+							//List<Long> issue_ids = new ArrayList<>();
+							for(UXIssueMessage issue: message.getAudit().getMessages()) {
+								UXIssueMessage issue_record = issue_message_service.save(issue);
+								issue_set.add(issue_record);
+								//issue_ids.add(issue_record.getId());
+							}
+							
+							message.getAudit().getMessages().addAll(issue_set);
+							Audit audit = audit_service.save(message.getAudit());
+							audit_record_service.addAudit( page_audit_record.getId(), audit.getId() );
+							//audit_service.addAllIssues(audit.getId(), issue_ids);
+							/*
+							List<UXIssueMessage> issue_messages = new ArrayList<>();
+							issue_messages.addAll(message.getAudit().getMessages());
+							Iterable<UXIssueMessage> issues = issue_message_service.saveAll(issue_messages);
+							Set<UXIssueMessage> issue_set = StreamSupport
+																  .stream(issues.spliterator(), true)
+																  .collect(Collectors.toSet());
+							*/
+							
+						}
+						
+						boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
+						if(is_audit_complete) {
+							PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record.getId());
+							
+							Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
+							for(Account account: accounts) {
+								mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
+							}
+						}
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

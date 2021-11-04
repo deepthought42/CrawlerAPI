@@ -29,7 +29,7 @@ public class ConfigService {
 	 */
 	@Bean
 	public ActorSystem actorSystem() {
-	  ActorSystem system = ActorSystem.create("QanairyActorSystem1");
+	  ActorSystem system = ActorSystem.create("LookseeActorSystem1");
 	  // initialize the application context in the Akka Spring Extension
 	  SpringExtProvider.get(system).initialize(applicationContext);
 	  return system;

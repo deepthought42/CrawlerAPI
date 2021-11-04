@@ -23,7 +23,7 @@ public class TypefacesIssue extends UXIssueMessage {
 			Priority priority, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance) {
+			String wcag_compliance, int points_awarded, int max_points) {
 		assert typefaces != null;
 		assert !typefaces.isEmpty();
 		assert description != null;
@@ -41,6 +41,8 @@ public class TypefacesIssue extends UXIssueMessage {
 		setCategory(category);
 		setLabels(labels);
 		setWcagCompliance(wcag_compliance);
+		setPoints(points_awarded);
+		setMaxPoints(max_points);
 		setKey(this.generateKey());
 	}
 

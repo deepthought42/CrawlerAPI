@@ -500,7 +500,7 @@ public class Crawler {
 				return result_page;
 			}
 			catch(NullPointerException e){
-				e.printStackTrace();
+				//e.printStackTrace();
 				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
 			} 
 			catch (GridException e) {

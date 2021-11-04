@@ -35,6 +35,8 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * @param wcag_compliance TODO
 	 * @param title TODO
 	 * @param font_size TODO
+	 * @param points_earned TODO
+	 * @param max_points TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
 	 * @pre !recommendation.isEmpty()
@@ -57,11 +59,12 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 			Set<String> labels, 
 			String wcag_compliance,
 			String title, 
-			String font_size
+			String font_size, 
+			int points_earned, 
+			int max_points
 	) {
 		assert priority != null;
 		assert recommendation != null;
-		assert !recommendation.isEmpty();
 		assert element != null;
 		assert foreground_color != null;
 		assert !foreground_color.isEmpty();
@@ -81,6 +84,8 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		setWcagCompliance(wcag_compliance);
 		setTitle(title);
 		setFontSize(font_size);
+		setPoints(points_earned);
+		setMaxPoints(max_points);
 		setKey(this.generateKey());
 	}
 

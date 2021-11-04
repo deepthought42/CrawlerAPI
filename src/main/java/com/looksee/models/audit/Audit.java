@@ -7,7 +7,6 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.LookseeObject;
-import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -32,9 +31,6 @@ public class Audit extends LookseeObject {
 	@Relationship(type = "HAS")
 	private Set<UXIssueMessage> messages;
 	
-	@Relationship(type = "HAS")
-	private PageState page_states;
-	
 	private Set<String> labels;
 
 	
@@ -57,7 +53,6 @@ public class Audit extends LookseeObject {
 	 * @param url TODO
 	 * @param why_it_matters TODO
 	 * @param description TODO
-	 * @param page_state TODO
 	 * @param isAccessibility TODO
 	 */
 	public Audit(
@@ -71,7 +66,6 @@ public class Audit extends LookseeObject {
 			String url, 
 			String why_it_matters, 
 			String description, 
-			PageState page_state, 
 			boolean is_accessibility
 	) {
 		super();
@@ -92,13 +86,12 @@ public class Audit extends LookseeObject {
 		setUrl(url);
 		setWhyItMatters(why_it_matters);
 		setDescription(description);
-		setPageState(page_state);
 		setAccessiblity(is_accessibility);
 		setKey(generateKey());
 	}
 
 	public Audit clone() {
-		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription(), getPageState(), isAccessiblity());
+		return new Audit(getCategory(), getSubcategory(), getName(), getPoints(), getMessages(), getLevel(), getTotalPossiblePoints(), getUrl(), getWhyItMatters(), getDescription(), isAccessiblity());
 	}
 
 	/**
@@ -204,14 +197,6 @@ public class Audit extends LookseeObject {
 
 	public void setMessages(Set<UXIssueMessage> messages) {
 		this.messages = messages;
-	}
-	
-	public PageState getPageState() {
-		return page_states;
-	}
-
-	public void setPageState(PageState page_states) {
-		this.page_states = page_states;
 	}
 
 	public boolean isAccessiblity() {

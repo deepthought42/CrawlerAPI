@@ -57,16 +57,13 @@ public class AccountService {
         account_repo.deleteAccountEdges(userId);
         account_repo.deleteAccount(userId);
 	}
-
-	public void removeDomain(String username, String domain_key) {
-		account_repo.removeDomain(username, domain_key);
+	
+	public void removeDomain(long account_id, long domain_id) {
+		account_repo.removeDomain(account_id, domain_id);
 	}
-
-	public Set<Domain> getDomainsForUser(String email) {
-		assert email != null;
-		assert !email.isEmpty();
-		
-		return account_repo.getDomainsForUser(email);
+	
+	public Set<Domain> getDomainsForAccount(long account_id) {		
+		return account_repo.getDomainsForAccount(account_id);
 	}
 	
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {

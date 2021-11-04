@@ -1,14 +1,18 @@
 package com.looksee.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.UXIssueMessageRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Service
+@Retry(name="neoforj")
 public class UXIssueMessageService {
 	
 	@Autowired
@@ -82,5 +86,10 @@ public class UXIssueMessageService {
 
 	public ElementState getElement(long id) {
 		return issue_message_repo.getElement(id);
+	}
+
+	public Iterable<UXIssueMessage> saveAll(List<UXIssueMessage> issue_messages) {
+		return issue_message_repo.saveAll(issue_messages);
+		
 	}
 }

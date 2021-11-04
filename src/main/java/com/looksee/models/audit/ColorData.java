@@ -17,7 +17,7 @@ public class ColorData extends LookseeObject{
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorData.class);
 
-	private float usage_percent;
+	private double usage_percent;
 	private int red;
 	private int green;
 	private int blue;
@@ -258,11 +258,11 @@ public class ColorData extends LookseeObject{
 		return rgb();
 	}
 
-	public float getUsagePercent() {
+	public double getUsagePercent() {
 		return usage_percent;
 	}
 
-	public void setUsagePercent(float usage_percent) {
+	public void setUsagePercent(double usage_percent) {
 		this.usage_percent = usage_percent;
 	}
 

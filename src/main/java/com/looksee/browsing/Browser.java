@@ -58,8 +58,8 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.assertthat.selenium_shutterbug.core.Capture;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
-import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.looksee.models.ElementState;
 
 import cz.vutbr.web.css.CSSFactory;
@@ -162,8 +162,8 @@ public class Browser {
 		try {
 			waitForPageToLoad();
 		}catch(Exception e) {
-			e.printStackTrace();
 			/*
+			e.printStackTrace();
 			Alert alert = isAlertPresent();
 			if(alert != null){
 				log.debug("Alert was encountered during navigation page load!!!");
@@ -173,9 +173,6 @@ public class Browser {
 			}
 			 */
 		}
-		
-		//waitForPageToLoad();
-		//log.debug("successfully navigated to "+url);
 	}
 
 	/**
@@ -214,6 +211,7 @@ public class Browser {
 	 */
 	public void close(){
 		try{
+			//driver.close();
 			driver.quit();
 		}
 		catch(Exception e){
@@ -372,7 +370,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
-		return Shutterbug.shootPage(driver, ScrollStrategy.WHOLE_PAGE, 1000).getImage();
+		return Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
 	}
 	
 	/**
@@ -381,7 +379,8 @@ public class Browser {
 	 * @param elem
 	 * @return
 	 * @throws IOException
-	 */	
+	 */
+	@Deprecated
 	public BufferedImage getElementScreenshot(com.looksee.models.Element element) throws IOException{
 		//calculate element position within screen
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
@@ -395,11 +394,12 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
+	public BufferedImage getElementScreenshot(WebElement element) throws Exception{
 		//log.warn("Fullpage width and height :: " + this.getFullPageScreenshot().getWidth() + " , " + this.getFullPageScreenshot().getHeight());
 
 		//calculate element position within screen
-		return Shutterbug.shootElementVerticallyCentered(driver, element, true).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage(); 
+		//return Shutterbug.shootElement(driver, element).getImage();
 	}
 	
 	/**
@@ -500,9 +500,6 @@ public class Browser {
 		assert url != null;
 		assert xpath != null;
 		
-		log.warn("-----------------------------------------------------------------------------");
-		log.warn("-----------------------------------------------------------------------------");
-		log.warn("loading post render css properties");
 		Map<String, String> css_map = new HashMap<>();
 
 		//THE FOLLOWING WORKS TO GET RENDERED CSS VALUES FOR EACH ELEMENT THAT ACTUALLY HAS CSS
@@ -1119,5 +1116,22 @@ public class Browser {
 	public void scrollDown() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollBy(0, window.innerHeight)");
+	}
+
+	/**
+	 * Retrieve HTML source form webpage
+	 * 
+	 * @return HTML source
+	 */
+	public String getSource() {
+		return this.getDriver().getPageSource();
+	}
+
+	public boolean is503Error() {
+		return this.getSource().contains("503 Service Temporarily Unavailable");
+	}
+
+	public WebElement findElement(String xpath) throws WebDriverException{
+		return getDriver().findElement(By.xpath(xpath));
 	}
 }

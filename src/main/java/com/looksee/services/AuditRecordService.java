@@ -1,4 +1,4 @@
-           package com.looksee.services;
+package com.looksee.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import io.github.resilience4j.retry.annotation.Retry;
  *
  */
 @Service
-@Retry(name = "neo4j")
+@Retry(name = "neoforj")
 public class AuditRecordService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
@@ -38,6 +38,7 @@ public class AuditRecordService {
 
 	public AuditRecord save(AuditRecord audit) {
 		assert audit != null;
+		
 		return audit_record_repo.save(audit);
 	}
 
@@ -64,15 +65,14 @@ public class AuditRecordService {
 	}
 
 	public void addAudit(long audit_record_id, long audit_id) {
+		assert audit_record_id != audit_id;
+		
 		//check if audit already exists for page state
 		audit_record_repo.addAudit(audit_record_id, audit_id);
 	}
 	
-	public Set<Audit> getAllAudits(String audit_record_key) {
-		assert audit_record_key != null;
-		assert !audit_record_key.isEmpty();
-		
-		return audit_record_repo.getAllAudits(audit_record_key);
+	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
+		return audit_record_repo.getAllAuditsAndIssues(audit_id);
 	}
 
 	/**
@@ -300,5 +300,9 @@ public class AuditRecordService {
 
 	public void addPageToAuditRecord(long audit_record_id, long page_state_id) {
 		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
+	}
+
+	public long getIssueCountBySeverity(long id, String severity) {
+		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
 }

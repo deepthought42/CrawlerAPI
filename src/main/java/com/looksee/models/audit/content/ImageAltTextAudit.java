@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
@@ -26,6 +27,7 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.PageStateService;
 
 /**
  * Responsible for executing an audit on the images on a page to determine adherence to alternate text best practices 
@@ -53,19 +55,17 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record) { 
 		assert page_state != null;
 		
-		Set<UXIssueMessage> issue_messages =  new HashSet<>();
+		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
-		labels.add("images");
-		labels.add("alt-text");
+		labels.add("alt_text");
 		
 		String tag_name = "img";
 		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
 		List<ElementState> image_elements = new ArrayList<>();
 		for(ElementState element : page_state.getElements()) {
 			if(element.getName().equalsIgnoreCase(tag_name)) {
-				log.warn("Image element found :: "+ element.getCssSelector());
 				image_elements.add(element);
 			}
 		}
@@ -76,21 +76,17 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				" ‘Alt’ text for images present on the website.";
 	
-		log.warn("Total image elements found :: "+image_elements.size());
-		
+		if(page_state.getUrl().contentEquals("look-see.com")) {
+			log.warn(image_elements.size()+" images found for evaluation on "+page_state.getUrl());
+		}
 		//score each link element
-		int score = 0;
 		for(ElementState image_element : image_elements) {
 	
 			Document jsoup_doc = Jsoup.parseBodyFragment(image_element.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag(tag_name).first();
 			
-			log.warn("is ALT text set?   "+element.hasAttr("alt"));
 			//Check if element has "alt" attribute present
-			if(element.hasAttr("alt")) {
-				score++;
-				
-				log.warn("is ALT text empty?   "+element.attr("alt").isEmpty());
+			if(element.hasAttr("alt")) {				
 
 				if(element.attr("alt").isEmpty()) {
 					String title = "Image alternative text value is empty";
@@ -104,11 +100,27 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
-																	title);
+																	title,
+																	0,
+																	1);
 					issue_messages.add(issue_message);
 				}
 				else {
-					score++;
+					String title = "Image has alt text value set!";
+					String description = "Well done! By providing an alternative text value, you are providing a more inclusive experience";
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.NONE, 
+																	description, 
+																	"Images without alternative text defined as a non empty string value", 
+																	image_element,
+																	AuditCategory.CONTENT,
+																	labels,
+																	ada_compliance,
+																	title,
+																	1,
+																	1);
+					issue_messages.add(issue_message);
 				}
 			}
 			else {
@@ -123,39 +135,33 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																AuditCategory.CONTENT, 
 																labels,
 																ada_compliance,
-																title);
+																title,
+																0,
+																1);
 				issue_messages.add(issue_message);
 			}
-			
-			
 		}
 		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.AESTHETICS.toString());
-		
-		/*
-		if(!images_with_alt_text_defined.isEmpty()) {
-			ElementStateObservation observation = new ElementStateObservation(
-					images_with_alt_text_defined, 
-					"Images that have alternative text defined as a non empty string value");
-			observations.add(observation_service.save(observation));
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
 		}
-		*/
 		
-		log.warn("LINKS AUDIT SCORE ::  "+score + " / " + (image_elements.size()*2));
+		//log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
-		
+
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY,
 						 AuditName.ALT_TEXT,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 image_elements.size()*2,
+						 max_points,
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 true);
 		
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit

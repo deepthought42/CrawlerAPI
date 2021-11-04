@@ -2,7 +2,6 @@ package com.looksee.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.auth0.client.auth.AuthAPI;
@@ -16,10 +15,20 @@ public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	//@Value(value = "${auth0.client_id}")
+	/* PRODUCTION VALUES */
+	/*
 	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
 	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
 	private static String domain = "look-see.us.auth0.com";
 	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
+	*/	
+	
+	
+	//@Value(value = "${auth0.client_id}")
+	/** STAGING VALUES */
+ 	private static String client_id = "8HRxTIHb0uJ9FRnosRJhoMOvXwQDTRGG"; 
+	private static String client_secret = "eF-ifoh6xNW6rWtdtbnZ8FVCVDwU46ELNpYc0H7xRCLXRnIpEGKCoHS20nmNLZB9";
+	private static String domain = "look-see-dev.us.auth0.com";
 	
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;

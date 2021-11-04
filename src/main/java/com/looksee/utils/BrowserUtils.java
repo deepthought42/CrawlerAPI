@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.cert.Certificate;
@@ -17,6 +19,7 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -25,6 +28,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -36,7 +40,9 @@ import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 
-
+/**
+ * 
+ */
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 	
@@ -58,7 +64,7 @@ public class BrowserUtils {
 		domain = domain.replace("index.html", "");
 		domain = domain.replace("index.htm", "");
 
-		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/'){
+		if(!domain.isEmpty() && domain.charAt(domain.length()-1) == '/' && !domain.startsWith("//")){
 			domain = domain.substring(0, domain.length()-1);
 		}
 		
@@ -150,10 +156,53 @@ public class BrowserUtils {
 	 * @return true if url is external, otherwise false
 	 * 
 	 * @throws MalformedURLException
+	 * @throws URISyntaxException 
 	 */
-	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException {
-		return !url.contains(domain_host);
+	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
+		//return ((!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host)) || url.contains("////");
+		return (!url.contains(domain_host) && !isRelativeLink(domain_host, url) ) || url.contains("////");
 	}
+	
+	/**
+	 * Returns true if link is empty or if it starts with a '/' and doesn't contain the domain host
+	 * @param domain_host host (example: google.com)
+	 * @param link_url link href value to be evaluated
+	 * 
+	 * @return true if link is empty or if it starts with a '/' and doesn't contain the domain host, otherwise false
+	 * @throws URISyntaxException
+	 */
+	public static boolean isRelativeLink(String domain_host, String link_url) {
+		assert domain_host != null;
+		assert link_url != null;
+		
+		return link_url.isEmpty() 
+				|| (link_url.charAt(0) == '/' && !link_url.startsWith("//") && !link_url.contains(domain_host)) 
+				|| (link_url.charAt(0) == '?' && !link_url.contains(domain_host))
+				|| (link_url.charAt(0) == '#' && !link_url.contains(domain_host));
+	}
+	
+
+	public static boolean isSubdomain(String domain_host, String new_host) throws URISyntaxException {
+		assert domain_host != null;
+		assert new_host != null;
+		
+		boolean is_contained = new_host.contains(domain_host) || domain_host.contains(new_host);
+		boolean is_equal = new_host.equals(domain_host);
+		boolean ends_with = new_host.endsWith(domain_host) || domain_host.endsWith(new_host);
+		return is_contained && !is_equal && ends_with;
+	}
+	
+	public static boolean isFile(String url) {
+		assert url != null;
+		
+		return url.endsWith(".zip") 
+				|| url.endsWith(".usdt") 
+				|| url.endsWith(".rss") 
+				|| url.endsWith(".svg") 
+				|| url.endsWith(".pdf")
+				|| isImageUrl(url);
+	}
+	
 	
 	/**
 	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
@@ -213,7 +262,7 @@ public class BrowserUtils {
 			}
 		}
 		if("https".equalsIgnoreCase(url.getProtocol())){
-			HttpsURLConnection https_client = getHttpsClient(url.toString());
+			HttpsURLConnection https_client = getHttpsClient(url);
 
 			try {
 				int responseCode = https_client.getResponseCode();
@@ -226,6 +275,10 @@ public class BrowserUtils {
 			} catch(UnknownHostException e) {
 				return false;
 			}
+			catch(SSLException e) {
+				log.warn("SSL Exception occurred while checking if URL exists");
+				return false;
+			}
 		}
 		else if("mailto".equalsIgnoreCase(url.getProtocol())) {
 			//TODO check if mailto address is vailid
@@ -236,8 +289,76 @@ public class BrowserUtils {
 		
 		return false;
 	}
+	
+	/**
+	 *  check if link returns valid content ie. no 404 or page not found errors when navigating to it
+	 * @param url
+	 * @return
+	 * 
+	 * @pre url_str != null
+	 * @throws Exception 
+	 */
+	public static boolean doesUrlExist(String url_str) throws Exception {
+		assert url_str != null;
+		
+		if(url_str.startsWith("#") 
+			|| BrowserUtils.isJavascript(url_str)
+			|| url_str.startsWith("itms-apps:")
+			|| url_str.startsWith("snap:")
+			|| url_str.startsWith("tel:")
+			|| url_str.startsWith("mailto:")
+		) {
+			return true;
+		}
+		
+		URL url = new URL(url_str);
+		//perform check for http clients
+		if("http".equalsIgnoreCase(url.getProtocol())){
+			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			int responseCode = huc.getResponseCode();
+			huc.disconnect();
+			if (responseCode == 404) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		else if("https".equalsIgnoreCase(url.getProtocol())){
+			try {
+				HttpsURLConnection https_client = getHttpsClient(url);
+				https_client.setConnectTimeout(10000);
+				https_client.setReadTimeout(10000);
+				https_client.setInstanceFollowRedirects(true);
 
-	private static HttpsURLConnection getHttpsClient(String url) throws Exception {
+				int responseCode = https_client.getResponseCode();
+
+				if (responseCode == 404) {
+					return false;
+				} else {
+					return true;
+				}
+			} catch(UnknownHostException e) {
+				e.printStackTrace();
+				return false;
+			}
+			catch(SSLException e) {
+				log.warn("SSL Exception occurred while checking if URL exists");
+				e.printStackTrace();
+				return false;
+			}
+			catch(Exception e) {
+				return false;
+			}
+		}
+		else {
+			log.warn("neither protocol is present");
+			// TODO handle image links
+		}
+		
+		return false;
+	}
+
+	private static HttpsURLConnection getHttpsClient(URL url) throws Exception {
 		 
         // Security section START
         TrustManager[] trustAllCerts = new TrustManager[]{
@@ -263,7 +384,8 @@ public class BrowserUtils {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         // Security section END
         
-        HttpsURLConnection client = (HttpsURLConnection) new URL(url).openConnection();
+        HttpsURLConnection client = (HttpsURLConnection) url.openConnection();
+        client.setSSLSocketFactory(sc.getSocketFactory());
         //add request header
         client.setRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36");
@@ -474,7 +596,7 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Checks if the server has certificates. Expects an https protocol in the url
+	 * Checks the http status codes received when visiting the given url
 	 * 
 	 * @param url
 	 * @param title
@@ -483,12 +605,12 @@ public class BrowserUtils {
 	 * @throws IOException
 	 */
 	public static int getHttpStatus(URL url) {
-		int status_code = 0;
+		int status_code = 500;
 		try {
 			if(url.getProtocol().contentEquals("http")) {
 				HttpURLConnection con = (HttpURLConnection)url.openConnection();
 				status_code = con.getResponseCode();
-				log.warn("HTTP status code = "+status_code);
+				//log.warn("HTTP status code = "+status_code);
 				return status_code;
 			}
 			else if(url.getProtocol().contentEquals("https")) {
@@ -505,7 +627,7 @@ public class BrowserUtils {
 	    	status_code = 404;
 	    	e.printStackTrace();
 	    }
-		return 500;
+		return status_code;
 	}
 	
 	/**
@@ -516,16 +638,13 @@ public class BrowserUtils {
 	 * @throws IOException
 	 */
 	public static boolean checkIfSecure(URL url) {
-        log.warn("Checking if page is secure...."+url.toString());
-        //dumpl all cert info
+        //dump all cert info
         //print_https_cert(con);
         boolean is_secure = false;
         try{
         	HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
         	con.connect();
-        	log.warn("certificate count ...  " + con.getServerCertificates().length);
         	is_secure = con.getServerCertificates().length > 0;
-        	log.warn("Is connection secure??   "+is_secure);
         }
         catch(Exception e) {
         	log.warn("an error was encountered while checking for SSL!!!!");
@@ -557,12 +676,8 @@ public class BrowserUtils {
 		                
 		    } catch (SSLPeerUnverifiedException e) {
 		        e.printStackTrace();
-		    } catch (IOException e){
-		        e.printStackTrace();
 		    }
-
-	    }
-	    
+	    }	    
    }
 
 	public static boolean doesElementHaveBackgroundColor(WebElement web_element) {
@@ -582,5 +697,52 @@ public class BrowserUtils {
 
 	public static double convertPxToPt(double pixel_size) {
 		return pixel_size * 0.75;
+	}
+
+	public static boolean isJavascript(String href) {
+		return href.startsWith("javascript:");
+	}
+
+	public static boolean isLargerThanViewport(Dimension element_size, int viewportWidth, int viewportHeight) {
+		return element_size.getWidth() > viewportWidth || element_size.getHeight() > viewportHeight;
+	}
+
+	/**
+	 * Handles extra formatting for relative links
+	 * @param protocol TODO
+	 * @param host
+	 * @param href
+	 * 
+	 * @pre host != null
+	 * @pre !host.isEmpty
+	 * 
+	 * @return
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public static String formatUrl(String protocol, String host, String href) throws MalformedURLException {
+		assert host != null;
+		assert !host.isEmpty();
+		
+		href = href.replaceAll(";", "").trim();
+		if(href == null 
+			|| href.isEmpty() 
+			|| BrowserUtils.isJavascript(href)
+			|| href.startsWith("itms-apps:")
+			|| href.startsWith("snap:")
+			|| href.startsWith("tel:")
+			|| href.startsWith("mailto:")
+		) {
+			return href;
+		}
+		
+		//URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
+		//href = BrowserUtils.getPageUrl(sanitized_href);
+		//check if external link
+		if(BrowserUtils.isRelativeLink(host, href)) {
+			href = protocol + "://" + host + href;
+		}
+		
+		return href;
 	}
 }

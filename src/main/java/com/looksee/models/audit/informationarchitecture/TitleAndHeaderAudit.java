@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -39,7 +38,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(TitleAndHeaderAudit.class);
 	
 	public TitleAndHeaderAudit() {}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -51,8 +50,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	@Override
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
+
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		//List<PageVersion> pages = domain_service.getPages(domain.getHost());
 
 		Score title_score = scorePageTitles(page_state);
 		Score favicon_score = scoreFavicon(page_state);
@@ -61,29 +60,29 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		issue_messages.addAll(title_score.getIssueMessages());
 		issue_messages.addAll(favicon_score.getIssueMessages());
 		issue_messages.addAll(heading_score.getIssueMessages());
+		
+		int points_earned = 0;
+		int max_points = 0;
 		for(UXIssueMessage issue_msg : issue_messages) {
-			MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_msg);
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
 		}
 		
-		int points = title_score.getPointsAchieved() + favicon_score.getPointsAchieved() + heading_score.getPointsAchieved();
-		int max_points = title_score.getMaxPossiblePoints() + favicon_score.getMaxPossiblePoints() + heading_score.getMaxPossiblePoints();
-		
-		log.warn("TITLE FONT AUDIT SCORE   ::   "+points +" / " +max_points);
+		//log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);
 		String why_it_matters = "The favicon is a small detail with a big impact on engagement. When users leave your site to look at another tab that they have open, the favicon allos them to easily identify the tab that belongs to your service.";
-		String ada_compliance = "Nunc nulla odio, accumsan ac mauris quis, efficitur mattis sem. Maecenas mattis non urna nec malesuada. Nullam felis risus, interdum vel turpis non, elementum lobortis nulla. Sed laoreet sagittis maximus. Vestibulum ac sollicitudin lectus, vitae viverra arcu. Donec imperdiet sit amet lorem non tempor. Phasellus velit leo, vestibulum at justo ac, viverra scelerisque massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi rutrum nunc et turpis facilisis gravida. Vivamus nec ipsum sed nunc efficitur mattis sed pulvinar metus. Morbi vitae nisi sit amet purus efficitur mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque accumsan, nisi eu dignissim convallis, elit libero dictum dui, eu euismod mauris dui nec odio.";
 		String description = "";
-		
+
+		//page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SEO,
 						 AuditName.TITLES,
-						 points,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
 						 max_points,
-						 page_state.getUrl(), 
+						 page_state.getUrl(),
 						 why_it_matters, 
 						 description, 
-						 page_state,
 						 true);
 	}
 
@@ -200,8 +199,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		}
 		
 		
-		log.warn("Headings score ::    "+score);
-		log.warn("Headings max score :::  "+max_points);
+		//log.warn("Headings score ::    "+score);
+		//log.warn("Headings max score :::  "+max_points);
 		return new Score(score, max_points, new HashSet<>());
 	}
 
@@ -220,26 +219,36 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		int points = 0;
 		int max_points = 1;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-
+		Set<String> labels = new HashSet<>();
+		labels.add("information_architecture");
+		labels.add("branding");
+		labels.add("seo");
+		
 		//score title of page state
 		if(hasFavicon(page_state.getSrc())) {
 			points += 1;
+			String title = "Favicon is present and accounted for";
+			String description = "Well done! This page has a favicon defined which helps improve recognition of your brand by showing the icon in the browser tab. When users open another tab they'll be able to easily identify which tab is your website.";
+			String recommendation = "";
+
+			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
+															page_state, 
+															description, 
+															recommendation,
+															Priority.HIGH, 
+															AuditCategory.INFORMATION_ARCHITECTURE,
+															labels,
+															ada_compliance,
+															title,
+															1,
+															1);
 			
-			//check if favicon is valid by having a valid href value defined
-			 //&& !element.attr("href").isEmpty()
-			
-			//check if resource can actually be reached
+			issue_messages.add(favicon_issue);
 		}
 		else {
 			
-			Set<String> labels = new HashSet<>();
-			labels.add("accessibility");
-			labels.add("color");
-			labels.add("seo");
-			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
-			Set<UXIssueMessage> favicon_issues = new HashSet<>();
 			String title = "favicon is missing";
 			String description = "Your page doesn't have a favicon defined. This results in browser tabs not displaying your logo which can reduce recognition of your website when users leave your site temporarily.";
 			String recommendation = "Create an icon that is 16x16 for your brand logo and include it as your favicon by inclding the following code in your head tag <link rel=\"shortcut icon\" href=\"your_favicon.ico\" type=\"image/x-icon\"> . Don't forget to put the location of your favicon in place of the href value";
@@ -252,8 +261,10 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															AuditCategory.INFORMATION_ARCHITECTURE,
 															labels,
 															ada_compliance,
-															title);
-			favicon_issues.add(favicon_issue);
+															title,
+															0,
+															1);
+			issue_messages.add(favicon_issue);
 			points += 0;			
 		}
 		
@@ -290,22 +301,19 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		int points = 0;
 		int max_points = 1;
 		String title = BrowserUtils.getTitle(page_state);
+		
+		Set<String> labels = new HashSet<>();
+		labels.add("seo");
+		labels.add("information_architecture");
+
 		//score title of page state
 		if( title != null && !title.isEmpty()) {
 			points += 1;
-		}
-		else {
+			String issue_title = "Page has a title";
+			String description = "Well done! This page has a title defined";
+			String ada_compliance = "";
+			String recommendation = "";
 
-			String issue_title = "Page is missing a title";
-			String description = "This page doesn't have a title defined";
-			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
-			String ada_compliance = "Each page should have a title defined to be compliant WCAG 2.1 standards";
-			String recommendation = "Add a title to the header tag in the html. eg. <title>Page title here</title>";
-			
-			Set<String> labels = new HashSet<>();
-			labels.add("information_architecture");
-			labels.add("accessibility");
-			labels.add("seo");
 			
 			Set<String> categories = new HashSet<>();
 			categories.add(AuditCategory.AESTHETICS.toString());
@@ -318,7 +326,34 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															AuditCategory.INFORMATION_ARCHITECTURE,
 															labels,
 															ada_compliance,
-															issue_title);
+															issue_title,
+															1,
+															1);
+			issue_messages.add(title_issue);
+		}
+		else {
+
+			String issue_title = "Page is missing a title";
+			String description = "This page doesn't have a title defined";
+			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
+			String ada_compliance = "";
+			String recommendation = "Add a title to the header tag in the html. eg. <title>Page title here</title>";
+
+			
+			Set<String> categories = new HashSet<>();
+			categories.add(AuditCategory.AESTHETICS.toString());
+
+			PageStateIssueMessage title_issue = new PageStateIssueMessage(
+															page_state, 
+															description, 
+															recommendation,
+															Priority.HIGH,
+															AuditCategory.INFORMATION_ARCHITECTURE,
+															labels,
+															ada_compliance,
+															issue_title,
+															0,
+															1);
 			issue_messages.add(title_issue);
 
 			points += 0;				

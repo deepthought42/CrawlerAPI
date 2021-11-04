@@ -10,10 +10,13 @@ import com.looksee.models.ElementState;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.StepRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Enables interacting with database for {@link Step Steps}
  */
 @Service
+@Retry(name = "neoforj")
 public class StepService {
 	private static Logger log = LoggerFactory.getLogger(StepService.class);
 

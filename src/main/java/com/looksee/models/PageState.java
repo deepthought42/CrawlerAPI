@@ -40,15 +40,16 @@ public class PageState extends LookseeObject {
 	private LocalDateTime last_landability_check;
 
 	private String viewport_screenshot_url;
-	private String full_page_screenshot_url;
+	private String full_page_screenshot_url_onload;
+	private String full_page_screenshot_url_composite;
 	private String browser;
 	private boolean landable;
 	private long scrollXOffset;
 	private long scrollYOffset;
 	private int viewport_width;
 	private int viewport_height;
-	private long full_page_width;
-	private long full_page_height;
+	private int full_page_width;
+	private int full_page_height;
 	private String page_name;
 	
 	private String title;
@@ -82,13 +83,14 @@ public class PageState extends LookseeObject {
 	 * @param viewport_width
 	 * @param viewport_height
 	 * @param browser
-	 * @param full_page_screenshot_url
+	 * @param full_page_screenshot_url_onload
 	 * @param full_page_width TODO
 	 * @param full_page_height TODO
 	 * @param url
 	 * @param title TODO
 	 * @param is_secure TODO
 	 * @param http_status_code TODO
+	 * @param full_page_screenshot_url_composite TODO
 	 * @throws MalformedURLException 
 	 */
 	public PageState(String screenshot_url, 
@@ -100,19 +102,20 @@ public class PageState extends LookseeObject {
 			int viewport_width, 
 			int viewport_height, 
 			BrowserType browser, 
-			String full_page_screenshot_url,
-			long full_page_width, 
-			long full_page_height, 
+			String full_page_screenshot_url_onload,
+			int full_page_width, 
+			int full_page_height, 
 			String url, 
 			String title, 
 			boolean is_secure, 
-			int http_status_code
+			int http_status_code, 
+			String full_page_screenshot_url_composite
 	) {
 		assert screenshot_url != null;
 		assert elements != null;
 		assert src != null;
 		assert browser != null;
-		assert full_page_screenshot_url != null;
+		assert full_page_screenshot_url_onload != null;
 		assert url != null;
 		assert !url.isEmpty();
 		
@@ -127,7 +130,8 @@ public class PageState extends LookseeObject {
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
 	    setLoginRequired(false);
-		setFullPageScreenshotUrl(full_page_screenshot_url);
+		setFullPageScreenshotUrlOnload(full_page_screenshot_url_onload);
+		setFullPageScreenshotUrlComposite(full_page_screenshot_url_composite);
 		setFullPageWidth(full_page_width);
 		setFullPageHeight(full_page_height);
 		setUrl(url);
@@ -237,13 +241,14 @@ public class PageState extends LookseeObject {
 							 getViewportWidth(), 
 							 getViewportHeight(), 
 							 getBrowser(), 
-							 getFullPageScreenshotUrl(), 
+							 getFullPageScreenshotUrlOnload(), 
 							 getFullPageWidth(), 
 							 getFullPageHeight(), 
 							 getUrl(),
 							 getTitle(),
 							 isSecure(),
-							 getHttpStatus());
+							 getHttpStatus(),
+							 getFullPageScreenshotUrlComposite());
 	}
 
 	@JsonIgnore
@@ -308,7 +313,7 @@ public class PageState extends LookseeObject {
 			key += element.getKey();
 		}
 		*/
-		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() + BrowserService.generalizeSrc(BrowserService.extractBody(this.getSrc()) ));
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() + this.getFullPageScreenshotUrlOnload()+BrowserService.generalizeSrc(BrowserService.extractBody(this.getSrc()) ));
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {
@@ -384,31 +389,31 @@ public class PageState extends LookseeObject {
 		this.login_required = login_required;
 	}
 	
-	public String getFullPageScreenshotUrl() {
-		return full_page_screenshot_url;
+	public String getFullPageScreenshotUrlOnload() {
+		return full_page_screenshot_url_onload;
 	}
 
-	public void setFullPageScreenshotUrl(String full_page_screenshot_url) {
-		this.full_page_screenshot_url = full_page_screenshot_url;
+	public void setFullPageScreenshotUrlOnload(String full_page_screenshot_url) {
+		this.full_page_screenshot_url_onload = full_page_screenshot_url;
 	}
 
-	public long getFullPageWidth() {
+	public int getFullPageWidth() {
 		return full_page_width;
 	}
 	
-	public void setFullPageWidth(long full_page_width) {
+	public void setFullPageWidth(int full_page_width) {
 		this.full_page_width = full_page_width;
 	}
 	
-	public long getFullPageHeight() {
+	public int getFullPageHeight() {
 		return full_page_height;
 	}
 
-	public void setFullPageHeight(long full_page_height) {
+	public void setFullPageHeight(int full_page_height) {
 		this.full_page_height = full_page_height;
 	}
 
-	public synchronized void addElements(List<ElementState> elements) {
+	public void addElements(List<ElementState> elements) {
 		//check for duplicates before adding
 		for(ElementState element : elements) {
 			if(!this.elements.contains(element)) {				
@@ -491,6 +496,14 @@ public class PageState extends LookseeObject {
 
 	public int getHttpStatus() {
 		return http_status;
+	}
+
+	public String getFullPageScreenshotUrlComposite() {
+		return full_page_screenshot_url_composite;
+	}
+
+	public void setFullPageScreenshotUrlComposite(String full_page_screenshot_url_composite) {
+		this.full_page_screenshot_url_composite = full_page_screenshot_url_composite;
 	}
 
 	public void setHttpStatus(int http_status) {

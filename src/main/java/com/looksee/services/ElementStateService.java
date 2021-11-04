@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.neo4j.ogm.exception.CypherException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,10 @@ import com.looksee.models.ElementState;
 import com.looksee.models.repository.ElementStateRepository;
 import com.looksee.models.rules.Rule;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Service
+@Retry(name="neoforj")
 public class ElementStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
@@ -33,7 +37,7 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public synchronized ElementState save(ElementState element){
+	public ElementState save(ElementState element) throws CypherException{
 		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());
@@ -190,5 +194,19 @@ public class ElementStateService {
 		assert page_state_key != null;
 		assert xpath != null;
 		return element_repo.findByPageStateAndXpath(page_state_key, xpath);
+	}
+
+	public Iterable<ElementState> saveAll(List<ElementState> element_states) {
+		return element_repo.saveAll(element_states);
+	}
+
+	/**
+	 * Returns subset of element keys that exist within the database 
+	 * 
+	 * @param element_keys
+	 * @return
+	 */
+	public List<String> getAllExistingKeys(List<String> element_keys) {
+		return element_repo.getAllExistingKeys(element_keys);
 	}
 }

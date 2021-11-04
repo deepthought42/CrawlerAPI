@@ -110,6 +110,10 @@ public class AuditRecord extends LookseeObject {
 		return aesthetic_audit_progress;
 	}
 
+	public void setAestheticAuditProgress(double aesthetic_audit_progress) {
+		this.aesthetic_audit_progress = aesthetic_audit_progress;
+	}
+
 	public String getContentAuditMsg() {
 		return content_audit_msg;
 	}
@@ -117,11 +121,7 @@ public class AuditRecord extends LookseeObject {
 	public void setContentAuditMsg(String content_audit_msg) {
 		this.content_audit_msg = content_audit_msg;
 	}
-
-	public void setAestheticAuditProgress(double aesthetic_audit_progress) {
-		this.aesthetic_audit_progress = aesthetic_audit_progress;
-	}
-
+	
 	public String getInfoArchMsg() {
 		return info_arch_msg;
 	}

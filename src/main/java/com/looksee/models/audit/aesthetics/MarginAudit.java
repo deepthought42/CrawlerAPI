@@ -141,7 +141,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(),
 						 "",
 						 "",
-						 page_state,
 						 false);
 	}
 
@@ -166,7 +165,23 @@ public class MarginAudit implements IExecutablePageStateAudit {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					//elements.add(element);
+					String title = "Element margins are multiple of 8";
+					String description = "All margins for element are a mutliple of 8";
+					Set<String> labels = new HashSet<>();
+					labels.add("whitespace");
+					
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																		Priority.MEDIUM,
+																		description,
+																		"For best responsiveness make sure margin values are a multiple of 8.", 
+																		element, 
+																		AuditCategory.AESTHETICS, 
+																		labels, 
+																		"",
+																		title, 
+																		1,
+																		1);
+					issue_messages.add(issue_message);
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
@@ -182,8 +197,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 																		element, 
 																		AuditCategory.AESTHETICS, 
 																		labels, 
-																		null,
-																		title);
+																		"",
+																		title, 
+																		0,
+																		1);
 					issue_messages.add(issue_message);
 				}
 				max_points++;
@@ -227,11 +244,27 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int max_points = 0;
 		Set<UXIssueMessage> element_issues = new HashSet<>();
 		
+		Set<String> labels = new HashSet<>();
+		labels.add("whitespace");
+		
 		for(ElementState element : elements_margins.keySet()) {
 			for(String size_str : elements_margins.get(element)) {
 				if(isMultipleOf8(size_str)) {
 					points_earned += 1;
-					
+					String title = "Has at least one margin value that isn't a multiple of 8.";
+					String description = title;
+					ElementStateIssueMessage element_issue = new ElementStateIssueMessage(
+							Priority.MEDIUM, 
+							description, 
+							"For best responsiveness make sure margin values are a multiple of 8.", 
+							element, 
+							AuditCategory.AESTHETICS, 
+							labels, 
+							"",
+							title,
+							1,
+							1);
+					element_issues.add(element_issue);
 				}
 				//else create observation that element is unlikely to scale gracefully
 				else {
@@ -245,7 +278,9 @@ public class MarginAudit implements IExecutablePageStateAudit {
 							AuditCategory.AESTHETICS, 
 							new HashSet<>(), 
 							null,
-							title);
+							title,
+							0,
+							1);
 					element_issues.add(element_issue);
 				}
 				max_points++;
@@ -261,9 +296,6 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		String ada_compliance = "There are no ADA requirements for use of margins";
 		Set<String> recommendations = new HashSet<>();
 		recommendations.add("For a responsive design we recommend using margin values that are a multiple of 8.");
-		
-		Set<String> labels = new HashSet<>();
-		labels.add("whitespace");
 		
 		Set<String> categories = new HashSet<>();
 		categories.add(AuditCategory.AESTHETICS.toString());
@@ -309,6 +341,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 		int max_vertical_score = 0;
 		Set<UXIssueMessage> element_issues = new HashSet<>();
 
+		Set<String> labels = new HashSet<>();
+		labels.add("responsiveness");
+		labels.add("whitespace");
+		
 		for(ElementState element : element_margin_map.keySet()) {
 			for(String margin_value : element_margin_map.get(element)) {
 				//determine unit measure
@@ -317,11 +353,7 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				vertical_score += scoreMeasureUnit(unit);
 				max_vertical_score += 3;
 				
-				if(vertical_score == 1) {
-					Set<String> labels = new HashSet<>();
-					labels.add("responsiveness");
-					labels.add("whitespace");
-					
+				if(vertical_score < 1) {
 					String description = "Unscalable margin units";
 					String title = "Unscalable margin units";
 
@@ -332,8 +364,27 @@ public class MarginAudit implements IExecutablePageStateAudit {
 																	element, 
 																	AuditCategory.AESTHETICS,
 																	labels, 
-																	null, 
-																	title);
+																	"", 
+																	title,
+																	0,
+																	1);
+					element_issues.add(issue_message);
+				}
+				else {
+					String description = "Correct use of scalable margin units";
+					String title = "Correct use of scalable margin units";
+
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM,
+																	description, 
+																	"Elements with unscalable margin units", 
+																	element, 
+																	AuditCategory.AESTHETICS,
+																	labels, 
+																	"", 
+																	title,
+																	1,
+																	1);
 					element_issues.add(issue_message);
 				}
 			}
@@ -445,6 +496,23 @@ public class MarginAudit implements IExecutablePageStateAudit {
 				}
 				
 				if(margin_used_as_padding) {
+					String title = "Margin used as padding";
+					String description = "Margin used as padding";
+
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM,
+																	description, 
+																	"Elements that appear to use margin as padding", 
+																	element, 
+																	AuditCategory.AESTHETICS,
+																	labels, 
+																	"",
+																	title,
+																	0,
+																	1);
+					element_issues.add(issue_message);
+				}
+				else {
 					score += 1;
 					String title = "Margin used as padding";
 					String description = "Margin used as padding";
@@ -456,8 +524,10 @@ public class MarginAudit implements IExecutablePageStateAudit {
 																	element, 
 																	AuditCategory.AESTHETICS,
 																	labels, 
-																	null,
-																	title);
+																	"",
+																	title,
+																	1,
+																	1);
 					element_issues.add(issue_message);
 				}
 				max_score += 3;

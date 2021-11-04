@@ -1,9 +1,7 @@
 package com.looksee.actors;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +16,10 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.aesthetics.NonTextColorContrastAudit;
 import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
-import com.looksee.services.AccountService;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
-import com.looksee.services.SendGridMailService;
-import com.looksee.utils.AuditUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -50,17 +47,7 @@ public class AestheticAuditor extends AbstractActor{
 	private NonTextColorContrastAudit non_text_contrast_auditor;
 	
 	@Autowired
-	private AuditService audit_service;
-	
-	@Autowired
 	private AuditRecordService audit_record_service;
-	
-	
-	@Autowired
-	private AccountService account_service;
-	
-	@Autowired
-	private SendGridMailService email_service;
 	
 	private Account account;
 
@@ -90,61 +77,84 @@ public class AestheticAuditor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageAuditRecord.class, page_audit_record_msg -> {
-				   	//generate audit report
-				   	Set<Audit> audits = new HashSet<>();
-				   	PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
-				   	
-				   	//check if page state already
-		   			//perform audit and return audit result
-				   
-				   	//Audit color_palette_audit = color_palette_auditor.execute(page);
-					//audits.add(color_palette_audit);
-					AuditRecord page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-				   	page_audit_record.setAestheticAuditProgress( (1.0/3.0) ); 
-				   	page_audit_record.setAestheticMsg("Reviewing text contrast...");
-				   	page_audit_record = audit_record_service.save(page_audit_record);
-				   	
-					Audit text_contrast_audit = text_contrast_auditor.execute(page, null);
-					audits.add(text_contrast_audit);
-					
-				   	page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-				   	page_audit_record.setAestheticAuditProgress( (2.0/3.0) ); 
-				   	page_audit_record.setAestheticMsg("Reviewing non-text contrast...");
-				   	page_audit_record = audit_record_service.save(page_audit_record);
-					/*
-					Audit padding_audits = padding_auditor.execute(page);
-					audits.add(padding_audits);
+					try {
+					   	//generate audit report
+					   	//Set<Audit> audits = new HashSet<>();
+						AuditRecord audit_record = page_audit_record_msg; //audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+					   	//PageState page = page_audit_record_msg.getPageState();
+					   	//check if page state already
+			   			//perform audit and return audit result
+					   
+					   	//Audit color_palette_audit = color_palette_auditor.execute(page);
+						//audits.add(color_palette_audit);
 
-					Audit margin_audits = margin_auditor.execute(page);
-					audits.add(margin_audits);
-					 */
-					Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, null);
-					audits.add(non_text_contrast_audit);
-					
-					page_audit_record = audit_record_service.findById(page_audit_record_msg.getId()).get();
-					page_audit_record.setAestheticAuditProgress( 1 ); 
-					page_audit_record.setAestheticMsg("Done!");
-					page_audit_record = audit_record_service.save(page_audit_record);
-		   			//send message to either user or page channel containing reference to audits
+					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(1.0/3.0),
+																	"Reviewing text contrast",
+																	AuditCategory.AESTHETICS,
+																	AuditLevel.PAGE,
+																	null);
 
-					log.warn("content audits complete :: "+audits.size());
-					for(Audit audit : audits) {						
-						audit = audit_service.save(audit);
-						audit_record_service.addAudit( page_audit_record_msg.getId(), audit.getId() );
-						((PageAuditRecord)page_audit_record_msg).addAudit(audit);
-					}
-
-					//NOTE: SEND DATA TO AUDIT MANAGER
-					//getSender().tell(msg, getSelf());
-					
-
-					boolean is_audit_complete = AuditUtils.isPageAuditComplete(page_audit_record);
-					if(is_audit_complete) {
+					   	getSender().tell(audit_update, getSelf());
+					   	
+						Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record);
 						
-						Set<Account> accounts = account_service.findForAuditRecord(page_audit_record.getId());
-						for(Account account: accounts) {
-							email_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), page_audit_record.getId());
-						}
+						/*
+						Audit padding_audits = padding_auditor.execute(page);
+						audits.add(padding_audits);
+	
+						Audit margin_audits = margin_auditor.execute(page);
+						audits.add(margin_audits);
+						 */
+
+						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	(2.0/3.0),
+																	"Reviewing non-text contrast for WCAG compliance",
+																	AuditCategory.AESTHETICS,
+																	AuditLevel.PAGE,
+																	text_contrast_audit);
+						
+						getSender().tell(audit_update2, getSelf());
+						
+						Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record);
+						
+						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																	page_audit_record_msg.getId(),
+																	1.0,
+																	"Completed review of non-text contrast",
+																	AuditCategory.AESTHETICS,
+																	AuditLevel.PAGE,
+																	non_text_contrast_audit);
+
+						getSender().tell(audit_update3, getSelf());
+						
+			   			//send message to either user or page channel containing reference to audits
+						log.warn("Aesthetic audit compelte ");
+						//NOTE: SEND DATA TO AUDIT MANAGER
+					}catch(Exception e) {
+						log.warn("exception caught during aesthetic audit");
+						e.printStackTrace();
+						log.warn("-------------------------------------------------------------");
+						log.warn("-------------------------------------------------------------");
+						log.warn("THERE WAS AN ISSUE DURING AESTHETICS AUDIT");
+						log.warn("-------------------------------------------------------------");
+						log.warn("-------------------------------------------------------------");
+
+						
+						
+						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+								page_audit_record_msg.getId(),
+								1.0,
+								"Completed review of non-text contrast",
+								AuditCategory.AESTHETICS,
+								AuditLevel.PAGE,
+								null);
+
+						getSender().tell(audit_update3, getSelf());
+						
 					}
 				})
 				.match(MemberUp.class, mUp -> {

@@ -26,11 +26,14 @@ import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Contains business logic for interacting with and managing audits
  *
  */
 @Service
+@Retry(name = "neoforj")
 public class AuditService {
 	private static Logger log = LoggerFactory.getLogger(AuditService.class);
 
@@ -45,6 +48,7 @@ public class AuditService {
 
 	public Audit save(Audit audit) {
 		assert audit != null;
+		
 		return audit_repo.save(audit);
 	}
 
@@ -73,12 +77,8 @@ public class AuditService {
 				continue;
 			}
 
-			try {
-				Audit saved_audit = audit_repo.save(audit);
-				audits_saved.add(saved_audit);
-			}catch(Exception e) {
-				e.printStackTrace();
-			}
+			Audit saved_audit = audit_repo.save(audit);
+			audits_saved.add(saved_audit);
 		}
 		
 		return audits_saved;
@@ -90,7 +90,16 @@ public class AuditService {
 	}
 
 	public Set<UXIssueMessage> getIssues(long audit_id) {
-		return audit_repo.findIssueMessages(audit_id);
+		Set<UXIssueMessage> raw_issue_set = audit_repo.findIssueMessages(audit_id);
+		Set<UXIssueMessage> filtered_issue_set = new HashSet<>();
+		
+		for(UXIssueMessage issue: raw_issue_set) {
+			if(issue.getPoints() != issue.getMaxPoints()) {
+				filtered_issue_set.add(issue);
+			}
+		}
+		
+		return filtered_issue_set;
 	}
 	
 	/**
@@ -123,12 +132,12 @@ public class AuditService {
 			SimplePage simple_page = new SimplePage(
 											page_state.getUrl(), 
 											page_state.getViewportScreenshotUrl(), 
-											page_state.getFullPageScreenshotUrl(), 
-											page_state.getFullPageWidth(), 
+											page_state.getFullPageScreenshotUrlOnload(), 
+											page_state.getFullPageScreenshotUrlComposite(), 
+											page_state.getFullPageWidth(),
 											page_state.getFullPageHeight(),
-											page_state.getSrc(),
-											page_state.getKey(), 
-											page_state.getId());
+											page_state.getSrc(), 
+											page_state.getKey(), page_state.getId());
 			PageStateAudits page_state_audits = new PageStateAudits(simple_page, audit_url_map.get(url));
 			page_audits.add( page_state_audits ) ;
 		}
@@ -275,6 +284,10 @@ public class AuditService {
 				
 		}
 		return element_map.values();
+	}
+
+	public void addAllIssues(long id, List<Long> issue_ids) {
+		audit_repo.addAllIssues(id, issue_ids);
 	}
 
 }

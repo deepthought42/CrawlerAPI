@@ -1,8 +1,10 @@
 package com.looksee.utils;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -22,14 +24,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.gcp.CloudVisionUtils;
+import com.looksee.gcp.GoogleCloudStorage;
+import com.looksee.models.ElementState;
+import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorUsageStat;
+import com.looksee.models.enums.BrowserType;
+import com.twelvemonkeys.image.ResampleOp;
 
 public class ImageUtils {
 	private static Logger log = LoggerFactory.getLogger(ImageUtils.class);
 
 	 public static BufferedImage resize(BufferedImage img, int height, int width) {
-        Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		 /* 
+		 BufferedImageOp resampler = new ResampleOp(width, height, ResampleOp.FILTER_LANCZOS); // A good default filter, see class documentation for more info
+		 BufferedImage scaledImage = resampler.filter(img, null);
+		 return scaledImage;
+		  */
+		Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         BufferedImage resized = new BufferedImage(width, height, img.getType());
         Graphics2D g2d = resized.createGraphics();
         g2d.drawImage(tmp, 0, 0, null);
@@ -104,27 +116,27 @@ public class ImageUtils {
 	    zr = Z/Zr;
 
 	    if ( xr > eps )
-	        fx =  (float) Math.pow(xr, 1/3.);
+	        fx =  (float) Math.pow(xr, 1/3.0);
 	    else
-	        fx = (float) ((k * xr + 16.) / 116.);
+	        fx = (float) ((k * xr + 16.0) / 116.0);
 
 	    if ( yr > eps )
-	        fy =  (float) Math.pow(yr, 1/3.);
+	        fy =  (float) Math.pow(yr, 1/3.0);
 	    else
-	    fy = (float) ((k * yr + 16.) / 116.);
+	    fy = (float) ((k * yr + 16.0) / 116.0);
 
 	    if ( zr > eps )
-	        fz =  (float) Math.pow(zr, 1/3.);
+	        fz =  (float) Math.pow(zr, 1/3.0);
 	    else
-	        fz = (float) ((k * zr + 16.) / 116);
+	        fz = (float) ((k * zr + 16.0) / 116);
 
 	    Ls = ( 116 * fy ) - 16;
 	    as = 500*(fx-fy);
 	    bs = 200*(fy-fz);
 	    int[] lab = new int[3];
-	    lab[0] = (int) (2.55*Ls + .5);
-	    lab[1] = (int) (as + .5); 
-	    lab[2] = (int) (bs + .5);       
+	    lab[0] = (int) (2.55*Ls + 0.5);
+	    lab[1] = (int) (as + 0.5); 
+	    lab[2] = (int) (bs + 0.5);       
 	    
 	    return lab;
 	}
@@ -136,30 +148,45 @@ public class ImageUtils {
 	 * @throws IOException
 	 */
 	public static List<ColorUsageStat> extractImageProperties(BufferedImage buffered_image) throws IOException {
+		int width = buffered_image.getWidth();
+		int height = buffered_image.getHeight();		
+		
+		int desired_width = 768;
+		int desired_height = 1024;
+		
+
+		//scale down
+		double w_scale = Math.ceil(desired_width / (double)width);
+		double h_scale = Math.ceil(desired_height / (double)height);
+		
+		if(h_scale > w_scale) {
+			desired_width = (int)(h_scale * width);
+			desired_height = (int)(h_scale * height);
+		}
+		else {
+			desired_width = (int)(w_scale * width);
+			desired_height = (int)(w_scale * height);
+		}
+		
+		ImageUtils.resize(buffered_image, desired_width, desired_height);
+		//return CloudVisionUtils.extractImageProperties(buffered_image);
+		
+		
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
 		
-		int w = buffered_image.getWidth();
-		int h = buffered_image.getHeight();
-		//BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-		//AffineTransform at = new AffineTransform();
-		//at.scale(0.5, 0.5);
-		/*AffineTransformOp scaleOp = 
-		   new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-		after = scaleOp.filter(buffered_image, after);
-		*/
+		
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors
 		// Getting pixel color by position x and y
-		for(int x=0; x < buffered_image.getWidth(); x++) {
-			for(int y=0; y < buffered_image.getHeight(); y++) {
-				 int clr = buffered_image.getRGB(x, y);
+		for(int x=0; x < width; x+=3) {
+			for(int y=0; y < height; y+=3) {
+				int clr = buffered_image.getRGB(x, y);
 		        int red =   (clr & 0x00ff0000) >> 16;
 		        int green = (clr & 0x0000ff00) >> 8;
 		        int blue =   clr & 0x000000ff;
 		        String rgb = red+","+green+","+blue;
 		        if(colors.containsKey(rgb)) {
-		        	colors.put(rgb, colors.get(rgb)+1); 
-		        	
+		        	colors.put(rgb, colors.get(rgb)+1);	
 		        }else {
 		        	colors.put(rgb, 1);
 		        }
@@ -168,13 +195,13 @@ public class ImageUtils {
        
 		for(String color_str: colors.keySet()) {
 			ColorData color = new ColorData(color_str);
-			float percent = colors.get(color_str) / (float) ( w * h );
+			double percent = ((double)colors.get(color_str)) / ((double) ( width * height ));
 			//log.warn(color_str+"     :     "+percent);
 			ColorUsageStat color_stat = new ColorUsageStat(color.getRed(), color.getGreen(), color.getBlue(), percent, 0);
 			color_usage_stats.add(color_stat);
 		}
-        
 	    return color_usage_stats;
+	    
 	}
 
 	/**
@@ -187,17 +214,12 @@ public class ImageUtils {
 	public static ColorData extractBackgroundColor(URL screenshot_url, ColorData font_color) throws IOException {
 		List<ColorUsageStat> color_data_list = new ArrayList<>();
 		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url))); //LOCAL BRUTE FORCE METHOD
-		//color_data_list.addAll(CloudVisionUtils.extractImageProperties(ImageIO.read(screenshot_url)));
-
-		color_data_list.sort((ColorUsageStat h1, ColorUsageStat h2) -> Float.compare(h1.getPixelPercent(), h2.getPixelPercent()));
-
-		//ColorUsageStat background_usage = color_data_list.get(color_data_list.size()-1);
-		//ColorUsageStat foreground_usage = color_data_list.get(color_data_list.size()-2);
-		//ColorData text_color = new ColorData("rgb("+ foreground_usage.getRed()+","+foreground_usage.getGreen()+","+foreground_usage.getBlue()+")");
-		float largest_pixel_percent = -1.0f;
+		
+		double largest_pixel_percent = -1.0;
 	    ColorUsageStat largest_color = null;
 		//extract background colors
-		for(ColorUsageStat color_stat : color_data_list) {
+		
+	    for(ColorUsageStat color_stat : color_data_list) {
 			//get color most used for background color
 			if(color_stat.getPixelPercent() >= largest_pixel_percent 
 				&& !color_stat.getRGB().equals(font_color.rgb())
@@ -206,6 +228,12 @@ public class ImageUtils {
 				largest_color = color_stat;
 			}
 		}
+	    
+	    if(largest_color == null) {
+	    	log.debug("Couldn't Identify largest color used, color data list size when extractBackgroundColor()  :  "+color_data_list.size());
+	    	largest_color = new ColorUsageStat(255, 255, 255, 1, 1);
+	    }
+	    
 		return new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
 		
 	}
@@ -235,6 +263,34 @@ public class ImageUtils {
 		}
 		return "";
 
+	}
+
+	public static String createComposite(BufferedImage onload_screenshot, List<ElementState> element_states, PageState page_state, BrowserType browser) throws IOException {
+		URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
+
+		BufferedImage composite_image = new BufferedImage(page_state.getFullPageWidth(), page_state.getFullPageHeight(), BufferedImage.TYPE_INT_ARGB);
+		// get graphics to draw..
+		Graphics2D graphics =composite_image.createGraphics();
+		//draw the other image on it
+		graphics.drawImage(onload_screenshot,0,0,null);
+		
+		for(ElementState element: element_states) {
+			if(element.getScreenshotUrl().isEmpty()) {
+				continue;
+			}
+			try {
+				BufferedImage element_image = ImageIO.read(new URL(element.getScreenshotUrl()));
+				graphics.drawImage(element_image, element.getXLocation(), element.getYLocation(), null);
+			}
+			catch(IOException e) {
+				log.error("url is malformed :: "+element.getScreenshotUrl());
+			}
+		}
+		
+		String full_page_screenshot_checksum = ImageUtils.getChecksum(composite_image);
+		String full_page_screenshot_url = GoogleCloudStorage.saveImage(composite_image, page_url.getHost(), full_page_screenshot_checksum, browser);
+		
+		return full_page_screenshot_url;
 	}
 	
 }

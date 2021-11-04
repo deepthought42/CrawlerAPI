@@ -9,7 +9,8 @@ public class SimplePage {
 	private long id;
 	private String url;
 	private String screenshot_url;
-	private String full_page_screenshot_url;
+	private String full_page_screenshot_url_onload;
+	private String full_page_screenshot_url_composite;
 	private long width;
 	private long height;
 	private String html_source;
@@ -19,16 +20,18 @@ public class SimplePage {
 			String url, 
 			String screenshot_url, 
 			String full_page_screenshot_url, 
+			String full_page_screenshot_composite_url, 
 			long width, 
 			long height, 
-			String html_source, 
-			String page_state_key, 
+			String html_source,
+			String page_state_key,
 			long id
 	) {
 		setId(id);
 		setUrl(url);
 		setScreenshotUrl(screenshot_url);
-		setFullPageScreenshotUrl(full_page_screenshot_url);
+		setFullPageScreenshotUrlOnload(full_page_screenshot_url);
+		setFullPageScreenshotUrlComposite(full_page_screenshot_composite_url);
 		setWidth(width);
 		setHeight(height);
 		setHtmlSource(html_source);
@@ -51,12 +54,20 @@ public class SimplePage {
 		this.screenshot_url = screenshot_url;
 	}
 
-	public String getFullPageScreenshotUrl() {
-		return full_page_screenshot_url;
+	public String getFullPageScreenshotUrlOnload() {
+		return full_page_screenshot_url_onload;
 	}
 
-	public void setFullPageScreenshotUrl(String full_page_screenshot_url) {
-		this.full_page_screenshot_url = full_page_screenshot_url;
+	public void setFullPageScreenshotUrlOnload(String full_page_screenshot_url) {
+		this.full_page_screenshot_url_onload = full_page_screenshot_url;
+	}
+
+	public String getFullPageScreenshotUrlComposite() {
+		return full_page_screenshot_url_composite;
+	}
+
+	public void setFullPageScreenshotUrlComposite(String full_page_screenshot_url_composite) {
+		this.full_page_screenshot_url_composite = full_page_screenshot_url_composite;
 	}
 
 	public long getWidth() {

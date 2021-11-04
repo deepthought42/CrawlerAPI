@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Element;
@@ -25,6 +26,8 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 
 
 /**
@@ -54,8 +57,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
 		assert page_state != null;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		int score = 0;
-		int max_score = 0;
+
 		String why_it_matters = "Sites that don't use HTTPS are highly insecure and are more likley to leak personal identifiable information(PII). Modern users are keenly aware of this fact and are less likely to trust sites that aren't secured.";
 		Set<String> labels = new HashSet<>();
 		labels.add("information_architecture");
@@ -63,41 +65,65 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		
 		boolean is_secure = page_state.isSecure();
 		if(!is_secure) {
-				String title = "Page isn't secure";
-				String description = page_state.getUrl() + " doesn't use https";
-				String wcag_compliance = "";
-				String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
-				UXIssueMessage ux_issue = new UXIssueMessage(
-												recommendation,
-												Priority.HIGH,
-												description,
-												ObservationType.SECURITY,
-												AuditCategory.INFORMATION_ARCHITECTURE,
-												wcag_compliance,
-												labels,
-												why_it_matters,
-												title);
-				issue_messages.add(ux_issue);
+			String title = "Page isn't secure";
+			String description = page_state.getUrl() + " doesn't use https";
+			String wcag_compliance = "";
+			String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
+			UXIssueMessage ux_issue = new UXIssueMessage(
+											recommendation,
+											Priority.HIGH,
+											description,
+											ObservationType.SECURITY,
+											AuditCategory.INFORMATION_ARCHITECTURE,
+											wcag_compliance,
+											labels,
+											why_it_matters,
+											title, 
+											0, 
+											1);
+			issue_messages.add(ux_issue);
 		}
 		else {
-			score++;
+			String title = "Page is secure";
+			String description = page_state.getUrl() + " uses https protocol to provide a secure connection";
+			String wcag_compliance = "";
+			String recommendation = "";
+			UXIssueMessage ux_issue = new UXIssueMessage(
+											recommendation,
+											Priority.NONE,
+											description,
+											ObservationType.SECURITY,
+											AuditCategory.INFORMATION_ARCHITECTURE,
+											wcag_compliance,
+											labels,
+											why_it_matters,
+											title, 
+											1, 
+											1);
+			issue_messages.add(ux_issue);
 		}
-		max_score++;
 		
 		String description = "";
 		
-		log.warn("FONT AUDIT SCORE   ::   "+(score) +" / " +(max_score));
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
+		
+		//log.warn("SECURITY AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
+		//page_state = page_state_service.findById(page_state.getId()).get();
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
 						 AuditSubcategory.SECURITY,
 						 AuditName.FONT,
-						 score,
+						 points_earned,
 						 issue_messages,
 						 AuditLevel.PAGE,
-						 max_score,
+						 max_points,
 						 page_state.getUrl(), 
-						 why_it_matters, 
+						 why_it_matters,
 						 description,
-						 page_state,
 						 false);
 	}
 	
@@ -105,5 +131,4 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	public static List<String> makeDistinct(List<String> from){
 		return from.stream().distinct().sorted().collect(Collectors.toList());
 	}
-	
 }

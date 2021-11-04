@@ -18,7 +18,7 @@ import com.looksee.models.audit.performance.PerformanceInsight;
 public interface PerformanceInsightRepository  extends Neo4jRepository<PerformanceInsight, Long> {
 	public PerformanceInsight findByKey(@Param("key") String key);
 
-	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{url:$domain_url}) MATCH (d)-[:HAS]->(p:Page) MATCH (p)-[:HAS]->(i:PerformanceInsight{key:$performance_insight_key}),(audit:Audit{key:$audit_key}) CREATE (i)-[:HAS]->(audit) RETURN audit LIMIT 1")
+	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{url:$domain_url}) MATCH (d)-[:HAS]->(p:Page) MATCH (p)-[:HAS]->(i:PerformanceInsight{key:$performance_insight_key}),(audit:Audit{key:$audit_key}) MERGE (i)-[:HAS]->(audit) RETURN audit LIMIT 1")
 	public PageSpeedAudit addAudit(@Param("user_id") String user_id, @Param("domain_url") String domain_url, @Param("performance_insight_key") String performance_insight_key, @Param("audit_key") String audit_key);
 
 	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{url:$domain_url}) MATCH (d)-[:HAS]->(p:Page) MATCH (p)-[]->(i:PerformanceInsight{key:$performance_insight_key}) MATCH (i)-[:HAS]->(audit:Audit{key:$audit_key}) RETURN audit LIMIT 1")

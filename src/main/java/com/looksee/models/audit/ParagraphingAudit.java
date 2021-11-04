@@ -1,6 +1,5 @@
 package com.looksee.models.audit;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -58,9 +57,6 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		int points_earned = 0;
-		int max_points = 0;
-		
 		for(ElementState element : element_list) {
 			String text_block = element.getOwnedText();
 			
@@ -71,16 +67,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				try {
 					List<Sentence> sentences = CloudNLPUtils.extractSentences(paragraph);
 					Score score = calculateSentenceScore(sentences, element);
-					points_earned += score.getPointsAchieved();
-					max_points += score.getMaxPossiblePoints();
-					issue_messages.addAll(score.getIssueMessages());
-					
-					/*
-					for(UXIssueMessage issue_msg : score.getIssueMessages()) {
-						MessageBroadcaster.sendIssueMessage(page_state.getUrl(), issue_msg);
-					}
-					*/
-				} catch (IOException e) {
+
+					issue_messages.addAll(score.getIssueMessages());					
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -89,21 +78,21 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			// validate that spacing between paragraphs is at least 2x the font size within the paragraphs
 		}
 		
-
 		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
 				" Attention spans are shorter, and users skim through most information." + 
 				" Presenting information in small, easy to digest chunks makes their" + 
 				" experience easy and convenient. ";
 
 
-		Set<String> labels = new HashSet<>();
-		labels.add("content");
-		labels.add("paragraphs");
-		
-		Set<String> categories = new HashSet<>();
-		categories.add(AuditCategory.CONTENT.getShortName());
+		int points_earned = 0;
+		int max_points = 0;
+		for(UXIssueMessage issue_msg : issue_messages) {
+			points_earned += issue_msg.getPoints();
+			max_points += issue_msg.getMaxPoints();
+		}
 		
 		String description = "";
+
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT, 
 						 AuditName.PARAGRAPHING, 
@@ -114,20 +103,22 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 page_state.getUrl(), 
 						 why_it_matters, 
 						 description,
-						 page_state,
 						 false); 
 						 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
 	}
 
 
-	public static Score calculateSentenceScore(List<Sentence> sentences, ElementState element) {
+	public Score calculateSentenceScore(List<Sentence> sentences, ElementState element) {
 		//    		for each sentence check that sentence is no longer than 20 words
 		int points_earned = 0;
 		int max_points = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
+		labels.add("paragraphs");
+		labels.add("readability");
+		
 		String ada_compliance = "There are no ADA compliance requirements for this category.";
 		
 		for(Sentence sentence : sentences) {			
@@ -148,7 +139,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 																AuditCategory.CONTENT,
 																labels,
 																ada_compliance,
-																title);
+																title,
+																0,
+																1);
 				
 				issue_messages.add(issue_message);
 				
@@ -158,6 +151,23 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			else {
 				points_earned += 1;
 				max_points += 1;
+				String recommendation = "";
+				String title = "Sentence meets EU and US governmental standards for sentence length";
+				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has less than 25 words which is the standard for governmental documentation in the European Union(EU) and the United States(US)";
+				
+				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																Priority.MEDIUM, 
+																description, 
+																recommendation, 
+																element,
+																AuditCategory.CONTENT,
+																labels,
+																ada_compliance,
+																title,
+																1,
+																1);
+				issue_messages.add(issue_message);
+
 			}
 		}
 		return new Score(points_earned, max_points, issue_messages);					

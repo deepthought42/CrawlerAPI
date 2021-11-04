@@ -13,3 +13,5 @@ src/main/resources/qanairy.jks
 JavaBooks.xlsx
 
 *.gz
+
+src/main/resources/

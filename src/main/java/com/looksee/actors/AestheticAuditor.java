@@ -13,12 +13,12 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.aesthetics.NonTextColorContrastAudit;
 import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.message.AuditProgressUpdate;
+import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
 
 import akka.actor.AbstractActor;
@@ -76,12 +76,12 @@ public class AestheticAuditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageAuditRecord.class, page_audit_record_msg -> {
+				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
 					   	//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
-						AuditRecord audit_record = page_audit_record_msg; //audit_record_service.findById(page_audit_record_msg.getId()).get();
-						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getId());
+						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord(); //audit_record_service.findById(page_audit_record_msg.getId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getPageAuditRecord().getId());
 					   	//PageState page = page_audit_record_msg.getPageState();
 					   	//check if page state already
 			   			//perform audit and return audit result
@@ -90,14 +90,15 @@ public class AestheticAuditor extends AbstractActor{
 						//audits.add(color_palette_audit);
 
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	page_audit_record_msg.getAccountId(),
+																	page_audit_record_msg.getPageAuditRecord().getId(),
 																	(1.0/3.0),
 																	"Reviewing text contrast",
 																	AuditCategory.AESTHETICS,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	null);
 
-					   	getSender().tell(audit_update, getSelf());
+					   	getContext().getParent().tell(audit_update, getSelf());
 					   	
 						Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record);
 						
@@ -110,26 +111,28 @@ public class AestheticAuditor extends AbstractActor{
 						 */
 
 						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	page_audit_record_msg.getAccountId(),
+																	page_audit_record_msg.getPageAuditRecord().getId(),
 																	(2.0/3.0),
 																	"Reviewing non-text contrast for WCAG compliance",
 																	AuditCategory.AESTHETICS,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	text_contrast_audit);
 						
-						getSender().tell(audit_update2, getSelf());
+						getContext().getParent().tell(audit_update2, getSelf());
 						
 						Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record);
 						
 						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-																	page_audit_record_msg.getId(),
+																	page_audit_record_msg.getAccountId(),
+																	page_audit_record_msg.getPageAuditRecord().getId(),
 																	1.0,
 																	"Completed review of non-text contrast",
 																	AuditCategory.AESTHETICS,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	non_text_contrast_audit);
 
-						getSender().tell(audit_update3, getSelf());
+						getContext().getParent().tell(audit_update3, getSelf());
 						
 			   			//send message to either user or page channel containing reference to audits
 						log.warn("Aesthetic audit compelte ");
@@ -146,14 +149,14 @@ public class AestheticAuditor extends AbstractActor{
 						
 						
 						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-								page_audit_record_msg.getId(),
+								page_audit_record_msg.getAccountId(),
+								page_audit_record_msg.getPageAuditRecord().getId(),
 								1.0,
 								"Completed review of non-text contrast",
 								AuditCategory.AESTHETICS,
-								AuditLevel.PAGE,
-								null);
+								AuditLevel.PAGE, null);
 
-						getSender().tell(audit_update3, getSelf());
+						getContext().getParent().tell(audit_update3, getSelf());
 						
 					}
 				})

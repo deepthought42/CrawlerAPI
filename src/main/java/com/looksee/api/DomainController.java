@@ -45,6 +45,7 @@ import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
+import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
@@ -69,6 +70,7 @@ import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
+import com.looksee.services.DomainSettingsService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
@@ -101,6 +103,9 @@ public class DomainController {
 	private UXIssueMessageService ux_issue_service;
 
 	@Autowired
+	private DomainSettingsService domain_settings_service;
+	
+	@Autowired
 	private ActorSystem actor_system;
 
 	@Autowired
@@ -115,7 +120,8 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(method = RequestMethod.POST)
-	public @ResponseBody Domain create(HttpServletRequest request, @RequestBody(required = true) Domain domain)
+	public @ResponseBody Domain create(HttpServletRequest request, 
+									   @RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
 
 		Principal principal = request.getUserPrincipal();
@@ -142,6 +148,9 @@ public class DomainController {
 			log.warn("domain url :: " + domain.getUrl());
 			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
 			if (domain_record == null) {
+				//set default settings
+				DomainSettings domain_settings = new DomainSettings("general", "neutral");
+				domain.setSettings(domain_settings_service.save(domain_settings));
 				domain = domain_service.save(domain);
 				account_service.addDomainToAccount(acct, domain);
 			} else {
@@ -217,6 +226,27 @@ public class DomainController {
 		account_service.save(acct);
 	}
 
+    
+    /**
+     * Update expertise setting in domain settings
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     * @throws MalformedURLException 
+     */
+    @RequestMapping(method= RequestMethod.POST, path="/{domain_id}/settings/expertise")
+    public @ResponseBody DomainSettings updateExpertise(
+    		HttpServletRequest request,
+    		@PathVariable("domain_id") long domain_id,
+    		@RequestBody String expertise
+	) throws MalformedURLException {
+    	log.warn("domain record id :: "+ domain_id);
+    	log.warn("education level :: "+expertise);
+    	//Get domain
+    	return domain_service.updateExpertiseSettings(domain_id, expertise);
+    }
+    
+    
 	// @PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {
@@ -627,7 +657,9 @@ public class DomainController {
 														  mid_issue_count,
 														  low_issue_count,
 														  elements_reviewed,
-														  elements_found);
+														  elements_found,
+														  audit_record.getDataExtractionMsg(), 
+														  audit_record.getDataExtractionProgress());
 
 			return audit_stats;
 		} else {
@@ -928,8 +960,12 @@ public class DomainController {
 
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system).props("auditManager"),
 				"auditManager" + UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain, account.getId(),
-				audit_record, false, sanitized_url);
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, 
+																 domain.getId(), 
+																 account.getId(),
+																 audit_record, 
+																 false, 
+																 sanitized_url);
 		audit_manager.tell(crawl_action, null);
 
 		return audit_record;

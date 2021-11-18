@@ -1,8 +1,5 @@
 package com.looksee.api;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -10,17 +7,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
-
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -42,34 +33,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
-import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
-import com.looksee.models.SimpleElement;
-import com.looksee.models.SimplePage;
 import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditFactory;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.AuditScore;
-import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.PageAudits;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
-import com.looksee.services.BrowserService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
-import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 
 import org.springframework.http.CacheControl;
@@ -77,9 +57,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -91,12 +68,6 @@ public class AuditController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
    	public final static long SECS_PER_HOUR = 60 * 60;
-
-	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
-	private PageStateService page_service;
 	
 	@Autowired
 	private AccountService account_service;
@@ -121,12 +92,6 @@ public class AuditController {
     
     @Autowired
     protected Crawler crawler;
-    
-    @Autowired
-    private ActorSystem actor_system;
-    
-    @Autowired
-	private AuditFactory audit_factory;
     
 	@Autowired
 	private UXIssueMessageService ux_issue_service;

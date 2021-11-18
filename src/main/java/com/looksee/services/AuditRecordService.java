@@ -305,4 +305,13 @@ public class AuditRecordService {
 	public long getIssueCountBySeverity(long id, String severity) {
 		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
+
+	public int getPageAuditRecordCount(long domain_audit_id) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getPageAuditCount(long domain_audit_id) {
+		return audit_record_repo.getPageAuditRecordCount(domain_audit_id);
+	}
 }

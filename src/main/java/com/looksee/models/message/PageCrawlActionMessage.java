@@ -16,11 +16,11 @@ public class PageCrawlActionMessage extends Message{
 	private URL url;
 	
 	public PageCrawlActionMessage(CrawlAction action, 
-			  long account_id, 
-			  PageAuditRecord record, 
-			  URL url){
-		setAccountId(account_id);
-		setAuditRecordId(record.getId());
+								  long account_id, 
+								  PageAuditRecord record, 
+								  URL url
+	){
+		super(-1, account_id, record.getId());
 		setAction(action);
 		setUrl(url);
 		setAuditRecord(record);

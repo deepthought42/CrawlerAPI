@@ -2,6 +2,8 @@ package com.looksee.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import com.auth0.client.auth.AuthAPI;
@@ -11,6 +13,7 @@ import com.auth0.json.auth.UserInfo;
 import com.auth0.net.Request;
 
 @Component
+@PropertySource("classpath:application.properties")
 public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -21,19 +24,22 @@ public class Auth0Client {
 	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
 	private static String domain = "look-see.us.auth0.com";
 	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
-	*/	
+	*/
 	
-	
-	//@Value(value = "${auth0.client_id}")
 	/** STAGING VALUES */
- 	private static String client_id = "8HRxTIHb0uJ9FRnosRJhoMOvXwQDTRGG"; 
+	/*
+	private static String client_id = "8HRxTIHb0uJ9FRnosRJhoMOvXwQDTRGG";
 	private static String client_secret = "eF-ifoh6xNW6rWtdtbnZ8FVCVDwU46ELNpYc0H7xRCLXRnIpEGKCoHS20nmNLZB9";
 	private static String domain = "look-see-dev.us.auth0.com";
+	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
+	*/
 	
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;
 
-    public Auth0Client() {
+    public Auth0Client(@Value("${auth0.domain}") String domain,
+    				   @Value("${auth0.client_id}") String client_id,
+    				   @Value("${auth0.client_secret}") String client_secret) {
         this.auth0 = new AuthAPI(domain, client_id, client_secret);
     }
 

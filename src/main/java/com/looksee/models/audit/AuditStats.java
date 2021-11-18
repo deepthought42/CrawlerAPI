@@ -91,7 +91,7 @@ public class AuditStats {
 			double branding_score, 
 			long elements_examined, 
 			long elements_found, 
-			double data_extraction_progress, 
+			double data_extraction_progress,
 			String data_extraction_msg
 	) {
 		setStartTime(start_time);

@@ -58,9 +58,11 @@ public class DomainAuditStats extends AuditStats{
 			double overall_score, 
 			long high_impact_issues,
 			long mid_impact_issues, 
-			long low_impact_issues, 
-			long elements_examined, 
-			long elements_found
+			long low_impact_issues,
+			long elements_examined,
+			long elements_found, 
+			String data_extraction_msg, 
+			double data_extraction_progress
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -93,6 +95,9 @@ public class DomainAuditStats extends AuditStats{
 		setHighImpactIssueCount(high_impact_issues);
 		setMidImpactIssueCount(mid_impact_issues);
 		setLowImpactIssueCount(low_impact_issues);
+		
+		setDataExtractionProgress(data_extraction_progress);
+		setDataExtractionMessage(data_extraction_msg);
 		
 		setTotalPagesAudited(page_count);
 		setPagesFound(page_count);

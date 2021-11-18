@@ -20,14 +20,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
 	
 	@Value(value = "${auth0.domain}")
 	private String domain;
-	/*
-	@Value(value = "${auth0.apiAudience}")
-    private String audience;
-    @Value(value = "${auth0.issuer}")
-    private String issuer;
-    @Value(value = "${auth0.clientId}")
-    private String clientId;
-	 */
     
     @Value("${auth0.audience}")
     private String audience;
@@ -59,6 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
 	        .mvcMatchers(HttpMethod.GET, "/auditrecords/{audit_record_id:[0-9]+}/stats").permitAll()
 	        .mvcMatchers(HttpMethod.GET, "/auditrecords/{audit_record_id:[0-9]+}/elements").permitAll()
 	        .mvcMatchers(HttpMethod.POST, "/auditrecords/{audit_record_id:[0-9]+}/persona/education").permitAll()
+	        .mvcMatchers(HttpMethod.POST, "/subscribe/stripe_webhook").permitAll()
 	        .mvcMatchers("/api/private-scoped").hasAuthority("SCOPE_read:messages") //this line is left in as future example
 	        .anyRequest()
 	        .authenticated()

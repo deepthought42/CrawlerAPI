@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.looksee.models.Action;
 import com.looksee.models.Domain;
+import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
@@ -266,5 +267,9 @@ public class DomainService {
 		assert !page_url.isEmpty();
 		
 		return audit_record_service.findMostRecentPageAuditRecord(page_url);
+	}
+
+	public DomainSettings updateExpertiseSettings(long domain_id, String expertise) {
+		return domain_repo.updateExpertiseSetting(domain_id, expertise);
 	}
 }

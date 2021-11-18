@@ -68,4 +68,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 
 	@Query("MATCH (e:ElementState) WHERE e.key IN $element_keys RETURN e.key")
 	public List<String> getAllExistingKeys(@Param("element_keys") List<String> element_keys);
+	
+	@Query("MATCH (e:ElementState) WHERE e.key IN $element_keys RETURN e")
+	public List<ElementState> getElements(@Param("element_keys")  Set<String> existing_keys);
 }

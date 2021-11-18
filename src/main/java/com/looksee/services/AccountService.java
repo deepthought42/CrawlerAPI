@@ -106,4 +106,12 @@ public class AccountService {
 	public Set<PageAuditRecord> findMostRecentPageAudits(long account_id) {
 		return account_repo.findMostRecentAuditsByAccount(account_id);
 	}
+
+	public int getPageAuditCountByMonth(long account_id, int month) {
+		return account_repo.getPageAuditCountByMonth(account_id, month);
+	}
+
+	public Account findByCustomerId(String customer_id) {
+		return account_repo.findByCustomerId(customer_id);
+	}
 }

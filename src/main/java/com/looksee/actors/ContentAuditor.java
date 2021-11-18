@@ -10,13 +10,13 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.ParagraphingAudit;
 import com.looksee.models.audit.content.ImageAltTextAudit;
 import com.looksee.models.audit.content.ReadabilityAudit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.message.AuditProgressUpdate;
+import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.PageStateService;
 
@@ -75,9 +75,9 @@ public class ContentAuditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageAuditRecord.class, page_audit_record_msg -> {
+				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
-						AuditRecord audit_record = page_audit_record_msg;//audit_record_service.findById(page_audit_record_msg.getId()).get();
+						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord();//audit_record_service.findById(page_audit_record_msg.getId()).get();
 						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 					   	//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
@@ -86,33 +86,36 @@ public class ContentAuditor extends AbstractActor{
 					   		log.warn(page.getElements().size()+" elements found for content audit of "+page.getUrl());
 					   	}
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
+					   												page_audit_record_msg.getAccountId(),
 					   												audit_record.getId(),
 					   												(1.0/4.0),
 					   												"checking images for alt text",
-					   												AuditCategory.CONTENT,
+					   												AuditCategory.CONTENT, 
 					   												AuditLevel.PAGE, 
 					   												null);
 					   	
-					   	getSender().tell(audit_update, getSelf());
+					   	getContext().getParent().tell(audit_update, getSelf());
 					   							
 						Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
 						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																	page_audit_record_msg.getAccountId(),
 																	audit_record.getId(),
 																	(2.0/4.0),
 																	"Reviewing content for readability",
 																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	alt_text_audit);
 
-						getSender().tell(audit_update2, getSelf());
+						getContext().getParent().tell(audit_update2, getSelf());
 						
 						Audit readability_audit = readability_auditor.execute(page, audit_record);
 						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																	page_audit_record_msg.getAccountId(),
 																	audit_record.getId(),
 																	(3.0/4.0),
 																	"Reviewing paragraph length",
 																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	readability_audit);
 
 						getSender().tell(audit_update3, getSelf());
@@ -121,14 +124,15 @@ public class ContentAuditor extends AbstractActor{
 						
 						Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
 						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																	page_audit_record_msg.getAccountId(),
 																	audit_record.getId(),
 																	(1.0),
 																	"Content Audit Compelete!",
 																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE,
+																	AuditLevel.PAGE, 
 																	paragraph_audit);
 
-						getSender().tell(audit_update4, getSelf());					
+						getContext().getParent().tell(audit_update4, getSelf());		
 						log.warn("content audits complete :: ");
 					}catch(Exception e) {
 						log.error("exception caught during content audit");
@@ -141,12 +145,12 @@ public class ContentAuditor extends AbstractActor{
 					}
 					finally {
 						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
-								page_audit_record_msg.getId(),
+								page_audit_record_msg.getAccountId(),
+								page_audit_record_msg.getAuditRecordId(),
 								(1.0),
 								"Content Audit Compelete!",
 								AuditCategory.CONTENT,
-								AuditLevel.PAGE,
-								null);
+								AuditLevel.PAGE, null);
 
 						getSender().tell(audit_update4, getSelf());
 						

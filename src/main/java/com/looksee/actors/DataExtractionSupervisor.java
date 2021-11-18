@@ -68,11 +68,16 @@ public class DataExtractionSupervisor extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementProgressMessage.class, message-> {
 					try {
+						log.warn("saving elements");
 						saveNewElements(message.getPageStateId(),
 										message.getElementStates());
 						
 						log.warn("saved "+message.getElementStates().size()+" elements to neo4j to page state id : "+message.getPageStateId());
-						ElementsSaved elements = new ElementsSaved(message.getPageUrl(), message.getAuditRecordId());
+						ElementsSaved elements = new ElementsSaved(message.getAccountId(),
+																   message.getPageUrl(), 
+																   message.getAuditRecordId(), 
+																   message.getElementStates().size());
+						
 						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {
 						e.printStackTrace();
@@ -103,18 +108,28 @@ public class DataExtractionSupervisor extends AbstractActor{
 		
 		Set<String> existing_keys = new HashSet<>();
 		existing_keys.addAll(element_state_service.getAllExistingKeys(element_keys));
-		
-		/*
+		List<ElementState> existing_elements = element_state_service.getElements(existing_keys);
+		log.warn(existing_elements.size()+" existing elements found");
 		List<ElementState> new_element_states = element_states
 												   .stream()
 												   .filter(f -> !existing_keys.contains(f.getKey()))
 												   .collect(Collectors.toList());
-		*/
-		for(ElementState element : element_states){
-			ElementState element_record = element_state_service.save(element);
-			element_ids.add(element_record.getId());
+		
+		log.warn(new_element_states.size()+" new elements flagged for db creation");
+		List<Long> existing_element_ids = existing_elements
+													   .stream()
+													   .map(ElementState::getId)
+													   .collect(Collectors.toList());
+
+		log.warn("Does this add up ??  "+(0 == element_states.size()-(existing_elements.size()+new_element_states.size())));
+		//Iterable<ElementState> new_elements = element_state_service.saveAll(new_element_states);
+		for(ElementState element : new_element_states){
+			element_ids.add(element_state_service.save(element).getId());
 	   	}
+		log.warn(existing_element_ids.size()+" elements created");
+		element_ids.addAll(existing_element_ids);
 		
 		page_state_service.addAllElements(page_state_id, element_ids);
+		log.warn("done adding elements to page state");
 	}	
 }

@@ -2,7 +2,6 @@ package com.looksee.models.message;
 
 import java.net.URL;
 
-import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.CrawlAction;
 
@@ -17,12 +16,13 @@ public class CrawlActionMessage extends Message{
 	private URL url;
 	
 	public CrawlActionMessage(CrawlAction action, 
-							  Domain domain, 
+							  long domain_id, 
 							  long account_id, 
 							  AuditRecord record, 
 							  boolean is_individual,
 							  URL url){
-		super(domain.getId(), account_id, record.getId());
+		super(domain_id, account_id, record.getId());
+		
 		setAction(action);
 		setIsIndividual(is_individual);
 		setUrl(url);

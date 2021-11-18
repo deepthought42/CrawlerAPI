@@ -156,4 +156,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit) MATCH (audit)-[:HAS]-(issue:UXIssueMessage{priority:$severity}) WHERE id(audit_record)=$audit_record_id RETURN count(issue) as count")
 	public long getIssueCountBySeverity(@Param("audit_record_id") long id, @Param("severity") String severity);
+
+	@Query("MATCH (audit_record:DomainAuditRecord)-[]-(page_audit:PageAuditRecord) WHERE id(audit_record)=$audit_record_id RETURN count(page_audit) as count")
+	public int getPageAuditRecordCount(@Param("audit_record_id") long domain_audit_id);
 }

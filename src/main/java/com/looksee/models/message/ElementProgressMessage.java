@@ -18,13 +18,16 @@ public class ElementProgressMessage extends Message{
 
 	
 	public ElementProgressMessage(
+			long account_id, 
 			long audit_record_id, 
 			long page_state_id, 
 			List<String> xpaths, 
 			List<ElementState> element_states, 
 			long total_xpaths, 
 			long total_dispatches, 
-			String page_url){
+			String page_url
+	){
+		setAccountId(account_id);
 		setAuditRecordId(audit_record_id);
 		setXpathsExplored(xpaths);
 		setPageStateId(page_state_id);

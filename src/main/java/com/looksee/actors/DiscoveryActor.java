@@ -32,7 +32,6 @@ import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.DiscoveryAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.message.AccountRequest;
 import com.looksee.models.message.DiscoveryActionMessage;
 import com.looksee.models.message.FormDiscoveredMessage;
 import com.looksee.models.message.FormDiscoveryMessage;
@@ -301,9 +300,6 @@ public class DiscoveryActor extends AbstractActor{
 			        form_msg.setDiscoveryActor(getSelf());
 
 			        discovery_service.save(discovery_record);
-				})
-				.match(AccountRequest.class, account_request_msg -> {
-					getSender().tell(this.getAccount(), getSelf());
 				})
 				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();

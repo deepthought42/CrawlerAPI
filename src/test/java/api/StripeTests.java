@@ -1,8 +1,8 @@
 package api;
 
-import com.looksee.models.StripeClient;
+import com.looksee.services.StripeService;
 
 public class StripeTests {
-	public StripeClient stripeClient;
+	public StripeService stripeClient;
 
 }

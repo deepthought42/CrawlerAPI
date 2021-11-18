@@ -209,4 +209,8 @@ public class ElementStateService {
 	public List<String> getAllExistingKeys(List<String> element_keys) {
 		return element_repo.getAllExistingKeys(element_keys);
 	}
+
+	public List<ElementState> getElements(Set<String> existing_keys) {
+		return element_repo.getElements(existing_keys);
+	}
 }

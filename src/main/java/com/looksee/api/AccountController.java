@@ -34,6 +34,7 @@ import com.looksee.models.Account;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
+import com.looksee.services.StripeService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.stripe.exception.StripeException;
 
@@ -51,14 +52,14 @@ public class AccountController {
     @Autowired
     private AccountService account_service;
     
-    /*
-    private StripeClient stripeClient;
+    
+    private StripeService stripeClient;
 
     @Autowired
-    AccountController(StripeClient stripeClient) {
+    AccountController(StripeService stripeClient) {
         this.stripeClient = stripeClient;
     }
-*/
+
     /**
      * Create new account
      *
@@ -95,7 +96,7 @@ public class AccountController {
     	customerParams.put("description", "Customer for "+account.getEmail());
     	//Customer customer = this.stripeClient.createCustomer(null, username);
     	
-    	acct = new Account(account.getUserId(), account.getEmail(), "stripe customer id goes here", "");
+    	acct = new Account(account.getUserId(), account.getEmail(), "", "");
     	
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());

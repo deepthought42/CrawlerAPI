@@ -133,7 +133,9 @@ public class WebCrawlerActor extends AbstractActor{
 						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 						//construct page and add page to list of page states
 						//retrieve html source for page
-						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAuditRecordId(), sanitized_url);
+						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAccountId(), 
+																			  crawl_action.getAuditRecordId(), 
+																			  sanitized_url);
 						getSender().tell(candidate, getSelf());
 						
 						visited.put(page_url_str, null);

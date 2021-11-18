@@ -4,14 +4,16 @@ import java.util.List;
 
 import com.looksee.models.PageState;
 
-public class ElementExtractionMessage {
+public class ElementExtractionMessage extends Message{
 	private PageState page_state;
-	private long audit_record_id;
 	private List<String> xpaths;
 	
-	public ElementExtractionMessage( PageState page,
-									 long audit_id,
-									 List<String> xpaths) {
+	public ElementExtractionMessage( long account_id,
+									 PageState page,
+									 long audit_id, 
+									 List<String> xpaths
+	) {
+		setAccountId(account_id);
 		setPageState(page);
 		setAuditRecordId(audit_id);
 		setXpaths(xpaths);
@@ -22,12 +24,6 @@ public class ElementExtractionMessage {
 	}
 	public void setPageState(PageState page_state) {
 		this.page_state = page_state;
-	}
-	public long getAuditRecordId() {
-		return audit_record_id;
-	}
-	public void setAuditRecordId(long audit_record_id) {
-		this.audit_record_id = audit_record_id;
 	}
 	public List<String> getXpaths() {
 		return xpaths;

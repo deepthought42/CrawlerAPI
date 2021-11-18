@@ -14,7 +14,8 @@ public class AuditSet extends Message {
 	private String url;
 	
 
-	public AuditSet(List<Audit> audits, String url){
+	public AuditSet(long account_id, List<Audit> audits, String url){
+		setAccountId(account_id);
 		setAudits(audits);
 		setUrl(url);
 	}

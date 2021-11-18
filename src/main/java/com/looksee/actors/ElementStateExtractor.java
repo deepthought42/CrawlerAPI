@@ -77,12 +77,13 @@ public class ElementStateExtractor extends AbstractActor{
 						
 						//tell page state builder of element states
 						log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
-						ElementProgressMessage element_message = new ElementProgressMessage(message.getAuditRecordId(), 
+						ElementProgressMessage element_message = new ElementProgressMessage(message.getAccountId(), 
+																							message.getAuditRecordId(), 
 																							message.getPageState().getId(), 
-																							message.getXpaths(), 
+																							message.getXpaths(),
 																							element_states,
 																							0L,
-																							0L,
+																							0L, 
 																							message.getPageState().getUrl());
 						getContext().parent().tell(element_message, getSelf());
 					} catch(Exception e) {

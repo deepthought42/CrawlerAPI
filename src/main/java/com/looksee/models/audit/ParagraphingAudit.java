@@ -63,15 +63,20 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			//    parse text block into paragraph chunks(multiple paragraphs can exist in a text block)
 			String[] paragraphs = text_block.split("\n");
 			for(String paragraph : paragraphs) {
-				
+				if(paragraph.split(" ").length < 3) {
+					continue;
+				}
+				else if(!paragraph.contains(".")) {
+					paragraph = paragraph + ".";
+				}
 				try {
 					List<Sentence> sentences = CloudNLPUtils.extractSentences(paragraph);
 					Score score = calculateSentenceScore(sentences, element);
 
-					issue_messages.addAll(score.getIssueMessages());					
+					issue_messages.addAll(score.getIssueMessages());	
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.warn("error getting sentences from text :: "+paragraph);
+					//e.printStackTrace();
 				}
 
 			}
@@ -109,8 +114,15 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	}
 
 
+	/**
+	 * Reviews list of sentences and gives a score based on how many of those sentences have 
+	 * 		25 words or less. This is considered the maximum sentence length allowed in EU government documentation
+	 * @param sentences
+	 * @param element
+	 * @return
+	 */
 	public Score calculateSentenceScore(List<Sentence> sentences, ElementState element) {
-		//    		for each sentence check that sentence is no longer than 20 words
+		//    		for each sentence check that sentence is no longer than 25 words
 		int points_earned = 0;
 		int max_points = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
@@ -121,7 +133,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "There are no ADA compliance requirements for this category.";
 		
-		for(Sentence sentence : sentences) {			
+		for(Sentence sentence : sentences) {
 			String[] words = sentence.getText().getContent().split(" ");
 			
 			if(words.length > 25) {

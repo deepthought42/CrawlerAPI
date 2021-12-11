@@ -1,16 +1,17 @@
 package com.looksee.models.audit;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.LookseeObject;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
-@NodeEntity
 public class UXIssueMessage extends LookseeObject {
 	private String title;
 	private String description;
@@ -24,22 +25,28 @@ public class UXIssueMessage extends LookseeObject {
 	private int points;
 	private int max_points;
 	
-	public UXIssueMessage() {}
+	@Relationship(type = "RECOMMEND")
+	private Set<Recommendation> recommendations;
+	
+	public UXIssueMessage() {
+		setRecommendations(new HashSet<>());
+	}
 	
 	public UXIssueMessage(
-			String recommendation,
-			Priority priority, 
-			String description,
+			Priority priority,
+			String description, 
 			ObservationType type,
 			AuditCategory category,
 			String wcag_compliance,
-			Set<String> labels, 
+			Set<String> labels,
 			String why_it_matters, 
 			String title, 
 			int points, 
-			int max_points
+			int max_points, 
+			Set<Recommendation> recommendations, 
+			String recommendation
 	) {
-		setRecommendation(recommendation);
+		setRecommendations(recommendations);
 		setPriority(priority);
 		setDescription(description);
 		setType(type);
@@ -50,6 +57,7 @@ public class UXIssueMessage extends LookseeObject {
 		setTitle(title);
 		setPoints(points);
 		setMaxPoints(max_points);
+		setRecommendation(recommendation);
 		setKey(generateKey());
 	}
 	
@@ -61,12 +69,12 @@ public class UXIssueMessage extends LookseeObject {
 		this.priority = priority.getShortName();
 	}
 
-	public String getRecommendation() {
-		return recommendation;
+	public Set<Recommendation> getRecommendations() {
+		return recommendations;
 	}
 
-	public void setRecommendation(String recommendation) {
-		this.recommendation = recommendation;
+	public void setRecommendations(Set<Recommendation> recommendations) {
+		this.recommendations = recommendations;
 	}
 	
 	public String getDescription() {
@@ -144,5 +152,13 @@ public class UXIssueMessage extends LookseeObject {
 
 	public void setMaxPoints(int max_points) {
 		this.max_points = max_points;
+	}
+
+	public String getRecommendation() {
+		return recommendation;
+	}
+
+	public void setRecommendation(String recommendation) {
+		this.recommendation = recommendation;
 	}
 }

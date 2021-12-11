@@ -2,7 +2,6 @@ package com.looksee.models.message;
 
 import java.net.URL;
 
-import com.looksee.models.Domain;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.CrawlAction;
 
@@ -27,11 +26,11 @@ public class PageCrawlActionMessage extends Message{
 	}
 		
 	public PageCrawlActionMessage(CrawlAction action, 
-							  Domain domain, 
+							  long domain_id, 
 							  long account_id, 
 							  PageAuditRecord record, 
 							  URL url){
-		super(domain.getId(), account_id, record.getId());
+		super(domain_id, account_id, record.getId());
 		setAction(action);
 		setUrl(url);
 		setAuditRecord(record);

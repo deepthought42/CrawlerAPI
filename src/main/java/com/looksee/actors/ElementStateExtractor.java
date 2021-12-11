@@ -7,8 +7,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.imageio.ImageIO;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +14,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -65,28 +65,37 @@ public class ElementStateExtractor extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementExtractionMessage.class, message-> {
 					try {
-						log.warn("Extracting elements from "+message.getPageState().getUrl());
 						URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(message.getPageState().getUrl() ));
-						BufferedImage page_screenshot = ImageIO.read(new URL(message.getPageState().getFullPageScreenshotUrlOnload()));
+						URL full_page_screenshot_url = new URL(message.getPageState().getFullPageScreenshotUrlOnload());
+						BufferedImage page_screenshot = ImageUtils.readImageFromURL(full_page_screenshot_url);
 						List<ElementState> element_states = browser_service.buildPageElements(	message.getPageState(), 
 																								message.getXpaths(),
 																								message.getAuditRecordId(), 
 																								sanitized_url,
 																								page_screenshot.getHeight());
-																						
 						
 						//tell page state builder of element states
-						log.warn("completed element state extraction for "+message.getXpaths().size() + "  xpaths");
 						ElementProgressMessage element_message = new ElementProgressMessage(message.getAccountId(), 
-																							message.getAuditRecordId(), 
+																							message.getAuditRecordId(),
 																							message.getPageState().getId(), 
 																							message.getXpaths(),
 																							element_states,
 																							0L,
 																							0L, 
 																							message.getPageState().getUrl());
+						
 						getContext().parent().tell(element_message, getSelf());
 					} catch(Exception e) {
+						//tell page state builder of element states
+						ElementExtractionError element_message = new ElementExtractionError(message.getAccountId(), 
+																							message.getAuditRecordId(), 
+																							message.getDomainId(),
+																							message.getPageState().getId(), 
+																							message.getPageState().getUrl(),
+																							e.getMessage());
+						
+						getContext().parent().tell(element_message, getSelf());
+						
 						e.printStackTrace();
 					}
 				})

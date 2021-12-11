@@ -91,7 +91,8 @@ public class AuditorController {
     	
 	   	//create new audit record
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
-		audit_record.setDataExtractionMsg("loading page");
+		audit_record.setUrl(sanitized_url.toString());
+	   	audit_record.setDataExtractionMsg("loading page");
 	   	audit_record.setDataExtractionProgress(1.0/50.0);
 	   	audit_record.setAestheticMsg("Waiting for data extraction ...");
 	   	audit_record.setContentAuditMsg("Waiting for data extraction ...");

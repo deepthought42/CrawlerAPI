@@ -402,8 +402,7 @@ public class DomainController {
 
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
-		Optional<DomainAuditRecord> domain_audit_record = audit_record_service
-				.findMostRecentDomainAuditRecord(domain_id);
+		Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
 		if (!domain_audit_record.isPresent()) {
 			throw new DomainAuditsNotFound();
 		}
@@ -413,6 +412,7 @@ public class DomainController {
 			if (page_state == null) {
 				continue;
 			}
+			
 			double content_score = AuditUtils
 					.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
 			double info_architecture_score = AuditUtils
@@ -422,11 +422,21 @@ public class DomainController {
 			double accessibility_score = AuditUtils
 					.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
 
-			PageStatisticDto page = new PageStatisticDto(page_state.getId(), page_state.getUrl(),
-					page_state.getViewportScreenshotUrl(), content_score, page_audit.getContentAuditProgress(),
-					info_architecture_score, page_audit.getInfoArchAuditProgress(), accessibility_score, 0.0,
-					aesthetic_score, page_audit.getAestheticAuditProgress(), page_audit.getId(),
-					page_audit.getElementsReviewed(), page_audit.getElementsFound(), page_audit.isComplete());
+			PageStatisticDto page = new PageStatisticDto(page_state.getId(), 
+														 page_state.getUrl(),
+														 page_state.getViewportScreenshotUrl(), 
+														 content_score, 
+														 page_audit.getContentAuditProgress(),
+														 info_architecture_score, 
+														 page_audit.getInfoArchAuditProgress(), 
+														 accessibility_score, 
+														 0.0,
+														 aesthetic_score, 
+														 page_audit.getAestheticAuditProgress(), 
+														 page_audit.getId(),
+														 page_audit.getElementsReviewed(), 
+														 page_audit.getElementsFound(), 
+														 page_audit.isComplete());
 
 			page_stats.add(page);
 		}
@@ -451,7 +461,8 @@ public class DomainController {
 			long content_audits_complete = 0;
 			long info_arch_audits_complete = 0;
 			long aesthetic_audits_complete = 0;
-
+			long element_extractions_complete = 0;
+			
 			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
 			// get Page Count
 			long page_count = audit_records.size();
@@ -491,7 +502,7 @@ public class DomainController {
 				elements_reviewed += page_audit.getElementsReviewed();
 				elements_found += page_audit.getElementsFound();
 
-				Set<Audit> audits = audit_record_service.getAllAuditsAndIssues(page_audit.getId());
+				Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
 				written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 				imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
 				videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
@@ -532,6 +543,9 @@ public class DomainController {
 				}
 				if (page_audit.getAestheticAuditProgress() >= 1.0) {
 					aesthetic_audits_complete++;
+				}
+				if (page_audit.getDataExtractionProgress() >= 1.0) {
+					element_extractions_complete++;
 				}
 			}
 
@@ -659,7 +673,7 @@ public class DomainController {
 														  elements_reviewed,
 														  elements_found,
 														  audit_record.getDataExtractionMsg(), 
-														  audit_record.getDataExtractionProgress());
+														  element_extractions_complete / (double) audit_records.size());
 
 			return audit_stats;
 		} else {
@@ -682,7 +696,7 @@ public class DomainController {
 			throw new MissingSubscriptionException();
 		}
 
-		URL url_obj = new URL(BrowserUtils.sanitizeUrl(url));
+		URL url_obj = new URL(BrowserUtils.sanitizeUrl(url, false));
 		Set<PageState> pages = domain_service.getPages(url_obj.getHost());
 
 		// TODO filter through pages to get most recent for each unique page url
@@ -846,7 +860,7 @@ public class DomainController {
 			}
 			log.warn("UX audits :: " + ux_issues.size());
 		}
-		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl()));
+		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
 		XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -928,7 +942,8 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
-	public @ResponseBody AuditRecord startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
+	public @ResponseBody AuditRecord startAudit(HttpServletRequest request, 
+											@PathVariable("domain_id") long domain_id)
 			throws Exception {
 		Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
@@ -947,11 +962,9 @@ public class DomainController {
 		String lowercase_url = domain.getUrl().toLowerCase();
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
 
-		System.out.println("domain returned from db id ...." + domain.getId());
-		System.out.println("domain returned from db key ...." + domain.getKey());
-		System.out.println("domain returned from db url ...." + sanitized_url);
 		// create new audit record
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
+		audit_record.setUrl(domain.getUrl());
 		log.warn("audit record found ..." + audit_record.getKey());
 		audit_record = audit_record_service.save(audit_record);
 

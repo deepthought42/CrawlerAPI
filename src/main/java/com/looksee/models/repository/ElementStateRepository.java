@@ -20,9 +20,6 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	
 	@Query("MATCH (e:ElementState{key:$key}) RETURN e LIMIT 1")
 	public ElementState findByKey(@Param("key") String key);
-	
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$key}) OPTIONAL MATCH z=(e)-->(x) RETURN e LIMIT 1")
-	public ElementState findByKeyAndUserId(@Param("user_id") String user_id, @Param("key") String key);
 
 	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[hr:HAS]->(:Rule{key:$key}) DELETE hr")
 	public void removeRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("key") String key);
@@ -39,7 +36,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{outer_html:$outer_html}) RETURN e LIMIT 1")
 	public ElementState findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(es:ElementState{key:$element_key}) Match (es)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
+	@Query("MATCH (:Account{user_id:$user_id})-[*]->(es:ElementState{key:$element_key}) Match (es)-[:HAS]->(b:BugMessage) DETACH DELETE b")
 	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (:Account{user_id:$user_id})-[]-(d:Domain) MATCH (d)-[]->(page:PageVersion) MATCH (page)-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS_CHILD]->(es:ElementState) RETURN es")

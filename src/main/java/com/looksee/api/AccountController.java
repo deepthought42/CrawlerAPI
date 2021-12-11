@@ -37,6 +37,7 @@ import com.looksee.services.AccountService;
 import com.looksee.services.StripeService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
 
 /**
  *	API for interacting with {@link User} data
@@ -51,7 +52,6 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
-    
     
     private StripeService stripeClient;
 
@@ -79,11 +79,6 @@ public class AccountController {
     		@RequestBody(required=true) Account account
     ) throws Exception{
     	log.warn("auth key passed :: " +request.getHeader("Authorization"));
-    	/*
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName();
-    	Account acct = account_service.findByUserId(id);
-    	*/
     	Account acct = account_service.findByEmail(account.getEmail());
 
     	//create account
@@ -94,7 +89,7 @@ public class AccountController {
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+account.getEmail());
-    	//Customer customer = this.stripeClient.createCustomer(null, username);
+    	Customer customer = this.stripeClient.createCustomer(null, account.getEmail());
     	
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
     	
@@ -164,7 +159,7 @@ public class AccountController {
      * @throws UnknownAccountException
      */
     @PreAuthorize("hasAuthority('read:accounts')")
-    @RequestMapping(path="/find", method = RequestMethod.GET)
+    @RequestMapping( method = RequestMethod.GET)
     public Account get(HttpServletRequest request) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");

@@ -11,8 +11,11 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class AuditRecord extends LookseeObject {
+	//NOTE: TEMPORARY VALUE
+	private String url;
 	
 	private String status;
+	private String status_message;
 	private String level;
 	private LocalDateTime start_time;
 	private LocalDateTime end_time;
@@ -47,11 +50,47 @@ public class AuditRecord extends LookseeObject {
 		setStatus(status);
 		setLevel(level);
 		
+		setDataExtractionProgress(0.0);		
 		setContentAuditProgress(0.0);
 		setInfoArchAuditProgress(0.0);
 		setAestheticAuditProgress(0.0);
 		
 		setStartTime(LocalDateTime.now());
+	}
+
+	public AuditRecord(long id, 
+					   ExecutionStatus status, 
+					   AuditLevel level, 
+					   String key, 
+					   LocalDateTime startTime,
+					   double aestheticAuditProgress, 
+					   String aestheticMsg, 
+					   String contentAuditMsg, 
+					   double contentAuditProgress,
+					   String infoArchMsg, 
+					   double infoArchAuditProgress, 
+					   String dataExtractionMsg, 
+					   double dataExtractionProgress,
+					   LocalDateTime createdAt, 
+					   LocalDateTime endTime, 
+					   String url
+	) {
+		setId(id);
+		setStatus(status);
+		setLevel(level);
+		setKey(key);
+		setStartTime(endTime);
+		setAestheticAuditProgress(dataExtractionProgress);
+		setAestheticMsg(aestheticMsg);
+		setContentAuditMsg(contentAuditMsg);
+		setContentAuditProgress(contentAuditProgress);
+		setInfoArchMsg(infoArchMsg);
+		setInfoArchAuditProgress(infoArchAuditProgress);
+		setDataExtractionMsg(dataExtractionMsg);
+		setDataExtractionProgress(dataExtractionProgress);
+		setCreatedAt(createdAt);
+		setEndTime(endTime);
+		setUrl(url);
 	}
 
 	public String generateKey() {
@@ -176,5 +215,41 @@ public class AuditRecord extends LookseeObject {
 
 	public void setTargetUserEducation(String target_user_education) {
 		this.target_user_education = target_user_education;
+	}
+
+	public String getStatusMessage() {
+		return status_message;
+	}
+
+	public void setStatusMessage(String status_message) {
+		this.status_message = status_message;
+	}
+	
+	@Override
+	public AuditRecord clone() {
+		return new AuditRecord(getId(),
+							   getStatus(),
+							   getLevel(),
+							   getKey(),
+							   getStartTime(),
+							   getAestheticAuditProgress(), 
+							   getAestheticMsg(), 
+							   getContentAuditMsg(), 
+							   getContentAuditProgress(), 
+							   getInfoArchMsg(), 
+							   getInfoArchAuditProgress(),
+							   getDataExtractionMsg(), 
+							   getDataExtractionProgress(), 
+							   getCreatedAt(), 
+							   getEndTime(),
+							   getUrl());
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

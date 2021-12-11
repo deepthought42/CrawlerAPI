@@ -248,6 +248,7 @@ public class AuditRecordController {
 			long content_audits_complete = 0;
 			long info_arch_audits_complete = 0;
 			long aesthetic_audits_complete = 0;
+			long element_extractions_complete = 0;
 
 			//Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
 			// get Page Count
@@ -330,7 +331,9 @@ public class AuditRecordController {
 			if (audit_record.getAestheticAuditProgress() >= 1.0) {
 				aesthetic_audits_complete++;
 			}
-		
+			if (audit_record.getDataExtractionProgress() >= 1.0) {
+				element_extractions_complete++;
+			}
 			double overall_score = ( score / audit_count ) * 100 ;
 			
 
@@ -368,7 +371,7 @@ public class AuditRecordController {
 														elements_reviewed,
 														elements_found,
 														audit_record.getDataExtractionMsg(),
-														audit_record.getDataExtractionProgress());
+														element_extractions_complete / (double)page_count);
 			
 			return audit_stats;
     	}

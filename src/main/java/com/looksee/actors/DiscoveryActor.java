@@ -320,7 +320,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 
 					log.warn("form message page key :: "+form_msg.getPage().getKey());
-					PageState page_state_record = page_state_service.findByKeyAndUsername(form_msg.getUserId(), form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
 					log.warn("form message page key :: "+page_state_record.getKey());
 
 					

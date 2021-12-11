@@ -25,7 +25,6 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.message.PathMessage;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
-import com.looksee.utils.TimingUtils;
 
 /**
  * Handles the saving of records into orientDB

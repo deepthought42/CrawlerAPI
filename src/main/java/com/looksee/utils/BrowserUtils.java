@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -46,12 +47,17 @@ import com.looksee.models.audit.ColorData;
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 	
-	public static String sanitizeUrl(String url) {
+	public static String sanitizeUrl(String url, boolean is_secure) {
 		assert url != null;
 		assert !url.isEmpty();
 		
 		if(!url.contains("://")) {
-			url = "http://"+url;
+			if(is_secure) {
+				url = "https://"+url;
+			}
+			else {				
+				url = "http://"+url;
+			}
 		}
 		
 		url = url.replace("www.", "");
@@ -123,7 +129,6 @@ public class BrowserUtils {
 		WebElement web_elem = browser.findWebElementByXpath("");//element.getXpath());
 		Point location = web_elem.getLocation();
 		if(location.getX() != element.getXLocation() || location.getY() != element.getYLocation()){
-			log.warn("updating element state from ::  ( " + element.getXLocation() + " , "+element.getYLocation()+" ) " + " to    ::  ( " + location.getX() + " , "+location.getY()+")");
 			element.setXLocation(location.getX());
 			element.setYLocation(location.getY());
 		}
@@ -160,6 +165,9 @@ public class BrowserUtils {
 	 */
 	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
 		//return ((!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host)) || url.contains("////");
+		if(url.indexOf('?') >= 0) {
+			url = url.substring(0, url.indexOf('?'));
+		}
 		return (!url.contains(domain_host) && !isRelativeLink(domain_host, url) ) || url.contains("////");
 	}
 	
@@ -175,10 +183,14 @@ public class BrowserUtils {
 		assert domain_host != null;
 		assert link_url != null;
 		
-		return link_url.isEmpty() 
-				|| (link_url.charAt(0) == '/' && !link_url.startsWith("//") && !link_url.contains(domain_host)) 
-				|| (link_url.charAt(0) == '?' && !link_url.contains(domain_host))
-				|| (link_url.charAt(0) == '#' && !link_url.contains(domain_host));
+		String link_without_params = link_url;
+		if( link_url.indexOf('?') >= 0) {
+			link_without_params = link_url.substring(0, link_url.indexOf('?'));
+		}
+		return link_without_params.isEmpty() 
+				|| (link_without_params.charAt(0) == '/' && !link_without_params.startsWith("//") && !link_without_params.contains(domain_host)) 
+				|| (link_without_params.charAt(0) == '?' && !link_without_params.contains(domain_host))
+				|| (link_without_params.charAt(0) == '#' && !link_without_params.contains(domain_host));
 	}
 	
 
@@ -200,10 +212,61 @@ public class BrowserUtils {
 				|| url.endsWith(".rss") 
 				|| url.endsWith(".svg") 
 				|| url.endsWith(".pdf")
+				|| url.endsWith(".m3u8") //apple file extension
+				|| url.endsWith(".usdz") //apple file extension
+				|| url.endsWith(".doc")
+				|| url.endsWith(".docx")
+				|| isVideoFile(url)
 				|| isImageUrl(url);
 	}
 	
 	
+	public static boolean isVideoFile(String url) {
+		return url.endsWith(".mov")
+				|| url.endsWith(".webm")
+				|| url.endsWith(".mkv")
+				|| url.endsWith(".flv")
+				|| url.endsWith(".vob")
+				|| url.endsWith(".ogv")
+				|| url.endsWith(".ogg")
+				|| url.endsWith(".drc")
+				|| url.endsWith(".gif")
+				|| url.endsWith(".mng")
+				|| url.endsWith(".avi")
+				|| url.endsWith(".MTS")
+				|| url.endsWith(".M2TS")
+				|| url.endsWith(".TS")
+				|| url.endsWith(".qt")
+				|| url.endsWith(".wmv")
+				|| url.endsWith(".yuv")
+				|| url.endsWith(".rm")
+				|| url.endsWith(".rmvb")
+				|| url.endsWith(".viv")
+				|| url.endsWith(".asf")
+				|| url.endsWith(".amv")
+				|| url.endsWith(".mp4")
+				|| url.endsWith(".m4p")
+				|| url.endsWith(".m4v")
+				|| url.endsWith(".mpg")
+				|| url.endsWith(".mpeg")
+				|| url.endsWith(".m2v")
+				|| url.endsWith(".mp3")
+				|| url.endsWith(".mp2")
+				|| url.endsWith(".mpv")
+				|| url.endsWith(".m4v")
+				|| url.endsWith(".svi")
+				|| url.endsWith(".3gp")
+				|| url.endsWith(".3g2")
+				|| url.endsWith(".mxf")
+				|| url.endsWith(".roq")
+				|| url.endsWith(".nsv")
+				|| url.endsWith(".flv")
+				|| url.endsWith(".f4v")
+				|| url.endsWith(".f4p")
+				|| url.endsWith(".f4a")
+				|| url.endsWith(".f4b");
+	}
+
 	/**
 	 * Extracts a {@link List list} of link urls by looking up `a` html tags and extracting the href values
 	 * 
@@ -301,8 +364,7 @@ public class BrowserUtils {
 	public static boolean doesUrlExist(String url_str) throws Exception {
 		assert url_str != null;
 		
-		if(url_str.startsWith("#") 
-			|| BrowserUtils.isJavascript(url_str)
+		if(BrowserUtils.isJavascript(url_str)
 			|| url_str.startsWith("itms-apps:")
 			|| url_str.startsWith("snap:")
 			|| url_str.startsWith("tel:")
@@ -311,10 +373,15 @@ public class BrowserUtils {
 			return true;
 		}
 		
+		
 		URL url = new URL(url_str);
 		//perform check for http clients
 		if("http".equalsIgnoreCase(url.getProtocol())){
 			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			huc.setConnectTimeout(10000);
+			huc.setReadTimeout(10000);
+			huc.setInstanceFollowRedirects(true);
+			
 			int responseCode = huc.getResponseCode();
 			huc.disconnect();
 			if (responseCode == 404) {
@@ -330,9 +397,9 @@ public class BrowserUtils {
 				https_client.setReadTimeout(10000);
 				https_client.setInstanceFollowRedirects(true);
 
-				int responseCode = https_client.getResponseCode();
+				int response_code = https_client.getResponseCode();
 
-				if (responseCode == 404) {
+				if (response_code == 404) {
 					return false;
 				} else {
 					return true;
@@ -344,7 +411,7 @@ public class BrowserUtils {
 			catch(SSLException e) {
 				log.warn("SSL Exception occurred while checking if URL exists");
 				e.printStackTrace();
-				return false;
+				return true;
 			}
 			catch(Exception e) {
 				return false;
@@ -608,20 +675,26 @@ public class BrowserUtils {
 		int status_code = 500;
 		try {
 			if(url.getProtocol().contentEquals("http")) {
-				HttpURLConnection con = (HttpURLConnection)url.openConnection();
-				status_code = con.getResponseCode();
+				HttpURLConnection http_client = (HttpURLConnection)url.openConnection();
+				http_client.setInstanceFollowRedirects(true);
+				
+				status_code = http_client.getResponseCode();
 				//log.warn("HTTP status code = "+status_code);
 				return status_code;
 			}
 			else if(url.getProtocol().contentEquals("https")) {
-				HttpURLConnection con = (HttpURLConnection)url.openConnection();
-				status_code = con.getResponseCode();
-				log.warn("HTTPS status code = "+status_code);
+				HttpsURLConnection https_client = (HttpsURLConnection)url.openConnection();
+				https_client.setInstanceFollowRedirects(true);
+				
+				status_code = https_client.getResponseCode();
 				return status_code;		
 			}
 			else {
 				log.warn("URL Protocol not found :: "+url.getProtocol());
 			}
+		}
+		catch(SocketTimeoutException e) {
+			status_code = 408;
 		}
 	    catch(IOException e) {
 	    	status_code = 404;
@@ -635,30 +708,45 @@ public class BrowserUtils {
 	 * 
 	 * @param url
 	 * @return
+	 * @throws MalformedURLException 
 	 * @throws IOException
 	 */
-	public static boolean checkIfSecure(URL url) {
-        //dump all cert info
-        //print_https_cert(con);
+	public static boolean checkIfSecure(URL url) throws MalformedURLException {
         boolean is_secure = false;
+        
+        if(url.getProtocol().contentEquals("http")) {
+        	url = new URL("https://"+url.getHost()+url.getPath());
+        }
+        
         try{
         	HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
+        	con.setConnectTimeout(10000);
+        	con.setReadTimeout(10000);
+        	con.setInstanceFollowRedirects(true);
+
         	con.connect();
         	is_secure = con.getServerCertificates().length > 0;
         }
+        catch(SSLHandshakeException e) {
+        	log.warn("SSLHandshakeException occurred for "+url);
+        }
         catch(Exception e) {
-        	log.warn("an error was encountered while checking for SSL!!!!");
+        	log.warn("an error was encountered while checking for SSL!!!!  "+url);
         	e.printStackTrace();
         }
         
         return is_secure;
 	}
 	
+	/**
+	 * 
+	 * @param con
+	 */
 	private static void print_https_cert(HttpsURLConnection con){
 	     
 	    if(con!=null){
 	            
-	      try {
+	    	try {
 	                
 			    System.out.println("Cipher Suite : " + con.getCipherSuite());
 			    System.out.println("\n");
@@ -712,7 +800,7 @@ public class BrowserUtils {
 	 * @param protocol TODO
 	 * @param host
 	 * @param href
-	 * 
+	 * @param is_secure TODO
 	 * @pre host != null
 	 * @pre !host.isEmpty
 	 * 
@@ -720,7 +808,11 @@ public class BrowserUtils {
 	 * 
 	 * @throws MalformedURLException
 	 */
-	public static String formatUrl(String protocol, String host, String href) throws MalformedURLException {
+	public static String formatUrl(String protocol, 
+								   String host, 
+								   String href, 
+								   boolean is_secure
+   ) throws MalformedURLException {
 		assert host != null;
 		assert !host.isEmpty();
 		
@@ -736,13 +828,28 @@ public class BrowserUtils {
 			return href;
 		}
 		
+		if(is_secure) {
+			protocol = "https";
+		}
+		else {
+			protocol = "http";
+		}
+		
 		//URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
 		//href = BrowserUtils.getPageUrl(sanitized_href);
 		//check if external link
 		if(BrowserUtils.isRelativeLink(host, href)) {
+			
+			
 			href = protocol + "://" + host + href;
 		}
-		
+		else if( isSchemeRelative(host, href)) {
+			href = protocol + href;
+		}
 		return href;
+	}
+
+	private static boolean isSchemeRelative(String host, String href) {
+		return href.startsWith("//"+host);
 	}
 }

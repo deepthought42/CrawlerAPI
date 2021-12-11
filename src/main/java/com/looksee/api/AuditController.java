@@ -253,7 +253,7 @@ public class AuditController {
     	}
     	log.warn("UX audits :: "+ux_issues.size());
 
-    	URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(page.getUrl()));
+    	URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(page.getUrl(), page.isSecure()));
     	XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
         
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

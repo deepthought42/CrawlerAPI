@@ -34,6 +34,8 @@ public class PageState extends LookseeObject {
 
 	private String src;
 	private String url;
+	private String url_after_loading;
+	
 	private boolean login_required;
 	private boolean is_secure;
 
@@ -91,6 +93,7 @@ public class PageState extends LookseeObject {
 	 * @param is_secure TODO
 	 * @param http_status_code TODO
 	 * @param full_page_screenshot_url_composite TODO
+	 * @param url_after_page_load TODO
 	 * @throws MalformedURLException 
 	 */
 	public PageState(String screenshot_url, 
@@ -109,7 +112,8 @@ public class PageState extends LookseeObject {
 			String title, 
 			boolean is_secure, 
 			int http_status_code, 
-			String full_page_screenshot_url_composite
+			String full_page_screenshot_url_composite, 
+			String url_after_page_load
 	) {
 		assert screenshot_url != null;
 		assert elements != null;
@@ -135,6 +139,7 @@ public class PageState extends LookseeObject {
 		setFullPageWidth(full_page_width);
 		setFullPageHeight(full_page_height);
 		setUrl(url);
+		setUrlAfterLoading(url_after_page_load);
 		setTitle(title);
 		setIsSecure(is_secure);
 		setHttpStatus(http_status_code);
@@ -144,7 +149,6 @@ public class PageState extends LookseeObject {
 		setStylesheetUrls( BrowserService.extractStylesheets(src));
 		setScriptUrls( BrowserService.extractScriptUrls(src));
 		setFaviconUrl(BrowserService.extractIconLinks(src));
-
 		setKeywords(new HashSet<>());
 		
 		setKey(generateKey());
@@ -248,7 +252,8 @@ public class PageState extends LookseeObject {
 							 getTitle(),
 							 isSecure(),
 							 getHttpStatus(),
-							 getFullPageScreenshotUrlComposite());
+							 getFullPageScreenshotUrlComposite(),
+							 getUrlAfterLoading());
 	}
 
 	@JsonIgnore
@@ -508,5 +513,13 @@ public class PageState extends LookseeObject {
 
 	public void setHttpStatus(int http_status) {
 		this.http_status = http_status;
+	}
+
+	public String getUrlAfterLoading() {
+		return url_after_loading;
+	}
+
+	public void setUrlAfterLoading(String url_after_loading) {
+		this.url_after_loading = url_after_loading;
 	}
 }

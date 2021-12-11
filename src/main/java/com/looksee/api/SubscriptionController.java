@@ -45,6 +45,7 @@ public class SubscriptionController {
     private SubscriptionService subscription_service;
     
     /**
+     * Cancels any existing subscription and sets account subscription to Free
      * 
      * @param request
      * @param plan
@@ -52,11 +53,17 @@ public class SubscriptionController {
      * @throws Exception
      */
     @RequestMapping(method = RequestMethod.PUT)
-    public void subscribe(HttpServletRequest request,
+    public void getFreeSubscription(HttpServletRequest request,
 					 		@RequestBody Subscription subscription) throws Exception {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
+    	if(acct.getSubscriptionToken() != null && !acct.getSubscriptionToken().isEmpty()) {
+    		stripe_service.cancelSubscription(acct.getSubscriptionToken());
+    	}
+    	acct.setSubscriptionToken("");
+    	acct.setSubscriptionType("Free");
+    	account_service.save(acct);
     }
     
     /**
@@ -89,6 +96,8 @@ public class SubscriptionController {
     }
     
     /**
+     * Webhook endpoint registered with Stripe. This webhook validates the event signature so that only
+     * Stripe can access it and we use it to manage payment issues
      * 
      * @param request
      * @param response
@@ -145,11 +154,11 @@ public class SubscriptionController {
         switch (event.getType()) {
           case "checkout.session.async_payment_failed":
         	  log.warn("checkout session completed webhook recieved");
-        	  Object session = stripeObject;
+        	  Session session = (Session) stripeObject;
         	  // Then define and call a function to handle the event checkout.session.async_payment_failed
         	  break;
           case "checkout.session.async_payment_succeeded":
-        	  Object session1 = stripeObject;
+        	  Session session1 = (Session) stripeObject;
         	  // Then define and call a function to handle the event checkout.session.async_payment_succeeded
         	  break;
           case "checkout.session.completed":

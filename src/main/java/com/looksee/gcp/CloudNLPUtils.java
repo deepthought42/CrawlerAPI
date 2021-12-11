@@ -15,27 +15,25 @@ import com.google.cloud.language.v1.Sentence;
 import com.google.cloud.language.v1.Sentiment;
 import com.google.cloud.language.v1.Token;
 
-import io.github.resilience4j.retry.annotation.Retry;
-
-@Retry(name="gcp")
+//@Retry(name="gcp")
 public class CloudNLPUtils {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(CloudNLPUtils.class);
 
 	public static List<Sentence> extractSentences(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 
 		// Detects the sentiment of the text
 		List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();
 		
-		language.shutdown();
+		language.shutdown(); 
 		return sentences;
 	}
 	
 	public static List<Sentence> extractParagraphs(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 
 		// Detects the sentiment of the text
 		List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();
@@ -46,7 +44,7 @@ public class CloudNLPUtils {
 	
 	public static Sentiment extractSentiment(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-	    Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+	    Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 	    
     	Sentiment sentiment = language.analyzeSentiment(doc).getDocumentSentiment();
     	language.shutdown();
@@ -57,7 +55,7 @@ public class CloudNLPUtils {
 	
 	public static List<Entity> extractEntities(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-	    Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+	    Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 	    
     	List<Entity> entities = language.analyzeEntities(doc).getEntitiesList();
     	language.shutdown();
@@ -68,7 +66,7 @@ public class CloudNLPUtils {
 	
 	public static List<Sentence> extractVoice(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 
 		// Detects the sentiment of the text
 		//List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();
@@ -87,7 +85,7 @@ public class CloudNLPUtils {
 	
 	public static List<Sentence> extractMood(String text) throws IOException {
 	    LanguageServiceClient language = LanguageServiceClient.create();
-		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+		Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).setLanguage("en").build();
 
 		// Detects the sentiment of the text
 		//List<Sentence> sentences = language.analyzeSyntax(doc).getSentencesList();

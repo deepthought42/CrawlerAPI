@@ -15,6 +15,7 @@ import com.looksee.models.audit.content.ImageAltTextAudit;
 import com.looksee.models.audit.content.ReadabilityAudit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
@@ -82,9 +83,7 @@ public class ContentAuditor extends AbstractActor{
 					   	//generate audit report
 					   	//Set<Audit> audits = new HashSet<>();
 					   	page.setElements(page_state_service.getElementStates(page.getKey()));
-					   	if(page.getUrl().contentEquals("look-see.com")) {					   		
-					   		log.warn(page.getElements().size()+" elements found for content audit of "+page.getUrl());
-					   	}
+
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
 					   												page_audit_record_msg.getAccountId(),
 					   												audit_record.getId(),
@@ -95,45 +94,78 @@ public class ContentAuditor extends AbstractActor{
 					   												null);
 					   	
 					   	getContext().getParent().tell(audit_update, getSelf());
-					   							
-						Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
-						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(2.0/4.0),
-																	"Reviewing content for readability",
-																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE, 
-																	alt_text_audit);
 
-						getContext().getParent().tell(audit_update2, getSelf());
+					   	try {
+							Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
+							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		(2.0/4.0),
+																		"Reviewing content for readability",
+																		AuditCategory.CONTENT,
+																		AuditLevel.PAGE, 
+																		alt_text_audit);
+	
+							getContext().getParent().tell(audit_update2, getSelf());
+					   	}
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing image alt-text", 
+																  AuditCategory.CONTENT, 
+																  (2.0/4.0));
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
+						}
 						
-						Audit readability_audit = readability_auditor.execute(page, audit_record);
-						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(3.0/4.0),
-																	"Reviewing paragraph length",
-																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE, 
-																	readability_audit);
-
-						getSender().tell(audit_update3, getSelf());
-						//Audit font_audit = font_auditor.execute(page);
-						//audits.add(font_audit);
-						
-						Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
-						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(1.0),
-																	"Content Audit Compelete!",
-																	AuditCategory.CONTENT,
-																	AuditLevel.PAGE, 
-																	paragraph_audit);
-
-						getContext().getParent().tell(audit_update4, getSelf());		
-						log.warn("content audits complete :: ");
+					   	try {
+							Audit readability_audit = readability_auditor.execute(page, audit_record);
+							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		(3.0/4.0),
+																		"Reviewing paragraph length",
+																		AuditCategory.CONTENT,
+																		AuditLevel.PAGE, 
+																		readability_audit);
+	
+							getSender().tell(audit_update3, getSelf());
+					   	}
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing readability", 
+																  AuditCategory.CONTENT, 
+																  (3.0/4.0));
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
+						}
+					   	
+					   	try {
+							Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
+							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		1.0,
+																		"Content Audit Compelete!",
+																		AuditCategory.CONTENT,
+																		AuditLevel.PAGE, 
+																		paragraph_audit);
+	
+							getContext().getParent().tell(audit_update4, getSelf());		
+					   	}
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing paragraph structure", 
+																  AuditCategory.CONTENT, 
+																  1.0);
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
+						}
 					}catch(Exception e) {
 						log.error("exception caught during content audit");
 						e.printStackTrace();
@@ -150,11 +182,10 @@ public class ContentAuditor extends AbstractActor{
 								(1.0),
 								"Content Audit Compelete!",
 								AuditCategory.CONTENT,
-								AuditLevel.PAGE, null);
+								AuditLevel.PAGE, 
+								null);
 
 						getSender().tell(audit_update4, getSelf());
-						
-						postStop();
 					}
 				})
 				.match(MemberUp.class, mUp -> {

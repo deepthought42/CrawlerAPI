@@ -102,8 +102,8 @@ public class IdeTestExportController {
 
     	JSONObject test_json = new JSONObject(json_str);
     	
-    	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"));
-		formatted_url = BrowserUtils.sanitizeUrl(formatted_url);
+    	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"), false);
+		formatted_url = BrowserUtils.sanitizeUrl(formatted_url, false);
 		URL domain_url = new URL(formatted_url);
 	
 		

@@ -26,6 +26,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
@@ -38,7 +39,9 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
@@ -76,9 +79,6 @@ public class BrowserService {
 	private ElementService element_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
 	private FormService form_service;
 
 	@Autowired
@@ -99,7 +99,7 @@ public class BrowserService {
 	 */
 	public Browser getConnection(BrowserType browser, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser != null;
-		log.debug("getting browser connection");
+		
 		return BrowserConnectionHelper.getConnection(browser, browser_env);
 	}
 
@@ -246,75 +246,6 @@ public class BrowserService {
 		return Pattern.compile("<!--.*?-->").matcher(html).replaceAll("");
     }
 	
-	
-	/**
-	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
-	 *
-	 * @return page {@linkplain PageState}
-	 * @throws Exception 
-	 * 
-	 * @pre browser != null
-	 */
-	@Deprecated
-	public PageState buildPageStateWithElementsWithUserAndDomain(String user_id, Domain domain, Browser browser) throws Exception{
-		assert browser != null;
-		
-		//retrieve landable page state associated with page with given url
-		URL browser_url = new URL(browser.getDriver().getCurrentUrl());
-		
-		String url_without_protocol = BrowserUtils.getPageUrl(browser_url);
-		String host = browser_url.getHost();
-		String page_src = Browser.cleanSrc(browser.getDriver().getPageSource());
-		String src_checksum = BrowserService.calculateSha256(BrowserService.generalizeSrc(page_src));
-		List<PageState> page_states = page_state_service.findBySourceChecksumForDomain(domain.getUrl(), src_checksum);
-
-		if(page_states.isEmpty()) {
-			log.warn("could not find page by source checksum ::  "+src_checksum);
-			//DONT MOVE THIS. THIS IS HERE TO MAKE SURE THAT WE GET THE UNALTERED SCREENSHOT OF THE VIEWPORT BEFORE DOING ANYTHING ELSE!!
-			BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-			String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
-			String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-			viewport_screenshot.flush();
-			
-			//scroll to bottom of page
-			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
-			String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
-			String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, host, full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-			full_page_screenshot.flush();
-	        int status_code = BrowserUtils.getHttpStatus(browser_url);
-
-			log.debug("creating new page state object ");
-			PageState page_state = new PageState(
-					viewport_screenshot_url,
-					new ArrayList<>(),
-					page_src,
-					false,
-					browser.getXScrollOffset(),
-					browser.getYScrollOffset(),
-					browser.getViewportSize().getWidth(),
-					browser.getViewportSize().getHeight(),
-					BrowserType.create(browser.getBrowserName()), 
-					full_page_screenshot_url, 
-					full_page_screenshot.getWidth(), 
-					full_page_screenshot.getHeight(), 
-					url_without_protocol,
-					browser.getDriver().getTitle(),
-					BrowserUtils.checkIfSecure(browser_url),
-					status_code, null);
-
-			//page_state.addScreenshotChecksum(screenshot_checksum);
-			page_state.setFullPageWidth(full_page_screenshot.getWidth());
-			page_state.setFullPageHeight(full_page_screenshot.getHeight());
-		
-			return page_state_service.saveUserAndDomain(user_id, domain.getKey(), page_state);
-		}
-		
-		PageState page_state = page_states.get(0);
-		page_state.setElements(page_state_service.getElementStatesForUser(user_id, page_states.get(0).getKey()));
-		
-		return page_state;
-	}
-	
 	/**
 	 * Process used by the web crawler to build {@link PageState} from {@link PageVersion}
 	 * 
@@ -324,79 +255,77 @@ public class BrowserService {
 	 * @throws XPathExpressionException 
 	 * @throws Exception
 	 */
-	//@Retry(name="webdriver")
-	public PageState buildPageState(URL url) {
+	public PageState buildPageState(URL url) throws Exception {
 		assert url != null;
-		//assert audit_record != null;
 		
 		int http_status = BrowserUtils.getHttpStatus(url);
 		//usually code 301 is returned which is a redirect, which is usually transferring to https
-		if(http_status == 404) {
+		if(http_status == 404 || http_status == 408) {
 			return null;
 		}
-		
-		boolean rendering_incomplete = true;
-		
-		int cnt = 0;
+
+		return performBuildPageProcess(url);
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * @return
+	 * @throws MalformedURLException 
+	 */
+	private PageState performBuildPageProcess(URL url) throws MalformedURLException {
 		PageState page_state = null;
-		Browser browser = null;
-		//audit_record = audit_record_service.findById(audit_record.getId()).get();
+		boolean complete = false;
+		int cnt = 0;
 		do {
+			Browser browser = null;
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.TEST);
 				browser.navigateTo(url.toString());
-			} catch(Exception e) {
-				log.warn("Unable to get browser connection");
-				continue;
-			}
-			
-			try {
 				if(browser.is503Error()) {
-					throw new Exception("503 Error encountered. Starting over..");
+					browser.close();
+					throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
 				}
 				browser.removeDriftChat();
-
-				//navigate to page url
-				page_state = buildPageState(url, browser);
-
-				rendering_incomplete = false;
-				cnt=10000000;
+				URL page_url_after_loading = new URL(browser.getDriver().getCurrentUrl());
+				page_state = buildPageState(url, browser, page_url_after_loading);
+				complete = true;
+				cnt = 100000;
 				break;
-			}
-			catch (IOException e) {
-				log.warn("An IO exception occurred while building page state");
+			}catch(Exception e) {
+				log.warn("Exception occurred while building page state");
 				//e.printStackTrace();
-			}
-			catch (Exception e) {
-				log.warn("An exception occurred while building page state");
-				//e.printStackTrace();
+				TimingUtils.pauseThread(1000L);
 			}
 			finally {
-				if(browser != null) {   
+				if(browser != null) {
 					browser.close();
 				}
 			}
 			cnt++;
-		}while(rendering_incomplete && cnt < 1000000);
+		}while(!complete && cnt < 100000);
+		
 		return page_state;
 	}
-	
+
 	/**
 	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
+	 * @param url_after_loading TODO
 	 * @param title TODO
 	 * @return page {@linkplain PageState}
+	 * @throws GridException 
 	 * @throws IOException 
 	 * @throws XPathExpressionException 
 	 * @throws Exception 
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( URL url, Browser browser ) throws IOException, XPathExpressionException{
+	public PageState buildPageState( URL url, Browser browser, URL url_after_loading ) throws GridException, IOException {
 		assert url != null;
 		assert browser != null;
 
 		String url_without_protocol = BrowserUtils.getPageUrl(url);
-		boolean is_secure = BrowserUtils.checkIfSecure(new URL("https://"+url_without_protocol));
+		boolean is_secure = BrowserUtils.checkIfSecure(url);
         int status_code = BrowserUtils.getHttpStatus(url);
 
         //remove 3rd party chat apps such as drift, and ...(NB: fill in as more identified)
@@ -423,25 +352,25 @@ public class BrowserService {
 		long y_offset = browser.getYScrollOffset();
 		Dimension size = browser.getDriver().manage().window().getSize();
 
-        log.debug("status code received .... " + status_code);
 		PageState page_state = new PageState(
-				viewport_screenshot_url,
-				new ArrayList<>(),
-				source,
-				false,
-				x_offset,
-				y_offset,
-				size.getWidth(),
-				size.getHeight(),
-				BrowserType.CHROME,
-				full_page_screenshot_url,
-				full_page_screenshot.getWidth(), 
-				full_page_screenshot.getHeight(), 
-				url_without_protocol,
-				title,
-				is_secure,
-				status_code, 
-				composite_url);
+										viewport_screenshot_url,
+										new ArrayList<>(),
+										source,
+										false,
+										x_offset,
+										y_offset,
+										size.getWidth(),
+										size.getHeight(),
+										BrowserType.CHROME,
+										full_page_screenshot_url,
+										full_page_screenshot.getWidth(), 
+										full_page_screenshot.getHeight(), 
+										url_without_protocol,
+										title,
+										is_secure,
+										status_code, 
+										composite_url,
+										url_after_loading.toString());
 
 		return page_state;
 	}
@@ -477,15 +406,10 @@ public class BrowserService {
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		
 		do {
+			log.warn("Getting browser connectin to build page elements");
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_url);
-			} catch(Exception e) {
-				log.warn("Unable to get browser connection");
-				continue;
-			}
-			
-			try {
 				if(browser.is503Error()) {
 					throw new Exception("503 Error encountered. Starting over..");
 				}
@@ -493,16 +417,18 @@ public class BrowserService {
 				
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
-				elements = extractElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
-				
+				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt = 10000000;
-				break;
+				cnt = 1000000;
 			}
 			catch (NullPointerException e) {
 				log.warn("NPE thrown during element state extraction");
 				//e.printStackTrace();
+			}
+			catch(MalformedURLException e) {
+				log.warn("Unable to get browser connection to build page elements : "+url);
+				break;
 			}
 			catch (Exception e) {
 				log.warn("An exception occurred while building page elements ... "+e.getMessage());
@@ -513,8 +439,9 @@ public class BrowserService {
 					browser.close();
 				}
 			}
+
 			cnt++;
-		}while(rendering_incomplete && cnt < 1000000);
+		}while(rendering_incomplete && cnt < 10000);
 
 		return elements;
 	}
@@ -558,7 +485,7 @@ public class BrowserService {
 		
 		Document html_doc = Jsoup.parse(body_src);
 		String host = url.getHost();
-		
+				
 		for(String xpath : xpaths) {
 			if(element_states_map.containsKey(xpath)) {
 				continue;
@@ -598,33 +525,38 @@ public class BrowserService {
 						element_screenshot.flush();
 					}
 					catch( Exception e) {
+						log.warn("exception occurred while getting screenshot and saving image");
+						/*
 						log.warn("element height :: "+element_size.getHeight());
 						log.warn("Element Y location ::  "+ element_location.getY());
 						log.warn("element width :: "+element_size.getWidth());
 						log.warn("Element X location ::  "+ element_location.getX());
+						*/
 						//e.printStackTrace();
 					}
 				}
 				else {
-					//extract image from full page screenshot manually
+					//TODO: extract image from full page screenshot manually
 				}
-				//get child elements for element
-				//Map<String, String> attributes = browser.extractAttributes(web_element);
+				
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
+				
 				if(children.isEmpty()) {
 					classification = ElementClassification.LEAF;
 				}
 				else {
 					classification = ElementClassification.ANCESTOR;
 				}
+				
 				//load json element
 				Elements elements = Xsoup.compile(xpath).evaluate(html_doc).getElements();
 				if(elements.size() == 0) {
 					log.warn("NO ELEMENTS WITH XPATH FOUND :: "+xpath);
 				}
+								
 				Element element = elements.first();
 				ElementState element_state = buildElementState(xpath, 
 															   new HashMap<>(), 
@@ -1641,30 +1573,6 @@ public class BrowserService {
 		return false;
 	}
 	
-	public List<ElementState> extractElementStates(
-			PageState page_state,
-			List<String> xpaths, 
-			Browser browser, 
-			Map<String, ElementState> elements, 
-			long audit_record_id, 
-			URL url, 
-			int height
-	) throws NullPointerException {
-		assert page_state != null;
-		assert xpaths != null;
-		assert !xpaths.isEmpty();
-		assert browser != null;
-		assert elements != null;
-		
-		return getDomElementStates(page_state, 
-									xpaths, 
-									browser, 
-									elements, 
-									audit_record_id, 
-									url, 
-									height);
-	}
-	
 	/**
 	 * 
 	 * @param src
@@ -1772,29 +1680,24 @@ public class BrowserService {
 		return icon_urls;
 	}
 
-	public String getPageSource(BrowserType browser_type, BrowserEnvironment environment, URL sanitized_url) throws MalformedURLException {
-		int attempt_cnt = 0;
-		Browser browser = null;
-		String page_src = "";
-		do {
-			try {
-				browser = BrowserConnectionHelper.getConnection(browser_type, environment);
-				browser.navigateTo(sanitized_url.toString());
-				page_src = browser.getSource();
-				attempt_cnt = 1000000;
-			}
-			catch(Exception e) {
-				log.warn("failed to obtain page source during crawl");
-				//e.printStackTrace();
-				attempt_cnt++;
-			}
-			finally {
-				if(browser != null) {
-					browser.close();
-				}
-			}
-		}while (page_src.trim().isEmpty() && attempt_cnt < 10000);
+	public String getPageSource(Browser browser, URL sanitized_url) throws MalformedURLException {
+		assert browser != null;
+		assert sanitized_url != null;
+		
+		return browser.getSource();
+	}
+}
 
-		return page_src;
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class ServiceUnavailableException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 794045239226319408L;
+
+	public ServiceUnavailableException(String msg) {
+		super(msg);
 	}
 }

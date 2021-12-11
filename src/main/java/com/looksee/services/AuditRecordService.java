@@ -217,14 +217,6 @@ public class AuditRecordService {
 	public Set<PageAuditRecord> getAllPageAudits(long audit_record_id) {		
 		return audit_record_repo.getAllPageAudits(audit_record_id);
 	}
-
-	@Deprecated
-	public Set<Audit> getAllAuditsForPageAuditRecord(String page_audit_key) {
-		assert page_audit_key != null;
-		assert !page_audit_key.isEmpty();
-		
-		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_key);
-	}
 	
 	public Set<Audit> getAllAuditsForPageAuditRecord(long page_audit_id) {		
 		return audit_record_repo.getAllAuditsForPageAuditRecord( page_audit_id);
@@ -313,5 +305,31 @@ public class AuditRecordService {
 
 	public int getPageAuditCount(long domain_audit_id) {
 		return audit_record_repo.getPageAuditRecordCount(domain_audit_id);
+	}
+
+	public Set<Audit> getAllAudits(long id) {
+		return audit_record_repo.getAllAudits(id);
+	}
+
+	public boolean isDomainAuditComplete(AuditRecord audit_record) {
+		AuditRecord audit_record_clone = audit_record.clone();
+		boolean is_complete = false;
+		if(audit_record_clone instanceof PageAuditRecord) {
+			log.warn("audit record is instance of PageAuditRecord");
+			audit_record_clone = audit_record_repo.getDomainForPageAuditRecord(audit_record_clone.getId()).get();
+		}
+		
+		//audit_record should now have a domain audit record
+		//get all page audit records for domain audit
+		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record_clone.getId());
+
+		//check all page audit records. If all are complete then the domain is also complete
+		for(PageAuditRecord audit : page_audits) {
+			if(!audit.isComplete()) {
+				is_complete = false;
+			}
+		}
+		
+		return is_complete;
 	}
 }

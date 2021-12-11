@@ -83,10 +83,6 @@ public class ElementStateService {
 		return element_repo.findByKey(key);
 	}
 
-	public ElementState findByKeyAndUserId(String user_id, String key){
-		return element_repo.findByKeyAndUserId(user_id, key);
-	}
-
 	public void removeRule(String user_id, String element_key, String rule_key){
 		element_repo.removeRule(user_id, element_key, rule_key);
 	}

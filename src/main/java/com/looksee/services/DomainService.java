@@ -237,8 +237,8 @@ public class DomainService {
         return audit_record_service.getAllAltTextAudits(record.getKey());
 	}
 
-	public Domain findByAuditRecord(String audit_record_key) {
-		return domain_repo.findByAuditRecord(audit_record_key);
+	public Domain findByAuditRecord(long audit_record_id) {
+		return domain_repo.findByAuditRecord(audit_record_id);
 	}
 
 	public Set<Audit> getMostRecentAuditRecordMargins( String host) {

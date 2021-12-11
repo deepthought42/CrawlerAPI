@@ -3,6 +3,7 @@ package com.looksee.models.audit;
 import java.util.Set;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
@@ -25,7 +26,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * 
 	 * @param priority
 	 * @param description TODO
-	 * @param recommendation
 	 * @param contrast
 	 * @param foreground_color
 	 * @param background_color
@@ -37,6 +37,8 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * @param font_size TODO
 	 * @param points_earned TODO
 	 * @param max_points TODO
+	 * @param recommendations TODO
+	 * @param recommendation TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
 	 * @pre !recommendation.isEmpty()
@@ -50,21 +52,21 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	public ColorContrastIssueMessage(
 			Priority priority, 
 			String description,
-			String recommendation,
 			double contrast,
 			String foreground_color,
-			String background_color, 
+			String background_color,
 			ElementState element, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance,
-			String title, 
+			String wcag_compliance, 
+			String title,
 			String font_size, 
 			int points_earned, 
-			int max_points
+			int max_points, 
+			Set<Recommendation> recommendations, 
+			String recommendation
 	) {
 		assert priority != null;
-		assert recommendation != null;
 		assert element != null;
 		assert foreground_color != null;
 		assert !foreground_color.isEmpty();
@@ -74,6 +76,7 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		setPriority(priority);
 		setDescription(description);
 		setRecommendation(recommendation);
+		setRecommendations(recommendations);
 		setContrast(contrast);
 		setForegroundColor(foreground_color);
 		setBackgroundColor(background_color);

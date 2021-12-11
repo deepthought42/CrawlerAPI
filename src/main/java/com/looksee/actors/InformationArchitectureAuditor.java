@@ -19,6 +19,7 @@ import com.looksee.models.audit.informationarchitecture.SecurityAudit;
 import com.looksee.models.audit.informationarchitecture.TitleAndHeaderAudit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
@@ -88,12 +89,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 					try {
 						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord(); //audit_record_service.findById(page_audit_record_msg.getId()).get();
 						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
-
-						if(page.getUrl().contains("acacia-research")) {
-							log.warn("Starting info architecture audit for "+page.getUrl());
-						}
 						//generate audit report
-					   	//Set<Audit> audits = new HashSet<>();
+
 						
 						AuditProgressUpdate audit_update = new AuditProgressUpdate(
 																	page_audit_record_msg.getAccountId(),
@@ -106,68 +103,106 @@ public class InformationArchitectureAuditor extends AbstractActor{
 
 						getContext().getParent().tell(audit_update, getSelf());
 
-					   	Audit link_audit = links_auditor.execute(page, audit_record);
-					   	
-						AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(2.0/5.0),
-																	"Reviewing title and header page title and header",
-																	AuditCategory.INFORMATION_ARCHITECTURE,
-																	AuditLevel.PAGE, 
-																	link_audit);
-
-						if(page.getUrl().contains("acacia-research")) {
-							log.warn("executing title and header audit for page "+page.getUrl());
+						try {
+						   	Audit link_audit = links_auditor.execute(page, audit_record);
+						   	
+							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		(2.0/5.0),
+																		"Reviewing title and header page title and header",
+																		AuditCategory.INFORMATION_ARCHITECTURE,
+																		AuditLevel.PAGE, 
+																		link_audit);
+	
+							getContext().getParent().tell(audit_update2, getSelf());
+						} 
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing title and header", 
+																  AuditCategory.INFORMATION_ARCHITECTURE, 
+																  (2.0/5.0));
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
 						}
-						getContext().getParent().tell(audit_update2, getSelf());
 						
-						Audit title_and_headers = title_and_header_auditor.execute(page, audit_record);
-						
-						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(3.0/5.0),
-																	"Checking that page is secure",
-																	AuditCategory.INFORMATION_ARCHITECTURE,
-																	AuditLevel.PAGE, 
-																	title_and_headers);
-
-						getContext().getParent().tell(audit_update3, getSelf());
-						
-						if(page.getUrl().contains("acacia-research")) {
-							log.warn("executing security audit for page "+page.getUrl());
+						try {
+							Audit title_and_headers = title_and_header_auditor.execute(page, audit_record);
+							
+							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		(3.0/5.0),
+																		"Checking that page is secure",
+																		AuditCategory.INFORMATION_ARCHITECTURE,
+																		AuditLevel.PAGE, 
+																		title_and_headers);
+	
+							getContext().getParent().tell(audit_update3, getSelf());
+						} 
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing page security", 
+																  AuditCategory.INFORMATION_ARCHITECTURE, 
+																  (3.0/5.0));
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
 						}
-						Audit security = security_audit.execute(page, audit_record);
 						
-						AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	(4.0/5.0),
-																	"Reviewing SEO",
-																	AuditCategory.INFORMATION_ARCHITECTURE,
-																	AuditLevel.PAGE, 
-																	security);
-						
-						getSender().tell(audit_update4, getSelf());
-						
-						if(page.getUrl().contains("acacia-research")) {
-							log.warn("executing metadata audit for page "+page.getUrl());
+						try {
+							Audit security = security_audit.execute(page, audit_record);
+							
+							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		(4.0/5.0),
+																		"Reviewing SEO",
+																		AuditCategory.INFORMATION_ARCHITECTURE,
+																		AuditLevel.PAGE, 
+																		security);
+							
+							getSender().tell(audit_update4, getSelf());
+						} 
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing SEO", 
+																  AuditCategory.INFORMATION_ARCHITECTURE, 
+																  (4.0/5.0));
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
 						}
-						Audit metadata = metadata_auditor.execute(page, audit_record);
 						
-						AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
-																	page_audit_record_msg.getAccountId(),
-																	audit_record.getId(),
-																	1.0,
-																	"Completed information architecture audit",
-																	AuditCategory.INFORMATION_ARCHITECTURE,
-																	AuditLevel.PAGE, 
-																	metadata);
+						try {
+							Audit metadata = metadata_auditor.execute(page, audit_record);
+							
+							AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		1.0,
+																		"Completed information architecture audit",
+																		AuditCategory.INFORMATION_ARCHITECTURE,
+																		AuditLevel.PAGE, 
+																		metadata);
+							
+							getSender().tell(audit_update5, getSelf());
+						}
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while reviewing metadata", 
+																  AuditCategory.INFORMATION_ARCHITECTURE, 
+																  1.0);
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
+						}
 						
-						getSender().tell(audit_update5, getSelf());
-						
-						log.warn("COMPLETE INFORMATION ARCHITECTURE audit for page "+page.getUrl());						
 					} catch(Exception e) {
 						log.warn("exception caught during Information Architecture audit");
 						e.printStackTrace();
@@ -186,7 +221,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 								1.0,
 								"Completed information architecture audit",
 								AuditCategory.INFORMATION_ARCHITECTURE,
-								AuditLevel.PAGE, null);
+								AuditLevel.PAGE,
+								null);
 
 						getSender().tell(audit_update5, getSelf());
 					}

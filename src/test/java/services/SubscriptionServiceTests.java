@@ -9,10 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -120,7 +118,7 @@ public class SubscriptionServiceTests {
 		when(account.getEmail()).thenReturn("test@test.com");
 		when(account_service.getTestCountByMonth(anyString(), anyInt())).thenReturn(1999);
 			
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertFalse(has_exceeded);
 	}
 	
@@ -129,7 +127,7 @@ public class SubscriptionServiceTests {
 		when(account.getEmail()).thenReturn("test@test.com");
 		when(account_service.getTestCountByMonth(anyString(), anyInt())).thenReturn(2000);
 			
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertFalse(has_exceeded);
 	}
 	
@@ -138,7 +136,7 @@ public class SubscriptionServiceTests {
 		when(account.getEmail()).thenReturn("test@test.com");
 		when(account_service.getTestCountByMonth(anyString(), anyInt())).thenReturn(2001);
 			
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertTrue(has_exceeded);
 	}
 	
@@ -152,7 +150,7 @@ public class SubscriptionServiceTests {
 		records.add(record);
 		when(account_service.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
 		
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertFalse(has_exceeded);
 	}
 	
@@ -165,7 +163,7 @@ public class SubscriptionServiceTests {
 		records.add(record);
 		when(account_service.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
 		
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertFalse(has_exceeded);
 	}
 	
@@ -178,7 +176,7 @@ public class SubscriptionServiceTests {
 		records.add(record);
 		when(account_service.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
 		
-		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.PRO);
+		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertTrue(has_exceeded);
 	}
 	

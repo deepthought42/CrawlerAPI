@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.message.ElementProgressMessage;
+import com.looksee.models.message.ElementsSaveError;
 import com.looksee.models.message.ElementsSaved;
 import com.looksee.services.ElementStateService;
-import com.looksee.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -37,9 +37,6 @@ public class DataExtractionSupervisor extends AbstractActor{
 	
 	@Autowired
 	private ElementStateService element_state_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -66,21 +63,30 @@ public class DataExtractionSupervisor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(ElementProgressMessage.class, message-> {
+				.match(ElementProgressMessage.class, message-> { 
+					log.warn("saving elements : "+message.getElementStates().size());
 					try {
-						log.warn("saving elements");
-						saveNewElements(message.getPageStateId(),
-										message.getElementStates());
+						List<Long> element_ids = saveNewElements(message.getPageStateId(),
+																 message.getElementStates());
 						
-						log.warn("saved "+message.getElementStates().size()+" elements to neo4j to page state id : "+message.getPageStateId());
+						log.warn("elements saved successfully : "+message.getPageUrl());
 						ElementsSaved elements = new ElementsSaved(message.getAccountId(),
 																   message.getPageUrl(), 
 																   message.getAuditRecordId(), 
-																   message.getElementStates().size());
+																   element_ids, 
+																   message.getPageStateId());
 						
 						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {
 						e.printStackTrace();
+						
+						ElementsSaveError err = new ElementsSaveError(message.getAccountId(),
+								   message.getPageStateId(), 
+								   message.getAuditRecordId(),
+								   message.getDomainId(),
+								   message.getPageUrl());
+
+						getContext().getSender().tell(err, getSelf());
 					}
 				})
 				.match(MemberUp.class, mUp -> {
@@ -98,7 +104,7 @@ public class DataExtractionSupervisor extends AbstractActor{
 				.build();
 	}
 	
-	private void saveNewElements(long page_state_id, List<ElementState> element_states) {
+	private List<Long> saveNewElements(long page_state_id, List<ElementState> element_states) {
 		List<Long> element_ids = new ArrayList<>();
 		List<String> element_keys = new ArrayList<>();
 
@@ -109,27 +115,20 @@ public class DataExtractionSupervisor extends AbstractActor{
 		Set<String> existing_keys = new HashSet<>();
 		existing_keys.addAll(element_state_service.getAllExistingKeys(element_keys));
 		List<ElementState> existing_elements = element_state_service.getElements(existing_keys);
-		log.warn(existing_elements.size()+" existing elements found");
 		List<ElementState> new_element_states = element_states
 												   .stream()
 												   .filter(f -> !existing_keys.contains(f.getKey()))
 												   .collect(Collectors.toList());
 		
-		log.warn(new_element_states.size()+" new elements flagged for db creation");
 		List<Long> existing_element_ids = existing_elements
 													   .stream()
 													   .map(ElementState::getId)
 													   .collect(Collectors.toList());
 
-		log.warn("Does this add up ??  "+(0 == element_states.size()-(existing_elements.size()+new_element_states.size())));
-		//Iterable<ElementState> new_elements = element_state_service.saveAll(new_element_states);
 		for(ElementState element : new_element_states){
 			element_ids.add(element_state_service.save(element).getId());
 	   	}
-		log.warn(existing_element_ids.size()+" elements created");
 		element_ids.addAll(existing_element_ids);
-		
-		page_state_service.addAllElements(page_state_id, element_ids);
-		log.warn("done adding elements to page state");
+		return element_ids;
 	}	
 }

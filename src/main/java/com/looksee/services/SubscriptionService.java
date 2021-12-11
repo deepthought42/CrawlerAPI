@@ -24,7 +24,6 @@ import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.SubscriptionItemCollection;
 import com.stripe.model.checkout.Session;
-import com.stripe.param.SubscriptionUpdateParams;
 
 /**
  * Provides methods to check if an {@link Account} user has permission to access a restricted resource and verifying that
@@ -203,13 +202,13 @@ public class SubscriptionService {
     	Date date = new Date();
     	int page_audit_cnt = account_service.getPageAuditCountByMonth(account_id, date.getMonth());
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt > 10){
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.STARTUP) && page_audit_cnt > 50){
+    	else if(plan.equals(SubscriptionPlan.STARTUP) && page_audit_cnt >= 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY) && page_audit_cnt > 1000){
+    	else if(plan.equals(SubscriptionPlan.AGENCY) && page_audit_cnt >= 1000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -221,32 +220,31 @@ public class SubscriptionService {
 	
 	/**
 	 * checks if user has exceeded limit for page limit for domain audit based on their subscription
+	 * @param plan TODO
 	 * @param acct {@link Account}
-	 * 
 	 * @return true if user has exceeded limits for their {@link SubscriptionPlan}, otherwise false
 	 * 
 	 * @pre plan != null
 	 * 
 	 * @throws StripeException
 	 */
-	public boolean hasExceededDomainPageAuditLimit(long account_id, long domain_audit_id) throws StripeException{				
+	public boolean hasExceededDomainPageAuditLimit(long account_id, long domain_audit_id, SubscriptionPlan plan) throws StripeException{				
     	int page_audit_cnt = audit_record_service.getPageAuditCount(domain_audit_id);
-    	Account account = account_service.findById(account_id).get();
-    	SubscriptionPlan plan = getSubscriptionPlanName(account.getSubscriptionToken());
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt > 10){
+    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_BASIC) && page_audit_cnt > 200){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt > 800){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 800){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_BASIC) && page_audit_cnt > 800){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 800){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt > 800){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 2000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -284,7 +282,7 @@ public class SubscriptionService {
     	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 2000){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && test_run_cnt > 2000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -319,7 +317,7 @@ public class SubscriptionService {
     	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 250){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && discovered_test_cnt > 250){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -350,16 +348,16 @@ public class SubscriptionService {
     		
         	for(SubscriptionItem item: items.getData()) {
 	        	if(item.getPrice().getId().equals(agency_basic_price_id)){
-	        		return SubscriptionPlan.AGENCY_BASIC;
-	        	}
-	        	else if(item.getPrice().getId().equals(agency_pro_price_id)){
 	        		return SubscriptionPlan.AGENCY_PRO;
 	        	}
+	        	else if(item.getPrice().getId().equals(agency_pro_price_id)){
+	        		return SubscriptionPlan.AGENCY_PREMIUM;
+	        	}
 	        	else if(item.getPrice().getId().equals(company_basic_price_id)){
-	        		return SubscriptionPlan.COMPANY_BASIC;
+	        		return SubscriptionPlan.COMPANY_PRO;
 	        	}
 	        	else if(item.getPrice().getId().equals(company_pro_price_id)){
-	        		return SubscriptionPlan.COMPANY_PRO;
+	        		return SubscriptionPlan.COMPANY_PREMIUM;
 	        	}
 	        	else{
 	        		return SubscriptionPlan.UNLIMITED;
@@ -387,15 +385,23 @@ public class SubscriptionService {
     	else {
     		subscription = stripe_client.getSubscription(subscription_token);        	
         	//check for product
-    		SubscriptionItemCollection items = subscription.getItems();
     		
-        	for(SubscriptionItem item: items.getData()) {
-	        	if(item.getPrice().getId().equals(agency_basic_price_id)){
-	        		account_subscription = SubscriptionPlan.AGENCY_BASIC;
-	        	}
-	        	else{
-	        		account_subscription = SubscriptionPlan.UNLIMITED;
-	        	}
+    		SubscriptionItem item = Collections.max(subscription.getItems().getData(), Comparator.comparing(SubscriptionItem::getCreated));
+
+        	if(item.getPrice().getId().equals(agency_basic_price_id)){
+        		account_subscription = SubscriptionPlan.AGENCY_PRO;
+        	}
+        	else if(item.getPrice().getId().equals(agency_pro_price_id)){
+        		account_subscription = SubscriptionPlan.AGENCY_PREMIUM;
+        	}
+        	else if(item.getPrice().getId().equals(company_basic_price_id)){
+        		account_subscription = SubscriptionPlan.COMPANY_PRO;
+        	}
+        	else if(item.getPrice().getId().equals(company_pro_price_id)){
+        		account_subscription = SubscriptionPlan.COMPANY_PREMIUM;
+        	}
+        	else{
+        		account_subscription = SubscriptionPlan.UNLIMITED;
         	}
     	}
     	

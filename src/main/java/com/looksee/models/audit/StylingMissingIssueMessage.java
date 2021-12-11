@@ -1,5 +1,8 @@
 package com.looksee.models.audit;
 
+import java.util.Set;
+
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
@@ -11,12 +14,12 @@ public class StylingMissingIssueMessage extends UXIssueMessage {
 	
 	public StylingMissingIssueMessage(
 			String description, 
-			String recommendation, 
+			Set<Recommendation> recommendation, 
 			Priority priority) {
 		super();
 		
 		assert description != null;
-		setRecommendation(recommendation);
+		setRecommendations(recommendation);
 		setDescription(description);
 		setType(ObservationType.STYLE_MISSING);
 		setKey(generateKey());

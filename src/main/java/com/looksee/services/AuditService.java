@@ -22,6 +22,7 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
@@ -170,8 +171,7 @@ public class AuditService {
 				}
 				
 				//associate issue with element
-				if(!element_issues.containsKey(element.getKey())) {
-					
+				if(!element_issues.containsKey(element.getKey())) {	
 					Set<String> issue_keys = new HashSet<>();
 					issue_keys.add(issue_msg.getKey());
 					
@@ -289,5 +289,4 @@ public class AuditService {
 	public void addAllIssues(long id, List<Long> issue_ids) {
 		audit_repo.addAllIssues(id, issue_ids);
 	}
-
 }

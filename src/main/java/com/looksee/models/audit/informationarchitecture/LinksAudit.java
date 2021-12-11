@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -67,33 +65,25 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		List<ElementState> link_elements = new ArrayList<>();
-		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		List<ElementState> link_elements = page_state_service.getLinkElementStates(page_state.getKey());
 		
 		String ada_compliance = "There is no ADA guideline for dead links";
-		
-		for(ElementState element : elements) {
-			if(element.getName().equalsIgnoreCase("a")) {
-				link_elements.add(element);
-			}
-		}
-		
+
 		Set<String> labels = new HashSet<>();
 		labels.add("information architecture");
 		labels.add("accessibility");
 		labels.add("navigation");
 		labels.add("links");
-		int	cnt = 0;
+		
 		//score each link element
 		for(ElementState link : link_elements) {
-			cnt++;
 			Document jsoup_doc = Jsoup.parseBodyFragment(link.getOuterHtml(), page_state.getUrl());
 			Element element = jsoup_doc.getElementsByTag("a").first();
 
 			if( element.hasAttr("href") ) {
 				String recommendation = "Make sure links have a url set for the href value.";
-				String description = "Link missing href attribute";
-				String title = "Link missing href attribute";
+				String description = "Link has href attribute";
+				String title = "Link has href attribute";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.NONE,
@@ -110,8 +100,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			else {
 				String recommendation = "Make sure links have a url set for the href value.";
-				String description = "Link missing href attribute";
-				String title = "Link missing href attribute";
+				String description = "Link is missing href attribute";
+				String title = "Link is missing href attribute";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
@@ -194,7 +184,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																1,
 																1);
 				issue_messages.add(issue_message);
-				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 			}
 			else {
 				String recommendation = "Make sure links have a url set for the href value";
@@ -213,18 +202,14 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																0,
 																1);
 				issue_messages.add(issue_message);
-				MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_message);
 				continue;
 			}
 			
+			// Check if element link a valid url
 			String sanitized_href = "";
-			//is element link a valid url?
 			try {
-				URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
-				String page_state_host = page_url.getHost();
-				String protocol = page_url.getProtocol();
-				sanitized_href = BrowserUtils.formatUrl(protocol, page_state_host, href);
-				
+				String host = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl(), page_state.isSecure())).getHost();
+				sanitized_href = BrowserUtils.formatUrl("http", host, href, page_state.isSecure());
 				if( BrowserUtils.isJavascript(href)
 					|| href.startsWith("itms-apps:")
 					|| href.startsWith("snap:")
@@ -233,7 +218,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				) {
 					//do something here
 					
-				}else {					
+				}else {
+					
 					//if href is external then try creating URL object, else if it's not external then check for page state
 					URL href_url = new URL(sanitized_href);
 				}
@@ -339,9 +325,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			} catch (IOException e) {
 				
 				log.warn("IO error occurred while auditing links ...."+e.getMessage());
-				log.warn("href value :: "+href);
+				log.warn("href value :: "+sanitized_href);
 				String recommendation = "Make sure links point to a valid url";
-				String description = "Invalid link url (IOException) - "+href;
+				String description = "Invalid link url (IOException) - "+sanitized_href;
 				String title = "Invalid link url";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 						Priority.HIGH,
@@ -354,7 +340,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						title, 
 						3,
 						4);
-				issue_messages.add(issue_message);
+				issue_messages.add(issue_message); 
 				e.printStackTrace();
 			} catch (Exception e) {
 				String recommendation = "Make sure links point to a valid url";

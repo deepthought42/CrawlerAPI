@@ -12,7 +12,7 @@ import com.looksee.models.audit.UXIssueMessage;
 public interface UXIssueMessageRepository extends Neo4jRepository<UXIssueMessage, Long>  {
 	public UXIssueMessage findByKey(@Param("key") String key);
 
-	@Query("MATCH (uim:UXIssueMessage)-[]->(e:ElementState) WHERE id(uim)=$id RETURN e")
+	@Query("MATCH (uim:UXIssueMessage)-[:FOR]->(e:ElementState) WHERE id(uim)=$id RETURN e")
 	public ElementState getElement(@Param("id") long id);
 	
 }

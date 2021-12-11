@@ -13,26 +13,9 @@ import com.auth0.json.auth.UserInfo;
 import com.auth0.net.Request;
 
 @Component
-@PropertySource("classpath:application.properties")
+@PropertySource("classpath:auth0.properties")
 public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-	//@Value(value = "${auth0.client_id}")
-	/* PRODUCTION VALUES */
-	/*
-	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
-	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
-	private static String domain = "look-see.us.auth0.com";
-	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
-	*/
-	
-	/** STAGING VALUES */
-	/*
-	private static String client_id = "8HRxTIHb0uJ9FRnosRJhoMOvXwQDTRGG";
-	private static String client_secret = "eF-ifoh6xNW6rWtdtbnZ8FVCVDwU46ELNpYc0H7xRCLXRnIpEGKCoHS20nmNLZB9";
-	private static String domain = "look-see-dev.us.auth0.com";
-	//private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
-	*/
 	
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;

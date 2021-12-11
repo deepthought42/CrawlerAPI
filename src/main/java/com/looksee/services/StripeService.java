@@ -162,6 +162,7 @@ public class StripeService {
 					  .setCustomer(customer_id)
 					  .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
 					  .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+					  .setAllowPromotionCodes(Boolean.TRUE)
 					  .addLineItem(new SessionCreateParams.LineItem.Builder()
 					    // For metered billing, do not pass quantity
 					    .setQuantity(1L)

@@ -17,11 +17,13 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.PageState;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.message.AuditProgressUpdate;
+import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
+import com.looksee.models.message.PageDataExtractionError;
+import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
@@ -83,6 +85,11 @@ public class PageStateBuilder extends AbstractActor{
 	 *
 	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
 	 * 		 is also a Test and thus if the order is reversed, then the ExploratoryPath code never runs when it should
+	 * 
+	 * PageCrawlActionMessage - Extracts data for individual web page
+	 * 		Emits Events -
+	 * 				PageDataExtractionMessage - used for tracking completion of page data extraction
+	 * 
 	 * @throws NullPointerException
 	 * @throws IOException
 	 * @throws NoSuchElementException
@@ -91,52 +98,41 @@ public class PageStateBuilder extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageCrawlActionMessage.class, crawl_action-> {
-					try {
-						log.warn("building page state in page state builder actor ....");
-						
+					try {						
 						int http_status = BrowserUtils.getHttpStatus(crawl_action.getUrl());
 	
 						//usually code 301 is returned which is a redirect, which is usually transferring to https
-						if(http_status == 404) {
+						if(http_status == 404 || http_status == 408) {
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
+							//send message to audit manager letting it know that an error occurred
+							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
+									 crawl_action.getAccountId(), 
+									 crawl_action.getAuditRecordId(), 
+									 crawl_action.getUrl().toString(), 
+									 "An exception occurred while building page state "+crawl_action.getUrl());
+
+							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;
 						}
+						
 						//update audit record with progress
-						PageState page_state = browser_service.buildPageState(crawl_action.getUrl());
+						log.warn("building page state  " + crawl_action.getUrl() );
+						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
 						final PageState page_state_record = page_state_service.save(page_state);
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
-						int XPATH_CHUNK_SIZE = 500;
-						this.total_dispatches.put(page_state.getUrl(), 1);
+						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
+						int XPATH_CHUNK_SIZE = (int)Math.ceil((xpaths.size() / (double)XPATH_PARTITIONS));
+						this.total_dispatches.put(page_state.getUrl(), 0);
 						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
 						
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
 						//crawl_action.getAuditRecord().setPageState(page_state_record);
-					   	
-						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(crawl_action.getAuditRecordId()).get();
-						audit_record.setDataExtractionMsg("Scanning webpage");
-						audit_record.setDataExtractionProgress(1.0/4.0);
-						audit_record.setDataExtractionMsg("Mapping HTML elements");
-						audit_record.setElementsFound(total_dispatches.get(page_state.getUrl()));
-						audit_record_service.save(audit_record);
-					   	
+						
 					   	int start_xpath_index = 0;
 					   	int last_xpath_index = 0;
 						List<List<String>> xpath_lists = new ArrayList<>();
-						
-					   //	List<CompletableFuture<Void>> futures_list = new ArrayList<>();
-						//UpdatePageElementDispatches dispatch_update = new UpdatePageElementDispatches(page_state_record.getUrl(), total_dispatches );
-						//getContext().parent().tell(dispatch_update, getSelf());
-						ElementExtractionMessage element_extraction_msg = 
-   								new ElementExtractionMessage(page_state_record, 
-   															 crawl_action.getAuditRecordId(), 
-   															 xpaths);
-						ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
-					   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
-					
-						element_extractor.tell(element_extraction_msg, getSelf());	
-						
-						/*
+
 						while(start_xpath_index < (xpaths.size()-1)) {
 					   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
 					   		if(last_xpath_index >= xpaths.size()) {
@@ -146,7 +142,8 @@ public class PageStateBuilder extends AbstractActor{
 					   		xpath_lists.add(xpath_subset);
 						   
 					   		ElementExtractionMessage element_extraction_msg = 
-						   								new ElementExtractionMessage(page_state_record, 
+						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
+						   															 page_state_record, 
 						   															 crawl_action.getAuditRecordId(), 
 						   															 xpath_subset);
 							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -158,18 +155,38 @@ public class PageStateBuilder extends AbstractActor{
 							//page_state_record.addElements(elements);
 							start_xpath_index = last_xpath_index;
 					   	}
-						*/
+						
+						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
+																									 crawl_action.getAccountId(), 
+																									 crawl_action.getAuditRecordId(), 
+																									 page_state.getUrl(), 
+																									 xpath_lists.size());
+						
+						getContext().getParent().tell(extraction_tracker, getSelf());
 					}catch(Exception e) {
+						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
+																								 crawl_action.getAccountId(), 
+																								 crawl_action.getAuditRecordId(), 
+																								 crawl_action.getUrl().toString(), 
+																								 "An exception occurred while building page state "+crawl_action.getUrl());
+
+						getContext().getParent().tell(extraction_tracker, getSelf());
+
 						log.error("An exception occurred that bubbled up to the page state builder");
 						e.printStackTrace();
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
+					log.warn("setting total xpaths and dispatches");
 					message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
 					message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
+					log.warn("forwarding element progress message to audit manager");
 					getContext().parent().forward(message, getContext());
 				})
 				.match(AuditProgressUpdate.class, message -> {
+					getContext().parent().forward(message, getContext());
+				})
+				.match(ElementExtractionError.class, message -> {
 					getContext().parent().forward(message, getContext());
 				})
 				.match(MemberUp.class, mUp -> {

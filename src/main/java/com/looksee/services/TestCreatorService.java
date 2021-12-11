@@ -63,7 +63,7 @@ public class TestCreatorService {
 	  	log.warn("total path object added to test :: "+path_objects.size());
 	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
 
-	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl());
+	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl(), false);
 		
 		String url_path = new URL(url).getPath();
 		url_path = url_path.replace("/", " ").trim();

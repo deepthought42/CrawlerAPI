@@ -16,7 +16,6 @@ import com.looksee.models.TestRecord;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.models.message.AuditMessage;
 import com.pusher.rest.Pusher;
 
 import org.slf4j.Logger;
@@ -48,21 +47,6 @@ public class MessageBroadcaster {
         String audit_json = mapper.writeValueAsString(audit);
 
 		pusher.trigger(host, "audit-update", audit_json);
-	}
-	
-	/**
-     * Message emitter that sends {@link Test} to all registered clients
-     * 
-     * @param test {@link Test} to be emitted to clients
-     * @throws JsonProcessingException 
-     */
-	public static void broadcastAuditMessage(String host, AuditMessage audit_message) throws JsonProcessingException {	
-        //Object to JSON in String        
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        String audit_json = mapper.writeValueAsString(audit_message);
-
-		pusher.trigger(host, "audit-message", audit_json);
 	}
 	
     /**

@@ -22,6 +22,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -124,8 +125,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Found that " + header_tag + " headers are using font sizes of "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same size.";
+				Set<Recommendation> recommendations = new HashSet<>();
+				//recommendations.add(new Recommendation(recommendation));
+				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -133,9 +136,11 @@ public class FontAudit implements IExecutablePageStateAudit {
 						wcag_compliance,
 						labels,
 						why_it_matters,
-						title, 
-						0,
-						1);
+						title,
+						0, 
+						1,
+						recommendations,
+						recommendation);
 				issue_messages.add(ux_issue);
 			}
 			else {
@@ -144,8 +149,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Found that " + header_tag + " headers are using font sizes of "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same size.";
+				Set<Recommendation> recommendations = new HashSet<>();
+				//recommendations.add(new Recommendation(recommendation));
+				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -153,9 +160,11 @@ public class FontAudit implements IExecutablePageStateAudit {
 						wcag_compliance,
 						labels,
 						why_it_matters,
-						title, 
+						title,
+						1, 
 						1,
-						1);
+						recommendations,
+						recommendation);
 				issue_messages.add(ux_issue);
 			}
 			max_score +=1;
@@ -167,8 +176,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Found that " + header_tag + " headers are using the following font weights. "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "To have a consistent experience your " + header_tag + " tags should all have the same weight.";
+				Set<Recommendation> recommendations = new HashSet<>();
+				//recommendations.add(new Recommendation(recommendation));
+				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -178,7 +189,9 @@ public class FontAudit implements IExecutablePageStateAudit {
 						why_it_matters,
 						title,
 						0,
-						1);
+						1,
+						recommendations,
+						recommendation);
 				issue_messages.add(ux_issue);
 			}
 			else {
@@ -188,8 +201,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Found that " + header_tag + " headers are using the following font weights. "+font_sizes+"";
 				String wcag_compliance = "";
 				String recommendation = "";
+				Set<Recommendation> recommendations = new HashSet<>();
+				//recommendations.add(new Recommendation(recommendation));
+				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -199,7 +214,9 @@ public class FontAudit implements IExecutablePageStateAudit {
 						why_it_matters,
 						title,
 						1,
-						1);
+						1,
+						recommendations,
+						recommendation);
 				issue_messages.add(ux_issue);
 			}
 			max_score +=1;
@@ -222,8 +239,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Text has a font size of " + font_size_str + " which is too small to be readable on a mobile device";
 				String wcag_compliance = "";
 				String recommendation = "Make sure to use a font that is greater than 12px. Anything smaller is impossible to read on a mobile device. On a desktop device, text smaller than 12px can be hard to reduce, especially for he visually impaired";
+				Set<Recommendation> recommendations = new HashSet<>();
+				//recommendations.add(new Recommendation(recommendation));
+				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -233,7 +252,10 @@ public class FontAudit implements IExecutablePageStateAudit {
 						why_it_matters,
 						title,
 						0,
-						1);
+						1,
+						recommendations,
+						recommendation);
+				
 				issue_messages.add(ux_issue);
 			}
 			else if(owns_text && font_size >=12 ) {
@@ -241,9 +263,9 @@ public class FontAudit implements IExecutablePageStateAudit {
 				String description = "Text has a font size of " + font_size_str + " which is properly sized to be readable on a mobile device";
 				String wcag_compliance = "";
 				String recommendation = "Well done!";
+				Set<Recommendation> recommendations = new HashSet<>();
 				
 				UXIssueMessage ux_issue = new UXIssueMessage(
-						recommendation,
 						Priority.HIGH,
 						description,
 						ObservationType.TYPOGRAPHY,
@@ -253,7 +275,9 @@ public class FontAudit implements IExecutablePageStateAudit {
 						why_it_matters,
 						title,
 						1,
-						1);
+						1,
+						recommendations,
+						recommendation);
 				font_size_score++;
 			}
 			total_score++;

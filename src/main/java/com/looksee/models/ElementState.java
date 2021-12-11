@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import com.looksee.models.enums.ElementClassification;
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
  *  maintained by ElementState though. 
  */
+@NodeEntity
 public class ElementState extends LookseeObject implements Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);

@@ -37,15 +37,12 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	
 	@Query("MATCH (p:PageState{full_page_checksum:$screenshot_checksum}) MATCH a=(p)-[h:HAS_CHILD]->() RETURN a")
 	public List<PageState> findByFullPageScreenshotChecksum(@Param("screenshot_checksum") String checksum );
-	
-	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[*]->(e:ElementState) RETURN e")
-	public List<ElementState> getElementStatesForUser(@Param("user_id") String user_id, @Param("page_key") String key);
 
-	@Query("MATCH (p:PageState{key:$page_key})-[]->(e:ElementState) RETURN e")
+	@Query("MATCH (p:PageState{key:$page_key})-[:HAS]->(e:ElementState) RETURN DISTINCT e")
 	public List<ElementState> getElementStates(@Param("page_key") String key);
 
-	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[*]->(e:ElementState{name:'a'}) RETURN e")
-	public List<ElementState> getLinkElementStates(@Param("user_id") String user_id, @Param("page_key") String key);
+	@Query("MATCH (p:PageState{key:$page_key})-[:HAS]->(e:ElementState{name:'a'}) RETURN DISTINCT e")
+	public List<ElementState> getLinkElementStates(@Param("page_key") String key);
 
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[h:HAS]->(s:Screenshot) RETURN s")
 	public List<Screenshot> getScreenshots(@Param("user_id") String user_id, @Param("page_key") String page_key);
@@ -77,7 +74,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState),(element:ElementState) WHERE id(p)=$page_id AND id(element)=$element_id MERGE (p)-[:HAS]->(element) RETURN element LIMIT 1")
 	public ElementState addElement(@Param("page_id") long page_id, @Param("element_id") long element_id);
 
-	@Query("MATCH (p:PageState)-[]->(element:ElementState) WHERE id(p)=$page_id AND id(element)=$element_id RETURN element ORDER BY p.created_at DESC LIMIT 1")
+	@Query("MATCH (p:PageState)-[:HAS]->(element:ElementState) WHERE id(p)=$page_id AND id(element)=$element_id RETURN element ORDER BY p.created_at DESC LIMIT 1")
 	public Optional<ElementState> getElementState(@Param("page_id") long page_id, @Param("element_id") long element_id);
 
 	@Query("MATCH (a:PageAuditRecord)-[:HAS]->(ps:PageState) WHERE id(ps)=$id RETURN a ORDER BY a.created_at DESC LIMIT 1")

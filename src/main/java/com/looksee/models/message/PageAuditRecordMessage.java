@@ -6,11 +6,11 @@ public class PageAuditRecordMessage extends Message {
 
 	private PageAuditRecord page_audit;
 	
-	public PageAuditRecordMessage(
-			PageAuditRecord page_audit_record, 
-			long domain_id, 
-			long account_id, 
-			long domain_audit_id) {
+	public PageAuditRecordMessage(PageAuditRecord page_audit_record, 
+								  long domain_id, 
+								  long account_id, 
+								  long domain_audit_id
+	) {
 		super(domain_id, account_id, domain_audit_id);
 		setPageAuditRecord(page_audit_record);
 	}

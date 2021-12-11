@@ -20,6 +20,7 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -63,11 +64,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		issue_messages.addAll(description_score.getIssueMessages());
 		issue_messages.addAll(refresh_score.getIssueMessages());
 		//issue_messages.addAll(keyword_score.getIssueMessages()); TODO: uncomment once keywords are part of dataset
-		
-		for(UXIssueMessage issue_msg : issue_messages) {
-			MessageBroadcaster.sendIssueMessage(page_state.getId(), issue_msg);
-		}
-				
+			
 		int points_earned = 0;
 		int max_points = 0;
 		for(UXIssueMessage issue_msg : issue_messages) {
@@ -138,9 +135,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			AuditCategory category = AuditCategory.INFORMATION_ARCHITECTURE;
 
 			String why_it_matters = "When your title is too short or too long then users aren't able to easily identify what to expect from a page.";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			UXIssueMessage ux_issue = new UXIssueMessage(recommendation, 
-												  Priority.NONE, 
+			UXIssueMessage ux_issue = new UXIssueMessage(Priority.NONE, 
 												  description, 
 												  type, 
 												  category, 
@@ -149,7 +147,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  why_it_matters, 
 												  title, 
 												  1, 
-												  1);
+												  1, 
+												  recommendations,
+												  recommendation);
 			
 			issue_messages.add(ux_issue);
 
@@ -177,19 +177,21 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 
 
 			String why_it_matters = "When your title is too short or too long then users aren't able to easily identify what to expect from a page.";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			
-			UXIssueMessage ux_issue = new UXIssueMessage(recommendation, 
-												  priority, 
-												  description, 
-												  type, 
-												  category, 
-												  wcag_compliance, 
-												  labels, 
-												  why_it_matters, 
-												  title, 
-												  0, 
-												  1);
+			UXIssueMessage ux_issue = new UXIssueMessage(priority, 
+														  description, 
+														  type, 
+														  category, 
+														  wcag_compliance, 
+														  labels, 
+														  why_it_matters, 
+														  title, 
+														  0, 
+														  1, 
+														  recommendations,
+														  recommendation );
 			
 			issue_messages.add(ux_issue);
 
@@ -347,9 +349,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 						String wcag_compliance = "There are no WCAG requirements for this";
 						String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Meta descriptions that are longer than 160 characters get cut off by Search engines and won't be shown to the user";
 						String title= "Meta description is too long";
+						Set<Recommendation> recommendations = new HashSet<>();
+						//recommendations.add(new Recommendation(recommendation));
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																	  priority, 
+						UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 																	  description, 
 																	  type, 
 																	  category, 
@@ -358,7 +361,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  why_it_matters, 
 																	  title, 
 																	  1, 
-																	  1);
+																	  1, 
+																	  recommendations,
+																	  recommendation);
 						
 						issue_messages.add(issue_msg);
 					}
@@ -371,9 +376,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 						String wcag_compliance = "There are no WCAG requirements for this";
 						String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Meta descriptions that are longer than 160 characters get cut off by Search engines and won't be shown to the user";
 						String title= "Meta description is too long";
+						Set<Recommendation> recommendations = new HashSet<>();
+						//recommendations.add(new Recommendation(recommendation));
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																	  priority, 
+						UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 																	  description, 
 																	  type, 
 																	  category, 
@@ -382,7 +388,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  why_it_matters, 
 																	  title, 
 																	  0, 
-																	  1);
+																	  1, 
+																	  recommendations,
+																	  recommendation);
 						issue_messages.add(issue_msg);
 					}
 					else {
@@ -394,9 +402,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 						String wcag_compliance = "There are no WCAG requirements for this";
 						String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Meta descriptions that are too short often lack enough information to know if the content within a search result is going to be helpful.";
 						String title= "Meta description is too short";
+						Set<Recommendation> recommendations = new HashSet<>();
+						//recommendations.add(new Recommendation(recommendation));
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																	  priority, 
+						UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 																	  description, 
 																	  type, 
 																	  category, 
@@ -405,7 +414,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  why_it_matters, 
 																	  title, 
 																	  0, 
-																	  1);
+																	  1, 
+																	  recommendations,
+																	  recommendation);
 						issue_messages.add(issue_msg);
 					}
 				
@@ -424,9 +435,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												+ "When your meta description is too difficult to read, it makes it difficult to understand if your page can help them at a quick glance."
 												+ "This often results on the user choosing another option that with a better meta description";
 						String title= "Meta description is " + ContentUtils.getReadingGradeLevel(ease_of_reading_score) + " reading level ";
+						Set<Recommendation> recommendations = new HashSet<>();
+						//recommendations.add(new Recommendation(recommendation));
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																	  Priority.NONE, 
+						UXIssueMessage issue_msg = new UXIssueMessage(Priority.NONE, 
 																	  description, 
 																	  type, 
 																	  category, 
@@ -435,7 +447,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  why_it_matters, 
 																	  title, 
 																	  1, 
-																	  1);
+																	  1, 
+																	  recommendations,
+																	  recommendation);
 						
 						issue_messages.add(issue_msg);
 					}
@@ -452,9 +466,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												+ "When your meta description is too difficult to read, it makes it difficult to understand if your page can help them at a quick glance."
 												+ "This often results on the user choosing another option that with a better meta description";
 						String title= "Meta description is " + ContentUtils.getReadingDifficultyRating(ease_of_reading_score) + " to read";
+						Set<Recommendation> recommendations = new HashSet<>();
+						//recommendations.add(new Recommendation(recommendation));
 						
-						UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																	  priority, 
+						UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 																	  description, 
 																	  type, 
 																	  category, 
@@ -463,7 +478,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  why_it_matters, 
 																	  title, 
 																	  0, 
-																	  1);
+																	  1, 
+																	  recommendations,
+																	  recommendation);
 						
 						issue_messages.add(issue_msg);
 					}
@@ -477,9 +494,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 					String wcag_compliance = "There are no WCAG requirements for this";
 					String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Having a description helps users understand if they can find what they are looking for on any given webpage.";
 					String title= "Meta description is empty";
+					Set<Recommendation> recommendations = new HashSet<>();
+					//recommendations.add(new Recommendation(recommendation));
 					
-					UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-																  priority, 
+					UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 																  description, 
 																  type, 
 																  category, 
@@ -488,7 +506,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																  why_it_matters, 
 																  title, 
 																  0, 
-																  1);
+																  1, 
+																  recommendations,
+																  recommendation);
 					
 					issue_messages.add(issue_msg);
 				}
@@ -506,9 +526,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String wcag_compliance = "There are no WCAG requirements for this";
 			String why_it_matters = "Search engines show the meta description to users when your page shows up in search results. Having a description helps users understand if they can find what they are looking for on any given webpage.";
 			String title= "Meta description not found";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-														  priority, 
+			UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 														  description, 
 														  type, 
 														  category, 
@@ -517,7 +538,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 														  why_it_matters, 
 														  title, 
 														  0, 
-														  2);
+														  2, 
+														  recommendations,
+														  recommendation);
 			
 			issue_messages.add(issue_msg);			
 		}
@@ -532,9 +555,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String wcag_compliance = "There are no WCAG requirements for this";
 			String why_it_matters = "Search engines will only show one meta description to users. Having more than 1 meta description doesn't help, and may actually hurt your search ranking";
 			String title= "Too many meta descriptions found";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-														  priority, 
+			UXIssueMessage issue_msg = new UXIssueMessage(priority, 
 														  description, 
 														  type, 
 														  category, 
@@ -543,7 +567,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 														  why_it_matters, 
 														  title, 
 														  1, 
-														  2);
+														  2, 
+														  recommendations,
+														  recommendation);
 			
 			issue_messages.add(issue_msg);
 		}
@@ -584,9 +610,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String wcag_compliance = "There are no WCAG requirements for this";
 			String why_it_matters = "Meta html tags with name=\"refresh\" are discouraged because consistent page refreshes can be disruptive to the experience as well as making a page highly difficult to interact with for people that rely on assistive technologies";
 			String title= "Meta refresh tag found";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-												  Priority.NONE, 
+			UXIssueMessage issue_msg = new UXIssueMessage(Priority.NONE, 
 												  description, 
 												  type, 
 												  category, 
@@ -595,7 +622,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  why_it_matters, 
 												  title, 
 												  1, 
-												  1);
+												  1, 
+												  recommendations,
+												  recommendation);
 			
 			issue_messages.add(issue_msg);
 		}
@@ -607,9 +636,10 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 			String wcag_compliance = "There are no WCAG requirements for this";
 			String why_it_matters = "Meta html tags with name=\"refresh\" are discouraged because consistent page refreshes can be disruptive to the experience as well as making a page highly difficult to interact with for people that rely on assistive technologies";
 			String title= "Meta refresh tag found";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
 			
-			UXIssueMessage issue_msg = new UXIssueMessage(recommendation, 
-												  Priority.HIGH, 
+			UXIssueMessage issue_msg = new UXIssueMessage(Priority.HIGH, 
 												  description, 
 												  type, 
 												  category, 
@@ -618,7 +648,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  why_it_matters, 
 												  title, 
 												  0, 
-												  1);
+												  1, 
+												  recommendations,
+												  recommendation);
 			
 			issue_messages.add(issue_msg);
 		}

@@ -7,8 +7,7 @@ import com.looksee.models.enums.AuditLevel;
 /**
  * Intended to contain information about progress an audit
  */
-public class AuditProgressUpdate {
-	private long audit_record_id;
+public class AuditProgressUpdate extends Message{
 	private Audit audit;
 	private AuditCategory category;
 	private AuditLevel level;
@@ -16,13 +15,15 @@ public class AuditProgressUpdate {
 	private String message;
 	
 	public AuditProgressUpdate(
+			long account_id,
 			long audit_record_id,
 			double progress,
-			String message,
-			AuditCategory category, 
-			AuditLevel level,
-			Audit audit
+			String message, 
+			AuditCategory category,
+			AuditLevel level, 
+			Audit audit 
 	) {
+		setAccountId(account_id);
 		setAuditRecordId(audit_record_id);
 		setProgress(progress);
 		setMessage(message);
@@ -32,12 +33,6 @@ public class AuditProgressUpdate {
 	}
 	
 	/* GETTERS / SETTERS */
-	public long getAuditRecordId() {
-		return audit_record_id;
-	}
-	public void setAuditRecordId(long audit_record_id) {
-		this.audit_record_id = audit_record_id;
-	}
 	public double getProgress() {
 		return progress;
 	}

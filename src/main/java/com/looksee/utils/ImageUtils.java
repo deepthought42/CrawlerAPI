@@ -1,10 +1,8 @@
 package com.looksee.utils;
 
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.BufferedImageOp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -15,7 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
@@ -23,14 +23,14 @@ import org.openimaj.image.analysis.colour.CIEDE2000;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorUsageStat;
 import com.looksee.models.enums.BrowserType;
-import com.twelvemonkeys.image.ResampleOp;
+
+import io.github.resilience4j.retry.annotation.Retry;
 
 public class ImageUtils {
 	private static Logger log = LoggerFactory.getLogger(ImageUtils.class);
@@ -142,7 +142,7 @@ public class ImageUtils {
 	}
 
 	/**
-	 * Detects image properties such as color frequency from the specified local image.
+	 * Measures color frequency from the specified local image.
 	 * 
 	 * @param image_url
 	 * @throws IOException
@@ -168,16 +168,34 @@ public class ImageUtils {
 			desired_height = (int)(w_scale * height);
 		}
 		
-		ImageUtils.resize(buffered_image, desired_width, desired_height);
+		buffered_image = ImageUtils.resize(buffered_image, desired_width, desired_height);
 		//return CloudVisionUtils.extractImageProperties(buffered_image);
 		
 		
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
-		
+		width = buffered_image.getWidth();
+		height = buffered_image.getHeight();	
 		
 		Map<String, Integer> colors = new HashMap<>();
-		//extract colors
+		//extract colors using a random sample of 10% of image pixels
+		int sample_size = (int)( ( width * height) * 0.1 );
+		
+		for(int sample_idx=0; sample_idx < sample_size; sample_idx++) {
+			int x = getRandomNumberUsingNextInt(0, width-1);
+			int y = getRandomNumberUsingNextInt(0, height-1);
+			
+			String rgb = getPixelColor(buffered_image, x, y);
+	        if(colors.containsKey(rgb)) {
+	        	colors.put(rgb, colors.get(rgb)+1);	
+	        }else {
+	        	colors.put(rgb, 1);
+	        }
+		}
+		
+		
 		// Getting pixel color by position x and y
+		/*
+		 * NOTE : ORIGINAL WORKING CODE. REMOVE IF STILL HERE AFTER 3/1/2022
 		for(int x=0; x < width; x+=3) {
 			for(int y=0; y < height; y+=3) {
 				int clr = buffered_image.getRGB(x, y);
@@ -192,6 +210,7 @@ public class ImageUtils {
 		        }
 			}
 		}
+		*/
        
 		for(String color_str: colors.keySet()) {
 			ColorData color = new ColorData(color_str);
@@ -205,6 +224,42 @@ public class ImageUtils {
 	}
 
 	/**
+	 * Retrieves the color for a given pixel and return the rgb value as a comma separated string
+	 * ( ie. 255, 255, 255 ) 
+	 * 
+	 * @param img
+	 * @param x coordinate for x axis
+	 * @param y coordinate for y axis
+	 * 
+	 * @pre img != null
+	 * 
+	 * @return rgb value as a comma separated string ( ie. 255, 255, 255 ) 
+	 */
+	private static String getPixelColor(BufferedImage img, int x, int y) {
+		assert img != null;
+
+		int clr = img.getRGB(x, y);
+        int red =   (clr & 0x00ff0000) >> 16;
+        int green = (clr & 0x0000ff00) >> 8;
+        int blue =   clr & 0x000000ff;
+        return red+","+green+","+blue;
+        
+	}
+
+	/**
+	 * Retrieves a random integer using the {@link Random}
+	 * 
+	 * @param min minimum range value
+	 * @param max maximum range value
+	 * 
+	 * @return random integer within the range provided
+	 */
+	private static int getRandomNumberUsingNextInt(int min, int max) {
+	    Random random = new Random();
+	    return random.nextInt(max - min) + min;
+	}
+	
+	/**
 	 * Extracts background color from element screenshot by identifying the most prevalent color and returning that color
 	 * @param element
 	 * @return
@@ -213,7 +268,8 @@ public class ImageUtils {
 	 */
 	public static ColorData extractBackgroundColor(URL screenshot_url, ColorData font_color) throws IOException {
 		List<ColorUsageStat> color_data_list = new ArrayList<>();
-		color_data_list.addAll( extractImageProperties(ImageIO.read(screenshot_url))); //LOCAL BRUTE FORCE METHOD
+		BufferedImage buffered_image = ImageUtils.readImageFromURL(screenshot_url);
+		color_data_list.addAll( extractImageProperties(buffered_image)); //DO NOT CHANGE!!!  LOCAL BRUTE FORCE METHOD - NOTE: This method is used because GCP cloud vision appears to use PCA to reduce color space, causing some really wrong results. DO NOT CHANGE!!!
 		
 		double largest_pixel_percent = -1.0;
 	    ColorUsageStat largest_color = null;
@@ -235,7 +291,6 @@ public class ImageUtils {
 	    }
 	    
 		return new ColorData("rgb("+ largest_color.getRed()+","+largest_color.getGreen()+","+largest_color.getBlue()+")");
-		
 	}
 	
 	/**
@@ -249,8 +304,8 @@ public class ImageUtils {
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but
-							// other formats ?
+		assert foundWriter; 
+		
 		// Get file input stream for reading the file content
 		byte[] data = baos.toByteArray();
 		try {
@@ -266,7 +321,7 @@ public class ImageUtils {
 	}
 
 	public static String createComposite(BufferedImage onload_screenshot, List<ElementState> element_states, PageState page_state, BrowserType browser) throws IOException {
-		URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl()));
+		URL page_url = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl(), false));
 
 		BufferedImage composite_image = new BufferedImage(page_state.getFullPageWidth(), page_state.getFullPageHeight(), BufferedImage.TYPE_INT_ARGB);
 		// get graphics to draw..
@@ -291,6 +346,11 @@ public class ImageUtils {
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(composite_image, page_url.getHost(), full_page_screenshot_checksum, browser);
 		
 		return full_page_screenshot_url;
+	}
+
+	@Retry(name="gcp")
+	public static BufferedImage readImageFromURL(URL full_page_screenshot_url) throws IOException {
+		return ImageIO.read( full_page_screenshot_url );
 	}
 	
 }

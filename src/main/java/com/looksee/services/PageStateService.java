@@ -133,14 +133,6 @@ public class PageStateService {
 		return page_state_record;
 	}
 	
-	public PageState findByKeyAndUsername(String user_id, String page_key) {
-		PageState page_state = page_state_repo.findByKeyAndUsername(user_id, page_key);
-		if(page_state != null){
-			page_state.setElements(getElementStatesForUser(user_id, page_key));
-		}
-		return page_state;
-	}
-	
 	public PageState findByKey(String page_key) {
 		PageState page_state = page_state_repo.findByKey(page_key);
 		if(page_state != null){
@@ -161,10 +153,6 @@ public class PageStateService {
 		return page_state_repo.findByAnimationImageChecksum(user_id, screenshot_checksum);		
 	}
 	
-	public List<ElementState> getElementStatesForUser(String user_id, String page_key){
-		return page_state_repo.getElementStatesForUser(user_id, page_key);
-	}
-	
 	public List<ElementState> getElementStates(String page_key){
 		assert page_key != null;
 		assert !page_key.isEmpty();
@@ -172,8 +160,8 @@ public class PageStateService {
 		return page_state_repo.getElementStates(page_key);
 	}
 	
-	public List<ElementState> getLinkElementStates(String user_id, String page_key){
-		return page_state_repo.getLinkElementStates(user_id, page_key);
+	public List<ElementState> getLinkElementStates(String page_key){
+		return page_state_repo.getLinkElementStates(page_key);
 	}
 	
 	public List<Screenshot> getScreenshots(String user_id, String page_key){
@@ -258,5 +246,4 @@ public class PageStateService {
 	public void addAllElements(long page_state_id, List<Long> element_ids) {
 		page_state_repo.addAllElements(page_state_id, element_ids);
 	}
-
 }

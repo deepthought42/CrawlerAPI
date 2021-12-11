@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,7 @@ import com.looksee.models.audit.performance.ScreenshotThumbnailDetails;
 import com.looksee.models.audit.performance.ThirdPartySummaryDetail;
 import com.looksee.models.audit.performance.TimingDetail;
 import com.looksee.models.audit.performance.WebPImageDetail;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.CaptchaResult;
 import com.looksee.models.enums.FormFactor;
@@ -115,7 +117,7 @@ public class PerformanceAuditor extends AbstractActor {
 					*/
 										
 					//log.warn("page states count :: " + page.getPageStates().size());
-					PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl(page.getUrl()));
+					PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl(page.getUrl(), page.isSecure()));
 					log.warn("page speed response length :: " + page_speed_response.toPrettyString().length());
 					List<UXIssueMessage> ux_issues = PageSpeedInsightUtils.extractFontSizeIssues(page_speed_response);
 
@@ -201,18 +203,21 @@ public class PerformanceAuditor extends AbstractActor {
 	    }
 	    
     	for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
+			Set<Recommendation> recommendations = new HashSet<>();
+			
     		UXIssueMessage issue_msg = new UXIssueMessage(
-    											"Recommendation goes here",
-    											Priority.HIGH, 
+    											Priority.HIGH,
     											audit_record.getDescription(), 
     											ObservationType.PAGE_STATE, 
     											AuditCategory.INFORMATION_ARCHITECTURE, 
     											"wcag compliance", 
-    											new HashSet<>(),
+    											new HashSet<>(), 
     											audit_record.getExplanation(),
-    											audit_record.getTitle(), 
+    											audit_record.getTitle(),
     											0, 
-    											1);
+    											1, 
+    											recommendations,
+    											"");
     				
     		ux_issues.add(issue_msg);
     		

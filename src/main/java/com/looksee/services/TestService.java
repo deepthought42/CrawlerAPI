@@ -294,10 +294,10 @@ public class TestService {
 		List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 		for(String key : path_keys) {
 			if(key.contains("pagestate")) {
-				path_objects.add(page_state_service.findByKeyAndUsername(user_id, key));
+				path_objects.add(page_state_service.findByKey(key));
 			}
 			else if(key.contains("elementstate")) {
-				path_objects.add(element_state_service.findByKeyAndUserId(user_id, key));
+				path_objects.add(element_state_service.findByKey(key));
 			}
 			else if(key.contains("action")) {
 				path_objects.add(action_service.findByKey(key));

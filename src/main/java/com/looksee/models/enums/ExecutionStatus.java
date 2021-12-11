@@ -3,7 +3,7 @@ package com.looksee.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum ExecutionStatus {
-	RUNNING("running"), STOPPED("stopped"), COMPLETE("complete"), IN_PROGRESS("in_progress");
+	RUNNING("running"), STOPPED("stopped"), COMPLETE("complete"), IN_PROGRESS("in_progress"), ERROR("error");
 	
 	private String shortName;
 

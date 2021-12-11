@@ -19,6 +19,8 @@ import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.ColorContrastRecommendation;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -27,6 +29,7 @@ import com.looksee.models.enums.Priority;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ColorUtils;
 import com.looksee.utils.ImageUtils;
 
 
@@ -69,7 +72,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				" through, creating a comfortable and engaging experience for your user. ";
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		String recommendation = "Use colors for text and images of text with background colors that have a contrast of at least 4.5:1 for ADA compliance";
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
@@ -117,23 +119,28 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String title = "Large text has low contrast";
 							String ada_compliance = "Text that is larger than 18 point or larger than 14 point and bold should meet the minimum contrast ratio of 3:1.";
 							String description = "Headline text has low contrast against the background";
-							recommendation = "Increase the contrast by either making the text darker or the background lighter";
-
+							String recommendation = "Increase the contrast by either making the text darker or the background lighter";
+							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, 
+																									background_color, 
+																									font_size, 
+																									!BrowserUtils.isTextBold(font_weight));
+			
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.HIGH,
 																									description,
-																									recommendation,
 																									contrast,
 																									font_color.rgb(),
-																									background_color.rgb(), 
-																									element,
+																									background_color.rgb(),
+																									element, 
 																									AuditCategory.AESTHETICS,
-																									labels, 
-																									ada_compliance,
-																									title, 
+																									labels,
+																									ada_compliance, 
+																									title,
 																									font_size+"", 
 																									0, 
-																									2);
+																									2, 
+																									recommendations,
+																									recommendation);
 
 							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
@@ -142,29 +149,32 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 						else if(contrast >= 3 && contrast < 4.5) {
 							//100% score
 							//AA WCAG 2.1
-							String title = "Large text meets minimum contrast for WCAG 2.1 compliance";
+							String title = "Large text is only WCAG 2.1 AA compliance";
 							String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 3:1 for WCAG 2.1 AA standard.";
 							//String description = "Headline text has recommended contrast against the background for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html'>WCAG 2.1 AA</a> standard";
 							String description = "Headline text has recommended contrast against the background for WCAG 2.1 AA standard";
-
-							recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 4.5:1";
 							labels.add("WCAG 2.1 AA");
+
+							String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 4.5:1";
+							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
+
 							
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.MEDIUM,
 																									description,
-																									recommendation,
 																									contrast,
 																									font_color.rgb(),
-																									background_color.rgb(), 
-																									element,
+																									background_color.rgb(),
+																									element, 
 																									AuditCategory.AESTHETICS,
-																									labels, 
-																									ada_compliance,
-																									title, 
-																									font_size+"",
+																									labels,
+																									ada_compliance, 
+																									title,
+																									font_size+"", 
 																									1,
-																									2);
+																									2,
+																									recommendations,
+																									recommendation);
 							
 							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
@@ -176,24 +186,25 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 4.5:1 to meet WCAG 2.1 AAA standards.";
 							//String description = "Headline text has recommended contrast for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html'>WCAG 2.1 AAA</a> standards against the background";
 							String description = "Headline text has recommended contrast for WCAG 2.1 AAA standards against the background";
-							recommendation = "";
 							labels.add("WCAG 2.1 AAA");
+							Set<Recommendation> recommendations = new HashSet<>();
 							
 							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
 																									Priority.NONE,
 																									description,
-																									recommendation,
 																									contrast,
 																									font_color.rgb(),
-																									background_color.rgb(), 
-																									element,
+																									background_color.rgb(),
+																									element, 
 																									AuditCategory.AESTHETICS,
-																									labels, 
-																									ada_compliance,
-																									title, 
-																									font_size+"",
+																									labels,
+																									ada_compliance, 
+																									title,
+																									font_size+"", 
 																									2,
-																									2);
+																									2,
+																									recommendations,
+																									"");
 							
 							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
@@ -205,23 +216,25 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
 							String ada_compliance = "Text that is smaller than 18 point and larger than 14 point but not bold or just smaller than 14 point fonts should meet the minimum contrast ratio of 4.5:1.";
-							recommendation = "Increase the contrast by either making the text darker or the background lighter";
-
+							String recommendation = "Increase the contrast by either making the text darker or the background lighter";
+							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
+							
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,
 																						description,
-																						recommendation,
 																						contrast,
 																						font_color.rgb(),
-																						background_color.rgb(), 
-																						element,
-																						AuditCategory.AESTHETICS, 
+																						background_color.rgb(),
+																						element, 
+																						AuditCategory.AESTHETICS,
 																						labels, 
-																						ada_compliance,
+																						ada_compliance, 
 																						title,
 																						font_size+"",
-																						0, 
-																						2);
+																						0,
+																						2, 
+																						recommendations,
+																						recommendation);
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
@@ -234,25 +247,27 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String title = "Text has minimum contrast for WCAG 2.1 AA standards";
 							String description = "Text has minimum contrast against the background";
 							String ada_compliance = "Text contrast meets WCAG 2.1 AA standards.";
-							recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 7:1";
+							String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 7:1";
 
 							labels.add("WCAG 2.1 AA");
+							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
 							
 							ColorContrastIssueMessage med_contrast_text_observation = new ColorContrastIssueMessage(
 																						Priority.MEDIUM,
 																						description,
-																						recommendation,
 																						contrast,
 																						font_color.rgb(),
-																						background_color.rgb(), 
-																						element,
-																						AuditCategory.AESTHETICS, 
+																						background_color.rgb(),
+																						element, 
+																						AuditCategory.AESTHETICS,
 																						labels, 
-																						ada_compliance,
+																						ada_compliance, 
 																						title,
 																						font_size+"",
-																						1, 
-																						2);
+																						1,
+																						2, 
+																						recommendations,
+																						recommendation);
 							issue_messages.add(med_contrast_text_observation);
 						}
 						else if(contrast >= 7.0) {
@@ -260,24 +275,25 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String title = "Text has appropriate contrast";
 							String description = "Text has recommended contrast against the background";
 							String ada_compliance = "Text contrast meets WCAG 2.1 enhanced(AAA) standards.";
-							recommendation = "";
 							labels.add("WCAG 2.1 AAA");
+							Set<Recommendation> recommendations = new HashSet<>();
 							
 							ColorContrastIssueMessage high_contrast_text_observation = new ColorContrastIssueMessage(
 																						Priority.NONE,
 																						description,
-																						recommendation,
 																						contrast,
 																						font_color.rgb(),
-																						background_color.rgb(), 
-																						element,
-																						AuditCategory.AESTHETICS, 
+																						background_color.rgb(),
+																						element, 
+																						AuditCategory.AESTHETICS,
 																						labels, 
-																						ada_compliance,
+																						ada_compliance, 
 																						title,
 																						font_size+"",
+																						2,
 																						2, 
-																						2);
+																						recommendations,
+																						"");
 							
 							issue_messages.add(high_contrast_text_observation);
 						}
@@ -327,4 +343,50 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					     "Text with contrast below 4.5", 
 						 true);
 	}
+
+	/**
+	 * Generates {@link Set} of {@link ColorContrastRecommendation recommendations} based on the text color, background color and font_size
+	 * 	NOTE : assumes a light color scheme only. Doesn't currently account for dark color scheme
+	 * 
+	 * @param font_color
+	 * @param background_color
+	 * @param font_size
+	 * @param is_bold TODO
+	 * 
+	 * @pre font_color != null
+	 * @pre background_color != null
+	 * 
+	 * @return
+	 */
+	private Set<Recommendation> generateTextContrastRecommendations(ColorData font_color,
+																	 ColorData background_color, 
+																	 double font_size, 
+																	 boolean is_bold) {
+		assert font_color != null;
+		assert background_color != null;
+		
+		Set<Recommendation> recommendations = new HashSet<>();
+		
+		//generate color suggestions with different background color shades (text doesn't change)
+		
+		boolean is_dark_theme = false;
+		//if text is lighter than background then it's dark theme
+		//otherwise light theme
+		
+		ColorContrastRecommendation recommended_bg_color = ColorUtils.findCompliantBackgroundColor(font_color, background_color, is_dark_theme, font_size, is_bold);
+		recommendations.add( recommended_bg_color);
+		
+		//generate color suggestions with different text color shades (background doesn't change)
+		ColorContrastRecommendation recommended_font_color = ColorUtils.findCompliantFontColor(font_color, background_color, is_dark_theme, font_size, is_bold);
+		recommendations.add( recommended_font_color);
+		
+		
+		//generate color suggestions with varying text and background colors that are within a bounded range of the original color
+		// NOTE: This involves pushing these values in opposing directions until we find a pair that meets WCAG 2.1 AAA standards. 
+		//       Then, the pair of colors are shifted together to find new color pairs
+		
+		
+		return recommendations;
+	}
+
 }

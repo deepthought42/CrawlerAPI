@@ -30,24 +30,24 @@ public class ColorData extends LookseeObject{
 	
 	/**
 	 * 
-	 * @param rgba_string
+	 * @param color_string
 	 * 
 	 * @pre rgba_string != null
 	 * @pre !rgba_string.isEmpty()
 	 */
-	public ColorData(String rgba_string) {
-		assert rgba_string != null;
-		assert !rgba_string.isEmpty();
+	public ColorData(String color_string) {
+		assert color_string != null;
+		assert !color_string.isEmpty();
 		
-		if(rgba_string.startsWith("#")) {
-			Color color = Color.decode(rgba_string);
+		if(color_string.startsWith("#")) {
+			Color color = Color.decode(color_string);
 			this.red = color.getRed();
 			this.green = color.getGreen();
 			this.blue = color.getBlue();
 		}
 		else {
 			//extract r,g,b,a from color_str
-			String tmp_color_str = rgba_string.replace(")", "");
+			String tmp_color_str = color_string.replace(")", "");
 			tmp_color_str = tmp_color_str.replace("rgba(", "");
 			tmp_color_str = tmp_color_str.replace("rgb(", "");
 			tmp_color_str = tmp_color_str.replaceAll(" ", "");
@@ -92,6 +92,22 @@ public class ColorData extends LookseeObject{
 		setUsagePercent(color_usage_stat.getPixelPercent());
 	}
 
+
+	public ColorData(int red, int green, int blue) {
+		this.red = red;
+		this.green = green;
+		this.blue = blue;
+		
+		setTransparency(Double.parseDouble("1.0"));
+
+		//convert rgb to hsl, store all as Color object
+		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
+		this.hue = hsb[0];
+		this.saturation = hsb[1];
+		this.brightness = hsb[2];
+		
+		this.setLuminosity(calculateLuminosity(red, green, blue));		
+	}
 
 	/**
 	 * Calculates luminosity from rgb color
@@ -179,6 +195,12 @@ public class ColorData extends LookseeObject{
 		return rgb();
 	}
 
+	@Override
+	public ColorData clone() {
+		return new ColorData(this.red, this.green, this.blue);
+	}
+	
+	
 	public String hsb() {
 		return hue+" , "+saturation+" , "+brightness;
 	}

@@ -20,7 +20,7 @@ public class BrowserUtilsTests {
 	@Test
 	public void verifySanitizeUrlWithoutSubdomainOrWww() throws MalformedURLException{
 		String url = "http://qanairy.com";
-		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 		
 		assertTrue("http://qanairy.com".equals(sanitized_url));
 	}
@@ -28,7 +28,7 @@ public class BrowserUtilsTests {
 	@Test
 	public void verifySanitizeUrlWithoutSubdomainOrWwwWithParams() throws MalformedURLException{
 		String url = "http://qanairy.com?value=test";
-		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 		
 		assertTrue("http://qanairy.com".equals(sanitized_url));
 	}
@@ -36,7 +36,7 @@ public class BrowserUtilsTests {
 	@Test
 	public void verifySanitizeUrlWithoutSubdomain() throws MalformedURLException{
 		String url = "http://www.look-see.com";
-		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 		
 		assertTrue("http://look-see.com".equals(sanitized_url));
 	}
@@ -44,7 +44,7 @@ public class BrowserUtilsTests {
 	@Test
 	public void verifySanitizeUrlWithSubdomain() throws MalformedURLException{
 		String url = "http://test4.masschallenge.com";
-		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 		
 		assertTrue("http://test4.masschallenge.com".equals(sanitized_url));
 	}
@@ -52,14 +52,9 @@ public class BrowserUtilsTests {
 	@Test
 	public void verifySanitizeUrlWithPath() throws MalformedURLException{
 		String url = "http://zaelab.com/services";
-		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 
 		assertTrue("http://zaelab.com/services".equals(sanitized_url));
-	}
-	
-	@Test
-	public void verifyLinkExtraction() {
-		
 	}
 	
 	@Test
@@ -117,13 +112,11 @@ public class BrowserUtilsTests {
 		URL url = new URL("http://www.look-see.com");
 
 		boolean is_secure = BrowserUtils.checkIfSecure(url);
-		
-		assertFalse(is_secure);
+		assertTrue(is_secure);
 		
 		URL url_2 = new URL("https://app.look-see.com");
 
 		boolean is_secure_2 = BrowserUtils.checkIfSecure(url_2);
-		
 		assertTrue(is_secure_2);
 	}
 	
@@ -176,19 +169,19 @@ public class BrowserUtilsTests {
 	@Test
 	public void formatUrlTest() throws MalformedURLException {
 		String url = "https://www.zaelab.com/blogs/using-a-continuous-delivery-model-to-innovate-faster/";
-		String formatted_url = BrowserUtils.formatUrl(null, "zaelab.com", url);
+		String formatted_url = BrowserUtils.formatUrl(null, "zaelab.com", url, false);
 		assertTrue(formatted_url.contentEquals("https://www.zaelab.com/blogs/using-a-continuous-delivery-model-to-innovate-faster/"));
 		
 		String url2 = "/products";
-		String formatted_url2 = BrowserUtils.formatUrl("https", "look-see.com", url2);
+		String formatted_url2 = BrowserUtils.formatUrl("https", "look-see.com", url2, true);
 		assertTrue(formatted_url2.contentEquals("https://look-see.com/products"));
 		
 		String url3 = "?lang=en";
-		String formatted_url3 = BrowserUtils.formatUrl("https", "look-see.com", url3);
+		String formatted_url3 = BrowserUtils.formatUrl("https", "look-see.com", url3, true);
 		assertTrue(formatted_url3.contentEquals("https://look-see.com?lang=en"));
 		
 		String url4 = "#products";
-		String formatted_url4 = BrowserUtils.formatUrl("https", "look-see.com", url4);
+		String formatted_url4 = BrowserUtils.formatUrl("https", "look-see.com", url4, true);
 		assertTrue(formatted_url4.contentEquals("https://look-see.com#products"));
 	}
 	

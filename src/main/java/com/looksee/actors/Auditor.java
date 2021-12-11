@@ -2,31 +2,19 @@ package com.looksee.actors;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Account;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditFactory;
-import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditSet;
 import com.looksee.models.message.DomainAuditMessage;
-import com.looksee.models.message.PageAuditRecordMessage;
-import com.looksee.models.message.PageStateAuditComplete;
-import com.looksee.models.message.PageStateMessage;
-import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -46,15 +34,6 @@ public class Auditor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(Auditor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	
-	@Autowired
-	private AuditService audit_service;
-	
-	@Autowired
-	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private AuditFactory audit_factory;
 	
 	private Account account;
 
@@ -83,6 +62,7 @@ public class Auditor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
+				/*
 				.match(PageStateMessage.class, page_state_msg -> {
 				   	//generate audit report
 				   	Set<Audit> audits = new HashSet<>();
@@ -92,7 +72,6 @@ public class Auditor extends AbstractActor{
 				   		return;
 				   	}
 		   			//perform audit and return audit result
-				   	/*
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
 				   	log.warn("?????????????????????????????????????????????????????????????????????");
@@ -101,7 +80,7 @@ public class Auditor extends AbstractActor{
 			   		ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 					performance_insight_actor.tell(page_state, getSelf());
-					*/
+					
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 						log.warn("performing all other audits");
 						
@@ -111,8 +90,8 @@ public class Auditor extends AbstractActor{
 			   			audits.addAll(rendered_audits_executed);
 			   		}
 		   			
-					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getDomainId(), 
-																					   page_state_msg.getAccountId(), 
+					PageStateAuditComplete audit_complete = new PageStateAuditComplete(page_state_msg.getAccountId(),
+																					   page_state_msg.getDomainId(), 
 																					   page_state_msg.getAuditRecordId(), 
 																					   page_state_msg.getPageState());
 		   			getSender().tell(audit_complete, getSelf());
@@ -128,12 +107,13 @@ public class Auditor extends AbstractActor{
 		   			getSender().tell( page_audit_msg, getSelf() );
 		   			//send message to either user or page channel containing reference to audits
 				})
+				*/
 				.match(DomainAuditMessage.class, domain_msg -> {
 					log.warn("audit record set message received...");
 					List<Audit> audits_executed = new ArrayList<>();
 				   	for(AuditCategory audit_category : AuditCategory.values()) {
 				   		//perform audit and return audit result
-				   		getSender().tell(new AuditSet(audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
+				   		getSender().tell(new AuditSet(domain_msg.getAccountId(), audits_executed, "http://"+domain_msg.getDomain().getUrl()), getSelf());
 				   	}
 				})
 				.match(MemberUp.class, mUp -> {

@@ -1,5 +1,7 @@
 package com.looksee.services;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,16 +10,20 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.util.Value;
 import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
-import com.looksee.models.StripeClient;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
-import com.stripe.model.Plan;
+import com.stripe.model.Product;
 import com.stripe.model.Subscription;
+import com.stripe.model.SubscriptionItem;
+import com.stripe.model.SubscriptionItemCollection;
+import com.stripe.model.checkout.Session;
 
 /**
  * Provides methods to check if an {@link Account} user has permission to access a restricted resource and verifying that
@@ -25,14 +31,31 @@ import com.stripe.model.Subscription;
  * 
  */
 @Service
+@PropertySource("classpath:application.properties")
 public class SubscriptionService {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+	@Value("${stripe.agency_basic_price_id}")
+	private String agency_basic_price_id;
+	
+	@Value("${stripe.agency_pro_price_id}")
+	private String agency_pro_price_id;
+	
+	@Value("${stripe.company_basic_price_id}")
+	private String company_basic_price_id;
+	
+	@Value("${stripe.company_pro_price_id}")
+	private String company_pro_price_id;
+	
 	@Autowired
-	private StripeClient stripe_client;
+	private StripeService stripe_client;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 	
 	@Autowired
 	private AccountService account_service;
+	
 	
 	public SubscriptionService(AccountService account_service){
 		this.account_service = account_service;
@@ -48,37 +71,52 @@ public class SubscriptionService {
 	 * 
 	 * @throws Exception
 	 */
+	@Deprecated
 	public void changeSubscription(Account acct, SubscriptionPlan plan) throws Exception{
-		Plan plan_tier = null;
-		if("FREE".equals(plan.toString())){
+		String plan_str = plan.toString();
+		
+		//retrive stripe customer info
+		Customer customer = null;
+		if(acct.getCustomerToken() == null 
+				|| acct.getCustomerToken().isEmpty()
+		) {
+			customer = this.stripe_client.createCustomer(null, acct.getEmail());
+			acct.setCustomerToken(customer.getId());
+		}
+		else {
+			customer = stripe_client.getCustomer(acct.getCustomerToken());
+		}
+		acct.setSubscriptionType(plan_str);
+
+		if("FREE".equals(plan_str)){
 			//check if account has a subscription, if so then unsubscribe and remove subscription token
 			if(acct.getSubscriptionToken() != null && 
 					!acct.getSubscriptionToken().isEmpty()){
 	    		stripe_client.cancelSubscription(acct.getSubscriptionToken());
 	    		acct.setSubscriptionToken("");
-	    		acct.setSubscriptionType("FREE");
-	    		account_service.save(acct);
 			}
 			else{
 				log.warn("User already has free plan");
 			}
 		}
-		else if("PRO".equals(plan.toString())){
+		else if("COMPANY_BASIC".equals(plan_str)){
 			//STAGING
-    		plan_tier = Plan.retrieve("plan_GKyHict9ublpsa");
-    		//PRODUCTION
+			//plan_tier = Plan.retrieve("plan_GKyHict9ublpsa");
+			//PRODUCTION
 			//plan_tier = Plan.retrieve("plan_GJrQYSjKUHpRB1");
-
-			Customer customer = stripe_client.getCustomer(acct.getCustomerToken());
+			String companyBasicPrice = "price_1JuNRWKuRH6u2PgWXdcWmZUD";
+			
 	    	Subscription subscription = null;
 	    	
 	    	if(acct.getSubscriptionToken() == null || acct.getSubscriptionToken().isEmpty()){
-	    		subscription = stripe_client.subscribe(plan_tier, customer);
+	    		subscription = stripe_client.subscribe(companyBasicPrice, customer);
 	    	}else{
+	    		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());
+	    		stripe_client.update_subscription(companyBasicPrice, subscription);
 	        	Map<String, Object> item = new HashMap<>();
-	        	subscription = Subscription.retrieve(acct.getSubscriptionToken());
+	        	subscription = stripe_client.getSubscription(acct.getSubscriptionToken());
 	        	item.put("id", subscription.getId());
-	        	item.put("plan", plan_tier.getId());
+	        	item.put("price", companyBasicPrice);
 	
 	        	Map<String, Object> items = new HashMap<>();
 	        	items.put("0", item);
@@ -90,9 +128,130 @@ public class SubscriptionService {
 	    	}
 	    	
 	    	acct.setSubscriptionToken(subscription.getId());
-    		acct.setSubscriptionType("PRO");
-	    	account_service.save(acct);
+    		acct.setSubscriptionType(plan_str);
 		}
+		else if("COMPANY_PRO".equals(plan_str)){
+
+		}
+		else if("AGENCY_BASIC".equals(plan_str)){
+
+		}
+		else if("AGENCY_PRO".equals(plan_str)){
+		
+		}
+		else if("UNLIMITED".equals(plan_str)){
+			
+		}
+		
+    	account_service.save(acct);
+	}
+	
+	/**
+	 * Updates the {@link Subscription} for a given {@link Account}
+	 * 
+	 * @param acct
+	 * @param subscription_id TODO
+	 * @param plan
+	 * @return
+	 * 
+	 * @throws Exception
+	 */
+	public void changeSubscription(Account acct, String subscription_id) throws Exception{		
+		assert acct != null;
+		
+		//retrive stripe customer info
+		Customer customer = null;
+		if(acct.getCustomerToken() == null 
+				|| acct.getCustomerToken().isEmpty()
+		) {
+			customer = this.stripe_client.createCustomer(null, acct.getEmail());
+			acct.setCustomerToken(customer.getId());
+		}
+		else {
+			customer = stripe_client.getCustomer(acct.getCustomerToken());
+		}
+
+		//get price info
+		Subscription subscription = stripe_client.getSubscription(subscription_id);
+		
+		SubscriptionItem item = Collections.max(subscription.getItems().getData(), Comparator.comparing(SubscriptionItem::getCreated));
+		String product_id = item.getPrice().getProduct();
+		Product product = stripe_client.getProduct(product_id);
+
+    	if(acct.getSubscriptionToken() != null && !acct.getSubscriptionToken().isEmpty()){
+    		//stripe_client.update_subscription(item.getPrice().getId(), subscription);		
+    		//cancel existing subscription
+    		stripe_client.cancelSubscription(acct.getSubscriptionToken());
+    	}
+
+    	acct.setSubscriptionType(product.getName());
+    	acct.setSubscriptionToken(subscription_id);
+    	account_service.save(acct);
+	}
+	
+	/**
+	 * checks if user has exceeded limit for page audits based on their subscription
+	 * 
+	 * @param acct {@link Account}
+	 * 
+	 * @return true if user has exceeded limits for their {@link SubscriptionPlan}, otherwise false
+	 * 
+	 * @throws StripeException
+	 */
+	public boolean hasExceededSinglePageAuditLimit(long account_id, SubscriptionPlan plan) throws StripeException{
+    	Date date = new Date();
+    	int page_audit_cnt = account_service.getPageAuditCountByMonth(account_id, date.getMonth());
+    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.STARTUP) && page_audit_cnt >= 50){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY) && page_audit_cnt >= 1000){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
+    		return true;
+    	}
+    	
+    	return false;
+	}
+	
+	/**
+	 * checks if user has exceeded limit for page limit for domain audit based on their subscription
+	 * @param plan TODO
+	 * @param acct {@link Account}
+	 * @return true if user has exceeded limits for their {@link SubscriptionPlan}, otherwise false
+	 * 
+	 * @pre plan != null
+	 * 
+	 * @throws StripeException
+	 */
+	public boolean hasExceededDomainPageAuditLimit(long account_id, long domain_audit_id, SubscriptionPlan plan) throws StripeException{				
+    	int page_audit_cnt = audit_record_service.getPageAuditCount(domain_audit_id);
+    	
+    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 200){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 800){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 800){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 2000){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
+    		return true;
+    	}
+    	
+    	return false;
 	}
 	
 	/**
@@ -123,10 +282,10 @@ public class SubscriptionService {
     	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 2000){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && test_run_cnt > 2000){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
+    	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
     		return true;
     	}
     	
@@ -158,10 +317,10 @@ public class SubscriptionService {
     	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 250){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && discovered_test_cnt > 250){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
+    	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
     		return true;
     	}
     	
@@ -183,19 +342,87 @@ public class SubscriptionService {
     		//free plan
     		account_subscription = SubscriptionPlan.FREE;
     	}
-    	//pro/enterprise plan
     	else {
-    		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());        	
-        	//check for product
-        	Plan plan = subscription.getPlan();
-        	if(plan.getId().equals("plan_GJrQYSjKUHpRB1")){
-        		account_subscription = SubscriptionPlan.PRO;
-        	}
-        	else{
-        		account_subscription = SubscriptionPlan.ENTERPRISE;
+    		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());
+    		SubscriptionItemCollection items = subscription.getItems();
+    		
+        	for(SubscriptionItem item: items.getData()) {
+	        	if(item.getPrice().getId().equals(agency_basic_price_id)){
+	        		return SubscriptionPlan.AGENCY_PRO;
+	        	}
+	        	else if(item.getPrice().getId().equals(agency_pro_price_id)){
+	        		return SubscriptionPlan.AGENCY_PREMIUM;
+	        	}
+	        	else if(item.getPrice().getId().equals(company_basic_price_id)){
+	        		return SubscriptionPlan.COMPANY_PRO;
+	        	}
+	        	else if(item.getPrice().getId().equals(company_pro_price_id)){
+	        		return SubscriptionPlan.COMPANY_PREMIUM;
+	        	}
+	        	else{
+	        		return SubscriptionPlan.UNLIMITED;
+	        	}
         	}
     	}
     	
     	return account_subscription;
+	}
+	
+	/**
+	 * Uses the user {@link Account} to retrieve a subscription
+	 * 
+	 * @param acct
+	 * @return
+	 * @throws StripeException
+	 */
+	public SubscriptionPlan getSubscriptionPlanName(String subscription_token) throws StripeException {
+		Subscription subscription = null;
+		SubscriptionPlan account_subscription = null;
+    	if(subscription_token == null || subscription_token.isEmpty()){
+    		//free plan
+    		account_subscription = SubscriptionPlan.FREE;
+    	}
+    	else {
+    		subscription = stripe_client.getSubscription(subscription_token);        	
+        	//check for product
+    		
+    		SubscriptionItem item = Collections.max(subscription.getItems().getData(), Comparator.comparing(SubscriptionItem::getCreated));
+
+        	if(item.getPrice().getId().equals(agency_basic_price_id)){
+        		account_subscription = SubscriptionPlan.AGENCY_PRO;
+        	}
+        	else if(item.getPrice().getId().equals(agency_pro_price_id)){
+        		account_subscription = SubscriptionPlan.AGENCY_PREMIUM;
+        	}
+        	else if(item.getPrice().getId().equals(company_basic_price_id)){
+        		account_subscription = SubscriptionPlan.COMPANY_PRO;
+        	}
+        	else if(item.getPrice().getId().equals(company_pro_price_id)){
+        		account_subscription = SubscriptionPlan.COMPANY_PREMIUM;
+        	}
+        	else{
+        		account_subscription = SubscriptionPlan.UNLIMITED;
+        	}
+    	}
+    	
+    	return account_subscription;
+	}
+
+	/**
+	 * Creates new checkout session
+	 * 
+	 * @param price_id
+	 * @param customer_id TODO
+	 * @param customer_email TODO
+	 * @return
+	 * @throws StripeException
+	 */
+	public Session createCheckoutSession(String price_id, 
+										 String customer_id, 
+										 String customer_email
+	 ) throws StripeException {
+		return stripe_client.createCheckoutSession(price_id, 
+												   customer_id, 
+												   customer_email);
 	}
 }

@@ -17,12 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.browsing.Browser;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCandidateFound;
+import com.looksee.models.message.StopCrawl;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
@@ -90,13 +92,11 @@ public class WebCrawlerActor extends AbstractActor{
 					//Map<String, PageState> pages = new HashMap<>();
 					Map<String, Boolean> frontier = new HashMap<>();
 					Map<String, PageState> visited = new HashMap<>();
+					Map<String, Boolean> external_links = new HashMap<>();
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
-					Map<String, Boolean> external_links = new HashMap<>();
 
-					
-					
 					while(!frontier.isEmpty()) {
 						//remove link from beginning of frontier
 						String raw_url = frontier.keySet().iterator().next();
@@ -105,54 +105,78 @@ public class WebCrawlerActor extends AbstractActor{
 						if(raw_url.trim().isEmpty()) {
 							continue;
 						}
-						
-						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(raw_url));
-						String page_url_str = BrowserUtils.getPageUrl(sanitized_url);
-						
-						if(visited.containsKey(page_url_str)) {
+						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
+						String page_url = BrowserUtils.getPageUrl(sanitized_url);
+
+						if(visited.containsKey(page_url.toString())) {
+							continue;
+						}
+						if( BrowserUtils.isFile(sanitized_url.toString())
+								|| BrowserUtils.isJavascript(sanitized_url.toString())
+								|| sanitized_url.toString().startsWith("itms-apps:")
+								|| sanitized_url.toString().startsWith("snap:")
+								|| sanitized_url.toString().startsWith("tel:")
+								|| sanitized_url.toString().startsWith("mailto:")
+								|| BrowserUtils.isExternalLink(domain.getUrl(), sanitized_url.toString())){
+							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(sanitized_url.toString()));
+							log.warn("isFile??   ::  "+ BrowserUtils.isFile(sanitized_url.toString()));
+							log.warn("is url in visited array???    "+visited.containsKey(sanitized_url.toString()));
+							log.warn("contains domain url?  :: "+ sanitized_url.toString().contains(domain.getUrl()));
+							log.warn("WebCrawler skipping url :: "+sanitized_url);
+
+							visited.put(page_url, null);
 							continue;
 						}
 						
-						if( BrowserUtils.isFile(page_url_str)
-								|| BrowserUtils.isJavascript(page_url_str)
-								|| page_url_str.startsWith("itms-apps:")
-								|| page_url_str.startsWith("snap:")
-								|| page_url_str.startsWith("tel:")
-								|| page_url_str.startsWith("mailto:")
-								|| BrowserUtils.isExternalLink(domain.getUrl(), page_url_str)){
-							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(page_url_str));
-							log.warn("isFile??   ::  "+ BrowserUtils.isFile(page_url_str));
-							log.warn("is url in visited array???    "+visited.containsKey(page_url_str));
-							log.warn("contains domain url?  :: "+ page_url_str.contains(domain.getUrl()));
-							log.warn("WebCrawler skipping url :: "+page_url_str);
-
-							visited.put(page_url_str, null);
-							continue;
-						}
-
-						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
-						//construct page and add page to list of page states
-						//retrieve html source for page
-						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAuditRecordId(), sanitized_url);
-						getSender().tell(candidate, getSelf());
-						
-						visited.put(page_url_str, null);
-
+						//Check http status to ensure page exists before trying to extract info from page
 						int http_status = BrowserUtils.getHttpStatus(sanitized_url);
 
 						//usually code 301 is returned which is a redirect, which is usually transferring to https
-						if(http_status == 404) {
+						if(http_status == 404 || http_status == 408) {
 							log.warn("Recieved 404 status for link :: "+sanitized_url);
+							visited.put(page_url, null);
 							continue;
 						}
 						
-						String page_source = "";
+						int attempt_cnt = 0;
+						String page_src = "";
+						do {
+							Browser browser = null;
+							try {
+								browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.TEST);
+								browser.navigateTo(sanitized_url.toString());
+								
+								sanitized_url = new URL(browser.getDriver().getCurrentUrl());
+								page_src = browser_service.getPageSource( browser, sanitized_url);
+								attempt_cnt = 10000000;
+								break;
+							}
+							catch(MalformedURLException e) {
+								log.warn("Malformed URL exception occurred for  "+sanitized_url);
+							}
+							catch(Exception e) {
+								log.warn("failed to obtain page source during crawl of :: "+sanitized_url);
+								e.printStackTrace();
+							}
+							finally {
+								if(browser != null) {
+									browser.close();
+								}
+							}
+						}while (page_src.trim().isEmpty() && attempt_cnt < 100000);
 						
-						page_source = browser_service.getPageSource(BrowserType.CHROME, BrowserEnvironment.TEST, sanitized_url);
+						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
+						//construct page and add page to list of page states
+						//retrieve html source for page
+						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAccountId(), 
+																			  crawl_action.getAuditRecordId(), 
+																			  sanitized_url);
+						getSender().tell(candidate, getSelf());
 						
+						visited.put(page_url, null);
+
 						try {
-							//Document doc = Jsoup.connect(sanitized_url.toString()).get();
-							Document doc = Jsoup.parse(page_source);
+							Document doc = Jsoup.parse(page_src);
 							Elements links = doc.select("a");
 							String domain_host = domain.getUrl().replace("www.", "");
 							
@@ -173,25 +197,17 @@ public class WebCrawlerActor extends AbstractActor{
 								}
 								
 								try {
-									URL href_url = new URL( BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), href_str)));
-									String href = BrowserUtils.getPageUrl(href_url);
-									//check if external link
+									URL href_url = new URL( BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), href_str, false), false));
 									
-									if(BrowserUtils.isRelativeLink(domain_host, href)) {
-										href = sanitized_url.getHost() + href;
-									}
-									href = href.replace("http://","").replace("https://", "");
-									URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
-									page_url_str = BrowserUtils.getPageUrl(sanitized_href);
-									boolean is_external_link = BrowserUtils.isExternalLink(domain_host, page_url_str);
-									boolean is_subdomain = BrowserUtils.isSubdomain(domain_host, sanitized_href.getHost());
+									boolean is_external_link = BrowserUtils.isExternalLink(domain_host, href_url.toString());
+									boolean is_subdomain = BrowserUtils.isSubdomain(domain_host, href_url.getHost());
+									
 									if( is_external_link || is_subdomain) {
-										
-										external_links.put(page_url_str, Boolean.TRUE);
+										external_links.put(href_url.toString(), Boolean.TRUE);
 									}
-									else if(!visited.containsKey(page_url_str)) {											
+									else {
 										//add link to frontier
-										frontier.put(page_url_str, Boolean.TRUE);
+										frontier.put(href_url.toString(), Boolean.TRUE);
 									}
 								}
 								catch(MalformedURLException e) {
@@ -199,9 +215,10 @@ public class WebCrawlerActor extends AbstractActor{
 									//e.printStackTrace();
 								}
 							}
+
 						} 
 						catch(IllegalArgumentException e) {
-							log.warn("illegal argument exception occurred when connecting to ::  " + page_url_str);
+							log.warn("illegal argument exception occurred when connecting to ::  " + sanitized_url.toString());
 							e.printStackTrace();
 						} 
 						catch(Exception e) {
@@ -209,6 +226,9 @@ public class WebCrawlerActor extends AbstractActor{
 							e.printStackTrace();
 						}
 					}
+				})
+				.match(StopCrawl.class, message -> {
+					getContext().stop(getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

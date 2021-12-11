@@ -20,6 +20,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -69,8 +70,10 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 			String description = page_state.getUrl() + " doesn't use https";
 			String wcag_compliance = "";
 			String recommendation = "Enable encryption(SSL) for your site by getting a signed certificate from a certificate authority and enabling ssl on the server that hosts your website.";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
+			
 			UXIssueMessage ux_issue = new UXIssueMessage(
-											recommendation,
 											Priority.HIGH,
 											description,
 											ObservationType.SECURITY,
@@ -78,9 +81,11 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											wcag_compliance,
 											labels,
 											why_it_matters,
-											title, 
+											title,
 											0, 
-											1);
+											1, 
+											recommendations,
+											recommendation);
 			issue_messages.add(ux_issue);
 		}
 		else {
@@ -88,8 +93,10 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 			String description = page_state.getUrl() + " uses https protocol to provide a secure connection";
 			String wcag_compliance = "";
 			String recommendation = "";
+			Set<Recommendation> recommendations = new HashSet<>();
+			//recommendations.add(new Recommendation(recommendation));
+			
 			UXIssueMessage ux_issue = new UXIssueMessage(
-											recommendation,
 											Priority.NONE,
 											description,
 											ObservationType.SECURITY,
@@ -97,9 +104,11 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											wcag_compliance,
 											labels,
 											why_it_matters,
-											title, 
+											title,
 											1, 
-											1);
+											1, 
+											recommendations,
+											recommendation);
 			issue_messages.add(ux_issue);
 		}
 		

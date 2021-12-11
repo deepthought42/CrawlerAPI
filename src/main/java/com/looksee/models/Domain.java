@@ -33,6 +33,9 @@ public class Domain extends LookseeObject{
 	@Relationship(type = "HAS", direction = Relationship.INCOMING)
 	private Set<DomainAuditRecord> audit_records;
 	
+	@Relationship(type = "HAS")
+	private DomainSettings settings;
+	
 	/**
 	 * 
 	 * 
@@ -53,7 +56,11 @@ public class Domain extends LookseeObject{
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
-	public Domain( String protocol, String host, String path, String logo_url){
+	public Domain( String protocol, 
+				   String host, 
+				   String path, 
+				   String logo_url
+	){
 		setLogoUrl(logo_url);
 		setUrl(host);
 		setEntrypointUrl(host+path);
@@ -167,5 +174,13 @@ public class Domain extends LookseeObject{
 
 	public void setEntrypointUrl(String entrypoint_url) {
 		this.entrypoint_url = entrypoint_url;
+	}
+
+	public DomainSettings getSettings() {
+		return settings;
+	}
+
+	public void setSettings(DomainSettings settings) {
+		this.settings = settings;
 	}
 }

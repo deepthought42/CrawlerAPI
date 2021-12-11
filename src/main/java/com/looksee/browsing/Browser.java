@@ -78,7 +78,6 @@ import io.github.resilience4j.retry.annotation.Retry;
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 @Component
-@Retry(name="webdriver")
 public class Browser {
 	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);

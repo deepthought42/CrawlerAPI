@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.looksee.api.exception.PaymentDueException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
@@ -30,13 +31,14 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.message.PageCandidateFound;
-import com.looksee.models.message.StartSinglePageAudit;
+import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
@@ -68,6 +70,9 @@ public class AuditorController {
     @Autowired
     protected AuditService audit_service;
     
+	@Autowired
+	private SubscriptionService subscription_service;
+	
 	/**
      * 
      * @param request
@@ -86,19 +91,35 @@ public class AuditorController {
     	
 	   	//create new audit record
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+		audit_record.setUrl(sanitized_url.toString());
+	   	audit_record.setDataExtractionMsg("loading page");
+	   	audit_record.setDataExtractionProgress(1.0/50.0);
 	   	audit_record.setAestheticMsg("Waiting for data extraction ...");
 	   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
 	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
 	   	
 	   	Principal principal = request.getUserPrincipal();
+	   	CrawlActionMessage start_single_page_audit = null;
+	   	long account_id = -1;
 		if(principal != null) {
 			String user_id = principal.getName();
 	    	Account account = account_service.findByUserId(user_id);
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
+	    	
+	    	if(subscription_service.hasExceededSinglePageAuditLimit(account.getId(), subscription_service.getSubscriptionPlanName(account))){
+	    		throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to generate more tests");
+	    	}
+			account_id = account.getId();			
 		}
 		
-		StartSinglePageAudit start_single_page_audit = new StartSinglePageAudit(audit_record, sanitized_url);
+		start_single_page_audit = new CrawlActionMessage(CrawlAction.START, 
+														 -1, 
+														 account_id,
+														 audit_record, 
+														 true, 
+														 sanitized_url);
+		
 		log.warn("Initiating audit via page state guilder actor");
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	   			.props("auditManager"), "auditManager"+UUID.randomUUID());

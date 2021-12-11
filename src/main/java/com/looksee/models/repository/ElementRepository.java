@@ -39,7 +39,7 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{outer_html:$outer_html}) RETURN e LIMIT 1")
 	public Element findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(es:Element{key:$element_key}) Match (es)-[hbm:HAS]->(b:BugMessage) DELETE hbm,b")
+	@Query("MATCH (:Account{user_id:$user_key})-[*]->(es:Element{key:$element_key}) Match (es)-[hbm:HAS]->(b:BugMessage) DETACH DELETE b")
 	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (:Account{user_id:$user_key})-[]-(d:Domain) MATCH (d)-[]->(page:PageVersion) MATCH (page)-[*]->(e:Element{key:$element_key}) MATCH (e)-[:HAS_CHILD]->(es:Element) RETURN es")

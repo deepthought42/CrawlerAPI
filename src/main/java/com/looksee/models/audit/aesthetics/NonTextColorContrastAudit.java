@@ -26,6 +26,8 @@ import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.ColorContrastRecommendation;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -33,6 +35,7 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
+import com.looksee.utils.ColorUtils;
 import com.looksee.utils.ImageUtils;
 
 
@@ -60,16 +63,24 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 */
 	@Override
 	public Audit execute(PageState page_state, AuditRecord audit_record) {
-		assert page_state != null;
+		assert page_state != null; 
 		
 		//get all button elements
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
+			log.warn("-------------------------------------------------------------");
+			log.warn(elements.size()+" page elements found");
+		}
 		List<ElementState> non_text_elements = getAllButtons(elements);
+		
+		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
+			log.warn(non_text_elements.size()+" page elements found");
+			log.warn("-------------------------------------------------------------");
+		}
 		non_text_elements.addAll(getAllInputs(elements));
-	
+			
 		return evaluateNonTextContrast(page_state, non_text_elements);
 	}
-
 
 	private List<ElementState> getAllIcons(List<ElementState> elements) {
 		//identify font awesome icons
@@ -102,13 +113,17 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		assert non_text_elements != null;
 		
-		int max_points = 0;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
 		labels.add(AuditCategory.AESTHETICS.toString().toLowerCase());
 		labels.add("color contrast");
 		labels.add("accessibility");
 		
+		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
+			log.warn("-------------------------------------------------------------");
+			log.warn(non_text_elements.size()+" non-text elements being evaluated");
+			log.warn("-------------------------------------------------------------");
+		}
 		for(ElementState element : non_text_elements) {
 			ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
 			//get parent element of button
@@ -162,6 +177,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						}
 					}
 				}
+
 				//choose elemtn just to the right of the elemnt in the page screenshot
 				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
 				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
@@ -192,6 +208,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				element.setBackgroundColor(bg_color);
 				element = element_state_service.save(element);
 				
+				//getting border color
 				ColorData element_bkg = new ColorData(element.getBackgroundColor());
 				String border_color_rgb = element_bkg.rgb();
 				if(element.getRenderedCssValues().get("border-inline-start-width") != "0px") {
@@ -242,11 +259,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					String ada_compliance = "Non-text items should have a minimum contrast ratio of 3:1.";
 					
 					String recommendation = "use a darker/lighter shade of "+ element.getBackgroundColor() +" to achieve a contrast of 3:1";
+					Set<Recommendation> recommendations = generateNonTextContrastRecommendations(element, 
+																								 parent_bkg);
 					
 					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
 																				Priority.HIGH,
 																				description,
-																				recommendation,
 																				highest_contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
@@ -254,10 +272,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
-																				title, 
+																				title,
 																				null, 
 																				0, 
-																				1);
+																				1, 
+																				recommendations,
+																				recommendation);
 					
 					issue_messages.add(low_contrast_issue);
 					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
@@ -270,11 +290,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					String ada_compliance = "This " + element.getName() + " has a contrast greater than 3 and is considered compliant with WCAG 2.1 standards.";
 					
 					String recommendation = "";
+					Set<Recommendation> recommendations = generateNonTextContrastRecommendations(element, 
+																								 parent_bkg);
 					
-					ColorContrastIssueMessage low_contrast_issue = new ColorContrastIssueMessage(
+					ColorContrastIssueMessage accessible_contrast = new ColorContrastIssueMessage(
 																				Priority.HIGH,
 																				description,
-																				recommendation,
 																				highest_contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
@@ -282,14 +303,15 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
-																				title, 
+																				title,
 																				null, 
 																				1, 
-																				1);
+																				1, 
+																				recommendations,
+																				recommendation);
 					
-					issue_messages.add(low_contrast_issue);
+					issue_messages.add(accessible_contrast);
 				}
-				max_points+=1;
 			}
 			catch(NullPointerException e) {
 				log.warn("null pointer..." + e.getMessage());
@@ -308,13 +330,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				"and be obviously clickable.</p>";
 
 		int points_earned = 0;
-		max_points = 0;
+		int max_points = 0;
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
 		}
 		
-
 		String description = "Color contrast of text";		
 		return new Audit(AuditCategory.AESTHETICS,
 						 AuditSubcategory.COLOR_MANAGEMENT,
@@ -350,5 +371,52 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		return bottom.contentEquals(top)
 				&& top.contentEquals(left)
 				&& left.contentEquals(right);
+	}
+	
+	/**
+	 * Generates {@link Set} of {@link ColorContrastRecommendation recommendations} based on the text color, background color and font_size
+	 * 	NOTE : assumes a light color scheme only. Doesn't currently account for dark color scheme
+	 * 
+	 * @param font_color
+	 * @param background_color
+	 * @param font_size
+	 * @param is_bold TODO
+	 * 
+	 * @pre font_color != null
+	 * @pre background_color != null
+	 * 
+	 * @return
+	 */
+	private Set<Recommendation> generateNonTextContrastRecommendations(ElementState element,
+																	 ColorData background_color) {
+		assert element != null;
+		assert background_color != null;
+		
+		Set<Recommendation> recommendations = new HashSet<>();
+		
+		//generate color suggestions with different background color shades (text doesn't change)
+		
+		boolean is_dark_theme = false;
+		//if text is lighter than background then it's dark theme
+		//otherwise light theme
+		ColorContrastRecommendation recommended_bg_color = ColorUtils.findCompliantNonTextBackgroundColor(new ColorData(element.getBackgroundColor()), 
+																											background_color, 
+																											is_dark_theme);
+		recommendations.add( recommended_bg_color);
+		
+		
+		//generate color suggestions with different text color shades (background doesn't change)
+		Set<ColorContrastRecommendation> recommended_font_color = ColorUtils.findCompliantElementColors(element, 
+																										background_color, 
+																										is_dark_theme);
+		recommendations.addAll( recommended_font_color);
+		
+		
+		//generate color suggestions with varying text and background colors that are within a bounded range of the original color
+		// NOTE: This involves pushing these values in opposing directions until we find a pair that meets WCAG 2.1 AAA standards. 
+		//       Then, the pair of colors are shifted together to find new color pairs
+		
+		
+		return recommendations;
 	}
 }

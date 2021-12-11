@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Action;
 import com.looksee.models.Domain;
+import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
@@ -112,13 +113,15 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain{key:$domain_key})<-[]-(audit:AuditRecord{key:$audit_record_key}) RETURN audit")
 	public AuditRecord getAuditRecords(@Param("domain_key") String domain_key, @Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (d:Domain)-[*]->(:AuditRecord{key:$audit_record_key}) RETURN d LIMIT 1")
-	public Domain findByAuditRecord(@Param("audit_record_key") String audit_record_key);
-
+	@Query("MATCH (d:Domain)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN d LIMIT 1")
+	public Domain findByAuditRecord(@Param("audit_record_id") long audit_record_id);
 
 	@Query("MATCH (domain:Domain) RETURN domain")
 	public Set<Domain> getDomains();
 	
 	@Query("MATCH (d:Domain)-[]->(p:PageState{key:$page_key}) WHERE id(d)=$domain_id RETURN p")
 	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
+
+	@Query("MATCH (d:Domain)-[]->(setting:DomainSetting) WHERE id(d)=$domain_id SET setting.expertise=$expertise RETURN setting")
+	public DomainSettings updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("expertise") String expertise);
 }

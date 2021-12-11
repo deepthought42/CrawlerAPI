@@ -125,7 +125,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							return;
 						}
 						else {
-							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl())));
+							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl(), result_page.isSecure())));
 							domain_service.addPage(message.getDomain().getId(), page.getKey());
 
 							long start_time = System.currentTimeMillis();

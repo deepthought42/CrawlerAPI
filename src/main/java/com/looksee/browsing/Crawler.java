@@ -3,6 +3,7 @@ package com.looksee.browsing;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -332,7 +333,7 @@ public class Crawler {
 					if((current_idx < ordered_path_objects.size()-1
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
-							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl())))){
+							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl(), false)))){
 						
 					}
 
@@ -410,12 +411,12 @@ public class Crawler {
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path, user_id);
 
 				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url);
+				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
 						
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
+				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				//result_page.setLoginRequired(last_page.isLoginRequired());
@@ -490,12 +491,12 @@ public class Crawler {
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getUrl(), path, user_id);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url);
+				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
 								
 				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageStateWithElementsWithUserAndDomain(user_id, domain, browser);
+				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));
 				//result_page.setLoginRequired(last_page_state.isLoginRequired());
 				return result_page;
 			}

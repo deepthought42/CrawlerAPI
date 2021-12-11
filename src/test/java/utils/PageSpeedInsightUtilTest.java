@@ -21,7 +21,7 @@ public class PageSpeedInsightUtilTest {
 	private static Logger log = LoggerFactory.getLogger(PageSpeedInsightUtilTest.class.getName());
 
 	public void testPageSpeedInsights() throws IOException, GeneralSecurityException {
-		PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl("https://wave.webaim.org"));
+		PagespeedApiPagespeedResponseV5 page_speed_response = PageSpeedInsightUtils.getPageInsights(BrowserUtils.sanitizeUrl("https://wave.webaim.org", false));
 		System.out.println("page speed response length :: " + page_speed_response.toPrettyString().length());
 		assertTrue(page_speed_response.toPrettyString().length() > 0);
 		//List<UXIssueMessage> ux_issues = extractInsights(page_speed_response);

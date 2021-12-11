@@ -32,7 +32,6 @@ import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.DiscoveryAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.message.AccountRequest;
 import com.looksee.models.message.DiscoveryActionMessage;
 import com.looksee.models.message.FormDiscoveredMessage;
 import com.looksee.models.message.FormDiscoveryMessage;
@@ -302,9 +301,6 @@ public class DiscoveryActor extends AbstractActor{
 
 			        discovery_service.save(discovery_record);
 				})
-				.match(AccountRequest.class, account_request_msg -> {
-					getSender().tell(this.getAccount(), getSelf());
-				})
 				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
 					try {
@@ -324,7 +320,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 
 					log.warn("form message page key :: "+form_msg.getPage().getKey());
-					PageState page_state_record = page_state_service.findByKeyAndUsername(form_msg.getUserId(), form_msg.getPage().getKey());
+					PageState page_state_record = page_state_service.findByKey(form_msg.getPage().getKey());
 					log.warn("form message page key :: "+page_state_record.getKey());
 
 					

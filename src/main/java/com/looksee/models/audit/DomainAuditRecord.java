@@ -15,8 +15,7 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class DomainAuditRecord extends AuditRecord {
-
-	
+		
 	@Relationship(type = "HAS")
 	private Set<PageAuditRecord> page_audit_records;
 	
@@ -24,8 +23,8 @@ public class DomainAuditRecord extends AuditRecord {
 	private Domain domain;
 	
 	public DomainAuditRecord() {
+		super();
 		setAudits(new HashSet<>());
-		setStartTime(LocalDateTime.now());
 	}
 	
 	/**
@@ -37,8 +36,9 @@ public class DomainAuditRecord extends AuditRecord {
 	 * @pre audit_stats != null;
 	 */
 	public DomainAuditRecord(ExecutionStatus status) {
+		super();
 		assert status != null;
-
+		
 		setAudits(new HashSet<>());
 		setStatus(status);
 		setLevel( AuditLevel.DOMAIN);

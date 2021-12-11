@@ -75,9 +75,6 @@ public class JourneyExpander extends AbstractActor{
 	private ActionService action_service;
 	
 	@Autowired
-	private DomainService domain_service;
-	
-	@Autowired
 	private StepExecutor step_executor;
 	
 	//subscribe to cluster changes
@@ -163,7 +160,7 @@ public class JourneyExpander extends AbstractActor{
 								//if page url is not the same as journey result page url then load new page for this
 								//construct page and add page to list of page states
 								URL new_page_url = new URL(current_url);
-								PageState exploration_result_page = browser_service.buildPageState(new_page_url, browser);
+								PageState exploration_result_page = browser_service.buildPageState(new_page_url, browser, null);
 								log.warn("Page state built in journey explorer");
 
 								log.warn("journey result page key :: "+journey_result_page.getKey());

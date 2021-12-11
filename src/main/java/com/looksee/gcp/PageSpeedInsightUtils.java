@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import com.google.api.services.pagespeedonline.v5.PagespeedInsights;
 import com.google.api.services.pagespeedonline.v5.model.LighthouseAuditResultV5;
 import com.google.api.services.pagespeedonline.v5.model.PagespeedApiPagespeedResponseV5;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.InsightType;
 import com.looksee.models.enums.ObservationType;
@@ -80,16 +82,21 @@ public class PageSpeedInsightUtils {
 	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
 		   
 	    for(LighthouseAuditResultV5 audit_record  : audit_map.values()) {
+			Set<Recommendation> recommendations = new HashSet<>();
+			
     		UXIssueMessage issue_msg = new UXIssueMessage(
-    											"Recommendation goes here",
-    											Priority.HIGH, 
+    											Priority.HIGH,
     											audit_record.getDescription(), 
     											ObservationType.PAGE_STATE, 
     											AuditCategory.INFORMATION_ARCHITECTURE, 
     											"wcag compliance", 
-    											new HashSet<>(),
+    											new HashSet<>(), 
     											audit_record.getExplanation(),
-    											audit_record.getTitle(), -1, -1);
+    											audit_record.getTitle(),
+    											-1, 
+    											-1, 
+    											recommendations,
+    											"");
     				
     		ux_issues.add(issue_msg);
     		
@@ -181,17 +188,21 @@ public class PageSpeedInsightUtils {
 	    		log.warn("audit record numeric value  ....  "+audit_record.getNumericValue());
 	    		log.warn("audit record score ....  "+audit_record.getScore());
 	    		log.warn("audit record warnings  ....  "+audit_record.getWarnings());
-	    		
+				Set<Recommendation> recommendations = new HashSet<>();
+				
 				UXIssueMessage issue_msg = new UXIssueMessage(
-						"Recommendation goes here",
-						Priority.HIGH, 
+						Priority.HIGH,
 						required_details, 
 						ObservationType.PAGE_STATE, 
 						AuditCategory.INFORMATION_ARCHITECTURE, 
 						"wcag compliance", 
-						new HashSet<>(),
+						new HashSet<>(), 
 						"",
-						audit_record.getTitle(), -1, -1);
+						audit_record.getTitle(),
+						-1, 
+						-1, 
+						recommendations,
+						"");
 
 				ux_issues.add(issue_msg);
 			}
@@ -206,17 +217,19 @@ public class PageSpeedInsightUtils {
 		log.warn("extracting page speed audit results for accessibility");
 	    Map<String, LighthouseAuditResultV5> audit_map = page_speed_response.getLighthouseResult().getAudits();
 	    LighthouseAuditResultV5 audit_record  = audit_map.get("font-size");
-    	
+		Set<Recommendation> recommendations = new HashSet<>();
+		
 		UXIssueMessage issue_msg = new UXIssueMessage(
-											"Recommendation goes here",
-											Priority.HIGH, 
+											Priority.HIGH,
 											audit_record.getDescription(), 
 											ObservationType.PAGE_STATE, 
 											AuditCategory.INFORMATION_ARCHITECTURE, 
 											"wcag compliance", 
-											new HashSet<>(),
+											new HashSet<>(), 
 											audit_record.getExplanation(),
-											audit_record.getTitle(), -1, -1);
+											audit_record.getTitle(),
+											-1, -1, recommendations, 
+											"");
 				
 		ux_issues.add(issue_msg);
 		
@@ -266,15 +279,18 @@ public class PageSpeedInsightUtils {
 	    LighthouseAuditResultV5 audit_record  = audit_map.get("font-size");
     	
 		UXIssueMessage issue_msg = new UXIssueMessage(
-											"Recommendation goes here",
-											Priority.HIGH, 
+											Priority.HIGH,
 											audit_record.getDescription(), 
 											ObservationType.PAGE_STATE, 
 											AuditCategory.INFORMATION_ARCHITECTURE, 
 											"wcag compliance", 
-											new HashSet<>(),
+											new HashSet<>(), 
 											audit_record.getExplanation(),
-											audit_record.getTitle(), -1, -1);
+											audit_record.getTitle(),
+											-1, 
+											-1, 
+											new HashSet<Recommendation>(),
+											"");
 				
 		ux_issues.add(issue_msg);
 		

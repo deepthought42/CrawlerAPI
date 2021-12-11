@@ -44,6 +44,7 @@ public class BrowserConnectionHelper {
 	 * 
 	 * @throws MalformedURLException
 	 */
+    @Retry(name="webdriver")
 	public static Browser getConnection(BrowserType browser, BrowserEnvironment environment) throws MalformedURLException{
 		assert browser != null;
 		assert environment != null;

@@ -24,10 +24,10 @@ import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCandidateFound;
-import com.looksee.models.message.StopCrawl;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -153,10 +153,12 @@ public class WebCrawlerActor extends AbstractActor{
 							}
 							catch(MalformedURLException e) {
 								log.warn("Malformed URL exception occurred for  "+sanitized_url);
+								break;
 							}
 							catch(Exception e) {
 								log.warn("failed to obtain page source during crawl of :: "+sanitized_url);
 								e.printStackTrace();
+								TimingUtils.pauseThread(2000L);
 							}
 							finally {
 								if(browser != null) {
@@ -226,9 +228,6 @@ public class WebCrawlerActor extends AbstractActor{
 							e.printStackTrace();
 						}
 					}
-				})
-				.match(StopCrawl.class, message -> {
-					getContext().stop(getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

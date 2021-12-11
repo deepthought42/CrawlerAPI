@@ -225,6 +225,13 @@ public class AuditRecord extends LookseeObject {
 		this.status_message = status_message;
 	}
 	
+	public boolean isComplete() {
+		return this.getAestheticAuditProgress() >= 1.0
+				&& this.getContentAuditProgress() >= 1.0
+				&& this.getInfoArchAuditProgress() >= 1.0
+				&& this.getDataExtractionProgress() >= 1.0;
+	}
+	
 	@Override
 	public AuditRecord clone() {
 		return new AuditRecord(getId(),

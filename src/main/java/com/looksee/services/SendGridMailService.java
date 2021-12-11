@@ -267,7 +267,24 @@ public class SendGridMailService {
     	sendMail(to, from, subject, email_msg);
    	}
 
+	/**
+	 * Sends the HTML email for domain audit completion to the given email address
+	 * 
+	 * @param account_email
+	 * @param domain_url
+	 * @param domain_id
+	 * 
+	 * @pre account_email != null
+	 * @pre !account_email.isEmpty()
+	 * @pre domain_url != null
+	 * @pre !account_email.isEmpty()
+	 */
 	public void sendDomainAuditCompleteEmail(String account_email, String domain_url, long domain_id) {
+		assert account_email != null;
+		assert !account_email.isEmpty();
+		assert domain_url != null;
+		assert !domain_url.isEmpty();
+		
 		Email to = new Email(account_email);
 		Email from = new Email("bkindred@look-see.com");
 		String subject = "UX audit complete for your domain: "+domain_url;

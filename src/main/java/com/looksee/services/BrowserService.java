@@ -420,7 +420,7 @@ public class BrowserService {
 				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
 				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt = 1000000;
+				cnt = 1000000000;
 			}
 			catch (NullPointerException e) {
 				log.warn("NPE thrown during element state extraction");
@@ -441,7 +441,7 @@ public class BrowserService {
 			}
 
 			cnt++;
-		}while(rendering_incomplete && cnt < 10000);
+		}while(rendering_incomplete && cnt < 1000000);
 
 		return elements;
 	}

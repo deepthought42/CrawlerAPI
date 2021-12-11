@@ -40,7 +40,6 @@ import com.looksee.models.message.PageCandidateFound;
 import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
-import com.looksee.models.message.StopCrawl;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
@@ -56,6 +55,7 @@ import com.looksee.utils.BrowserUtils;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -184,7 +184,7 @@ public class AuditManager extends AbstractActor{
 																					message.getAuditRecordId(),
 																					plan)
 							) {	
-								getContext().getSender().tell(new StopCrawl(), getSelf());
+								getContext().getSender().tell(PoisonPill.getInstance(), getSelf());
 								
 								log.warn("Account "+message.getAccountId() +" has exceeded limit on number of pages available for the domain");
 								AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
@@ -397,6 +397,8 @@ public class AuditManager extends AbstractActor{
 						if(message.getAudit() != null) {
 							for(UXIssueMessage issue: message.getAudit().getMessages()) {
 								Set<Recommendation> recommendations = new HashSet<>();
+								
+								issue.getRecommendations().remove(null);
 								for(Recommendation recommendation: issue.getRecommendations()) {
 									recommendations.add(recommendation_service.save(recommendation));
 								}
@@ -409,17 +411,21 @@ public class AuditManager extends AbstractActor{
 						
 						if(this.is_domain_audit) {
 							try {
-								log.warn("checking if domain audit is complete..");
 								if( audit_record_service.isDomainAuditComplete(audit_record)) {
 									log.warn("looking up account to send email to "+message.getAccountId());
 									Account account = account_service.findById(message.getAccountId()).get();
 									log.warn("sending domain email to account :: "+account.getEmail());
-									
-									Domain domain = domain_service.findByAuditRecord(audit_record.getId());
+									log.warn("Looking up domain with id :: "+message.getAuditRecordId());
+									Domain domain = domain_service.findByAuditRecord(message.getAuditRecordId()); //findById(message.getDomainId()).get();  //findByAuditRecord(audit_record.getId());
+									log.warn("domain acquired :: "+domain.getId());
+									log.warn("domain url :: "+domain.getUrl());
+									log.warn("account email :: "+account.getEmail());
+									log.warn("mail service :: "+mail_service);
 									mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 								}
 							}
 							catch(Exception e) {
+								// TODO: Add a message to audit record indicating that an error occurred while sending email
 								e.printStackTrace();
 							}
 						}

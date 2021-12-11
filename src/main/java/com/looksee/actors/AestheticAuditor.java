@@ -97,7 +97,8 @@ public class AestheticAuditor extends AbstractActor{
 																	"Reviewing text contrast",
 																	AuditCategory.AESTHETICS,
 																	AuditLevel.PAGE, 
-																	null);
+																	null, 
+																	page_audit_record_msg.getDomainId());
 
 					   	getContext().getParent().tell(audit_update, getSelf());
 
@@ -118,7 +119,8 @@ public class AestheticAuditor extends AbstractActor{
 																		"Reviewing non-text contrast for WCAG compliance",
 																		AuditCategory.AESTHETICS,
 																		AuditLevel.PAGE, 
-																		text_contrast_audit);
+																		text_contrast_audit, 
+																		page_audit_record_msg.getDomainId());
 							
 							getContext().getParent().tell(audit_update2, getSelf());
 						}
@@ -145,7 +147,8 @@ public class AestheticAuditor extends AbstractActor{
 																		"Completed review of non-text contrast",
 																		AuditCategory.AESTHETICS,
 																		AuditLevel.PAGE, 
-																		non_text_contrast_audit);
+																		non_text_contrast_audit, 
+																		page_audit_record_msg.getDomainId());
 
 							getContext().getParent().tell(audit_update3, getSelf());
 						}
@@ -177,7 +180,8 @@ public class AestheticAuditor extends AbstractActor{
 								"Completed review of non-text contrast",
 								AuditCategory.AESTHETICS,
 								AuditLevel.PAGE, 
-								null);
+								null,
+								page_audit_record_msg.getDomainId());
 
 						getContext().getParent().tell(audit_update3, getSelf());
 					}

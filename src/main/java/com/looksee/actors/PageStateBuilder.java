@@ -177,10 +177,8 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
-					log.warn("setting total xpaths and dispatches");
 					message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
 					message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
-					log.warn("forwarding element progress message to audit manager");
 					getContext().parent().forward(message, getContext());
 				})
 				.match(AuditProgressUpdate.class, message -> {

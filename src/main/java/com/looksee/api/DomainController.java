@@ -303,34 +303,28 @@ public class DomainController {
 
 			// build domain stats
 			// add domain stat to set
-			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(domain_audit.getId());
-			page_count = audit_records.size();
-
-			for (PageAuditRecord record : audit_records) {
-				if (record.isComplete()) {
-					audited_pages++;
-				}
-			}
 
 			// check if there is a current audit running
 			AuditRecord audit_record = audit_record_opt.get();
 			Set<PageAuditRecord> page_audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
+			page_count = page_audit_records.size();
 
 			double content_progress = 0.0;
 			double aesthetic_progress = 0.0;
 			double info_architecture_progress = 0.0;
-			long elements_examined = 0;
-			long elements_found = 0;
 			boolean is_audit_running = false;
+			double data_extraction_progress = 0.0;
 
 			for (PageAuditRecord record : page_audit_records) {
 				content_progress += record.getContentAuditProgress();
 				aesthetic_progress += record.getAestheticAuditProgress();
 				info_architecture_progress += record.getInfoArchAuditProgress();
-				elements_found += record.getElementsFound();
-				elements_examined += record.getElementsReviewed();
+				data_extraction_progress += record.getDataExtractionProgress();
 
-				if (!record.isComplete()) {
+				if (record.isComplete()) {
+					audited_pages++;
+				}
+				else {
 					is_audit_running = true;
 				}
 			}
@@ -339,16 +333,24 @@ public class DomainController {
 				content_progress = content_progress / page_audit_records.size();
 				info_architecture_progress = (info_architecture_progress / page_audit_records.size());
 				aesthetic_progress = (aesthetic_progress / page_audit_records.size());
+				data_extraction_progress = (data_extraction_progress / page_audit_records.size());
 			}
 
-			double data_extraction_progress = 0.0;
-			if (elements_found > 0) {
-				data_extraction_progress = (elements_examined / elements_found);
-			}
-
-			domain_info_set.add(new DomainDto(domain.getId(), domain.getUrl(), page_count, audited_pages, content_score,
-					content_progress, info_arch_score, info_architecture_progress, accessibility_score, 100.0,
-					aesthetics_score, aesthetic_progress, is_audit_running, data_extraction_progress));
+			
+			domain_info_set.add(new DomainDto(domain.getId(), 
+											  domain.getUrl(), 
+											  page_count, 
+											  audited_pages, 
+											  content_score,
+											  content_progress, 
+											  info_arch_score, 
+											  info_architecture_progress, 
+											  accessibility_score, 
+											  100.0,
+											  aesthetics_score, 
+											  aesthetic_progress, 
+											  is_audit_running, 
+											  data_extraction_progress));
 		}
 		return domain_info_set;
 	}
@@ -406,7 +408,7 @@ public class DomainController {
 		if (!domain_audit_record.isPresent()) {
 			throw new DomainAuditsNotFound();
 		}
-		Set<PageAuditRecord> page_audits = audit_record_service.getPageAuditRecords(domain_audit_record.get().getId());
+		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 		for (PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
 			if (page_state == null) {
@@ -463,7 +465,7 @@ public class DomainController {
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
 			
-			Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
+			Set<PageAuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
 			// get Page Count
 			long page_count = audit_records.size();
 			long pages_audited = 0;

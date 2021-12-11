@@ -64,12 +64,10 @@ public class DataExtractionSupervisor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(ElementProgressMessage.class, message-> { 
-					log.warn("saving elements : "+message.getElementStates().size());
 					try {
 						List<Long> element_ids = saveNewElements(message.getPageStateId(),
 																 message.getElementStates());
 						
-						log.warn("elements saved successfully : "+message.getPageUrl());
 						ElementsSaved elements = new ElementsSaved(message.getAccountId(),
 																   message.getPageUrl(), 
 																   message.getAuditRecordId(), 

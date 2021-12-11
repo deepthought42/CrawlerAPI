@@ -273,10 +273,6 @@ public class AuditRecordService {
 	public Set<Audit> getAllAestheticAudits(long id) {
 		return audit_record_repo.getAllAestheticsAudits(id);
 	}
-	
-	public Set<PageAuditRecord> getPageAuditRecords(long domain_audit_id) {
-		return audit_record_repo.getPageAuditRecord(domain_audit_id);
-	}
 
 	public PageState getPageStateForAuditRecord(long page_audit_id) {
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
@@ -312,10 +308,9 @@ public class AuditRecordService {
 	}
 
 	public boolean isDomainAuditComplete(AuditRecord audit_record) {
-		AuditRecord audit_record_clone = audit_record.clone();
-		boolean is_complete = false;
+		AuditRecord audit_record_clone = findById(audit_record.getId()).get();
+		boolean is_complete = true;
 		if(audit_record_clone instanceof PageAuditRecord) {
-			log.warn("audit record is instance of PageAuditRecord");
 			audit_record_clone = audit_record_repo.getDomainForPageAuditRecord(audit_record_clone.getId()).get();
 		}
 		
@@ -327,6 +322,7 @@ public class AuditRecordService {
 		for(PageAuditRecord audit : page_audits) {
 			if(!audit.isComplete()) {
 				is_complete = false;
+				break;
 			}
 		}
 		

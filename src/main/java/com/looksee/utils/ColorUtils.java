@@ -270,8 +270,11 @@ public class ColorUtils {
 		}
 		
 		
-		
-		ColorData border_color = new ColorData(element.getRenderedCssValues().get("border-color"));
+		String border_rgb = element.getRenderedCssValues().get("border-color");
+		if(border_rgb == null) {
+			return recommendations;
+		}
+		ColorData border_color = new ColorData(border_rgb);
 		
 		
 		//calculate for element border color

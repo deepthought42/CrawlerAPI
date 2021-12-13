@@ -215,6 +215,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					|| href.startsWith("snap:")
 					|| href.startsWith("tel:")
 					|| href.startsWith("mailto:")
+					|| href.startsWith("applenews:") //both apple news spellings are here because its' not clear which is the proper protocol
+					|| href.startsWith("applenewss:")//both apple news spellings are here because its' not clear which is the proper protocol
 				) {
 					//do something here
 					

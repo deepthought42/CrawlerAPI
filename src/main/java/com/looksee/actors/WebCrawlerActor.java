@@ -18,16 +18,19 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.browsing.Browser;
+import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCandidateFound;
+import com.looksee.services.AccountService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
+import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -57,6 +60,11 @@ public class WebCrawlerActor extends AbstractActor{
 	@Autowired
 	private BrowserService browser_service;
 	
+	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -96,6 +104,8 @@ public class WebCrawlerActor extends AbstractActor{
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
+					Account account = account_service.findById(crawl_action.getAccountId()).get();
+					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
 					while(!frontier.isEmpty()) {
 						//remove link from beginning of frontier
@@ -107,7 +117,17 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
 						String page_url = BrowserUtils.getPageUrl(sanitized_url);
-
+				    	
+						//quick check to make sure we haven't exceeded user plan
+						if(subscription_service.hasExceededDomainPageAuditLimit(crawl_action.getAccountId(), 
+																				crawl_action.getAuditRecordId(),
+																				plan)
+						) {
+							this.getContext().stop(getSelf());
+							break;
+						}
+						
+						
 						if(visited.containsKey(page_url.toString())) {
 							continue;
 						}
@@ -116,6 +136,7 @@ public class WebCrawlerActor extends AbstractActor{
 								|| sanitized_url.toString().startsWith("itms-apps:")
 								|| sanitized_url.toString().startsWith("snap:")
 								|| sanitized_url.toString().startsWith("tel:")
+								|| sanitized_url.toString().startsWith("applenewss:")
 								|| sanitized_url.toString().startsWith("mailto:")
 								|| BrowserUtils.isExternalLink(domain.getUrl(), sanitized_url.toString())){
 							log.warn("is url and image url ??  "+ BrowserUtils.isImageUrl(sanitized_url.toString()));
@@ -143,7 +164,7 @@ public class WebCrawlerActor extends AbstractActor{
 						do {
 							Browser browser = null;
 							try {
-								browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.TEST);
+								browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 								browser.navigateTo(sanitized_url.toString());
 								
 								sanitized_url = new URL(browser.getDriver().getCurrentUrl());
@@ -158,7 +179,6 @@ public class WebCrawlerActor extends AbstractActor{
 							catch(Exception e) {
 								log.warn("failed to obtain page source during crawl of :: "+sanitized_url);
 								e.printStackTrace();
-								TimingUtils.pauseThread(2000L);
 							}
 							finally {
 								if(browser != null) {
@@ -193,6 +213,8 @@ public class WebCrawlerActor extends AbstractActor{
 										|| href_str.startsWith("snap:")
 										|| href_str.startsWith("tel:")
 										|| href_str.startsWith("mailto:")
+										|| href_str.startsWith("applenews:") //both apple news spellings are here because its' not clear which is the proper protocol
+										|| href_str.startsWith("applenewss:")//both apple news spellings are here because its' not clear which is the proper protocol
 										|| BrowserUtils.isFile(href_str)
 								) {
 									continue;

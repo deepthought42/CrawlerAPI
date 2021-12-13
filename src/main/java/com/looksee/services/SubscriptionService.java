@@ -231,7 +231,6 @@ public class SubscriptionService {
 	public boolean hasExceededDomainPageAuditLimit(long account_id, long domain_audit_id, SubscriptionPlan plan) throws StripeException{				
     	int page_audit_cnt = audit_record_service.getPageAuditCount(domain_audit_id);
     	
-    	
     	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
     		return true;
     	}

@@ -1,5 +1,15 @@
 package com.looksee.dto;
 
+import java.util.Optional;
+import java.util.Set;
+
+import com.looksee.models.Domain;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.utils.AuditUtils;
+
 /**
  * Data transfer object for {@link Domain} object that is designed to comply with
  * the data format for browser extensions
@@ -163,7 +173,5 @@ public class DomainDto {
 
 	public void setDataExtractionProgress(double data_extraction_progress) {
 		this.data_extraction_progress = data_extraction_progress;
-	}
-
-	
+	}	
 }

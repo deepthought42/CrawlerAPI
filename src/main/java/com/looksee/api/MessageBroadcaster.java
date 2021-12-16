@@ -14,6 +14,7 @@ import com.looksee.models.LookseeObject;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.UXIssueMessage;
 import com.pusher.rest.Pusher;
@@ -204,6 +205,11 @@ public class MessageBroadcaster {
 		pusher.trigger(user_id.replace("|", ""), "domain-added", test_confirmation_json);
 	}
 
+	/**
+	 * send {@link AuditStats} to the users pusher channel
+	 * @param account_id
+	 * @param audit
+	 */
 	public static void sendAuditStatUpdate(long user_id, AuditStats audit_record) throws JsonProcessingException {
 		
         ObjectMapper mapper = new ObjectMapper();
@@ -223,5 +229,18 @@ public class MessageBroadcaster {
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * send {@link AuditRecord} to the users pusher channel
+	 * @param account_id
+	 * @param audit
+	 */
+	public static void sendAuditRecord(String user_id, DomainDto domain_dto) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+		String audit_record_json = mapper.writeValueAsString(domain_dto);
+		pusher.trigger(user_id, "audit-record", audit_record_json);
 	}
 }

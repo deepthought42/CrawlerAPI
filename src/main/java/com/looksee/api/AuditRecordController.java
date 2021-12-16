@@ -371,7 +371,7 @@ public class AuditRecordController {
 														elements_reviewed,
 														elements_found,
 														audit_record.getDataExtractionMsg(),
-														element_extractions_complete / (double)page_count);
+														audit_record.getDataExtractionProgress());
 			
 			return audit_stats;
     	}

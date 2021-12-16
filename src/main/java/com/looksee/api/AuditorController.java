@@ -84,7 +84,9 @@ public class AuditorController {
 	public @ResponseBody AuditRecord startSinglePageAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) PageState page
-	) throws Exception {    	
+	) throws Exception {
+		Principal principal = request.getUserPrincipal();
+		
     	String lowercase_url = page.getUrl().toLowerCase();
 
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
@@ -97,9 +99,8 @@ public class AuditorController {
 	   	audit_record.setAestheticMsg("Waiting for data extraction ...");
 	   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
 	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
-	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record);
+	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
 	   	
-	   	Principal principal = request.getUserPrincipal();
 	   	CrawlActionMessage start_single_page_audit = null;
 	   	long account_id = -1;
 		if(principal != null) {
@@ -170,7 +171,7 @@ public class AuditorController {
 			@PathVariable(value="page_key", required=true) String page_key
 	) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){

@@ -51,9 +51,6 @@ public class SubscriptionService {
 	private StripeService stripe_client;
 	
 	@Autowired
-	private AuditRecordService audit_record_service;
-	
-	@Autowired
 	private AccountService account_service;
 	
 	
@@ -221,6 +218,7 @@ public class SubscriptionService {
 	/**
 	 * checks if user has exceeded limit for page limit for domain audit based on their subscription
 	 * @param plan TODO
+	 * @param page_audit_count TODO
 	 * @param acct {@link Account}
 	 * @return true if user has exceeded limits for their {@link SubscriptionPlan}, otherwise false
 	 * 
@@ -228,22 +226,20 @@ public class SubscriptionService {
 	 * 
 	 * @throws StripeException
 	 */
-	public boolean hasExceededDomainPageAuditLimit(long account_id, long domain_audit_id, SubscriptionPlan plan) throws StripeException{				
-    	int page_audit_cnt = audit_record_service.getPageAuditCount(domain_audit_id);
-    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
+	public boolean hasExceededDomainPageAuditLimit(SubscriptionPlan plan, int page_audit_count) throws StripeException{				    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count >= 10){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 200){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count >= 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 800){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count >= 400){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 800){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count >= 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 2000){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count >= 1000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){

@@ -292,6 +292,9 @@ public class BrowserService {
 				log.warn("Service unavailable exception occurred while building page state");
 				//e.printStackTrace();
 			}
+			catch(WebDriverException | GridException e) {								
+				log.warn("Selenium Exception occurred while building page state :: "+url);
+			}
 			catch(Exception e) {
 				log.warn("Exception occurred while building page state");
 				e.printStackTrace();
@@ -437,9 +440,9 @@ public class BrowserService {
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		
 		do {
-			log.warn("Getting browser connectin to build page elements");
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				log.warn("navigating to url :: "+page_url);
 				browser.navigateTo(page_url);
 				if(browser.is503Error()) {
 					throw new Exception("503 Error encountered. Starting over..");
@@ -449,7 +452,6 @@ public class BrowserService {
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
 				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
-				//page_state.setElements(elements);
 				rendering_incomplete = false;
 				cnt = 1000000000;
 			}
@@ -461,9 +463,12 @@ public class BrowserService {
 				log.warn("Unable to get browser connection to build page elements : "+url);
 				break;
 			}
-			catch (Exception e) {
+			catch(WebDriverException | GridException e) {								
+				log.warn("Selenium Exception occurred while building page elements :: "+url);
+			}
+			catch(Exception e) {
 				log.warn("An exception occurred while building page elements ... "+e.getMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			finally {
 				if(browser != null) {

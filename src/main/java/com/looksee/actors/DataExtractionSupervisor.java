@@ -72,7 +72,8 @@ public class DataExtractionSupervisor extends AbstractActor{
 																   message.getPageUrl(), 
 																   message.getAuditRecordId(), 
 																   element_ids, 
-																   message.getPageStateId());
+																   message.getPageStateId(),
+																   message.getDomainId());
 						
 						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {

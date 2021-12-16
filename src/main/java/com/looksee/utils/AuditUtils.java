@@ -28,7 +28,12 @@ public class AuditUtils {
 				continue;
 			}
 			audit_cnt++;
+			
 			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
+		}
+		
+		if(audits.size() == 0) {
+			return 0.0;
 		}
 		return score/(double)audit_cnt;
 	}

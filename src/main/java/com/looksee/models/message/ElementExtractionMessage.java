@@ -10,12 +10,12 @@ public class ElementExtractionMessage extends Message{
 	
 	public ElementExtractionMessage( long account_id,
 									 PageState page,
-									 long audit_id, 
-									 List<String> xpaths
+									 long audit_record_id, 
+									 List<String> xpaths, 
+									 long domain_id
 	) {
-		setAccountId(account_id);
+		super(domain_id, account_id, audit_record_id);
 		setPageState(page);
-		setAuditRecordId(audit_id);
 		setXpaths(xpaths);
 	}
 	

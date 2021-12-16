@@ -82,7 +82,8 @@ public class ElementStateExtractor extends AbstractActor{
 																							element_states,
 																							0L,
 																							0L, 
-																							message.getPageState().getUrl());
+																							message.getPageState().getUrl(),
+																							message.getDomainId());
 						
 						getContext().parent().tell(element_message, getSelf());
 					} catch(Exception e) {

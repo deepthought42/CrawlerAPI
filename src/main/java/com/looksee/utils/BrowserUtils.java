@@ -851,6 +851,6 @@ public class BrowserUtils {
 	}
 
 	private static boolean isSchemeRelative(String host, String href) {
-		return href.startsWith("//"+host);
+		return href.startsWith("//");
 	}
 }

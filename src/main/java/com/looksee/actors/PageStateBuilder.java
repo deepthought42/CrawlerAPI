@@ -106,10 +106,10 @@ public class PageStateBuilder extends AbstractActor{
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
 							//send message to audit manager letting it know that an error occurred
 							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-									 crawl_action.getAccountId(), 
-									 crawl_action.getAuditRecordId(), 
-									 crawl_action.getUrl().toString(), 
-									 "An exception occurred while building page state "+crawl_action.getUrl());
+													 crawl_action.getAccountId(), 
+													 crawl_action.getAuditRecordId(), 
+													 crawl_action.getUrl().toString(), 
+													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
 
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;
@@ -121,7 +121,7 @@ public class PageStateBuilder extends AbstractActor{
 						final PageState page_state_record = page_state_service.save(page_state);
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
-						int XPATH_PARTITIONS = 5; // this is meant to replace XPATH_CHUNK_SIZE
+						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						int XPATH_CHUNK_SIZE = (int)Math.ceil((xpaths.size() / (double)XPATH_PARTITIONS));
 						this.total_dispatches.put(page_state.getUrl(), 0);
 						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
@@ -145,7 +145,8 @@ public class PageStateBuilder extends AbstractActor{
 						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
 						   															 page_state_record, 
 						   															 crawl_action.getAuditRecordId(), 
-						   															 xpath_subset);
+						   															 xpath_subset, 
+						   															 crawl_action.getDomainId());
 							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
 						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
 		
@@ -168,7 +169,7 @@ public class PageStateBuilder extends AbstractActor{
 																								 crawl_action.getAccountId(), 
 																								 crawl_action.getAuditRecordId(), 
 																								 crawl_action.getUrl().toString(), 
-																								 "An exception occurred while building page state "+crawl_action.getUrl());
+																								 "An exception occurred while building page state "+crawl_action.getUrl()+".\n"+e.getMessage());
 
 						getContext().getParent().tell(extraction_tracker, getSelf());
 

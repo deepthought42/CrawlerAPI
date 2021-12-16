@@ -10,6 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.looksee.api.MessageBroadcaster;
+import com.looksee.dto.DomainDto;
+import com.looksee.models.Account;
+import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -31,15 +36,38 @@ public class AuditRecordService {
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
 
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private AuditRecordRepository audit_record_repo;
+	
+	@Autowired
+	private DomainDtoService domain_dto_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
 
-	public AuditRecord save(AuditRecord audit) {
+	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
 		
-		return audit_record_repo.save(audit);
+		audit = audit_record_repo.save(audit);
+		if(account_id != null && domain_id != null) {	
+			try {
+				Account account = account_service.findById(account_id).get();
+				int id_start_idx = account.getUserId().indexOf('|');
+				String user_id = account.getUserId().substring(id_start_idx+1);
+				Domain domain = domain_service.findById(domain_id).get();
+				DomainDto domain_dto = domain_dto_service.build(domain);
+				MessageBroadcaster.sendAuditRecord(user_id, domain_dto);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		//broadcast audit record to users
+		return audit;
 	}
 
 	public Optional<AuditRecord> findById(long id) {

@@ -12,6 +12,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.utils.AuditUtils;
 
 @Service
@@ -33,8 +34,24 @@ public class DomainDtoService {
 		int audited_pages = 0;
 		int page_count = 0;
 		if (!audit_record_opt.isPresent()) {
-			return new DomainDto(domain.getId(), domain.getUrl(), 0, 0, 0, 0.0, 0, 0.0, 0, 0.0, 0, 0.0, false, 0.0);
+			return new DomainDto(domain.getId(), 
+								 domain.getUrl(), 
+								 0, 
+								 0, 
+								 0, 
+								 0.0, 
+								 0, 
+								 0.0, 
+								 0, 
+								 0.0, 
+								 0, 
+								 0.0, 
+								 false, 
+								 0.0, 
+								 "An error occurred while retrieving audit",
+								 ExecutionStatus.ERROR);
 		}
+		
 		// get most recent audit record for this domain
 		DomainAuditRecord domain_audit = audit_record_opt.get();
 
@@ -78,7 +95,7 @@ public class DomainDtoService {
 		for (PageAuditRecord record : page_audit_records) {
 			content_progress += record.getContentAuditProgress();
 			aesthetic_progress += record.getAestheticAuditProgress();
-			info_architecture_progress += record.getInfoArchAuditProgress();
+			info_architecture_progress += record.getInfoArchitechtureAuditProgress();
 			data_extraction_progress += record.getDataExtractionProgress();
 
 			if (record.isComplete()) {
@@ -109,6 +126,8 @@ public class DomainDtoService {
 							  aesthetics_score, 
 							  aesthetic_progress, 
 							  is_audit_running, 
-							  data_extraction_progress);
+							  data_extraction_progress,
+							  audit_record.getStatusMessage(),
+							  audit_record.getStatus());
 	}
 }

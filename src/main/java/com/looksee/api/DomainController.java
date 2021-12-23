@@ -350,15 +350,16 @@ public class DomainController {
 														 content_score, 
 														 page_audit.getContentAuditProgress(),
 														 info_architecture_score, 
-														 page_audit.getInfoArchAuditProgress(), 
+														 page_audit.getInfoArchitechtureAuditProgress(), 
 														 accessibility_score, 
 														 0.0,
 														 aesthetic_score, 
 														 page_audit.getAestheticAuditProgress(), 
 														 page_audit.getId(),
 														 page_audit.getElementsReviewed(), 
-														 page_audit.getElementsFound(), 
-														 page_audit.isComplete());
+														 page_audit.getElementsFound(),
+														 page_audit.isComplete(),
+														 page_audit.getDataExtractionProgress());
 
 			page_stats.add(page);
 		}
@@ -457,7 +458,7 @@ public class DomainController {
 				}
 				audit_count += audits.size();
 
-				if (page_audit.getInfoArchAuditProgress() >= 1.0) {
+				if (page_audit.getInfoArchitechtureAuditProgress() >= 1.0) {
 					info_arch_audits_complete++;
 				}
 				if (page_audit.getContentAuditProgress() >= 1.0) {
@@ -856,10 +857,13 @@ public class DomainController {
 	}
 
 	/**
+	 * Starts an audit on an entire domain
 	 * 
 	 * @param request
 	 * @param page
+	 * 
 	 * @return
+	 * 
 	 * @throws Exception
 	 */
 	// @PreAuthorize("hasAuthority('execute:audits')")

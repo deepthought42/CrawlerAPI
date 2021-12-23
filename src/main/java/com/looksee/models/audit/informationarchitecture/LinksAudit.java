@@ -398,10 +398,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						}
 					}
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();

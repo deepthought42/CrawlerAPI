@@ -142,6 +142,7 @@ public class WebCrawlerActor extends AbstractActor{
 								|| sanitized_url.toString().startsWith("itms-apps:")
 								|| sanitized_url.toString().startsWith("snap:")
 								|| sanitized_url.toString().startsWith("tel:")
+								|| sanitized_url.toString().startsWith("mailto:")
 								|| sanitized_url.toString().startsWith("applenews:")
 								|| sanitized_url.toString().startsWith("applenewss:")
 								|| sanitized_url.toString().startsWith("mailto:")
@@ -160,6 +161,8 @@ public class WebCrawlerActor extends AbstractActor{
 							continue;
 						}
 						
+						
+						//Extract page source from url
 						int attempt_cnt = 0;
 						String page_src = "";
 						do {
@@ -239,7 +242,6 @@ public class WebCrawlerActor extends AbstractActor{
 								}
 								catch(MalformedURLException e) {
 									log.error("malformed href value ....  "+href_str);
-									//e.printStackTrace();
 								}
 							}
 
@@ -249,7 +251,7 @@ public class WebCrawlerActor extends AbstractActor{
 							e.printStackTrace();
 						} 
 						catch(Exception e) {
-							log.error("Something went wrong while crawling page "+sanitized_url);
+							log.error("Something went wrong while crawling page " + sanitized_url);
 							e.printStackTrace();
 						}
 					}

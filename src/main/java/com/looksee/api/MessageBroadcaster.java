@@ -17,6 +17,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.enums.ExecutionStatus;
 import com.pusher.rest.Pusher;
 
 import org.slf4j.Logger;
@@ -196,7 +197,9 @@ public class MessageBroadcaster {
 											  0, 
 											  0.0, 
 											  false, 
-											  0.0);
+											  0.0,
+											  "Domain successfully created",
+											  ExecutionStatus.COMPLETE);
 		
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());

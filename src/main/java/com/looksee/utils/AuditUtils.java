@@ -139,14 +139,14 @@ public class AuditUtils {
 	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {
 		return page_audit_record.getAestheticAuditProgress() >= 1 
 			&& page_audit_record.getContentAuditProgress() >= 1
-			&& page_audit_record.getInfoArchAuditProgress() >= 1
+			&& page_audit_record.getInfoArchitechtureAuditProgress() >= 1
 			&& page_audit_record.getDataExtractionProgress() >= 1;
 	}
 
 	public static String getExperienceRating(PageAuditRecord audit_record) {
 		double score = audit_record.getAestheticAuditProgress();
 		score += audit_record.getContentAuditProgress();
-		score += audit_record.getInfoArchAuditProgress();
+		score += audit_record.getInfoArchitechtureAuditProgress();
 		
 		double final_score = score / 3;
 		if(final_score >= 80) {

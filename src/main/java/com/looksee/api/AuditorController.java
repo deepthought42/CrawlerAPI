@@ -97,8 +97,11 @@ public class AuditorController {
 	   	audit_record.setDataExtractionMsg("loading page");
 	   	audit_record.setDataExtractionProgress(1.0/50.0);
 	   	audit_record.setAestheticMsg("Waiting for data extraction ...");
+	   	audit_record.setAestheticAuditProgress(0.0);
 	   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
+	   	audit_record.setContentAuditProgress(0.0);
 	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
+	   	audit_record.setInfoArchitectureAuditProgress(0.0);
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
 	   	
 	   	CrawlActionMessage start_single_page_audit = null;

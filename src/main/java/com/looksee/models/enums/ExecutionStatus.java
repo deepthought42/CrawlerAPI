@@ -29,7 +29,7 @@ public enum ExecutionStatus {
             throw new IllegalArgumentException();
         }
         for(ExecutionStatus v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
         }

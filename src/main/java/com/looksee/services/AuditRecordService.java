@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.looksee.api.MessageBroadcaster;
 import com.looksee.dto.DomainDto;
 import com.looksee.models.Account;
@@ -52,8 +51,9 @@ public class AuditRecordService {
 
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
-		
+
 		audit = audit_record_repo.save(audit);
+		
 		if(account_id != null && domain_id != null) {	
 			try {
 				Account account = account_service.findById(account_id).get();
@@ -322,11 +322,6 @@ public class AuditRecordService {
 		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
 
-	public int getPageAuditRecordCount(long domain_audit_id) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
 	public int getPageAuditCount(long domain_audit_id) {
 		return audit_record_repo.getPageAuditRecordCount(domain_audit_id);
 	}
@@ -336,15 +331,11 @@ public class AuditRecordService {
 	}
 
 	public boolean isDomainAuditComplete(AuditRecord audit_record) {
-		AuditRecord audit_record_clone = findById(audit_record.getId()).get();
 		boolean is_complete = true;
-		if(audit_record_clone instanceof PageAuditRecord) {
-			audit_record_clone = audit_record_repo.getDomainForPageAuditRecord(audit_record_clone.getId()).get();
-		}
 		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
-		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record_clone.getId());
+		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
 
 		//check all page audit records. If all are complete then the domain is also complete
 		for(PageAuditRecord audit : page_audits) {
@@ -355,5 +346,9 @@ public class AuditRecordService {
 		}
 		
 		return is_complete;
+	}
+
+	public Optional<DomainAuditRecord> getDomainAuditRecordForPageRecord(long id) {
+		return audit_record_repo.getDomainForPageAuditRecord(id);
 	}
 }

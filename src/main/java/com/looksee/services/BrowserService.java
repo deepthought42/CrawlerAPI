@@ -60,7 +60,6 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
-import com.looksee.utils.TimingUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -442,7 +441,6 @@ public class BrowserService {
 		do {
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				log.warn("navigating to url :: "+page_url);
 				browser.navigateTo(page_url);
 				if(browser.is503Error()) {
 					throw new Exception("503 Error encountered. Starting over..");

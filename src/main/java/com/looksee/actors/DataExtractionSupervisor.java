@@ -22,6 +22,7 @@ import com.looksee.models.message.ElementsSaved;
 import com.looksee.services.ElementStateService;
 
 import akka.actor.AbstractActor;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -87,6 +88,8 @@ public class DataExtractionSupervisor extends AbstractActor{
 
 						getContext().getSender().tell(err, getSelf());
 					}
+					
+					getContext().getSelf().tell(PoisonPill.getInstance(), getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

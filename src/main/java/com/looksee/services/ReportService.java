@@ -14,12 +14,11 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.looksee.models.UXIssueReportDto;
-import com.looksee.models.audit.UXIssueMessage;
 
 public class ReportService {
 
 	public static XSSFWorkbook generateExcelSpreadsheet( 
-			List<UXIssueMessage> audit_messages, 
+			List<UXIssueReportDto> audit_messages, 
 			URL url
 	) throws FileNotFoundException, IOException {
 		assert audit_messages != null;
@@ -38,29 +37,26 @@ public class ReportService {
 
         Row header_row = sheet.createRow(rowCount);
         header_row.setRowStyle(header_cell_style);
-        //write object to cells in order of category, issue, why it matters, recommendations, ada compliance, and priority
-        Cell url_header_cell = header_row.createCell(0);
-        url_header_cell.setCellValue("Page URL");
-        
-        Cell category_header_cell = header_row.createCell(1);
+        //write object to cells in order of category, issue, why it matters, recommendations, ada compliance, and priority   
+        Cell category_header_cell = header_row.createCell(0);
         category_header_cell.setCellValue("Category");
         
-        Cell description_header_cell = header_row.createCell(2);
+        Cell description_header_cell = header_row.createCell(1);
         description_header_cell.setCellValue("Description");
         
-        Cell why_it_matters_header_cell = header_row.createCell(3);
+        Cell why_it_matters_header_cell = header_row.createCell(2);
         why_it_matters_header_cell.setCellValue("Why it matters");
         
-        Cell recommendation_header_cell = header_row.createCell(4);
+        Cell recommendation_header_cell = header_row.createCell(3);
         recommendation_header_cell.setCellValue("Recommendation");
         
-        Cell wcag_header_cell = header_row.createCell(5);
+        Cell wcag_header_cell = header_row.createCell(4);
         wcag_header_cell.setCellValue("WCAG/ADA compliance");
         
-        Cell priority_header_cell = header_row.createCell(6);
+        Cell priority_header_cell = header_row.createCell(5);
         priority_header_cell.setCellValue("Priority");
         
-        Cell selector_header_cell = header_row.createCell(7);
+        Cell selector_header_cell = header_row.createCell(6);
         selector_header_cell.setCellValue("Element CSS Selector");
         
         sheet.setColumnWidth(0, 30 * 256);
@@ -76,7 +72,7 @@ public class ReportService {
         XSSFCellStyle wrapped_text_cell_style = workbook.createCellStyle();
         wrapped_text_cell_style.setWrapText(true);
 
-        for(UXIssueMessage msg : audit_messages) {
+        for(UXIssueReportDto msg : audit_messages) {
             Row row = sheet.createRow(++rowCount);
             row.setRowStyle(wrapped_text_cell_style);
             row.setHeight((short)2000);

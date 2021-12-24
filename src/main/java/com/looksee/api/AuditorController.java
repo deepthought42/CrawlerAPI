@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.looksee.api.exception.PaymentDueException;
@@ -33,6 +35,7 @@ import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -86,6 +89,17 @@ public class AuditorController {
 			@RequestBody(required=true) PageState page
 	) throws Exception {
 		Principal principal = request.getUserPrincipal();
+		Account account = null;
+    	
+		//is user logged in and have they exceeded the page audit limit??
+		if(principal != null ) {
+			account = account_service.findByUserId(principal.getName());
+			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+			
+			if( subscription_service.hasExceededSinglePageAuditLimit(account.getId(), plan) ) {				
+				throw new AccountLimitExceededException();
+			}
+		}
 		
     	String lowercase_url = page.getUrl().toLowerCase();
 
@@ -106,9 +120,7 @@ public class AuditorController {
 	   	
 	   	CrawlActionMessage start_single_page_audit = null;
 	   	long account_id = -1;
-		if(principal != null) {
-			String user_id = principal.getName();
-	    	Account account = account_service.findByUserId(user_id);
+		if(account != null) {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 	    	
 	    	if(subscription_service.hasExceededSinglePageAuditLimit(account.getId(), subscription_service.getSubscriptionPlanName(account))){
@@ -128,7 +140,7 @@ public class AuditorController {
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	   			.props("auditManager"), "auditManager"+UUID.randomUUID());
 		audit_manager.tell(start_single_page_audit, ActorRef.noSender());
-		   	
+		
    		return audit_record;
 	}
 	
@@ -185,4 +197,18 @@ public class AuditorController {
         return null; //page_service.getAuditInsights(page_state_key);
     }
     
+}
+
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class AccountLimitExceededException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8549092797919036363L;
+
+	public AccountLimitExceededException() {
+		super("You have exceeded the number of single page audits that are available for your plan. Upgrade to get access to more audits.");
+	}
 }

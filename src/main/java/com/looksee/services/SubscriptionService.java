@@ -199,13 +199,19 @@ public class SubscriptionService {
     	Date date = new Date();
     	int page_audit_cnt = account_service.getPageAuditCountByMonth(account_id, date.getMonth());
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 5){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.STARTUP) && page_audit_cnt >= 50){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY) && page_audit_cnt >= 1000){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 100){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 200){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 500){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){

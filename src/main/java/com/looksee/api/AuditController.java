@@ -224,7 +224,6 @@ public class AuditController {
     	for(Audit audit : audits) {
     		log.warn("audit key :: "+audit.getKey());
     		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
-    		log.warn("audit issue messages size ...."+messages.size());
     		
     		for(UXIssueMessage message : messages) {
     			String element_selector = "";
@@ -251,10 +250,9 @@ public class AuditController {
     		}
     		
     	}
-    	log.warn("UX audits :: "+ux_issues.size());
 
     	URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(page.getUrl(), page.isSecure()));
-    	XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
+    	XSSFWorkbook workbook = ReportService.generateExcelSpreadsheet(ux_issues, sanitized_domain_url);
         
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             workbook.write(outputStream);

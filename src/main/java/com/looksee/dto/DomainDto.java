@@ -1,5 +1,7 @@
 package com.looksee.dto;
 
+import com.looksee.models.enums.ExecutionStatus;
+
 /**
  * Data transfer object for {@link Domain} object that is designed to comply with
  * the data format for browser extensions
@@ -19,7 +21,9 @@ public class DomainDto {
 	private double aesthetics_progress;
 	private double data_extraction_progress;
 	private boolean is_audit_running;
-
+	private String message;
+	private String status;
+	
 	public DomainDto(){}
 
 	public DomainDto(
@@ -36,7 +40,10 @@ public class DomainDto {
 			double aesthetics_score,
 			double aesthetics_progress, 
 			boolean is_audit_running, 
-			double data_extraction_progress){
+			double data_extraction_progress,
+			String message,
+			ExecutionStatus status
+	){
 		setId(id);
 		setUrl(url);
 		setPageCount(page_count);
@@ -51,6 +58,8 @@ public class DomainDto {
 		setIsAuditRunning(is_audit_running);
 		setPagesAudited(audited_page_count);
 		setDataExtractionProgress(data_extraction_progress);
+		setMessage(message);
+		setStatus(status);
 	}
 
 	public long getId() {
@@ -165,5 +174,19 @@ public class DomainDto {
 		this.data_extraction_progress = data_extraction_progress;
 	}
 
-	
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public ExecutionStatus getStatus() {
+		return ExecutionStatus.create(status);
+	}
+
+	public void setStatus(ExecutionStatus status) {
+		this.status = status.getShortName();
+	}	
 }

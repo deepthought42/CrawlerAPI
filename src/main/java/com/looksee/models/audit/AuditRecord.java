@@ -52,7 +52,7 @@ public class AuditRecord extends LookseeObject {
 		
 		setDataExtractionProgress(0.0);		
 		setContentAuditProgress(0.0);
-		setInfoArchAuditProgress(0.0);
+		setInfoArchitectureAuditProgress(0.0);
 		setAestheticAuditProgress(0.0);
 		
 		setStartTime(LocalDateTime.now());
@@ -85,7 +85,7 @@ public class AuditRecord extends LookseeObject {
 		setContentAuditMsg(contentAuditMsg);
 		setContentAuditProgress(contentAuditProgress);
 		setInfoArchMsg(infoArchMsg);
-		setInfoArchAuditProgress(infoArchAuditProgress);
+		setInfoArchitectureAuditProgress(infoArchAuditProgress);
 		setDataExtractionMsg(dataExtractionMsg);
 		setDataExtractionProgress(dataExtractionProgress);
 		setCreatedAt(createdAt);
@@ -137,11 +137,11 @@ public class AuditRecord extends LookseeObject {
 		this.content_audit_progress = content_audit_progress;
 	}
 
-	public double getInfoArchAuditProgress() {
+	public double getInfoArchitechtureAuditProgress() {
 		return info_arch_audit_progress;
 	}
 
-	public void setInfoArchAuditProgress(double info_arch_audit_progress) {
+	public void setInfoArchitectureAuditProgress(double info_arch_audit_progress) {
 		this.info_arch_audit_progress = info_arch_audit_progress;
 	}
 
@@ -225,6 +225,13 @@ public class AuditRecord extends LookseeObject {
 		this.status_message = status_message;
 	}
 	
+	public boolean isComplete() {
+		return (this.getAestheticAuditProgress() >= 1.0
+				&& this.getContentAuditProgress() >= 1.0
+				&& this.getInfoArchitechtureAuditProgress() >= 1.0
+				&& this.getDataExtractionProgress() >= 1.0);
+	}
+	
 	@Override
 	public AuditRecord clone() {
 		return new AuditRecord(getId(),
@@ -237,7 +244,7 @@ public class AuditRecord extends LookseeObject {
 							   getContentAuditMsg(), 
 							   getContentAuditProgress(), 
 							   getInfoArchMsg(), 
-							   getInfoArchAuditProgress(),
+							   getInfoArchitechtureAuditProgress(),
 							   getDataExtractionMsg(), 
 							   getDataExtractionProgress(), 
 							   getCreatedAt(), 

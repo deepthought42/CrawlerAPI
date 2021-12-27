@@ -11,11 +11,11 @@ public class ElementsSaved extends Message{
 						String page_url, 
 						long audit_record_id,
 						List<Long> element_ids, 
-						long page_state_id
+						long page_state_id,
+						long domain_id
 	) {
-		setAccountId(account_id);
+		super(domain_id, account_id, audit_record_id);
 		setPageUrl(page_url);
-		setAuditRecordId(audit_record_id);
 		setElements(element_ids);
 		setPageStateId(page_state_id);
 	}

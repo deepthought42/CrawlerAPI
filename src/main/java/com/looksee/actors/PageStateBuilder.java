@@ -106,10 +106,10 @@ public class PageStateBuilder extends AbstractActor{
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
 							//send message to audit manager letting it know that an error occurred
 							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-									 crawl_action.getAccountId(), 
-									 crawl_action.getAuditRecordId(), 
-									 crawl_action.getUrl().toString(), 
-									 "An exception occurred while building page state "+crawl_action.getUrl());
+													 crawl_action.getAccountId(), 
+													 crawl_action.getAuditRecordId(), 
+													 crawl_action.getUrl().toString(), 
+													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
 
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;
@@ -145,7 +145,8 @@ public class PageStateBuilder extends AbstractActor{
 						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
 						   															 page_state_record, 
 						   															 crawl_action.getAuditRecordId(), 
-						   															 xpath_subset);
+						   															 xpath_subset, 
+						   															 crawl_action.getDomainId());
 							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
 						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
 		
@@ -168,7 +169,7 @@ public class PageStateBuilder extends AbstractActor{
 																								 crawl_action.getAccountId(), 
 																								 crawl_action.getAuditRecordId(), 
 																								 crawl_action.getUrl().toString(), 
-																								 "An exception occurred while building page state "+crawl_action.getUrl());
+																								 "An exception occurred while building page state "+crawl_action.getUrl()+".\n"+e.getMessage());
 
 						getContext().getParent().tell(extraction_tracker, getSelf());
 
@@ -177,10 +178,8 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
-					log.warn("setting total xpaths and dispatches");
 					message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
 					message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
-					log.warn("forwarding element progress message to audit manager");
 					getContext().parent().forward(message, getContext());
 				})
 				.match(AuditProgressUpdate.class, message -> {

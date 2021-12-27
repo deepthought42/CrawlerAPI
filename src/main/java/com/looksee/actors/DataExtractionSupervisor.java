@@ -22,6 +22,7 @@ import com.looksee.models.message.ElementsSaved;
 import com.looksee.services.ElementStateService;
 
 import akka.actor.AbstractActor;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -64,17 +65,16 @@ public class DataExtractionSupervisor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(ElementProgressMessage.class, message-> { 
-					log.warn("saving elements : "+message.getElementStates().size());
 					try {
 						List<Long> element_ids = saveNewElements(message.getPageStateId(),
 																 message.getElementStates());
 						
-						log.warn("elements saved successfully : "+message.getPageUrl());
 						ElementsSaved elements = new ElementsSaved(message.getAccountId(),
 																   message.getPageUrl(), 
 																   message.getAuditRecordId(), 
 																   element_ids, 
-																   message.getPageStateId());
+																   message.getPageStateId(),
+																   message.getDomainId());
 						
 						getContext().getSender().tell(elements, getSelf());
 					} catch(Exception e) {
@@ -88,6 +88,8 @@ public class DataExtractionSupervisor extends AbstractActor{
 
 						getContext().getSender().tell(err, getSelf());
 					}
+					
+					getContext().getSelf().tell(PoisonPill.getInstance(), getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

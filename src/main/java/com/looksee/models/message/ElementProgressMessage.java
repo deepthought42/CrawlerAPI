@@ -25,10 +25,10 @@ public class ElementProgressMessage extends Message{
 			List<ElementState> element_states, 
 			long total_xpaths, 
 			long total_dispatches, 
-			String page_url
+			String page_url,
+			long domain_id
 	){
-		setAccountId(account_id);
-		setAuditRecordId(audit_record_id);
+		super(domain_id, account_id, audit_record_id);
 		setXpathsExplored(xpaths);
 		setPageStateId(page_state_id);
 		setElementStates(element_states);

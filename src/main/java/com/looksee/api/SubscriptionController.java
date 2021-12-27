@@ -140,7 +140,7 @@ public class SubscriptionController {
             }
         }
 
-     // Deserialize the nested object inside the event
+        // Deserialize the nested object inside the event
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
         StripeObject stripeObject = null;
         if (dataObjectDeserializer.getObject().isPresent()) {

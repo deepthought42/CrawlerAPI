@@ -91,7 +91,8 @@ public class ContentAuditor extends AbstractActor{
 					   												"checking images for alt text",
 					   												AuditCategory.CONTENT, 
 					   												AuditLevel.PAGE, 
-					   												null);
+					   												null,
+																	page_audit_record_msg.getDomainId());
 					   	
 					   	getContext().getParent().tell(audit_update, getSelf());
 
@@ -104,7 +105,8 @@ public class ContentAuditor extends AbstractActor{
 																		"Reviewing content for readability",
 																		AuditCategory.CONTENT,
 																		AuditLevel.PAGE, 
-																		alt_text_audit);
+																		alt_text_audit,  
+																		page_audit_record_msg.getDomainId());
 	
 							getContext().getParent().tell(audit_update2, getSelf());
 					   	}
@@ -128,7 +130,8 @@ public class ContentAuditor extends AbstractActor{
 																		"Reviewing paragraph length",
 																		AuditCategory.CONTENT,
 																		AuditLevel.PAGE, 
-																		readability_audit);
+																		readability_audit,  
+																		page_audit_record_msg.getDomainId());
 	
 							getSender().tell(audit_update3, getSelf());
 					   	}
@@ -152,7 +155,8 @@ public class ContentAuditor extends AbstractActor{
 																		"Content Audit Compelete!",
 																		AuditCategory.CONTENT,
 																		AuditLevel.PAGE, 
-																		paragraph_audit);
+																		paragraph_audit,  
+																		page_audit_record_msg.getDomainId());
 	
 							getContext().getParent().tell(audit_update4, getSelf());		
 					   	}
@@ -183,7 +187,8 @@ public class ContentAuditor extends AbstractActor{
 								"Content Audit Compelete!",
 								AuditCategory.CONTENT,
 								AuditLevel.PAGE, 
-								null);
+								null,  
+								page_audit_record_msg.getDomainId());
 
 						getSender().tell(audit_update4, getSelf());
 					}

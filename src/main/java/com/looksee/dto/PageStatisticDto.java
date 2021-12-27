@@ -18,6 +18,7 @@ public class PageStatisticDto {
 	private double accessibility_progress;
 	private double aesthetic_score;
 	private double aesthetic_progress;
+	private double data_extraction_progress;
 	private long elements_extracted;
 	private long elements_reviewed;
 	private boolean is_complete;
@@ -37,7 +38,8 @@ public class PageStatisticDto {
 			long audit_record_id, 
 			long elements_reviewed, 
 			long elements_extracted, 
-			boolean is_complete
+			boolean is_complete, 
+			double data_extraction_progress
 	) {
 		setId(id);
 		setUrl(url);
@@ -53,6 +55,7 @@ public class PageStatisticDto {
 		setAestheticProgress(aesthetic_progress);
 		setElementsReviewed(elements_reviewed);
 		setElementsExtracted(elements_extracted);
+		setDataExtractionProgress(data_extraction_progress);
 		setComplete(is_complete);
 	}
 
@@ -174,6 +177,14 @@ public class PageStatisticDto {
 
 	public void setComplete(boolean is_complete) {
 		this.is_complete = is_complete;
+	}
+
+	public double getDataExtractionProgress() {
+		return data_extraction_progress;
+	}
+
+	public void setDataExtractionProgress(double data_extraction_progress) {
+		this.data_extraction_progress = data_extraction_progress;
 	}
 
 }

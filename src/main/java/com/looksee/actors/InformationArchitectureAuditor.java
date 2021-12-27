@@ -99,7 +99,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																	"Reviewing links",
 																	AuditCategory.INFORMATION_ARCHITECTURE,
 																	AuditLevel.PAGE, 
-																	null);
+																	null,  
+																	page_audit_record_msg.getDomainId());
 
 						getContext().getParent().tell(audit_update, getSelf());
 
@@ -113,7 +114,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																		"Reviewing title and header page title and header",
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		AuditLevel.PAGE, 
-																		link_audit);
+																		link_audit,  
+																		page_audit_record_msg.getDomainId());
 	
 							getContext().getParent().tell(audit_update2, getSelf());
 						} 
@@ -138,7 +140,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																		"Checking that page is secure",
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		AuditLevel.PAGE, 
-																		title_and_headers);
+																		title_and_headers,  
+																		page_audit_record_msg.getDomainId());
 	
 							getContext().getParent().tell(audit_update3, getSelf());
 						} 
@@ -163,7 +166,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																		"Reviewing SEO",
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		AuditLevel.PAGE, 
-																		security);
+																		security,  
+																		page_audit_record_msg.getDomainId());
 							
 							getSender().tell(audit_update4, getSelf());
 						} 
@@ -188,7 +192,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 																		"Completed information architecture audit",
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		AuditLevel.PAGE, 
-																		metadata);
+																		metadata,  
+																		page_audit_record_msg.getDomainId());
 							
 							getSender().tell(audit_update5, getSelf());
 						}
@@ -222,7 +227,8 @@ public class InformationArchitectureAuditor extends AbstractActor{
 								"Completed information architecture audit",
 								AuditCategory.INFORMATION_ARCHITECTURE,
 								AuditLevel.PAGE,
-								null);
+								null,  
+								page_audit_record_msg.getDomainId());
 
 						getSender().tell(audit_update5, getSelf());
 					}

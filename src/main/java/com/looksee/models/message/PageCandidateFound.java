@@ -8,11 +8,10 @@ public class PageCandidateFound extends Message {
 
 	public PageCandidateFound(long account_id, 
 							  long audit_record_id,
-							  URL url
+							  long domain_id, URL url
 	) {
-		setAccountId(account_id);
+		super(domain_id, account_id, audit_record_id);
 		setUrl(url);
-		setAuditRecordId(audit_record_id);
 	}
 	
 	public URL getUrl() {

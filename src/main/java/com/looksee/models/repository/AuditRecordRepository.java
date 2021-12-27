@@ -94,7 +94,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
-
+	
 	@Query("MATCH (domain_audit:DomainAuditRecord)-[]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
 	public Set<PageAuditRecord> getAllPageAudits(@Param("domain_audit_id") long domain_audit_id);
 
@@ -135,9 +135,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllAestheticsAudits(@Param("id") long id);
 
-	@Query("MATCH (dar:DomainAuditRecord)-[:HAS]->(par:PageAuditRecord) WHERE id(dar)=$domain_audit_id RETURN DISTINCT par")
-	public Set<PageAuditRecord> getPageAuditRecord(@Param("domain_audit_id") long domain_audit_id);
-
 	@Query("MATCH (dar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{is_accessibility:true}) WHERE id(dar)=$domain_audit_id RETURN audit")
 	public Set<Audit> getAllAccessibilityAuditsForDomainRecord(@Param("domain_audit_id") long domain_audit_id);
 
@@ -156,6 +153,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (audit_record:DomainAuditRecord)-[]-(page_audit:PageAuditRecord) WHERE id(audit_record)=$audit_record_id RETURN count(page_audit) as count")
 	public int getPageAuditRecordCount(@Param("audit_record_id") long domain_audit_id);
 
-	@Query("MATCH (doman_audit:DomainAuditRecord)-[:HAS]->(page_audit:PageAuditRecord) WHERE id(page_audit)=$audit_record_id RETURN doman_audit")
+	@Query("MATCH (doman_audit:DomainAuditRecord)-[:HAS]->(page_audit:PageAuditRecord) WHERE id(page_audit)=$audit_record_id RETURN doman_audit LIMIT 1")
 	public Optional<DomainAuditRecord> getDomainForPageAuditRecord(@Param("audit_record_id") long audit_record_id);
 }

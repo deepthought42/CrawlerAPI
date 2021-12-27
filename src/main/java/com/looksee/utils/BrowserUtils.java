@@ -824,6 +824,9 @@ public class BrowserUtils {
 			|| href.startsWith("snap:")
 			|| href.startsWith("tel:")
 			|| href.startsWith("mailto:")
+			|| href.startsWith("applenews:") //both apple news spellings are here because its' not clear which is the proper protocol
+			|| href.startsWith("applenewss:")//both apple news spellings are here because its' not clear which is the proper protocol
+
 		) {
 			return href;
 		}
@@ -838,9 +841,7 @@ public class BrowserUtils {
 		//URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
 		//href = BrowserUtils.getPageUrl(sanitized_href);
 		//check if external link
-		if(BrowserUtils.isRelativeLink(host, href)) {
-			
-			
+		if(BrowserUtils.isRelativeLink(host, href)) {	
 			href = protocol + "://" + host + href;
 		}
 		else if( isSchemeRelative(host, href)) {
@@ -850,6 +851,6 @@ public class BrowserUtils {
 	}
 
 	private static boolean isSchemeRelative(String host, String href) {
-		return href.startsWith("//"+host);
+		return href.startsWith("//");
 	}
 }

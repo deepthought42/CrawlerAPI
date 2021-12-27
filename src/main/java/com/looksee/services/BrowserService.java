@@ -60,7 +60,6 @@ import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
-import com.looksee.utils.TimingUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -242,6 +241,13 @@ public class BrowserService {
 		return removeComments(html_doc.html());
 	}
 	
+	/**
+	 * Removes HTML comments from html string
+	 * 
+	 * @param html
+	 * 
+	 * @return html string without comments
+	 */
 	public static String removeComments(String html) {
 		return Pattern.compile("<!--.*?-->").matcher(html).replaceAll("");
     }
@@ -263,39 +269,34 @@ public class BrowserService {
 		if(http_status == 404 || http_status == 408) {
 			return null;
 		}
-
-		return performBuildPageProcess(url);
-	}
-	
-	/**
-	 * 
-	 * @param url
-	 * @return
-	 * @throws MalformedURLException 
-	 */
-	private PageState performBuildPageProcess(URL url) throws MalformedURLException {
+		
 		PageState page_state = null;
 		boolean complete = false;
 		int cnt = 0;
 		do {
-			Browser browser = null;
+			Browser browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 			try {
-				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.TEST);
-				browser.navigateTo(url.toString());
-				if(browser.is503Error()) {
-					browser.close();
-					throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
-				}
-				browser.removeDriftChat();
-				URL page_url_after_loading = new URL(browser.getDriver().getCurrentUrl());
-				page_state = buildPageState(url, browser, page_url_after_loading);
+				page_state = performBuildPageProcess(url, browser);
 				complete = true;
-				cnt = 100000;
+				cnt=Integer.MAX_VALUE;
+			}
+			catch(MalformedURLException e) {
 				break;
-			}catch(Exception e) {
-				log.warn("Exception occurred while building page state");
+			}
+			catch(IOException e) {
+				log.warn("IOException occurred while building page state");
 				//e.printStackTrace();
-				TimingUtils.pauseThread(1000L);
+			}
+			catch(ServiceUnavailableException e) {
+				log.warn("Service unavailable exception occurred while building page state");
+				//e.printStackTrace();
+			}
+			catch(WebDriverException | GridException e) {								
+				log.warn("Selenium Exception occurred while building page state :: "+url);
+			}
+			catch(Exception e) {
+				log.warn("Exception occurred while building page state");
+				e.printStackTrace();
 			}
 			finally {
 				if(browser != null) {
@@ -306,6 +307,38 @@ public class BrowserService {
 		}while(!complete && cnt < 100000);
 		
 		return page_state;
+	}
+	
+	/**
+	 * Navigates to a url, checks that the service is available, then removes drift 
+	 * 	chat client from page if it exists. Finally it builds a {@link PageState}
+	 * 
+	 * @param url
+	 * @param browser TODO
+	 * 
+	 * @pre url != null;
+	 * @pre browser != null
+	 * 
+	 * @return {@link PageState}
+	 * 
+	 * @throws MalformedURLException
+	 * @throws IOException 
+	 * @throws GridException 
+	 */
+	private PageState performBuildPageProcess(URL url, Browser browser) 
+			throws GridException, ServiceUnavailableException, MalformedURLException, IOException 
+	{
+		assert url != null;
+		assert browser != null;
+		
+		browser.navigateTo(url.toString());
+		if(browser.is503Error()) {
+			browser.close();
+			throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
+		}
+		browser.removeDriftChat();
+		URL page_url_after_loading = new URL(browser.getDriver().getCurrentUrl());
+		return buildPageState(url, browser, page_url_after_loading);
 	}
 
 	/**
@@ -406,7 +439,6 @@ public class BrowserService {
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		
 		do {
-			log.warn("Getting browser connectin to build page elements");
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(page_url);
@@ -418,9 +450,8 @@ public class BrowserService {
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
 				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
-				//page_state.setElements(elements);
 				rendering_incomplete = false;
-				cnt = 1000000;
+				cnt = 1000000000;
 			}
 			catch (NullPointerException e) {
 				log.warn("NPE thrown during element state extraction");
@@ -430,9 +461,12 @@ public class BrowserService {
 				log.warn("Unable to get browser connection to build page elements : "+url);
 				break;
 			}
-			catch (Exception e) {
+			catch(WebDriverException | GridException e) {								
+				log.warn("Selenium Exception occurred while building page elements :: "+url);
+			}
+			catch(Exception e) {
 				log.warn("An exception occurred while building page elements ... "+e.getMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			finally {
 				if(browser != null) {
@@ -441,7 +475,7 @@ public class BrowserService {
 			}
 
 			cnt++;
-		}while(rendering_incomplete && cnt < 10000);
+		}while(rendering_incomplete && cnt < 1000000);
 
 		return elements;
 	}

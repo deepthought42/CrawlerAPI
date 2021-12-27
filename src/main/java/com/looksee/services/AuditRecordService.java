@@ -10,6 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.looksee.api.MessageBroadcaster;
+import com.looksee.dto.DomainDto;
+import com.looksee.models.Account;
+import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -31,15 +35,39 @@ public class AuditRecordService {
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
 
 	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private AuditRecordRepository audit_record_repo;
+	
+	@Autowired
+	private DomainDtoService domain_dto_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
 
-	public AuditRecord save(AuditRecord audit) {
+	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
+
+		audit = audit_record_repo.save(audit);
 		
-		return audit_record_repo.save(audit);
+		if(account_id != null && domain_id != null) {	
+			try {
+				Account account = account_service.findById(account_id).get();
+				int id_start_idx = account.getUserId().indexOf('|');
+				String user_id = account.getUserId().substring(id_start_idx+1);
+				Domain domain = domain_service.findById(domain_id).get();
+				DomainDto domain_dto = domain_dto_service.build(domain);
+				MessageBroadcaster.sendAuditRecord(user_id, domain_dto);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		//broadcast audit record to users
+		return audit;
 	}
 
 	public Optional<AuditRecord> findById(long id) {
@@ -273,10 +301,6 @@ public class AuditRecordService {
 	public Set<Audit> getAllAestheticAudits(long id) {
 		return audit_record_repo.getAllAestheticsAudits(id);
 	}
-	
-	public Set<PageAuditRecord> getPageAuditRecords(long domain_audit_id) {
-		return audit_record_repo.getPageAuditRecord(domain_audit_id);
-	}
 
 	public PageState getPageStateForAuditRecord(long page_audit_id) {
 		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
@@ -298,11 +322,6 @@ public class AuditRecordService {
 		return audit_record_repo.getIssueCountBySeverity(id, severity);
 	}
 
-	public int getPageAuditRecordCount(long domain_audit_id) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
 	public int getPageAuditCount(long domain_audit_id) {
 		return audit_record_repo.getPageAuditRecordCount(domain_audit_id);
 	}
@@ -312,24 +331,24 @@ public class AuditRecordService {
 	}
 
 	public boolean isDomainAuditComplete(AuditRecord audit_record) {
-		AuditRecord audit_record_clone = audit_record.clone();
-		boolean is_complete = false;
-		if(audit_record_clone instanceof PageAuditRecord) {
-			log.warn("audit record is instance of PageAuditRecord");
-			audit_record_clone = audit_record_repo.getDomainForPageAuditRecord(audit_record_clone.getId()).get();
-		}
+		boolean is_complete = true;
 		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
-		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record_clone.getId());
+		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
 
 		//check all page audit records. If all are complete then the domain is also complete
 		for(PageAuditRecord audit : page_audits) {
 			if(!audit.isComplete()) {
 				is_complete = false;
+				break;
 			}
 		}
 		
 		return is_complete;
+	}
+
+	public Optional<DomainAuditRecord> getDomainAuditRecordForPageRecord(long id) {
+		return audit_record_repo.getDomainForPageAuditRecord(id);
 	}
 }

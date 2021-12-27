@@ -322,7 +322,7 @@ public class AuditRecordController {
 			}
 			audit_count += audits.size();
 
-			if (audit_record.getInfoArchAuditProgress() >= 1.0) {
+			if (audit_record.getInfoArchitechtureAuditProgress() >= 1.0) {
 				info_arch_audits_complete++;
 			}
 			if (audit_record.getContentAuditProgress() >= 1.0) {
@@ -371,7 +371,7 @@ public class AuditRecordController {
 														elements_reviewed,
 														elements_found,
 														audit_record.getDataExtractionMsg(),
-														element_extractions_complete / (double)page_count);
+														audit_record.getDataExtractionProgress());
 			
 			return audit_stats;
     	}

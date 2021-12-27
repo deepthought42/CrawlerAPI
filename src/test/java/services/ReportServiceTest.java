@@ -12,7 +12,7 @@ import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
 
-import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
@@ -24,69 +24,64 @@ public class ReportServiceTest {
 	@Test
 	public void testGenerateExcelReport() throws FileNotFoundException, IOException {
 		//create list of messages
-		List<UXIssueMessage> messages = new ArrayList<>();
+		List<UXIssueReportDto> messages = new ArrayList<>();
 		Set<Recommendation> recommendations = new HashSet<>();
 
-		UXIssueMessage issue_msg_1 = new UXIssueMessage(Priority.HIGH,
-				"38 icons do not meet the minimum required color contrast ratio level of 3:1",
-				ObservationType.COLOR_CONTRAST,
-				AuditCategory.AESTHETICS,
-				"buttons should have a minimum color contrast ratio of 3:1 with the background surrounding the button",
-				new HashSet<>(),
-				null, 
-				null, 
-				0, 
-				1, 
-				recommendations,
-				"");
+		UXIssueReportDto issue_dto = new UXIssueReportDto(recommendations.toString(),
+														Priority.HIGH,
+														"3 grammatical errors found",
+														ObservationType.ELEMENT,
+														AuditCategory.CONTENT,
+														"meta title exceeds the recommended 70 character limit",
+														new HashSet<>(),
+														null,
+														null,
+														"",
+													  	"");
 		
-		messages.add(issue_msg_1);
+		messages.add(issue_dto);
 		
-		UXIssueMessage issue_msg_2 = new UXIssueMessage(Priority.LOW,
+		UXIssueReportDto issue_dto1 = new UXIssueReportDto(recommendations.toString(),
+				Priority.MEDIUM,
 				"3 grammatical errors found",
 				ObservationType.ELEMENT,
 				AuditCategory.CONTENT,
-				"The grammar should be consistent with respect to the language used\n" + 
-				"(English UK / US).",
+				"meta title exceeds the recommended 70 character limit",
 				new HashSet<>(),
-				null, 
-				null, 
-				0, 
-				1, 
-				recommendations,
-				"");
+				null,
+				null,
+				"",
+			  	"");
 		
-		messages.add(issue_msg_2);
-		
-		UXIssueMessage issue_msg_3 = new UXIssueMessage(Priority.MEDIUM,
+		messages.add(issue_dto1);
+
+		UXIssueReportDto issue_dto2 = new UXIssueReportDto(recommendations.toString(),
+				Priority.MEDIUM,
 				"3 grammatical errors found",
 				ObservationType.ELEMENT,
 				AuditCategory.INFORMATION_ARCHITECTURE,
 				"meta title exceeds the recommended 70 character limit",
 				new HashSet<>(),
-				null, 
-				null, 
-				0, 
-				1, 
-				recommendations,
-				"");
+				null,
+				null,
+				"",
+			  	"");
 		
-		messages.add(issue_msg_3);
+		messages.add(issue_dto2);
 		
-		UXIssueMessage issue_msg_4 = new UXIssueMessage(Priority.MEDIUM,
-				"3 grammatical errors found",
-				ObservationType.ELEMENT,
-				AuditCategory.AESTHETICS,
-				"meta title exceeds the recommended 70 character limit",
-				new HashSet<>(),
-				null, 
-				null, 
-				0, 
-				1, 
-				recommendations,
-				"");
+		UXIssueReportDto issue_dto3 = new UXIssueReportDto(recommendations.toString(),
+															Priority.MEDIUM,
+															"3 grammatical errors found",
+															ObservationType.ELEMENT,
+															AuditCategory.AESTHETICS,
+															"meta title exceeds the recommended 70 character limit",
+															new HashSet<>(),
+															null,
+															null,
+															"",
+														  	"");
 		
-		messages.add(issue_msg_4);
+		messages.add(issue_dto3);
 		
 		
 		URL url = new URL("https://www.look-see.com");

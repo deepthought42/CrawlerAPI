@@ -89,7 +89,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 						int height, 
 						ElementClassification classification, 
 						String outer_html, 
-						boolean isVisible, 
+						boolean is_visible, 
 						String css_selector, 
 						String font_color, 
 						String background_color){
@@ -115,7 +115,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setCssSelector(css_selector);
 		setClassification(classification);
 		setXpath(xpath);
-		setVisible(isVisible);
+		setVisible(is_visible);
 		setForegroundColor(font_color);
 		setBackgroundColor(background_color);
 		setKey(generateKey());

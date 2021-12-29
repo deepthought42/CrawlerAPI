@@ -443,11 +443,12 @@ public class AuditManager extends AbstractActor{
 							log.warn("checking if page audit is complete");
 							boolean is_page_audit_complete = AuditUtils.isPageAuditComplete(audit_record);						
 							if(is_page_audit_complete) {
+								log.warn("page audit is complete!");
 								audit_record.setEndTime(LocalDateTime.now());
 								audit_record.setStatus(ExecutionStatus.COMPLETE);
 								audit_record =  audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
 								
-								log.warn("Page audit is complete : "+audit_record.getUrl());
+								log.warn("Page audit updated to reflect completion : "+audit_record.getUrl());
 
 								PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());								
 								Account account = account_service.findById(message.getAccountId()).get();

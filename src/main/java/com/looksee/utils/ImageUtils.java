@@ -178,7 +178,7 @@ public class ImageUtils {
 		
 		Map<String, Integer> colors = new HashMap<>();
 		//extract colors using a random sample of 10% of image pixels
-		int sample_size = (int)( ( width * height) * 0.1 );
+		int sample_size = (int)( ( width * height) * 0.05 );
 		
 		for(int sample_idx=0; sample_idx < sample_size; sample_idx++) {
 			int x = getRandomNumberUsingNextInt(0, width-1);
@@ -346,6 +346,45 @@ public class ImageUtils {
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(composite_image, page_url.getHost(), full_page_screenshot_checksum, browser);
 		
 		return full_page_screenshot_url;
+	}
+	
+	public static boolean areRowsMatching(BufferedImage current_screenshot, 
+			int current_screenshot_row,
+			BufferedImage original_image, 
+			int original_screenshot_row
+	) {
+		for (int x = 0; x < current_screenshot.getWidth(); x++) {
+			int current_screenshot_rgb = current_screenshot.getRGB(x, current_screenshot_row);
+			int original_screenshot_rgb = original_image.getRGB(x, original_screenshot_row);
+			if ( current_screenshot_rgb != original_screenshot_rgb) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public static boolean areWindowsMatching(BufferedImage current_screenshot, 
+		int current_screenshot_row,
+		BufferedImage original_image, 
+		int original_screenshot_row,
+		int window_height
+	) {
+		if( (original_screenshot_row+window_height) >= original_image.getHeight()) {
+		return false;
+		}
+		
+		for (int x = 0; x < current_screenshot.getWidth(); x++) {
+			for(int current_y = 0; current_y < window_height; current_y++) {
+				int current_screenshot_rgb = current_screenshot.getRGB(x, current_screenshot_row+current_y);
+				int original_screenshot_rgb = original_image.getRGB(x, original_screenshot_row+current_y);
+				if ( current_screenshot_rgb != original_screenshot_rgb) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
 	}
 
 	@Retry(name="gcp")

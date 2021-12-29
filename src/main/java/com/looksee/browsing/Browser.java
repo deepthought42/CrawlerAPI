@@ -1,5 +1,6 @@
 package com.looksee.browsing;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,6 +62,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.assertthat.selenium_shutterbug.core.Capture;
 import com.assertthat.selenium_shutterbug.core.Shutterbug;
 import com.looksee.models.ElementState;
+import com.looksee.utils.ImageUtils;
 
 import cz.vutbr.web.css.CSSFactory;
 import cz.vutbr.web.css.CombinedSelector;
@@ -72,7 +74,6 @@ import cz.vutbr.web.csskit.RuleFontFaceImpl;
 import cz.vutbr.web.csskit.RuleKeyframesImpl;
 import cz.vutbr.web.csskit.RuleMediaImpl;
 import cz.vutbr.web.domassign.StyleMap;
-import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -367,11 +368,94 @@ public class Browser {
 	 * 
 	 * @return File png file of image
 	 * @throws IOException
+	 * 
+	 * NOTE: The out put of this method is a screenshot that doesn't make any effort at removing duplicated sections
+	 * caused by things like floating elements sticky navigation bars
 	 */
+	@Deprecated
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
 		return Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
 	}
 	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public BufferedImage getFullPageScreenshotStitched() throws IOException, GridException{
+		//scroll to top of page
+		scrollToTopOfPage();
+	
+		//capture viewport screenshot
+		BufferedImage original_image = getViewportScreenshot();
+		original_image = original_image.getSubimage(0, 0, original_image.getWidth()-20, original_image.getHeight());
+		int viewport_height = extractViewportHeight(driver);
+		long last_y_offset = 0;
+
+		//while scroll position isn't at end of page
+		do {
+			last_y_offset = extractYOffset(driver);
+			log.warn("last y offset pre-scroll :: "+last_y_offset);
+			//scroll 75% of the height of the viewport
+			scrollDownTwentyFivePercent();
+			log.warn("last y offset after scroll :: "+extractYOffset(driver));
+
+			log.warn("scrolled down by 25%");
+			
+			//capture screenshot
+			BufferedImage current_screenshot = getViewportScreenshot();
+			current_screenshot = current_screenshot.getSubimage(0, 0, current_screenshot.getWidth()-20, current_screenshot.getHeight());
+
+			
+			//identify stitching points by using a sliding window with random sampling to determine
+			// if both images match. If a sliding window is found that matches for both images, then stitch images
+			int window_size = 50;
+			
+			//stitch images together using following steps
+			//    1. retrieve row that is 25% from top of last screenshot
+			int current_screenshot_row = (int)(viewport_height/4.0);
+			
+			//	  2. retrieve row that is 25% of the way down the visible area
+			int original_screenshot_row = (int)(original_image.getHeight() - (int)((viewport_height/4.0)*3));
+			
+			//    3. compare rows from step 1 and 2. if they are equal, then append all rows after the row in the current image for step 1 to the original screenshot
+			//                 else decrement row for original screenshot and repeat steps 1-3
+			
+			boolean doRowsMatch = false;
+			do {
+				doRowsMatch = ImageUtils.areWindowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row, window_size);
+
+				//doRowsMatch = areRowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row);
+				if(doRowsMatch) {
+					BufferedImage cropped_og_img = original_image.getSubimage(0, 0, original_image.getWidth(), original_screenshot_row);
+					current_screenshot = current_screenshot.getSubimage(0, current_screenshot_row, current_screenshot.getWidth(), current_screenshot.getHeight()-current_screenshot_row);
+							
+					//append all rows after the row in the current image for step 1 to the original screenshot
+					int height_total = cropped_og_img.getHeight() + current_screenshot.getHeight();
+					BufferedImage concat_image = new BufferedImage(cropped_og_img.getWidth(), height_total, BufferedImage.TYPE_INT_RGB);
+					Graphics2D g2d = concat_image.createGraphics();
+		            g2d.drawImage(cropped_og_img, 0, 0, null);
+		            g2d.drawImage(current_screenshot, 0, original_screenshot_row, null);
+			        g2d.dispose();
+			        
+			        original_image = concat_image;
+			        break;
+				}
+				else {
+					//decrement row for original screenshot
+					current_screenshot_row--;
+					if(current_screenshot_row == 0 && original_screenshot_row < (original_image.getHeight()-1)) {
+						current_screenshot_row = (int)(viewport_height/4.0);
+						original_screenshot_row++;
+					}
+				}
+			}while(!doRowsMatch && (original_screenshot_row < (original_image.getHeight()-1) && current_screenshot_row > 0));
+		}while(extractYOffset(driver) > last_y_offset);
+		
+		return original_image;//Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
+	}
+
 	/**
 	 * 
 	 * @param screenshot
@@ -770,7 +854,7 @@ public class Browser {
 		}
 		while(offsets_y != offsets.getY()) {
 			offsets_y = offsets.getY();
-			scrollDown();
+			scrollDownFull();
 
 			offsets = elem.getLocation();
 		}
@@ -1112,7 +1196,22 @@ public class Browser {
 	     	.executeScript("window.scrollTo(0, 0)");
 	}
 	
-	public void scrollDown() {
+	public void scrollDownFiftyPercent() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollBy(0, window.innerHeight*0.5)");
+	}
+	
+	public void scrollDownTwentyFivePercent() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollBy(0, window.innerHeight*0.25)");
+	}
+	
+	public void scrollDownThreeQuarters() {
+		((JavascriptExecutor) driver)
+	     	.executeScript("window.scrollBy(0, window.innerHeight*0.75)");
+	}
+	
+	public void scrollDownFull() {
 		((JavascriptExecutor) driver)
 	     	.executeScript("window.scrollBy(0, window.innerHeight)");
 	}

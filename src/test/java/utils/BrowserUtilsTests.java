@@ -191,7 +191,7 @@ public class BrowserUtilsTests {
 		
 		assertTrue(BrowserUtils.doesUrlExist(url1));
 		
-		String url2 = "https://www.businesswire.com/";
+		String url2 = "https://www.businesswirefasfasfasfew.com/";
 		
 		assertFalse(BrowserUtils.doesUrlExist(url2));
 		

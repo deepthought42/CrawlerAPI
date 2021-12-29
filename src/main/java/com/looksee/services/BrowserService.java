@@ -462,8 +462,6 @@ public class BrowserService {
 		viewport_screenshot.flush();
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
-		//BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
-
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		log.warn("full page screenshot checksum :: "+full_page_screenshot_checksum);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));

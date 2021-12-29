@@ -453,7 +453,6 @@ public class Browser {
 			}while(!doRowsMatch && (original_screenshot_row < (original_image.getHeight()-1) && current_screenshot_row > 0));
 		}while(extractYOffset(driver) > last_y_offset);
 		
-		log.warn("returning full page screenshot image");
 		return original_image;//Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
 	}
 

@@ -11,7 +11,6 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class AuditRecord extends LookseeObject {
-	//NOTE: TEMPORARY VALUE
 	private String url;
 	
 	private String status;
@@ -31,33 +30,31 @@ public class AuditRecord extends LookseeObject {
 	private double data_extraction_progress;
 	private String data_extraction_msg;
 
-	private String favorite_audit_category;
 	private String target_user_age;
 	private String target_user_education;
 	
 	public AuditRecord() {
 		setStartTime(LocalDateTime.now());
+		setStatus(ExecutionStatus.UNKNOWN);
+		setUrl("");
+		setStatusMessage("");
+		setLevel(AuditLevel.UNKNOWN);
+		setContentAuditProgress(0.0);
+		setContentAuditMsg("");
+		setInfoArchitectureAuditProgress(0.0);
+		setInfoArchMsg("");
+		setAestheticAuditProgress(0.0);
+		setAestheticMsg("");
+		setDataExtractionProgress(0.0);
+		setDataExtractionMsg("");
+		
 	}
 	
 	/**
 	 * Constructor
 	 * @param level TODO
 	 * 
-	 * @pre audit_stats != null;
 	 */
-	public AuditRecord(ExecutionStatus status, AuditLevel level) {
-		setKey(generateKey());
-		setStatus(status);
-		setLevel(level);
-		
-		setDataExtractionProgress(0.0);		
-		setContentAuditProgress(0.0);
-		setInfoArchitectureAuditProgress(0.0);
-		setAestheticAuditProgress(0.0);
-		
-		setStartTime(LocalDateTime.now());
-	}
-
 	public AuditRecord(long id, 
 					   ExecutionStatus status, 
 					   AuditLevel level, 
@@ -191,14 +188,6 @@ public class AuditRecord extends LookseeObject {
 
 	public void setDataExtractionMsg(String data_extraction_msg) {
 		this.data_extraction_msg = data_extraction_msg;
-	}
-
-	public String getFavoriteAuditCategory() {
-		return favorite_audit_category;
-	}
-
-	public void setFavoriteAuditCategory(String favorite_audit_category) {
-		this.favorite_audit_category = favorite_audit_category;
 	}
 
 	public String getTargetUserAge() {

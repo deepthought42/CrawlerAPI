@@ -39,7 +39,6 @@ public class ElementStateService {
 	 */
 	public ElementState save(ElementState element) throws CypherException{
 		assert element != null;
-
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes		
@@ -51,7 +50,7 @@ public class ElementStateService {
 			element_record.setForegroundColor(element.getForegroundColor());
 			element_repo.save(element_record);
 		}
-	
+
 		return element_record;
 	}
 	

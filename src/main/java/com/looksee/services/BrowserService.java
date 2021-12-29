@@ -45,11 +45,18 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.Form;
+import com.looksee.models.ImageElementState;
+import com.looksee.models.ImageFaceAnnotation;
+import com.looksee.models.ImageLandmarkInfo;
+import com.looksee.models.ImageSearchAnnotation;
+import com.looksee.models.Label;
+import com.looksee.models.Logo;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
 import com.looksee.models.enums.BrowserEnvironment;
@@ -168,6 +175,85 @@ public class BrowserService {
 				css_selector, 
 				foreground_color,
 				rendered_css_values.get("background-color"));
+		
+		return element_state;
+	}
+	
+	/**
+ 	 * Constructs an {@link Element} from a JSOUP {@link Element element}
+ 	 * 
+	 * @param xpath
+	 * @param attributes
+	 * @param element
+	 * @param web_elem
+	 * @param classification
+	 * @param rendered_css_values
+	 * @param screenshot_url TODO
+	 * @param css_selector TODO
+	 * @pre xpath != null && !xpath.isEmpty()
+	 * @pre attributes != null
+	 * @pre element != null
+	 * @pre classification != null
+	 * @pre rendered_css_values != null
+	 * @pre css_values != null
+	 * @pre screenshot != null
+	 * 
+	 * @return {@link ElementState} based on {@link WebElement} and other params
+	 * @throws IOException 
+	 */
+	public static ElementState buildImageElementState(
+			String xpath, 
+			Map<String, String> attributes, 
+			Element element,
+			WebElement web_elem,
+			ElementClassification classification, 
+			Map<String, String> rendered_css_values, 
+			String screenshot_url,
+			String css_selector,
+			Set<ImageLandmarkInfo> landmark_info_set,
+			Set<ImageFaceAnnotation> faces,
+			Set<ImageSearchAnnotation> image_search_set,
+			Set<Logo> logos,
+			Set<Label> labels
+	) throws IOException{
+		assert xpath != null && !xpath.isEmpty();
+		assert attributes != null;
+		assert element != null;
+		assert classification != null;
+		assert rendered_css_values != null;
+		assert screenshot_url != null;
+		
+		Point location = web_elem.getLocation();
+		Dimension dimension = web_elem.getSize();
+		
+		String foreground_color = rendered_css_values.get("color");
+		if(foreground_color == null || foreground_color.trim().isEmpty()) {
+			foreground_color = "rgb(0,0,0)";
+		}
+		
+		ElementState element_state = new ImageElementState(
+													element.ownText().trim(),
+													element.text(),
+													xpath, 
+													element.tagName(), 
+													attributes, 
+													rendered_css_values, 
+													screenshot_url, 
+													location.getX(), 
+													location.getY(), 
+													dimension.getWidth(), 
+													dimension.getHeight(), 
+													classification,
+													element.outerHtml(),
+													web_elem.isDisplayed(),
+													css_selector, 
+													foreground_color,
+													rendered_css_values.get("background-color"),
+													landmark_info_set,
+													faces,
+													image_search_set,
+													logos,
+													labels);
 		
 		return element_state;
 	}
@@ -375,7 +461,7 @@ public class BrowserService {
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
-		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();		
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
@@ -475,7 +561,7 @@ public class BrowserService {
 			}
 
 			cnt++;
-		}while(rendering_incomplete && cnt < 1000000);
+		}while(rendering_incomplete && cnt < 1000);
 
 		return elements;
 	}
@@ -536,6 +622,7 @@ public class BrowserService {
 				if(element_location.getY() >= page_height || element_size.getHeight() >= page_height) {
 					continue;
 				}
+				
 				//check if element is visible in pane and if not then continue to next element xpath
 				if( !web_element.isDisplayed()
 						|| !hasWidthAndHeight(element_size)
@@ -543,16 +630,17 @@ public class BrowserService {
 					continue;
 				}
 				
-				
 				String css_selector = generateCssSelectorFromXpath(xpath);
 				String element_screenshot_url = "";
 
+				BufferedImage element_screenshot = null;
+				
 				if(!BrowserUtils.isLargerThanViewport(element_size, page_state.getViewportWidth(), page_state.getViewportHeight())) {
 					try {
 							
 						//extract element screenshot from full page screenshot
 						//BufferedImage element_screenshot = page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
-						BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+						element_screenshot = browser.getElementScreenshot(web_element);
 						String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 						
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -573,6 +661,7 @@ public class BrowserService {
 					//TODO: extract image from full page screenshot manually
 				}
 				
+
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				
 				ElementClassification classification = null;
@@ -592,17 +681,52 @@ public class BrowserService {
 				}
 								
 				Element element = elements.first();
-				ElementState element_state = buildElementState(xpath, 
-															   new HashMap<>(), 
-															   element, 
-															   web_element, 
-															   classification, 
-															   rendered_css_props, 
-															   element_screenshot_url,
-															   css_selector);
 				
-				element_states_map.put(xpath, element_state);
-				visited_elements.add(element_state);
+				if(isImageElement(web_element) && element_screenshot != null) {
+					//retrieve image landmark properties from google cloud vision
+					Set<ImageLandmarkInfo> landmark_info_set = CloudVisionUtils.extractImageLandmarks(element_screenshot);
+					
+					//retrieve image faces properties from google cloud vision
+					Set<ImageFaceAnnotation> faces = CloudVisionUtils.extractImageFaces(element_screenshot);
+					
+					//retrieve image reverse image search properties from google cloud vision
+					Set<ImageSearchAnnotation> image_search_set = CloudVisionUtils.searchWebForImageUsage(element_screenshot);
+					
+					//retrieve image logos from google cloud vision
+					Set<Logo> logos = CloudVisionUtils.extractImageLogos(element_screenshot);
+					
+					//retrieve image labels
+					Set<Label> labels = CloudVisionUtils.extractImageLabels(element_screenshot);
+					ElementState element_state = buildImageElementState(xpath, 
+																	   new HashMap<>(), 
+																	   element, 
+																	   web_element, 
+																	   classification, 
+																	   rendered_css_props, 
+																	   element_screenshot_url,
+																	   css_selector,
+																	   landmark_info_set,
+																	   faces,
+																	   image_search_set,
+																	   logos,
+																	   labels);
+					
+					element_states_map.put(xpath, element_state);
+					visited_elements.add(element_state);
+				}
+				else {
+					ElementState element_state = buildElementState(xpath, 
+																   new HashMap<>(), 
+																   element, 
+																   web_element, 
+																   classification, 
+																   rendered_css_props, 
+																   element_screenshot_url,
+																   css_selector);
+					element_states_map.put(xpath, element_state);
+					visited_elements.add(element_state);
+				}
+				
 			}
 			catch(NoSuchElementException e) {
 				//log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());
@@ -622,6 +746,15 @@ public class BrowserService {
 			}
 		}
 		return visited_elements;
+	}
+
+	/**
+	 * Checks if element tag is 'img'
+	 * @param web_element
+	 * @return
+	 */
+	private boolean isImageElement(WebElement web_element) {
+		return web_element.getTagName().equalsIgnoreCase("img");
 	}
 
 	/** MESSAGE GENERATION METHODS **/

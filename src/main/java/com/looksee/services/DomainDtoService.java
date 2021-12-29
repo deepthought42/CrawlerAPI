@@ -39,17 +39,17 @@ public class DomainDtoService {
 								 0, 
 								 0, 
 								 0, 
-								 0.0, 
+								 1.0, 
 								 0, 
-								 0.0, 
+								 1.0, 
 								 0, 
-								 0.0, 
+								 1.0, 
 								 0, 
-								 0.0, 
+								 1.0, 
 								 false, 
-								 0.0, 
-								 "An error occurred while retrieving audit",
-								 ExecutionStatus.ERROR);
+								 1.0, 
+								 "",
+								 ExecutionStatus.COMPLETE);
 		}
 		
 		// get most recent audit record for this domain

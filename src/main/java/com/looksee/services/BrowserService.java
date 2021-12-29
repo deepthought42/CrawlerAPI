@@ -462,8 +462,12 @@ public class BrowserService {
 		viewport_screenshot.flush();
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
+		//BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
+		log.warn("full page screenshot checksum :: "+full_page_screenshot_checksum);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		log.warn("screenshot saved to GCP successfully...");
 		full_page_screenshot.flush();
 		
 		String composite_url = full_page_screenshot_url;
@@ -471,6 +475,7 @@ public class BrowserService {
 		long y_offset = browser.getYScrollOffset();
 		Dimension size = browser.getDriver().manage().window().getSize();
 
+		log.warn("constructing PageState object");
 		PageState page_state = new PageState(
 										viewport_screenshot_url,
 										new ArrayList<>(),

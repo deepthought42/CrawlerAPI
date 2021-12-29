@@ -10,7 +10,8 @@ public enum ExecutionStatus {
 	ERROR("error"), 
 	RUNNING_AUDITS("running audits"), 
 	BUILDING_PAGE("building page"), 
-	EXTRACTING_ELEMENTS("extracting elements");
+	EXTRACTING_ELEMENTS("extracting elements"), 
+	UNKNOWN("unknown");
 	
 	private String shortName;
 

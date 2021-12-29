@@ -6,7 +6,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -16,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
-import com.google.cloud.vision.v1.Block;
 import com.google.cloud.vision.v1.ColorInfo;
 import com.google.cloud.vision.v1.DominantColorsAnnotation;
 import com.google.cloud.vision.v1.EntityAnnotation;
@@ -25,17 +26,18 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.LocationInfo;
-import com.google.cloud.vision.v1.Page;
-import com.google.cloud.vision.v1.Paragraph;
-import com.google.cloud.vision.v1.Symbol;
-import com.google.cloud.vision.v1.TextAnnotation;
 import com.google.cloud.vision.v1.WebDetection;
 import com.google.cloud.vision.v1.WebDetection.WebEntity;
 import com.google.cloud.vision.v1.WebDetection.WebImage;
 import com.google.cloud.vision.v1.WebDetection.WebLabel;
 import com.google.cloud.vision.v1.WebDetection.WebPage;
-import com.google.cloud.vision.v1.Word;
 import com.google.protobuf.ByteString;
+import com.looksee.models.ImageFaceAnnotation;
+import com.looksee.models.ImageLandmarkInfo;
+import com.looksee.models.ImageSearchAnnotation;
+import com.looksee.models.Label;
+import com.looksee.models.LatLng;
+import com.looksee.models.Logo;
 import com.looksee.models.audit.ColorUsageStat;
 import com.looksee.utils.ImageUtils;
 
@@ -52,9 +54,9 @@ public class CloudVisionUtils {
 	 * @throws IOException
 	 */
 	public static List<String> extractImageText(BufferedImage buffered_image) throws IOException {
-		List<String> text_values = new ArrayList<>();
-		 
+		List<String> text_values = new ArrayList<>(); 
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    
 	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
 	    ImageIO.write(buffered_image, "png", os);
@@ -76,14 +78,8 @@ public class CloudVisionUtils {
 	    	List<AnnotateImageResponse> responses = response.getResponsesList();
 	    	
 	    	for (AnnotateImageResponse res : responses) {
-	      		/*
-    			log.warn("response label annotations :: " +res.getLabelAnnotationsList());
-	      		log.warn("Full Text annotation :: " +res.getFullTextAnnotation());
-		        log.warn("text annotations :   "+res.getTextAnnotationsList());
-*/
-    			
 		        if (res.hasError()) {
-		        	log.warn("Error: %s%n", res.getError().getMessage());
+		        	log.error("Error: %s%n", res.getError().getMessage());
 		        	return new ArrayList<>();
 		        }
 		        
@@ -96,96 +92,6 @@ public class CloudVisionUtils {
         return text_values;
 	}
 	
-	 /**
-		 * Detects image properties such as color frequency from the specified local image.
-		 * 
-		 * @param image_url
-		 * @throws IOException
-		 */
-		public static List<String> extractImageParagraphs(BufferedImage buffered_image) throws IOException {
-			List<String> text_values = new ArrayList<>();
-			 
-		    List<AnnotateImageRequest> requests = new ArrayList<>();
-		    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
-		    ByteArrayOutputStream os = new ByteArrayOutputStream();
-		    ImageIO.write(buffered_image, "png", os);
-		    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
-		    
-		    ByteString imgBytes = ByteString.readFrom(input_stream);
-		
-		    Image img = Image.newBuilder().setContent(imgBytes).build();
-		    Feature feat = Feature.newBuilder().setType(Feature.Type.TEXT_DETECTION).build();
-		    AnnotateImageRequest request =
-		        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-		    requests.add(request);
-		
-		    // Initialize client that will be used to send requests. This client only needs to be created
-		    // once, and can be reused for multiple requests. After completing all of your requests, call
-		    // the "close" method on the client to safely clean up any remaining background resources.
-		    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
-		    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
-		    	List<AnnotateImageResponse> responses = response.getResponsesList();
-		    	    	
-	    		for (AnnotateImageResponse res : responses) {
-		      		/*
-	    			log.warn("response label annotations :: " +res.getLabelAnnotationsList());
-		      		log.warn("Full Text annotation :: " +res.getFullTextAnnotation());
-			        log.warn("text annotations :   "+res.getTextAnnotationsList());
-	*/
-	    			
-			        if (res.hasError()) {
-			          System.out.format("Error: %s%n", res.getError().getMessage());
-			          return new ArrayList<>();
-			        }
-			        TextAnnotation annotation = res.getFullTextAnnotation();
-			        for (Page page : annotation.getPagesList()) {
-			          String pageText = "";
-			          for (Block block : page.getBlocksList()) {
-			            String blockText = "";
-			            for (Paragraph para : block.getParagraphsList()) {
-			              String paraText = "";
-			              
-			              for (Word word : para.getWordsList()) {
-			                String wordText = "";
-			                for (Symbol symbol : word.getSymbolsList()) {
-			                  wordText = wordText + symbol.getText();
-			                 /*
-			                  System.out.format(
-			                      "Symbol text: %s (confidence: %f)%n",
-			                      symbol.getText(), symbol.getConfidence());
-			                      */
-			                }
-			                /*
-			                System.out.format(
-			                    "Word text: %s (confidence: %f)%n%n", wordText, word.getConfidence());
-			                    */
-			                paraText = String.format("%s %s", paraText, wordText);
-			              }
-			              
-			              // Output Example using Paragraph:
-			              System.out.println("%nParagraph: %n" + paraText);
-			              System.out.format("Paragraph Confidence: %f%n", para.getConfidence());
-			              text_values.add(paraText);
-
-			              blockText = blockText + paraText;
-			            }
-			            pageText = pageText + blockText;
-			          }
-			        }
-			        
-			          
-			        // For full list of available annotations, see http://g.co/cloud/vision/docs
-			        /*
-			        for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
-			        	System.out.format("Text: %s%n", annotation.getDescription());
-			        	System.out.format("Position : %s%n", annotation.getBoundingPoly());
-			        	text_values.add(annotation.getDescription());
-			        }
-			        */
-		      	}
-		    }
-	        return text_values;
-		}
 		
 	/**
 	 * Detects image properties such as color frequency from the specified local image.
@@ -193,11 +99,14 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static void extractImageLabels(BufferedImage buffered_image) throws IOException {
+	public static Set<Label> extractImageLabels(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    Set<Label> labels = new HashSet<>();
+	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
 	    
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
@@ -217,34 +126,42 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		          log.error("Error: %s%n", res.getError().getMessage());
+		          return new HashSet<>();
 		        }
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        log.warn("-----------------------Label Annotation list ----------------------------");
 		        for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
-		          annotation
-		              .getAllFields()
-		              .forEach((k, v) -> System.out.format("%s : %s%n", k, v.toString()));
+		        	labels.add(new Label(annotation.getDescription(), 
+		        						 annotation.getScore(), 
+		        						 annotation.getTopicality()));
 		        }
 	      	}
 	    }
+	    
+	    return labels;
 	}
 	
 	/**
 	 * Detects image properties such as color frequency from the specified local image.
 	 * 
 	 * @param image_url
+	 * 
+	 * @pre buffered_image != null
+	 * 
 	 * @throws IOException
 	 */
-	public static void extractImageLandmarks(BufferedImage buffered_image) throws IOException {
-	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    //InputStream url_input_stream = new URL(image_url).openStream();
+	public static Set<ImageLandmarkInfo> extractImageLandmarks(BufferedImage buffered_image) throws IOException {
+		assert buffered_image != null;
+		
+		List<AnnotateImageRequest> requests = new ArrayList<>();
+		Set<ImageLandmarkInfo> landmark_info_set = new HashSet<>();
+		
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
-	    
+	       
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
 	
 	    Image img = Image.newBuilder().setContent(imgBytes).build();
@@ -262,17 +179,23 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		          log.error("Error: %s%n", res.getError().getMessage());
+		          return new HashSet<>();
 		        }
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLandmarkAnnotationsList()) {
-		          LocationInfo info = annotation.getLocationsList().listIterator().next();
-		          System.out.format("Landmark: %s%n %s%n", annotation.getDescription(), info.getLatLng());
+		        	Set<LatLng> locations = new HashSet<LatLng>();
+		        	for(LocationInfo info: annotation.getLocationsList()) {
+		        		locations.add(new LatLng(info.getLatLng().getLatitude(), info.getLatLng().getLongitude()));
+		        	}
+		        	
+		        	landmark_info_set.add(new ImageLandmarkInfo(locations, annotation.getDescription(), annotation.getScore()));      		
 		        }
 	      	}
 	    }
+	    
+	    return landmark_info_set;
 	}
 	
 	/**
@@ -281,11 +204,14 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static void extractImageFaces(BufferedImage buffered_image) throws IOException {
+	public static Set<ImageFaceAnnotation> extractImageFaces(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    Set<ImageFaceAnnotation> face_annotations = new HashSet<>();
+	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
 	    
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
@@ -305,12 +231,20 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		         log.error("Error: %s%n", res.getError().getMessage());
+		          return new HashSet<>();
 		        }
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
-		        for (FaceAnnotation annotation : res.getFaceAnnotationsList()) {
+		        for (FaceAnnotation annotation : res.getFaceAnnotationsList()) {		        	
+		        	face_annotations.add(new ImageFaceAnnotation(annotation.getAngerLikelihood(),
+		        												 annotation.getJoyLikelihood(),
+		        												 annotation.getBlurredLikelihood(),
+		        												 annotation.getHeadwearLikelihood(),
+		        												 annotation.getSorrowLikelihood(),
+		        												 annotation.getSurpriseLikelihood(),
+		        												 annotation.getUnderExposedLikelihood(),
+		        												 annotation.getBoundingPoly()));
 		          System.out.format(
 		              "anger: %s%njoy: %s%nsurprise: %s%nposition: %s",
 		              annotation.getAngerLikelihood(),
@@ -320,6 +254,8 @@ public class CloudVisionUtils {
 		        }
 	      	}
 	    }
+	    
+	    return face_annotations;
 	}
 	
 	/**
@@ -328,11 +264,13 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static void extractImageLogos(BufferedImage buffered_image) throws IOException {
+	public static Set<Logo> extractImageLogos(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    //InputStream url_input_stream = new URL(image_url).openStream();
+	    Set<Logo> logos = new HashSet<>();
+	    
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
 	    
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
@@ -353,15 +291,21 @@ public class CloudVisionUtils {
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
 		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		          return new HashSet<>();
 		        }
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLogoAnnotationsList()) {
-		          System.out.println(annotation.getDescription());
+		          System.out.println("Image logo description ::  "+annotation.getDescription());
+		          logos.add(new Logo(annotation.getDescription(),
+		        		  			 annotation.getLocale(),
+		        		  			 annotation.getScore(),
+		        		  			 annotation.getBoundingPoly()));
 		        }
 	      	}
 	    }
+	    
+	    return logos;
 	}
 	
 	
@@ -371,11 +315,14 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static void searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
+	public static Set<ImageSearchAnnotation> searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    Set<ImageSearchAnnotation> image_search_annotation = new HashSet<>();
+	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    ImageIO.write(buffered_image, "jpeg", os);                          // Passing: ​(RenderedImage im, String formatName, OutputStream output)
+	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
 	    
 	    ByteString imgBytes = ByteString.readFrom(input_stream);
@@ -395,41 +342,51 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
-		          return;
+		          log.error("Error: %s%n", res.getError().getMessage());
+		          return new HashSet<>();
 		        }
 		
 		        // Search the web for usages of the image. You could use these signals later
 		        // for user input moderation or linking external references.
 		        // For a full list of available annotations, see http://g.co/cloud/vision/docs
 		        WebDetection annotation = res.getWebDetection();
-		        System.out.println("Entity:Id:Score");
-		        System.out.println("===============");
+		        Set<Label> labels = new HashSet<>();
+
 		        for (WebEntity entity : annotation.getWebEntitiesList()) {
-		          System.out.println(
-		              entity.getDescription() + " : " + entity.getEntityId() + " : " + entity.getScore());
+		        	labels.add(new Label(entity.getDescription(), entity.getScore(), 0.0F));
 		        }
+		        
+		        Set<String> best_guess_labels = new HashSet<>();
 		        for (WebLabel label : annotation.getBestGuessLabelsList()) {
-		          System.out.format("%nBest guess label: %s", label.getLabel());
+		        	best_guess_labels.add(label.getLabel());
 		        }
-		        System.out.println("%nPages with matching images: Score%n==");
+		        
+		        Set<String> similar_images = new HashSet<>();
 		        for (WebPage page : annotation.getPagesWithMatchingImagesList()) {
-		          System.out.println(page.getUrl() + " : " + page.getScore());
+		          similar_images.add(page.getUrl());
 		        }
-		        System.out.println("%nPages with partially matching images: Score%n==");
+		        
 		        for (WebImage image : annotation.getPartialMatchingImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
+		        	similar_images.add(image.getUrl());
 		        }
-		        System.out.println("%nPages with fully matching images: Score%n==");
+		        
+		        Set<String> fully_matching_images = new HashSet<>();
 		        for (WebImage image : annotation.getFullMatchingImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
+		        	fully_matching_images.add(image.getUrl());
 		        }
-		        System.out.println("%nPages with visually similar images: Score%n==");
+		        
 		        for (WebImage image : annotation.getVisuallySimilarImagesList()) {
-		          System.out.println(image.getUrl() + " : " + image.getScore());
+		        	similar_images.add(image.getUrl());
 		        }
+
+		        image_search_annotation.add(new ImageSearchAnnotation(labels, 
+		        													  best_guess_labels, 
+		        													  fully_matching_images,
+		        													  similar_images));
 	      	}
 	    }
+	    
+	    return image_search_annotation;
 	}
 	
 	/**
@@ -442,6 +399,7 @@ public class CloudVisionUtils {
 		List<ColorUsageStat> color_usage_stats = new ArrayList<>();
 		 
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
+	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
 	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());

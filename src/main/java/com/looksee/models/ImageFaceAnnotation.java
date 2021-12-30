@@ -1,5 +1,7 @@
 package com.looksee.models;
 
+import java.util.UUID;
+
 import com.google.cloud.vision.v1.BoundingPoly;
 import com.google.cloud.vision.v1.Likelihood;
 
@@ -7,7 +9,7 @@ import com.google.cloud.vision.v1.Likelihood;
  * Stores image face annotations
  *
  */
-public class ImageFaceAnnotation {
+public class ImageFaceAnnotation extends LookseeObject{
 	private String locale;
 	private float score;
 	
@@ -219,6 +221,11 @@ public class ImageFaceAnnotation {
 
 	public void setHeadwearLikelihood(String headwearLikelihood) {
 		this.headwearLikelihood = headwearLikelihood;
+	}
+
+	@Override
+	public String generateKey() {
+		return "imagefaceannotation::"+UUID.randomUUID();
 	}
 	
 	

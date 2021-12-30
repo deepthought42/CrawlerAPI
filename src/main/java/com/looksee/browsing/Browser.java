@@ -399,9 +399,6 @@ public class Browser {
 			log.warn("last y offset pre-scroll :: "+last_y_offset);
 			//scroll 75% of the height of the viewport
 			scrollDownTwentyFivePercent();
-			log.warn("last y offset after scroll :: "+extractYOffset(driver));
-
-			log.warn("scrolled down by 25%");
 			
 			//capture screenshot
 			BufferedImage current_screenshot = getViewportScreenshot();

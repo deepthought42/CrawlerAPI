@@ -389,44 +389,55 @@ public class Browser {
 	
 		//capture viewport screenshot
 		BufferedImage original_image = getViewportScreenshot();
-		original_image = original_image.getSubimage(0, 0, original_image.getWidth()-20, original_image.getHeight());
+		original_image = original_image.getSubimage(0, 
+													0, 
+													original_image.getWidth()-20, 
+													original_image.getHeight());
 		int viewport_height = extractViewportHeight(driver);
 		long last_y_offset = 0;
 
 		//while scroll position isn't at end of page
 		do {
 			last_y_offset = extractYOffset(driver);
-			log.warn("last y offset pre-scroll :: "+last_y_offset);
 			//scroll 75% of the height of the viewport
-			scrollDownTwentyFivePercent();
+			scrollDownPercent(0.30);
 			
 			//capture screenshot
 			BufferedImage current_screenshot = getViewportScreenshot();
-			current_screenshot = current_screenshot.getSubimage(0, 0, current_screenshot.getWidth()-20, current_screenshot.getHeight());
+			current_screenshot = current_screenshot.getSubimage(0, 
+																0, 
+																current_screenshot.getWidth()-20, 
+																current_screenshot.getHeight());
 
 			
 			//identify stitching points by using a sliding window with random sampling to determine
 			// if both images match. If a sliding window is found that matches for both images, then stitch images
-			int window_size = 50;
+			int window_size = 20;
 			
 			//stitch images together using following steps
 			//    1. retrieve row that is 25% from top of last screenshot
-			int current_screenshot_row = (int)(viewport_height/4.0);
+			int current_screenshot_row = viewport_height-1-window_size;
 			
 			//	  2. retrieve row that is 25% of the way down the visible area
-			int original_screenshot_row = (int)(original_image.getHeight() - (int)((viewport_height/4.0)*3));
+			int original_screenshot_row =  (original_image.getHeight()-1-window_size);
 			
 			//    3. compare rows from step 1 and 2. if they are equal, then append all rows after the row in the current image for step 1 to the original screenshot
 			//                 else decrement row for original screenshot and repeat steps 1-3
-			
 			boolean doRowsMatch = false;
 			do {
-				doRowsMatch = ImageUtils.areWindowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row, window_size);
+				doRowsMatch = ImageUtils.areWindowsMatching(current_screenshot, 
+															current_screenshot_row, 
+															original_image, 
+															original_screenshot_row, 
+															window_size);
 
 				//doRowsMatch = areRowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row);
 				if(doRowsMatch) {
 					BufferedImage cropped_og_img = original_image.getSubimage(0, 0, original_image.getWidth(), original_screenshot_row);
-					current_screenshot = current_screenshot.getSubimage(0, current_screenshot_row, current_screenshot.getWidth(), current_screenshot.getHeight()-current_screenshot_row);
+					current_screenshot = current_screenshot.getSubimage(0, 
+																		current_screenshot_row, 
+																		current_screenshot.getWidth(), 
+																		current_screenshot.getHeight()-current_screenshot_row);
 							
 					//append all rows after the row in the current image for step 1 to the original screenshot
 					int height_total = cropped_og_img.getHeight() + current_screenshot.getHeight();
@@ -442,12 +453,12 @@ public class Browser {
 				else {
 					//decrement row for original screenshot
 					current_screenshot_row--;
-					if(current_screenshot_row == 0 && original_screenshot_row < (original_image.getHeight()-1)) {
-						current_screenshot_row = (int)(viewport_height/4.0);
-						original_screenshot_row++;
+					if(current_screenshot_row == 0 && original_screenshot_row > 0) {
+						current_screenshot_row = viewport_height-window_size-1;
+						original_screenshot_row--;
 					}
 				}
-			}while(!doRowsMatch && (original_screenshot_row < (original_image.getHeight()-1) && current_screenshot_row > 0));
+			}while(!doRowsMatch && (original_screenshot_row >= 0 && current_screenshot_row >= 0));
 		}while(extractYOffset(driver) > last_y_offset);
 		
 		return original_image;//Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
@@ -1193,19 +1204,9 @@ public class Browser {
 	     	.executeScript("window.scrollTo(0, 0)");
 	}
 	
-	public void scrollDownFiftyPercent() {
+	public void scrollDownPercent(double percent) {
 		((JavascriptExecutor) driver)
-	     	.executeScript("window.scrollBy(0, window.innerHeight*0.5)");
-	}
-	
-	public void scrollDownTwentyFivePercent() {
-		((JavascriptExecutor) driver)
-	     	.executeScript("window.scrollBy(0, window.innerHeight*0.25)");
-	}
-	
-	public void scrollDownThreeQuarters() {
-		((JavascriptExecutor) driver)
-	     	.executeScript("window.scrollBy(0, window.innerHeight*0.75)");
+	     	.executeScript("window.scrollBy(0, (window.innerHeight*"+percent+"))");
 	}
 	
 	public void scrollDownFull() {

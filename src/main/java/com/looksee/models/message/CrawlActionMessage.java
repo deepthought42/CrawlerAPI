@@ -9,7 +9,7 @@ import com.looksee.models.enums.CrawlAction;
  * Message for different audit actions to perform and which audit types to perform them for.
  * 
  */
-public class CrawlActionMessage extends Message{
+public class CrawlActionMessage extends Message {
 	private CrawlAction action;
 	private AuditRecord audit_record;
 	private boolean is_individual;

@@ -65,13 +65,14 @@ public class ElementStateExtractor extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementExtractionMessage.class, message-> {
 					try {
-						URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(message.getPageState().getUrl() ));
 						URL full_page_screenshot_url = new URL(message.getPageState().getFullPageScreenshotUrlOnload());
 						BufferedImage page_screenshot = ImageUtils.readImageFromURL(full_page_screenshot_url);
+						URL page_url = new URL(BrowserUtils.sanitizeUrl(message.getPageState().getUrl(),
+								 						 message.getPageState().isSecure()));
 						List<ElementState> element_states = browser_service.buildPageElements(	message.getPageState(), 
 																								message.getXpaths(),
-																								message.getAuditRecordId(), 
-																								sanitized_url,
+																								message.getAuditRecordId(),
+																								page_url,
 																								page_screenshot.getHeight());
 						
 						//tell page state builder of element states

@@ -195,23 +195,20 @@ public class SubscriptionService {
 	 * 
 	 * @throws StripeException
 	 */
-	public boolean hasExceededSinglePageAuditLimit(long account_id, SubscriptionPlan plan) throws StripeException{
-    	Date date = new Date();
-    	int page_audit_cnt = account_service.getPageAuditCountByMonth(account_id, date.getMonth());
-    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 5){
+	public boolean hasExceededSinglePageAuditLimit(SubscriptionPlan plan, int page_audit_cnt) {    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt > 5){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 50){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt > 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 100){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt > 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 200){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 500){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt > 500){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -232,20 +229,20 @@ public class SubscriptionService {
 	 * 
 	 * @throws StripeException
 	 */
-	public boolean hasExceededDomainPageAuditLimit(SubscriptionPlan plan, int page_audit_count) throws StripeException{				    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count >= 5){
+	public boolean hasExceededDomainPageAuditLimit(SubscriptionPlan plan, int page_audit_count) {				    	
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count > 5){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count >= 50){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count > 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count >= 200){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count >= 50){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count > 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count >= 400){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count > 400){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){

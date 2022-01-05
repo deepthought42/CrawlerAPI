@@ -529,7 +529,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000000);
+		}while(result_page == null && tries < 100);
 		return result_page;
 	}
 	

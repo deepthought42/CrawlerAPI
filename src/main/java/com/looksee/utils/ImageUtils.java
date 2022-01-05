@@ -365,13 +365,15 @@ public class ImageUtils {
 	}
 	
 	public static boolean areWindowsMatching(BufferedImage current_screenshot, 
-		int current_screenshot_row,
-		BufferedImage original_image, 
-		int original_screenshot_row,
-		int window_height
+											int current_screenshot_row,
+											BufferedImage original_image, 
+											int original_screenshot_row,
+											int window_height
 	) {
-		if( (original_screenshot_row+window_height) >= original_image.getHeight()) {
-		return false;
+		
+		if( (original_screenshot_row+window_height) >= original_image.getHeight()
+				|| (current_screenshot_row-window_height) < 0) {
+			return false;
 		}
 		
 		for (int x = 0; x < current_screenshot.getWidth(); x++) {

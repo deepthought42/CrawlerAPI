@@ -68,6 +68,7 @@ import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ImageUtils;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import us.codecraft.xsoup.Xsoup;
 
 /**
@@ -390,7 +391,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-		}while(!complete && cnt < 100000);
+		}while(!complete && cnt < 100);
 		
 		return page_state;
 	}
@@ -506,70 +507,76 @@ public class BrowserService {
 	 * @param height TODO
 	 * @param audit_record TODO
 	 * @return
-	 * @throws IOException 
-	 * @throws Exception
+	 * @throws MalformedURLException 
 	 */
 	public List<ElementState> buildPageElements(PageState page_state, 
 												List<String> xpaths, 
 												long audit_id, 
 												URL url, 
 												int page_height
-	) {
+	) throws MalformedURLException {
 		assert page_state != null;
-		  
-   		String page_url = url.toString();
-   		
-		boolean rendering_incomplete = true;
-		
+   				
 		List<ElementState> elements = new ArrayList<>();
-		
-		int cnt = 0;
-		Browser browser = null;
 		Map<String, ElementState> elements_mapped = new HashMap<>();
-		
+		boolean rendering_incomplete = true;
 		do {
-			try {
-				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(page_url);
-				if(browser.is503Error()) {
-					throw new Exception("503 Error encountered. Starting over..");
-				}
-				browser.removeDriftChat();
-				
-				//get ElementState List by asking multiple bots to build xpaths in parallel
-				//for each xpath then extract element state
-				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, url, page_height);
-				rendering_incomplete = false;
-				cnt = 1000000000;
-			}
-			catch (NullPointerException e) {
-				log.warn("NPE thrown during element state extraction");
-				//e.printStackTrace();
-			}
-			catch(MalformedURLException e) {
-				log.warn("Unable to get browser connection to build page elements : "+url);
-				break;
-			}
-			catch(WebDriverException | GridException e) {								
-				log.warn("Selenium Exception occurred while building page elements :: "+url);
-			}
-			catch(Exception e) {
-				log.warn("An exception occurred while building page elements ... "+e.getMessage());
-				e.printStackTrace();
-			}
-			finally {
-				if(browser != null) {
-					browser.close();
-				}
-			}
-
-			cnt++;
-		}while(rendering_incomplete && cnt < 1000);
+			rendering_incomplete = openBrowserAndBuildElementStates(elements, 
+																	elements_mapped, 
+																	page_state, 
+																	xpaths, 
+																	audit_id,
+																	page_height);
+		}while(rendering_incomplete);
 
 		return elements;
 	}
 	
 	
+	@Retry(name="webdriver")
+	private boolean openBrowserAndBuildElementStates(List<ElementState> elements,
+												  Map<String, ElementState> elements_mapped, 
+												  PageState page_state,
+												  List<String> xpaths,
+												  long audit_id,
+												  int page_height
+    ) throws MalformedURLException {
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
+		String page_url = sanitized_url.toString();
+		Browser browser = null;
+		
+		try {
+			browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+			browser.navigateTo(page_url);
+			if(browser.is503Error()) {
+				throw new FiveZeroThreeException("503 Error encountered. Starting over..");
+			}
+			browser.removeDriftChat();
+			
+			//get ElementState List by asking multiple bots to build xpaths in parallel
+			//for each xpath then extract element state
+			elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+			return false;
+		}
+		catch (NullPointerException e) {
+			log.warn("NPE thrown during element state extraction");
+			//e.printStackTrace();
+		}
+		catch(MalformedURLException e) {
+			log.warn("Unable to get browser connection to build page elements : "+page_url);
+			return false;
+		}
+		catch(FiveZeroThreeException e) {
+			log.warn("503 exception occurred while accessing "+page_url);
+		}	
+		finally {
+			if(browser != null) {
+				browser.close();
+			}
+		}
+		return true;
+	}
+
 	private static String calculateSha256(String value) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
@@ -685,6 +692,7 @@ public class BrowserService {
 								
 				Element element = elements.first();
 				
+				/*
 				if(isImageElement(web_element) && element_screenshot != null) {
 					//retrieve image landmark properties from google cloud vision
 					Set<ImageLandmarkInfo> landmark_info_set = CloudVisionUtils.extractImageLandmarks(element_screenshot);
@@ -718,6 +726,8 @@ public class BrowserService {
 					visited_elements.add(element_state);
 				}
 				else {
+				*/
+				log.warn("building element state :: "+xpath);
 					ElementState element_state = buildElementState(xpath, 
 																   new HashMap<>(), 
 																   element, 
@@ -728,7 +738,7 @@ public class BrowserService {
 																   css_selector);
 					element_states_map.put(xpath, element_state);
 					visited_elements.add(element_state);
-				}
+				//}
 				
 			}
 			catch(NoSuchElementException e) {
@@ -1868,6 +1878,19 @@ class ServiceUnavailableException extends RuntimeException {
 	private static final long serialVersionUID = 794045239226319408L;
 
 	public ServiceUnavailableException(String msg) {
+		super(msg);
+	}
+}
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class FiveZeroThreeException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 452417401491490882L;
+
+	public FiveZeroThreeException(String msg) {
 		super(msg);
 	}
 }

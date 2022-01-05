@@ -118,11 +118,12 @@ public class PageStateBuilder extends AbstractActor{
 						//update audit record with progress
 						log.warn("building page state  " + crawl_action.getUrl() );
 						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						
 						final PageState page_state_record = page_state_service.save(page_state);
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
 						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
-						int XPATH_CHUNK_SIZE = (int)Math.ceil((xpaths.size() / (double)XPATH_PARTITIONS));
+						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 						this.total_dispatches.put(page_state.getUrl(), 0);
 						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
 						

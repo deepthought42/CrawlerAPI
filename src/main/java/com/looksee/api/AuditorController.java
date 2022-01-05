@@ -4,6 +4,7 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
 import java.security.Principal;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -95,9 +96,11 @@ public class AuditorController {
 		if(principal != null ) {
 			account = account_service.findByUserId(principal.getName());
 			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
-			
-			if( subscription_service.hasExceededSinglePageAuditLimit(account.getId(), plan) ) {				
-				throw new AccountLimitExceededException();
+			Date date = new Date();
+	    	int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), date.getMonth());
+
+			if( subscription_service.hasExceededSinglePageAuditLimit(plan, page_audit_cnt) ) {				
+	    		throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to perform more audits");
 			}
 		}
 		
@@ -122,10 +125,6 @@ public class AuditorController {
 	   	long account_id = -1;
 		if(account != null) {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
-	    	
-	    	if(subscription_service.hasExceededSinglePageAuditLimit(account.getId(), subscription_service.getSubscriptionPlanName(account))){
-	    		throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to generate more tests");
-	    	}
 			account_id = account.getId();			
 		}
 		

@@ -1,25 +1,17 @@
 package services;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.looksee.models.Account;
-import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.enums.SubscriptionPlan;
-import com.looksee.services.AccountService;
 import com.looksee.services.SubscriptionService;
-import com.stripe.exception.StripeException;
 
 @SpringBootTest
 public class SubscriptionServiceTests {
@@ -27,25 +19,14 @@ public class SubscriptionServiceTests {
 	@InjectMocks
 	private SubscriptionService subscription_service;
 	
-	@Mock
-	private Account account;
-	
-	@Spy
-	private Account account_spy;
-	
-	@Mock
-	private AccountService account_service;
-
-	@Mock
-	private DiscoveryRecord record;
-	
 	
 	@Before
 	public void start(){
-        //MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.initMocks(this);
     }
 	
 	//@Test
+	/*
 	public void belowLimitTestRunsOnFreePlan() throws StripeException{
 		when(account.getEmail()).thenReturn("test@test.com");
 		when(account_service.getTestCountByMonth(anyString(), anyInt())).thenReturn(199);
@@ -179,8 +160,77 @@ public class SubscriptionServiceTests {
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.COMPANY_PRO);
 		assertTrue(has_exceeded);
 	}
+	*/
 	
+	@Test
+	public void hasExceededDomainPageAuditLimit()  {
+		boolean has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 5);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 6);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 50);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 51);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 200);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 201);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 50);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 51);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 400);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 401);
+		assertTrue(has_exceeded);
+	}
+	
+	@Test
+	public void hasExceededSinglePageAuditLimit()  {
+		boolean has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 5);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 6);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 50);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 51);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 100);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 101);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PRO, 200);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PRO, 201);
+		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 500);
+		assertFalse(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 501);
+		assertTrue(has_exceeded);
+	}
+	
+	/*
 	public void freePlanWithExistingSubscription() throws Exception{
 		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE);
 	}
+	*/
 }

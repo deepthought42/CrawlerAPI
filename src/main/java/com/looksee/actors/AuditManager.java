@@ -164,6 +164,7 @@ public class AuditManager extends AbstractActor{
 							//send message to page data extractor
 							ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 									.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+							
 							web_crawl_actor.tell(message, getSelf());
 						}
 					}
@@ -243,10 +244,11 @@ public class AuditManager extends AbstractActor{
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
+					
+					log.warn("element progress data sent to data extraction actor");
 				})
 				.match(ElementExtractionError.class, message -> {
 					long response_count = 0L; 
-					
 					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
 						response_count = this.total_dispatch_responses.get(message.getPageUrl());
 					}
@@ -311,7 +313,7 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(ElementsSaved.class, message -> {
 					long response_count = 0L; 
-					
+					log.warn("Received element saved message from data extraction actor");
 					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
 						response_count = this.total_dispatch_responses.get(message.getPageUrl());
 					}
@@ -377,6 +379,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(ElementsSaveError.class, message -> {
+					log.warn("error saving elements");
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					audit_record.setDataExtractionMsg("Error Saving elements "+this.total_dispatch_responses.get(message.getPageUrl()) + " / "+this.total_dispatches.get(message.getPageUrl()));
 					audit_record.setDataExtractionProgress(this.total_dispatch_responses.get(message.getPageUrl())/ (double)this.total_dispatches.get(message.getPageUrl()));

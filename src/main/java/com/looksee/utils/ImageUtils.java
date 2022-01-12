@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
@@ -371,11 +370,38 @@ public class ImageUtils {
 											int window_height
 	) {
 		
-		if( (original_screenshot_row+window_height) >= original_image.getHeight()
-				|| (current_screenshot_row-window_height) < 0) {
+		if( (original_screenshot_row+window_height-1) >= original_image.getHeight()
+				|| (current_screenshot_row+window_height-1) >= current_screenshot.getHeight()
+				|| current_screenshot_row < 0) {
 			return false;
 		}
 		
+		//perform random sampling to check equivalence
+		Random random = new Random();
+		int sample_size = (current_screenshot.getWidth() * window_height) / 5;
+		for(int idx = 0; idx < sample_size; idx++) {
+			int x = random.nextInt(current_screenshot.getWidth()-1);
+			int y = random.nextInt(window_height-1);
+			
+			int current_screenshot_rgb = 0;
+			try{
+				current_screenshot_rgb = current_screenshot.getRGB(x, current_screenshot_row + y);
+			}
+			catch(Exception e) {
+				log.warn("current row :: "+current_screenshot_row);
+				log.warn("y value :: "+ y);
+				log.warn("current row + y : "+(current_screenshot_row + y));
+				log.warn("current screenshot height : "+ current_screenshot.getHeight());
+				log.warn("x  :: "+x);
+				log.warn("img width :: "+current_screenshot.getWidth());
+			}
+			int original_screenshot_rgb = original_image.getRGB(x, original_screenshot_row + y);
+			if ( current_screenshot_rgb != original_screenshot_rgb) {
+				return false;
+			}
+		}
+		
+		/*
 		for (int x = 0; x < current_screenshot.getWidth(); x++) {
 			for(int current_y = 0; current_y < window_height; current_y++) {
 				int current_screenshot_rgb = current_screenshot.getRGB(x, current_screenshot_row+current_y);
@@ -385,7 +411,7 @@ public class ImageUtils {
 				}
 			}
 		}
-		
+		*/
 		return true;
 	}
 

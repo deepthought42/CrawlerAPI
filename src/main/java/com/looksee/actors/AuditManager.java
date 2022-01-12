@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -356,7 +357,7 @@ public class AuditManager extends AbstractActor{
 							
 							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 						   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-						
+							log.warn("sending message to content auditor....");
 							content_auditor.tell(audit_record_msg, getSelf());							
 
 							ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -443,7 +444,6 @@ public class AuditManager extends AbstractActor{
 							}
 						}
 						else if(audit_record instanceof PageAuditRecord){
-							log.warn("checking if page audit is complete");
 							boolean is_page_audit_complete = AuditUtils.isPageAuditComplete(audit_record);						
 							if(is_page_audit_complete) {
 								log.warn("page audit is complete!");
@@ -454,10 +454,16 @@ public class AuditManager extends AbstractActor{
 								log.warn("Page audit updated to reflect completion : "+audit_record.getUrl());
 
 								PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());								
-								Account account = account_service.findById(message.getAccountId()).get();
 								
-								log.warn("sending email to account :: "+account.getEmail());
-								mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
+								log.warn("Retrieving account ... "+message.getAccountId());
+								log.warn("using audit record id :: "+audit_record.getId());
+								Optional<Account> account_opt = audit_record_service.getAccount(audit_record.getId());// account_service.findById(message.getAccountId());
+								if(account_opt.isPresent()) {
+									log.warn("account is present for audit record");
+									Account account = account_opt.get();
+									log.warn("sending email to account :: "+account.getEmail());
+									mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
+								}
 							}
 						}
 					} catch(Exception e) {

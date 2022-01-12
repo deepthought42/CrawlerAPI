@@ -361,8 +361,10 @@ public class BrowserService {
 		boolean complete = false;
 		int cnt = 0;
 		do {
-			Browser browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+			log.warn("getting browser connection... ");
+			Browser browser = null;
 			try {
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				page_state = performBuildPageProcess(url, browser);
 				complete = true;
 				cnt=Integer.MAX_VALUE;
@@ -372,7 +374,7 @@ public class BrowserService {
 			}
 			catch(IOException e) {
 				log.warn("IOException occurred while building page state");
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			catch(ServiceUnavailableException e) {
 				log.warn("Service unavailable exception occurred while building page state");
@@ -391,7 +393,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-		}while(!complete && cnt < 100);
+		}while(!complete && cnt < 10000);
 		
 		return page_state;
 	}
@@ -452,17 +454,23 @@ public class BrowserService {
         //browser.removeDriftChat();
         
         //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
-        
+        log.warn("constructing source for page state ");
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
 
+		log.warn("Capturing viewport screenshot");
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
+		log.warn("capturing full page screenshot");
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
+		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
+		if(full_page_screenshot.getHeight() < shutterbug_fullpage_screenshot.getHeight()) {
+			full_page_screenshot = shutterbug_fullpage_screenshot;
+		}
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		log.warn("full page screenshot checksum :: "+full_page_screenshot_checksum);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
@@ -520,14 +528,48 @@ public class BrowserService {
 		List<ElementState> elements = new ArrayList<>();
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		boolean rendering_incomplete = true;
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
+		String page_url = sanitized_url.toString();
+		
+		int cnt = 0;
 		do {
-			rendering_incomplete = openBrowserAndBuildElementStates(elements, 
-																	elements_mapped, 
-																	page_state, 
-																	xpaths, 
-																	audit_id,
-																	page_height);
-		}while(rendering_incomplete);
+			Browser browser = null;
+			
+			try {
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(page_url);
+				if(browser.is503Error()) {
+					throw new FiveZeroThreeException("503 Error encountered. Starting over..");
+				}
+				browser.removeDriftChat();
+				
+				//get ElementState List by asking multiple bots to build xpaths in parallel
+				//for each xpath then extract element state
+				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+				break;
+			}
+			catch (NullPointerException e) {
+				log.warn("NPE thrown during element state extraction");
+				//e.printStackTrace();
+			}
+			catch(MalformedURLException e) {
+				log.warn("Unable to get browser connection to build page elements : "+page_url);
+				continue;
+			}
+			catch(FiveZeroThreeException e) {
+				log.warn("503 exception occurred while accessing "+page_url);
+			}
+			catch(WebDriverException | GridException e) {
+				log.warn("Webdriver exception occurred ... "+page_url);
+				//e.printStackTrace();
+			}	
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			cnt++;
+		}while(rendering_incomplete && cnt < 1000);
 
 		return elements;
 	}
@@ -727,7 +769,6 @@ public class BrowserService {
 				}
 				else {
 				*/
-				log.warn("building element state :: "+xpath);
 					ElementState element_state = buildElementState(xpath, 
 																   new HashMap<>(), 
 																   element, 

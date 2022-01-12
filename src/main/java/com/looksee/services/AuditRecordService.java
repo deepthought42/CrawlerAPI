@@ -52,13 +52,10 @@ public class AuditRecordService {
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
 
-		log.warn("saving audit record "+audit.getId());
 		audit = audit_record_repo.save(audit);
 		
-		log.warn("broadcasting audit record updated message ");
 		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {	
 			try {
-				log.warn("looking up account by id :: "+account_id);
 				Account account = account_service.findById(account_id).get();
 				int id_start_idx = account.getUserId().indexOf('|');
 				String user_id = account.getUserId().substring(id_start_idx+1);
@@ -353,5 +350,9 @@ public class AuditRecordService {
 
 	public Optional<DomainAuditRecord> getDomainAuditRecordForPageRecord(long id) {
 		return audit_record_repo.getDomainForPageAuditRecord(id);
+	}
+
+	public Optional<Account> getAccount(long audit_record_id) {
+		return audit_record_repo.getAccount(audit_record_id);
 	}
 }

@@ -102,8 +102,8 @@ public class AuditRecordController {
     	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct_record.getId());
     	account_service.addAuditRecord(acct_record.getId(), audit_record_id);
     	
-    	PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record_id);
-    	log.warn("sending email for user ...."+acct_record.getEmail());
+    	//PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record_id);
+    	//log.warn("sending email for user ...."+acct_record.getEmail());
     	//Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
     	/*
     	String email_msg = "<html>"

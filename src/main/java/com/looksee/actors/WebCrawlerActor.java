@@ -129,12 +129,10 @@ public class WebCrawlerActor extends AbstractActor{
 						}
 						
 						int page_audit_cnt = audit_record_service.getPageAuditCount(crawl_action.getAuditRecord().getId());
-						log.warn("checking if user has exceeded account restriction : "+page_audit_cnt + " : domain id = "+ crawl_action.getDomainId());
 						//quick check to make sure we haven't exceeded user plan
 						if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_audit_cnt)) {
 							log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
 							this.getContext().stop(getSelf());
-							break;
 						}
 						
 						if( BrowserUtils.isFile(sanitized_url.toString())
@@ -193,7 +191,6 @@ public class WebCrawlerActor extends AbstractActor{
 						//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 						//construct page and add page to list of page states
 						//retrieve html source for page
-						log.warn("sending page candidate to AuditManager....");
 						PageCandidateFound candidate = new PageCandidateFound(crawl_action.getAccountId(), 
 																			  crawl_action.getAuditRecordId(), 
 																			  crawl_action.getDomainId(),

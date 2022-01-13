@@ -22,8 +22,8 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
 
@@ -288,5 +288,9 @@ public class AuditService {
 
 	public void addAllIssues(long id, List<Long> issue_ids) {
 		audit_repo.addAllIssues(id, issue_ids);
+	}
+
+	public List<ElementState> getIssuesByNameAndScore(AuditName audit_name, int score) {
+		return audit_repo.getIssuesByNameAndScore(audit_name.toString(), score);
 	}
 }

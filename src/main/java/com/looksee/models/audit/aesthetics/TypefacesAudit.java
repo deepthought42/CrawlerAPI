@@ -130,7 +130,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														labels,
 														ada_compliance, 
 														1,
-														1);
+														1, "");
 			
 			issue_messages.add(issue_message_service.save(observation));
 		}
@@ -147,7 +147,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 														labels,
 														ada_compliance,
 														0,
-														1);
+														1, "");
 			issue_messages.add(issue_message_service.save(observation));
 		}
 		total_possible_points++;		
@@ -194,7 +194,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 															labels,
 															ada_compliance,
 															0,
-															1);
+															1, "");
 				issue_messages.add(issue_message_service.save(issue));
 			}
 			else {
@@ -209,7 +209,7 @@ public class TypefacesAudit implements IExecutablePageStateAudit {
 															labels,
 															ada_compliance,
 															1,
-															1);
+															1, "");
 				issue_messages.add(issue_message_service.save(issue));
 			}
 			

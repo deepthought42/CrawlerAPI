@@ -1,5 +1,6 @@
 package com.looksee.models.audit;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -32,18 +33,20 @@ public class PageStateIssueMessage extends UXIssueMessage {
 				int points_awarded, 
 				int max_points
 	) {
+		super(	priority, 
+				description, 
+				ObservationType.PAGE_STATE,
+				category,
+				wcag_compliance,
+				labels,
+				"",
+				title,
+				points_awarded,
+				max_points,
+				new HashSet<>(),
+				recommendation);
+		
 		setPage(page);
-		setDescription(description);
-		setRecommendation(recommendation);
-		setPriority(priority);
-		setCategory(category);
-		setLabels(labels);
-		setType(ObservationType.PAGE_STATE);
-		setWcagCompliance(wcag_compliance);
-		setTitle(title);
-		setPoints(points_awarded);
-		setMaxPoints(max_points);
-		setKey(this.generateKey());
 	}
 
 	public PageState getElements() {

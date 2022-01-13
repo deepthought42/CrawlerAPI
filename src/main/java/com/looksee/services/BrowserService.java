@@ -45,7 +45,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
-import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Domain;
@@ -454,27 +453,25 @@ public class BrowserService {
         //browser.removeDriftChat();
         
         //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
-        log.warn("constructing source for page state ");
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
 
-		log.warn("Capturing viewport screenshot");
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
 		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
-		log.warn("capturing full page screenshot");
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
+		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
-		if(full_page_screenshot.getHeight() < shutterbug_fullpage_screenshot.getHeight()) {
+		
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight()) - (viewport_screenshot.getHeight()/2.0) ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
+		
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
-		log.warn("full page screenshot checksum :: "+full_page_screenshot_checksum);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-		log.warn("screenshot saved to GCP successfully...");
 		full_page_screenshot.flush();
 		
 		String composite_url = full_page_screenshot_url;
@@ -482,7 +479,6 @@ public class BrowserService {
 		long y_offset = browser.getYScrollOffset();
 		Dimension size = browser.getDriver().manage().window().getSize();
 
-		log.warn("constructing PageState object");
 		PageState page_state = new PageState(
 										viewport_screenshot_url,
 										new ArrayList<>(),
@@ -699,7 +695,7 @@ public class BrowserService {
 						element_screenshot.flush();
 					}
 					catch( Exception e) {
-						log.warn("exception occurred while getting screenshot and saving image");
+						//do nothing
 						/*
 						log.warn("element height :: "+element_size.getHeight());
 						log.warn("Element Y location ::  "+ element_location.getY());

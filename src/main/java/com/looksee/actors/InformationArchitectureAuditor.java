@@ -106,7 +106,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 
 						try {
 						   	Audit link_audit = links_auditor.execute(page, audit_record);
-						   	
+						   		
 							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
 																		audit_record.getId(),

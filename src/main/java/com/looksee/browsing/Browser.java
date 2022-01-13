@@ -383,7 +383,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshotStitched() throws IOException, GridException{
-		double percentage = 0.3;
+		double percentage = 0.2;
 		
 		//scroll to top of page
 		scrollToTopOfPage();
@@ -392,7 +392,7 @@ public class Browser {
 		int viewport_height = extractViewportHeight(driver);
 		long last_y_offset = 0;
 		List<BufferedImage> screenshots = new ArrayList<>();
-		String page_url = driver.getCurrentUrl();
+		//String page_url = driver.getCurrentUrl();
 		//while scroll position isn't at end of page
 		do {
 			last_y_offset = extractYOffset(driver);
@@ -417,7 +417,7 @@ public class Browser {
 
 		//identify stitching points by using a sliding window with random sampling to determine
 		// if both images match. If a sliding window is found that matches for both images, then stitch images
-		int window_size = 200;
+		int window_size = 300;
 
 		//stitch images together using following steps
 		//    1. retrieve row that is 25% from top of last screenshot
@@ -428,7 +428,6 @@ public class Browser {
 		//                 else decrement row for original screenshot and repeat steps 1-3
 		boolean doWindowsMatch = false;
 		for(BufferedImage current_screenshot : screenshots){
-			log.warn("stitching together full page screenshot for page :: " + page_url);
 			//	  2. retrieve row that is 25% of the way down the visible area
 			original_screenshot_row =  (original_image.getHeight()-1-window_size);
 

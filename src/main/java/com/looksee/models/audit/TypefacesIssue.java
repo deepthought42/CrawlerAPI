@@ -1,11 +1,13 @@
 package com.looksee.models.audit;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.looksee.models.Element;
 import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
 /**
@@ -23,27 +25,27 @@ public class TypefacesIssue extends UXIssueMessage {
 			Priority priority, 
 			AuditCategory category, 
 			Set<String> labels, 
-			String wcag_compliance, int points_awarded, int max_points) {
+			String wcag_compliance, 
+			int points_awarded, 
+			int max_points,
+			String title) {
+		super(	priority, 
+				description, 
+				ObservationType.PAGE_STATE,
+				category,
+				wcag_compliance,
+				labels,
+				"",
+				title,
+				points_awarded,
+				max_points,
+				new HashSet<>(),
+				recommendation);
+		
 		assert typefaces != null;
 		assert !typefaces.isEmpty();
-		assert description != null;
-		assert !description.isEmpty();
-		assert recommendation != null;
-		assert !recommendation.isEmpty();
-		assert priority != null;
-		assert category != null;
-		assert labels != null;
 		
 		setTypefaces(typefaces);
-		setDescription(description);
-		setRecommendation(recommendation);
-		setPriority(priority);
-		setCategory(category);
-		setLabels(labels);
-		setWcagCompliance(wcag_compliance);
-		setPoints(points_awarded);
-		setMaxPoints(max_points);
-		setKey(this.generateKey());
 	}
 
 	public List<String> getTypefaces() {

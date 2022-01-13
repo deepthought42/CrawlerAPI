@@ -194,7 +194,6 @@ public class AuditManager extends AbstractActor{
 								log.warn("Account "+message.getAccountId() +" has exceeded limit on number of pages available for the domain");
 							}
 							else {
-								log.warn("Creating page for "+url_without_protocol);
 								//Account is still within page limit. continue with mapping page 
 		
 								PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
@@ -245,8 +244,6 @@ public class AuditManager extends AbstractActor{
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
-					
-					log.warn("element progress data sent to data extraction actor");
 				})
 				.match(ElementExtractionError.class, message -> {
 					long response_count = 0L; 
@@ -254,7 +251,6 @@ public class AuditManager extends AbstractActor{
 						response_count = this.total_dispatch_responses.get(message.getPageUrl());
 					}
 					this.total_dispatch_responses.put(message.getPageUrl(), ++response_count);
-					
 					
 					log.warn("an error occurred during element extraction   "+message.getPageUrl());
 					try {

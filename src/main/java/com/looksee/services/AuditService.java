@@ -22,6 +22,7 @@ import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.ObservationType;
@@ -246,11 +247,24 @@ public class AuditService {
 			Set<UXIssueMessage> issue_set = getIssues(audit.getId());
 			
 			for(UXIssueMessage ux_issue: issue_set) {
-				issues.put(ux_issue.getKey(), ux_issue);
+				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
+					log.warn("ELEMENT type UX Issue was found");
+					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
+					log.warn("ELEMENT GOOD EXAMPLE :: "+ element_issue.getGoodExample());
+					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
+					element_issue.setGoodExample(good_example);
+					log.warn("ELEMENT GOOD EXAMPLE(after retrieval) :: "+ element_issue.getGoodExample());
+					
+					issues.put(ux_issue.getKey(), element_issue);
+				}
+				else {
+					issues.put(ux_issue.getKey(), ux_issue);
+				}
 			}
 		}
 		return issues.values();
 	}
+	
 
 	/**
 	 * Returns a {@linkplain Set} of {@linkplain ElementState} objects that are associated 
@@ -258,7 +272,7 @@ public class AuditService {
 	 * @param issue_set
 	 * @return
 	 */
-	public Collection<SimpleElement> retrieveElementSet(Collection<UXIssueMessage> issue_set) {
+	public Collection<SimpleElement> retrieveElementSet(Collection<? extends UXIssueMessage> issue_set) {
 		Map<String, SimpleElement> element_map = new HashMap<>();
 		
 		for(UXIssueMessage ux_issue: issue_set) {
@@ -292,5 +306,9 @@ public class AuditService {
 
 	public List<ElementState> getIssuesByNameAndScore(AuditName audit_name, int score) {
 		return audit_repo.getIssuesByNameAndScore(audit_name.toString(), score);
+	}
+	
+	public List<ElementState> findGoodExample(AuditName audit_name, int score) {
+		return getIssuesByNameAndScore(audit_name, score);
 	}
 }

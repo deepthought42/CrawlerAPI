@@ -417,7 +417,7 @@ public class Browser {
 
 		//identify stitching points by using a sliding window with random sampling to determine
 		// if both images match. If a sliding window is found that matches for both images, then stitch images
-		int window_size = 300;
+		int window_size = 400;
 
 		//stitch images together using following steps
 		//    1. retrieve row that is 25% from top of last screenshot
@@ -431,9 +431,7 @@ public class Browser {
 			//	  2. retrieve row that is 25% of the way down the visible area
 			original_screenshot_row =  (original_image.getHeight()-1-window_size);
 
-			do {
-				
-				
+			do {			
 				doWindowsMatch = ImageUtils.areWindowsMatching(current_screenshot, 
 															current_screenshot_row, 
 															original_image, 

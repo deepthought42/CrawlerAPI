@@ -201,10 +201,9 @@ public class AuditRecordController {
     	log.warn("page audit record id :: "+ audit_record_id);
     	//Get most recent audits
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
-    	log.warn("processing audits :: "+audits.size());
     	
     	//retrieve element set
-    	Collection<UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+    	Collection<? extends UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
     	log.warn("issues retrieved :: "+issues.size());
     	
     	//retrieve issue set

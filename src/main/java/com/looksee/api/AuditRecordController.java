@@ -370,7 +370,12 @@ public class AuditRecordController {
 														elements_reviewed,
 														elements_found,
 														audit_record.getDataExtractionMsg(),
-														audit_record.getDataExtractionProgress());
+														audit_record.getDataExtractionProgress(), 
+														null, 
+														null, 
+														null, 
+														null, 
+														null);
 			
 			return audit_stats;
     	}

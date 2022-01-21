@@ -2,6 +2,7 @@ package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -14,6 +15,12 @@ public class AuditStats {
 	private LocalDateTime end_time;
 	private long audit_record_id;
 	
+	//12 month historical scores
+	private List<SimpleScore> overall_score_history;
+	private List<SimpleScore> content_score_history;
+	private List<SimpleScore> info_architecture_score_history;
+	private List<SimpleScore> aesthetic_score_history;
+	private List<SimpleScore> accessibility_score_history;
 	
 	//crawl progress trackers
 	private long elements_examined;
@@ -92,7 +99,12 @@ public class AuditStats {
 			long elements_examined, 
 			long elements_found, 
 			double data_extraction_progress,
-			String data_extraction_msg
+			String data_extraction_msg,
+			List<SimpleScore> overall_score_history, 
+			List<SimpleScore> content_score_history, 
+			List<SimpleScore> info_architecture_score_history, 
+			List<SimpleScore> aesthetic_score_history, 
+			List<SimpleScore> accessibility_score_history
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -123,6 +135,12 @@ public class AuditStats {
 		setElementsFound(elements_found);
 		setDataExtractionProgress(data_extraction_progress);
 		setDataExtractionMessage(data_extraction_msg);
+		
+		setOverallScoreHistory(overall_score_history);
+		setContentScoreHistory(content_score_history);
+		setInfoArchitectureScoreHistory(info_architecture_score_history);
+		setAestheticScoreHistory(aesthetic_score_history);
+		setAccessibilityScoreHistory(accessibility_score_history);
 	}
 
 
@@ -380,5 +398,46 @@ public class AuditStats {
 
 	public void setDataExtractionMessage(String data_extraction_message) {
 		this.data_extraction_message = data_extraction_message;
+	}
+	
+
+	public List<SimpleScore> getOverallScoreHistory() {
+		return overall_score_history;
+	}
+
+	public void setOverallScoreHistory(List<SimpleScore> overall_scores) {
+		this.overall_score_history = overall_scores;
+	}
+
+	public List<SimpleScore> getContentScoreHistory() {
+		return content_score_history;
+	}
+
+	public void setContentScoreHistory(List<SimpleScore> content_scores_history) {
+		this.content_score_history = content_scores_history;
+	}
+
+	public List<SimpleScore> getInfoArchitectureScoreHistory() {
+		return info_architecture_score_history;
+	}
+
+	public void setInfoArchitectureScoreHistory(List<SimpleScore> info_architecture_score_history) {
+		this.info_architecture_score_history = info_architecture_score_history;
+	}
+
+	public List<SimpleScore> getAestheticScoreHistory() {
+		return aesthetic_score_history;
+	}
+
+	public void setAestheticScoreHistory(List<SimpleScore> aesthetic_score_history) {
+		this.aesthetic_score_history = aesthetic_score_history;
+	}
+
+	public List<SimpleScore> getAccessibilityScoreHistory() {
+		return accessibility_score_history;
+	}
+
+	public void setAccessibilityScoreHistory(List<SimpleScore> accessibility_score_history) {
+		this.accessibility_score_history = accessibility_score_history;
 	}
 }

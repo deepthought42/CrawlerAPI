@@ -1,5 +1,6 @@
 package com.looksee.services;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -271,5 +272,9 @@ public class DomainService {
 
 	public DomainSettings updateExpertiseSettings(long domain_id, String expertise) {
 		return domain_repo.updateExpertiseSetting(domain_id, expertise);
+	}
+
+	public List<DomainAuditRecord> getAuditRecordHistory(long domain_id) {
+		return domain_repo.getAuditRecordHistory(domain_id);
 	}
 }

@@ -2,6 +2,7 @@ package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -62,7 +63,12 @@ public class DomainAuditStats extends AuditStats{
 			long elements_examined,
 			long elements_found, 
 			String data_extraction_msg, 
-			double data_extraction_progress
+			double data_extraction_progress, 
+			List<SimpleScore> overall_score_history, 
+			List<SimpleScore> content_score_history, 
+			List<SimpleScore> info_architecture_score_history, 
+			List<SimpleScore> aesthetic_score_history, 
+			List<SimpleScore> accessibility_score_history
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -102,6 +108,12 @@ public class DomainAuditStats extends AuditStats{
 		setTotalPagesAudited(page_count);
 		setPagesFound(page_count);
 		setPagesExamined(pages_examined);
+		
+		setOverallScoreHistory(overall_score_history);
+		setContentScoreHistory(content_score_history);
+		setInfoArchitectureScoreHistory(info_architecture_score_history);
+		setAestheticScoreHistory(aesthetic_score_history);
+		setAccessibilityScoreHistory(accessibility_score_history);
 	}
 
 

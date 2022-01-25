@@ -36,6 +36,7 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.security.SecurityConfig;
@@ -272,7 +273,9 @@ public class AuditRecordController {
 			double performance_score = 0.0;
 
 			double aesthetic_score = 0.0;
-			double color_score = 0.0;
+			double text_color_contrast_score = 0.0;
+			double non_text_color_contrast_score = 1.0;
+			
 			double typography_score = 0.0;
 			double whitespace_score = 0.0;
 			double branding_score = 0.0;
@@ -297,9 +300,11 @@ public class AuditRecordController {
 			seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
 			menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
 			performance_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
+			double link_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
 
 			aesthetic_score = AuditUtils.calculateScore(audits);
-			color_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
+			text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+			non_text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 			typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
 			whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
 			branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
@@ -345,6 +350,10 @@ public class AuditRecordController {
 														page_count,
 														content_audits_complete,
 														content_audits_complete / (double)page_count,
+														0,
+														0,
+														0,
+														0,
 														written_content_score,
 														imagery_score,
 														videos_score,
@@ -352,13 +361,24 @@ public class AuditRecordController {
 														audit_record.getContentAuditMsg(),
 														info_arch_audits_complete,
 														info_arch_audits_complete / (double)page_count,
+														0,
+														0,
+														0,
+														0,
 														seo_score,
 														menu_analysis_score,
 														performance_score,
+														link_score,
 														audit_record.getInfoArchMsg(),
 														aesthetic_audits_complete,
 														aesthetic_audits_complete / (double)page_count,
-														color_score,
+														0,
+														0,
+														0,
+														0,
+														0,
+														text_color_contrast_score,
+														non_text_color_contrast_score,
 														typography_score,
 														whitespace_score,
 														branding_score,
@@ -375,7 +395,8 @@ public class AuditRecordController {
 														null, 
 														null, 
 														null, 
-														null);
+														null,
+														0);
 			
 			return audit_stats;
     	}

@@ -11,6 +11,7 @@ import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 
 public class AuditUtils {
@@ -194,16 +195,36 @@ public class AuditUtils {
 
 	public static double calculateScoreByCategory(Set<Audit> audits, AuditCategory category) {
 		assert audits != null;
+		assert category != null;
 		
 		double score = 0.0;
 		int audit_cnt = 0;
 	
 		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() == 0 || !category.equals(audit.getCategory())) {
-				continue;
+			if(audit.getTotalPossiblePoints() > 0 && category.equals(audit.getCategory())) {
+				audit_cnt++;
+				score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
 			}
-			audit_cnt++;
-			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
+		}
+		
+		if(audit_cnt == 0) {
+			return -1.0;
+		}
+		return score / (double)audit_cnt;
+	}
+
+	public static double calculateScoreByName(Set<Audit> audits, AuditName name) {
+		assert audits != null;
+		assert name != null;
+		
+		double score = 0.0;
+		int audit_cnt = 0;
+	
+		for(Audit audit: audits) {
+			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
+				audit_cnt++;
+				score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
+			}
 		}
 		
 		if(audit_cnt == 0) {

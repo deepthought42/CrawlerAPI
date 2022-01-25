@@ -512,7 +512,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		}
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.PERFORMANCE,
+						 AuditSubcategory.NAVIGATION,
 						 AuditName.LINKS,
 						 points_earned,
 						 issue_messages,

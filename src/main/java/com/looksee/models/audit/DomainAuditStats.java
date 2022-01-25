@@ -38,6 +38,10 @@ public class DomainAuditStats extends AuditStats{
 			long page_count,
 			long content_pages_audited,
 			double content_audit_progress,
+			int written_content_issue_count,
+			int imagery_issue_count,
+			int video_issue_count,
+			int audio_issue_count,
 			double written_content_score,
 			double imagery_score,
 			double videos_score,
@@ -45,13 +49,24 @@ public class DomainAuditStats extends AuditStats{
 			String content_msg,
 			long info_arch_pages_audited,
 			double info_arch_audit_progress,
+			int seo_issue_count,
+			int menu_issue_count,
+			int performance_issue_count,
+			int link_issue_count,
 			double seo_score,
 			double menu_analysis_score,
 			double performance_score,
+			double link_score,
 			String info_arch_msg, 
 			long aesthetic_pages_audited, 
 			double aesthetic_audit_progress,
-			double color_score, 
+			int text_contrast_issue_count,
+			int non_text_issue_count,
+			int typography_issue_count,
+			int whitespace_issue_count,
+			int branding_issue_count,
+			double text_contrast_score,
+			double non_text_contrast_score,
 			double typography_score, 
 			double whitespace_score,
 			double branding_score,
@@ -68,7 +83,8 @@ public class DomainAuditStats extends AuditStats{
 			List<SimpleScore> content_score_history, 
 			List<SimpleScore> info_architecture_score_history, 
 			List<SimpleScore> aesthetic_score_history, 
-			List<SimpleScore> accessibility_score_history
+			List<SimpleScore> accessibility_score_history, 
+			int total_issues
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -76,6 +92,11 @@ public class DomainAuditStats extends AuditStats{
 		setSubcategoryStats(new HashSet<>());
 		setContentPagesAudited(content_pages_audited);
 		setContentAuditProgress(content_audit_progress);
+		
+		setWrittenContentIssueCount(written_content_issue_count);
+		setImageryIssueCount(imagery_issue_count);
+		setVideoIssueCount(video_issue_count);
+		setAuditIssueCount(audio_issue_count);
 		setWrittenContentScore(written_content_score);
 		setImageryScore(imagery_score);
 		setVideosScore(videos_score);
@@ -84,19 +105,32 @@ public class DomainAuditStats extends AuditStats{
 		setContentMsg(content_msg);
 		setInfoArchPagesAudited(info_arch_pages_audited);
 		setInfoArchAuditProgress(info_arch_audit_progress);
+		setSeoIssueCount(seo_issue_count);
+		setMenuIssueCount(menu_issue_count);
+		setLinkIssueCount(link_issue_count);
+		setPerformanceIssueCount(performance_issue_count);
 		setSeoScore(seo_score);
 		setMenuAnalysisScore(menu_analysis_score);
+		setLinkScore(link_score);
 		setPerformanceScore(performance_score);
 		setInfoArchMsg(info_arch_msg);
 		
 		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
-		setColorScore(color_score);
+		setTextContrastIssueCount(text_contrast_issue_count);
+		setNonTextContrastIssueCount(non_text_issue_count);
+		setTypographyIssueCount(typography_issue_count);
+		setWhitespaceIssueCount(whitespace_issue_count);
+		setBrandingIssueCount(branding_issue_count);
+		
+		setTextContrastScore(text_contrast_score);
+		setNonTextContrastScore(non_text_contrast_score);
 		setTypographyScore(typography_score);
 		setWhitespaceScore(whitespace_score);
 		setBrandingScore(branding_score);
 		setAestheticMsg(aesthetic_msg);
 		
+		setTotalIssues(total_issues);
 		setOverallScore(overall_score);
 		setHighImpactIssueCount(high_impact_issues);
 		setMidImpactIssueCount(mid_impact_issues);

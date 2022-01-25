@@ -25,6 +25,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
 
@@ -311,4 +312,33 @@ public class AuditService {
 	public List<ElementState> findGoodExample(AuditName audit_name, int score) {
 		return getIssuesByNameAndScore(audit_name, score);
 	}
+	
+	public int countAuditBySubcategory(Set<Audit> audits, AuditSubcategory category) {
+		assert audits != null;
+		assert category != null;
+		
+		int issue_count = 0;
+	
+		for(Audit audit: audits) {
+			if(audit.getTotalPossiblePoints() > 0 && category.equals(audit.getSubcategory())) {
+				issue_count += audit_repo.getMessageCount(audit.getId());
+			}
+		}
+		
+		return issue_count;
+	}
+
+	public int countIssuesByAuditName(Set<Audit> audits, AuditName name) {
+		assert audits != null;
+		assert name != null;
+		
+		int issue_count = 0;
+	
+		for(Audit audit: audits) {
+			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
+				issue_count += audit_repo.getMessageCount(audit.getId());
+			}
+		}
+		
+		return issue_count;	}
 }

@@ -31,5 +31,8 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 
 	@Query("MATCH (audit:Audit{name:$audit_name})-[]->(msg:UXIssueMessage) MATCH (msg)-[]->(element:ElementState) WHERE msg.score >= $score RETURN element ORDER BY element.created_at DESC LIMIT 50")
 	public List<ElementState> getIssuesByNameAndScore(@Param("audit_name") String audit_name,
-												@Param("score") int score);
+													  @Param("score") int score);
+
+	@Query("MATCH (audit:Audit)-[]->(ux_issue:UXIssueMessage) WHERE id(audit)=$audit_id AND NOT ux_issue.points=ux_issue.max_points RETURN COUNT(ux_issue)")
+	public int getMessageCount(@Param("audit_id") long id);
 }

@@ -92,4 +92,8 @@ public class UXIssueMessageService {
 		return issue_message_repo.saveAll(issue_messages);
 		
 	}
+
+	public ElementState getGoodExample(long issue_id) {
+		return issue_message_repo.getGoodExample(issue_id);
+	}
 }

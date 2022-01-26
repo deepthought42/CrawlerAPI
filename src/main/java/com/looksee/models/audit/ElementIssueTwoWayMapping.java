@@ -7,7 +7,7 @@ import java.util.Set;
 import com.looksee.models.SimpleElement;
 
 public class ElementIssueTwoWayMapping {
-	private Collection<UXIssueMessage> issues;
+	private Collection<? extends UXIssueMessage> issues;
 	private Collection<SimpleElement> elements;
 	
 	private Map<String, String> issues_element_map; // 1 to 1 correlation
@@ -17,7 +17,7 @@ public class ElementIssueTwoWayMapping {
 	private String page_src;
 	
 	public ElementIssueTwoWayMapping(
-			Collection<UXIssueMessage> issues,
+			Collection<? extends UXIssueMessage> issues,
 			Collection<SimpleElement> elements,
 			Map<String, String> issue_element_map,
 			Map<String, Set<String>> element_issues, 
@@ -33,12 +33,12 @@ public class ElementIssueTwoWayMapping {
 	}
 
 
-	public Collection<UXIssueMessage> getIssues() {
+	public Collection<? extends UXIssueMessage> getIssues() {
 		return issues;
 	}
 
 
-	public void setIssues(Collection<UXIssueMessage> issues) {
+	public void setIssues(Collection<? extends UXIssueMessage> issues) {
 		this.issues = issues;
 	}
 

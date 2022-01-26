@@ -14,5 +14,8 @@ public interface UXIssueMessageRepository extends Neo4jRepository<UXIssueMessage
 
 	@Query("MATCH (uim:UXIssueMessage)-[:FOR]->(e:ElementState) WHERE id(uim)=$id RETURN e")
 	public ElementState getElement(@Param("id") long id);
+
+	@Query("MATCH (uim:UXIssueMessage)-[:EXAMPLE]->(e:ElementState) WHERE id(uim)=$id RETURN e")
+	public ElementState getGoodExample(@Param("id") long issue_id);
 	
 }

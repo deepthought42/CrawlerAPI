@@ -1,5 +1,6 @@
 package com.looksee.models.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -124,4 +125,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain)-[]->(setting:DomainSetting) WHERE id(d)=$domain_id SET setting.expertise=$expertise RETURN setting")
 	public DomainSettings updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("expertise") String expertise);
+
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(d:Domain) MATCH y=(ar)-[*]->(audit:Audit) WHERE id(d)=$domain_id RETURN y ORDER BY audit.created_at")
+	public List<DomainAuditRecord> getAuditRecordHistory(@Param("domain_id") long domain_id);
 }

@@ -378,7 +378,7 @@ public class ImageUtils {
 		
 		//perform random sampling to check equivalence
 		Random random = new Random();
-		int sample_size = (current_screenshot.getWidth() * window_height) / 5;
+		int sample_size = (current_screenshot.getWidth() * window_height) / 4;
 		for(int idx = 0; idx < sample_size; idx++) {
 			int x = random.nextInt(current_screenshot.getWidth()-1);
 			int y = random.nextInt(window_height-1);

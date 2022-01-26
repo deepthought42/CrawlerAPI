@@ -14,11 +14,15 @@ public enum AuditSubcategory {
 	MENU_ANALYSIS("Menu Analysis"),
 	PERFORMANCE("Performance"),
 	SEO("SEO"),
-	TYPOGRAPHY("TYPOGRAPHY"),
+	TYPOGRAPHY("Typography"),
 	COLOR_MANAGEMENT("Color Management"),
+	TEXT_CONTRAST("Text Contrast"), // REMOVE THIS
+	NON_TEXT_CONTRAST("Non-Text Contrast"), // REMOVE THIS
 	WHITESPACE("Whitespace"),
 	BRANDING("Branding"),
-	SECURITY("Security");
+	SECURITY("Security"),
+	LINKS("Links"),					//REMOVE THIS
+	NAVIGATION("Navigation");
 	
 	private String shortName;
 

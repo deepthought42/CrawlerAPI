@@ -496,7 +496,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				log.warn("ux issue score :: "+issue_msg.getScore());
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				log.warn("Retrieving example for LINKS");
-				List<ElementState> good_examples = findGoodExample(AuditName.LINKS, 100);
+				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.LINKS, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
 					continue;
@@ -512,7 +512,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		}
 		
 		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.PERFORMANCE,
+						 AuditSubcategory.NAVIGATION,
 						 AuditName.LINKS,
 						 points_earned,
 						 issue_messages,
@@ -523,10 +523,5 @@ public class LinksAudit implements IExecutablePageStateAudit {
 						 description,
 						 true); 
 		//the contstant 6 in this equation is the exact number of boolean checks for this audit
-	}
-
-
-	private List<ElementState> findGoodExample(AuditName audit_name, int score) {
-		return audit_service.getIssuesByNameAndScore(audit_name, score);
 	}
 }

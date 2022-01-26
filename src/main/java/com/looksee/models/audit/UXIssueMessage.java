@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.ElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;

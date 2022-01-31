@@ -23,11 +23,13 @@ import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.ColorContrastRecommendation;
 import com.looksee.models.audit.recommend.Recommendation;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.services.AuditService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -66,10 +68,16 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	 * 
 	 * WCAG Success Criteria Source - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
 	 * 
+	 * There is no level A compliance
+	 * Level AA is the requirement used withiin common laws and standards
+	 * Level AAA This is for companies looking to provide an exceptional experience with color contrast
+	 * 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
+		
+		WCAGComplianceLevel wcag_compliance = WCAGComplianceLevel.create(design_system.getWcagComplianceLevel());
 		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		//filter elements that aren't text elements
@@ -82,6 +90,8 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				" through, creating a comfortable and engaging experience for your user. ";
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
+
+		
 		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
@@ -121,9 +131,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					String font_size_str = og_font_size_str.replace("px", "");
 					
 					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.strip()));
-					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 (A Compliance)
+					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 ("A Compliance")
 					//NOTE: The following measures of font size are in pixels not font points
 					if(font_size >= 18 || (font_size >= 14 && BrowserUtils.isTextBold(font_weight))) {
+						
 						if( contrast < 3 ) {
 							//low contrast header issue
 							String title = "Large text has low contrast";
@@ -154,74 +165,110 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 							issue_messages.add(low_header_contrast_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
-
 						}
 						else if(contrast >= 3 && contrast < 4.5) {
-							//100% score
-							//AA WCAG 2.1
-							String title = "Large text is only WCAG 2.1 AA compliance";
-							String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 3:1 for WCAG 2.1 AA standard.";
-							//String description = "Headline text has recommended contrast against the background for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html'>WCAG 2.1 AA</a> standard";
-							String description = "Headline text has recommended contrast against the background for WCAG 2.1 AA standard";
-							labels.add("WCAG 2.1 AA");
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
 
-							String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 4.5:1";
-							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
-
-							
-							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
-																									Priority.MEDIUM,
-																									description,
-																									contrast,
-																									font_color.rgb(),
-																									background_color.rgb(),
-																									element, 
-																									AuditCategory.AESTHETICS,
-																									labels,
-																									ada_compliance, 
-																									title,
-																									font_size+"", 
-																									1,
-																									2,
-																									recommendations,
-																									recommendation);
-							
-							issue_messages.add(low_header_contrast_observation);
-							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+								//100% score
+								//AA WCAG 2.1
+								String title = "Large text is not compliant for level " + wcag_compliance;
+								String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 3:1 for WCAG 2.1 AA standard.";
+								//String description = "Headline text has recommended contrast against the background for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html'>WCAG 2.1 AA</a> standard";
+								String description = "Headline text has recommended contrast against the background for WCAG 2.1 AA standard";
+								labels.add("WCAG 2.1 AA");
+	
+								String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 4.5:1";
+								Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
+	
+								
+								ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
+																										Priority.MEDIUM,
+																										description,
+																										contrast,
+																										font_color.rgb(),
+																										background_color.rgb(),
+																										element, 
+																										AuditCategory.AESTHETICS,
+																										labels,
+																										ada_compliance, 
+																										title,
+																										font_size+"", 
+																										1,
+																										2,
+																										recommendations,
+																										recommendation);
+								
+								issue_messages.add(low_header_contrast_observation);
+								MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+							}
+							else {
+								
+								//100% score
+								//low contrast header issue
+								String title = "Large text complies with WCAG 2.1 " + wcag_compliance + " standard";
+								String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 4.5:1 to meet WCAG 2.1 AAA standards.";
+								//String description = "Headline text has recommended contrast for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html'>WCAG 2.1 AAA</a> standards against the background";
+								String description = "Headline text has recommended contrast for WCAG 2.1 AAA standards against the background";
+								labels.add("WCAG 2.1 AAA");
+								Set<Recommendation> recommendations = new HashSet<>();
+								
+								ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
+																										Priority.NONE,
+																										description,
+																										contrast,
+																										font_color.rgb(),
+																										background_color.rgb(),
+																										element, 
+																										AuditCategory.AESTHETICS,
+																										labels,
+																										ada_compliance, 
+																										title,
+																										font_size+"", 
+																										2,
+																										2,
+																										recommendations,
+																										"");
+								
+								issue_messages.add(low_header_contrast_observation);
+								MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+							}
 						}
 						else if(contrast >= 4.5) {
-							//100% score
-							//low contrast header issue
-							String title = "Large text complies with WCAG 2.1 AAA standard";
-							String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 4.5:1 to meet WCAG 2.1 AAA standards.";
-							//String description = "Headline text has recommended contrast for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html'>WCAG 2.1 AAA</a> standards against the background";
-							String description = "Headline text has recommended contrast for WCAG 2.1 AAA standards against the background";
-							labels.add("WCAG 2.1 AAA");
-							Set<Recommendation> recommendations = new HashSet<>();
-							
-							ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
-																									Priority.NONE,
-																									description,
-																									contrast,
-																									font_color.rgb(),
-																									background_color.rgb(),
-																									element, 
-																									AuditCategory.AESTHETICS,
-																									labels,
-																									ada_compliance, 
-																									title,
-																									font_size+"", 
-																									2,
-																									2,
-																									recommendations,
-																									"");
-							
-							issue_messages.add(low_header_contrast_observation);
-							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+	
+								//100% score
+								//low contrast header issue
+								String title = "Large text complies with WCAG 2.1 " + wcag_compliance + " standard";
+								String ada_compliance = "Text that is larger than 18pt font or larger than 14pt and bolded should meets minimum contrast of 4.5:1 to meet WCAG 2.1 AAA standards.";
+								//String description = "Headline text has recommended contrast for <a href='https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html'>WCAG 2.1 AAA</a> standards against the background";
+								String description = "Headline text has recommended contrast for WCAG 2.1 AAA standards against the background";
+								labels.add("WCAG 2.1 AAA");
+								Set<Recommendation> recommendations = new HashSet<>();
+								
+								ColorContrastIssueMessage low_header_contrast_observation = new ColorContrastIssueMessage(
+																										Priority.NONE,
+																										description,
+																										contrast,
+																										font_color.rgb(),
+																										background_color.rgb(),
+																										element, 
+																										AuditCategory.AESTHETICS,
+																										labels,
+																										ada_compliance, 
+																										title,
+																										font_size+"", 
+																										2,
+																										2,
+																										recommendations,
+																										"");
+								
+								issue_messages.add(low_header_contrast_observation);
+								MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
+							}
 						}
 					}
 					else if((font_size < 18 && font_size >= 14 && !BrowserUtils.isTextBold(font_weight)) || font_size < 14 ) {
-						if( contrast < 4.50 ) {
+						if( contrast < 4.50 ) {	
 							//fail
 							String title = "Text has low contrast";
 							String description = "Text has low contrast against the background";
@@ -250,62 +297,94 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//No points are rewarded for low contrast text
 							issue_messages.add(low_text_observation);
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_text_observation);
-
 						}
 						else if(contrast >= 4.50 && contrast < 7.0) {
-							//100% score
-							String title = "Text has minimum contrast for WCAG 2.1 AA standards";
-							String description = "Text has minimum contrast against the background";
-							String ada_compliance = "Text contrast meets WCAG 2.1 AA standards.";
-							String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 7:1";
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
 
-							labels.add("WCAG 2.1 AA");
-							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
-							
-							ColorContrastIssueMessage med_contrast_text_observation = new ColorContrastIssueMessage(
-																						Priority.MEDIUM,
-																						description,
-																						contrast,
-																						font_color.rgb(),
-																						background_color.rgb(),
-																						element, 
-																						AuditCategory.AESTHETICS,
-																						labels, 
-																						ada_compliance, 
-																						title,
-																						font_size+"",
-																						1,
-																						2, 
-																						recommendations,
-																						recommendation);
-							issue_messages.add(med_contrast_text_observation);
+								//100% score
+								String title = "Text doesn't meet WCAG 2.1 " + wcag_compliance + " standards";
+								String description = "Text has minimum contrast against the background";
+								String ada_compliance = title;
+								String recommendation = "To reach AAA standards for WCAG 2.1 increase contrast to 7:1";
+	
+								labels.add("WCAG 2.1 AA");
+								Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
+								
+								ColorContrastIssueMessage med_contrast_text_observation = new ColorContrastIssueMessage(
+																							Priority.MEDIUM,
+																							description,
+																							contrast,
+																							font_color.rgb(),
+																							background_color.rgb(),
+																							element, 
+																							AuditCategory.AESTHETICS,
+																							labels, 
+																							ada_compliance, 
+																							title,
+																							font_size+"",
+																							1,
+																							2, 
+																							recommendations,
+																							recommendation);
+								issue_messages.add(med_contrast_text_observation);
+							}
+							else {
+								//100% score
+								String title = "Text has appropriate contrast";
+								String description = "Text has recommended contrast against the background";
+								String ada_compliance = "Text contrast meets WCAG 2.1 " + wcag_compliance + " standards.";
+								labels.add("WCAG 2.1 AAA");
+								Set<Recommendation> recommendations = new HashSet<>();
+								
+								ColorContrastIssueMessage high_contrast_text_observation = new ColorContrastIssueMessage(
+																							Priority.NONE,
+																							description,
+																							contrast,
+																							font_color.rgb(),
+																							background_color.rgb(),
+																							element, 
+																							AuditCategory.AESTHETICS,
+																							labels, 
+																							ada_compliance, 
+																							title,
+																							font_size+"",
+																							2,
+																							2, 
+																							recommendations,
+																							"");
+								
+								issue_messages.add(high_contrast_text_observation);
+							}
 						}
 						else if(contrast >= 7.0) {
-							//100% score
-							String title = "Text has appropriate contrast";
-							String description = "Text has recommended contrast against the background";
-							String ada_compliance = "Text contrast meets WCAG 2.1 enhanced(AAA) standards.";
-							labels.add("WCAG 2.1 AAA");
-							Set<Recommendation> recommendations = new HashSet<>();
-							
-							ColorContrastIssueMessage high_contrast_text_observation = new ColorContrastIssueMessage(
-																						Priority.NONE,
-																						description,
-																						contrast,
-																						font_color.rgb(),
-																						background_color.rgb(),
-																						element, 
-																						AuditCategory.AESTHETICS,
-																						labels, 
-																						ada_compliance, 
-																						title,
-																						font_size+"",
-																						2,
-																						2, 
-																						recommendations,
-																						"");
-							
-							issue_messages.add(high_contrast_text_observation);
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+	
+								//100% score
+								String title = "Text has appropriate contrast";
+								String description = "Text has recommended contrast against the background";
+								String ada_compliance = "Text contrast meets WCAG 2.1 enhanced(AAA) standards.";
+								labels.add("WCAG 2.1 AAA");
+								Set<Recommendation> recommendations = new HashSet<>();
+								
+								ColorContrastIssueMessage high_contrast_text_observation = new ColorContrastIssueMessage(
+																							Priority.NONE,
+																							description,
+																							contrast,
+																							font_color.rgb(),
+																							background_color.rgb(),
+																							element, 
+																							AuditCategory.AESTHETICS,
+																							labels, 
+																							ada_compliance, 
+																							title,
+																							font_size+"",
+																							2,
+																							2, 
+																							recommendations,
+																							"");
+								
+								issue_messages.add(high_contrast_text_observation);
+							}
 						}
 					}
 				}

@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,8 @@ import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;
+import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
-import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
@@ -59,6 +60,7 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.SimpleScore;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
@@ -72,9 +74,10 @@ import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.CompetitorService;
+import com.looksee.services.DesignSystemService;
 import com.looksee.services.DomainDtoService;
 import com.looksee.services.DomainService;
-import com.looksee.services.DomainSettingsService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
@@ -105,9 +108,6 @@ public class DomainController {
 
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
-
-	@Autowired
-	private DomainSettingsService domain_settings_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -117,7 +117,13 @@ public class DomainController {
 	
 	@Autowired
 	private TestUserRepository test_user_repo;
-
+	
+	@Autowired
+	private CompetitorService competitor_service;
+	
+	@Autowired
+	private DesignSystemService design_system_service;
+	
 	/**
 	 * Create a new {@link Domain domain}
 	 * 
@@ -145,19 +151,15 @@ public class DomainController {
 
 		String lowercase_url = domain.getUrl().toLowerCase();
 
-		log.warn("domain url ::   " + lowercase_url);
 		String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url);
-		log.warn("sanitized domain url ::   " + formatted_url);
 		domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
 
 		try {
-			log.warn("Account email :: " + acct.getEmail());
-			log.warn("domain url :: " + domain.getUrl());
 			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
 			if (domain_record == null) {
 				//set default settings
-				DomainSettings domain_settings = new DomainSettings("general", "neutral");
-				domain.setSettings(domain_settings_service.save(domain_settings));
+				DesignSystem domain_settings = new DesignSystem();
+				domain.setDesignSystem(design_system_service.save(domain_settings));
 				domain = domain_service.save(domain);
 				account_service.addDomainToAccount(acct, domain);
 			} else {
@@ -216,7 +218,8 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(path = "/select", method = RequestMethod.PUT)
-	public @ResponseBody void selectDomain(HttpServletRequest request, @RequestBody Domain domain)
+	public @ResponseBody void selectDomain(HttpServletRequest request, 
+											@RequestBody Domain domain)
 			throws UnknownAccountException, MalformedURLException {
 
 		Principal principal = request.getUserPrincipal();
@@ -233,6 +236,49 @@ public class DomainController {
 		account_service.save(acct);
 	}
 
+
+    /**
+     * Retrieves the {@link DesignSystem} for the given domain
+     * 
+     * @return list of competitors
+     */
+    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/settings")
+    public @ResponseBody DesignSystem getDesignSystem(
+    									@PathVariable("domain_id") long domain_id,
+							    		HttpServletRequest request
+	) {
+    	log.warn("retrieving design system");
+    	Optional<DesignSystem> design_system = domain_service.getDesignSystem(domain_id);
+    	if(!design_system.isPresent()) {
+    		log.warn("no design system present. Creating new design system with default settings");
+    		DesignSystem design = new DesignSystem();
+    		design = design_system_service.save(design);
+    		domain_service.addDesignSystem(domain_id, design.getId());
+    		return design;
+    	}
+    	
+    	log.warn("returning existing design system");
+    	return design_system.get();
+    }
+    
+	/**
+     * Update expertise setting in domain settings
+     * 
+     * @param id
+     * @return {@link Audit audit} with given ID
+     * @throws MalformedURLException 
+     */
+    @RequestMapping(method= RequestMethod.POST, path="/{domain_id}/settings/wcag")
+    public @ResponseBody DesignSystem updateWcagLevel(
+    		HttpServletRequest request,
+    		@PathVariable("domain_id") long domain_id,
+    		@RequestBody(required=true) DesignSystem settings
+	) throws MalformedURLException {
+    	log.warn("domain record id :: "+ domain_id);
+    	log.warn("WCAG level :: "+settings.getWcagComplianceLevel());
+    	//Get domain
+    	return domain_service.updateWcagSettings(domain_id, settings.getWcagComplianceLevel());
+    }
     
     /**
      * Update expertise setting in domain settings
@@ -242,15 +288,15 @@ public class DomainController {
      * @throws MalformedURLException 
      */
     @RequestMapping(method= RequestMethod.POST, path="/{domain_id}/settings/expertise")
-    public @ResponseBody DomainSettings updateExpertise(
+    public @ResponseBody DesignSystem updateExpertise(
     		HttpServletRequest request,
     		@PathVariable("domain_id") long domain_id,
-    		@RequestBody String expertise
+    		@RequestBody(required=true) DesignSystem settings
 	) throws MalformedURLException {
     	log.warn("domain record id :: "+ domain_id);
-    	log.warn("education level :: "+expertise);
+    	log.warn("proficiency level :: "+settings.getAudienceProficiency());
     	//Get domain
-    	return domain_service.updateExpertiseSettings(domain_id, expertise);
+    	return domain_service.updateExpertiseSettings(domain_id, settings.getAudienceProficiency());
     }
     
     
@@ -959,6 +1005,52 @@ public class DomainController {
 		log.info("finding all page insights :: " + host);
 		return domain_service.getMostRecentAuditRecord(host).get();
 	}
+	
+	/**
+     * Retrieves all competitors for the given domain
+     * 
+     * @return list of competitors
+     */
+    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/competitors")
+    public @ResponseBody List<Competitor> getAllCompetitors(
+							    		HttpServletRequest request
+	) {
+    	return IterableUtils.toList(competitor_service.getAll());
+    }
+    
+	/**
+     * Creates a new competitor and links it to the given domain
+     * 
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.POST, path="{domain_id}/competitors")
+    public @ResponseBody Competitor createCompetitor(
+							    		HttpServletRequest request,
+							    		@PathVariable("domain_id") long domain_id,
+							    		@RequestBody Competitor competitor
+	) {
+    	competitor = competitor_service.save(competitor);
+    	domain_service.addCompetitor(domain_id, competitor.getId());
+    	
+    	return competitor;
+    }
+    
+    /**
+     * Deletes the given competitor from the given domain
+     * 
+     * @param domain_id id value for a valid {@link Domain}
+     * @param competitor_id id value for a valid {@link Competitor}
+     */
+    @RequestMapping(method= RequestMethod.DELETE, path="{domain_id}/competitors/{competitor_id}")
+    public @ResponseBody void deleteCompetitor(
+								    		HttpServletRequest request,
+								    		@PathVariable("domain_id") long domain_id,
+								    		@PathVariable("competitor_id") long competitor_id
+	) {
+		competitor_service.deleteById(competitor_id);
+    }
+    
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

@@ -105,7 +105,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						getContext().getParent().tell(audit_update, getSelf());
 
 						try {
-						   	Audit link_audit = links_auditor.execute(page, audit_record);
+						   	Audit link_audit = links_auditor.execute(page, audit_record, null);
 						   		
 							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
@@ -131,7 +131,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						}
 						
 						try {
-							Audit title_and_headers = title_and_header_auditor.execute(page, audit_record);
+							Audit title_and_headers = title_and_header_auditor.execute(page, audit_record, null);
 							
 							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
@@ -157,7 +157,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						}
 						
 						try {
-							Audit security = security_audit.execute(page, audit_record);
+							Audit security = security_audit.execute(page, audit_record, null);
 							
 							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
@@ -183,7 +183,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 						}
 						
 						try {
-							Audit metadata = metadata_auditor.execute(page, audit_record);
+							Audit metadata = metadata_auditor.execute(page, audit_record, null);
 							
 							AuditProgressUpdate audit_update5 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),

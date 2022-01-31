@@ -97,7 +97,7 @@ public class ContentAuditor extends AbstractActor{
 					   	getContext().getParent().tell(audit_update, getSelf());
 
 					   	try {
-							Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record);
+							Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record, null);
 							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
 																		audit_record.getId(),
@@ -122,7 +122,7 @@ public class ContentAuditor extends AbstractActor{
 						}
 						
 					   	try {
-							Audit readability_audit = readability_auditor.execute(page, audit_record);
+							Audit readability_audit = readability_auditor.execute(page, audit_record, null);
 							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
 																		audit_record.getId(),
@@ -147,7 +147,7 @@ public class ContentAuditor extends AbstractActor{
 						}
 					   	
 					   	try {
-							Audit paragraph_audit = paragraph_auditor.execute(page, audit_record);
+							Audit paragraph_audit = paragraph_auditor.execute(page, audit_record, null);
 							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
 																		audit_record.getId(),

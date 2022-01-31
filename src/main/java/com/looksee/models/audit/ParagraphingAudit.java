@@ -16,6 +16,7 @@ import com.google.cloud.language.v1.Sentence;
 import com.looksee.gcp.CloudNLPUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -57,7 +58,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();

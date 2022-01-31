@@ -10,8 +10,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Action;
+import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
-import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
@@ -23,6 +23,7 @@ import com.looksee.models.TestUser;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.designsystem.DesignSystem;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -123,9 +124,21 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[]->(p:PageState{key:$page_key}) WHERE id(d)=$domain_id RETURN p")
 	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
 
-	@Query("MATCH (d:Domain)-[]->(setting:DomainSetting) WHERE id(d)=$domain_id SET setting.expertise=$expertise RETURN setting")
-	public DomainSettings updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("expertise") String expertise);
+	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.audience_proficiency=$audience_proficiency RETURN setting")
+	public DesignSystem updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("audience_proficiency") String audience_proficiency);
+	
+	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.wcag_compliance_level=$wcag_level RETURN setting")
+	public DesignSystem updateWcagSettings(@Param("domain_id") long domain_id, @Param("wcag_level") String wcag_level);
 
 	@Query("MATCH (ar:DomainAuditRecord)-[]->(d:Domain) MATCH y=(ar)-[*]->(audit:Audit) WHERE id(d)=$domain_id RETURN y ORDER BY audit.created_at")
 	public List<DomainAuditRecord> getAuditRecordHistory(@Param("domain_id") long domain_id);
+
+	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
+	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
+
+	@Query("MATCH (domain:Domain)-[:USES]->(ds:DesignSystem) WHERE id(domain)=$domain_id RETURN ds LIMIT 1")
+	public Optional<DesignSystem> getDesignSystem(@Param("domain_id") long domain_id);
+
+	@Query("MATCH (d:Domain),(design:DesignSystem) WHERE id(d)=$domain_id AND id(design)=$design_system_id MERGE (d)-[:USES]->(design) RETURN design")
+	public DesignSystem addDesignSystem(@Param("domain_id") long domain_id, @Param("design_system_id") long design_system_id);
 }

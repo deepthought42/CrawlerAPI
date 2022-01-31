@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.Action;
+import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
-import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
@@ -23,6 +23,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.repository.DomainRepository;
 
 @Service
@@ -270,11 +271,27 @@ public class DomainService {
 		return audit_record_service.findMostRecentPageAuditRecord(page_url);
 	}
 
-	public DomainSettings updateExpertiseSettings(long domain_id, String expertise) {
+	public DesignSystem updateExpertiseSettings(long domain_id, String expertise) {
 		return domain_repo.updateExpertiseSetting(domain_id, expertise);
 	}
 
 	public List<DomainAuditRecord> getAuditRecordHistory(long domain_id) {
 		return domain_repo.getAuditRecordHistory(domain_id);
+	}
+
+	public Competitor addCompetitor(long domain_id, long competitor_id) {
+		return domain_repo.addCompetitor(domain_id, competitor_id);
+	}
+
+	public Optional<DesignSystem> getDesignSystem(long domain_id) {
+		return domain_repo.getDesignSystem(domain_id);
+	}
+
+	public DesignSystem addDesignSystem(long domain_id, long design_system_id) {
+		return domain_repo.addDesignSystem(domain_id, design_system_id);
+	}
+
+	public DesignSystem updateWcagSettings(long domain_id, String wcag_level) {
+		return domain_repo.updateWcagSettings(domain_id, wcag_level);
 	}
 }

@@ -22,6 +22,7 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.services.CompetitorService;
+import com.looksee.services.DomainService;
 
 import org.springframework.http.MediaType;
 
@@ -35,47 +36,7 @@ public class CompetitorController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
-	private CompetitorService competitor_service;
+	private DomainService domain_service;
 	
-	/**
-     * Creates a new {@link Observation observation} 
-     * 
-     * @return {@link PerformanceInsight insight}
-     * @throws UnknownAccountException 
-     */
-    @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<Competitor> getAll(
-							    		HttpServletRequest request
-	) {
-    	return IterableUtils.toList(competitor_service.getAll());
-    }
-    
-	/**
-     * Creates a new {@link Observation observation} 
-     * 
-     * @return {@link PerformanceInsight insight}
-     * @throws UnknownAccountException 
-     */
-    @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Competitor createCompetitor(
-							    		HttpServletRequest request,
-							    		@RequestBody Competitor competitor
-	) {
-    	return competitor_service.save(competitor);
-    }
-    
-    /**
-     * 
-     * 
-     * @param id
-     * @return {@link Audit audit} with given ID
-     * @throws MalformedURLException 
-     */
-    @RequestMapping(method= RequestMethod.DELETE)
-    public @ResponseBody void deleteCompetitor(
-								    		HttpServletRequest request,
-								    		@PathVariable("competitor_id") long competitor_id
-	) {
-		competitor_service.deleteById(competitor_id);
-    }
+
 }

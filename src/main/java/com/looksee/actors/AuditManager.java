@@ -419,6 +419,8 @@ public class AuditManager extends AbstractActor{
 						}
 						
 						if(this.is_domain_audit) {
+							//extract color from page audits for color palette
+							
 							try {
 								if(audit_record instanceof PageAuditRecord) {
 									audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();

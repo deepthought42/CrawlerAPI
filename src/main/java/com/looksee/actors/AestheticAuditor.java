@@ -13,14 +13,17 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.aesthetics.ColorPaletteAudit;
 import com.looksee.models.audit.aesthetics.NonTextColorContrastAudit;
 import com.looksee.models.audit.aesthetics.TextColorContrastAudit;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
+import com.looksee.services.DomainService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -46,9 +49,15 @@ public class AestheticAuditor extends AbstractActor{
 
 	@Autowired
 	private NonTextColorContrastAudit non_text_contrast_auditor;
+
+	@Autowired
+	private ColorPaletteAudit color_palette_auditor;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	private Account account;
 
@@ -79,8 +88,9 @@ public class AestheticAuditor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
-					   	//generate audit report
-					   	//Set<Audit> audits = new HashSet<>();
+						//retrieve compliance level
+						DesignSystem design_system = domain_service.getDesignSystem(page_audit_record_msg.getDomainId()).get();
+						
 						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord(); //audit_record_service.findById(page_audit_record_msg.getId()).get();
 						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getPageAuditRecord().getId());
 					   	//PageState page = page_audit_record_msg.getPageState();
@@ -111,7 +121,7 @@ public class AestheticAuditor extends AbstractActor{
 						 */
 						
 						try {
-						   	Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record);
+						   	Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record, design_system);
 							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
 																		page_audit_record_msg.getAccountId(),
 																		audit_record.getId(),
@@ -137,7 +147,7 @@ public class AestheticAuditor extends AbstractActor{
 						
 						
 						try {
-							Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record);
+							Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record, design_system);
 							
 							
 							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
@@ -162,6 +172,35 @@ public class AestheticAuditor extends AbstractActor{
 							getContext().getParent().tell(audit_err, getSelf());
 							e.printStackTrace();
 						}
+						
+						
+						try {
+							Audit color_palette_audit = color_palette_auditor.execute(page, audit_record, design_system);
+							
+							
+							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
+																		page_audit_record_msg.getAccountId(),
+																		audit_record.getId(),
+																		1.0,
+																		"Completed review of color palette",
+																		AuditCategory.AESTHETICS,
+																		AuditLevel.PAGE, 
+																		color_palette_audit, 
+																		page_audit_record_msg.getDomainId());
+
+							getContext().getParent().tell(audit_update4, getSelf());
+						}
+						catch(Exception e) {
+							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
+																  page_audit_record_msg.getAccountId(), 
+																  page_audit_record_msg.getAuditRecordId(), 
+																  "An error occurred while performing color contrast audit", 
+																  AuditCategory.AESTHETICS, 
+																  1.0);
+							getContext().getParent().tell(audit_err, getSelf());
+							e.printStackTrace();
+						}
+						
 					}catch(Exception e) {
 						log.warn("exception caught during aesthetic audit");
 						e.printStackTrace();

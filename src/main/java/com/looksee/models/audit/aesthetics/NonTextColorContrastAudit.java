@@ -30,6 +30,7 @@ import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.ColorContrastRecommendation;
 import com.looksee.models.audit.recommend.Recommendation;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -72,7 +73,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null; 
 		
 		//get all button elements
@@ -89,7 +90,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		non_text_elements.addAll(getAllInputs(elements));
 			
-		return evaluateNonTextContrast(page_state, non_text_elements);
+		return evaluateNonTextContrast(page_state, non_text_elements, design_system);
 	}
 
 	private List<ElementState> getAllIcons(List<ElementState> elements) {
@@ -117,9 +118,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * 
 	 * @param page_state
 	 * @param non_text_elements
+	 * @param design_system TODO
 	 * @return
 	 */
-	private Audit evaluateNonTextContrast(PageState page_state, List<ElementState> non_text_elements) {
+	private Audit evaluateNonTextContrast(PageState page_state, List<ElementState> non_text_elements, DesignSystem design_system) {
 		assert page_state != null;
 		assert non_text_elements != null;
 		
@@ -297,7 +299,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					String description = "Element background has appropriate contrast for accessibility";
 					//no points are rewarded for low contrast
 					
-					String ada_compliance = "This " + element.getName() + " has a contrast greater than 3 and is considered compliant with WCAG 2.1 standards.";
+					String ada_compliance = "Element is compliant with WCAG 2.1 " + design_system.getWcagComplianceLevel() + " standards.";
 					
 					String recommendation = "";
 					Set<Recommendation> recommendations = generateNonTextContrastRecommendations(element, 

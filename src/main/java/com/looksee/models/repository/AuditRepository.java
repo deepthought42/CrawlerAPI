@@ -8,6 +8,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.UXIssueMessage;
 
@@ -27,4 +28,11 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 
 	@Query("MATCH (audit:Audit),(msg:UXIssueMessage) WHERE id(audit)=$audit_id AND id(msg) IN $issue_ids MERGE audit_issue=(audit)-[:HAS]->(msg) RETURN msg")
 	public void addAllIssues(@Param("audit_id") long audit_id, @Param("issue_ids") List<Long> issue_ids);
+
+	@Query("MATCH (audit:Audit{name:$audit_name})-[]->(msg:UXIssueMessage) MATCH (msg)-[]->(element:ElementState) WHERE msg.score >= $score RETURN element ORDER BY element.created_at DESC LIMIT 50")
+	public List<ElementState> getIssuesByNameAndScore(@Param("audit_name") String audit_name,
+													  @Param("score") int score);
+
+	@Query("MATCH (audit:Audit)-[]->(ux_issue:UXIssueMessage) WHERE id(audit)=$audit_id AND NOT ux_issue.points=ux_issue.max_points RETURN COUNT(ux_issue)")
+	public int getMessageCount(@Param("audit_id") long id);
 }

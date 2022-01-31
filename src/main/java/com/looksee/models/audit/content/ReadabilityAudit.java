@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.AuditService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
@@ -41,6 +43,10 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+
+	@Autowired
+	private AuditService audit_service;
 	
 	@Autowired
 	private UXIssueMessageService issue_message_service;
@@ -174,6 +180,24 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
+			
+			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
+				log.warn("ux issue score :: "+issue_msg.getScore());
+				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
+				log.warn("Retrieving example for LINKS");
+				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.PARAGRAPHING, 100);
+				if(good_examples.isEmpty()) {
+					log.warn("Could not find element for good example...");
+					continue;
+				}
+				Random random = new Random();
+				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
+				log.warn("example that was retrieved :: "+good_example);
+				log.warn("Setting good example on issue message :: "+good_example.getId());
+				element_issue_msg.setGoodExample(good_example);
+				log.warn("saving element state to issue message");
+				issue_message_service.save(element_issue_msg);
+			}
 		}
 
 		String description = "";		

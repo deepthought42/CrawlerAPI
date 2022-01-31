@@ -165,11 +165,16 @@ public class BrowserUtils {
 	 * 
 	 * @return true if url is external, otherwise false
 	 * 
+	 * @pre !domain_host.isEmpty()
+	 * @pre !url.isEmpty()
+	 * 
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException 
 	 */
 	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
-		//return ((!domain_host.contains(url) && !url.contains(domain_host)) && !isRelativeLink(url, domain_host)) || url.contains("////");
+		assert !domain_host.isEmpty();
+		assert !url.isEmpty();
+		
 		if(url.indexOf('?') >= 0) {
 			url = url.substring(0, url.indexOf('?'));
 		}

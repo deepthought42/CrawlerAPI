@@ -372,7 +372,6 @@ public class Browser {
 	 * NOTE: The out put of this method is a screenshot that doesn't make any effort at removing duplicated sections
 	 * caused by things like floating elements sticky navigation bars
 	 */
-	@Deprecated
 	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
 		return Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
 	}
@@ -384,24 +383,21 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshotStitched() throws IOException, GridException{
+		double percentage = 0.2;
+		
 		//scroll to top of page
 		scrollToTopOfPage();
-	
+
 		//capture viewport screenshot
-		BufferedImage original_image = getViewportScreenshot();
-		original_image = original_image.getSubimage(0, 
-													0, 
-													original_image.getWidth()-20, 
-													original_image.getHeight());
 		int viewport_height = extractViewportHeight(driver);
 		long last_y_offset = 0;
-
+		List<BufferedImage> screenshots = new ArrayList<>();
+		//String page_url = driver.getCurrentUrl();
 		//while scroll position isn't at end of page
 		do {
 			last_y_offset = extractYOffset(driver);
 			//scroll 75% of the height of the viewport
-			scrollDownPercent(0.30);
-			
+			scrollDownPercent(percentage);
 			//capture screenshot
 			BufferedImage current_screenshot = getViewportScreenshot();
 			current_screenshot = current_screenshot.getSubimage(0, 
@@ -409,30 +405,41 @@ public class Browser {
 																current_screenshot.getWidth()-20, 
 																current_screenshot.getHeight());
 
-			
-			//identify stitching points by using a sliding window with random sampling to determine
-			// if both images match. If a sliding window is found that matches for both images, then stitch images
-			int window_size = 20;
-			
-			//stitch images together using following steps
-			//    1. retrieve row that is 25% from top of last screenshot
-			int current_screenshot_row = viewport_height-1-window_size;
-			
+			screenshots.add(current_screenshot);
+		}while(extractYOffset(driver) > last_y_offset);
+		
+		
+		BufferedImage original_image = null;
+		
+		if(screenshots.size() > 0) {
+			original_image = screenshots.remove(0);
+		}
+
+		//identify stitching points by using a sliding window with random sampling to determine
+		// if both images match. If a sliding window is found that matches for both images, then stitch images
+		int window_size = 400;
+
+		//stitch images together using following steps
+		//    1. retrieve row that is 25% from top of last screenshot
+		int current_screenshot_row = viewport_height-1 - window_size;
+		int original_screenshot_row = 0;
+		
+		//    3. compare rows from step 1 and 2. if they are equal, then append all rows after the row in the current image for step 1 to the original screenshot
+		//                 else decrement row for original screenshot and repeat steps 1-3
+		boolean doWindowsMatch = false;
+		for(BufferedImage current_screenshot : screenshots){
 			//	  2. retrieve row that is 25% of the way down the visible area
-			int original_screenshot_row =  (original_image.getHeight()-1-window_size);
-			
-			//    3. compare rows from step 1 and 2. if they are equal, then append all rows after the row in the current image for step 1 to the original screenshot
-			//                 else decrement row for original screenshot and repeat steps 1-3
-			boolean doRowsMatch = false;
-			do {
-				doRowsMatch = ImageUtils.areWindowsMatching(current_screenshot, 
+			original_screenshot_row =  (original_image.getHeight()-1-window_size);
+
+			do {			
+				doWindowsMatch = ImageUtils.areWindowsMatching(current_screenshot, 
 															current_screenshot_row, 
 															original_image, 
 															original_screenshot_row, 
 															window_size);
-
+	
 				//doRowsMatch = areRowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row);
-				if(doRowsMatch) {
+				if(doWindowsMatch) {
 					BufferedImage cropped_og_img = original_image.getSubimage(0, 0, original_image.getWidth(), original_screenshot_row);
 					current_screenshot = current_screenshot.getSubimage(0, 
 																		current_screenshot_row, 
@@ -453,15 +460,14 @@ public class Browser {
 				else {
 					//decrement row for original screenshot
 					current_screenshot_row--;
-					if(current_screenshot_row == 0 && original_screenshot_row > 0) {
-						current_screenshot_row = viewport_height-window_size-1;
+					if(current_screenshot_row <= 0 && original_screenshot_row > (original_image.getHeight() - current_screenshot.getHeight()) ) {
+						current_screenshot_row = viewport_height - (int)(viewport_height*percentage) - window_size;
 						original_screenshot_row--;
 					}
 				}
-			}while(!doRowsMatch && (original_screenshot_row >= 0 && current_screenshot_row >= 0));
-		}while(extractYOffset(driver) > last_y_offset);
-		
-		return original_image;//Shutterbug.shootPage(driver, Capture.FULL_SCROLL).getImage();
+			}while(!doWindowsMatch && (original_screenshot_row >= (int)(original_image.getHeight() - current_screenshot.getHeight()) && current_screenshot_row >= 0));
+		}
+		return original_image;
 	}
 
 	/**
@@ -780,7 +786,7 @@ public class Browser {
 		//border inline/block colors
 		css_map.put("border-inline-start-color", element.getCssValue("border-inline-start-color"));
 		css_map.put("border-inline-end-color", element.getCssValue("border-inline-end-color"));
-		css_map.put("border-block-start-color", element.getCssValue("border-block-start-color"));
+		css_map.put("border-block-start-color", element.getCssValue("border-block-sta)rt-color"));
 		css_map.put("border-block-end-color", element.getCssValue("border-block-end-color"));
 
 		//border dimensions

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -193,7 +194,6 @@ public class AuditManager extends AbstractActor{
 								log.warn("Account "+message.getAccountId() +" has exceeded limit on number of pages available for the domain");
 							}
 							else {
-								log.warn("Creating page for "+url_without_protocol);
 								//Account is still within page limit. continue with mapping page 
 		
 								PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
@@ -244,8 +244,6 @@ public class AuditManager extends AbstractActor{
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
-					
-					log.warn("element progress data sent to data extraction actor");
 				})
 				.match(ElementExtractionError.class, message -> {
 					long response_count = 0L; 
@@ -253,7 +251,6 @@ public class AuditManager extends AbstractActor{
 						response_count = this.total_dispatch_responses.get(message.getPageUrl());
 					}
 					this.total_dispatch_responses.put(message.getPageUrl(), ++response_count);
-					
 					
 					log.warn("an error occurred during element extraction   "+message.getPageUrl());
 					try {
@@ -356,7 +353,7 @@ public class AuditManager extends AbstractActor{
 							
 							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 						   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-						
+							log.warn("sending message to content auditor....");
 							content_auditor.tell(audit_record_msg, getSelf());							
 
 							ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -443,7 +440,6 @@ public class AuditManager extends AbstractActor{
 							}
 						}
 						else if(audit_record instanceof PageAuditRecord){
-							log.warn("checking if page audit is complete");
 							boolean is_page_audit_complete = AuditUtils.isPageAuditComplete(audit_record);						
 							if(is_page_audit_complete) {
 								log.warn("page audit is complete!");
@@ -454,10 +450,16 @@ public class AuditManager extends AbstractActor{
 								log.warn("Page audit updated to reflect completion : "+audit_record.getUrl());
 
 								PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());								
-								Account account = account_service.findById(message.getAccountId()).get();
 								
-								log.warn("sending email to account :: "+account.getEmail());
-								mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
+								log.warn("Retrieving account ... "+message.getAccountId());
+								log.warn("using audit record id :: "+audit_record.getId());
+								Optional<Account> account_opt = audit_record_service.getAccount(audit_record.getId());// account_service.findById(message.getAccountId());
+								if(account_opt.isPresent()) {
+									log.warn("account is present for audit record");
+									Account account = account_opt.get();
+									log.warn("sending email to account :: "+account.getEmail());
+									mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
+								}
 							}
 						}
 					} catch(Exception e) {

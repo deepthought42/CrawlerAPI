@@ -1,6 +1,7 @@
 package com.looksee.models.audit;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,30 +61,28 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 			String title, 
 			int points_earned, 
 			int max_points
-	) {
-		assert priority != null;
-		assert recommendation != null;
-		assert !recommendation.isEmpty();
+	) {		
+		super(	priority, 
+				description, 
+				ObservationType.COLOR_PALETTE,
+				category,
+				wcag_compliance,
+				labels,
+				"",
+				title,
+				points_earned,
+				max_points,
+				new HashSet<>(),
+				recommendation);
+		
+		
 		assert colors != null;
 		assert palette_colors != null;
 		assert color_scheme != null;
-		assert category != null;
-		assert labels != null;
 		
-		setPriority(priority);
-		setDescription(description);
-		setRecommendation(recommendation);
 		setColors(colors);
 		setPaletteColors(palette_colors);
 		setColorScheme(color_scheme);
-		setCategory(category);
-		setLabels(labels);
-		setType(ObservationType.COLOR_PALETTE);
-		setWcagCompliance(wcag_compliance);
-		setTitle(title);
-		setPoints(points_earned);
-		setMaxPoints(max_points);
-		setKey(this.generateKey());
 	}
 
 	public List<String> getColors() {

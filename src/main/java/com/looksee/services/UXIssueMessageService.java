@@ -18,8 +18,8 @@ public class UXIssueMessageService {
 	@Autowired
 	private UXIssueMessageRepository issue_message_repo;
 	
-	public UXIssueMessage save(UXIssueMessage low_header_contrast_observation) {
-		return issue_message_repo.save(low_header_contrast_observation);
+	public UXIssueMessage save(UXIssueMessage ux_issue) {
+		return issue_message_repo.save(ux_issue);
 	}
 
 	/**
@@ -91,5 +91,9 @@ public class UXIssueMessageService {
 	public Iterable<UXIssueMessage> saveAll(List<UXIssueMessage> issue_messages) {
 		return issue_message_repo.saveAll(issue_messages);
 		
+	}
+
+	public ElementState getGoodExample(long issue_id) {
+		return issue_message_repo.getGoodExample(issue_id);
 	}
 }

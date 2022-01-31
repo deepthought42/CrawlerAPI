@@ -116,7 +116,6 @@ public class PageStateBuilder extends AbstractActor{
 						}
 						
 						//update audit record with progress
-						log.warn("building page state  " + crawl_action.getUrl() );
 						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
 						
 						final PageState page_state_record = page_state_service.save(page_state);

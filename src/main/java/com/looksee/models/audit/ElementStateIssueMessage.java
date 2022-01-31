@@ -1,6 +1,7 @@
 package com.looksee.models.audit;
 
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -18,6 +19,9 @@ public class ElementStateIssueMessage extends UXIssueMessage {
 	@Relationship(type = "FOR")
 	private ElementState element;
 	
+	@Relationship(type = "EXAMPLE")
+	private ElementState good_example;
+
 	public ElementStateIssueMessage() {}
 	
 	public ElementStateIssueMessage(
@@ -32,26 +36,35 @@ public class ElementStateIssueMessage extends UXIssueMessage {
 			int points_awarded,
 			int max_points
 	) {
-		setPriority(priority);
-		setDescription(description);
-		setRecommendation(recommendation);
+		super(	priority, 
+				description, 
+				ObservationType.ELEMENT,
+				category,
+				wcag_compliance,
+				labels,
+				"",
+				title,
+				points_awarded,
+				max_points,
+				new HashSet<>(),
+				recommendation);
+		
 		setElement(element);
-		setType(ObservationType.ELEMENT);
-		setCategory(category);
-		setLabels(labels);
-		setWcagCompliance(wcag_compliance);
-		setTitle(title);
-		setPoints(points_awarded);
-		setMaxPoints(max_points);
-		setKey(this.generateKey());
 	}
 
 	public ElementState getElement() {
 		return element;
 	}
 
-
 	public void setElement(ElementState element) {
 		this.element = element;
+	}
+	
+	public ElementState getGoodExample() {
+		return good_example;
+	}
+
+	public void setGoodExample(ElementState good_example) {
+		this.good_example = good_example;
 	}
 }

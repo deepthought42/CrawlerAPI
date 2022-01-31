@@ -23,7 +23,7 @@ public class ExploratoryPathTests {
 
 	@Before
 	public void start(){
-       // MockitoAnnotations.initMocks(page);
+       //MockitoAnnotations.initMocks(page);
 	}
 	
 	//@Test

@@ -45,7 +45,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
-import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Domain;
@@ -361,8 +360,10 @@ public class BrowserService {
 		boolean complete = false;
 		int cnt = 0;
 		do {
-			Browser browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+			log.warn("getting browser connection... ");
+			Browser browser = null;
 			try {
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				page_state = performBuildPageProcess(url, browser);
 				complete = true;
 				cnt=Integer.MAX_VALUE;
@@ -372,7 +373,7 @@ public class BrowserService {
 			}
 			catch(IOException e) {
 				log.warn("IOException occurred while building page state");
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			catch(ServiceUnavailableException e) {
 				log.warn("Service unavailable exception occurred while building page state");
@@ -391,7 +392,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-		}while(!complete && cnt < 100);
+		}while(!complete && cnt < 10000);
 		
 		return page_state;
 	}
@@ -452,7 +453,6 @@ public class BrowserService {
         //browser.removeDriftChat();
         
         //scroll to bottom then back to top to make sure all elements that may be hidden until the page is scrolled
-        
 		String source = browser.getDriver().getPageSource();
 		String title = browser.getDriver().getTitle();
 
@@ -463,10 +463,15 @@ public class BrowserService {
 		viewport_screenshot.flush();
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
+		
+		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
+		
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight()) - (viewport_screenshot.getHeight()/2.0) ) {
+			full_page_screenshot = shutterbug_fullpage_screenshot;
+		}
+		
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
-		log.warn("full page screenshot checksum :: "+full_page_screenshot_checksum);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-		log.warn("screenshot saved to GCP successfully...");
 		full_page_screenshot.flush();
 		
 		String composite_url = full_page_screenshot_url;
@@ -474,7 +479,6 @@ public class BrowserService {
 		long y_offset = browser.getYScrollOffset();
 		Dimension size = browser.getDriver().manage().window().getSize();
 
-		log.warn("constructing PageState object");
 		PageState page_state = new PageState(
 										viewport_screenshot_url,
 										new ArrayList<>(),
@@ -520,14 +524,48 @@ public class BrowserService {
 		List<ElementState> elements = new ArrayList<>();
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		boolean rendering_incomplete = true;
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
+		String page_url = sanitized_url.toString();
+		
+		int cnt = 0;
 		do {
-			rendering_incomplete = openBrowserAndBuildElementStates(elements, 
-																	elements_mapped, 
-																	page_state, 
-																	xpaths, 
-																	audit_id,
-																	page_height);
-		}while(rendering_incomplete);
+			Browser browser = null;
+			
+			try {
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(page_url);
+				if(browser.is503Error()) {
+					throw new FiveZeroThreeException("503 Error encountered. Starting over..");
+				}
+				browser.removeDriftChat();
+				
+				//get ElementState List by asking multiple bots to build xpaths in parallel
+				//for each xpath then extract element state
+				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+				break;
+			}
+			catch (NullPointerException e) {
+				log.warn("NPE thrown during element state extraction");
+				//e.printStackTrace();
+			}
+			catch(MalformedURLException e) {
+				log.warn("Unable to get browser connection to build page elements : "+page_url);
+				continue;
+			}
+			catch(FiveZeroThreeException e) {
+				log.warn("503 exception occurred while accessing "+page_url);
+			}
+			catch(WebDriverException | GridException e) {
+				log.warn("Webdriver exception occurred ... "+page_url);
+				//e.printStackTrace();
+			}	
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			cnt++;
+		}while(rendering_incomplete && cnt < 1000);
 
 		return elements;
 	}
@@ -657,7 +695,7 @@ public class BrowserService {
 						element_screenshot.flush();
 					}
 					catch( Exception e) {
-						log.warn("exception occurred while getting screenshot and saving image");
+						//do nothing
 						/*
 						log.warn("element height :: "+element_size.getHeight());
 						log.warn("Element Y location ::  "+ element_location.getY());
@@ -727,7 +765,6 @@ public class BrowserService {
 				}
 				else {
 				*/
-				log.warn("building element state :: "+xpath);
 					ElementState element_state = buildElementState(xpath, 
 																   new HashMap<>(), 
 																   element, 

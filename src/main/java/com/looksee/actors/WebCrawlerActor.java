@@ -108,7 +108,7 @@ public class WebCrawlerActor extends AbstractActor{
 				.match(DomainMessage.class, crawl_action -> {
 					URL sanitized_url = new URL(crawl_action.getRawUrl());
 					String page_url = BrowserUtils.getPageUrl(sanitized_url);
-
+          
 					if(!visited.containsKey(page_url)){
 						frontier.put(page_url, Boolean.TRUE);
 					}

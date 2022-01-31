@@ -172,7 +172,16 @@ public class BrowserUtilsTests {
 		assertFalse( BrowserUtils.isFile("look-see.com/products"));
 		assertFalse( BrowserUtils.isFile("app.look-see.com"));
 
-		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.jpg"));
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.zip") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.usdt") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.rss") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.svg") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.pdf") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.m3u8") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.usdz") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.doc") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.docx") );
+		assertTrue( BrowserUtils.isFile("look-see.com/thisisafile.jpg") );
 	}
 	
 	@Test

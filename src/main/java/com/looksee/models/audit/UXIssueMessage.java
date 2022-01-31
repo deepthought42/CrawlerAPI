@@ -24,10 +24,11 @@ public class UXIssueMessage extends LookseeObject {
 	private Set<String> labels;
 	private int points;
 	private int max_points;
+	private int score;
 	
 	@Relationship(type = "RECOMMEND")
 	private Set<Recommendation> recommendations;
-	
+
 	public UXIssueMessage() {
 		setRecommendations(new HashSet<>());
 	}
@@ -46,6 +47,10 @@ public class UXIssueMessage extends LookseeObject {
 			Set<Recommendation> recommendations, 
 			String recommendation
 	) {
+		assert priority != null;
+		assert category != null;
+		assert labels != null;
+
 		setRecommendations(recommendations);
 		setPriority(priority);
 		setDescription(description);
@@ -57,6 +62,7 @@ public class UXIssueMessage extends LookseeObject {
 		setTitle(title);
 		setPoints(points);
 		setMaxPoints(max_points);
+		setScore( (int)((points/(double)max_points)*100) );
 		setRecommendation(recommendation);
 		setKey(generateKey());
 	}
@@ -160,5 +166,13 @@ public class UXIssueMessage extends LookseeObject {
 
 	public void setRecommendation(String recommendation) {
 		this.recommendation = recommendation;
+	}
+
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
 	}
 }

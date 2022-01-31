@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -12,11 +13,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.PageStateIssueMessage;
 import com.looksee.models.audit.Score;
@@ -26,6 +30,8 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.AuditService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ElementStateUtils;
 
@@ -36,6 +42,12 @@ import com.looksee.utils.ElementStateUtils;
 @Component
 public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(TitleAndHeaderAudit.class);
+	
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public TitleAndHeaderAudit() {}
 	
@@ -66,6 +78,24 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
+			
+			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
+				log.warn("ux issue score :: "+issue_msg.getScore());
+				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
+				log.warn("Retrieving example for LINKS");
+				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.LINKS, 100);
+				if(good_examples.isEmpty()) {
+					log.warn("Could not find element for good example...");
+					continue;
+				}
+				Random random = new Random();
+				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
+				log.warn("example that was retrieved :: "+good_example);
+				log.warn("Setting good example on issue message :: "+good_example.getId());
+				element_issue_msg.setGoodExample(good_example);
+				log.warn("saving element state to issue message");
+				issue_message_service.save(element_issue_msg);
+			}
 		}
 		
 		//log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);

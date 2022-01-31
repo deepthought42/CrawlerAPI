@@ -2,6 +2,7 @@ package com.looksee.actors;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.services.AuditRecordService;
+import com.looksee.services.DesignSystemService;
 import com.looksee.services.DomainService;
 
 import akka.actor.AbstractActor;
@@ -43,6 +45,9 @@ public class AestheticAuditor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(AestheticAuditor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
+	
+	@Autowired
+	private DesignSystemService design_system_service;
 	
 	@Autowired
 	private TextColorContrastAudit text_contrast_auditor;
@@ -89,8 +94,17 @@ public class AestheticAuditor extends AbstractActor{
 				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
 						//retrieve compliance level
-						DesignSystem design_system = domain_service.getDesignSystem(page_audit_record_msg.getDomainId()).get();
+						Optional<DesignSystem> design_system_opt = domain_service.getDesignSystem(page_audit_record_msg.getDomainId());
+						DesignSystem design_system = null;
 						
+						if(!design_system_opt.isPresent()) {
+							log.warn("design system couldn't be found for domain :: "+page_audit_record_msg.getDomainId());
+							design_system = design_system_service.save(new DesignSystem());
+							domain_service.addDesignSystem(page_audit_record_msg.getDomainId(), design_system.getId());
+						}
+						else {
+							design_system = design_system_opt.get();
+						}
 						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord(); //audit_record_service.findById(page_audit_record_msg.getId()).get();
 						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getPageAuditRecord().getId());
 					   	//PageState page = page_audit_record_msg.getPageState();

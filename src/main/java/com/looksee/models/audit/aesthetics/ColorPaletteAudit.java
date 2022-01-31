@@ -40,6 +40,7 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ColorScheme;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
+import com.looksee.services.PaletteColorService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ImageUtils;
 
@@ -51,6 +52,9 @@ import com.looksee.utils.ImageUtils;
 public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorPaletteAudit.class);
+	
+	@Autowired
+	private PaletteColorService palette_color_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -90,7 +94,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		try {
 			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrlOnload()), elements));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -150,8 +153,11 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		*/
 		//colors.addAll(colors);
 		//generate palette, identify color scheme and score how well palette conforms to color scheme
-		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(colors);
-		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
+		List<PaletteColor> palette_colors = new ArrayList<>();
+		for(PaletteColor palette : ColorPaletteUtils.extractPalette(colors)) {
+			palette_colors.add( palette_color_service.save(palette) );
+		}
+		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette_colors);
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
@@ -169,7 +175,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 																description,
 																recommendation,
 																new ArrayList<>(),
-																palette,
+																palette_colors,
 																color_scheme,
 																AuditCategory.AESTHETICS,
 																labels, 
@@ -180,7 +186,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		issue_messages.add(ux_issue_service.save(palette_issue_message));
 		
 		//score colors found against scheme
-		Score score = ColorPaletteUtils.getPaletteScore(palette, color_scheme);
+		Score score = ColorPaletteUtils.getPaletteScore(palette_colors, color_scheme);
 		//observations.add(observation_service.save(observation));
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));

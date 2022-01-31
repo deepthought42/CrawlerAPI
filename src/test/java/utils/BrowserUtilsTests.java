@@ -10,9 +10,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import org.junit.Before;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
+import com.looksee.services.BrowserService;
 import com.looksee.utils.BrowserUtils;
 
 public class BrowserUtilsTests {
@@ -198,5 +207,89 @@ public class BrowserUtilsTests {
 		String url3 = "https://www.look-see.com/product";
 		
 		assertTrue(BrowserUtils.doesUrlExist(url3));
+	}
+
+	@InjectMocks
+	private BrowserService browser_service;
+
+	@Before
+	public void start(){
+		MockitoAnnotations.initMocks(this);
+	}
+
+	@Test
+	public void isValidUrlTest() throws MalformedURLException, URISyntaxException {
+		String host = "look-see.com";
+		String sanitized_url0 = "abcde://look-see.com";
+
+		String sanitized_url1 = "https://look-see.com";
+		String sanitized_url2 = "itms-apps://look-see.com";
+		String sanitized_url3 = "snap://look-see.com";
+		String sanitized_url4 = "tel://look-see.com";
+		String sanitized_url5 = "mailto://look-see.com";
+		String sanitized_url6 = "applenews://look-see.com";
+		String sanitized_url7 = "applenewss://look-see.com";
+		String sanitized_url8 = "mailto://look-see.com";
+		
+		assertTrue(BrowserUtils.isValidUrl(sanitized_url0, host));
+		assertTrue(BrowserUtils.isValidUrl(sanitized_url1, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url2, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url3, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url4, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url5, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url6, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url7, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url8, host));
+	}
+
+	@Test
+	public void extractPageSrcTest() throws MalformedURLException {
+		URL sanitized_url1 = new URL("https://www.wikipedia.org/");
+		URL sanitized_url2 = new URL("https://www.look-see.com/");
+
+		String page_src1 = BrowserUtils.extractPageSrc(sanitized_url1, browser_service);
+		String page_src2 = BrowserUtils.extractPageSrc(sanitized_url2, browser_service);
+
+		assertTrue(!page_src1.isEmpty());
+		assertTrue(page_src1 != page_src2);
+	}
+
+	@Test
+	public void isValidLink(){
+		//The first link should be correct, all else should be malformed for testing
+		
+		//Set a mock page
+		String page_src = "<a href=\"https://www.wikipedia.org\">Wikipedia</a><a href=\"itms-apps://www.apple.com\">Apple</a><a href=\"tel://www.google.com\">Google</a><a href=\"mailto://www.snapchat.com\">Snapchat</a>";
+		//Get the page source
+		Document doc = Jsoup.parse(page_src);
+		Elements links = doc.select("a");
+		
+		//Get the first link
+		Element link = links.get(0);
+		String href_str = link.attr("href");
+		href_str = href_str.replaceAll(";", "").trim();
+
+		assertTrue(BrowserUtils.isValidLink(href_str));
+
+		//check every link to make sure that they are fail the assertion
+		for(int i = 1; i < links.size(); ++i){
+			href_str = links.get(i).attr("href");
+			href_str = href_str.replaceAll(";", "").trim();
+			
+			assertFalse(BrowserUtils.isValidLink(href_str));
+		}
+		
+		assertFalse(BrowserUtils.isValidLink(null));
+		assertFalse(BrowserUtils.isValidLink(""));
+	}
+
+	@Test
+	public void hasValidHttpStatus() throws MalformedURLException {
+		URL wikipedia_link = new URL("https://www.wikipedia.org/");
+		URL wikipedia_bad_link = new URL("https://www.wikipadai.org/");
+
+		assertTrue(BrowserUtils.hasValidHttpStatus(wikipedia_link));
+		assertFalse(BrowserUtils.hasValidHttpStatus(wikipedia_bad_link));
+
 	}
 }

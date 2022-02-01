@@ -77,7 +77,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 		
-		WCAGComplianceLevel wcag_compliance = WCAGComplianceLevel.create(design_system.getWcagComplianceLevel());
+		WCAGComplianceLevel wcag_compliance = design_system.getWcagComplianceLevel();
 		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		//filter elements that aren't text elements
@@ -414,9 +414,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 			
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
-				log.warn("ux issue score :: "+issue_msg.getScore());
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
-				log.warn("Retrieving example for LINKS");
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.TEXT_BACKGROUND_CONTRAST, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
@@ -424,10 +422,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				}
 				Random random = new Random();
 				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
-				log.warn("example that was retrieved :: "+good_example);
-				log.warn("Setting good example on issue message :: "+good_example.getId());
 				element_issue_msg.setGoodExample(good_example);
-				log.warn("saving element state to issue message");
 				issue_message_service.save(element_issue_msg);
 			}
 		}

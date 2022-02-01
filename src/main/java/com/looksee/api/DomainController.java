@@ -277,7 +277,7 @@ public class DomainController {
     	log.warn("domain record id :: "+ domain_id);
     	log.warn("WCAG level :: "+settings.getWcagComplianceLevel());
     	//Get domain
-    	return domain_service.updateWcagSettings(domain_id, settings.getWcagComplianceLevel());
+    	return domain_service.updateWcagSettings(domain_id, settings.getWcagComplianceLevel().toString());
     }
     
     /**
@@ -296,7 +296,7 @@ public class DomainController {
     	log.warn("domain record id :: "+ domain_id);
     	log.warn("proficiency level :: "+settings.getAudienceProficiency());
     	//Get domain
-    	return domain_service.updateExpertiseSettings(domain_id, settings.getAudienceProficiency());
+    	return domain_service.updateExpertiseSettings(domain_id, settings.getAudienceProficiency().toString());
     }
     
     

@@ -16,15 +16,15 @@ import com.looksee.models.enums.WCAGComplianceLevel;
 @NodeEntity
 public class DesignSystem extends LookseeObject{
 
-	private WCAGComplianceLevel wcag_compliance_level;
-	private AudienceProficiency audience_proficiency;
+	private String wcag_compliance_level;
+	private String audience_proficiency;
 	
 	@Relationship(type="USES")
 	private ColorPalette palette;
 
 	public DesignSystem() {
-		wcag_compliance_level = WCAGComplianceLevel.AA;
-		audience_proficiency = AudienceProficiency.GENERAL;
+		wcag_compliance_level = WCAGComplianceLevel.AA.toString();
+		audience_proficiency = AudienceProficiency.GENERAL.toString();
 		palette = new ColorPalette();
 	}
 	
@@ -36,16 +36,16 @@ public class DesignSystem extends LookseeObject{
 		this.palette = palette;
 	}
 	
-	public String getWcagComplianceLevel() {
-		return wcag_compliance_level.toString();
+	public WCAGComplianceLevel getWcagComplianceLevel() {
+		return WCAGComplianceLevel.create(wcag_compliance_level);
 	}
 
-	public void setWcagComplianceLevel(String wcag_compliance_level) {
-		this.wcag_compliance_level = WCAGComplianceLevel.create(wcag_compliance_level);
+	public void setWcagComplianceLevel(WCAGComplianceLevel wcag_compliance_level) {
+		this.wcag_compliance_level = wcag_compliance_level.toString();
 	}
 
-	public String getAudienceProficiency() {
-		return audience_proficiency.toString();
+	public AudienceProficiency getAudienceProficiency() {
+		return AudienceProficiency.create(audience_proficiency);
 	}
 
 	/**
@@ -53,8 +53,8 @@ public class DesignSystem extends LookseeObject{
 	 * 
 	 * @param audience_proficiency {@link AudienceProficiency} string value
 	 */
-	public void setAudienceProficiency(String audience_proficiency) {
-		this.audience_proficiency = AudienceProficiency.create(audience_proficiency);
+	public void setAudienceProficiency(AudienceProficiency audience_proficiency) {
+		this.audience_proficiency = audience_proficiency.toString();
 	}
 	
 	@Override

@@ -28,11 +28,11 @@ public enum WCAGComplianceLevel {
 	A("A"), 
 	AA("AA"), 
 	AAA("AAA"),
-	UNKNOWN("unknown"); 
+	UNKNOWN("UNKNOWN"); 
 	
 	private String shortName;
 
-	WCAGComplianceLevel (String shortName) {
+	WCAGComplianceLevel(String shortName) {
         this.shortName = shortName;
     }
 
@@ -42,16 +42,17 @@ public enum WCAGComplianceLevel {
     }
 
     @JsonCreator
-    public static WCAGComplianceLevel create (String value) {
+    public static WCAGComplianceLevel create(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
         for(WCAGComplianceLevel v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
         }
-        throw new IllegalArgumentException();
+        
+        return UNKNOWN;
     }
 
     public String getShortName() {

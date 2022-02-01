@@ -25,10 +25,10 @@ Four colors that are evenly spaced on the color wheel. Tetradic color schemes ar
 
  */
 public enum AudienceProficiency {
-	GENERAL("general"), 
-	KNOWLEDGEABLE("knowledgeable"), 
-	EXPERT("expert"),
-	UNKNOWN("unknown"); 
+	GENERAL("GENERAL"), 
+	KNOWLEDGEABLE("KNOWLEDGEABLE"), 
+	EXPERT("EXPERT"),
+	UNKNOWN("UNKNOWN"); 
 	
 	private String shortName;
 
@@ -42,16 +42,16 @@ public enum AudienceProficiency {
     }
 
     @JsonCreator
-    public static AudienceProficiency create (String value) {
+    public static AudienceProficiency create(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
         for(AudienceProficiency v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
         }
-        throw new IllegalArgumentException();
+        return UNKNOWN;
     }
 
     public String getShortName() {

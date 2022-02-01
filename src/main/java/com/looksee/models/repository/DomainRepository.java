@@ -124,7 +124,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[]->(p:PageState{key:$page_key}) WHERE id(d)=$domain_id RETURN p")
 	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
 
-	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.audience_proficiency=$audience_proficiency RETURN setting")
+	@Query("MATCH (d:Domain)-[:USES]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.audience_proficiency=$audience_proficiency RETURN setting")
 	public DesignSystem updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("audience_proficiency") String audience_proficiency);
 	
 	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.wcag_compliance_level=$wcag_level RETURN setting")

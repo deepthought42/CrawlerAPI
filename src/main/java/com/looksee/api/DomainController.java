@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -48,6 +49,7 @@ import com.looksee.models.Account;
 import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.UXIssueReportDto;
@@ -78,6 +80,8 @@ import com.looksee.services.CompetitorService;
 import com.looksee.services.DesignSystemService;
 import com.looksee.services.DomainDtoService;
 import com.looksee.services.DomainService;
+import com.looksee.services.ElementStateService;
+import com.looksee.services.PageStateService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
@@ -120,6 +124,9 @@ public class DomainController {
 	
 	@Autowired
 	private CompetitorService competitor_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private DesignSystemService design_system_service;
@@ -519,6 +526,8 @@ public class DomainController {
 			long elements_reviewed = 0;
 			long elements_found = 0;
 
+			Set<Label> image_labels = new HashSet<>();
+
 			for (PageAuditRecord page_audit : audit_records) {
 				if (page_audit.isComplete()) {
 					pages_audited++;
@@ -610,11 +619,16 @@ public class DomainController {
 				if (page_audit.getDataExtractionProgress() >= 1.0) {
 					element_extractions_complete++;
 				}
+				
+				
+				image_labels.addAll( audit_record_service.getLabelsForImageElements(page_audit.getId()) );
 			}
 
+			image_labels = image_labels.parallelStream().distinct().collect(Collectors.toSet());
 			
 			double overall_score = (score / (double) audit_count) * 100.0;
 
+			
 			// build stats object
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														  audit_record.getStartTime(),
@@ -669,7 +683,8 @@ public class DomainController {
 														  info_architecture_score_history, 
 														  aesthetic_score_history, 
 														  accessibility_score_history,
-														  total_issues);
+														  total_issues,
+														  new HashSet<>());
 
 			return audit_stats;
 		} else {

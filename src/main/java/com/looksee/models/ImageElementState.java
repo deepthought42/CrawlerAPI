@@ -22,14 +22,15 @@ public class ImageElementState extends ElementState{
 	private Set<ImageFaceAnnotation> faces;
 	
 	@Relationship(type="HAS")
-	private Set<ImageSearchAnnotation> image_search_set;
+	private ImageSearchAnnotation image_search_set;
 	
 	public ImageElementState() {
+		super();
 		this.logos = new HashSet<>();
 		this.labels = new HashSet<>();
 		this.landmark_info_set = new HashSet<>();
 		this.faces = new HashSet<>();
-		this.image_search_set = new HashSet<>();
+		setImageFlagged(false);
 	}
 	
 	public ImageElementState(String owned_text, 
@@ -51,7 +52,7 @@ public class ImageElementState extends ElementState{
 							 String background_color, 
 							 Set<ImageLandmarkInfo> landmark_info_set,
 							 Set<ImageFaceAnnotation> faces, 
-							 Set<ImageSearchAnnotation> image_search_set, 
+							 ImageSearchAnnotation image_search, 
 							 Set<Logo> logos,
 							 Set<Label> labels
 	) {
@@ -77,8 +78,15 @@ public class ImageElementState extends ElementState{
 		setImageSearchSet(image_search_set);
 		setLogos(logos);
 		setLabels(labels);
-		
+		checkIfImageFlagged(image_search);
 	}
+	
+	private void checkIfImageFlagged(ImageSearchAnnotation image_search) {
+		if(!image_search.getFullMatchingImages().isEmpty()) {
+			setImageFlagged(true);
+		}
+	}
+
 	public Set<Logo> getLogos() {
 		return logos;
 	}
@@ -103,10 +111,10 @@ public class ImageElementState extends ElementState{
 	public void setFaces(Set<ImageFaceAnnotation> faces) {
 		this.faces = faces;
 	}
-	public Set<ImageSearchAnnotation> getImageSearchSet() {
+	public ImageSearchAnnotation getImageSearchSet() {
 		return image_search_set;
 	}
-	public void setImageSearchSet(Set<ImageSearchAnnotation> image_search_set) {
+	public void setImageSearchSet(ImageSearchAnnotation image_search_set) {
 		this.image_search_set = image_search_set;
 	}
 }

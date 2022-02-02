@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
@@ -340,7 +341,7 @@ public class AuditRecordController {
 			}
 			double overall_score = ( score / audit_count ) * 100 ;
 			
-
+			Set<Label> image_labels = audit_record_service.getLabelsForImageElements(audit_record.getId()) ;
 			
 			//build stats object
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
@@ -396,7 +397,8 @@ public class AuditRecordController {
 														null, 
 														null, 
 														null,
-														0);
+														0,
+														image_labels);
 			
 			return audit_stats;
     	}

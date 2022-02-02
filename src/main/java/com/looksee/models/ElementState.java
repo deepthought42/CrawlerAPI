@@ -41,6 +41,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	private int height;
 	private double text_contrast;
 	private double non_text_contrast;
+	private boolean image_flagged;
 	
 	private boolean visible;
 	
@@ -379,5 +380,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 
 	public void setForegroundColor(String foreground_color) {
 		this.foreground_color = foreground_color;
+	}
+
+	public boolean isImageFlagged() {
+		return image_flagged;
+	}
+
+	public void setImageFlagged(boolean image_flagged) {
+		this.image_flagged = image_flagged;
 	}
 }

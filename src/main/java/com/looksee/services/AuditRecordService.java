@@ -14,6 +14,7 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.dto.DomainDto;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -354,5 +355,9 @@ public class AuditRecordService {
 
 	public Optional<Account> getAccount(long audit_record_id) {
 		return audit_record_repo.getAccount(audit_record_id);
+	}
+
+	public Set<Label> getLabelsForImageElements(long id) {
+		return audit_record_repo.getLabelsForImageElements(id);
 	}
 }

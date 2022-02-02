@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Account;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -159,5 +160,8 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (account:Account)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account LIMIT 1")
 	public Optional<Account> getAccount(@Param("audit_record_id") long audit_record_id);
+
+	@Query("MATCH (audit_record:AuditRecord)-[*]->(element:ImageElementState) MATCH (element)-[]->(label:Label) WHERE id(audit_record)=$audit_record_id RETURN label")
+	public Set<Label> getLabelsForImageElements(@Param("audit_record_id") long id);
 	
 }

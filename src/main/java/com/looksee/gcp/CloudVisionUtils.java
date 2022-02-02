@@ -27,7 +27,6 @@ import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.LocationInfo;
 import com.google.cloud.vision.v1.WebDetection;
-import com.google.cloud.vision.v1.WebDetection.WebEntity;
 import com.google.cloud.vision.v1.WebDetection.WebImage;
 import com.google.cloud.vision.v1.WebDetection.WebLabel;
 import com.google.cloud.vision.v1.WebDetection.WebPage;
@@ -315,9 +314,9 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static Set<ImageSearchAnnotation> searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
+	public static ImageSearchAnnotation searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    Set<ImageSearchAnnotation> image_search_annotation = new HashSet<>();
+	    ImageSearchAnnotation image_search_annotation = null;
 	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
 	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
@@ -343,18 +342,13 @@ public class CloudVisionUtils {
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
 		          log.error("Error: %s%n", res.getError().getMessage());
-		          return new HashSet<>();
+		          return null;
 		        }
 		
 		        // Search the web for usages of the image. You could use these signals later
 		        // for user input moderation or linking external references.
 		        // For a full list of available annotations, see http://g.co/cloud/vision/docs
 		        WebDetection annotation = res.getWebDetection();
-		        Set<Label> labels = new HashSet<>();
-
-		        for (WebEntity entity : annotation.getWebEntitiesList()) {
-		        	labels.add(new Label(entity.getDescription(), entity.getScore(), 0.0F));
-		        }
 		        
 		        Set<String> best_guess_labels = new HashSet<>();
 		        for (WebLabel label : annotation.getBestGuessLabelsList()) {
@@ -363,7 +357,7 @@ public class CloudVisionUtils {
 		        
 		        Set<String> similar_images = new HashSet<>();
 		        for (WebPage page : annotation.getPagesWithMatchingImagesList()) {
-		          similar_images.add(page.getUrl());
+		        	similar_images.add(page.getUrl());
 		        }
 		        
 		        for (WebImage image : annotation.getPartialMatchingImagesList()) {
@@ -379,10 +373,9 @@ public class CloudVisionUtils {
 		        	similar_images.add(image.getUrl());
 		        }
 
-		        image_search_annotation.add(new ImageSearchAnnotation(labels, 
-		        													  best_guess_labels, 
+		        image_search_annotation = new ImageSearchAnnotation(  best_guess_labels, 
 		        													  fully_matching_images,
-		        													  similar_images));
+		        													  similar_images);
 	      	}
 	    }
 	    

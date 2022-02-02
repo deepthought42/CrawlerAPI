@@ -213,7 +213,7 @@ public class BrowserService {
 			String css_selector,
 			Set<ImageLandmarkInfo> landmark_info_set,
 			Set<ImageFaceAnnotation> faces,
-			Set<ImageSearchAnnotation> image_search_set,
+			ImageSearchAnnotation image_search_set,
 			Set<Logo> logos,
 			Set<Label> labels
 	) throws IOException{
@@ -740,7 +740,7 @@ public class BrowserService {
 					Set<ImageFaceAnnotation> faces = CloudVisionUtils.extractImageFaces(element_screenshot);
 					
 					//retrieve image reverse image search properties from google cloud vision
-					Set<ImageSearchAnnotation> image_search_set = CloudVisionUtils.searchWebForImageUsage(element_screenshot);
+					ImageSearchAnnotation image_search_set = CloudVisionUtils.searchWebForImageUsage(element_screenshot);
 					
 					//retrieve image logos from google cloud vision
 					Set<Logo> logos = CloudVisionUtils.extractImageLogos(element_screenshot);

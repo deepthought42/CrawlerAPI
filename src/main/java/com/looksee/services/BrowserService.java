@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Domain;
@@ -466,7 +467,7 @@ public class BrowserService {
 		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
-		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight()) - (viewport_screenshot.getHeight()/2.0) ) {
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight()) - viewport_screenshot.getHeight() ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
 		
@@ -730,7 +731,7 @@ public class BrowserService {
 								
 				Element element = elements.first();
 				
-				/*
+
 				if(isImageElement(web_element) && element_screenshot != null) {
 					//retrieve image landmark properties from google cloud vision
 					Set<ImageLandmarkInfo> landmark_info_set = CloudVisionUtils.extractImageLandmarks(element_screenshot);
@@ -764,7 +765,6 @@ public class BrowserService {
 					visited_elements.add(element_state);
 				}
 				else {
-				*/
 					ElementState element_state = buildElementState(xpath, 
 																   new HashMap<>(), 
 																   element, 
@@ -775,8 +775,7 @@ public class BrowserService {
 																   css_selector);
 					element_states_map.put(xpath, element_state);
 					visited_elements.add(element_state);
-				//}
-				
+				}
 			}
 			catch(NoSuchElementException e) {
 				//log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());

@@ -1,11 +1,12 @@
 package com.looksee.actors;
 
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.ElementState;
+import com.looksee.models.ImageElementState;
+import com.looksee.models.ImageFaceAnnotation;
+import com.looksee.models.ImageLandmarkInfo;
 import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
@@ -28,6 +33,11 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+
+import com.looksee.models.Label;
+import com.looksee.models.Logo;
+import com.looksee.models.ImageSearchAnnotation;
+
 
 @Component
 @Scope("prototype")
@@ -74,6 +84,60 @@ public class ElementStateExtractor extends AbstractActor{
 																								message.getAuditRecordId(),
 																								page_url,
 																								page_screenshot.getHeight());
+						
+					
+
+						//Enrich data using NLP and computer vision to add labels to elements
+						/*
+						Set<Label> image_labels = new HashSet<>();
+						Set<ImageLandmarkInfo> image_landmarks = new HashSet<>();
+						Set<Logo> image_logos = new HashSet<>();
+						Set<ImageFaceAnnotation> image_face_annotation = new HashSet<>();
+						Set<ImageSearchAnnotation> reverse_image_search = new HashSet<>();
+						
+						List<ImageElementState> image_elements = BrowserUtils.getImageElements(element_states);
+						for(ImageElementState image : image_elements) {
+							BufferedImage buffered_img = ImageUtils.readImageFromURL(new URL(image.getScreenshotUrl()));
+							image_labels.addAll( CloudVisionUtils.extractImageLabels( buffered_img ));
+							image_landmarks.addAll( CloudVisionUtils.extractImageLandmarks( buffered_img ));
+							image_logos.addAll( CloudVisionUtils.extractImageLogos( buffered_img ));
+							image_face_annotation.addAll( CloudVisionUtils.extractImageFaces( buffered_img ));
+							reverse_image_search.addAll( CloudVisionUtils.searchWebForImageUsage( buffered_img ));
+						}
+						
+						for(Label label: image_labels) {
+							log.warn("labels :: " + label.getDescription());
+						}
+						
+						for(ImageLandmarkInfo landmark : image_landmarks) {
+							log.warn("landmarks :: "+landmark.getDescription());
+							log.warn("lat/lng   :: "+landmark.getLatLngSet());
+						}
+						
+						for(Logo logo: image_logos) {
+							log.warn("Logo  :  "+logo.getDescription());
+						}
+						
+						for(ImageFaceAnnotation face : image_face_annotation) {
+							log.warn("ANGER      	  :  "+face.getAngerLikelihood());
+							log.warn("BLURRED    	  :  "+face.getBlurredLikelihood());
+							log.warn("JOY 	     	  :  "+face.getJoyLikelihood());
+							log.warn("SORROW    	  :  "+face.getSorrowLikelihood());
+							log.warn("SURPRISE        :  "+face.getSurpriseLikelihood());
+							log.warn("UNDER EXPOSED   :  "+face.getUnderExposedLikelihood());
+							log.warn("HEADWEAR        :  "+face.getHeadwearLikelihood());
+
+						}
+						
+						for(ImageSearchAnnotation img_search : reverse_image_search) {
+							log.warn("FULL MATCHING IMAGES      	  :  "+img_search.getFullMatchingImages());
+							log.warn("SIMILAR IMAGES    		  	  :  "+img_search.getSimilarImages());
+							log.warn("BEST GUESS LABEL 	     		  :  "+img_search.getBestGuessLabel());
+							log.warn("LABELS    	  			  	  :  "+img_search.getLabels());
+							log.warn("SCORE           			  	  :  "+img_search.getScore());
+
+						}
+						*/
 						
 						//tell page state builder of element states
 						ElementProgressMessage element_message = new ElementProgressMessage(message.getAccountId(), 

@@ -251,10 +251,8 @@ public class AuditService {
 				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
 					log.warn("ELEMENT type UX Issue was found");
 					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
-					log.warn("ELEMENT GOOD EXAMPLE :: "+ element_issue.getGoodExample());
 					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
 					element_issue.setGoodExample(good_example);
-					log.warn("ELEMENT GOOD EXAMPLE(after retrieval) :: "+ element_issue.getGoodExample());
 					
 					issues.put(ux_issue.getKey(), element_issue);
 				}

@@ -309,6 +309,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(ElementsSaved.class, message -> {
+					
 					long response_count = 0L; 
 					log.warn("Received element saved message from data extraction actor");
 					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {

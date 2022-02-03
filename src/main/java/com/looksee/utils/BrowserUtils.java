@@ -175,7 +175,16 @@ public class BrowserUtils {
 		if(url.indexOf('?') >= 0) {
 			url = url.substring(0, url.indexOf('?'));
 		}
-		return (!url.contains(domain_host) && !isRelativeLink(domain_host, url) ) || url.contains("////");
+		
+		boolean is_same_domain = false;
+		
+		boolean contains_domain = url.contains(domain_host);
+		boolean is_url_longer = url.length() > domain_host.length();
+		boolean url_contains_long_host = url.contains(domain_host+"/");
+		if( contains_domain && ((is_url_longer && url_contains_long_host) || !is_url_longer) ) {
+			is_same_domain = true;
+		}
+		return (!is_same_domain && !isRelativeLink(domain_host, url) ) || url.contains("////");
 	}
 	
 	/**

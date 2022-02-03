@@ -500,9 +500,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					log.warn("Could not find element for good example...");
 					continue;
 				}
-				Random random = new Random();
-				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
-				element_issue_msg.setGoodExample(good_example);
+				
+				if(good_examples.size() > 1) {					
+					Random random = new Random();
+					ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
+					element_issue_msg.setGoodExample(good_example);
+				}
+				else {
+					ElementState good_example = good_examples.get(0);
+					element_issue_msg.setGoodExample(good_example);
+				}
 				issue_message_service.save(element_issue_msg);
 			}
 		}

@@ -87,7 +87,8 @@ public class DomainAuditStats extends AuditStats{
 			List<SimpleScore> info_architecture_score_history, 
 			List<SimpleScore> aesthetic_score_history, 
 			List<SimpleScore> accessibility_score_history, 
-			int total_issues, Set<Label> image_labels
+			int total_issues, Set<Label> image_labels,
+			int image_copyright_issue_count
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -153,6 +154,7 @@ public class DomainAuditStats extends AuditStats{
 		setAccessibilityScoreHistory(accessibility_score_history);
 		
 		setImageLabels(image_labels);
+		setImageCopyrightIssueCount(image_copyright_issue_count);
 	}
 
 

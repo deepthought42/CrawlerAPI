@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +48,7 @@ import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
+import com.looksee.gcp.ImageSafeSearchAnnotation;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
@@ -175,7 +177,8 @@ public class BrowserService {
 				web_elem.isDisplayed(),
 				css_selector, 
 				foreground_color,
-				rendered_css_values.get("background-color"));
+				rendered_css_values.get("background-color"),
+				false);
 		
 		return element_state;
 	}
@@ -215,7 +218,8 @@ public class BrowserService {
 			Set<ImageFaceAnnotation> faces,
 			ImageSearchAnnotation image_search_set,
 			Set<Logo> logos,
-			Set<Label> labels
+			Set<Label> labels,
+			ImageSafeSearchAnnotation safe_search_annotation
 	) throws IOException{
 		assert xpath != null && !xpath.isEmpty();
 		assert attributes != null;
@@ -254,7 +258,8 @@ public class BrowserService {
 													faces,
 													image_search_set,
 													logos,
-													labels);
+													labels,
+													safe_search_annotation);
 		
 		return element_state;
 	}
@@ -467,7 +472,7 @@ public class BrowserService {
 		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
-		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight()) - viewport_screenshot.getHeight() ) {
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - viewport_screenshot.getHeight()) ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
 		
@@ -703,6 +708,24 @@ public class BrowserService {
 						log.warn("element width :: "+element_size.getWidth());
 						log.warn("Element X location ::  "+ element_location.getX());
 						*/
+						try {
+							BufferedImage full_page_screenshot = ImageIO.read(new URL(page_state.getFullPageScreenshotUrlComposite()));
+							int width = element_size.getWidth();
+							int height = element_size.getHeight();
+							
+							if( (element_location.getX() + element_size.getWidth()) > full_page_screenshot.getWidth() ) {
+								width = full_page_screenshot.getWidth() - element_location.getX()-1;
+							}
+							
+							if( (element_location.getY() + element_size.getHeight()) > full_page_screenshot.getHeight() ) {
+								height = full_page_screenshot.getHeight() - element_location.getY()-1;
+							}
+							
+							element_screenshot = full_page_screenshot.getSubimage(element_location.getX(), element_location.getY(), width, height);
+						}
+						catch(Exception e1){
+							e1.printStackTrace();
+						}
 						//e.printStackTrace();
 					}
 				}
@@ -741,6 +764,7 @@ public class BrowserService {
 					
 					//retrieve image reverse image search properties from google cloud vision
 					ImageSearchAnnotation image_search_set = CloudVisionUtils.searchWebForImageUsage(element_screenshot);
+					ImageSafeSearchAnnotation img_safe_search_annotation = CloudVisionUtils.detectSafeSearch(element_screenshot);
 					
 					//retrieve image logos from google cloud vision
 					Set<Logo> logos = CloudVisionUtils.extractImageLogos(element_screenshot);
@@ -759,7 +783,8 @@ public class BrowserService {
 																	   faces,
 																	   image_search_set,
 																	   logos,
-																	   labels);
+																	   labels,
+																	   img_safe_search_annotation);
 					
 					element_states_map.put(xpath, element_state);
 					visited_elements.add(element_state);

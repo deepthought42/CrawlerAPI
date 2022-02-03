@@ -496,6 +496,7 @@ public class DomainController {
 			int written_content_issue_count = 0;
 			int imagery_issue_count = 0;
 			int video_issue_count = 0;
+			int image_copyright_issue_count = 0;
 			int audit_issue_count = 0;
 			
 			double info_arch_score = 0.0;
@@ -540,6 +541,7 @@ public class DomainController {
 				Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
 				log.warn("retreived audits. Tabulating scores now");
 				written_content_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
+				image_copyright_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.IMAGE_COPYRIGHT);
 				imagery_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
 				videos_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
 				audio_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
@@ -684,7 +686,8 @@ public class DomainController {
 														  aesthetic_score_history, 
 														  accessibility_score_history,
 														  total_issues,
-														  new HashSet<>());
+														  image_labels,
+														  image_copyright_issue_count);
 
 			return audit_stats;
 		} else {

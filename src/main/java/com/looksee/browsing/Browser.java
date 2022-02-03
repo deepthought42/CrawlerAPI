@@ -383,7 +383,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshotStitched() throws IOException, GridException{
-		double percentage = 0.10;
+		double percentage = 0.15;
 		
 		//scroll to top of page
 		scrollToTopOfPage();
@@ -417,7 +417,7 @@ public class Browser {
 
 		//identify stitching points by using a sliding window with random sampling to determine
 		// if both images match. If a sliding window is found that matches for both images, then stitch images
-		int window_size = 500;
+		int window_size = 400;
 
 		//stitch images together using following steps
 		//    1. retrieve row that is 25% from top of last screenshot

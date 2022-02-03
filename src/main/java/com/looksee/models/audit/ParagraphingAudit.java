@@ -192,7 +192,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has less than 25 words which is the standard for governmental documentation in the European Union(EU) and the United States(US)";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																Priority.MEDIUM, 
+																Priority.NONE, 
 																description, 
 																recommendation, 
 																element,

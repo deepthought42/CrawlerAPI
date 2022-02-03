@@ -79,6 +79,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 		
 		WCAGComplianceLevel wcag_compliance = design_system.getWcagComplianceLevel();
 		
+		if(wcag_compliance.equals(WCAGComplianceLevel.A)) {
+			return null;
+		}
+		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
@@ -91,8 +95,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 
-		
-		
 		//analyze screenshots of all text images for contrast
 		for(ElementState element : element_list) {
 			Set<String> labels = new HashSet<>();
@@ -167,7 +169,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_header_contrast_observation);
 						}
 						else if(contrast >= 3 && contrast < 4.5) {
-							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance) || WCAGComplianceLevel.UNKNOWN.equals(wcag_compliance)){
 
 								//100% score
 								//AA WCAG 2.1
@@ -234,7 +236,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							}
 						}
 						else if(contrast >= 4.5) {
-							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance) || WCAGComplianceLevel.UNKNOWN.equals(wcag_compliance)){
 	
 								//100% score
 								//low contrast header issue
@@ -299,7 +301,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							MessageBroadcaster.sendIssueMessage(page_state.getId(), low_text_observation);
 						}
 						else if(contrast >= 4.50 && contrast < 7.0) {
-							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance) || WCAGComplianceLevel.UNKNOWN.equals(wcag_compliance)){
 
 								//100% score
 								String title = "Text doesn't meet WCAG 2.1 " + wcag_compliance + " standards";
@@ -357,7 +359,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							}
 						}
 						else if(contrast >= 7.0) {
-							if(WCAGComplianceLevel.AAA.equals(wcag_compliance)){
+							if(WCAGComplianceLevel.AAA.equals(wcag_compliance) || WCAGComplianceLevel.UNKNOWN.equals(wcag_compliance)){
 	
 								//100% score
 								String title = "Text has appropriate contrast";
@@ -417,7 +419,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.TEXT_BACKGROUND_CONTRAST, 100);
 				if(good_examples.isEmpty()) {
-					log.warn("Could not find element for good example...");
 					continue;
 				}
 				Random random = new Random();

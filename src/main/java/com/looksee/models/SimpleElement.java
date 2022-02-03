@@ -9,6 +9,8 @@ public class SimpleElement {
 	private int height;
 	private String text;
 	private String css_selector;
+	private boolean image_flagged;
+	private boolean adult_content;
 	
 	public SimpleElement(String key, 
 						 String screenshot_url, 
@@ -17,7 +19,9 @@ public class SimpleElement {
 						 int width, 
 						 int height, 
 						 String css_selector, 
-						 String text) {
+						 String text, 
+						 boolean is_image_flagged, 
+						 boolean is_adult_content) {
 		setKey(key);
 		setScreenshotUrl(screenshot_url);
 		setXLocation(x);
@@ -26,6 +30,8 @@ public class SimpleElement {
 		setHeight(height);
 		setCssSelector(css_selector);
 		setText(text);
+		setImageFlagged(is_image_flagged);
+		setAdultContent(is_adult_content);
 	}
 	
 	public String getScreenshotUrl() {
@@ -85,5 +91,21 @@ public class SimpleElement {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	public boolean isImageFlagged() {
+		return image_flagged;
+	}
+
+	public void setImageFlagged(boolean is_image_flagged) {
+		this.image_flagged = is_image_flagged;
+	}
+
+	public boolean isAdultContent() {
+		return adult_content;
+	}
+
+	public void setAdultContent(boolean adult_content) {
+		this.adult_content = adult_content;
 	}	
 }

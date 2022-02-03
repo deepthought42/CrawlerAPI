@@ -69,6 +69,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 * @param css_selector TODO
 	 * @param font_color TODO
 	 * @param background_color TODO
+	 * @param image_flagged TODO
 	 * @param text
 	 * @pre xpath != null
 	 * @pre name != null
@@ -93,7 +94,8 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 						boolean is_visible, 
 						String css_selector, 
 						String font_color, 
-						String background_color){
+						String background_color,
+						boolean image_flagged){
 		assert name != null;
 		assert xpath != null;
 		assert !xpath.isEmpty();
@@ -119,6 +121,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		setVisible(is_visible);
 		setForegroundColor(font_color);
 		setBackgroundColor(background_color);
+		setImageFlagged(image_flagged);
 		setKey(generateKey());
 	}
 	

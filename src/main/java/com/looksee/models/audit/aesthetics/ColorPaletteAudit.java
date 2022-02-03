@@ -213,7 +213,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws IOException
 	 */
 	private List<ColorUsageStat> extractColorsFromScreenshot(URL screenshot_url,
-			List<ElementState> elements
+															 List<ElementState> elements
 	) throws MalformedURLException, IOException {		
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
@@ -224,7 +224,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			}
 			
 			for(int x_pixel = element.getXLocation(); x_pixel < (element.getXLocation()+element.getWidth()); x_pixel++) {
-				if(x_pixel > screenshot.getWidth()) {
+				if(x_pixel >= screenshot.getWidth()) {
 					break;
 				}
 				
@@ -232,7 +232,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 					continue;
 				}
 				for(int y_pixel = element.getYLocation(); y_pixel < (element.getYLocation()+element.getHeight()); y_pixel++) {
-					if(y_pixel > screenshot.getHeight()) {
+					if(y_pixel >= screenshot.getHeight()) {
 						break;
 					}
 					

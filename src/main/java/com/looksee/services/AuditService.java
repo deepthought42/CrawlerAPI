@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.ImageElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
@@ -249,7 +250,6 @@ public class AuditService {
 			
 			for(UXIssueMessage ux_issue: issue_set) {
 				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
-					log.warn("ELEMENT type UX Issue was found");
 					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
 					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
 					element_issue.setGoodExample(good_example);
@@ -279,17 +279,36 @@ public class AuditService {
 					ux_issue.getType().equals(ObservationType.ELEMENT) ) {
 
 				ElementState element = ux_issue_service.getElement(ux_issue.getId());
-				
-				SimpleElement simple_element = 	new SimpleElement(element.getKey(),
-																  element.getScreenshotUrl(), 
-																  element.getXLocation(), 
-																  element.getYLocation(), 
-																  element.getWidth(), 
-																  element.getHeight(),
-																  element.getCssSelector(),
-																  element.getAllText());
-				
-				element_map.put(element.getKey(), simple_element);
+				if(element instanceof ImageElementState) {
+					ImageElementState img_element = (ImageElementState)element;
+					
+					SimpleElement simple_element = 	new SimpleElement(img_element.getKey(),
+																		img_element.getScreenshotUrl(), 
+																		img_element.getXLocation(), 
+																		img_element.getYLocation(), 
+																		img_element.getWidth(), 
+																		img_element.getHeight(),
+																		img_element.getCssSelector(),
+																		img_element.getAllText(),
+																		img_element.isImageFlagged(),
+																		img_element.isAdultContent());
+
+					element_map.put(img_element.getKey(), simple_element);
+				}
+				else {					
+					SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																	  element.getScreenshotUrl(), 
+																	  element.getXLocation(), 
+																	  element.getYLocation(), 
+																	  element.getWidth(), 
+																	  element.getHeight(),
+																	  element.getCssSelector(),
+																	  element.getAllText(),
+																	  element.isImageFlagged(),
+																	  false);
+					
+					element_map.put(element.getKey(), simple_element);
+				}
 			}
 			else {
 				//DO NOTHING FOR NOW

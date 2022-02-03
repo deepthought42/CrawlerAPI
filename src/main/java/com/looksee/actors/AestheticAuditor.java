@@ -136,17 +136,19 @@ public class AestheticAuditor extends AbstractActor{
 						
 						try {
 						   	Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record, design_system);
-							AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
-																		page_audit_record_msg.getAccountId(),
-																		audit_record.getId(),
-																		(2.0/3.0),
-																		"Reviewing non-text contrast for WCAG compliance",
-																		AuditCategory.AESTHETICS,
-																		AuditLevel.PAGE, 
-																		text_contrast_audit, 
-																		page_audit_record_msg.getDomainId());
-							
-							getContext().getParent().tell(audit_update2, getSelf());
+						   	if(text_contrast_audit != null) {
+								AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
+																			page_audit_record_msg.getAccountId(),
+																			audit_record.getId(),
+																			(2.0/3.0),
+																			"Reviewing non-text contrast for WCAG compliance",
+																			AuditCategory.AESTHETICS,
+																			AuditLevel.PAGE, 
+																			text_contrast_audit, 
+																			page_audit_record_msg.getDomainId());
+								
+								getContext().getParent().tell(audit_update2, getSelf());
+						   	}
 						}
 						catch(Exception e) {
 							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
@@ -162,19 +164,20 @@ public class AestheticAuditor extends AbstractActor{
 						
 						try {
 							Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record, design_system);
+							if( non_text_contrast_audit != null ) {
 							
-							
-							AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
-																		page_audit_record_msg.getAccountId(),
-																		audit_record.getId(),
-																		1.0,
-																		"Completed review of non-text contrast",
-																		AuditCategory.AESTHETICS,
-																		AuditLevel.PAGE, 
-																		non_text_contrast_audit, 
-																		page_audit_record_msg.getDomainId());
-
-							getContext().getParent().tell(audit_update3, getSelf());
+								AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
+																			page_audit_record_msg.getAccountId(),
+																			audit_record.getId(),
+																			1.0,
+																			"Completed review of non-text contrast",
+																			AuditCategory.AESTHETICS,
+																			AuditLevel.PAGE, 
+																			non_text_contrast_audit, 
+																			page_audit_record_msg.getDomainId());
+	
+								getContext().getParent().tell(audit_update3, getSelf());
+							}
 						}
 						catch(Exception e) {
 							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 

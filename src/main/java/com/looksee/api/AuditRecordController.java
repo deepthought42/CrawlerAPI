@@ -262,6 +262,8 @@ public class AuditRecordController {
 			long mid_issue_count = 0;
 			long low_issue_count = 0;
 
+			int image_copyright_issue_count = 0;
+
 			double content_score = 0.0;
 			double written_content_score = 0.0;
 			double imagery_score = 0.0;
@@ -297,6 +299,7 @@ public class AuditRecordController {
 			imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
 			videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
 			audio_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
+			image_copyright_issue_count = audit_service.countIssuesByAuditName(audits, AuditName.IMAGE_COPYRIGHT);
 
 			seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
 			menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
@@ -398,7 +401,8 @@ public class AuditRecordController {
 														null, 
 														null,
 														0,
-														image_labels);
+														image_labels,
+														image_copyright_issue_count);
 			
 			return audit_stats;
     	}

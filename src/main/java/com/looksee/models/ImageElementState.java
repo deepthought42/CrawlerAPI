@@ -5,10 +5,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.looksee.gcp.ImageSafeSearchAnnotation;
 import com.looksee.models.enums.ElementClassification;
 
-public class ImageElementState extends ElementState{
+public class ImageElementState extends ElementState {
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(ImageElementState.class);
+	
 	@Relationship(type="HAS")
 	private Set<Logo> logos;
 	
@@ -23,6 +29,10 @@ public class ImageElementState extends ElementState{
 	
 	@Relationship(type="HAS")
 	private ImageSearchAnnotation image_search_set;
+	
+	private String adult;
+	private String racy;
+	private String violence;
 	
 	public ImageElementState() {
 		super();
@@ -54,7 +64,8 @@ public class ImageElementState extends ElementState{
 							 Set<ImageFaceAnnotation> faces, 
 							 ImageSearchAnnotation image_search, 
 							 Set<Logo> logos,
-							 Set<Label> labels
+							 Set<Label> labels, 
+							 ImageSafeSearchAnnotation safe_search_annotation
 	) {
 		super(owned_text,
 				all_text,
@@ -72,19 +83,16 @@ public class ImageElementState extends ElementState{
 				is_visible,
 				css_selector,
 				foreground_color,
-				background_color);
+				background_color,
+				!image_search.getFullMatchingImages().isEmpty());
 		setLandmarkInfoSet(landmark_info_set);
 		setFaces(faces);
 		setImageSearchSet(image_search_set);
 		setLogos(logos);
 		setLabels(labels);
-		checkIfImageFlagged(image_search);
-	}
-	
-	private void checkIfImageFlagged(ImageSearchAnnotation image_search) {
-		if(!image_search.getFullMatchingImages().isEmpty()) {
-			setImageFlagged(true);
-		}
+		setAdult(safe_search_annotation.getAdult());
+		setRacy(safe_search_annotation.getRacy());
+		setViolence(safe_search_annotation.getViolence());
 	}
 
 	public Set<Logo> getLogos() {
@@ -116,5 +124,43 @@ public class ImageElementState extends ElementState{
 	}
 	public void setImageSearchSet(ImageSearchAnnotation image_search_set) {
 		this.image_search_set = image_search_set;
+	}
+
+	public boolean isAdultContent() {
+		return getAdult().contains("LIKELY")
+				|| getAdult().contains("POSSIBLE")
+				|| getRacy().contains("LIKELY")
+				|| getRacy().contains("POSSIBLE");
+					
+	}
+	
+	public boolean isViolentContent() {
+		return getViolence().contains("LIKELY")
+				|| getViolence().contains("POSSIBLE");
+					
+	}
+
+	public String getAdult() {
+		return adult;
+	}
+
+	public void setAdult(String adult) {
+		this.adult = adult;
+	}
+
+	public String getRacy() {
+		return racy;
+	}
+
+	public void setRacy(String racy) {
+		this.racy = racy;
+	}
+
+	public String getViolence() {
+		return violence;
+	}
+
+	public void setViolence(String violence) {
+		this.violence = violence;
 	}
 }

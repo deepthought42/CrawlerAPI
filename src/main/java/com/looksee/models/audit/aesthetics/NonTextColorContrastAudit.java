@@ -36,6 +36,7 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.services.AuditService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -76,6 +77,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null; 
 		
+		WCAGComplianceLevel wcag_compliance_level = design_system.getWcagComplianceLevel();
+		if(wcag_compliance_level.equals(WCAGComplianceLevel.A)) {
+			return null;
+		}
 		//get all button elements
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
@@ -124,6 +129,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	private Audit evaluateNonTextContrast(PageState page_state, List<ElementState> non_text_elements, DesignSystem design_system) {
 		assert page_state != null;
 		assert non_text_elements != null;
+		
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();

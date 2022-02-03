@@ -26,6 +26,7 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.LocationInfo;
+import com.google.cloud.vision.v1.SafeSearchAnnotation;
 import com.google.cloud.vision.v1.WebDetection;
 import com.google.cloud.vision.v1.WebDetection.WebImage;
 import com.google.cloud.vision.v1.WebDetection.WebLabel;
@@ -319,7 +320,7 @@ public class CloudVisionUtils {
 	    ImageSearchAnnotation image_search_annotation = null;
 	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
-	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
+	    //buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
 	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
@@ -438,5 +439,57 @@ public class CloudVisionUtils {
 	    }
 	    
 	    return color_usage_stats;
-	}	
+	}
+	
+	// Detects whether the specified image has features you would want to moderate.
+	  public static ImageSafeSearchAnnotation detectSafeSearch(BufferedImage buffered_img) throws IOException {
+		  List<AnnotateImageRequest> requests = new ArrayList<>();
+
+		  
+		  ByteArrayOutputStream os = new ByteArrayOutputStream();
+		  ImageIO.write(buffered_img, "png", os);
+		  InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
+		    
+		  ByteString imgBytes = ByteString.readFrom(input_stream);
+
+		  Image img = Image.newBuilder().setContent(imgBytes).build();
+		  Feature feat = Feature.newBuilder().setType(Feature.Type.SAFE_SEARCH_DETECTION).build();
+		  AnnotateImageRequest request =
+		        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+		  requests.add(request);
+	
+		  ImageSafeSearchAnnotation safe_search_annotation = null;
+		    // Initialize client that will be used to send requests. This client only needs to be created
+		    // once, and can be reused for multiple requests. After completing all of your requests, call
+		    // the "close" method on the client to safely clean up any remaining background resources.
+		    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+		    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+		    	List<AnnotateImageResponse> responses = response.getResponsesList();
+	
+		    	for (AnnotateImageResponse res : responses) {
+		    		if (res.hasError()) {
+		    			System.out.format("Error: %s%n", res.getError().getMessage());
+		    			return null;
+		    		}
+	
+			        // For full list of available annotations, see http://g.co/cloud/vision/docs
+			        SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();
+			        System.out.format(
+			            "adult: %s%nmedical: %s%nspoofed: %s%nviolence: %s%nracy: %s%n",
+			            annotation.getAdult(),
+			            annotation.getMedical(),
+			            annotation.getSpoof(),
+			            annotation.getViolence(),
+			            annotation.getRacy());
+			     
+			        safe_search_annotation = new ImageSafeSearchAnnotation(annotation.getSpoof().name(), 
+			        														annotation.getMedical().name(), 
+			        														annotation.getAdult().name(), 
+			        														annotation.getViolence().name(),
+			        														annotation.getRacy().name());
+		    	}
+		    }
+		    
+		    return safe_search_annotation;
+	  }
 }

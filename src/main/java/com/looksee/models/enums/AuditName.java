@@ -20,7 +20,8 @@ public enum AuditName {
 	ALT_TEXT("Alt Text"),
 	PARAGRAPHING("Paragraphing"),
 	METADATA("Metadata"),
-	UNKNOWN("Unknown");
+	UNKNOWN("Unknown"), 
+	IMAGE_COPYRIGHT("Image Copyright");
 	
 	private String shortName;
 

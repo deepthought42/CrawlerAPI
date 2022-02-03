@@ -294,4 +294,8 @@ public class DomainService {
 	public DesignSystem updateWcagSettings(long domain_id, String wcag_level) {
 		return domain_repo.updateWcagSettings(domain_id, wcag_level);
 	}
+
+	public DesignSystem updateAllowedImageCharacteristics(long domain_id, List<String> allowed_image_characteristics) {
+		return domain_repo.updateAllowedImageCharacteristics(domain_id, allowed_image_characteristics);
+	}
 }

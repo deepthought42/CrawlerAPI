@@ -99,7 +99,7 @@ public class AestheticAuditor extends AbstractActor{
 						
 						if(!design_system_opt.isPresent()) {
 							log.warn("design system couldn't be found for domain :: "+page_audit_record_msg.getDomainId());
-							design_system = design_system_service.save(new DesignSystem());
+							design_system = design_system_service.save( new DesignSystem() );
 							domain_service.addDesignSystem(page_audit_record_msg.getDomainId(), design_system.getId());
 						}
 						else {

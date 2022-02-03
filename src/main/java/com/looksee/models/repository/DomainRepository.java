@@ -130,6 +130,9 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.wcag_compliance_level=$wcag_level RETURN setting")
 	public DesignSystem updateWcagSettings(@Param("domain_id") long domain_id, @Param("wcag_level") String wcag_level);
 
+	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.allowed_image_characteristics=$image_characteristics RETURN setting")
+	public DesignSystem updateAllowedImageCharacteristics(@Param("domain_id") long domain_id, @Param("image_characteristics") List<String> allowed_image_characteristics);
+
 	@Query("MATCH (ar:DomainAuditRecord)-[]->(d:Domain) MATCH y=(ar)-[*]->(audit:Audit) WHERE id(d)=$domain_id RETURN y ORDER BY audit.created_at")
 	public List<DomainAuditRecord> getAuditRecordHistory(@Param("domain_id") long domain_id);
 
@@ -141,4 +144,5 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain),(design:DesignSystem) WHERE id(d)=$domain_id AND id(design)=$design_system_id MERGE (d)-[:USES]->(design) RETURN design")
 	public DesignSystem addDesignSystem(@Param("domain_id") long domain_id, @Param("design_system_id") long design_system_id);
+
 }

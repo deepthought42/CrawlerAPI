@@ -80,8 +80,6 @@ import com.looksee.services.CompetitorService;
 import com.looksee.services.DesignSystemService;
 import com.looksee.services.DomainDtoService;
 import com.looksee.services.DomainService;
-import com.looksee.services.ElementStateService;
-import com.looksee.services.PageStateService;
 import com.looksee.services.ReportService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
@@ -124,9 +122,6 @@ public class DomainController {
 	
 	@Autowired
 	private CompetitorService competitor_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private DesignSystemService design_system_service;
@@ -1052,6 +1047,21 @@ public class DomainController {
     	domain_service.addCompetitor(domain_id, competitor.getId());
     	
     	return competitor;
+    }
+    
+    /**
+     * Creates a new competitor and links it to the given domain
+     * 
+     * @return {@link PerformanceInsight insight}
+     * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.POST, path="{domain_id}/policies")
+    public @ResponseBody void setAllowedImageCharacteristicsPolicy(
+							    		HttpServletRequest request,
+							    		@PathVariable("domain_id") long domain_id,
+							    		@RequestBody List<String> allowed_image_characteristics
+	) {
+    	domain_service.updateAllowedImageCharacteristics(domain_id, allowed_image_characteristics);
     }
     
     /**

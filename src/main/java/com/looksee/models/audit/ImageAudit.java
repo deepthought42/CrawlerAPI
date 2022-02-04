@@ -55,18 +55,18 @@ public class ImageAudit implements IExecutablePageStateAudit {
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
-		Score score = calculateCopyrightScore(element_list);
-		log.warn("found "+score.getIssueMessages() + " image copyright issues");
+		Score copyright_score = calculateCopyrightScore(element_list);
+		log.warn("found "+copyright_score.getIssueMessages() + " image copyright issues");
 		String why_it_matters = "";
 		String description = "";
 
 		return new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.IMAGERY, 
 						 AuditName.IMAGE_COPYRIGHT, 
-						 score.getPointsAchieved(), 
-						 score.getIssueMessages(), 
+						 copyright_score.getPointsAchieved(), 
+						 copyright_score.getIssueMessages(), 
 						 AuditLevel.PAGE, 
-						 score.getMaxPossiblePoints(), 
+						 copyright_score.getMaxPossiblePoints(), 
 						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,

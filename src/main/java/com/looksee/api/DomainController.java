@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.looksee.api.exception.MissingSubscriptionException;
+import com.looksee.api.exception.SubscriptionExceededException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;
@@ -71,6 +73,7 @@ import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
@@ -81,6 +84,7 @@ import com.looksee.services.DesignSystemService;
 import com.looksee.services.DomainDtoService;
 import com.looksee.services.DomainService;
 import com.looksee.services.ReportService;
+import com.looksee.services.SubscriptionService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
@@ -125,6 +129,9 @@ public class DomainController {
 	
 	@Autowired
 	private DesignSystemService design_system_service;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	/**
 	 * Create a new {@link Domain domain}
@@ -964,6 +971,16 @@ public class DomainController {
 		if (account == null) {
 			throw new UnknownAccountException();
 		}
+		
+		LocalDate today = LocalDate.now();
+		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
+		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+
+		if(subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
+			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
+			throw new SubscriptionExceededException("You have exceeded your subscription");
+		}
+		
 		log.warn("looking for domain by id :: " + domain_id);
 		Optional<Domain> domain_opt = domain_service.findById(domain_id);
 		if (!domain_opt.isPresent()) {
@@ -977,7 +994,6 @@ public class DomainController {
 		// create new audit record
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
-		log.warn("audit record found ..." + audit_record.getKey());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
 
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());

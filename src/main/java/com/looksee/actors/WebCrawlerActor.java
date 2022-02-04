@@ -20,19 +20,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.browsing.Browser;
-import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCandidateFound;
-import com.looksee.services.AccountService;
-import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
-import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -62,15 +57,6 @@ public class WebCrawlerActor extends AbstractActor{
 	
 	@Autowired
 	private BrowserService browser_service;
-
-	@Autowired
-	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private AccountService account_service;
-	
-	@Autowired
-	private SubscriptionService subscription_service;
 	
 	Map<String, Boolean> frontier = new HashMap<>();
 	Map<String, PageState> visited = new HashMap<>();
@@ -110,9 +96,8 @@ public class WebCrawlerActor extends AbstractActor{
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
-					Account account = account_service.findById(crawl_action.getAccountId()).get();
-					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
+					log.warn("starting crawl process");
 					while(!frontier.isEmpty()) {
 						//remove link from beginning of frontier
 						String raw_url = frontier.keySet().iterator().next();
@@ -128,14 +113,9 @@ public class WebCrawlerActor extends AbstractActor{
 							continue;
 						}
 						
-						int page_audit_cnt = audit_record_service.getPageAuditCount(crawl_action.getAuditRecord().getId());
-						//quick check to make sure we haven't exceeded user plan
-						if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_audit_cnt)) {
-							log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
-							this.getContext().stop(getSelf());
-						}
-						
-						if( BrowserUtils.isFile(sanitized_url.toString())
+						boolean is_external_link = BrowserUtils.isExternalLink(domain.getUrl(), sanitized_url.toString());
+
+						if( (BrowserUtils.isFile(sanitized_url.toString())
 								|| BrowserUtils.isJavascript(sanitized_url.toString())
 								|| sanitized_url.toString().startsWith("itms-apps:")
 								|| sanitized_url.toString().startsWith("snap:")
@@ -143,8 +123,8 @@ public class WebCrawlerActor extends AbstractActor{
 								|| sanitized_url.toString().startsWith("mailto:")
 								|| sanitized_url.toString().startsWith("applenews:")
 								|| sanitized_url.toString().startsWith("applenewss:")
-								|| sanitized_url.toString().startsWith("mailto:")
-								|| BrowserUtils.isExternalLink(domain.getUrl(), sanitized_url.toString())){
+								|| sanitized_url.toString().startsWith("mailto:"))
+								|| is_external_link ){
 							visited.put(page_url, null);
 							continue;
 						}

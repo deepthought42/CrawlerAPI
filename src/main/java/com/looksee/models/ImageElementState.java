@@ -128,15 +128,11 @@ public class ImageElementState extends ElementState {
 
 	public boolean isAdultContent() {
 		return getAdult().contains("LIKELY")
-				|| getAdult().contains("POSSIBLE")
-				|| getRacy().contains("LIKELY")
-				|| getRacy().contains("POSSIBLE");
-					
+				|| getRacy().contains("LIKELY");					
 	}
 	
 	public boolean isViolentContent() {
-		return getViolence().contains("LIKELY")
-				|| getViolence().contains("POSSIBLE");
+		return getViolence().contains("LIKELY");
 					
 	}
 

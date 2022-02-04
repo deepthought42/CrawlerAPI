@@ -114,4 +114,8 @@ public class AccountService {
 	public Account findByCustomerId(String customer_id) {
 		return account_repo.findByCustomerId(customer_id);
 	}
+	
+	public int getDomainAuditCountByMonth(long account_id, int month) {
+		return account_repo.geDomainAuditRecordCountByMonth(account_id, month);
+	}
 }

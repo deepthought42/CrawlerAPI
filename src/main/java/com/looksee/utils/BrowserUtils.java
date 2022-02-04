@@ -176,10 +176,13 @@ public class BrowserUtils {
 			url = url.substring(0, url.indexOf('?'));
 		}
 		
+		//remove protocol for checking same domain
+		String url_without_protocol = url.replace("http://", "");
+		url_without_protocol = url_without_protocol.replace("https://", "");
 		boolean is_same_domain = false;
 		
 		boolean contains_domain = url.contains(domain_host);
-		boolean is_url_longer = url.length() > domain_host.length();
+		boolean is_url_longer = url_without_protocol.length() > domain_host.length();
 		boolean url_contains_long_host = url.contains(domain_host+"/");
 		if( contains_domain && ((is_url_longer && url_contains_long_host) || !is_url_longer) ) {
 			is_same_domain = true;

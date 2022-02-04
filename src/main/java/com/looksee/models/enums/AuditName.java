@@ -21,7 +21,8 @@ public enum AuditName {
 	PARAGRAPHING("Paragraphing"),
 	METADATA("Metadata"),
 	UNKNOWN("Unknown"), 
-	IMAGE_COPYRIGHT("Image Copyright");
+	IMAGE_COPYRIGHT("Image Copyright"), 
+	IMAGE_POLICY("Image Policy");
 	
 	private String shortName;
 

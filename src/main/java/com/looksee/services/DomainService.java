@@ -19,7 +19,6 @@ import com.looksee.models.PageState;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.TestUser;
-import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
@@ -182,86 +181,9 @@ public class DomainService {
 	public Set<AuditRecord> getAuditRecords(String domain_key) {
 		return domain_repo.getAuditRecords(domain_key);
 	}
-	
-	public Set<Audit> getMostRecentAuditRecordColorPaletteAudits(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllColorPaletteAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTextColorContrast(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTextColorContrastAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordNonTextColorContrast(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-		return audit_record_service.getAllNonTextColorContrastAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTypeface(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTypefaceAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordLinks(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllLinkAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTitleAndHeader(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTitleAndHeaderAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordAltText(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllAltTextAudits(record.getKey());
-	}
 
 	public Domain findByAuditRecord(long audit_record_id) {
 		return domain_repo.findByAuditRecord(audit_record_id);
-	}
-
-	public Set<Audit> getMostRecentAuditRecordMargins( String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllMarginAudits(record.getKey());	
-    }
-	
-	public Set<Audit> getMostRecentAuditRecordPadding( String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllPagePaddingAudits(record.getKey());
-    }
-
-	public Set<Audit> getMostRecentAuditRecordParagraphing(String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
 
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String page_url) {

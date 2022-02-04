@@ -108,7 +108,8 @@ public class BrowserService {
 	 */
 	public Browser getConnection(BrowserType browser, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser != null;
-		
+		log.warn("retrieving connection");
+
 		return BrowserConnectionHelper.getConnection(browser, browser_env);
 	}
 

@@ -11,6 +11,7 @@ import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ImageAudit;
+import com.looksee.models.audit.ImagePolicyAudit;
 import com.looksee.models.audit.ParagraphingAudit;
 import com.looksee.models.audit.content.ImageAltTextAudit;
 import com.looksee.models.audit.content.ReadabilityAudit;
@@ -60,6 +61,9 @@ public class ContentAuditor extends AbstractActor {
 	@Autowired
 	private ImageAudit image_audit;
 
+	@Autowired
+	private ImagePolicyAudit image_policy_audit;
+	
 	private Account account;
 
 	// subscribe to cluster changes
@@ -154,6 +158,28 @@ public class ContentAuditor extends AbstractActor {
 					getContext().getParent().tell(audit_err, getSelf());
 					e.printStackTrace();
 				}
+				
+				try {
+					Audit image_policy_result = image_policy_audit.execute(page, audit_record, null);
+					AuditProgressUpdate audit_update6 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
+																				audit_record.getId(), 
+																				(2.0 / 4.0), 
+																				"Reviewing images for compliance with domain policy", 
+																				AuditCategory.CONTENT,
+																				AuditLevel.PAGE, 
+																				image_policy_result, 
+																				page_audit_record_msg.getDomainId());
+
+					getContext().getParent().tell(audit_update6, getSelf());
+				} catch (Exception e) {
+					AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(),
+							page_audit_record_msg.getAccountId(), page_audit_record_msg.getAuditRecordId(),
+							"An error occurred while reviewing images for uniqueness", AuditCategory.CONTENT,
+							(2.0 / 4.0));
+					getContext().getParent().tell(audit_err, getSelf());
+					e.printStackTrace();
+				}
+				
 			} catch (Exception e) {
 				log.error("exception caught during content audit");
 				e.printStackTrace();
@@ -163,11 +189,11 @@ public class ContentAuditor extends AbstractActor {
 				log.error("-------------------------------------------------------------");
 				log.error("-------------------------------------------------------------");
 			} finally {
-				AuditProgressUpdate audit_update6 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
+				AuditProgressUpdate audit_update = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
 						page_audit_record_msg.getAuditRecordId(), (1.0), "Content Audit Compelete!",
 						AuditCategory.CONTENT, AuditLevel.PAGE, null, page_audit_record_msg.getDomainId());
 
-				getSender().tell(audit_update6, getSelf());
+				getSender().tell(audit_update, getSelf());
 			}
 		}).match(MemberUp.class, mUp -> {
 			log.debug("Member is Up: {}", mUp.member());

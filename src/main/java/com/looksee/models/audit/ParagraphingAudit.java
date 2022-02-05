@@ -16,6 +16,7 @@ import com.google.cloud.language.v1.Sentence;
 import com.looksee.gcp.CloudNLPUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -57,7 +58,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
@@ -106,9 +107,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 			
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
-				log.warn("ux issue score :: "+issue_msg.getScore());
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
-				log.warn("Retrieving example for LINKS");
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.ALT_TEXT, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
@@ -116,10 +115,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				}
 				Random random = new Random();
 				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
-				log.warn("example that was retrieved :: "+good_example);
-				log.warn("Setting good example on issue message :: "+good_example.getId());
 				element_issue_msg.setGoodExample(good_example);
-				log.warn("saving element state to issue message");
 				issue_message_service.save(element_issue_msg);
 			}
 		}
@@ -133,7 +129,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 issue_messages, 
 						 AuditLevel.PAGE, 
 						 max_points, 
-						 page_state.getUrl(), 
+						 page_state.getUrl(),
 						 why_it_matters, 
 						 description,
 						 false); 
@@ -196,7 +192,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has less than 25 words which is the standard for governmental documentation in the European Union(EU) and the United States(US)";
 				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																Priority.MEDIUM, 
+																Priority.NONE, 
 																description, 
 																recommendation, 
 																element,

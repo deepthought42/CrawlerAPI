@@ -6,7 +6,6 @@ import java.util.UUID;
 
 public class ImageSearchAnnotation extends LookseeObject{
 	private float score;
-	private Set<Label> labels;
 	private Set<String> best_guess_label;
 	private Set<String> full_matching_images;
 	private Set<String> similar_images;
@@ -18,12 +17,10 @@ public class ImageSearchAnnotation extends LookseeObject{
 		setSimilarImages(new HashSet<>());
 	}
 	
-	public ImageSearchAnnotation(Set<Label> labels,
-								 Set<String> best_guess_label,
+	public ImageSearchAnnotation(Set<String> best_guess_label,
 								 Set<String> full_matching_images,
 								 Set<String> similar_images
 	) {
-		setLabels(labels);
 		setScore(score);
 		setBestGuessLabel(best_guess_label);
 		setFullMatchingImages(full_matching_images);
@@ -58,13 +55,5 @@ public class ImageSearchAnnotation extends LookseeObject{
 	@Override
 	public String generateKey() {
 		return "imagesearchannotation::"+UUID.randomUUID();
-	}
-
-	public Set<Label> getLabels() {
-		return labels;
-	}
-
-	public void setLabels(Set<Label> labels) {
-		this.labels = labels;
 	}
 }

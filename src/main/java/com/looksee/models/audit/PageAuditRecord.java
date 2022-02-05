@@ -16,7 +16,7 @@ public class PageAuditRecord extends AuditRecord {
 	@Relationship(type = "HAS")
 	private Set<Audit> audits;
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "FOR")
 	private PageState page_state;
 	
 	private String status;

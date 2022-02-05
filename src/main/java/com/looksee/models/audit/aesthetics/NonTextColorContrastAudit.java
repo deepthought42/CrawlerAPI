@@ -30,11 +30,13 @@ import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.ColorContrastRecommendation;
 import com.looksee.models.audit.recommend.Recommendation;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.services.AuditService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -72,9 +74,13 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null; 
 		
+		WCAGComplianceLevel wcag_compliance_level = design_system.getWcagComplianceLevel();
+		if(wcag_compliance_level.equals(WCAGComplianceLevel.A)) {
+			return null;
+		}
 		//get all button elements
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
 		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
@@ -89,7 +95,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		}
 		non_text_elements.addAll(getAllInputs(elements));
 			
-		return evaluateNonTextContrast(page_state, non_text_elements);
+		return evaluateNonTextContrast(page_state, non_text_elements, design_system);
 	}
 
 	private List<ElementState> getAllIcons(List<ElementState> elements) {
@@ -117,11 +123,13 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * 
 	 * @param page_state
 	 * @param non_text_elements
+	 * @param design_system TODO
 	 * @return
 	 */
-	private Audit evaluateNonTextContrast(PageState page_state, List<ElementState> non_text_elements) {
+	private Audit evaluateNonTextContrast(PageState page_state, List<ElementState> non_text_elements, DesignSystem design_system) {
 		assert page_state != null;
 		assert non_text_elements != null;
+		
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		Set<String> labels = new HashSet<>();
@@ -297,7 +305,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					String description = "Element background has appropriate contrast for accessibility";
 					//no points are rewarded for low contrast
 					
-					String ada_compliance = "This " + element.getName() + " has a contrast greater than 3 and is considered compliant with WCAG 2.1 standards.";
+					String ada_compliance = "Element is compliant with WCAG 2.1 " + design_system.getWcagComplianceLevel() + " standards.";
 					
 					String recommendation = "";
 					Set<Recommendation> recommendations = generateNonTextContrastRecommendations(element, 
@@ -346,20 +354,14 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();
 			
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
-				log.warn("ux issue score :: "+issue_msg.getScore());
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
-				log.warn("Retrieving example for LINKS");
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.NON_TEXT_BACKGROUND_CONTRAST, 100);
 				if(good_examples.isEmpty()) {
-					log.warn("Could not find element for good example...");
 					continue;
 				}
 				Random random = new Random();
 				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
-				log.warn("example that was retrieved :: "+good_example);
-				log.warn("Setting good example on issue message :: "+good_example.getId());
 				element_issue_msg.setGoodExample(good_example);
-				log.warn("saving element state to issue message");
 				issue_message_service.save(element_issue_msg);
 			}
 		}

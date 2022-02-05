@@ -28,6 +28,7 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -70,7 +71,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
@@ -493,20 +494,22 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			max_points += issue_msg.getMaxPoints();		   
 
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
-				log.warn("ux issue score :: "+issue_msg.getScore());
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
-				log.warn("Retrieving example for LINKS");
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.LINKS, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
 					continue;
 				}
-				Random random = new Random();
-				ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
-				log.warn("example that was retrieved :: "+good_example);
-				log.warn("Setting good example on issue message :: "+good_example.getId());
-				element_issue_msg.setGoodExample(good_example);
-				log.warn("saving element state to issue message");
+				
+				if(good_examples.size() > 1) {					
+					Random random = new Random();
+					ElementState good_example = good_examples.get(random.nextInt(good_examples.size()-1));
+					element_issue_msg.setGoodExample(good_example);
+				}
+				else {
+					ElementState good_example = good_examples.get(0);
+					element_issue_msg.setGoodExample(good_example);
+				}
 				issue_message_service.save(element_issue_msg);
 			}
 		}

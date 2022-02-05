@@ -1,12 +1,15 @@
 package com.looksee.actors;
 
 
+import static com.looksee.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,6 +25,8 @@ import com.looksee.models.message.ElementsSaved;
 import com.looksee.services.ElementStateService;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
@@ -35,6 +40,9 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class DataExtractionSupervisor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DataExtractionSupervisor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
+	
+	@Autowired
+	private ActorSystem actor_system;
 	
 	@Autowired
 	private ElementStateService element_state_service;
@@ -66,6 +74,7 @@ public class DataExtractionSupervisor extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementProgressMessage.class, message-> { 
 					try {
+						
 						List<Long> element_ids = saveNewElements(message.getPageStateId(),
 																 message.getElementStates());
 						
@@ -89,7 +98,7 @@ public class DataExtractionSupervisor extends AbstractActor{
 						getContext().getSender().tell(err, getSelf());
 					}
 					
-					getContext().getSelf().tell(PoisonPill.getInstance(), getSelf());
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

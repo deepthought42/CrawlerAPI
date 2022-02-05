@@ -20,6 +20,9 @@ public class AuditScore {
 	private double interactivity_score;
 	private double accessibility_score;
 	
+	private double text_contrast;
+	private double non_text_contrast;
+	
 	public AuditScore(double content_score,
 					  double readability,
 					  double spelling_grammar,
@@ -34,7 +37,9 @@ public class AuditScore {
 					  double color_contrast, 
 					  double whitespace, 
 					  double interactivity_score, 
-					  double accessibility_score) {
+					  double accessibility_score, 
+					  double text_contrast, 
+					  double non_text_contrast) {
 		setContentScore(content_score);
 		setReadability(readability);
 		setSpellingGrammar(spelling_grammar);
@@ -53,6 +58,9 @@ public class AuditScore {
 		
 		setInteractivityScore(interactivity_score);
 		setAccessibilityScore(accessibility_score);
+		
+		setTextContrastScore(text_contrast);
+		setNonTextContrastScore(non_text_contrast);
 	}
 	
 	
@@ -193,5 +201,25 @@ public class AuditScore {
 
 	public void setWhitespace(double whitespace) {
 		this.whitespace = whitespace;
+	}
+
+
+	public double getTextContrastScore() {
+		return text_contrast;
+	}
+
+
+	public void setTextContrastScore(double text_contrast) {
+		this.text_contrast = text_contrast;
+	}
+
+
+	public double getNonTextContrastScore() {
+		return non_text_contrast;
+	}
+
+
+	public void setNonTextContrastScore(double non_text_contrast) {
+		this.non_text_contrast = non_text_contrast;
 	}
 }

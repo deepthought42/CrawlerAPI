@@ -14,6 +14,7 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.dto.DomainDto;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -102,19 +103,6 @@ public class AuditRecordService {
 	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
 		return audit_record_repo.getAllAuditsAndIssues(audit_id);
 	}
-
-	/**
-	 * deprecated in favor or using domain id for lookup
-	 * @param host
-	 * @return
-	 */
-	@Deprecated
-	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		return audit_record_repo.findMostRecentDomainAuditRecord(host);
-	}
 	
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(long id) {
 		return audit_record_repo.findMostRecentDomainAuditRecord(id);
@@ -135,14 +123,6 @@ public class AuditRecordService {
 		PageState page_state = page_state_service.findByUrl(page_url);
 		return audit_record_repo.getMostRecentAuditsForPage(page_state.getKey());
 		//return audit_record_repo.findMostRecentDomainAuditRecord(page_url);
-	}
-
-	public Set<Audit> getAllColorManagementAudits(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
-		return audit_record_repo.getAllColorManagementAudits(record.getKey());
 	}
 
 	public Set<Audit> getAllColorPaletteAudits(String audit_record_key) {
@@ -166,14 +146,6 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageNonTextColorContrastAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllTypographyAudits( String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
-		return audit_record_repo.getAllTypographyAudits(record.getKey());
-	}
-
 	public Set<Audit> getAllTypefaceAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
@@ -181,17 +153,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageTypefaceAudits(audit_record_key);
 	}
 
-	////////////////////////////////////////
-	//	INFORMATION ARCHITECTURE
-	/////////////////////////////////////////	
-	public Set<Audit> getAllInformationArchitectureAudits( String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
-		return audit_record_repo.getAllInformationArchitectureAudits(record.getKey());
-	}
-
+	
 	public Set<Audit> getAllLinkAudits(String audit_record_key) {
 		assert audit_record_key != null;
 		assert !audit_record_key.isEmpty();
@@ -213,13 +175,6 @@ public class AuditRecordService {
 		return audit_record_repo.getAllPageAltTextAudits(audit_record_key);
 	}
 
-	public Set<Audit> getAllVisualAudits( String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = findMostRecentDomainAuditRecord(host).get();
-		return audit_record_repo.getAllVisualAudits(record.getKey());
-	}
 
 	public Set<Audit> getAllMarginAudits(String audit_record_key) {
 		assert audit_record_key != null;
@@ -354,5 +309,9 @@ public class AuditRecordService {
 
 	public Optional<Account> getAccount(long audit_record_id) {
 		return audit_record_repo.getAccount(audit_record_id);
+	}
+
+	public Set<Label> getLabelsForImageElements(long id) {
+		return audit_record_repo.getLabelsForImageElements(id);
 	}
 }

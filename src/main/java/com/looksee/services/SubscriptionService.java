@@ -252,6 +252,36 @@ public class SubscriptionService {
     	return false;
 	}
 	
+
+	/**
+	 * Checks if account has exceeded the allowed number of domain audits 
+	 * @param create
+	 * @param domain_audit_cnt
+	 * @return
+	 */
+	public boolean hasExceededDomainAuditLimit(SubscriptionPlan plan, int domain_audit_cnt) {
+		if(plan.equals(SubscriptionPlan.FREE) && domain_audit_cnt > 1){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && domain_audit_cnt > 1){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && domain_audit_cnt > 4){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && domain_audit_cnt > 10){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && domain_audit_cnt > 15){
+    		return true;
+    	}
+    	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
+    		return true;
+    	}
+    	
+    	return false;
+	}
+	
 	/**
 	 * checks if user has exceeded test run limit for their subscription
 	 * 
@@ -423,4 +453,5 @@ public class SubscriptionService {
 												   customer_id, 
 												   customer_email);
 	}
+
 }

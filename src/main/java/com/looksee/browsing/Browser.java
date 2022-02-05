@@ -383,7 +383,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public BufferedImage getFullPageScreenshotStitched() throws IOException, GridException{
-		double percentage = 0.2;
+		double percentage = 0.15;
 		
 		//scroll to top of page
 		scrollToTopOfPage();

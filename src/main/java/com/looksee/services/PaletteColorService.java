@@ -2,6 +2,7 @@ package com.looksee.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,10 @@ public class PaletteColorService {
 	
 	public PaletteColor save(PaletteColor palette_color) {
 		assert palette_color != null;
-
+		Optional<PaletteColor> palette_color_record = palette_color_repo.findByKey(palette_color.getKey());
+		if(palette_color_record.isPresent()) {
+			return palette_color_record.get();
+		}
 		return palette_color_repo.save(palette_color);
 	}
 

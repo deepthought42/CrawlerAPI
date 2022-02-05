@@ -114,7 +114,6 @@ public class AuditManager extends AbstractActor{
 	private boolean is_domain_audit = false;
 	private int total_pages = 0;
 	private Map<String, Boolean> page_states_experienced;
-	private Map<String, PageState> page_states_audited;
 
 	//subscribe to cluster changes
 	@Override
@@ -124,7 +123,6 @@ public class AuditManager extends AbstractActor{
 		this.total_dispatch_responses = new HashMap<>();
 		this.total_dispatches = new HashMap<>();
 		this.page_states_experienced = new HashMap<>();
-		this.page_states_audited = new HashMap<>();
 		this.total_pages = 0;
 	}
 
@@ -161,6 +159,7 @@ public class AuditManager extends AbstractActor{
 							page_state_builder.tell(crawl_action_msg, getSelf());
 						}
 						else {
+							log.warn("starting domain audit");
 							this.is_domain_audit = true;
 							//send message to page data extractor
 							ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -175,6 +174,7 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
+					log.warn("Page candidate recieved");
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
 						if(!this.page_states_experienced.containsKey(url_without_protocol)) {
@@ -309,6 +309,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(ElementsSaved.class, message -> {
+					
 					long response_count = 0L; 
 					log.warn("Received element saved message from data extraction actor");
 					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
@@ -419,6 +420,8 @@ public class AuditManager extends AbstractActor{
 						}
 						
 						if(this.is_domain_audit) {
+							//extract color from page audits for color palette
+							
 							try {
 								if(audit_record instanceof PageAuditRecord) {
 									audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();

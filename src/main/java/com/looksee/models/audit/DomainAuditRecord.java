@@ -19,7 +19,7 @@ public class DomainAuditRecord extends AuditRecord {
 	@Relationship(type = "HAS")
 	private Set<PageAuditRecord> page_audit_records;
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "BELONGS_TO")
 	private Domain domain;
 	
 	public DomainAuditRecord() {

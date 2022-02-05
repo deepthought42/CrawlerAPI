@@ -32,6 +32,7 @@ import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.PaletteColor;
 import com.looksee.models.audit.Score;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -39,6 +40,7 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ColorScheme;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.PageStateService;
+import com.looksee.services.PaletteColorService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ImageUtils;
 
@@ -50,6 +52,9 @@ import com.looksee.utils.ImageUtils;
 public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorPaletteAudit.class);
+	
+	@Autowired
+	private PaletteColorService palette_color_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -66,7 +71,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 		
 		String why_it_matters = "Studies have found that it takes 90 seconds for a customer to form an" + 
@@ -89,7 +94,6 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		try {
 			color_usage_list.addAll(extractColorsFromScreenshot(new URL(page_state.getFullPageScreenshotUrlOnload()), elements));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -149,8 +153,11 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		*/
 		//colors.addAll(colors);
 		//generate palette, identify color scheme and score how well palette conforms to color scheme
-		List<PaletteColor> palette = ColorPaletteUtils.extractPalette(colors);
-		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette);
+		List<PaletteColor> palette_colors = new ArrayList<>();
+		for(PaletteColor palette : ColorPaletteUtils.extractPalette(colors)) {
+			palette_colors.add( palette_color_service.save(palette) );
+		}
+		ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette_colors);
 
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
@@ -168,7 +175,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 																description,
 																recommendation,
 																new ArrayList<>(),
-																palette,
+																palette_colors,
 																color_scheme,
 																AuditCategory.AESTHETICS,
 																labels, 
@@ -179,7 +186,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		issue_messages.add(ux_issue_service.save(palette_issue_message));
 		
 		//score colors found against scheme
-		Score score = ColorPaletteUtils.getPaletteScore(palette, color_scheme);
+		Score score = ColorPaletteUtils.getPaletteScore(palette_colors, color_scheme);
 		//observations.add(observation_service.save(observation));
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));
@@ -206,7 +213,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	 * @throws IOException
 	 */
 	private List<ColorUsageStat> extractColorsFromScreenshot(URL screenshot_url,
-			List<ElementState> elements
+															 List<ElementState> elements
 	) throws MalformedURLException, IOException {		
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
@@ -217,7 +224,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 			}
 			
 			for(int x_pixel = element.getXLocation(); x_pixel < (element.getXLocation()+element.getWidth()); x_pixel++) {
-				if(x_pixel > screenshot.getWidth()) {
+				if(x_pixel >= screenshot.getWidth()) {
 					break;
 				}
 				
@@ -225,7 +232,7 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 					continue;
 				}
 				for(int y_pixel = element.getYLocation(); y_pixel < (element.getYLocation()+element.getHeight()); y_pixel++) {
-					if(y_pixel > screenshot.getHeight()) {
+					if(y_pixel >= screenshot.getHeight()) {
 						break;
 					}
 					

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.looksee.browsing.Browser;
 import com.looksee.models.ElementState;
+import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
@@ -173,7 +175,19 @@ public class BrowserUtils {
 		if(url.indexOf('?') >= 0) {
 			url = url.substring(0, url.indexOf('?'));
 		}
-		return (!url.contains(domain_host) && !isRelativeLink(domain_host, url) ) || url.contains("////");
+		
+		//remove protocol for checking same domain
+		String url_without_protocol = url.replace("http://", "");
+		url_without_protocol = url_without_protocol.replace("https://", "");
+		boolean is_same_domain = false;
+		
+		boolean contains_domain = url.contains(domain_host);
+		boolean is_url_longer = url_without_protocol.length() > domain_host.length();
+		boolean url_contains_long_host = url.contains(domain_host+"/");
+		if( contains_domain && ((is_url_longer && url_contains_long_host) || !is_url_longer) ) {
+			is_same_domain = true;
+		}
+		return (!is_same_domain && !isRelativeLink(domain_host, url) ) || url.contains("////");
 	}
 	
 	/**
@@ -519,25 +533,7 @@ public class BrowserUtils {
         
         return font_families.keySet();
 	}
-	
-	/**
-	 * Retrieves {@link ElementStates} that contain text
-	 * 
-	 * @param element_states
-	 * @return
-	 */
-	public static List<ElementState> getTextElements(List<ElementState> element_states) {
-		assert element_states != null;
-		
-		List<ElementState> element_list = new ArrayList<>();
-		for(ElementState element : element_states ) {
-			if(element.getOwnedText() != null && !element.getOwnedText().trim().isEmpty()) {
-				element_list.add(element);
-			}
-		}
-		
-		return element_list;
-	}
+
 
 	public static String getTitle(PageState page_state) {
 		Document doc = Jsoup.parse(page_state.getSrc());
@@ -857,5 +853,50 @@ public class BrowserUtils {
 
 	private static boolean isSchemeRelative(String host, String href) {
 		return href.startsWith("//");
+	}
+	
+	
+	/**
+	 * Retrieves {@link ElementStates} that contain text
+	 * 
+	 * @param element_states
+	 * @return
+	 */
+	public static List<ElementState> getTextElements(List<ElementState> element_states) {
+		assert element_states != null;
+		
+		boolean parent_found = false;
+		
+		List<ElementState> elements = element_states.parallelStream().filter(p -> p.getOwnedText() != null && !p.getOwnedText().trim().isEmpty()).distinct().collect(Collectors.toList());
+		//remove all elements that are part of another element
+		List<ElementState> filtered_elements = new ArrayList<>();
+		for(ElementState element1: elements) {
+			for(ElementState element2: elements) {
+				if(!element1.equals(element2) 
+						&& element2.getAllText().contains(element1.getAllText()) 
+						&& element2.getXpath().contains(element1.getXpath())) {
+					parent_found = true;
+					break;
+				}
+			}
+			if(!parent_found) {
+				filtered_elements.add(element1);
+			}
+		}
+		
+		return filtered_elements;
+	}
+
+	public static List<ImageElementState> getImageElements(List<ElementState> element_states) {
+		assert element_states != null;
+		
+		List<ElementState> elements = element_states.parallelStream().filter(p ->p.getName().equalsIgnoreCase("img")).distinct().collect(Collectors.toList());
+		
+		List<ImageElementState> img_elements = new ArrayList<>();
+		for(ElementState element : elements) {
+			img_elements.add((ImageElementState)element);
+		}
+		
+		return img_elements;
 	}
 }

@@ -93,7 +93,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
 	
-	@Query("MATCH (domain_audit:DomainAuditRecord)-[]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
+	@Query("MATCH (domain_audit:DomainAuditRecord)-[:HAS]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
 	public Set<PageAuditRecord> getAllPageAudits(@Param("domain_audit_id") long domain_audit_id);
 
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) OPTIONAL MATCH auditsAndMessages=(audit)-->(:UXIssueMessage) WHERE id(page_audit)=$page_audit_id RETURN auditsAndMessages")
@@ -157,7 +157,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (account:Account)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account LIMIT 1")
 	public Optional<Account> getAccount(@Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (audit_record:AuditRecord)-[*]->(element:ImageElementState) MATCH (element)-[]->(label:Label) WHERE id(audit_record)=$audit_record_id RETURN label")
+	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[*]->(element:ImageElementState) MATCH (element)-[]->(label:Label) RETURN label")
 	public Set<Label> getLabelsForImageElements(@Param("audit_record_id") long id);
 	
 }

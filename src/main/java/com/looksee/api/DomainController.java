@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -426,7 +425,7 @@ public class DomainController {
 	}
 
 	/**
-	 * Retrieves that AuditStats for the domain with the given ID
+	 * Retrieves {@link AuditStats} for the domain with the given ID
 	 * 
 	 * @return {@link PerformanceInsight insight}
 	 * @throws UnknownAccountException
@@ -439,13 +438,13 @@ public class DomainController {
 		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain_id);
 
 		if (audit_record_opt.isPresent()) {
-			AuditRecord audit_record = audit_record_opt.get();
+			DomainAuditRecord audit_record = audit_record_opt.get();
 			long content_audits_complete = 0;
 			long info_arch_audits_complete = 0;
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
 			
-			Set<PageAuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
+			Set<PageAuditRecord> audit_records = audit_record.getAudits(); //audit_record_service.getAllPageAudits(audit_record.getId());
 			// get Page Count
 			long page_count = audit_records.size();
 			long pages_audited = 0;
@@ -471,14 +470,15 @@ public class DomainController {
 				double aesthetic_score = 0;
 				double info_architecture_score = 0;
 				double content_score = 0;
+				page_count += page_audits.size();
 				log.warn("Reviewing page audits for overall score");
 				for(PageAuditRecord page_audit: page_audits) {
 					Set<Audit> audits = page_audit.getAudits();
 					
-					overall_score += (int)( AuditUtils.calculateScore(audits) * 100 );
-					aesthetic_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS) * 100);
-					info_architecture_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE) * 100);
-					content_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT) * 100 );
+					overall_score += (int)( AuditUtils.calculateScore(audits) );
+					aesthetic_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS) );
+					info_architecture_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE) );
+					content_score += (int)( AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT) );
 				}
 				
 				if(!page_audits.isEmpty()) {					
@@ -487,7 +487,6 @@ public class DomainController {
 					info_architecture_score_history.add(new SimpleScore(record.getCreatedAt(), info_architecture_score/page_audits.size() ));
 					content_score_history.add(new SimpleScore(record.getCreatedAt(), content_score/page_audits.size() ));
 				}
-				
 			}
 			
 			double content_score = 0.0;
@@ -531,6 +530,7 @@ public class DomainController {
 
 			Set<Label> image_labels = new HashSet<>();
 
+			Set<Audit> audits = new HashSet<>();
 			for (PageAuditRecord page_audit : audit_records) {
 				if (page_audit.isComplete()) {
 					pages_audited++;
@@ -539,78 +539,16 @@ public class DomainController {
 				elements_reviewed += page_audit.getElementsReviewed();
 				elements_found += page_audit.getElementsFound();
 
-				log.warn("starting get all audits....");
-				Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
-				log.warn("retreived audits. Tabulating scores now");
-				written_content_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
-				image_copyright_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.IMAGE_COPYRIGHT);
-				imagery_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
-				videos_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
-				audio_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
-
-				written_content_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.WRITTEN_CONTENT);
-				imagery_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.IMAGERY);
-				video_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.VIDEOS);
-				audit_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.AUDIO);
-
-				seo_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.SEO);
-				menu_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.MENU_ANALYSIS);
-				performance_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.PERFORMANCE);
-				link_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.LINKS);
-
-				seo_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
-				menu_analysis_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
-				performance_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
-				link_score += AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
-
-				//aesthetic_score = AuditUtils.calculateScore(audits);
-				//color_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.COLOR_MANAGEMENT);
-				text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
-				non_text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-
-				typography_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.TYPOGRAPHY);
-				whitespace_issue_count += 0; //AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.WHITESPACE);
-				branding_issue_count += 0; //AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.BRANDING);
-				
-				//color_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
-				text_contrast_score += AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
-				non_text_contrast_score += AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-				typography_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
-				whitespace_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
-				branding_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
-
 				high_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.HIGH.toString());
 				mid_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.MEDIUM.toString());
 				low_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.LOW.toString());
-
-				total_issues = written_content_issue_count
-								+ imagery_issue_count
-								+ video_issue_count
-								+ audit_issue_count
-								+ seo_issue_count
-								+ menu_issue_count
-								+ performance_issue_count
-								+ link_issue_count
-								+ text_contrast_issue_count
-								+ non_text_contrast_issue_count
-								+ typography_issue_count
-								+ whitespace_issue_count
-								+ branding_issue_count;
-
-				for (Audit audit : audits) {
-					// get issues
-					if (audit.getTotalPossiblePoints() == 0) {
-						score += 1;
-					} else {
-						score += (audit.getPoints() / (double) audit.getTotalPossiblePoints());
-					}
-					
-				}
-				audit_count += audits.size();
-
+				
+				audits.addAll(page_audit.getAudits());
+				//Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
+				
 				if (page_audit.getInfoArchitechtureAuditProgress() >= 1.0) {
 					info_arch_audits_complete++;
 				}
@@ -622,17 +560,74 @@ public class DomainController {
 				}
 				if (page_audit.getDataExtractionProgress() >= 1.0) {
 					element_extractions_complete++;
-				}
-				
-				
-				image_labels.addAll( audit_record_service.getLabelsForImageElements(page_audit.getId()) );
+				}	
 			}
-
-			image_labels = image_labels.parallelStream().distinct().collect(Collectors.toSet());
 			
-			double overall_score = (score / (double) audit_count) * 100.0;
+			
+			log.warn("retreived audits. Tabulating scores for "+audits.size() + " audits");
+			written_content_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
+			image_copyright_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.IMAGE_COPYRIGHT);
+			imagery_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
+			videos_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
+			audio_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
+
+			written_content_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.WRITTEN_CONTENT);
+			imagery_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.IMAGERY);
+			video_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.VIDEOS);
+			audit_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.AUDIO);
+
+			seo_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.SEO);
+			menu_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.MENU_ANALYSIS);
+			performance_issue_count += 0;//AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.PERFORMANCE);
+			link_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.LINKS);
+
+			seo_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
+			menu_analysis_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
+			performance_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
+			link_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
+
+			//aesthetic_score = AuditUtils.calculateScore(audits);
+			//color_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.COLOR_MANAGEMENT);
+			text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+			non_text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+
+			typography_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.TYPOGRAPHY);
+			whitespace_issue_count += 0; //AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.WHITESPACE);
+			branding_issue_count += 0; //AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.BRANDING);
+			
+			//color_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
+			text_contrast_score += AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+			non_text_contrast_score += AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+			typography_score += AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
+			whitespace_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
+			branding_score += 0;//AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
 
 			
+
+			total_issues = written_content_issue_count
+							+ imagery_issue_count
+							+ video_issue_count
+							+ audit_issue_count
+							+ seo_issue_count
+							+ menu_issue_count
+							+ performance_issue_count
+							+ link_issue_count
+							+ text_contrast_issue_count
+							+ non_text_contrast_issue_count
+							+ typography_issue_count
+							+ whitespace_issue_count
+							+ branding_issue_count;
+
+			double overall_score = AuditUtils.calculateScore(audits);
+			audit_count += audits.size();
+
+				
+			//}
+			//image_labels.addAll( audit_record_service.getLabelsForImageElements(audit_record.getId()) );
+
+			//image_labels = image_labels.parallelStream().distinct().collect(Collectors.toSet());
+			
+
 			// build stats object
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														  audit_record.getStartTime(),
@@ -645,10 +640,10 @@ public class DomainController {
 														  imagery_issue_count,
 														  video_issue_count,
 														  audit_issue_count,
-														  written_content_score / (double) audit_records.size(), 
-														  imagery_score / (double) audit_records.size(),
-														  videos_score / (double) audit_records.size(), 
-														  audio_score / (double) audit_records.size(), 
+														  written_content_score, 
+														  imagery_score,
+														  videos_score, 
+														  audio_score, 
 														  audit_record.getContentAuditMsg(), 
 														  info_arch_audits_complete,
 														  info_arch_audits_complete / (double) audit_records.size(),
@@ -656,10 +651,10 @@ public class DomainController {
 														  menu_issue_count,
 														  performance_issue_count,
 														  link_issue_count,
-														  seo_score / (double) audit_records.size(), 
-														  menu_analysis_score / (double) audit_records.size(),
-														  performance_score / (double) audit_records.size(),
-														  link_score / (double) audit_records.size(),
+														  seo_score , 
+														  menu_analysis_score ,
+														  performance_score ,
+														  link_score ,
 														  audit_record.getInfoArchMsg(),
 														  aesthetic_audits_complete,
 														  aesthetic_audits_complete / (double) audit_records.size(),
@@ -668,11 +663,11 @@ public class DomainController {
 														  typography_issue_count,
 														  whitespace_issue_count,
 														  branding_issue_count,
-														  text_contrast_score / (double) audit_records.size(),
-														  non_text_contrast_score / (double) audit_records.size(),
-														  typography_score / (double) audit_records.size(),
-														  whitespace_score  / (double) audit_records.size(),
-														  branding_score / (double) audit_records.size(),
+														  text_contrast_score,
+														  non_text_contrast_score,
+														  typography_score,
+														  whitespace_score,
+														  branding_score,
 														  audit_record.getAestheticMsg(),
 														  overall_score,
 														  high_issue_count,

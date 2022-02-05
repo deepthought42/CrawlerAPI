@@ -100,7 +100,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain{url:$url})-[]->(audit:DomainAuditRecord) RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(@Param("url") String url);
 
-	@Query("MATCH (audit:DomainAuditRecord)-[]->(d:Domain) WHERE id(d) = $id RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
+	@Query("MATCH(d:Domain) WITH d WHERE id(d)=$id MATCH (audit:DomainAuditRecord)-[]->(d) WITH audit ORDER BY audit.created_at DESC LIMIT 1 MATCH y=(audit)-[:HAS]->(page_audit:PageAuditRecord) MATCH z=(page_audit)-[:HAS]->(:Audit) RETURN y,z ")
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(@Param("id") long id);
 
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:$page_state_key}) RETURN d LIMIT 1")
@@ -133,7 +133,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.allowed_image_characteristics=$image_characteristics RETURN setting")
 	public DesignSystem updateAllowedImageCharacteristics(@Param("domain_id") long domain_id, @Param("image_characteristics") List<String> allowed_image_characteristics);
 
-	@Query("MATCH (ar:DomainAuditRecord)-[]->(d:Domain) MATCH y=(ar)-[*]->(audit:Audit) WHERE id(d)=$domain_id RETURN y ORDER BY audit.created_at")
+	@Query("MATCH(d:Domain) WITH d WHERE id(d)=$domain_id MATCH (ar:DomainAuditRecord)-[]->(d) MATCH y=(ar)-[:HAS]->(page_audit:PageAuditRecord) MATCH z=(page_audit)-[:HAS]->(audit:Audit) RETURN y,z")
 	public List<DomainAuditRecord> getAuditRecordHistory(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")

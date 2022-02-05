@@ -333,7 +333,12 @@ public class AuditService {
 	public int countAuditBySubcategory(Set<Audit> audits, AuditSubcategory category) {
 		assert audits != null;
 		assert category != null;
-		
+	
+		int issue_count = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && category.equals(s.getSubcategory())))
+				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
+				  .sum();
+		/*
 		int issue_count = 0;
 	
 		for(Audit audit: audits) {
@@ -341,21 +346,25 @@ public class AuditService {
 				issue_count += audit_repo.getMessageCount(audit.getId());
 			}
 		}
-		
+		*/
 		return issue_count;
 	}
 
 	public int countIssuesByAuditName(Set<Audit> audits, AuditName name) {
 		assert audits != null;
 		assert name != null;
-		
-		int issue_count = 0;
 	
+		int issue_count = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
+				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
+				  .sum();
+		/*
 		for(Audit audit: audits) {
 			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
 				issue_count += audit_repo.getMessageCount(audit.getId());
 			}
 		}
-		
-		return issue_count;	}
+		*/
+		return issue_count;	
+	}
 }

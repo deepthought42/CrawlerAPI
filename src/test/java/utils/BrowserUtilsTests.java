@@ -264,7 +264,7 @@ public class BrowserUtilsTests {
 	}
 
 	@Test
-	public void isValidLink(){
+	public void isValidLinkTest(){
 		//The first link should be correct, all else should be malformed for testing
 		
 		//Set a mock page
@@ -293,7 +293,7 @@ public class BrowserUtilsTests {
 	}
 
 	@Test
-	public void hasValidHttpStatus() throws MalformedURLException {
+	public void hasValidHttpStatusTest() throws MalformedURLException {
 		URL wikipedia_link = new URL("https://www.wikipedia.org/");
 		URL wikipedia_bad_link = new URL("https://www.wikipadai.org/");
 

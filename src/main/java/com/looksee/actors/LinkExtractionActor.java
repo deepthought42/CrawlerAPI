@@ -7,6 +7,8 @@ import java.util.AbstractMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -20,7 +22,20 @@ import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.UnreachableMember;
 
+/**
+ * Link Extraction actor checks the links of a webpage by performing the following:
+ * 
+ * 1. Parse the page source to get all hyperlink href links.
+ * 2. Iterate over each href link to check their validity.
+ * 3. Exclude any external or subdomain links by putting them in their respective hashmap.
+ * 
+ */
+@Component
+@Scope("prototype")
 public class LinkExtractionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(LinkExtractionActor.class);
 
@@ -32,7 +47,6 @@ public class LinkExtractionActor extends AbstractActor {
 			.match(SourceMessage.class, page_src_msg -> {
 				Domain domain = domain_service.findById(page_src_msg.getDomainId()).get();
 				String page_src = page_src_msg.getPageSrc();
-
 				URL sanitized_url = page_src_msg.getSanitizedUrl();
 
 				try {
@@ -76,6 +90,18 @@ public class LinkExtractionActor extends AbstractActor {
 				DomainMessage domain_msg = new DomainMessage(page_src_msg, domain, sanitized_url.toString());
 
 				getSender().tell(domain_msg, getSelf());
+			})
+			.match(MemberUp.class, mUp -> {
+				log.info("Member is Up: {}", mUp.member());
+			})
+			.match(UnreachableMember.class, mUnreachable -> {
+				log.info("Member detected as unreachable: {}", mUnreachable.member());
+			})
+			.match(MemberRemoved.class, mRemoved -> {
+				log.info("Member is Removed: {}", mRemoved.member());
+			})
+			.matchAny(o -> {
+				log.info("received unknown message of type :: " + o.getClass().getName());
 			})
 			.build();
 	}

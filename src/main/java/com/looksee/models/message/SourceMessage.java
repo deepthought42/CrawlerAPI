@@ -3,7 +3,7 @@ package com.looksee.models.message;
 import java.net.URL;
 
 /**
- * Message 
+ * A message that contains a sanitized url and its page source that will be further extracted for any links it contains.
  */
 public class SourceMessage extends Message {
 	private URL sanitized_url;

@@ -865,10 +865,11 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Check if the 
+	 * Check if the url begins with a valid protocol and is in the valid format.
+	 * Also check if the url is an external link by comparing it to a host name.
 	 * 
-	 * @param sanitized_url
-	 * @param host
+	 * @param sanitized_url A sanitized url, such as https://look-see.com
+	 * @param host The host website, such as look-see.com
 	 * @return {@code boolean}
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
@@ -878,18 +879,18 @@ public class BrowserUtils {
 	 */
 	public static boolean isValidUrl(String sanitized_url, String host) throws MalformedURLException, URISyntaxException {
 		assert sanitized_url != null;
-		assert sanitized_url.isEmpty();
-
-		if(BrowserUtils.isFile(sanitized_url.toString())
-			|| BrowserUtils.isJavascript(sanitized_url.toString())
-			|| sanitized_url.toString().startsWith("itms-apps:")
-			|| sanitized_url.toString().startsWith("snap:")
-			|| sanitized_url.toString().startsWith("tel:")
-			|| sanitized_url.toString().startsWith("mailto:")
-			|| sanitized_url.toString().startsWith("applenews:")
-			|| sanitized_url.toString().startsWith("applenewss:")
-			|| sanitized_url.toString().startsWith("mailto:")
-			|| BrowserUtils.isExternalLink(host, sanitized_url.toString())){
+		assert !sanitized_url.isEmpty();
+  
+		if(BrowserUtils.isFile(sanitized_url)
+			|| BrowserUtils.isJavascript(sanitized_url)
+			|| sanitized_url.startsWith("itms-apps:")
+			|| sanitized_url.startsWith("snap:")
+			|| sanitized_url.startsWith("tel:")
+			|| sanitized_url.startsWith("mailto:")
+			|| sanitized_url.startsWith("applenews:")
+			|| sanitized_url.startsWith("applenewss:")
+			|| sanitized_url.startsWith("mailto:")
+			|| BrowserUtils.isExternalLink(host, sanitized_url)){
 			return false;
 		}
 		else {
@@ -898,10 +899,10 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Check to see if a link extracted from an href begins with a valid protocol.
+	 * Check to see if a link extracted from an href is empty or begins with a valid protocol.
 	 * 
-	 * @param href_str 
-	 * @return {@code boolean}
+	 * @param href_str An href link from a page source.
+	 * @return {@code boolean} True if valid, false if invalid
 	 */
 	public static boolean isValidLink(String href_str){
 		if(href_str == null 
@@ -920,7 +921,7 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Check if the sanitized url returns a valid code.
+	 * Check if the sanitized url returns a valid http status code.
 	 * 
 	 * @param sanitized_url
 	 * @return {@code boolean} True if valid, false if page is not found.
@@ -943,7 +944,7 @@ public class BrowserUtils {
 	}
 
 	/**
-	 * Extracts the the page source from the URL.
+	 * Extracts the page source from the URL.
 	 * Attempts to connect to the browser service, then navigates to the url and extracts the source.
 	 * 
 	 * @param sanitized_url The sanitized URL that contains the page source

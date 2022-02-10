@@ -162,6 +162,16 @@ public class WebCrawlerActor extends AbstractActor{
 				.build();
 	}
 
+	/**
+	 * Process a link in the frontier by doing the following:
+	 * 
+	 * 1. Get the domain and its url
+	 * 2. Iterate to the first raw url in the frontier
+	 * 3. Check if the formatted page url has already been visited, if not, intitiate the audit for that page.
+	 * 
+	 * @param crawl_action
+	 * @throws MalformedURLException
+	 */
 	private void processFrontier(Message crawl_action) throws MalformedURLException {
 		/* perform site wide crawl */
 		Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
@@ -178,7 +188,7 @@ public class WebCrawlerActor extends AbstractActor{
 			URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
 			String page_url = BrowserUtils.getPageUrl(sanitized_url);
 					
-			if(!visited.containsKey(page_url.toString())) {
+			if(!visited.containsKey(page_url)) { //?
 				DomainMessage domain_msg = new DomainMessage(crawl_action, domain, raw_url);
 				
 				this.source_extractor.tell(domain_msg, getSelf());

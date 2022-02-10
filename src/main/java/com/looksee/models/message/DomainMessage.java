@@ -3,7 +3,7 @@ package com.looksee.models.message;
 import com.looksee.models.Domain;
 
 /**
- * Message sent from WebCrawlerManager to SourceExtractionActor
+ * Message containing a website's domain and a raw URL within the domain. Will be checked if it is in a correct format and has a valid URL call to be prepared for proper source extraction.
  */
 public class DomainMessage extends Message {
 	private Domain domain;

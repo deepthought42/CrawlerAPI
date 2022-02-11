@@ -1,6 +1,7 @@
 package com.looksee.models.audit;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.models.CIEColorSpace;
+import com.looksee.models.designsystem.PaletteColor;
+import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ColorScheme;
+import com.looksee.models.enums.Priority;
 
 /**
  * 
@@ -74,6 +78,117 @@ public class ColorPaletteUtils {
 		
 		return new Score(score, max_points, new HashSet<>());
 	}
+	
+	/**
+	 * Scores site color palette based on the design system color palette and the colors found on the page
+	 * 
+	 * @param palette {@link List} of colors that define the accepted {@link DesignSystem} palette
+	 * @param colors {@link List} of colors that were found on the page
+	 * 
+	 * @return {@link Score}
+	 * 
+	 * @pre palette != null
+	 * @pre colors != null
+	 */
+	public static Score getPaletteScore(List<String> palette, List<ColorData> colors) {
+		assert palette != null;
+		assert colors != null;
+		
+		//if palette has exactly 1 color set and that color set has more than 1 color, then monochromatic
+		int score = 0;
+		int max_points = 0;
+		
+		Map<String, Boolean> non_compliant_colors = ColorPaletteUtils.retrieveNonCompliantColors(palette, colors);
+		
+		//if all colors match up with a palette color in hue then score is 1/1
+		//otherwise score is based on the number of colors that deviate from the design system
+		Set<String> labels = new HashSet<>();
+		labels.add("brand");
+		labels.add("color");
+		
+		Set<String> categories = new HashSet<>();
+		categories.add(AuditCategory.AESTHETICS.toString());
+		
+		
+		Set<UXIssueMessage> messages = new HashSet<>();
+		if(!non_compliant_colors.isEmpty()) {
+			String title = "Page colors don't conform to the brand";
+			String description = "Colors were found that aren't in the design system";
+			String recommendation = "You shouldn't use colors that aren't part of brand's design system";
+			String ada_compliance = "There are no ADA compliance guidelines regarding the website color" + 
+									" palette. However, keeping a cohesive color palette allows you to create" + 
+									" a webpage that is easy for everyone to read and interact with ";
+			
+			//for(String color : non_compliant_colors.keySet()) {
+			UXIssueMessage palette_issue_message = new ColorPaletteIssueMessage(
+																	Priority.HIGH,
+																	description,
+																	recommendation,
+																	non_compliant_colors.keySet(),
+																	palette,
+																	AuditCategory.AESTHETICS,
+																	labels,
+																	ada_compliance, 
+																	title,
+																	0,
+																	1);
+			
+			messages.add(palette_issue_message);
+		}
+		else {
+			String title = "Page colors are on brand!";
+			String description = "All colors on the page are part of the design system";
+			String recommendation = "";
+			String ada_compliance = "";
+			
+			//for(String color : non_compliant_colors.keySet()) {
+			UXIssueMessage palette_success_message = new ColorPaletteIssueMessage(
+																	Priority.HIGH,
+																	description,
+																	recommendation,
+																	non_compliant_colors.keySet(),
+																	palette,
+																	AuditCategory.AESTHETICS,
+																	labels,
+																	ada_compliance, 
+																	title,
+																	1,
+																	1);
+			
+			messages.add(palette_success_message);
+		}
+		return new Score(score, max_points, messages);
+	}
+
+	/**
+	 * Compares colors to palette and if any colors are within 5 arc degrees of a palette color, then it is considered to
+	 * 	conform to the palette.
+	 * 
+	 * @param palette
+	 * @param colors
+	 * @return
+	 */
+	private static Map<String, Boolean> retrieveNonCompliantColors(List<String> palette, List<ColorData> colors) {
+		Map<String, Boolean> non_compliant_colors = new HashMap<>();
+
+		for(ColorData color: colors) {
+			boolean conforms_to_palette = false;
+			for(String palette_color : palette) {
+				boolean is_similar_hue = new ColorData(palette_color).isSimilarHue(color);
+				//if color is a hue within 5 arc degrees of palette color then it matches
+				//otherwise it is not a match within the palette and we should
+				if(is_similar_hue) {
+					conforms_to_palette = true;
+					break;
+				}
+			}
+			if(!conforms_to_palette) {
+				//    add it to a list of non matching colors
+				non_compliant_colors.put(color.rgb(), Boolean.TRUE);
+			}
+		}
+		return non_compliant_colors;
+	}
 
 	/**
 	 * // NOTE:: we consider black and white as one color and the shades of gray as shades of 1 extreme meaning that grayscale is 1 color(gray) with many shades.
@@ -82,7 +197,7 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre palette != null
 	 */
-	public static ColorScheme getColorScheme(List<PaletteColor> palette) {
+	public static ColorScheme getColorScheme(Collection<PaletteColor> palette) {
 		assert palette != null;
 		
 		//if palette has exactly 1 color set and that color set has more than 1 color, then monochromatic
@@ -138,7 +253,7 @@ public class ColorPaletteUtils {
 			return ColorScheme.UNKNOWN;
 		}
 	}
-
+	
 	/**
 	 * TODO Needs testing
 	 * Checks if all colors are equidistant on the color wheel
@@ -148,7 +263,7 @@ public class ColorPaletteUtils {
 	 * 
 	 * @pre colors != null;
 	 */
-	private static boolean areEquidistantColors(List<PaletteColor> colors) {
+	private static boolean areEquidistantColors(Collection<PaletteColor> colors) {
 		assert colors != null;
 		
 		List<PaletteColor> color_list = new ArrayList<>(colors);
@@ -158,11 +273,10 @@ public class ColorPaletteUtils {
 			for(int b=a+1; b < color_list.size(); b++) {
 				ColorData color_b = new ColorData(color_list.get(b).getPrimaryColor());
 
-				//TODO AN ACTUAL DISTANCE METHOD HERE WOULD BE GREAT!!!!
 				distances.add(
 						Math.sqrt( Math.pow((color_b.getHue() - color_a.getHue()), 2) 
-						+ Math.pow((color_b.getSaturation() - color_a.getSaturation()), 2) 
-						+ Math.pow((color_b.getLuminosity() - color_a.getLuminosity()), 2)));
+								+ Math.pow((color_b.getSaturation() - color_a.getSaturation()), 2) 
+								+ Math.pow((color_b.getBrightness() - color_a.getBrightness()), 2)));
 			}	
 		}
 		
@@ -315,6 +429,26 @@ public class ColorPaletteUtils {
 	}
 	
 	/**
+	 * Extracts set of {@link PaletteColor colors} that define a palette based on a set of rgb strings
+	 * 
+	 * @param colors
+	 * @return
+	 */
+	public static List<PaletteColor> extractColors(List<ColorData> colors) {
+		assert colors != null;
+		
+		List<PaletteColor> palette_colors = new ArrayList<>();		
+		for(ColorData color : colors) {
+			PaletteColor palette_color = new PaletteColor(
+					color.rgb(), 
+					color.getUsagePercent(), 
+					new HashMap<>());
+			palette_colors.add(palette_color);
+		}
+		
+		return palette_colors;
+	}
+	/**
 	 * Evaluates each color set to identify the primary color. The primary color is defined as the 
 	 * second most used color in the set. The most used color in the set is defined as the background color
 	 * 
@@ -421,14 +555,11 @@ public class ColorPaletteUtils {
 			for(int idx=1; idx < colors.size(); idx++) {
 				ColorData color2 = colors.get(idx);
 
-				//if the difference between the 2 hues is less 3 degrees 
 				if(isSimilarHue(color, color2)) {	
 					if(similar_colors.isEmpty()) {
 						similar_colors.add(color);
-						//colors.remove(color);
 					}
 					similar_colors.add( color2 );
-					//colors.remove(color2);
 				}
 				
 			}
@@ -483,6 +614,14 @@ public class ColorPaletteUtils {
 
 	}
 
+	/**
+	 *	Checks if 2 colors are within 5 degrees
+	 * 
+	 * @param color1
+	 * @param color2
+	 * 
+	 * @return true if the difference between the 2 hues is less 5 degrees, otherwise false
+	 */
 	public static boolean isSimilarHue(ColorData color1, ColorData color2) {
 		assert color1 != null;
 		assert color2 != null;
@@ -508,8 +647,8 @@ public class ColorPaletteUtils {
 
 	
 	public static boolean isGrayScale(ColorData color) {
-		return ((color.getSaturation() <= 0.07 && color.getBrightness() > 0.2)
-				|| (color.getBrightness() < 0.25)
+		return ((color.getSaturation() <= 7 && color.getBrightness() > 20)
+				|| (color.getBrightness() < 25)
 				|| color.getLuminosity() < 0.15);
 	}
 

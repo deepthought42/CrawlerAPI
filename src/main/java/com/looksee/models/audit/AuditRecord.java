@@ -1,6 +1,8 @@
 package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.looksee.models.LookseeObject;
@@ -32,6 +34,9 @@ public class AuditRecord extends LookseeObject {
 
 	private String target_user_age;
 	private String target_user_education;
+
+	//DESIGN SYSTEM VALUES
+	private List<String> colors;
 	
 	public AuditRecord() {
 		setStartTime(LocalDateTime.now());
@@ -47,7 +52,7 @@ public class AuditRecord extends LookseeObject {
 		setAestheticMsg("");
 		setDataExtractionProgress(0.0);
 		setDataExtractionMsg("");
-		
+		setColors(new ArrayList<>());
 	}
 	
 	/**
@@ -87,6 +92,7 @@ public class AuditRecord extends LookseeObject {
 		setDataExtractionProgress(dataExtractionProgress);
 		setCreatedAt(createdAt);
 		setEndTime(endTime);
+		setColors(new ArrayList<>());
 		setUrl(url);
 	}
 
@@ -247,5 +253,21 @@ public class AuditRecord extends LookseeObject {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public List<String> getColors() {
+		return colors;
+	}
+
+	public void setColors(List<String> colors) {
+		this.colors = colors;
+	}
+	
+	public boolean addColor(String color){
+		if(!getColors().contains(color)) {
+			return getColors().add(color);
+		}
+		
+		return true;	
 	}
 }

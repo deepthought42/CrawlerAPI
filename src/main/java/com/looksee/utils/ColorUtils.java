@@ -1,13 +1,22 @@
 package com.looksee.utils;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.audit.ColorData;
+import com.looksee.models.audit.ColorUsageStat;
 import com.looksee.models.audit.recommend.ColorContrastRecommendation;
 
 public class ColorUtils {
@@ -206,6 +215,15 @@ public class ColorUtils {
 		return new ColorContrastRecommendation(element_color.rgb(), bg_color.rgb());
 	}
 
+	/**
+	 * Generates color recommendations based on contrast using either the background or the border color(if border is present)
+	 *   that would make the contrast compliant with WCAG 2.1 AAA standards
+	 *   
+	 * @param element
+	 * @param background_color
+	 * @param is_dark_theme
+	 * @return
+	 */
 	public static Set<ColorContrastRecommendation> findCompliantElementColors(ElementState element,
 																				ColorData background_color,
 																				boolean is_dark_theme) {
@@ -335,5 +353,49 @@ public class ColorUtils {
 		
 		//generate color recommendation for border color
 		return recommendations;
+	}
+	
+	/**
+	 * 
+	 * @param screenshot_url
+	 * @param elements
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
+	public static List<ColorUsageStat> extractColorsFromScreenshot(URL screenshot_url,
+															 		List<ElementState> elements
+	) throws MalformedURLException, IOException {		
+		//copy page state full page screenshot
+		BufferedImage screenshot = ImageIO.read(screenshot_url);
+		
+		for(ElementState element : elements) {
+			if(!element.getName().contentEquals("img")) {
+				continue;
+			}
+			
+			for(int x_pixel = element.getXLocation(); x_pixel < (element.getXLocation()+element.getWidth()); x_pixel++) {
+				if(x_pixel >= screenshot.getWidth()) {
+					break;
+				}
+				
+				if(x_pixel < 0) {
+					continue;
+				}
+				for(int y_pixel = element.getYLocation(); y_pixel < (element.getYLocation()+element.getHeight()); y_pixel++) {
+					if(y_pixel >= screenshot.getHeight()) {
+						break;
+					}
+					
+					if(y_pixel < 0) {
+						continue;
+					}
+					screenshot.setRGB(x_pixel, y_pixel, new Color(0,0,0).getRGB());
+				}	
+			}
+		}
+		
+		//return CloudVisionUtils.extractImageProperties(screenshot);
+		return ImageUtils.extractImageProperties(screenshot);
 	}
 }

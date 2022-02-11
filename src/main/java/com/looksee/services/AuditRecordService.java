@@ -21,6 +21,7 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.repository.AuditRecordRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -49,7 +50,7 @@ public class AuditRecordService {
 	
 	@Autowired
 	private PageStateService page_state_service;
-
+	
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
 
@@ -313,5 +314,9 @@ public class AuditRecordService {
 
 	public Set<Label> getLabelsForImageElements(long id) {
 		return audit_record_repo.getLabelsForImageElements(id);
+	}
+
+	public Optional<DesignSystem> getDesignSystem(long audit_record_id) {
+		return audit_record_repo.getDesignSystem(audit_record_id);
 	}
 }

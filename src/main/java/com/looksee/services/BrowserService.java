@@ -108,7 +108,6 @@ public class BrowserService {
 	 */
 	public Browser getConnection(BrowserType browser, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser != null;
-		log.warn("retrieving connection");
 
 		return BrowserConnectionHelper.getConnection(browser, browser_env);
 	}
@@ -473,7 +472,7 @@ public class BrowserService {
 		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
-		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - viewport_screenshot.getHeight()) ) {
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - browser.getViewportSize().getHeight()) ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
 		
@@ -572,7 +571,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-		}while(rendering_incomplete && cnt < 1000);
+		}while(rendering_incomplete && cnt < 10000);
 
 		return elements;
 	}

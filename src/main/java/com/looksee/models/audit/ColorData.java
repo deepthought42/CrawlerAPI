@@ -67,11 +67,11 @@ public class ColorData extends LookseeObject{
 		
 		//convert rgb to hsl, store all as Color object
 		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-		this.hue = hsb[0];
-		this.saturation = hsb[1];
-		this.brightness = hsb[2];
+		this.hue = Math.round(hsb[0]*360);
+		this.saturation = Math.round(hsb[1]*100);
+		this.brightness = Math.round(hsb[2]*100);
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));		
+		this.setLuminosity(calculatePercievedLightness(red, green, blue));		
 	}
 
 	public ColorData(ColorUsageStat color_usage_stat) {
@@ -84,11 +84,11 @@ public class ColorData extends LookseeObject{
 	
 		//convert rgb to hsl, store all as Color object
 		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-		this.hue = hsb[0];
-		this.saturation = hsb[1];
-		this.brightness = hsb[2];
+		this.hue = Math.round(hsb[0]*360);
+		this.saturation = Math.round(hsb[1]*100);
+		this.brightness = Math.round(hsb[2]*100);
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));
+		this.setLuminosity(calculatePercievedLightness(red, green, blue));		
 		setUsagePercent(color_usage_stat.getPixelPercent());
 	}
 
@@ -102,11 +102,11 @@ public class ColorData extends LookseeObject{
 
 		//convert rgb to hsl, store all as Color object
 		float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-		this.hue = hsb[0];
-		this.saturation = hsb[1];
-		this.brightness = hsb[2];
+		this.hue = Math.round(hsb[0]*360);
+		this.saturation = Math.round(hsb[1]*100);
+		this.brightness = Math.round(hsb[2]*100);
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));		
+		this.setLuminosity(calculatePercievedLightness(red, green, blue));		
 	}
 
 	/**
@@ -117,38 +117,43 @@ public class ColorData extends LookseeObject{
 	 * @param blue
 	 * @return
 	 */
-	private double calculateLuminosity(int red, int green, int blue) {
+	private double calculatePercievedLightness(int red, int green, int blue) {
 		//calculate luminosity
 		//For the sRGB colorspace, the relative luminance of a color is defined as
 		//where R, G and B are defined as:
+		
 		double RsRGB = red/255.0;
 		double GsRGB = green/255.0;
 		double BsRGB = blue/255.0;
 
-		double R, G, B;
-		if(RsRGB <= 0.04045) {
-			R = RsRGB/12.92;
-		}
-		else {
-			R = Math.pow(((RsRGB+0.055)/1.055), 2.4);
-		}
+		double R = sRGBtoLin(RsRGB);
+		double G = sRGBtoLin(GsRGB);
+		double B = sRGBtoLin(BsRGB);
 		
-		if(GsRGB <= 0.04045) {
-			G = GsRGB/12.92;
-		}
-		else {
-			G = Math.pow(((GsRGB+0.055)/1.055), 2.4);
-		}
-		
-		if(BsRGB <= 0.04045) {
-			B = BsRGB/12.92;
-		}
-		else {
-			B = Math.pow(((BsRGB+0.055)/1.055), 2.4);
-		}
-		
-		return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+		return 0.2126 * R + 0.7152 * G + 0.0722 * B ;
 	}
+	
+	private double YtoLstar(double luminance) {
+        // Send this function a luminance value between 0.0 and 1.0,
+        // and it returns L* which is "perceptual lightness"
+	
+	    if ( luminance <= (216/24389.0) ) {       // The CIE standard states 0.008856 but 216/24389 is the intent for 0.008856451679036
+            return luminance * (24389/27.0);  // The CIE standard states 903.3, but 24389/27 is the intent, making 903.296296296296296
+        } else {
+            return Math.pow(luminance,(1/3.0)) * 116 - 16;
+        }
+	}
+	
+	private double sRGBtoLin(double colorChannel) {
+        // Send this function a decimal sRGB gamma encoded color value
+        // between 0.0 and 1.0, and it returns a linearized value.
+
+	    if ( colorChannel <= 0.04045 ) {
+            return colorChannel / 12.92;
+        } else {
+            return Math.pow((( colorChannel + 0.055)/1.055),2.4);
+        }
+    }
 	
 	/**
 	 * Conver RGB to XYZ from rgb color
@@ -190,6 +195,9 @@ public class ColorData extends LookseeObject{
 		return color.blue == this.blue && color.red == this.red && color.green == this.green;
 	}
 	
+	/**
+	 * Returns the RGB representation of this color
+	 */
 	@Override
 	public String toString() {
 		return rgb();
@@ -299,6 +307,19 @@ public class ColorData extends LookseeObject{
 		this.saturation = hsb[1];
 		this.brightness = hsb[2];
 		
-		this.setLuminosity(calculateLuminosity(red, green, blue));
+		this.setLuminosity(calculatePercievedLightness(red, green, blue));
+	}
+
+	
+	/**
+	 * Checks if both colors are within a given distance of each other on the conic HSL(Hugh, Saturation, Luminosity) color representation
+	 * 
+	 * @param palette_color color of primary color being evaluated against
+	 * @param color {@link ColorData} color being evaluated
+	 * 
+	 * @return true if color2 is within 5 arc degress of color1
+	 */
+	public boolean isSimilarHue(ColorData color2) {		
+		return Math.abs(this.getHue() - color2.getHue()) <= 5.0;
 	}
 }

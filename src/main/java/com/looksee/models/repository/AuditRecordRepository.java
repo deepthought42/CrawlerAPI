@@ -16,6 +16,7 @@ import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.designsystem.DesignSystem;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -159,5 +160,8 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[*]->(element:ImageElementState) MATCH (element)-[]->(label:Label) RETURN label")
 	public Set<Label> getLabelsForImageElements(@Param("audit_record_id") long id);
+
+	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[:DETECTED]->(design_system:DesignSystem) RETURN design_system")
+	public Optional<DesignSystem> getDesignSystem(@Param("audit_record_id") long audit_record_id);
 	
 }

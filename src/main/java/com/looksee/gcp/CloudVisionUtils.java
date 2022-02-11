@@ -132,9 +132,8 @@ public class CloudVisionUtils {
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
-		        	labels.add(new Label(annotation.getDescription(), 
-		        						 annotation.getScore(), 
-		        						 annotation.getTopicality()));
+		        	labels.add(new Label(annotation.getDescription(),
+		        						 annotation.getScore()));
 		        }
 	      	}
 	    }
@@ -245,12 +244,6 @@ public class CloudVisionUtils {
 		        												 annotation.getSurpriseLikelihood(),
 		        												 annotation.getUnderExposedLikelihood(),
 		        												 annotation.getBoundingPoly()));
-		          System.out.format(
-		              "anger: %s%njoy: %s%nsurprise: %s%nposition: %s",
-		              annotation.getAngerLikelihood(),
-		              annotation.getJoyLikelihood(),
-		              annotation.getSurpriseLikelihood(),
-		              annotation.getBoundingPoly());
 		        }
 	      	}
 	    }
@@ -290,7 +283,6 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
 		          return new HashSet<>();
 		        }
 		
@@ -473,15 +465,7 @@ public class CloudVisionUtils {
 		    		}
 	
 			        // For full list of available annotations, see http://g.co/cloud/vision/docs
-			        SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();
-			        System.out.format(
-			            "adult: %s%nmedical: %s%nspoofed: %s%nviolence: %s%nracy: %s%n",
-			            annotation.getAdult(),
-			            annotation.getMedical(),
-			            annotation.getSpoof(),
-			            annotation.getViolence(),
-			            annotation.getRacy());
-			     
+			        SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();			     
 			        safe_search_annotation = new ImageSafeSearchAnnotation(annotation.getSpoof().name(), 
 			        														annotation.getMedical().name(), 
 			        														annotation.getAdult().name(), 

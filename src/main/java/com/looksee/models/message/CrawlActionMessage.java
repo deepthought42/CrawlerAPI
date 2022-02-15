@@ -14,19 +14,22 @@ public class CrawlActionMessage extends Message {
 	private AuditRecord audit_record;
 	private boolean is_individual;
 	private URL url;
+	private String host;
 	
 	public CrawlActionMessage(CrawlAction action, 
 							  long domain_id, 
 							  long account_id, 
-							  AuditRecord record, 
+							  long record_id, 
 							  boolean is_individual,
-							  URL url){
-		super(domain_id, account_id, record.getId());
+							  URL url,
+							  String host){
+		super(domain_id, account_id, record_id);
 		
 		setAction(action);
 		setIsIndividual(is_individual);
 		setUrl(url);
-		setAuditRecord(record);
+		//setAuditRecord(record_id);
+		setHost(host);
 	}
 	
 	public CrawlAction getAction() {
@@ -59,5 +62,13 @@ public class CrawlActionMessage extends Message {
 
 	public void setUrl(URL url) {
 		this.url = url;
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
 	}	
 }

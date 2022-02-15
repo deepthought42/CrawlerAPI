@@ -1,13 +1,11 @@
 package com.looksee.models;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.competitiveanalysis.brand.Brand;
 
 
 /**
@@ -20,9 +18,9 @@ public class Competitor extends LookseeObject{
 	private String url;
 	private String industry;
 	
-	@Relationship(type = "HAS")
-	private Set<AuditRecord> competitive_audit = new HashSet<>();
-
+	@Relationship("USES")
+	private Brand brand;
+	
 	public Competitor(){
 		super();
 	}
@@ -74,5 +72,13 @@ public class Competitor extends LookseeObject{
 
 	public void setIndustry(String industry) {
 		this.industry = industry;
+	}
+
+	public Brand getBrand() {
+		return brand;
+	}
+
+	public void setBrand(Brand brand) {
+		this.brand = brand;
 	}
 }

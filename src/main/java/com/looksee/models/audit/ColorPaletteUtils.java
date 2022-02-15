@@ -369,12 +369,10 @@ public class ColorPaletteUtils {
 	 */
 	public static List<PaletteColor> extractPalette(List<ColorData> colors) {
 		assert colors != null;
-		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		
-		Set<ColorData> color_set = identifyColorSet(colors);
+		//Set<ColorData> color_set = identifyColorSet(colors);
 		//Group colors
-		Set<Set<ColorData>> color_sets = groupColors(new ArrayList<>(color_set));
+		Set<Set<ColorData>> color_sets = groupColors(colors);
 		Set<ColorData> primary_colors = identifyPrimaryColors(color_sets);
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
@@ -463,7 +461,6 @@ public class ColorPaletteUtils {
 			color_list.sort((o1, o2) -> Double.compare(o2.getUsagePercent(), o1.getUsagePercent()));
 
 			primary_colors.add(color_list.get(0));
-			log.warn("primary color identified :: "+color_list.get(0).rgb() + "  :   " +color_list.get(0).getUsagePercent());
 		}
 		// TODO Auto-generated method stub
 		return primary_colors;
@@ -481,7 +478,6 @@ public class ColorPaletteUtils {
 			double percent = -5.0;
 
 			for(ColorData color : colors) {
-				log.warn("color :: "+color.rgb()+"     :       "+color.getUsagePercent());
 				if(percent < color.getUsagePercent()) {
 					percent = color.getUsagePercent();
 					largest_color = color;
@@ -497,8 +493,8 @@ public class ColorPaletteUtils {
 			Set<ColorData> similar_colors = new HashSet<>();
 			//remove any similar colors to primary color
 			for(ColorData color : colors) {
-				if(!color.equals(largest_color) && isSimilar(color, largest_color)) {
-					log.warn("Similar Color found :: "+color);
+				if(!color.equals(largest_color) && isSimilarHue(color, largest_color)) {
+					//log.warn("Similar Color found :: "+color);
 					similar_colors.add(color);
 				}
 			}
@@ -509,7 +505,7 @@ public class ColorPaletteUtils {
 			//remove similar colors from color set
 			for(ColorData color : similar_colors) {
 				colors.remove(color);
-				log.warn("removing color :: "+color.rgb());
+				//log.warn("removing color :: "+color.rgb());
 			}
 			log.warn("colors size after removal ::   "+colors.size());
 
@@ -627,20 +623,19 @@ public class ColorPaletteUtils {
 		assert color2 != null;
 		
 		if(isGrayScale(color1) && isGrayScale(color2)) {
-			log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
-			log.warn("color luminosities ::   "+color1.getLuminosity() + "  :  "+color2.getLuminosity());
+			//log.warn("both colors are grey  "+color1.rgb() + " : " + color2.rgb());
+			//log.warn("color luminosities ::   "+color1.getLuminosity() + "  :  "+color2.getLuminosity());
 			return (color1.getLuminosity() < 0.6 && color2.getLuminosity() < 0.6)
 					|| (color1.getLuminosity() >= 0.4 && color2.getLuminosity() >= 0.4);
 		}
 		else if((isGrayScale(color1) && !isGrayScale(color2))
 			|| (!isGrayScale(color1) && isGrayScale(color2)))
 		{
-			log.warn("colors are not similar. one is gray scale and the other isn't");
+			//log.warn("colors are not similar. one is gray scale and the other isn't");
 			return false;
 		}
 
 		double hue_diff = Math.abs(color1.getHue() - color2.getHue());
-		log.warn("hue diff :: "+hue_diff);
 
 		return hue_diff < 0.05;
 	}

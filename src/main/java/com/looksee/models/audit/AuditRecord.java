@@ -73,7 +73,7 @@ public class AuditRecord extends LookseeObject {
 					   double infoArchAuditProgress, 
 					   String dataExtractionMsg, 
 					   double dataExtractionProgress,
-					   LocalDateTime createdAt, 
+					   LocalDateTime created_at, 
 					   LocalDateTime endTime, 
 					   String url
 	) {
@@ -90,7 +90,7 @@ public class AuditRecord extends LookseeObject {
 		setInfoArchitectureAuditProgress(infoArchAuditProgress);
 		setDataExtractionMsg(dataExtractionMsg);
 		setDataExtractionProgress(dataExtractionProgress);
-		setCreatedAt(createdAt);
+		setCreatedAt(created_at);
 		setEndTime(endTime);
 		setColors(new ArrayList<>());
 		setUrl(url);

@@ -472,7 +472,7 @@ public class BrowserService {
 		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
-		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - browser.getViewportSize().getHeight()) ) {
+		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - viewport_screenshot.getHeight()) ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
 		

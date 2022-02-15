@@ -454,4 +454,19 @@ public class SubscriptionService {
 												   customer_email);
 	}
 
+	/**
+	 * Checks if the given {@link Account} can access the competitive analysis functionality. As of 2/14/2022, this feature is available to anyone with a paid account
+	 * @param account
+	 * @return
+	 */
+	public boolean canAccessCompetitiveAnalysis(Account account) {
+    	if(account.getSubscriptionToken() == null || account.getSubscriptionToken().isEmpty()){
+    		//free plan
+    		return false;
+    	}
+    	else {
+    		return true;
+    	}
+	}
+
 }

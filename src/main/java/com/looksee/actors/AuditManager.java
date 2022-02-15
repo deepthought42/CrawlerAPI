@@ -161,7 +161,7 @@ public class AuditManager extends AbstractActor{
 						else {
 							log.warn("starting domain audit");
 							this.is_domain_audit = true;
-							//send message to page data extractor
+							//send message to webCrawlerActor to get pages
 							ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 									.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 							

@@ -1,5 +1,7 @@
 package com.looksee.services;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +33,13 @@ public class CompetitorService {
 
 	public Iterable<Competitor> getAll() {
 		return competitor_repo.findAll();
+	}
+
+	public void addBrand(long competitor_id, long brand_id) {
+		competitor_repo.addBrand(competitor_id, brand_id);
+	}
+
+	public Optional<Competitor> findById(long competitor_id) {
+		return competitor_repo.findById(competitor_id);
 	}
 }

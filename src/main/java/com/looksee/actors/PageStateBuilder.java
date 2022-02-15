@@ -56,10 +56,8 @@ public class PageStateBuilder extends AbstractActor{
 	@Autowired
 	private AuditRecordService audit_record_service;
 	
-	
 	@Autowired
 	private PageStateService page_state_service;
-
 	
 	@Autowired
 	private ActorSystem actor_system;

@@ -20,14 +20,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.browsing.Browser;
-import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCandidateFound;
 import com.looksee.services.BrowserService;
-import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
@@ -51,9 +49,6 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class WebCrawlerActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(WebCrawlerActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private DomainService domain_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -91,8 +86,8 @@ public class WebCrawlerActor extends AbstractActor{
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, crawl_action-> {
 					/* perform site wide crawl */
-					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
-					String initial_url = domain.getUrl();
+					//Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
+					String initial_url = crawl_action.getHost();
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
@@ -106,14 +101,21 @@ public class WebCrawlerActor extends AbstractActor{
 						if(raw_url.trim().isEmpty()) {
 							continue;
 						}
-						URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
+						
+						URL sanitized_url = new URL(
+												BrowserUtils.sanitizeUrl(
+														BrowserUtils.formatUrl("http", 
+																			   crawl_action.getHost(), 
+																			   raw_url, 
+																			   false), false));
 						String page_url = BrowserUtils.getPageUrl(sanitized_url);
 						
 						if(visited.containsKey(page_url.toString())) {
 							continue;
 						}
 						
-						boolean is_external_link = BrowserUtils.isExternalLink(domain.getUrl(), sanitized_url.toString());
+						boolean is_external_link = BrowserUtils.isExternalLink(crawl_action.getHost(), 
+																			   sanitized_url.toString());
 
 						if( (BrowserUtils.isFile(sanitized_url.toString())
 								|| BrowserUtils.isJavascript(sanitized_url.toString())
@@ -182,7 +184,7 @@ public class WebCrawlerActor extends AbstractActor{
 						try {
 							Document doc = Jsoup.parse(page_src);
 							Elements links = doc.select("a");
-							String domain_host = domain.getUrl().replace("www.", "");
+							String domain_host = crawl_action.getHost().replace("www.", "");
 							
 							//iterate over links and exclude external links from frontier
 							for (Element link : links) {
@@ -203,7 +205,7 @@ public class WebCrawlerActor extends AbstractActor{
 								}
 								
 								try {
-									URL href_url = new URL( BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), href_str, false), false));
+									URL href_url = new URL( BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", crawl_action.getHost(), href_str, false), false));
 									String link_page_url = BrowserUtils.getPageUrl(href_url);
 									
 									if( BrowserUtils.isExternalLink(domain_host, href_url.toString())) {

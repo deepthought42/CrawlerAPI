@@ -896,7 +896,7 @@ public class DomainController {
 	 * @throws UnknownUserException
 	 */
 	// @PreAuthorize("hasAuthority('create:test_user')")
-	@RequestMapping(path = "test_users/$user_id", method = RequestMethod.DELETE)
+	@RequestMapping(path = "test_users/{user_id}", method = RequestMethod.DELETE)
 	public @ResponseBody void delete(HttpServletRequest request,
 			@RequestParam(value = "domain_key", required = true) String domain_key,
 			@RequestParam(value = "username", required = true) String username) throws UnknownAccountException {
@@ -999,9 +999,10 @@ public class DomainController {
 		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, 
 																 domain.getId(), 
 																 account.getId(),
-																 audit_record, 
+																 audit_record.getId(), 
 																 false, 
-																 sanitized_url);
+																 sanitized_url,
+																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
 
 		return audit_record;
@@ -1090,26 +1091,6 @@ public class DomainController {
 		competitor_service.deleteById(competitor_id);
     }
     
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class RequiredFieldMissingException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public RequiredFieldMissingException() {
-		super("Please fill in or select all required fields.");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class QanairyEmployeesOnlyException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public QanairyEmployeesOnlyException() {
-		super("It looks like you tried to add a Qanairy domain. If you would like to test Qanairy, please apply by emailing us at careers@qanairy.com.");
-	}
 }
 
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -134,9 +134,10 @@ public class AuditorController {
 		start_single_page_audit = new CrawlActionMessage(CrawlAction.START, 
 														 -1, 
 														 account_id,
-														 audit_record, 
+														 audit_record.getId(), 
 														 true, 
-														 sanitized_url);
+														 sanitized_url,
+														 sanitized_url.getHost());
 		
 		log.warn("Initiating audit via page state guilder actor");
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)

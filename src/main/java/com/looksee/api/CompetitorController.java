@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.looksee.api.exception.InsufficientSubscriptionException;
 import com.looksee.models.Account;
-import com.looksee.models.Competitor;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.message.CompetitorMessage;
 import com.looksee.services.AccountService;
@@ -30,13 +30,11 @@ import com.looksee.services.SubscriptionService;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
-import org.springframework.http.MediaType;
-
 /**
  *	API for interacting with {@link User} data
  */
 @Controller
-@RequestMapping(path = "/competitors", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping("/competitors")
 public class CompetitorController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

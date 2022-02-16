@@ -1,10 +1,9 @@
-package com.looksee.models;
-
-import java.util.UUID;
+package com.looksee.models.competitiveanalysis;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.looksee.models.LookseeObject;
 import com.looksee.models.competitiveanalysis.brand.Brand;
 
 
@@ -47,7 +46,7 @@ public class Competitor extends LookseeObject{
 	
 	@Override
 	public String generateKey() {
-		return "competitor::"+UUID.randomUUID().toString();
+		return "competitor::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() );
 	}
 
 	public String getCompanyName() {

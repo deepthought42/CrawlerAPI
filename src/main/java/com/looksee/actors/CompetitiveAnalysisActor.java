@@ -2,6 +2,7 @@ package com.looksee.actors;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -9,12 +10,15 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorPaletteUtils;
@@ -109,9 +113,11 @@ public class CompetitiveAnalysisActor extends AbstractActor{
 						this.page_count++;
 
 						PageState page = browser_service.buildPageState(message.getUrl());
-						List<ColorUsageStat> color_stats = ColorUtils.extractColorsFromScreenshot(new URL(page.getFullPageScreenshotUrlOnload()), page.getElements());
-						log.warn("Colors found on page ... "+color_stats.size());
-	
+						BufferedImage full_page_screenshot = ImageIO.read( new URL( page.getFullPageScreenshotUrlOnload()));
+								
+						List<ColorUsageStat> color_stats = CloudVisionUtils.extractImageProperties(full_page_screenshot);
+						
+						log.warn("Colors found on page ... "+color_stats.size());	
 						List<ColorData> color_data_list = color_stats.parallelStream()
 																.distinct()
 																.map(x -> new ColorData(x))

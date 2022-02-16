@@ -1,6 +1,6 @@
 package com.looksee.models.message;
 
-import com.looksee.models.Competitor;
+import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.competitiveanalysis.Message;
 
 public class CompetitorMessage extends Message {

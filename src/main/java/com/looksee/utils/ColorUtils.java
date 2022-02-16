@@ -369,6 +369,19 @@ public class ColorUtils {
 		//copy page state full page screenshot
 		BufferedImage screenshot = ImageIO.read(screenshot_url);
 		
+		removeImageElements(screenshot, elements);
+		
+		//return CloudVisionUtils.extractImageProperties(screenshot);
+		return ImageUtils.extractImageProperties(screenshot);
+	}
+
+	/**
+	 * Removes image elements from a screenshot
+	 * 
+	 * @param screenshot
+	 * @param elements
+	 */
+	public static void removeImageElements(BufferedImage screenshot, List<ElementState> elements) {
 		for(ElementState element : elements) {
 			if(!element.getName().contentEquals("img")) {
 				continue;
@@ -394,8 +407,5 @@ public class ColorUtils {
 				}	
 			}
 		}
-		
-		//return CloudVisionUtils.extractImageProperties(screenshot);
-		return ImageUtils.extractImageProperties(screenshot);
 	}
 }

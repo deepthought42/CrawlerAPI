@@ -160,6 +160,10 @@ public class PageStateService {
 		return page_state_repo.getElementStates(page_key);
 	}
 	
+	public List<ElementState> getElementStates(long page_state_id){
+		return page_state_repo.getElementStates(page_state_id);
+	}
+	
 	public List<ElementState> getLinkElementStates(String page_key){
 		return page_state_repo.getLinkElementStates(page_key);
 	}

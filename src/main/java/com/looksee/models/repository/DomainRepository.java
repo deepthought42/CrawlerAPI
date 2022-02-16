@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Action;
-import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
@@ -23,6 +22,8 @@ import com.looksee.models.TestUser;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -136,13 +137,15 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH(d:Domain) WITH d WHERE id(d)=$domain_id MATCH (ar:DomainAuditRecord)-[]->(d) MATCH y=(ar)-[:HAS]->(page_audit:PageAuditRecord) MATCH z=(page_audit)-[:HAS]->(audit:Audit) RETURN y,z")
 	public List<DomainAuditRecord> getAuditRecordHistory(@Param("domain_id") long domain_id);
 
-	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
-	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
-
 	@Query("MATCH (domain:Domain)-[:USES]->(ds:DesignSystem) WHERE id(domain)=$domain_id RETURN ds LIMIT 1")
 	public Optional<DesignSystem> getDesignSystem(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (d:Domain),(design:DesignSystem) WHERE id(d)=$domain_id AND id(design)=$design_system_id MERGE (d)-[:USES]->(design) RETURN design")
 	public DesignSystem addDesignSystem(@Param("domain_id") long domain_id, @Param("design_system_id") long design_system_id);
 
+	@Query("MATCH (domain:Domain)-[]->(c:Competitor) WHERE id(domain)=$domain_id RETURN c")
+	public List<Competitor> getCompetitors(@Param("domain_id") long domain_id);
+	
+	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
+	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
 }

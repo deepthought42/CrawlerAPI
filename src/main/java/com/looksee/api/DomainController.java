@@ -14,13 +14,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,6 @@ import com.looksee.api.exception.SubscriptionExceededException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
 import com.looksee.models.Account;
-import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Label;
@@ -63,7 +63,10 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.SimpleScore;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.dto.CompetitorDto;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
@@ -896,7 +899,7 @@ public class DomainController {
 	 * @throws UnknownUserException
 	 */
 	// @PreAuthorize("hasAuthority('create:test_user')")
-	@RequestMapping(path = "test_users/$user_id", method = RequestMethod.DELETE)
+	@RequestMapping(path = "test_users/{user_id}", method = RequestMethod.DELETE)
 	public @ResponseBody void delete(HttpServletRequest request,
 			@RequestParam(value = "domain_key", required = true) String domain_key,
 			@RequestParam(value = "username", required = true) String username) throws UnknownAccountException {
@@ -999,9 +1002,10 @@ public class DomainController {
 		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, 
 																 domain.getId(), 
 																 account.getId(),
-																 audit_record, 
+																 audit_record.getId(), 
 																 false, 
-																 sanitized_url);
+																 sanitized_url,
+																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
 
 		return audit_record;
@@ -1036,10 +1040,19 @@ public class DomainController {
      * @return list of competitors
      */
     @RequestMapping(method = RequestMethod.GET, path="{domain_id}/competitors")
-    public @ResponseBody List<Competitor> getAllCompetitors(
-							    		HttpServletRequest request
+    public @ResponseBody List<CompetitorDto> getAllCompetitors(
+							    		HttpServletRequest request,
+							    		@PathVariable("domain_id") long domain_id
 	) {
-    	return IterableUtils.toList(competitor_service.getAll());
+    	return domain_service.getCompetitors(domain_id)
+					.parallelStream()
+					.map( x -> {
+						Brand brand = competitor_service.getMostRecentBrand(x.getId());
+						boolean is_running = competitor_service.isAnalysisRunning(brand);
+						return new CompetitorDto(x.getId(), x.getCompanyName(), x.getUrl(), x.getIndustry(), is_running, brand);	
+					})
+					.collect(Collectors.toList());
+    												
     }
     
 	/**
@@ -1058,6 +1071,26 @@ public class DomainController {
     	domain_service.addCompetitor(domain_id, competitor.getId());
     	
     	return competitor;
+    }
+    
+    /**
+     * Retrieves the color palettes for all competitors for the given domain
+     * 
+     * @return List of color Lists
+     */
+    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/competitors/palettes")
+    public @ResponseBody List<List<String>> getAllCompetitorPalettes(
+							    		HttpServletRequest request,
+							    		@PathVariable("domain_id") long domain_id
+	) {
+    	List<List<String>> color_palettes = domain_service.getCompetitors(domain_id).parallelStream()
+    											.map(x -> competitor_service.getMostRecentBrand(x.getId()))
+    											.filter(Objects::nonNull)
+    											.map(x -> x.getColors().parallelStream().map(color-> "rgb("+color+")").collect(Collectors.toList()))
+    											.collect(Collectors.toList());
+    	
+    	return color_palettes;
+    												
     }
     
     /**
@@ -1090,26 +1123,6 @@ public class DomainController {
 		competitor_service.deleteById(competitor_id);
     }
     
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class RequiredFieldMissingException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public RequiredFieldMissingException() {
-		super("Please fill in or select all required fields.");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class QanairyEmployeesOnlyException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public QanairyEmployeesOnlyException() {
-		super("It looks like you tried to add a Qanairy domain. If you would like to test Qanairy, please apply by emailing us at careers@qanairy.com.");
-	}
 }
 
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

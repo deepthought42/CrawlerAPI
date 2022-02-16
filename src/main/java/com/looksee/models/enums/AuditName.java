@@ -26,7 +26,7 @@ public enum AuditName {
 	
 	private String shortName;
 
-    AuditName (String shortName) {
+    AuditName(String shortName) {
         this.shortName = shortName;
     }
 
@@ -36,7 +36,7 @@ public enum AuditName {
     }
 
     @JsonCreator
-    public static AuditName create (String value) {
+    public static AuditName create(String value) {
         if(value == null) {
             return UNKNOWN;
         }

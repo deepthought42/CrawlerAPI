@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.AudienceProficiency;
@@ -22,23 +21,13 @@ public class DesignSystem extends LookseeObject{
 	private String audience_proficiency;
 	
 	private List<String> allowed_image_characteristics;
-	
-	@Relationship(type="USES")
-	private ColorPalette palette;
+	private List<String> color_palette;
 
 	public DesignSystem() {
 		wcag_compliance_level = WCAGComplianceLevel.AA.toString();
 		audience_proficiency = AudienceProficiency.GENERAL.toString();
 		allowed_image_characteristics = new ArrayList<String>();
-		palette = new ColorPalette();
-	}
-	
-	public ColorPalette getPalette() {
-		return palette;
-	}
-
-	public void setPalette(ColorPalette palette) {
-		this.palette = palette;
+		color_palette = new ArrayList<>();
 	}
 	
 	public WCAGComplianceLevel getWcagComplianceLevel() {
@@ -73,5 +62,25 @@ public class DesignSystem extends LookseeObject{
 
 	public void setAllowedImageCharacteristics(List<String> allowed_image_characteristics) {
 		this.allowed_image_characteristics = allowed_image_characteristics;
+	}
+
+	public List<String> getColorPalette() {
+		return color_palette;
+	}
+
+	public void setColorPalette(List<String> color_palette) {
+		this.color_palette = color_palette;
+	}
+	
+	public boolean addColor(String color){
+		if(!getColorPalette().contains(color)) {
+			return getColorPalette().add(color);
+		}
+		
+		return true;	
+	}
+
+	public boolean removeColor(String color) {
+		return getColorPalette().remove(color);
 	}
 }

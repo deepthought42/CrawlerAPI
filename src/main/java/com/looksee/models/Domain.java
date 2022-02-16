@@ -8,6 +8,7 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
 
 

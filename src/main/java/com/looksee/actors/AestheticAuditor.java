@@ -54,12 +54,12 @@ public class AestheticAuditor extends AbstractActor{
 
 	@Autowired
 	private NonTextColorContrastAudit non_text_contrast_auditor;
-
-	@Autowired
-	private ColorPaletteAudit color_palette_auditor;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private ColorPaletteAudit color_palette_auditor;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -105,8 +105,8 @@ public class AestheticAuditor extends AbstractActor{
 						else {
 							design_system = design_system_opt.get();
 						}
-						AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord(); //audit_record_service.findById(page_audit_record_msg.getId()).get();
-						PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record_msg.getPageAuditRecord().getId());
+						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getPageAuditId()).get();
+						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 					   	//PageState page = page_audit_record_msg.getPageState();
 					   	//check if page state already
 			   			//perform audit and return audit result
@@ -190,34 +190,6 @@ public class AestheticAuditor extends AbstractActor{
 							e.printStackTrace();
 						}
 						
-						
-						try {
-							Audit color_palette_audit = color_palette_auditor.execute(page, audit_record, design_system);
-							
-							
-							AuditProgressUpdate audit_update4 = new AuditProgressUpdate(
-																		page_audit_record_msg.getAccountId(),
-																		audit_record.getId(),
-																		1.0,
-																		"Completed review of color palette",
-																		AuditCategory.AESTHETICS,
-																		AuditLevel.PAGE, 
-																		color_palette_audit, 
-																		page_audit_record_msg.getDomainId());
-
-							getContext().getParent().tell(audit_update4, getSelf());
-						}
-						catch(Exception e) {
-							AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(), 
-																  page_audit_record_msg.getAccountId(), 
-																  page_audit_record_msg.getAuditRecordId(), 
-																  "An error occurred while performing color contrast audit", 
-																  AuditCategory.AESTHETICS, 
-																  1.0);
-							getContext().getParent().tell(audit_err, getSelf());
-							e.printStackTrace();
-						}
-						
 					}catch(Exception e) {
 						log.warn("exception caught during aesthetic audit");
 						e.printStackTrace();
@@ -231,7 +203,7 @@ public class AestheticAuditor extends AbstractActor{
 						
 						AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
 								page_audit_record_msg.getAccountId(),
-								page_audit_record_msg.getPageAuditRecord().getId(),
+								page_audit_record_msg.getPageAuditId(),
 								1.0,
 								"Completed review of non-text contrast",
 								AuditCategory.AESTHETICS,

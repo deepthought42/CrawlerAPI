@@ -417,7 +417,7 @@ public class Browser {
 
 		//identify stitching points by using a sliding window with random sampling to determine
 		// if both images match. If a sliding window is found that matches for both images, then stitch images
-		int window_size = 400;
+		int window_size = 200;
 
 		//stitch images together using following steps
 		//    1. retrieve row that is 25% from top of last screenshot

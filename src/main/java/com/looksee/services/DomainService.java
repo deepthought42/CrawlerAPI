@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.Action;
-import com.looksee.models.Competitor;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
@@ -22,6 +21,7 @@ import com.looksee.models.TestUser;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.repository.DomainRepository;
 
@@ -219,5 +219,9 @@ public class DomainService {
 
 	public DesignSystem updateAllowedImageCharacteristics(long domain_id, List<String> allowed_image_characteristics) {
 		return domain_repo.updateAllowedImageCharacteristics(domain_id, allowed_image_characteristics);
+	}
+
+	public List<Competitor> getCompetitors(long domain_id) {
+		return domain_repo.getCompetitors(domain_id);
 	}
 }

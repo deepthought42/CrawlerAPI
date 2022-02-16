@@ -11,13 +11,6 @@ public class Message<T> {
 	private final T datum;
 	private final DiscoveryRecord discovery;
 	
-	@Deprecated
-	public Message(String account_key, T data){
-		this.account_key = account_key;
-		this.datum = data;
-		this.discovery = null;
-	}
-	
 	public Message(String account_key, T data, DiscoveryRecord discovery){
 		this.account_key = account_key;
 		this.datum = data;

@@ -85,7 +85,7 @@ public class ContentAuditor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder().match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 			try {
-				AuditRecord audit_record = page_audit_record_msg.getPageAuditRecord();// audit_record_service.findById(page_audit_record_msg.getId()).get();
+				AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getPageAuditId()).get();
 				PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 				// generate audit report
 				// Set<Audit> audits = new HashSet<>();

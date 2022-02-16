@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.ColorPaletteUtils;
-import com.looksee.models.audit.PaletteColor;
+import com.looksee.models.designsystem.PaletteColor;
 
 
 public class ColorPaletteUtilsTest {
@@ -49,12 +49,12 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb( 212,238,231 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(!is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 213,238,231 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(!is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 1,6,22 )");
 
@@ -66,7 +66,7 @@ public class ColorPaletteUtilsTest {
 		is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(is_gray);
 		
-		color = new ColorData("rgb(  193,193,193 )");
+		color = new ColorData("rgb( 193,193,193 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(is_gray);
@@ -79,17 +79,17 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb( 54,58,65)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 53,60,53)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 95,88,80)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 252,229,221)");
 
@@ -99,17 +99,32 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb(  99,104,113)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb( 34,41,53)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(is_gray);
+		assertFalse(is_gray);
 		
 		color = new ColorData("rgb(129,136,129)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
 		assertTrue(is_gray);
+		
+		color = new ColorData("rgb(115, 135, 115)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertFalse(is_gray);
+		
+		color = new ColorData("rgb(124, 135, 124)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertTrue(is_gray);
+		
+		color = new ColorData("rgb(47, 51, 47)");
+
+		is_gray = ColorPaletteUtils.isGrayScale(color);
+		assertFalse(is_gray);
 	}
 	
 	
@@ -219,6 +234,9 @@ public class ColorPaletteUtilsTest {
 		ColorData color4 = new ColorData("rgb( 36,36,36)");
 		color4.setUsagePercent(0.02f);
 
+		ColorData color5 = new ColorData("255,255,255");
+		color5.setUsagePercent(0.08f);
+		
 		ColorData color6 = new ColorData("129,136,129");
 		color6.setUsagePercent(0.001f);
 		
@@ -228,21 +246,21 @@ public class ColorPaletteUtilsTest {
 		colors.add(color2);
 		colors.add(color3);
 		colors.add(color4);
-		//colors.add(color5);
+		colors.add(color5);
 		colors.add(color6);
-		
 
 		List<PaletteColor> color_set = ColorPaletteUtils.extractPalette(colors);
 		for(PaletteColor primary : color_set) {
 			System.out.println(primary.getPrimaryColor());
 		}
-		assertTrue(color_set.size() == 3);
+		//assertTrue(color_set.size() == 3);
 	}
 	
 	@Test
 	public void extractPaletteTestLookSeeColors() {
 		ColorData color = new ColorData("rgb( 35,31,32)");
 		color.setUsagePercent(0.71f);
+		
 		ColorData color1 = new ColorData("rgb(193,193,193)");
 		color1.setUsagePercent(0.001f);
 
@@ -252,19 +270,35 @@ public class ColorPaletteUtilsTest {
 		ColorData color3 = new ColorData("35,27,24");
 		color3.setUsagePercent(0.08f);
 		
+		ColorData color4 = new ColorData("55,17,24");
+		color4.setUsagePercent(0.08f);
+		
+		ColorData color5 = new ColorData("105,17,204");
+		color5.setUsagePercent(0.08f);
+		
+		ColorData color6 = new ColorData("145,127,204");
+		color6.setUsagePercent(0.06f);
+		
+		ColorData color7 = new ColorData("15,17,204");
+		color7.setUsagePercent(0.05f);
+		
 		List<ColorData> colors = new ArrayList<>();
 		colors.add(color);
 		colors.add(color1);
 		colors.add(color2);
 		colors.add(color3);
+		colors.add(color4);
+		colors.add(color5);
+		colors.add(color6);
+		colors.add(color7);
 		
-
 		List<PaletteColor> color_set = ColorPaletteUtils.extractPalette(colors);
 		for(PaletteColor primary : color_set) {
 			System.out.println(primary.getPrimaryColor());
 		}
-		assertTrue(color_set.size() == 2);
-
+		
+		System.out.println("primary colors : "+color_set.size());
+		assertTrue(color_set.size() == 5);
 	}
 
 }

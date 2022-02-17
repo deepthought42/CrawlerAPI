@@ -40,11 +40,11 @@ public class SourceExtractionActor extends AbstractActor {
 		return receiveBuilder()
 			.match(DomainMessage.class, domain_msg -> {
 				Domain domain = domain_msg.getDomain();
-				URL sanitized_url = new URL(domain_msg.getRawUrl());
+				URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(domain_msg.getRawUrl(), false));
 				String page_url = BrowserUtils.getPageUrl(sanitized_url);
 				
+				getSender().tell(new AbstractMap.SimpleEntry<String, String>("visited", page_url), getSelf());
 				if(BrowserUtils.isValidUrl(sanitized_url.toString(), domain.getUrl())){
-					getSender().tell(new AbstractMap.SimpleEntry<String, String>("visited", page_url), getSelf());
 				
 					if(BrowserUtils.hasValidHttpStatus(sanitized_url)) {
 						String page_src = BrowserUtils.extractPageSrc(sanitized_url, browser_service);

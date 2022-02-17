@@ -175,6 +175,7 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
+					log.warn("Audit manager recieved page candidate "+message.getUrl());
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
 						if(!this.page_states_experienced.containsKey(url_without_protocol)) {
@@ -195,7 +196,7 @@ public class AuditManager extends AbstractActor{
 							}
 							else {
 								//Account is still within page limit. continue with mapping page 
-		
+								log.warn("building page audit record...");
 								PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
 																					new HashSet<>(), 
 																					null, 

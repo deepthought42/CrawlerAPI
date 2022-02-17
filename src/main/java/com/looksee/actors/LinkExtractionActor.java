@@ -72,10 +72,16 @@ public class LinkExtractionActor extends AbstractActor {
 							else if(BrowserUtils.isSubdomain(domain_host, href_url.getHost())) {
 								getSender().tell(new AbstractMap.SimpleEntry<String, String>("subdomain", href_url.toString()), getSelf());
 							}
+							else {
+								DomainMessage domain_msg = new DomainMessage(page_src_msg, domain, href_url.toString());
+								getSender().tell(domain_msg, getSelf());
+							}
 						}
 						catch(MalformedURLException e) {
 							log.error("malformed href value ....  " + href_str);
 						}
+						
+						
 					}
 				} 
 				catch(IllegalArgumentException e) {
@@ -87,9 +93,7 @@ public class LinkExtractionActor extends AbstractActor {
 					e.printStackTrace();
 				}
 				
-				DomainMessage domain_msg = new DomainMessage(page_src_msg, domain, sanitized_url.toString());
-
-				getSender().tell(domain_msg, getSelf());
+				
 			})
 			.match(MemberUp.class, mUp -> {
 				log.info("Member is Up: {}", mUp.member());

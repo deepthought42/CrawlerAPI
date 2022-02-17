@@ -877,7 +877,9 @@ public class BrowserUtils {
 	 * @pre sanitized_url != null
 	 * @pre !sanitized_url.isEmpty()
 	 */
-	public static boolean isValidUrl(String sanitized_url, String host) throws MalformedURLException, URISyntaxException {
+	public static boolean isValidUrl(String sanitized_url, String host) 
+			throws MalformedURLException, URISyntaxException 
+	{
 		assert sanitized_url != null;
 		assert !sanitized_url.isEmpty();
   
@@ -985,7 +987,7 @@ public class BrowserUtils {
 					browser.close();
 				}
 			}
-		} while (page_src.trim().isEmpty() && attempt_cnt < 100000);
+		} while (page_src.trim().isEmpty() && attempt_cnt < 1000);
 
 		return page_src;
 	}

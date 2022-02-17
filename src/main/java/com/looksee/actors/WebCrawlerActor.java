@@ -102,6 +102,13 @@ public class WebCrawlerActor extends AbstractActor{
 				.match(CrawlActionMessage.class, crawl_action -> {
 					this.audit_manager = getContext().getSender();
 
+					/* perform site wide crawl */
+					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
+					String initial_url = domain.getUrl();
+											
+					//add link to frontier
+					frontier.put(initial_url, Boolean.TRUE);
+					
 					processFrontier(crawl_action);
 				})
 				//From LinkExtraction to SourceExtraction
@@ -110,9 +117,9 @@ public class WebCrawlerActor extends AbstractActor{
 					String page_url = BrowserUtils.getPageUrl(sanitized_url);
           
 					if(!visited.containsKey(page_url)){
+						log.warn(page_url +" not visited");
 						frontier.put(page_url, Boolean.TRUE);
 					}
-
 					processFrontier(crawl_action);
 				})
 				//From SourceExtraction to LinkExtraction
@@ -122,7 +129,6 @@ public class WebCrawlerActor extends AbstractActor{
 					//URL page_url_obj = new URL(BrowserUtils.sanitizeUrl(page_url_str));
 					//construct page and add page to list of page states
 					//retrieve html source for page
-					log.warn("sending page candidate to AuditManager....");
 					PageCandidateFound candidate = new PageCandidateFound(page_src_msg.getAccountId(), 
 																		  page_src_msg.getAuditRecordId(), 
 																		  page_src_msg.getDomainId(),
@@ -134,16 +140,16 @@ public class WebCrawlerActor extends AbstractActor{
 					//Insert into the correct map
 					switch(mPair.getKey().toString()){
 						case "visited":
-							this.visited.put(mPair.getKey().toString(), Boolean.TRUE);
+							this.visited.put(mPair.getValue().toString(), Boolean.TRUE);
 						break;
 						case "frontier":
-							this.frontier.put(mPair.getKey().toString(), Boolean.TRUE);
+							this.frontier.put(mPair.getValue().toString(), Boolean.TRUE);
 						break;
 						case "subdomain":
-							this.subdomains.put(mPair.getKey().toString(), Boolean.TRUE);
+							this.subdomains.put(mPair.getValue().toString(), Boolean.TRUE);
 						break;
 						case "external_link":
-							this.external_links.put(mPair.getKey().toString(), Boolean.TRUE);
+							this.external_links.put(mPair.getValue().toString(), Boolean.TRUE);
 						break;
 					}
 				})
@@ -173,23 +179,19 @@ public class WebCrawlerActor extends AbstractActor{
 	 * @throws MalformedURLException
 	 */
 	private void processFrontier(Message crawl_action) throws MalformedURLException {
-		/* perform site wide crawl */
 		Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
-		String initial_url = domain.getUrl();
-								
-		//add link to frontier
-		frontier.put(initial_url, Boolean.TRUE);
 	
 		if(!frontier.isEmpty()) {
 			//remove link from beginning of frontier
 			String raw_url = frontier.keySet().iterator().next();
 			frontier.remove(raw_url);
-			
 			URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
 			String page_url = BrowserUtils.getPageUrl(sanitized_url);
-					
+			this.visited.put(page_url, Boolean.TRUE);
+			log.warn("Sanitized url from frontier ... "+page_url);
 			if(!visited.containsKey(page_url)) { //?
-				DomainMessage domain_msg = new DomainMessage(crawl_action, domain, raw_url);
+				log.warn("sending url to source extractor");
+				DomainMessage domain_msg = new DomainMessage(crawl_action, domain, page_url);
 				
 				this.source_extractor.tell(domain_msg, getSelf());
 			}

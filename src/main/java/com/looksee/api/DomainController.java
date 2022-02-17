@@ -474,7 +474,7 @@ public class DomainController {
 				double info_architecture_score = 0;
 				double content_score = 0;
 				page_count += page_audits.size();
-				log.warn("Reviewing page audits for overall score");
+
 				for(PageAuditRecord page_audit: page_audits) {
 					Set<Audit> audits = page_audit.getAudits();
 					

@@ -30,8 +30,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,9 @@ import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
+import com.looksee.models.enums.BrowserEnvironment;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.services.BrowserService;
 
 /**
  * 
@@ -854,7 +859,134 @@ public class BrowserUtils {
 	private static boolean isSchemeRelative(String host, String href) {
 		return href.startsWith("//");
 	}
-	
+
+	/**
+	 * Check if the url begins with a valid protocol and is in the valid format.
+	 * Also check if the url is an external link by comparing it to a host name.
+	 * 
+	 * @param sanitized_url A sanitized url, such as https://look-see.com
+	 * @param host The host website, such as look-see.com
+	 * @return {@code boolean}
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
+	 * 
+	 * @pre sanitized_url != null
+	 * @pre !sanitized_url.isEmpty()
+	 */
+	public static boolean isValidUrl(String sanitized_url, String host) 
+			throws MalformedURLException, URISyntaxException 
+	{
+		assert sanitized_url != null;
+		assert !sanitized_url.isEmpty();
+  
+		if(BrowserUtils.isFile(sanitized_url)
+			|| BrowserUtils.isJavascript(sanitized_url)
+			|| sanitized_url.startsWith("itms-apps:")
+			|| sanitized_url.startsWith("snap:")
+			|| sanitized_url.startsWith("tel:")
+			|| sanitized_url.startsWith("mailto:")
+			|| sanitized_url.startsWith("applenews:")
+			|| sanitized_url.startsWith("applenewss:")
+			|| sanitized_url.startsWith("mailto:")
+			|| BrowserUtils.isExternalLink(host, sanitized_url)){
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+	/**
+	 * Check to see if a link extracted from an href is empty or begins with a valid protocol.
+	 * 
+	 * @param href_str An href link from a page source.
+	 * @return {@code boolean} True if valid, false if invalid
+	 */
+	public static boolean isValidLink(String href_str){
+		if(href_str == null 
+				|| href_str.isEmpty() 
+				|| BrowserUtils.isJavascript(href_str)
+				|| href_str.startsWith("itms-apps:")
+				|| href_str.startsWith("snap:")
+				|| href_str.startsWith("tel:")
+				|| href_str.startsWith("mailto:")
+				|| BrowserUtils.isFile(href_str)){
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+	/**
+	 * Check if the sanitized url returns a valid http status code.
+	 * 
+	 * @param sanitized_url
+	 * @return {@code boolean} True if valid, false if page is not found.
+	 * 
+	 * @pre sanitized_url != null
+	 */
+	public static boolean hasValidHttpStatus(URL sanitized_url){
+		assert sanitized_url != null;
+
+		//Check http status to ensure page exists before trying to extract info from page
+		int http_status = BrowserUtils.getHttpStatus(sanitized_url);
+
+		//usually code 301 is returned which is a redirect, which is usually transferring to https
+		if(http_status == 404 || http_status == 408) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+	/**
+	 * Extracts the page source from the URL.
+	 * Attempts to connect to the browser service, then navigates to the url and extracts the source.
+	 * 
+	 * @param sanitized_url The sanitized URL that contains the page source
+	 * @param browser_service 
+	 * @return {@code String} The page source
+	 * 
+	 * @pre sanitized_url != null
+	 * @pre browser_service != null
+	 */
+	public static String extractPageSrc(URL sanitized_url, BrowserService browser_service){
+		assert sanitized_url != null;
+		assert browser_service != null;
+
+		//Extract page source from url
+		int attempt_cnt = 0;
+		String page_src = "";
+		
+		do {
+			Browser browser = null;
+			try {
+				browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(sanitized_url.toString());
+				
+				sanitized_url = new URL(browser.getDriver().getCurrentUrl());
+				page_src = browser_service.getPageSource(browser, sanitized_url);
+				attempt_cnt = 10000000;
+				break;
+			}
+			catch(MalformedURLException e) {
+				log.warn("Malformed URL exception occurred for  "+sanitized_url);
+				break;
+			}
+			catch(WebDriverException | GridException e) {								
+				log.warn("failed to obtain page source during crawl of :: "+sanitized_url);
+			}
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+		} while (page_src.trim().isEmpty() && attempt_cnt < 1000);
+
+		return page_src;
+  }	
 	
 	/**
 	 * Retrieves {@link ElementStates} that contain text

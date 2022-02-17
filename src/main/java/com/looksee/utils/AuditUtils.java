@@ -1,6 +1,8 @@
 package com.looksee.utils;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,22 +23,21 @@ public class AuditUtils {
 
 	public static double calculateScore(Set<Audit> audits) {
 		assert audits != null;
-		double score = 0.0;
-		int audit_cnt = 0;
-				
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() == 0) {
-				continue;
-			}
-			audit_cnt++;
-			
-			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
-		}
 		
-		if(audits.size() == 0) {
+		List<Audit> filtered_audits = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0))
+			      .collect(Collectors.toList());
+
+		double scores_total = filtered_audits.parallelStream()
+				   .mapToDouble(x -> x.getPoints() / (double)x.getTotalPossiblePoints())
+				   .sum();
+
+		if(filtered_audits.isEmpty()) {
 			return 0.0;
 		}
-		return score/(double)audit_cnt;
+		double final_score = (scores_total / (double)filtered_audits.size())*100;
+		
+		return final_score;
 	}
 	
 	/**
@@ -97,6 +98,8 @@ public class AuditUtils {
     	double seo = extractLabelScore(audits, "seo");
     	double security = extractLabelScore(audits, "security");
     	double color_contrast = extractLabelScore(audits, "color contrast");
+    	double text_contrast = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+    	double non_text_contrast = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
     	double whitespace = extractLabelScore(audits, "whitespace");
     	double accessibility = extractLabelScore(audits, "accessibility");
     	
@@ -114,7 +117,9 @@ public class AuditUtils {
     							color_contrast, 
     							whitespace, 
     							interactivity_score, 
-    							accessibility);
+    							accessibility,
+    							text_contrast,
+    							non_text_contrast);
     	
 	}
 
@@ -173,63 +178,87 @@ public class AuditUtils {
 		return audits.size() == 3;
 	}
 
+	/**
+	 * Calculate the score for all audits that have the given subcategory
+	 * 
+	 * @param audits
+	 * @param subcategory
+	 * 
+	 * @return
+	 * 
+	 * @pre audits != null
+	 * @pre subcategory != null
+	 */
 	public static double calculateSubcategoryScore(Set<Audit> audits, AuditSubcategory subcategory) {
 		assert audits != null;
+		assert subcategory != null;
 		
-		double score = 0.0;
-		int audit_cnt = 0;
-	
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() == 0 || !subcategory.equals(audit.getSubcategory())) {
-				continue;
-			}
-			audit_cnt++;
-			score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
-		}
 		
-		if(audit_cnt == 0) {
+		List<Audit> filtered_audits = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && s.getSubcategory().equals(subcategory)))
+			      .collect(Collectors.toList());
+
+		double scores_total = filtered_audits.parallelStream()
+				   .mapToDouble(x -> (x.getPoints() / (double)x.getTotalPossiblePoints()))
+				   .sum();
+
+		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
-		return score / (double)audit_cnt;
+		
+		double category_score = (scores_total / (double)filtered_audits.size())*100;
+		
+		return category_score;
 	}
 
 	public static double calculateScoreByCategory(Set<Audit> audits, AuditCategory category) {
 		assert audits != null;
 		assert category != null;
+			
+		List<Audit> filtered_audits = audits.parallelStream()
+							  .filter((s) -> (s.getTotalPossiblePoints() > 0 && s.getCategory().equals(category)))
+						      .collect(Collectors.toList());
 		
-		double score = 0.0;
-		int audit_cnt = 0;
-	
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() > 0 && category.equals(audit.getCategory())) {
-				audit_cnt++;
-				score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
-			}
-		}
 		
-		if(audit_cnt == 0) {
+		double scores_total = filtered_audits.parallelStream()
+				   .mapToDouble(x -> (x.getPoints() / (double)x.getTotalPossiblePoints()))
+				   .sum();
+		
+		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
-		return score / (double)audit_cnt;
+		
+		double category_score = (scores_total / (double)filtered_audits.size())*100;
+		return category_score;
 	}
 
+	/**
+	 * Calculates percentage score based on audits with the given name
+	 * 
+	 * @param audits
+	 * @param name
+	 * @return
+	 */
 	public static double calculateScoreByName(Set<Audit> audits, AuditName name) {
 		assert audits != null;
 		assert name != null;
 		
-		double score = 0.0;
-		int audit_cnt = 0;
+		//int audit_cnt = 0;
 	
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
-				audit_cnt++;
-				score += ((double)audit.getPoints() / (double)audit.getTotalPossiblePoints());
-			}
-		}
+		List<Audit> filtered_audits = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
+			      .collect(Collectors.toList());
 		
-		if(audit_cnt == 0) {
+		double scores_total = filtered_audits.parallelStream()
+				   .mapToDouble(x -> { return x.getPoints() / (double)x.getTotalPossiblePoints(); })
+				   .sum();
+
+		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
-		return score / (double)audit_cnt;
+		
+		double category_score = (scores_total / (double)filtered_audits.size())*100;
+		
+		return category_score;
 	}
 }

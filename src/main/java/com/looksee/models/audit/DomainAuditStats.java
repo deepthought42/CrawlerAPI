@@ -8,6 +8,7 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.AuditSubcategoryStat;
+import com.looksee.models.Label;
 
 public class DomainAuditStats extends AuditStats{	
 	
@@ -22,6 +23,8 @@ public class DomainAuditStats extends AuditStats{
 	
 	@Relationship(type = "HAS")
 	private Set<AuditSubcategoryStat> subcategory_stats;
+	
+	private Set<Label> image_labels;
 	
 	public DomainAuditStats() {}
 	
@@ -84,7 +87,8 @@ public class DomainAuditStats extends AuditStats{
 			List<SimpleScore> info_architecture_score_history, 
 			List<SimpleScore> aesthetic_score_history, 
 			List<SimpleScore> accessibility_score_history, 
-			int total_issues
+			int total_issues, Set<Label> image_labels,
+			int image_copyright_issue_count
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -148,6 +152,9 @@ public class DomainAuditStats extends AuditStats{
 		setInfoArchitectureScoreHistory(info_architecture_score_history);
 		setAestheticScoreHistory(aesthetic_score_history);
 		setAccessibilityScoreHistory(accessibility_score_history);
+		
+		setImageLabels(image_labels);
+		setImageCopyrightIssueCount(image_copyright_issue_count);
 	}
 
 
@@ -197,5 +204,13 @@ public class DomainAuditStats extends AuditStats{
 
 	public void setPagesFound(long pages_found) {
 		this.pages_found = pages_found;
+	}
+
+	public Set<Label> getImageLabels() {
+		return image_labels;
+	}
+
+	public void setImageLabels(Set<Label> img_labels) {
+		this.image_labels = img_labels;
 	}
 }

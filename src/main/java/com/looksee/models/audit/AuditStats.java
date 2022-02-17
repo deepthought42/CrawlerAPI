@@ -38,7 +38,8 @@ public class AuditStats {
 	private int imagery_issue_count;
 	private int video_issue_count;
 	private int audit_issue_count;
-	
+	private int image_copyright_issue_count;
+
 	private double written_content_score;
 	private double imagery_score;
 	private double videos_score;
@@ -77,7 +78,7 @@ public class AuditStats {
 	private double typography_score;
 	private double whitespace_score;
 	private double branding_score;
-	
+		
 	private int total_issues;
 	private double overall_score;
 
@@ -139,7 +140,8 @@ public class AuditStats {
 			List<SimpleScore> content_score_history, 
 			List<SimpleScore> info_architecture_score_history, 
 			List<SimpleScore> aesthetic_score_history, 
-			List<SimpleScore> accessibility_score_history
+			List<SimpleScore> accessibility_score_history, 
+			int image_copyright_issue_count
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
@@ -604,5 +606,13 @@ public class AuditStats {
 
 	public void setNonTextContrastScore(double non_text_contrast_score) {
 		this.non_text_contrast_score = non_text_contrast_score;
+	}
+
+	public int getImageCopyrightIssueCount() {
+		return image_copyright_issue_count;
+	}
+
+	public void setImageCopyrightIssueCount(int image_copyright_issue_count) {
+		this.image_copyright_issue_count = image_copyright_issue_count;
 	}
 }

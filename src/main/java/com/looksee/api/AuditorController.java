@@ -4,6 +4,8 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
@@ -96,8 +98,9 @@ public class AuditorController {
 		if(principal != null ) {
 			account = account_service.findByUserId(principal.getName());
 			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
-			Date date = new Date();
-	    	int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), date.getMonth());
+			LocalDate today = LocalDate.now();
+			
+			int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), today.getMonthValue());
 
 			if( subscription_service.hasExceededSinglePageAuditLimit(plan, page_audit_cnt) ) {				
 	    		throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to perform more audits");
@@ -131,9 +134,10 @@ public class AuditorController {
 		start_single_page_audit = new CrawlActionMessage(CrawlAction.START, 
 														 -1, 
 														 account_id,
-														 audit_record, 
+														 audit_record.getId(), 
 														 true, 
-														 sanitized_url);
+														 sanitized_url,
+														 sanitized_url.getHost());
 		
 		log.warn("Initiating audit via page state guilder actor");
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)

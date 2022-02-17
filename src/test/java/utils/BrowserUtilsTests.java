@@ -148,11 +148,16 @@ public class BrowserUtilsTests {
 	public void isExternalLinkTest() throws URISyntaxException, MalformedURLException {
 		assertFalse( BrowserUtils.isExternalLink("look-see.com", "look-see.com"));
 		assertFalse( BrowserUtils.isExternalLink("look-see.com", "/products"));
+		assertFalse( BrowserUtils.isExternalLink("look-see.com", "look-see.com/products"));
 		assertFalse( BrowserUtils.isExternalLink("app.look-see.com", "app.look-see.com"));
-		
+		assertFalse( BrowserUtils.isExternalLink("look-see.com", "http://look-see.com"));
+
 		assertTrue( BrowserUtils.isExternalLink("app.look-see.com", "look-see.com"));
-		assertFalse( BrowserUtils.isExternalLink("look-see.com", "app.look-see.com"));
+		assertTrue( BrowserUtils.isExternalLink("look-see.com", "app.look-see.com"));
 		assertTrue( BrowserUtils.isExternalLink("look-see.com", "wikipedia.com"));
+		assertTrue( BrowserUtils.isExternalLink("shootproof.com", "shootproof.community"));
+		assertTrue( BrowserUtils.isExternalLink("shootproof.com", "foreground.co/about"));
+
 	}
 	
 	@Test

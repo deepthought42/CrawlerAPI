@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.looksee.models.Action;
 import com.looksee.models.Domain;
-import com.looksee.models.DomainSettings;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
@@ -19,10 +18,11 @@ import com.looksee.models.PageState;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.TestUser;
-import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.repository.DomainRepository;
 
 @Service
@@ -181,86 +181,9 @@ public class DomainService {
 	public Set<AuditRecord> getAuditRecords(String domain_key) {
 		return domain_repo.getAuditRecords(domain_key);
 	}
-	
-	public Set<Audit> getMostRecentAuditRecordColorPaletteAudits(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllColorPaletteAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTextColorContrast(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTextColorContrastAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordNonTextColorContrast(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-        AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-		return audit_record_service.getAllNonTextColorContrastAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTypeface(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTypefaceAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordLinks(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllLinkAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordTitleAndHeader(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllTitleAndHeaderAudits(record.getKey());
-	}
-
-	public Set<Audit> getMostRecentAuditRecordAltText(String host) {
-		assert host != null;
-		assert !host.isEmpty();
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllAltTextAudits(record.getKey());
-	}
 
 	public Domain findByAuditRecord(long audit_record_id) {
 		return domain_repo.findByAuditRecord(audit_record_id);
-	}
-
-	public Set<Audit> getMostRecentAuditRecordMargins( String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllMarginAudits(record.getKey());	
-    }
-	
-	public Set<Audit> getMostRecentAuditRecordPadding( String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllPagePaddingAudits(record.getKey());
-    }
-
-	public Set<Audit> getMostRecentAuditRecordParagraphing(String host) {
-		assert host != null;
-		
-		AuditRecord record = audit_record_service.findMostRecentDomainAuditRecord(host).get();
-        return audit_record_service.getAllPageParagraphingAudits(record.getKey());
 	}
 
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String page_url) {
@@ -270,11 +193,35 @@ public class DomainService {
 		return audit_record_service.findMostRecentPageAuditRecord(page_url);
 	}
 
-	public DomainSettings updateExpertiseSettings(long domain_id, String expertise) {
+	public DesignSystem updateExpertiseSettings(long domain_id, String expertise) {
 		return domain_repo.updateExpertiseSetting(domain_id, expertise);
 	}
 
 	public List<DomainAuditRecord> getAuditRecordHistory(long domain_id) {
 		return domain_repo.getAuditRecordHistory(domain_id);
+	}
+
+	public Competitor addCompetitor(long domain_id, long competitor_id) {
+		return domain_repo.addCompetitor(domain_id, competitor_id);
+	}
+
+	public Optional<DesignSystem> getDesignSystem(long domain_id) {
+		return domain_repo.getDesignSystem(domain_id);
+	}
+
+	public DesignSystem addDesignSystem(long domain_id, long design_system_id) {
+		return domain_repo.addDesignSystem(domain_id, design_system_id);
+	}
+
+	public DesignSystem updateWcagSettings(long domain_id, String wcag_level) {
+		return domain_repo.updateWcagSettings(domain_id, wcag_level);
+	}
+
+	public DesignSystem updateAllowedImageCharacteristics(long domain_id, List<String> allowed_image_characteristics) {
+		return domain_repo.updateAllowedImageCharacteristics(domain_id, allowed_image_characteristics);
+	}
+
+	public List<Competitor> getCompetitors(long domain_id) {
+		return domain_repo.getCompetitors(domain_id);
 	}
 }

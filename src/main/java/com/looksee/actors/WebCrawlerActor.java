@@ -49,9 +49,6 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class WebCrawlerActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(WebCrawlerActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private DomainService domain_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -59,7 +56,6 @@ public class WebCrawlerActor extends AbstractActor{
 	private ActorRef audit_manager;
 	private ActorRef source_extractor;
 	private ActorRef link_extractor;
-
 	
 	private Map<String, Boolean> frontier = new HashMap<>();
 	private Map<String, Boolean> visited = new HashMap<>();
@@ -103,8 +99,8 @@ public class WebCrawlerActor extends AbstractActor{
 					this.audit_manager = getContext().getSender();
 
 					/* perform site wide crawl */
-					Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
-					String initial_url = domain.getUrl();
+					//Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
+					String initial_url = crawl_action.getHost();
 											
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);

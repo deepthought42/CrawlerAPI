@@ -26,8 +26,8 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.LocationInfo;
+import com.google.cloud.vision.v1.SafeSearchAnnotation;
 import com.google.cloud.vision.v1.WebDetection;
-import com.google.cloud.vision.v1.WebDetection.WebEntity;
 import com.google.cloud.vision.v1.WebDetection.WebImage;
 import com.google.cloud.vision.v1.WebDetection.WebLabel;
 import com.google.cloud.vision.v1.WebDetection.WebPage;
@@ -132,9 +132,8 @@ public class CloudVisionUtils {
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
-		        	labels.add(new Label(annotation.getDescription(), 
-		        						 annotation.getScore(), 
-		        						 annotation.getTopicality()));
+		        	labels.add(new Label(annotation.getDescription(),
+		        						 annotation.getScore()));
 		        }
 	      	}
 	    }
@@ -245,12 +244,6 @@ public class CloudVisionUtils {
 		        												 annotation.getSurpriseLikelihood(),
 		        												 annotation.getUnderExposedLikelihood(),
 		        												 annotation.getBoundingPoly()));
-		          System.out.format(
-		              "anger: %s%njoy: %s%nsurprise: %s%nposition: %s",
-		              annotation.getAngerLikelihood(),
-		              annotation.getJoyLikelihood(),
-		              annotation.getSurpriseLikelihood(),
-		              annotation.getBoundingPoly());
 		        }
 	      	}
 	    }
@@ -290,7 +283,6 @@ public class CloudVisionUtils {
 	
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
-		          System.out.format("Error: %s%n", res.getError().getMessage());
 		          return new HashSet<>();
 		        }
 		
@@ -315,12 +307,12 @@ public class CloudVisionUtils {
 	 * @param image_url
 	 * @throws IOException
 	 */
-	public static Set<ImageSearchAnnotation> searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
+	public static ImageSearchAnnotation searchWebForImageUsage(BufferedImage buffered_image) throws IOException {
 	    List<AnnotateImageRequest> requests = new ArrayList<>();
-	    Set<ImageSearchAnnotation> image_search_annotation = new HashSet<>();
+	    ImageSearchAnnotation image_search_annotation = null;
 	    
 	    //InputStream url_input_stream = new URL(image_url).openStream();
-	    buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
+	    //buffered_image = ImageUtils.resize(buffered_image, 768, 1024);
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
 	    ImageIO.write(buffered_image, "png", os);
 	    InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
@@ -343,18 +335,13 @@ public class CloudVisionUtils {
 	      	for (AnnotateImageResponse res : responses) {
 		        if (res.hasError()) {
 		          log.error("Error: %s%n", res.getError().getMessage());
-		          return new HashSet<>();
+		          return null;
 		        }
 		
 		        // Search the web for usages of the image. You could use these signals later
 		        // for user input moderation or linking external references.
 		        // For a full list of available annotations, see http://g.co/cloud/vision/docs
 		        WebDetection annotation = res.getWebDetection();
-		        Set<Label> labels = new HashSet<>();
-
-		        for (WebEntity entity : annotation.getWebEntitiesList()) {
-		        	labels.add(new Label(entity.getDescription(), entity.getScore(), 0.0F));
-		        }
 		        
 		        Set<String> best_guess_labels = new HashSet<>();
 		        for (WebLabel label : annotation.getBestGuessLabelsList()) {
@@ -363,7 +350,7 @@ public class CloudVisionUtils {
 		        
 		        Set<String> similar_images = new HashSet<>();
 		        for (WebPage page : annotation.getPagesWithMatchingImagesList()) {
-		          similar_images.add(page.getUrl());
+		        	similar_images.add(page.getUrl());
 		        }
 		        
 		        for (WebImage image : annotation.getPartialMatchingImagesList()) {
@@ -379,10 +366,9 @@ public class CloudVisionUtils {
 		        	similar_images.add(image.getUrl());
 		        }
 
-		        image_search_annotation.add(new ImageSearchAnnotation(labels, 
-		        													  best_guess_labels, 
+		        image_search_annotation = new ImageSearchAnnotation(  best_guess_labels, 
 		        													  fully_matching_images,
-		        													  similar_images));
+		        													  similar_images);
 	      	}
 	    }
 	    
@@ -445,5 +431,49 @@ public class CloudVisionUtils {
 	    }
 	    
 	    return color_usage_stats;
-	}	
+	}
+	
+	// Detects whether the specified image has features you would want to moderate.
+	  public static ImageSafeSearchAnnotation detectSafeSearch(BufferedImage buffered_img) throws IOException {
+		  List<AnnotateImageRequest> requests = new ArrayList<>();
+
+		  
+		  ByteArrayOutputStream os = new ByteArrayOutputStream();
+		  ImageIO.write(buffered_img, "png", os);
+		  InputStream input_stream = new ByteArrayInputStream(os.toByteArray());
+		    
+		  ByteString imgBytes = ByteString.readFrom(input_stream);
+
+		  Image img = Image.newBuilder().setContent(imgBytes).build();
+		  Feature feat = Feature.newBuilder().setType(Feature.Type.SAFE_SEARCH_DETECTION).build();
+		  AnnotateImageRequest request =
+		        AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+		  requests.add(request);
+	
+		  ImageSafeSearchAnnotation safe_search_annotation = null;
+		    // Initialize client that will be used to send requests. This client only needs to be created
+		    // once, and can be reused for multiple requests. After completing all of your requests, call
+		    // the "close" method on the client to safely clean up any remaining background resources.
+		    try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+		    	BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+		    	List<AnnotateImageResponse> responses = response.getResponsesList();
+	
+		    	for (AnnotateImageResponse res : responses) {
+		    		if (res.hasError()) {
+		    			System.out.format("Error: %s%n", res.getError().getMessage());
+		    			return null;
+		    		}
+	
+			        // For full list of available annotations, see http://g.co/cloud/vision/docs
+			        SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();			     
+			        safe_search_annotation = new ImageSafeSearchAnnotation(annotation.getSpoof().name(), 
+			        														annotation.getMedical().name(), 
+			        														annotation.getAdult().name(), 
+			        														annotation.getViolence().name(),
+			        														annotation.getRacy().name());
+		    	}
+		    }
+		    
+		    return safe_search_annotation;
+	  }
 }

@@ -114,7 +114,6 @@ public class AuditManager extends AbstractActor{
 	private boolean is_domain_audit = false;
 	private int total_pages = 0;
 	private Map<String, Boolean> page_states_experienced;
-	private Map<String, PageState> page_states_audited;
 
 	//subscribe to cluster changes
 	@Override
@@ -124,7 +123,6 @@ public class AuditManager extends AbstractActor{
 		this.total_dispatch_responses = new HashMap<>();
 		this.total_dispatches = new HashMap<>();
 		this.page_states_experienced = new HashMap<>();
-		this.page_states_audited = new HashMap<>();
 		this.total_pages = 0;
 	}
 
@@ -161,8 +159,9 @@ public class AuditManager extends AbstractActor{
 							page_state_builder.tell(crawl_action_msg, getSelf());
 						}
 						else {
+							log.warn("starting domain audit");
 							this.is_domain_audit = true;
-							//send message to page data extractor
+							//send message to webCrawlerActor to get pages
 							ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 									.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 							
@@ -175,7 +174,6 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
-					log.warn("Audit manager recieved page candidate "+message.getUrl());
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
 						if(!this.page_states_experienced.containsKey(url_without_protocol)) {
@@ -281,7 +279,7 @@ public class AuditManager extends AbstractActor{
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
 							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
-																				audit_record, 
+																				audit_record.getId(), 
 																				message.getDomainId(), 
 																				message.getAccountId(), 
 																				message.getAuditRecordId());
@@ -309,9 +307,18 @@ public class AuditManager extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
+				.match(PageDataExtractionMessage.class, message -> {
+					this.total_dispatches.put(message.getUrl(), (long)message.getDispatchCount());
+
+					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+					audit_record.setDataExtractionMsg("Extracting elements");
+					audit_record.setDataExtractionProgress(0.1);
+					audit_record.setStatus(ExecutionStatus.EXTRACTING_ELEMENTS);
+					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
+				})
 				.match(ElementsSaved.class, message -> {
+					
 					long response_count = 0L; 
-					log.warn("Received element saved message from data extraction actor");
 					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
 						response_count = this.total_dispatch_responses.get(message.getPageUrl());
 					}
@@ -338,8 +345,20 @@ public class AuditManager extends AbstractActor{
 							audit_record.setInfoArchitectureAuditProgress(1/100.0);
 							audit_record.setInfoArchMsg("Starting Information Architecture audit");
 							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()) );
-							audit_record = (PageAuditRecord) audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
+							audit_record = (PageAuditRecord) audit_record_service.save(audit_record, 
+																						message.getAccountId(), 
+																						message.getDomainId());
 						
+							//send page audit record to design system extractor
+							ActorRef design_system_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("designSystemExtractor"), "designSystemExtractor"+UUID.randomUUID());
+							log.warn("sending message to design system extractor ....");
+							PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage( audit_record.getId(), 
+																								message.getDomainId(), 
+																								message.getAccountId(), 
+																								message.getAuditRecordId());
+							design_system_extractor.tell(page_audit_msg, getSelf());
+							
 							/*
 						   	log.warn("requesting performance audit from performance auditor....");
 						   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -347,7 +366,7 @@ public class AuditManager extends AbstractActor{
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
 							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
-																				audit_record, 
+																				audit_record.getId(), 
 																				message.getDomainId(), 
 																				message.getAccountId(), 
 																				message.getAuditRecordId());
@@ -420,6 +439,8 @@ public class AuditManager extends AbstractActor{
 						}
 						
 						if(this.is_domain_audit) {
+							//extract color from page audits for color palette
+							
 							try {
 								if(audit_record instanceof PageAuditRecord) {
 									audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();
@@ -485,15 +506,6 @@ public class AuditManager extends AbstractActor{
 						audit_record.setInfoArchMsg(message.getErrorMessage());
 					}
 					
-					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
-				})
-				.match(PageDataExtractionMessage.class, message -> {
-					this.total_dispatches.put(message.getUrl(), (long)message.getDispatchCount());
-
-					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-					audit_record.setDataExtractionMsg("Extracting elements");
-					audit_record.setDataExtractionProgress(0.1);
-					audit_record.setStatus(ExecutionStatus.EXTRACTING_ELEMENTS);
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(MemberUp.class, mUp -> {

@@ -21,6 +21,7 @@ import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.Score;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.Recommendation;
+import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -50,7 +51,7 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 	 * @throws URISyntaxException 
 	 */
 	@Override
-	public Audit execute(PageState page_state, AuditRecord audit_record) {
+	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		//List<PageVersion> pages = domain_service.getPages(domain.getHost());

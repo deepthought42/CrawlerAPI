@@ -8,6 +8,8 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.designsystem.DesignSystem;
 
 
 /**
@@ -33,8 +35,11 @@ public class Domain extends LookseeObject{
 	@Relationship(type = "HAS", direction = Relationship.INCOMING)
 	private Set<DomainAuditRecord> audit_records;
 	
-	@Relationship(type = "HAS")
-	private DomainSettings settings;
+	@Relationship(type="COMPETES_WTIH")
+	private Set<Competitor> competitors;
+	
+	@Relationship(type="USES")
+	private DesignSystem design_system;
 	
 	/**
 	 * 
@@ -47,6 +52,7 @@ public class Domain extends LookseeObject{
 		setPages( new ArrayList<>() );
 		setAuditRecords(new HashSet<>());
 		setSitemap(new ArrayList<>());
+		setDesignSystem(new DesignSystem());
 	}
 	
 	/**
@@ -67,6 +73,7 @@ public class Domain extends LookseeObject{
 		setLogoUrl(logo_url);
 		setPages(new ArrayList<>());
 		setAuditRecords(new HashSet<>());
+		setDesignSystem(new DesignSystem());
 		setKey(generateKey());
 	}
 	
@@ -176,11 +183,19 @@ public class Domain extends LookseeObject{
 		this.entrypoint_url = entrypoint_url;
 	}
 
-	public DomainSettings getSettings() {
-		return settings;
+	public Set<Competitor> getCompetitors() {
+		return competitors;
 	}
 
-	public void setSettings(DomainSettings settings) {
-		this.settings = settings;
+	public void setCompetitors(Set<Competitor> competitors) {
+		this.competitors = competitors;
+	}
+
+	public DesignSystem getDesignSystem() {
+		return design_system;
+	}
+
+	public void setDesignSystem(DesignSystem design_system) {
+		this.design_system = design_system;
 	}
 }

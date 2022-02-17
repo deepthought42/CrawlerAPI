@@ -9,12 +9,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Account;
+import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.designsystem.DesignSystem;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -46,10 +48,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllAuditsAndIssues(@Param("audit_record_id") long audit_record_id);
-
-	@Query("MATCH (d:Domain{host:$domain_host})-[]-(ar:DomainAuditRecord) RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
-	@Deprecated
-	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(@Param("domain_host")  String domain_host);
 
 	@Query("MATCH (d:Domain)-[]-(ar:DomainAuditRecord) WHERE id(d)=$domain_id RETURN ar ORDER BY ar.created_at DESC LIMIT 1")
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(@Param("domain_id") long domain_id);
@@ -96,7 +94,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
 	
-	@Query("MATCH (domain_audit:DomainAuditRecord)-[]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
+	@Query("MATCH (domain_audit:DomainAuditRecord)-[:HAS]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
 	public Set<PageAuditRecord> getAllPageAudits(@Param("domain_audit_id") long domain_audit_id);
 
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) OPTIONAL MATCH auditsAndMessages=(audit)-->(:UXIssueMessage) WHERE id(page_audit)=$page_audit_id RETURN auditsAndMessages")
@@ -151,7 +149,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit) MATCH (audit)-[:HAS]-(issue:UXIssueMessage{priority:$severity}) WHERE id(audit_record)=$audit_record_id RETURN count(issue) as count")
 	public long getIssueCountBySeverity(@Param("audit_record_id") long id, @Param("severity") String severity);
 
-	@Query("MATCH (audit_record:DomainAuditRecord)-[]-(page_audit:PageAuditRecord) WHERE id(audit_record)=$audit_record_id RETURN count(page_audit) as count")
+	@Query("MATCH (audit_record:DomainAuditRecord)-[]->(page_audit:PageAuditRecord) WHERE id(audit_record)=$audit_record_id RETURN count(page_audit) as count")
 	public int getPageAuditRecordCount(@Param("audit_record_id") long domain_audit_id);
 
 	@Query("MATCH (doman_audit:DomainAuditRecord)-[:HAS]->(page_audit:PageAuditRecord) WHERE id(page_audit)=$audit_record_id RETURN doman_audit LIMIT 1")
@@ -159,5 +157,11 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (account:Account)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account LIMIT 1")
 	public Optional<Account> getAccount(@Param("audit_record_id") long audit_record_id);
+
+	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[*]->(element:ImageElementState) MATCH (element)-[]->(label:Label) RETURN label")
+	public Set<Label> getLabelsForImageElements(@Param("audit_record_id") long id);
+
+	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[:DETECTED]->(design_system:DesignSystem) RETURN design_system")
+	public Optional<DesignSystem> getDesignSystem(@Param("audit_record_id") long audit_record_id);
 	
 }

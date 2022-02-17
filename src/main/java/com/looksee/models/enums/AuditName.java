@@ -20,11 +20,13 @@ public enum AuditName {
 	ALT_TEXT("Alt Text"),
 	PARAGRAPHING("Paragraphing"),
 	METADATA("Metadata"),
-	UNKNOWN("Unknown");
+	UNKNOWN("Unknown"), 
+	IMAGE_COPYRIGHT("Image Copyright"), 
+	IMAGE_POLICY("Image Policy");
 	
 	private String shortName;
 
-    AuditName (String shortName) {
+    AuditName(String shortName) {
         this.shortName = shortName;
     }
 
@@ -34,7 +36,7 @@ public enum AuditName {
     }
 
     @JsonCreator
-    public static AuditName create (String value) {
+    public static AuditName create(String value) {
         if(value == null) {
             return UNKNOWN;
         }

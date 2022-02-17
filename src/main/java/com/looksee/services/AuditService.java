@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.ImageElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.PageStateAudits;
 import com.looksee.models.SimpleElement;
@@ -249,12 +250,9 @@ public class AuditService {
 			
 			for(UXIssueMessage ux_issue: issue_set) {
 				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
-					log.warn("ELEMENT type UX Issue was found");
 					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
-					log.warn("ELEMENT GOOD EXAMPLE :: "+ element_issue.getGoodExample());
 					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
 					element_issue.setGoodExample(good_example);
-					log.warn("ELEMENT GOOD EXAMPLE(after retrieval) :: "+ element_issue.getGoodExample());
 					
 					issues.put(ux_issue.getKey(), element_issue);
 				}
@@ -281,17 +279,36 @@ public class AuditService {
 					ux_issue.getType().equals(ObservationType.ELEMENT) ) {
 
 				ElementState element = ux_issue_service.getElement(ux_issue.getId());
-				
-				SimpleElement simple_element = 	new SimpleElement(element.getKey(),
-																  element.getScreenshotUrl(), 
-																  element.getXLocation(), 
-																  element.getYLocation(), 
-																  element.getWidth(), 
-																  element.getHeight(),
-																  element.getCssSelector(),
-																  element.getAllText());
-				
-				element_map.put(element.getKey(), simple_element);
+				if(element instanceof ImageElementState) {
+					ImageElementState img_element = (ImageElementState)element;
+					
+					SimpleElement simple_element = 	new SimpleElement(img_element.getKey(),
+																		img_element.getScreenshotUrl(), 
+																		img_element.getXLocation(), 
+																		img_element.getYLocation(), 
+																		img_element.getWidth(), 
+																		img_element.getHeight(),
+																		img_element.getCssSelector(),
+																		img_element.getAllText(),
+																		img_element.isImageFlagged(),
+																		img_element.isAdultContent());
+
+					element_map.put(img_element.getKey(), simple_element);
+				}
+				else {					
+					SimpleElement simple_element = 	new SimpleElement(element.getKey(),
+																	  element.getScreenshotUrl(), 
+																	  element.getXLocation(), 
+																	  element.getYLocation(), 
+																	  element.getWidth(), 
+																	  element.getHeight(),
+																	  element.getCssSelector(),
+																	  element.getAllText(),
+																	  element.isImageFlagged(),
+																	  false);
+					
+					element_map.put(element.getKey(), simple_element);
+				}
 			}
 			else {
 				//DO NOTHING FOR NOW
@@ -316,7 +333,12 @@ public class AuditService {
 	public int countAuditBySubcategory(Set<Audit> audits, AuditSubcategory category) {
 		assert audits != null;
 		assert category != null;
-		
+	
+		int issue_count = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && category.equals(s.getSubcategory())))
+				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
+				  .sum();
+		/*
 		int issue_count = 0;
 	
 		for(Audit audit: audits) {
@@ -324,21 +346,25 @@ public class AuditService {
 				issue_count += audit_repo.getMessageCount(audit.getId());
 			}
 		}
-		
+		*/
 		return issue_count;
 	}
 
 	public int countIssuesByAuditName(Set<Audit> audits, AuditName name) {
 		assert audits != null;
 		assert name != null;
-		
-		int issue_count = 0;
 	
+		int issue_count = audits.parallelStream()
+				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
+				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
+				  .sum();
+		/*
 		for(Audit audit: audits) {
 			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
 				issue_count += audit_repo.getMessageCount(audit.getId());
 			}
 		}
-		
-		return issue_count;	}
+		*/
+		return issue_count;	
+	}
 }

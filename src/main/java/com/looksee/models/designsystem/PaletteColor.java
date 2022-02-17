@@ -1,25 +1,19 @@
-package com.looksee.models.audit;
+package com.looksee.models.designsystem;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.neo4j.ogm.annotation.Properties;
-
-import com.looksee.models.LookseeObject;
 
 /**
  * Contains data for individual palette primary colors and the shades, tints, and tones associated with them
  *
  */
-public class PaletteColor extends LookseeObject {
+public class PaletteColor {
 
 	private String primary_color;
 	private double primary_color_percent;
 	
-	@Properties
 	private Map<String, String> tints_shades_tones = new HashMap<>();
 	
 	public PaletteColor() {}
@@ -28,7 +22,6 @@ public class PaletteColor extends LookseeObject {
 		setPrimaryColor(primary_color.trim());
 		setPrimaryColorPercent(primary_color_percent);
 		addTintsShadesTones(tints_shades_tones);
-		setKey(generateKey());
 	}
 
 	public String getPrimaryColor() {
@@ -53,12 +46,5 @@ public class PaletteColor extends LookseeObject {
 
 	public void addTintsShadesTones(Map<String, String> tints_shades_tones) {
 		this.tints_shades_tones.putAll(tints_shades_tones);
-	}
-
-	@Override
-	public String generateKey() {
-		List<String> sorted_keys = new ArrayList<>(tints_shades_tones.keySet());
-		Collections.sort(sorted_keys);
-		return "palettecolor"+org.apache.commons.codec.digest.DigestUtils.sha256Hex( primary_color + sorted_keys );
 	}
 }

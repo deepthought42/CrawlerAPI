@@ -416,7 +416,6 @@ public class DomainController {
 				double aesthetic_score = 0;
 				double info_architecture_score = 0;
 				double content_score = 0;
-				log.warn("Reviewing page audits for overall score");
 				for(PageAuditRecord page_audit: page_audits) {
 					Set<Audit> audits = page_audit.getAudits();
 					

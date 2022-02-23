@@ -414,6 +414,17 @@ public class ImageUtils {
 		*/
 		return true;
 	}
+	
+	// convert BufferedImage to byte[]
+    public static byte[] toByteArray(BufferedImage bi, String format)
+        throws IOException {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(bi, format, baos);
+        byte[] bytes = baos.toByteArray();
+        return bytes;
+
+    }
 
 	@Retry(name="gcp")
 	public static BufferedImage readImageFromURL(URL full_page_screenshot_url) throws IOException {

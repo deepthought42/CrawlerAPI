@@ -446,13 +446,14 @@ public class AuditManager extends AbstractActor{
 									audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();
 								}
 								
-								if( audit_record_service.isDomainAuditComplete(audit_record)) {
+								Account account = account_service.findById(message.getAccountId()).get();
+						    	
+								if( audit_record_service.isDomainAuditComplete( audit_record, total_pages, this.page_states_experienced.keySet().size())) {
 									audit_record.setEndTime(LocalDateTime.now());
 									audit_record.setStatus(ExecutionStatus.COMPLETE);
 									audit_record =  audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
 									log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
 									
-									Account account = account_service.findById(message.getAccountId()).get();
 									Domain domain = domain_service.findByAuditRecord(message.getAuditRecordId()); //findById(message.getDomainId()).get();  //findByAuditRecord(audit_record.getId());
 									mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 								}
@@ -494,15 +495,15 @@ public class AuditManager extends AbstractActor{
 					audit_record.setStatus(ExecutionStatus.ERROR);
 
 					if(AuditCategory.CONTENT.equals(message.getAuditCategory())) {
-						audit_record.setContentAuditProgress( 1 );
+						audit_record.setContentAuditProgress( message.getProgress() );
 						audit_record.setContentAuditMsg( message.getErrorMessage());
 					}
 					else if(AuditCategory.AESTHETICS.equals(message.getAuditCategory())) {
-						audit_record.setAestheticAuditProgress( 1 );
+						audit_record.setAestheticAuditProgress( message.getProgress() );
 						audit_record.setAestheticMsg(message.getErrorMessage());
 					}
 					else if(AuditCategory.INFORMATION_ARCHITECTURE.equals(message.getAuditCategory())) {
-						audit_record.setInfoArchitectureAuditProgress( 1 );
+						audit_record.setInfoArchitectureAuditProgress( message.getProgress() );
 						audit_record.setInfoArchMsg(message.getErrorMessage());
 					}
 					

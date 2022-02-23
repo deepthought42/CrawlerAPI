@@ -54,6 +54,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	 * 
 	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
+	 *   
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */

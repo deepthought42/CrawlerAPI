@@ -278,7 +278,7 @@ public class ColorPaletteUtils {
 						Math.sqrt( Math.pow((color_b.getHue() - color_a.getHue()), 2) 
 								+ Math.pow((color_b.getSaturation() - color_a.getSaturation()), 2) 
 								+ Math.pow((color_b.getBrightness() - color_a.getBrightness()), 2)));
-			}	
+			}
 		}
 		
 		for(int a=0; a < distances.size()-1; a++) {

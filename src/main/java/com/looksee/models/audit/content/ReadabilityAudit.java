@@ -52,8 +52,7 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private UXIssueMessageService issue_message_service;
 	
-	public ReadabilityAudit() {
-	}
+	public ReadabilityAudit() {} 
 
 	
 	/**

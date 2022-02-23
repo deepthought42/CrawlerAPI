@@ -322,4 +322,25 @@ public class ColorData extends LookseeObject{
 	public boolean isSimilarHue(ColorData color2) {		
 		return Math.abs(this.getHue() - color2.getHue()) <= 5.0;
 	}
+
+	public String getHex() {
+		String red_value = Integer.toHexString(getRed());
+		if(red_value.length() == 1) {
+			red_value = "0"+red_value;
+		}
+		
+		String green_value = Integer.toHexString(getGreen());
+		if(green_value.length() == 1) {
+			green_value = "0"+green_value;
+		}
+		
+		String blue_value = Integer.toHexString(getBlue());
+		if(blue_value.length() == 1) {
+			blue_value = "0"+blue_value;
+		}
+		
+		String hex_value = "#"+red_value+green_value+blue_value;
+		log.warn("Hex value :: "+hex_value);
+		return hex_value;
+	}
 }

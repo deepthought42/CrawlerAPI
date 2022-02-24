@@ -399,7 +399,10 @@ public class AuditManager extends AbstractActor{
 					log.warn("error saving elements");
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					audit_record.setDataExtractionMsg("Error Saving elements "+this.total_dispatch_responses.get(message.getPageUrl()) + " / "+this.total_dispatches.get(message.getPageUrl()));
-					audit_record.setDataExtractionProgress(this.total_dispatch_responses.get(message.getPageUrl())/ (double)this.total_dispatches.get(message.getPageUrl()));
+					
+					double responses = (double)this.total_dispatch_responses.get(message.getPageUrl());
+					double dispatches = (double)this.total_dispatches.get(message.getPageUrl());
+					audit_record.setDataExtractionProgress( responses / dispatches);
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(AuditProgressUpdate.class, message -> {

@@ -20,7 +20,12 @@ public class PageCrawlActionMessage extends Message{
 								  URL url,
 								  long domain_id
 	){
-		super(domain_id, account_id, record.getId());
+		assert record != null;
+		assert url != null;
+
+		setDomainId(domain_id);
+		setAccountId(account_id);
+		setAuditRecordId(record.getId());
 		setAction(action);
 		setUrl(url);
 		setAuditRecord(record);

@@ -40,6 +40,7 @@ import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
@@ -124,20 +125,17 @@ public class AuditorController {
 	   	audit_record.setInfoArchitectureAuditProgress(0.0);
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
 	   	
-	   	CrawlActionMessage start_single_page_audit = null;
 	   	long account_id = -1;
 		if(account != null) {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 			account_id = account.getId();			
 		}
 		
-		start_single_page_audit = new CrawlActionMessage(CrawlAction.START, 
-														 -1, 
+		PageCrawlActionMessage start_single_page_audit = new PageCrawlActionMessage(CrawlAction.START, 
+														 -1L, 
 														 account_id,
-														 audit_record.getId(), 
-														 true, 
-														 sanitized_url,
-														 sanitized_url.getHost());
+														 audit_record,
+														 sanitized_url);
 		
 		log.warn("Initiating audit via page state guilder actor");
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)

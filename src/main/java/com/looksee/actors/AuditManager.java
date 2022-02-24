@@ -144,29 +144,36 @@ public class AuditManager extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
+				.match(PageCrawlActionMessage.class, message-> {
+					//HANDLE SINGLE PAGE AUDIT ACTION
+					if(message.getAction().equals(CrawlAction.START)){
+						this.is_domain_audit = false;
+						log.warn("starting single page audit for  :: "+message.getUrl());
+						PageAuditRecord page_audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, 
+																							 message.getAccountId(), 
+																							 page_audit_record, 
+																							 message.getUrl(), 
+																							 message.getDomainId());
+						
+						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+						page_state_builder.tell(crawl_action_msg, getSelf());
+					}
+					else if(message.getAction().equals(CrawlAction.STOP)){
+						stopAudit(message);
+					}
+					
+				})
 				.match(CrawlActionMessage.class, message-> {
 					if(message.getAction().equals(CrawlAction.START)){
-						if(message.isIndividual()) {
-							this.is_domain_audit = false;
-							PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, 
-																								 message.getAccountId(), 
-																								 (PageAuditRecord)message.getAuditRecord(), 
-																								 message.getUrl(), 
-																								 message.getDomainId());
-							
-							ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
-						   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-							page_state_builder.tell(crawl_action_msg, getSelf());
-						}
-						else {
-							log.warn("starting domain audit");
-							this.is_domain_audit = true;
-							//send message to webCrawlerActor to get pages
-							ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
-									.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
-							
-							web_crawl_actor.tell(message, getSelf());
-						}
+						log.warn("starting domain audit");
+						this.is_domain_audit = true;
+						//send message to webCrawlerActor to get pages
+						ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
+						
+						web_crawl_actor.tell(message, getSelf());
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);
@@ -527,6 +534,14 @@ public class AuditManager extends AbstractActor{
 	}
 	
 	private void stopAudit(CrawlActionMessage message) {		
+		//stop all discovery processes
+		if(web_crawler_actor != null){
+			//actor_system.stop(web_crawler_actor);
+			web_crawler_actor = null;
+		}
+	}
+	
+	private void stopAudit(PageCrawlActionMessage message) {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

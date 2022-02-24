@@ -6,7 +6,7 @@ import java.net.URL;
  * A message that contains a sanitized url and its page source that will be further extracted for any links it contains.
  */
 public class SourceMessage extends Message {
-	private URL sanitized_url;
+	private URL url;
 	private String page_src;
 
 	public SourceMessage(Message crawl_action,
@@ -17,16 +17,16 @@ public class SourceMessage extends Message {
 			  crawl_action.getAccountId(),
 			  crawl_action.getAuditRecordId());
 		
-		setSanitizedUrl(sanitized_url);
+		setUrl(sanitized_url);
 		setPageSrc(page_src);
 	}
 
-	public URL getSanitizedUrl(){
-		return this.sanitized_url;
+	public URL getUrl(){
+		return this.url;
 	}
 
-	public void setSanitizedUrl(URL sanitized_url){
-		this.sanitized_url = sanitized_url;
+	public void setUrl(URL url){
+		this.url = url;
 	}
 
 	public String getPageSrc(){

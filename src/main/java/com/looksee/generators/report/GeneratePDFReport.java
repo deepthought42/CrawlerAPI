@@ -220,10 +220,7 @@ public class GeneratePDFReport {
 		
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Visuals");
-		
-		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("Information Architecture");
-		
+
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Appendix");
 		content_stream.endText();
@@ -244,13 +241,11 @@ public class GeneratePDFReport {
 		content_stream.showText("16");
 		
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("23");
+		content_stream.showText("22");
 		
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("30");
+		content_stream.showText("26");
 		
-		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("39");
 		content_stream.endText();
 		content_stream.close();
 		

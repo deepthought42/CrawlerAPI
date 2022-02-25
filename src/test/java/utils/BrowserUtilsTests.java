@@ -245,7 +245,7 @@ public class BrowserUtilsTests {
 		String sanitized_url7 = "applenewss://look-see.com";
 		String sanitized_url8 = "mailto://look-see.com";
 		
-		assertTrue(BrowserUtils.isValidUrl(sanitized_url0, host));
+		assertFalse(BrowserUtils.isValidUrl(sanitized_url0, host));
 		assertTrue(BrowserUtils.isValidUrl(sanitized_url1, host));
 		assertFalse(BrowserUtils.isValidUrl(sanitized_url2, host));
 		assertFalse(BrowserUtils.isValidUrl(sanitized_url3, host));

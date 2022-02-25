@@ -47,7 +47,7 @@ public class LinkExtractionActor extends AbstractActor {
 			.match(SourceMessage.class, page_src_msg -> {
 				Domain domain = domain_service.findById(page_src_msg.getDomainId()).get();
 				String page_src = page_src_msg.getPageSrc();
-				URL sanitized_url = page_src_msg.getSanitizedUrl();
+				URL sanitized_url = page_src_msg.getUrl();
 
 				try {
 					Document doc = Jsoup.parse(page_src);

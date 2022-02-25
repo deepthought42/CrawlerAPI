@@ -53,6 +53,9 @@ public class WebCrawlerActor extends AbstractActor{
 	@Autowired
 	private ActorSystem actor_system;
 
+	@Autowired
+	private DomainService domain_service;
+	
 	private ActorRef audit_manager;
 	private ActorRef source_extractor;
 	private ActorRef link_extractor;

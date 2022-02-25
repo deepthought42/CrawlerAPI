@@ -11,6 +11,9 @@ public class ElementsSaveError extends Message {
 							 String page_url
 	) {
 		super(domain_id, account_id, audit_record_id);
+		assert page_url != null;
+		assert !page_url.isEmpty();
+		
 		setPageId(page_id);
 		setPageUrl(page_url);
 	}

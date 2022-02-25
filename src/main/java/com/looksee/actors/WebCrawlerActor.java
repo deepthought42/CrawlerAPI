@@ -53,6 +53,9 @@ public class WebCrawlerActor extends AbstractActor{
 	@Autowired
 	private ActorSystem actor_system;
 
+	@Autowired
+	private DomainService domain_service;
+	
 	private ActorRef audit_manager;
 	private ActorRef source_extractor;
 	private ActorRef link_extractor;
@@ -128,7 +131,7 @@ public class WebCrawlerActor extends AbstractActor{
 					PageCandidateFound candidate = new PageCandidateFound(page_src_msg.getAccountId(), 
 																		  page_src_msg.getAuditRecordId(), 
 																		  page_src_msg.getDomainId(),
-																		  page_src_msg.getSanitizedUrl());
+																		  page_src_msg.getUrl());
 
 					this.audit_manager.tell(candidate, getSelf());
 				})

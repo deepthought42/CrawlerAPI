@@ -28,7 +28,7 @@ public abstract class Message {
 		return domain_id;
 	}
 	
-	private void setDomainId(long domain) {
+	protected void setDomainId(long domain) {
 		this.domain_id = domain;
 	}
 	

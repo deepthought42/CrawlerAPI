@@ -22,7 +22,6 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
-import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.repository.AuditRecordRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -52,8 +51,11 @@ public class AuditRecordService {
 	@Autowired
 	private PageStateService page_state_service;
 	
-	@Autowired
-	private SubscriptionService subscription_service;
+	public AuditRecord save(AuditRecord audit) {
+		assert audit != null;
+
+		return audit_record_repo.save(audit);
+	}
 	
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;

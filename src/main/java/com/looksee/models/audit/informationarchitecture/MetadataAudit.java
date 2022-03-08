@@ -11,6 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.api.MessageBroadcaster;
@@ -28,6 +29,8 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.AuditService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
 
 import io.whelk.flesch.kincaid.ReadabilityCalculator;
@@ -41,6 +44,11 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(MetadataAudit.class);
 	
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -77,17 +85,21 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 		String why_it_matters = "Metadata tells search engines what your web page has to offer. By using metadata correctly, you can boost your relevancy in search results. Metadata provides search engines with the most important information about your web pages, including titles and descriptions.";
 		String description = "";
 
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.SEO,
-						 AuditName.METADATA,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(), 
-						 why_it_matters, 
-						 description, 
-						 false);
+		Audit audit = new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+								 AuditSubcategory.SEO,
+								 AuditName.METADATA,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(), 
+								 why_it_matters, 
+								 description, 
+								 false);
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 
 	/**
@@ -149,10 +161,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  title, 
 												  1, 
 												  1, 
-												  recommendations,
 												  recommendation);
 			
-			issue_messages.add(ux_issue);
+			issue_messages.add(issue_message_service.save(ux_issue));
 
 		}
 		else {
@@ -191,10 +202,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 														  title, 
 														  0, 
 														  1, 
-														  recommendations,
 														  recommendation );
 			
-			issue_messages.add(ux_issue);
+			issue_messages.add(issue_message_service.save(ux_issue));
 
 		}
 		max_points++;
@@ -363,10 +373,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  title, 
 																	  1, 
 																	  1, 
-																	  recommendations,
 																	  recommendation);
 						
-						issue_messages.add(issue_msg);
+						issue_messages.add(issue_message_service.save(issue_msg));
 					}
 					else if (meta_description.length() > 150) {
 						String recommendation = "Try to be more concise with your meta description and make sure the description is no longer than 150 characters";
@@ -390,9 +399,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  title, 
 																	  0, 
 																	  1, 
-																	  recommendations,
 																	  recommendation);
-						issue_messages.add(issue_msg);
+						
+						issue_messages.add(issue_message_service.save(issue_msg));
 					}
 					else {
 						String recommendation = "Add some more context to your description, so that it's easy for a user to understand if they will find what they are looking for on the page";
@@ -416,9 +425,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  title, 
 																	  0, 
 																	  1, 
-																	  recommendations,
 																	  recommendation);
-						issue_messages.add(issue_msg);
+
+						issue_messages.add(issue_message_service.save(issue_msg));
 					}
 				
 					//if element with type description contains text that is between 5-8th grade reading level then add 1 to score
@@ -449,10 +458,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  title, 
 																	  1, 
 																	  1, 
-																	  recommendations,
 																	  recommendation);
 						
-						issue_messages.add(issue_msg);
+						issue_messages.add(issue_message_service.save(issue_msg));
 					}
 					else {
 						String recommendation = "Simplify the language in your meta description so that it is within the 5-7 grade reading level";
@@ -480,10 +488,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																	  title, 
 																	  0, 
 																	  1, 
-																	  recommendations,
 																	  recommendation);
 						
-						issue_messages.add(issue_msg);
+						issue_messages.add(issue_message_service.save(issue_msg));
 					}
 				}
 				else {
@@ -508,10 +515,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 																  title, 
 																  0, 
 																  1, 
-																  recommendations,
 																  recommendation);
 					
-					issue_messages.add(issue_msg);
+					issue_messages.add(issue_message_service.save(issue_msg));
 				}
 			}
 			max_points += 5;
@@ -540,10 +546,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 														  title, 
 														  0, 
 														  2, 
-														  recommendations,
 														  recommendation);
 			
-			issue_messages.add(issue_msg);			
+			issue_messages.add(issue_message_service.save(issue_msg));
 		}
 		if(description_count > 1) {
 			score = score / description_count;
@@ -569,10 +574,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 														  title, 
 														  1, 
 														  2, 
-														  recommendations,
 														  recommendation);
 			
-			issue_messages.add(issue_msg);
+			issue_messages.add(issue_message_service.save(issue_msg));
 		}
 		
 		return new Score(score, max_points, issue_messages);
@@ -624,10 +628,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  title, 
 												  1, 
 												  1, 
-												  recommendations,
 												  recommendation);
 			
-			issue_messages.add(issue_msg);
+			issue_messages.add(issue_message_service.save(issue_msg));
 		}
 		else {
 			String recommendation = "Remove the meta tag with the attribute name='refresh'";
@@ -650,10 +653,9 @@ public class MetadataAudit implements IExecutablePageStateAudit {
 												  title, 
 												  0, 
 												  1, 
-												  recommendations,
 												  recommendation);
 			
-			issue_messages.add(issue_msg);
+			issue_messages.add(issue_message_service.save(issue_msg));
 		}
 		//max_points++;
 		

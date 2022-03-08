@@ -216,7 +216,6 @@ public class PerformanceAuditor extends AbstractActor {
     											audit_record.getTitle(),
     											0, 
     											1, 
-    											recommendations,
     											"");
     				
     		ux_issues.add(issue_msg);

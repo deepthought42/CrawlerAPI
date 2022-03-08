@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.looksee.models.Label;
 import com.looksee.models.Logo;
+import com.looksee.models.audit.ColorData;
 import com.looksee.models.ImageSearchAnnotation;
 
 
@@ -86,7 +88,46 @@ public class ElementStateExtractor extends AbstractActor{
 																								page_screenshot.getHeight());
 						
 					
-
+						//ENRICHMENT : BACKGROUND COLORS
+						element_states = element_states.parallelStream()
+								   .filter(element -> element != null)
+								   .filter(element -> !element.getOwnedText().isEmpty())
+								   .map(element -> {
+										try {
+											ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));				
+											//extract opacity color
+											ColorData bkg_color = null;
+											if(element.getScreenshotUrl().trim().isEmpty()) {
+												bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
+											}
+											else {
+												//log.warn("extracting background color");
+												bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
+																							   font_color);
+												
+												//log.warn("done extracting background color");
+											}
+											String bg_color = bkg_color.rgb();	
+											
+											//Identify background color by getting largest color used in picture
+											//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
+											ColorData background_color = new ColorData(bg_color);
+											element.setBackgroundColor(background_color.rgb());
+											element.setForegroundColor(font_color.rgb());
+											
+											double contrast = ColorData.computeContrast(background_color, font_color);
+											log.warn("contrast :: "+contrast);
+											element.setTextContrast(contrast);
+											return element;
+										}
+										catch (Exception e) {
+											log.warn("element screenshot url  :: "+element.getScreenshotUrl());
+											e.printStackTrace();
+										}
+										return element;
+								})
+								.collect(Collectors.toList());
+						
 						//Enrich data using NLP and computer vision to add labels to elements
 						/*
 						Set<Label> image_labels = new HashSet<>();

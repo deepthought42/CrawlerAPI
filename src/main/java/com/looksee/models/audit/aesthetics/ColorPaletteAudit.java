@@ -25,6 +25,7 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.services.AuditService;
 import com.looksee.services.UXIssueMessageService;
 
 
@@ -35,6 +36,9 @@ import com.looksee.services.UXIssueMessageService;
 public class ColorPaletteAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorPaletteAudit.class);
+	
+	@Autowired
+	private AuditService audit_service;
 	
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
@@ -114,17 +118,21 @@ public class ColorPaletteAudit implements IExecutablePageStateAudit {
 		//score colors found against scheme
 		//setGrayColors(new ArrayList<>(gray_colors));
 		
-		return new Audit(AuditCategory.AESTHETICS,
-						 AuditSubcategory.COLOR_MANAGEMENT,
-						 AuditName.COLOR_PALETTE,
-						 score.getPointsAchieved(),
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 score.getMaxPossiblePoints(),
-						 page_state.getUrl(),
-						 why_it_matters, 
-						 audit_description,
-						 false);
+		Audit audit = new Audit(AuditCategory.AESTHETICS,
+								 AuditSubcategory.COLOR_MANAGEMENT,
+								 AuditName.COLOR_PALETTE,
+								 score.getPointsAchieved(),
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 score.getMaxPossiblePoints(),
+								 page_state.getUrl(),
+								 why_it_matters, 
+								 audit_description,
+								 false);
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 	
 	

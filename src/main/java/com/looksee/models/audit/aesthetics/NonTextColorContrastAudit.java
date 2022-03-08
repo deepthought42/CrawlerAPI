@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.api.MessageBroadcaster;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -25,7 +23,6 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.ColorData;
-import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.ColorContrastRecommendation;
@@ -82,17 +79,9 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			return null;
 		}
 		//get all button elements
-		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
-			log.warn("-------------------------------------------------------------");
-			log.warn(elements.size()+" page elements found");
-		}
+		List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
 		List<ElementState> non_text_elements = getAllButtons(elements);
-		
-		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
-			log.warn(non_text_elements.size()+" page elements found");
-			log.warn("-------------------------------------------------------------");
-		}
+
 		non_text_elements.addAll(getAllInputs(elements));
 			
 		return evaluateNonTextContrast(page_state, non_text_elements, design_system);
@@ -105,12 +94,18 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	}
 
 	private List<ElementState> getAllInputs(List<ElementState> elements) {
-		return elements.parallelStream().filter(p ->p.getName().equalsIgnoreCase("input")).distinct().collect(Collectors.toList());  // iterating price 
+		return elements.parallelStream()
+							.filter(p ->p.getName().equalsIgnoreCase("input"))
+							.distinct()
+							.collect(Collectors.toList());  // iterating price 
 
 	}
 
 	private List<ElementState> getAllButtons(List<ElementState> elements) {
-		return elements.parallelStream().filter(p ->p.getName().equalsIgnoreCase("button")).distinct().collect(Collectors.toList());  // iterating price 
+		return elements.parallelStream()
+							.filter(p -> p.getName().equalsIgnoreCase("button") || (p.getAttributes().containsKey("class") && p.getAttribute("class").toLowerCase().contains("button")))
+							.distinct()
+							.collect(Collectors.toList());  // iterating price 
 	}
 	
 	public Color getPixelColor(String image_url, int x, int y) throws IOException {
@@ -136,6 +131,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		labels.add(AuditCategory.AESTHETICS.toString().toLowerCase());
 		labels.add("color contrast");
 		labels.add("accessibility");
+		labels.add("wcag");
 		
 		if(page_state.getUrl().contains("apple.com/shop/buy-watch/apple-watch")) {
 			log.warn("-------------------------------------------------------------");
@@ -202,6 +198,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 
 				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
 				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
+				/*
 				String bg_color_css = element.getRenderedCssValues().get("background-color");
 				String bg_image = element.getRenderedCssValues().get("background-image");
 				String bg_color = "255,255,255";
@@ -225,7 +222,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				
 				element.setBackgroundColor(bg_color);
 				element = element_state_service.save(element);
-				
+				*/
 				//getting border color
 				ColorData element_bkg = new ColorData(element.getBackgroundColor());
 				String border_color_rgb = element_bkg.rgb();
@@ -286,7 +283,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				highest_contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
-																				element,
+																				null,
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
@@ -294,11 +291,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				null, 
 																				0, 
 																				1, 
-																				recommendations,
 																				recommendation);
 					
+					low_contrast_issue = issue_message_service.saveColorContrast(low_contrast_issue);
+					issue_message_service.addElement(low_contrast_issue.getId(), element.getId());
 					issue_messages.add(low_contrast_issue);
-					MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
+					//MessageBroadcaster.sendIssueMessage(page_state.getId(), low_contrast_issue);
 				}
 				else {
 					String title = "Element contrast is accessisible";
@@ -317,7 +315,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				highest_contrast,
 																				element_bkg.rgb(),
 																				parent_bkg.rgb(),
-																				element,
+																				null,
 																				AuditCategory.AESTHETICS,
 																				labels,
 																				ada_compliance,
@@ -325,9 +323,10 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 																				null, 
 																				1, 
 																				1, 
-																				recommendations,
 																				recommendation);
 					
+					accessible_contrast = issue_message_service.saveColorContrast(accessible_contrast);
+					issue_message_service.addElement(accessible_contrast.getId(), element.getId());
 					issue_messages.add(accessible_contrast);
 				}
 			}
@@ -352,7 +351,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
-			
+			/*
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.NON_TEXT_BACKGROUND_CONTRAST, 100);
@@ -364,20 +363,25 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				element_issue_msg.setGoodExample(good_example);
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 		
 		String description = "Color contrast of text";		
-		return new Audit(AuditCategory.AESTHETICS,
-						 AuditSubcategory.COLOR_MANAGEMENT,
-						 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters,
-						 description,
-						 true);
+		Audit audit = new Audit(AuditCategory.AESTHETICS,
+								 AuditSubcategory.COLOR_MANAGEMENT,
+								 AuditName.NON_TEXT_BACKGROUND_CONTRAST,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(),
+								 why_it_matters,
+								 description,
+								 true);
+
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 
 

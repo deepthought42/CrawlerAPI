@@ -95,7 +95,6 @@ public class PageSpeedInsightUtils {
     											audit_record.getTitle(),
     											-1, 
     											-1, 
-    											recommendations,
     											"");
     				
     		ux_issues.add(issue_msg);
@@ -201,7 +200,6 @@ public class PageSpeedInsightUtils {
 						audit_record.getTitle(),
 						-1, 
 						-1, 
-						recommendations,
 						"");
 
 				ux_issues.add(issue_msg);
@@ -228,8 +226,7 @@ public class PageSpeedInsightUtils {
 											new HashSet<>(), 
 											audit_record.getExplanation(),
 											audit_record.getTitle(),
-											-1, -1, recommendations, 
-											"");
+											-1, -1, "");
 				
 		ux_issues.add(issue_msg);
 		
@@ -289,7 +286,6 @@ public class PageSpeedInsightUtils {
 											audit_record.getTitle(),
 											-1, 
 											-1, 
-											new HashSet<Recommendation>(),
 											"");
 				
 		ux_issues.add(issue_msg);

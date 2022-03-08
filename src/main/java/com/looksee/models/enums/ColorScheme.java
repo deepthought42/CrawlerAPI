@@ -25,7 +25,14 @@ Four colors that are evenly spaced on the color wheel. Tetradic color schemes ar
 
  */
 public enum ColorScheme {
-	COMPLEMENTARY("complementary"), MONOCHROMATIC("monochromatic"), ANALOGOUS("analogous"), TRIADIC("triadic"), TETRADIC("tetradic"), UNKNOWN("unknown"), GRAYSCALE("grayscale"), SPLIT_COMPLIMENTARY("split_complimentary");
+	COMPLEMENTARY("complementary"), 
+	MONOCHROMATIC("monochromatic"), 
+	ANALOGOUS("analogous"), 
+	TRIADIC("triadic"), 
+	TETRADIC("tetradic"), 
+	UNKNOWN("unknown"), 
+	GRAYSCALE("grayscale"), 
+	SPLIT_COMPLIMENTARY("split_complimentary");
 	
 	private String shortName;
 
@@ -41,14 +48,14 @@ public enum ColorScheme {
     @JsonCreator
     public static ColorScheme create (String value) {
         if(value == null) {
-            throw new IllegalArgumentException();
+            return UNKNOWN;
         }
         for(ColorScheme v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
         }
-        throw new IllegalArgumentException();
+        return UNKNOWN;
     }
 
     public String getShortName() {

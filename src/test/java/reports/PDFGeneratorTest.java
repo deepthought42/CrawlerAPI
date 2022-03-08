@@ -160,7 +160,7 @@ public class PDFGeneratorTest {
 		
 		//Visuals
 		pdf_report.generateVisualsCoverPage(68, "Acme.com");
-		pdf_report.generateVisualsImageryPage(68, "Acme.com", 67, 12, WCAGComplianceLevel.AA, WCAGComplianceLevel.AA);
+		pdf_report.generateVisualsImageryPage(68, "Acme.com", 67, 12, 5, WCAGComplianceLevel.AA);
 		pdf_report.generateImageryWhyItMattersPage();
 		
 		pdf_report.generateAppendixCoverPage();

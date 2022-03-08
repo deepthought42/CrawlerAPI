@@ -20,7 +20,9 @@ import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
+import com.looksee.services.AuditService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 
 /**
@@ -32,8 +34,13 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(ImagePolicyAudit.class);
 	
 	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
 	private	PageStateService page_state_service;
 	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public ImagePolicyAudit() {
 	}
@@ -61,17 +68,21 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 
 		Score image_policy_score = calculateImagePolicyViolationScore(element_list, design_system);
 		
-		return new Audit(AuditCategory.CONTENT,
-						 AuditSubcategory.IMAGERY, 
-						 AuditName.IMAGE_POLICY, 
-						 image_policy_score.getPointsAchieved(), 
-						 image_policy_score.getIssueMessages(), 
-						 AuditLevel.PAGE, 
-						 image_policy_score.getMaxPossiblePoints(), 
-						 page_state.getUrl(),
-						 why_it_matters, 
-						 description,
-						 false); 
+		Audit audit = new Audit(AuditCategory.CONTENT,
+								 AuditSubcategory.IMAGERY, 
+								 AuditName.IMAGE_POLICY, 
+								 image_policy_score.getPointsAchieved(), 
+								 new HashSet<>(), 
+								 AuditLevel.PAGE, 
+								 image_policy_score.getMaxPossiblePoints(), 
+								 page_state.getUrl(),
+								 why_it_matters, 
+								 description,
+								 false); 
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), image_policy_score.getIssueMessages());
+		return audit;
 	}
 
 
@@ -102,12 +113,12 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 					String recommendation = "Use an image without nudity";
 					String title = "Nudity detected";
 					String description = "Image contains nudity and/or adult content";
-					
+
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.MEDIUM, 
 																	description, 
 																	recommendation, 
-																	element,
+																	null,
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
@@ -115,6 +126,8 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 																	0,
 																	1);
 					
+					issue_message = (ReadingComplexityIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), element.getId());
 					issue_messages.add(issue_message);
 					
 					points_earned += 0;
@@ -132,7 +145,7 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 																	Priority.MEDIUM, 
 																	description, 
 																	recommendation, 
-																	element,
+																	null,
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
@@ -140,6 +153,8 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 																	0,
 																	1);
 					
+					issue_message = (ReadingComplexityIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), element.getId());
 					issue_messages.add(issue_message);
 					
 					points_earned += 0;
@@ -156,15 +171,17 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 																	Priority.NONE, 
 																	description, 
 																	recommendation, 
-																	element,
+																	null,
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
 																	title,
 																	1,
 																	1);
+
+					issue_message = (ReadingComplexityIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), element.getId());
 					issue_messages.add(issue_message);
-		
 				}
 			}
 		}

@@ -1,7 +1,6 @@
 package com.looksee.models.audit;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +38,6 @@ public class TypefacesIssue extends UXIssueMessage {
 				title,
 				points_awarded,
 				max_points,
-				new HashSet<>(),
 				recommendation);
 		
 		assert typefaces != null;

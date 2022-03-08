@@ -44,8 +44,8 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (p:PageState)-[:HAS]->(e:ElementState) WHERE id(p)=$page_state_id RETURN DISTINCT e")
 	public List<ElementState> getElementStates(@Param("page_state_id") long page_state_id);
 
-	@Query("MATCH (p:PageState{key:$page_key})-[:HAS]->(e:ElementState{name:'a'}) RETURN DISTINCT e")
-	public List<ElementState> getLinkElementStates(@Param("page_key") String key);
+	@Query("MATCH (p:PageState)-[:HAS]->(e:ElementState{name:'a'}) WHERE id(p)=$page_state_id RETURN DISTINCT e")
+	public List<ElementState> getLinkElementStates(@Param("page_state_id") long page_state_id);
 
 	@Query("MATCH (:Account{username:$user_id})-[*]->(p:PageState{key:$page_key}) MATCH (p)-[h:HAS]->(s:Screenshot) RETURN s")
 	public List<Screenshot> getScreenshots(@Param("user_id") String user_id, @Param("page_key") String page_key);

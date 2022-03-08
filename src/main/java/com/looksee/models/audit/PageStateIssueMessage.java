@@ -1,6 +1,5 @@
 package com.looksee.models.audit;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.Relationship;
@@ -43,7 +42,6 @@ public class PageStateIssueMessage extends UXIssueMessage {
 				title,
 				points_awarded,
 				max_points,
-				new HashSet<>(),
 				recommendation);
 		
 		setPage(page);

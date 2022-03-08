@@ -54,8 +54,6 @@ public class SourceExtractionActor extends AbstractActor {
 					}
 					else {
 						log.warn("Recieved 404 status for link :: " + sanitized_url);
-
-						this.getContext().stop(getSelf());
 					}
 				}
 			})

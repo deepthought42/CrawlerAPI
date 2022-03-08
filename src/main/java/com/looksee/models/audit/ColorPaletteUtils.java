@@ -377,10 +377,9 @@ public class ColorPaletteUtils {
 		List<PaletteColor> palette_colors = new ArrayList<>();
 		
 		for(ColorData color : primary_colors) {
-			PaletteColor palette_color = new PaletteColor(
-					color.rgb(), 
-					color.getUsagePercent(), 
-					new HashMap<>());
+			PaletteColor palette_color = new PaletteColor(color.rgb(), 
+														  color.getUsagePercent(), 
+														  new HashMap<>());
 			palette_colors.add(palette_color);
 		}
 		
@@ -398,10 +397,9 @@ public class ColorPaletteUtils {
 		
 		List<PaletteColor> palette_colors = new ArrayList<>();		
 		for(ColorData color : colors) {
-			PaletteColor palette_color = new PaletteColor(
-					color.rgb(), 
-					color.getUsagePercent(), 
-					new HashMap<>());
+			PaletteColor palette_color = new PaletteColor(color.rgb(), 
+														  color.getUsagePercent(), 
+														  new HashMap<>());
 			palette_colors.add(palette_color);
 		}
 		
@@ -521,9 +519,11 @@ public class ColorPaletteUtils {
 			ColorData most_frequent_color = colors.parallelStream().max(Comparator.comparing( ColorData::getUsagePercent)).get();
 			similar_colors.add(most_frequent_color);
 			//identify all similar colors and remove them from the colors set
-			for(int idx=1; idx < colors.size(); idx++) {
+			for(int idx=0; idx < colors.size(); idx++) {
 				ColorData color = colors.get(idx);
-
+				if(color.equals(most_frequent_color)) {
+					continue;
+				}
 				//add similar colors to similar colors set
 				if(isSimilarHue(most_frequent_color, color)) {	
 					similar_colors.add( color );
@@ -607,8 +607,8 @@ public class ColorPaletteUtils {
 
 	
 	public static boolean isGrayScale(ColorData color) {
-		return ((color.getSaturation() < 10 && color.getBrightness() > 20)
-				|| (color.getBrightness() < 20));
+		return ((color.getSaturation() < 15 && color.getBrightness() > 25)
+				|| (color.getBrightness() < 25));
 	}
 
 	public static int getMax(ColorData color) {

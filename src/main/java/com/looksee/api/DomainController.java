@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDate;
@@ -47,6 +48,7 @@ import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.api.exception.SubscriptionExceededException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
+import com.looksee.generators.report.GeneratePDFReport;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
@@ -76,6 +78,7 @@ import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 import com.looksee.models.enums.SubscriptionPlan;
+import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
@@ -90,6 +93,8 @@ import com.looksee.services.SubscriptionService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ContentUtils;
+import com.looksee.utils.PDFDocUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -134,7 +139,7 @@ public class DomainController {
 
 	@Autowired
 	private SubscriptionService subscription_service;
-
+	
 	/**
 	 * Create a new {@link Domain domain}
 	 * 
@@ -144,7 +149,8 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(method = RequestMethod.POST)
-	public @ResponseBody Domain create(HttpServletRequest request, @RequestBody(required = true) Domain domain)
+	public @ResponseBody Domain create(HttpServletRequest request, 
+									   @RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
 
 		Principal principal = request.getUserPrincipal();
@@ -160,7 +166,6 @@ public class DomainController {
 		}
 
 		String lowercase_url = domain.getUrl().toLowerCase();
-
 		String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url);
 		domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
 
@@ -415,7 +420,8 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/{domain_id}/stats")
-	public @ResponseBody AuditStats getAuditStat(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
+	public @ResponseBody AuditStats getAuditStat(HttpServletRequest request, 
+												 @PathVariable("domain_id") long domain_id)
 			throws UnknownAccountException {
 		// get most recent audit record for the domain
 		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain_id);
@@ -426,10 +432,10 @@ public class DomainController {
 			long info_arch_audits_complete = 0;
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
-
-			Set<PageAuditRecord> audit_records = audit_record.getAudits(); // audit_record_service.getAllPageAudits(audit_record.getId());
+			
+			Set<PageAuditRecord> audit_records = audit_record.getAudits();
 			// get Page Count
-			long page_count = audit_records.size();
+			long page_count = audit_record.getTotalPages();
 			long pages_audited = 0;
 
 			double score = 0.0;
@@ -453,8 +459,7 @@ public class DomainController {
 				double aesthetic_score = 0;
 				double info_architecture_score = 0;
 				double content_score = 0;
-				page_count += page_audits.size();
-
+				
 				for (PageAuditRecord page_audit : page_audits) {
 					Set<Audit> audits = page_audit.getAudits();
 
@@ -558,8 +563,7 @@ public class DomainController {
 			videos_score += 0;// AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
 			audio_score += 0;// AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
 
-			written_content_issue_count += audit_service.countAuditBySubcategory(audits,
-					AuditSubcategory.WRITTEN_CONTENT);
+			written_content_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.WRITTEN_CONTENT);
 			imagery_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.IMAGERY);
 			video_issue_count += 0;// AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.VIDEOS);
 			audit_issue_count += 0;// AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.AUDIO);
@@ -577,10 +581,8 @@ public class DomainController {
 			// aesthetic_score = AuditUtils.calculateScore(audits);
 			// color_issue_count += audit_service.countAuditBySubcategory(audits,
 			// AuditSubcategory.COLOR_MANAGEMENT);
-			text_contrast_issue_count += audit_service.countIssuesByAuditName(audits,
-					AuditName.TEXT_BACKGROUND_CONTRAST);
-			non_text_contrast_issue_count += audit_service.countIssuesByAuditName(audits,
-					AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+			text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+			non_text_contrast_issue_count += audit_service.countIssuesByAuditName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 
 			typography_issue_count += audit_service.countAuditBySubcategory(audits, AuditSubcategory.TYPOGRAPHY);
 			whitespace_issue_count += 0; // AuditUtils.countAuditBySubcategory(audits, AuditSubcategory.WHITESPACE);
@@ -610,22 +612,62 @@ public class DomainController {
 			// image_labels.parallelStream().distinct().collect(Collectors.toSet());
 
 			// build stats object
-			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(), audit_record.getStartTime(),
-					audit_record.getEndTime(), pages_audited, page_count, content_audits_complete,
-					content_audits_complete / (double) audit_records.size(), written_content_issue_count,
-					imagery_issue_count, video_issue_count, audit_issue_count, written_content_score, imagery_score,
-					videos_score, audio_score, audit_record.getContentAuditMsg(), info_arch_audits_complete,
-					info_arch_audits_complete / (double) audit_records.size(), seo_issue_count, menu_issue_count,
-					performance_issue_count, link_issue_count, seo_score, menu_analysis_score, performance_score,
-					link_score, audit_record.getInfoArchMsg(), aesthetic_audits_complete,
-					aesthetic_audits_complete / (double) audit_records.size(), text_contrast_issue_count,
-					non_text_contrast_issue_count, typography_issue_count, whitespace_issue_count, branding_issue_count,
-					text_contrast_score, non_text_contrast_score, typography_score, whitespace_score, branding_score,
-					audit_record.getAestheticMsg(), overall_score, high_issue_count, mid_issue_count, low_issue_count,
-					elements_reviewed, elements_found, audit_record.getDataExtractionMsg(),
-					element_extractions_complete / (double) audit_records.size(), overall_score_history,
-					content_score_history, info_architecture_score_history, aesthetic_score_history,
-					accessibility_score_history, total_issues, image_labels, image_copyright_issue_count);
+			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(), 
+					audit_record.getStartTime(),
+					audit_record.getEndTime(), 
+					pages_audited, 
+					page_count, 
+					content_audits_complete,
+					content_audits_complete / (double) audit_records.size(), 
+					written_content_issue_count,
+					imagery_issue_count, 
+					video_issue_count, 
+					audit_issue_count, 
+					written_content_score, 
+					imagery_score,
+					videos_score, 
+					audio_score, 
+					audit_record.getContentAuditMsg(), 
+					info_arch_audits_complete,
+					info_arch_audits_complete / (double) audit_records.size(), 
+					seo_issue_count, 
+					menu_issue_count,
+					performance_issue_count, 
+					link_issue_count, 
+					seo_score, 
+					menu_analysis_score, 
+					performance_score,
+					link_score, 
+					audit_record.getInfoArchMsg(), 
+					aesthetic_audits_complete,
+					aesthetic_audits_complete / (double) audit_records.size(), 
+					text_contrast_issue_count,
+					non_text_contrast_issue_count, 
+					typography_issue_count, 
+					whitespace_issue_count, 
+					branding_issue_count,
+					text_contrast_score, 
+					non_text_contrast_score, 
+					typography_score, 
+					whitespace_score, 
+					branding_score,
+					audit_record.getAestheticMsg(), 
+					overall_score, 
+					high_issue_count, 
+					mid_issue_count, 
+					low_issue_count,
+					elements_reviewed, 
+					elements_found, 
+					audit_record.getDataExtractionMsg(),
+					element_extractions_complete / (double) audit_records.size(), 
+					overall_score_history,
+					content_score_history, 
+					info_architecture_score_history, 
+					aesthetic_score_history,
+					accessibility_score_history, 
+					total_issues, 
+					image_labels, 
+					image_copyright_issue_count);
 
 			return audit_stats;
 		} else {
@@ -789,9 +831,7 @@ public class DomainController {
 			Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId());
 			PageState page = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
 			for (Audit audit : audits) {
-				log.warn("audit key :: " + audit.getKey());
 				Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
-				log.warn("audit issue messages size ...." + messages.size());
 
 				for (UXIssueMessage message : messages) {
 					String element_selector = "";
@@ -810,7 +850,6 @@ public class DomainController {
 				}
 
 			}
-			log.warn("UX audits :: " + ux_issues.size());
 		}
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
 		XSSFWorkbook workbook = ReportService.generateDomainExcelSpreadsheet(ux_issues, sanitized_domain_url);
@@ -828,6 +867,130 @@ public class DomainController {
 					.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
 		}
 	}
+
+	/**
+	 * Get Excel file for domain with the given id
+	 * 
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 * @throws URISyntaxException 
+	 */
+	// @PreAuthorize("hasAuthority('create:domains')")
+	@RequestMapping(path = "/{domain_id}/pdf", method = RequestMethod.GET)
+	public @ResponseBody ResponseEntity<Resource> exportPdfReport(HttpServletRequest request,
+												@PathVariable(value = "domain_id", required = true) long domain_id
+	) throws UnknownAccountException, FileNotFoundException, IOException, URISyntaxException {
+		Optional<Domain> domain_opt = domain_service.findById(domain_id);
+		if (!domain_opt.isPresent()) {
+			throw new DomainNotFoundException();
+		}
+		
+		Domain domain = domain_opt.get();
+		Optional<DomainAuditRecord> domain_audit_opt = domain_service.getMostRecentAuditRecord(domain.getId());
+		if (!domain_audit_opt.isPresent()) {
+			throw new DomainAuditsNotFound();
+		}
+
+		DomainAuditRecord domain_audit = domain_audit_opt.get();
+		
+		List<UXIssueReportDto> ux_issues = new ArrayList<>();
+		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
+		
+		
+		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
+		
+		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl());
+		
+		Set<Audit> audits = new HashSet<Audit>();
+		for(PageAuditRecord page_audit : page_audits) {
+			Set<Audit> page_audit_list = audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId());
+			page_audit.addAudits( page_audit_list );
+			audits.addAll( page_audit_list );
+		}
+		
+		List<AuditSubcategory> needs_improvement = PDFDocUtils.getTopFourCategoriesThatNeedImprovement(audits);
+		double overall_score = AuditUtils.calculateScore(audits);
+		double aesthetic_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
+		double color_palette_score = AuditUtils.calculateScoreByName(audits, AuditName.COLOR_PALETTE);
+		double text_contrast_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TEXT_CONTRAST);
+		double non_text_contrast_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.NON_TEXT_CONTRAST);
+		double written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
+		double paragraphing_score = AuditUtils.calculateScoreByName(audits, AuditName.PARAGRAPHING);
+		double visuals_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
+		double visuals_imagery_score = AuditUtils.calculateScoreByName(audits, AuditName.IMAGE_COPYRIGHT);
+		double information_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		double branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
+		double ease_of_understanding_score = AuditUtils.calculateScoreByName(audits, AuditName.READING_COMPLEXITY);
+		
+		double percentage_of_passing_large_text_items = AuditUtils.getPercentPassingLargeTextItems(audits);
+		double percent_failing_large_text_items = 100.0 - percentage_of_passing_large_text_items;
+		
+		double percent_failing_small_text_items = AuditUtils.getPercentFailingSmallTextItems(audits);
+		double percentage_pages_non_text_issues = AuditUtils.getCountPagesWithSubcategoryIssues(page_audits, AuditSubcategory.NON_TEXT_CONTRAST) / (double)page_audits.size();
+		int number_of_pages_paragraphing_issues = AuditUtils.getCountPagesWithIssuesByAuditName(page_audits, AuditName.PARAGRAPHING);
+		
+		DesignSystem design_system = domain_service.getDesignSystem(domain.getId()).get();
+		WCAGComplianceLevel wcag_company_compliance_level = design_system.getWcagComplianceLevel();
+		int non_ada_compliant_pages = AuditUtils.getCountOfPagesWithWcagComplianceIssues(page_audits);
+		double average_words_per_sentence = AuditUtils.calculateAverageWordsPerSentence(audits);
+		double stock_image_percentage = AuditUtils.calculatePercentStockImages(audits);
+		double percent_custom_images = 100.0 - stock_image_percentage;
+		double avg_reading_complexity = AuditUtils.calculateAverageReadingComplexity(audits);
+		String avg_difficulty_string = ContentUtils.getReadingDifficultyRatingByEducationLevel(avg_reading_complexity, 
+																								domain_audit.getTargetUserEducation());
+		String avg_grade_level = ContentUtils.getReadingGradeLevel(avg_reading_complexity);
+		
+		pdf_report.writeDocument(needs_improvement, 
+								 domain.getUrl(), 
+								 page_audits.size(), 
+								 overall_score,
+								 aesthetic_score, 
+								 color_palette_score, 
+								 text_contrast_score,
+								 percentage_of_passing_large_text_items, 
+								 percent_failing_large_text_items, 
+								 percent_failing_small_text_items, 
+								 non_text_contrast_score, 
+								 percentage_pages_non_text_issues, 
+								 written_content_score, 
+								 ease_of_understanding_score, 
+								 paragraphing_score, 
+								 number_of_pages_paragraphing_issues, 
+								 average_words_per_sentence, 
+								 visuals_score, 
+								 visuals_imagery_score, 
+								 percent_custom_images, 
+								 stock_image_percentage, 
+								 wcag_company_compliance_level, 
+								 information_architecture_score, 
+								 branding_score, 
+								 domain_audit.getColors(),
+								 avg_difficulty_string, 
+								 avg_grade_level, 
+								 non_ada_compliant_pages);
+		
+		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+		
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Content-Disposition", "attachment; " + sanitized_domain_url.getHost() + ".pdf");
+
+			return ResponseEntity.ok()
+					.contentType(MediaType.parseMediaType("application/pdf"))
+					.cacheControl(CacheControl.noCache()).headers(headers)
+					.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
+		}
+	}
+	
+	
 
 	/**
 	 * 

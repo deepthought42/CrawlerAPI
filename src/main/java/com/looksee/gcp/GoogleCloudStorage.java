@@ -55,8 +55,8 @@ public class GoogleCloudStorage {
 		//baos.flush();
 		byte[] imageInByte = baos.toByteArray();
 		baos.close();
-
-		String key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain + element_key + browser);
+		String stripped_domain = domain.replace(".", "").replace("/", "").replace(":", "").replace("https", "").replace("http", "");
+		String key = stripped_domain+element_key+browser;
 		String file_name = key+".png";
 		Blob blob = bucket.get(file_name);
 		if(blob != null && blob.exists()) {

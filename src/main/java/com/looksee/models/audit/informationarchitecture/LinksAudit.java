@@ -75,8 +75,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		assert page_state != null;
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
-		List<ElementState> link_elements = page_state_service.getLinkElementStates(page_state.getKey());
-		
+		List<ElementState> link_elements = page_state_service.getLinkElementStates(page_state.getId());
+		log.warn("link audit links :: "+link_elements.size());
 		String ada_compliance = "There is no ADA guideline for dead links";
 
 		Set<String> labels = new HashSet<>();
@@ -84,6 +84,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		labels.add("accessibility");
 		labels.add("navigation");
 		labels.add("links");
+		labels.add("wcag");
 		
 		//score each link element
 		for(ElementState link : link_elements) {
@@ -99,13 +100,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.NONE,
 																description,
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																1,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 			}
 			else {
@@ -117,13 +121,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.HIGH,
 																description,
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																0,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				continue;
 			}
@@ -139,13 +146,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.NONE,
 																description,
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																1,
 																1);
+				
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				continue;
 			}
@@ -159,13 +169,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.NONE,
 																description,
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																1,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				continue;
 			}
@@ -186,13 +199,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.NONE, 
 																description, 
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																1,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 			}
 			else {
@@ -204,13 +220,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.HIGH, 
 																description, 
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																0,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				continue;
 			}
@@ -246,7 +265,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.NONE, 
 																description, 
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
@@ -254,6 +273,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																1,
 																1);
 				
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 			} catch (MalformedURLException e) {
 				String recommendation = "Make sure link url format is valid. For example \"https://www.google.com\"";
@@ -264,13 +285,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																Priority.HIGH, 
 																description, 
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title,
 																0,
 																1);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				e.printStackTrace();
 				continue;
@@ -287,13 +311,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	Priority.HIGH,
 																	description,
 																	recommendation, 
-																	link,
+																	null,
 																	AuditCategory.INFORMATION_ARCHITECTURE,
 																	labels,
 																	ada_compliance,
 																	title,
 																	0,
 																	1);
+
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), link.getId());
 					issue_messages.add(issue_message);
 				}
 				else {
@@ -306,13 +333,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																		Priority.NONE,
 																		description,
 																		recommendation, 
-																		link,
+																		null,
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		labels,
 																		ada_compliance,
 																		title,
 																		1,
 																		1);
+
+						issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+						issue_message_service.addElement(issue_message.getId(), link.getId());
 						issue_messages.add(issue_message);
 					}
 					else {
@@ -324,13 +354,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																		Priority.HIGH,
 																		description,
 																		recommendation, 
-																		link,
+																		null,
 																		AuditCategory.INFORMATION_ARCHITECTURE,
 																		labels,
 																		ada_compliance,
 																		title,
 																		0,
 																		1);
+
+						issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+						issue_message_service.addElement(issue_message.getId(), link.getId());
 						issue_messages.add(issue_message);
 					}
 				}
@@ -342,33 +375,39 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String description = "Invalid link url (IOException) - "+sanitized_href;
 				String title = "Invalid link url";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-						Priority.HIGH,
-						description,
-						recommendation, 
-						link, 
-						AuditCategory.INFORMATION_ARCHITECTURE, 
-						labels,
-						ada_compliance,
-						title, 
-						3,
-						4);
-				issue_messages.add(issue_message); 
+																Priority.HIGH,
+																description,
+																recommendation, 
+																null, 
+																AuditCategory.INFORMATION_ARCHITECTURE, 
+																labels,
+																ada_compliance,
+																title, 
+																3,
+																4);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
+				issue_messages.add(issue_message);
 				e.printStackTrace();
 			} catch (Exception e) {
 				String recommendation = "Make sure links point to a valid url";
 				String description = "Invalid link url (IOException) - "+href;
 				String title = "Invalid link url";
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-						Priority.HIGH,
-						description,
-						recommendation, 
-						link, 
-						AuditCategory.INFORMATION_ARCHITECTURE, 
-						labels,
-						ada_compliance,
-						title, 
-						3,
-						4);
+																			Priority.HIGH,
+																			description,
+																			recommendation, 
+																			null, 
+																			AuditCategory.INFORMATION_ARCHITECTURE, 
+																			labels,
+																			ada_compliance,
+																			title, 
+																			3,
+																			4);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
 				log.warn("Exception thrown during links audit :: "+e.getMessage());
 				e.printStackTrace();
@@ -379,25 +418,39 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				String recommendation = "";
 				String description = "Link contains text and is setup correctly. Well done!";
 				String title = "Link is setup correctly and considered accessible";
-
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH,
 																description, 
 																recommendation, 
-																link,
+																null,
 																AuditCategory.INFORMATION_ARCHITECTURE,
 																labels,
 																ada_compliance,
 																title, 
 																4,
 																4);
+
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), link.getId());
 				issue_messages.add(issue_message);
-			 }
+			}
 			 else {
+				 //NOTE :: evaluating links with images has proven to be an issue. Commenting out for now until this can be
+				 //made more robust. The issue is that often the link is not the same size as the image. 
+				 //We should also be able to identify when all links within a parent tag have the same destination,
+				 // and in these scenarios recommend making the parent tag a link instead of including multiple link tags
+				 // NOTE 2: This is an issue for blind people and others that rely on screen readers
+				 // NOTE 3: Links with image tags within then should have the alt-text extracted and reviewed.
+				 
 				 boolean element_includes_text = false;
 
 				//send img src to google for text extraction
 				try {
+					//check if link contains image, if so then extract image source
+					if(link.getOuterHtml().contains("<img")) {
+						//link contains image
+					}
+					log.warn("link screenshot url :: "+link.getScreenshotUrl());
 					URL url = new URL( link.getScreenshotUrl() );
 					BufferedImage img_src = ImageIO.read( url );
 					List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);
@@ -425,7 +478,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	Priority.HIGH,
 																	description, 
 																	recommendation, 
-																	link,
+																	null,
 																	AuditCategory.INFORMATION_ARCHITECTURE,
 																	labels,
 																	ada_compliance,
@@ -433,8 +486,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																	3,
 																	4);
 					 //does element use image as links?
-					issue_messages.add(issue_message);
-				 }
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), link.getId());
+					issue_messages.add(issue_message);				 }
 				 else {
 					 String recommendation = "";
 					 String description = "Link contains text and is setup correctly. Well done!";
@@ -443,13 +497,16 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					 ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.HIGH,
 																							description, 
 																							recommendation, 
-																							link,
+																							null,
 																							AuditCategory.INFORMATION_ARCHITECTURE,
 																							labels,
 																							ada_compliance,
 																							title, 
 																							4,
 																							4);
+
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), link.getId());
 					issue_messages.add(issue_message);
 				 }
 			}
@@ -492,7 +549,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();		   
-
+/*
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.LINKS, 100);
@@ -512,19 +569,23 @@ public class LinksAudit implements IExecutablePageStateAudit {
 				}
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 		
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.NAVIGATION,
-						 AuditName.LINKS,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters, 
-						 description,
-						 true); 
-		//the contstant 6 in this equation is the exact number of boolean checks for this audit
+		Audit audit = new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+								 AuditSubcategory.NAVIGATION,
+								 AuditName.LINKS,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(),
+								 why_it_matters, 
+								 description,
+								 true); 
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 }

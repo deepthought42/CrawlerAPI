@@ -210,9 +210,9 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 			key += getRenderedCssValues().get(style);
 		}
 		
-		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(key+getScreenshotUrl()+getOuterHtml());
+		return "elementstate"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key)+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getOuterHtml());
 	}
-	
+
 	/**
 	 * Checks if {@link ElementState elements} are equal
 	 * 
@@ -225,10 +225,37 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
         if (!(o instanceof ElementState)) return false;
         
         ElementState that = (ElementState)o;
-		return this.getKey().equals(that.getKey());
+		return this.getId().equals(that.getId());
 	}
 
+	public void print() {
+		log.warn("element key :: "+getKey());
+		log.warn("element desc :: "+getId());
+		log.warn("element points :: "+getAllText());
+		log.warn("element max point :: "+getBackgroundColor());
+		log.warn("element reco :: "+getCssSelector());
+		log.warn("element score :: "+getForegroundColor());
+		log.warn("element title ::"+ getHeight());
+		log.warn("element wcag :: "+getName());
+		log.warn("element why it matters :: "+getNonTextContrast());
+		log.warn("element category :: "+getOuterHtml());
+		log.warn("element labels:: "+getOwnedText());
+		log.warn("element priority :: "+getScreenshotUrl());
+		log.warn("element recommendations list :: "+getTextContrast());
+		log.warn("element type :: "+getWidth());
+		log.warn("element :: "+getWidth());
+		log.warn("element x_loc :: "+getXLocation());
+		log.warn("element y_loc :: "+getYLocation());
+		log.warn("element attr :: "+getAttributes());
+		log.warn("element children :: "+getChildElements());
+		log.warn("element classification :: "+getClassification());
+		log.warn("element created_at :: "+getCreatedAt());
 
+
+		log.warn("------------------------------------------------------------------------------");
+		
+	}
+	
 	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());

@@ -117,7 +117,7 @@ public class AestheticAuditor extends AbstractActor{
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
 																	page_audit_record_msg.getAccountId(),
 																	audit_record.getId(),
-																	(1.0/3.0),
+																	(2.0/4.0),
 																	"Reviewing text contrast",
 																	AuditCategory.AESTHETICS,
 																	AuditLevel.PAGE, 
@@ -140,7 +140,7 @@ public class AestheticAuditor extends AbstractActor{
 								AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
 																			page_audit_record_msg.getAccountId(),
 																			audit_record.getId(),
-																			(2.0/3.0),
+																			(3.0/4.0),
 																			"Reviewing non-text contrast for WCAG compliance",
 																			AuditCategory.AESTHETICS,
 																			AuditLevel.PAGE, 
@@ -156,7 +156,7 @@ public class AestheticAuditor extends AbstractActor{
 																  page_audit_record_msg.getAuditRecordId(), 
 																  "An error occurred while performing non-text audit", 
 																  AuditCategory.AESTHETICS, 
-																  2/3.0);
+																  2.0/3.0);
 							getContext().getParent().tell(audit_err, getSelf());
 							e.printStackTrace();
 						}

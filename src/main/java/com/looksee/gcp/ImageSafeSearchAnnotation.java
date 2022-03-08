@@ -11,7 +11,13 @@ public class ImageSafeSearchAnnotation extends LookseeObject{
 	private String violence;
 	private String racy;
 	
-	public ImageSafeSearchAnnotation() {}
+	public ImageSafeSearchAnnotation() {
+		setAdult("");
+		setMedical("");
+		setSpoof("");
+		setViolence("");
+		setRacy("");
+	}
 	
 	public ImageSafeSearchAnnotation(String spoof,
 									 String medical,

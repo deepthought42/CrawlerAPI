@@ -53,31 +53,30 @@ public class GeneratePDFReport {
 	public void writeDocument(List<AuditSubcategory> needs_improvement,
 							  String domain_host,
 							  int pages_audited,
-							  int overall_score,
-							  int color_management_score,
-							  int color_palette_score,
-							  int text_contrast_score,
-							  int percentage_of_passing_large_text_items,
-							  int percent_failing_large_text_items,
-							  int percent_failing_small_text_items,
-							  int non_text_contrast_score,
-							  int percentage_pages_non_text_issues,
-							  int written_content_score,
-							  int ease_of_understanding_score,
-							  int paragraphing_score,
+							  double overall_score,
+							  double color_management_score,
+							  double color_palette_score,
+							  double text_contrast_score,
+							  double percentage_of_passing_large_text_items,
+							  double percent_failing_large_text_items,
+							  double percent_failing_small_text_items,
+							  double non_text_contrast_score,
+							  double percentage_pages_non_text_issues,
+							  double written_content_score,
+							  double ease_of_understanding_score,
+							  double paragraphing_score,
 							  int number_of_pages_paragraphing_issues,
-							  int average_words_per_sentence,
-							  int visuals_score,
-							  int visuals_imagery_score,
-							  int percent_custom_images,
-							  int stock_image_percentage,
-							  WCAGComplianceLevel wcag_compliance_level,
+							  double average_words_per_sentence,
+							  double visuals_score,
+							  double visuals_imagery_score,
+							  double percent_custom_images,
+							  double stock_image_percentage,
 							  WCAGComplianceLevel wcag_company_compliance_level,
-							  int information_architecture_score,
-							  int branding_score,
+							  double information_architecture_score,
+							  double branding_score,
 							  List<String> palette_colors,
-							  String reading_complexity,
-							  String grade_level,
+							  String avg_difficulty_string,
+							  String avg_grade_level,
 							  int non_ada_compliant_pages
 	) throws IOException {
 		
@@ -124,8 +123,8 @@ public class GeneratePDFReport {
 		this.generateWrittenContentCoverPage(written_content_score, domain_host);
 		this.generateWrittenContentEaseOfUnderstandingPage(ease_of_understanding_score, 
 														   domain_host, 
-														   reading_complexity, 
-														   grade_level, 
+														   avg_difficulty_string, 
+														   avg_grade_level, 
 														   non_ada_compliant_pages);
 		this.generateEaseOfReadingWhyItMattersPage();
 		this.generateWrittenContentParagraphingPage(paragraphing_score, 
@@ -141,7 +140,7 @@ public class GeneratePDFReport {
 										domain_host, 
 										percent_custom_images, 
 										stock_image_percentage, 
-										wcag_compliance_level, 
+										non_ada_compliant_pages, 
 										wcag_company_compliance_level);
 		this.generateImageryWhyItMattersPage();
 		
@@ -543,7 +542,7 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateScoreOverviewPage(int overall_score, 
+	public void generateScoreOverviewPage(double overall_score, 
 										   String domain_host, 
 										   List<AuditSubcategory> improvement_areas
 	) throws IOException {
@@ -613,13 +612,13 @@ public class GeneratePDFReport {
 	 * @return
 	 * @throws IOException
 	 */
-	public PDPage generateScoreBreakdownPage(int overall_score, 
+	public PDPage generateScoreBreakdownPage(double overall_score, 
 											String domain_host,
-											int color_management_score,
-											int written_content_score,
-											int visuals_score,
-											int information_architecture_score,
-											int branding_score
+											double color_management_score,
+											double written_content_score,
+											double visuals_score,
+											double information_architecture_score,
+											double branding_score
 	) throws IOException {
 		PDPage page = new PDPage();
 		addPage(page);
@@ -708,7 +707,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateColorManagementCoverPage(int overall_score, 
+	public void generateColorManagementCoverPage(double overall_score, 
 												 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -782,7 +781,7 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateColorManagementColorPalettePage(int score, 
+	public void generateColorManagementColorPalettePage(double score, 
 			 									 		String domain_host,
 			 									 		List<String> primary_colors
 	) throws IOException {
@@ -989,12 +988,12 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateColorManagementTextColorContrastPage(int score, 
+	public void generateColorManagementTextColorContrastPage(double score, 
 			 									 			String domain_host,
 			 									 			String example_image_url,
-			 									 			int percentage_of_passing_large_text_items,
-			 									 			int percent_failing_large_text_items,
-			 									 			int percent_failing_small_text_items
+			 									 			double percentage_of_passing_large_text_items,
+			 									 			double percent_failing_large_text_items,
+			 									 			double percent_failing_small_text_items
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1162,9 +1161,9 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateNonTextColorContrastPage(int score, 
+	public void generateNonTextColorContrastPage(double score, 
  									 			 String domain_host,
- 									 			 int percent_pages_failing_non_text_items
+ 									 			 double percent_pages_failing_non_text_items
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1315,7 +1314,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateWrittenContentCoverPage(int overall_score, 
+	public void generateWrittenContentCoverPage(double overall_score, 
 												 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -1389,9 +1388,9 @@ public class GeneratePDFReport {
 	 * @param number_of_non_ada_compliant_pages
 	 * @throws IOException
 	 */
-	public void generateWrittenContentEaseOfUnderstandingPage(int score, 
+	public void generateWrittenContentEaseOfUnderstandingPage(double score, 
  									 			 			  String domain_host,
- 									 			 			  String average_reading_complexity,
+ 									 			 			  String avg_difficulty_string,
  									 			 			  String average_grade_level,
  									 			 			  int number_of_non_ada_compliant_pages
 	) throws IOException {
@@ -1438,7 +1437,7 @@ public class GeneratePDFReport {
 		
 		content_stream.setFont(getLightFont(), 14);
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("The main navigation pages on your website are "+average_reading_complexity+" to understand.");
+		content_stream.showText("The main navigation pages on your website are "+avg_difficulty_string+" to understand.");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("with an average reading level of "+average_grade_level);
 		
@@ -1536,11 +1535,11 @@ public class GeneratePDFReport {
 	 * @param average_words_per_sentence
 	 * @throws IOException
 	 */
-	public void generateWrittenContentParagraphingPage(int score, 
+	public void generateWrittenContentParagraphingPage(double score, 
 							 			 			  String domain_host,
 							 			 			  int number_of_pages_with_issues,
 							 			 			  int total_pages,
-							 			 			  int average_words_per_sentence
+							 			 			  double average_words_per_sentence
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1865,7 +1864,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateVisualsCoverPage(int overall_score, 
+	public void generateVisualsCoverPage(double overall_score, 
 										 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -1931,11 +1930,11 @@ public class GeneratePDFReport {
 	 * @param number_of_non_ada_compliant_pages
 	 * @throws IOException
 	 */
-	public void generateVisualsImageryPage(int score, 
+	public void generateVisualsImageryPage(double score, 
 				 			 			   String domain_host,
-				 			 			   int percent_custom_images,
-				 			 			   int stock_image_percentage,
-				 			 			   WCAGComplianceLevel compliance_level,
+				 			 			   double percent_custom_images,
+				 			 			   double stock_image_percentage,
+				 			 			   int page_count_wcag_compliance_issues,
 				 			 			   WCAGComplianceLevel company_compliance
 	) throws IOException {
 		assert domain_host != null;
@@ -2005,21 +2004,15 @@ public class GeneratePDFReport {
 		content_stream.showText("ADA compliance");
 		
 		content_stream.setFont(getLightFont(), 14);
-		if(compliance_level.compareTo(company_compliance) < 0) {
+		if(page_count_wcag_compliance_issues > 0) {
 			content_stream.newLineAtOffset(0, -40);
 			content_stream.showText("Your website does not meet the level "+company_compliance+" ADA compliance requirement for");
 			content_stream.newLineAtOffset(0, -20);
 			content_stream.showText("‘Alt’ text for images present on the website.");
 		}
-		else if(compliance_level.compareTo(company_compliance) == 0){
-			content_stream.newLineAtOffset(0, -40);
-			content_stream.showText("Your website meets the level "+company_compliance+" ADA compliance requirement for");
-			content_stream.newLineAtOffset(0, -20);
-			content_stream.showText("‘Alt’ text for images present on the website.");
-		}
 		else {
 			content_stream.newLineAtOffset(0, -40);
-			content_stream.showText("Your website exceeds the level "+company_compliance+" ADA compliance requirement for");
+			content_stream.showText("Your website meets the level "+company_compliance+" ADA compliance requirement for");
 			content_stream.newLineAtOffset(0, -20);
 			content_stream.showText("‘Alt’ text for images present on the website.");
 		}
@@ -2649,7 +2642,7 @@ public class GeneratePDFReport {
 	 * @param height
 	 * @throws IOException
 	 */
-	private void drawScoreBreakdownBox(int score, 
+	private void drawScoreBreakdownBox(double score, 
 									   PDPageContentStream content_stream,
 									   AuditSubcategory category,
 									   int x, 
@@ -2782,7 +2775,7 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private void drawScoreStatusBox(int score, 
+	private void drawScoreStatusBox(double score, 
 									PDPageContentStream content_stream, 
 									int x, 
 									int y, 
@@ -2820,7 +2813,7 @@ public class GeneratePDFReport {
 	 * @param content_stream
 	 * @throws IOException 
 	 */
-	private void drawProgressBar(int score, 
+	private void drawProgressBar(double score, 
 								PDPageContentStream content_stream, 
 								int x, 
 								int y, 
@@ -2854,11 +2847,11 @@ public class GeneratePDFReport {
 		content_stream.endText();
 	}
 
-	private String getScoreCategoryText(int overall_score) {
-		if(overall_score >= 80) {
+	private String getScoreCategoryText(double overall_score) {
+		if(overall_score >= 80.0) {
 			return "Delightful";
 		}
-		else if(overall_score >= 60 && overall_score < 80) {
+		else if(overall_score >= 60.0 && overall_score < 80.0) {
 			return "Almost There";
 		}
 		else {
@@ -2866,11 +2859,11 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private Color getScoreColor(int overall_score) {
-		if(overall_score >= 80) {
+	private Color getScoreColor(double overall_score) {
+		if(overall_score >= 80.0) {
 			return new Color(35, 216, 164);
 		}
-		else if(overall_score >= 60 && overall_score < 80) {
+		else if(overall_score >= 60.0 && overall_score < 80.0) {
 			return new Color(249, 191, 7);
 		}
 		else {
@@ -2878,11 +2871,11 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private String getScoreText(int overall_score) {
-		if(overall_score >= 80) {
+	private String getScoreText(double overall_score) {
+		if(overall_score >= 80.0) {
 			return "80% to 100%";
 		}
-		else if(overall_score >= 60 && overall_score < 80) {
+		else if(overall_score >= 60.0 && overall_score < 80.0) {
 			return "60% to 80%";
 		}
 		else {
@@ -2890,11 +2883,11 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private URL getScoreEmojiImage(int overall_score) throws MalformedURLException {
-		if(overall_score >= 80) {
+	private URL getScoreEmojiImage(double overall_score) throws MalformedURLException {
+		if(overall_score >= 80.0) {
 			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
 		}
-		else if(overall_score >= 60 && overall_score < 80) {
+		else if(overall_score >= 60.0 && overall_score < 80.0) {
 			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
 		}
 		else {

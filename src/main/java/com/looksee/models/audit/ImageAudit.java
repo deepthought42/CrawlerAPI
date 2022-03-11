@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.ElementState;
 import com.looksee.models.ImageElementState;
 import com.looksee.models.PageState;
-import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
@@ -22,7 +21,6 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.AuditService;
-import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
 
@@ -36,9 +34,6 @@ public class ImageAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private AuditService audit_service;
-	
-	@Autowired
-	private	PageStateService page_state_service;
 	
 	@Autowired
 	private UXIssueMessageService issue_message_service;
@@ -65,7 +60,6 @@ public class ImageAudit implements IExecutablePageStateAudit {
 		List<ImageElementState> element_list = BrowserUtils.getImageElements(page_state.getElements());
 		
 		Score copyright_score = calculateCopyrightScore(element_list);
-		log.warn("found "+copyright_score.getIssueMessages() + " image copyright issues");
 		String why_it_matters = "";
 		String description = "";
 

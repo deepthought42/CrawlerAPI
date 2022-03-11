@@ -73,7 +73,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		assert background_color != null;
 		assert !background_color.isEmpty();
 
-		log.warn("color contrast issue :: "+contrast);
 		setPriority(priority);
 		setDescription(description);
 		setRecommendation(recommendation);
@@ -98,7 +97,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 
 	public void setContrast(double contrast) {
 		this.contrast = contrast;
-		log.warn("color contrast issue :: "+this.contrast);
 	}
 
 	public String getForegroundColor() {

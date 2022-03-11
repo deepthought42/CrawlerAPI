@@ -35,10 +35,7 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
-import com.looksee.models.Label;
-import com.looksee.models.Logo;
 import com.looksee.models.audit.ColorData;
-import com.looksee.models.ImageSearchAnnotation;
 
 
 @Component
@@ -91,7 +88,6 @@ public class ElementStateExtractor extends AbstractActor{
 						//ENRICHMENT : BACKGROUND COLORS
 						element_states = element_states.parallelStream()
 								   .filter(element -> element != null)
-								   .filter(element -> !element.getOwnedText().isEmpty())
 								   .map(element -> {
 										try {
 											ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));				
@@ -116,7 +112,6 @@ public class ElementStateExtractor extends AbstractActor{
 											element.setForegroundColor(font_color.rgb());
 											
 											double contrast = ColorData.computeContrast(background_color, font_color);
-											log.warn("contrast :: "+contrast);
 											element.setTextContrast(contrast);
 											return element;
 										}

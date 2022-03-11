@@ -2,6 +2,7 @@ package com.looksee.generators.report;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -31,6 +32,19 @@ public class GeneratePDFReport {
 	private PDFont medium_font;
 	private PDFont bold_font;
 	
+	private final int HEADER_XL = 56;
+	private final int HEADER_0 = 40;
+	private final int HEADER_1 = 32;
+	private final int HEADER_2 = 26;
+	private final int HEADER_3 = 22;
+	private final int HEADER_4 = 20;
+	
+	private final int TEXT_SIZE = 12;
+	
+	private final int LEFT_MARGIN_SM = 80;
+	private final int LEFT_MARGIN_LG = 120;
+	
+	
 	public GeneratePDFReport(String domain_url) throws IOException, URISyntaxException {
 		 setDocument(new PDDocument());
 		 setDocumentName(domain_url+"-"+LocalDate.now()+".pdf");
@@ -53,27 +67,27 @@ public class GeneratePDFReport {
 	public void writeDocument(List<AuditSubcategory> needs_improvement,
 							  String domain_host,
 							  int pages_audited,
-							  double overall_score,
-							  double color_management_score,
-							  double color_palette_score,
-							  double text_contrast_score,
-							  double percentage_of_passing_large_text_items,
-							  double percent_failing_large_text_items,
-							  double percent_failing_small_text_items,
-							  double non_text_contrast_score,
-							  double percentage_pages_non_text_issues,
-							  double written_content_score,
-							  double ease_of_understanding_score,
-							  double paragraphing_score,
+							  int overall_score,
+							  int color_management_score,
+							  int color_palette_score,
+							  int text_contrast_score,
+							  int percentage_of_passing_large_text_items,
+							  int percent_failing_large_text_items,
+							  int percent_failing_small_text_items,
+							  int non_text_contrast_score,
+							  int percentage_pages_non_text_issues,
+							  int written_content_score,
+							  int ease_of_understanding_score,
+							  int paragraphing_score,
 							  int number_of_pages_paragraphing_issues,
-							  double average_words_per_sentence,
-							  double visuals_score,
-							  double visuals_imagery_score,
-							  double percent_custom_images,
-							  double stock_image_percentage,
+							  int average_words_per_sentence,
+							  int visuals_score,
+							  int visuals_imagery_score,
+							  int percent_custom_images,
+							  int stock_image_percentage,
 							  WCAGComplianceLevel wcag_company_compliance_level,
-							  double information_architecture_score,
-							  double branding_score,
+							  int information_architecture_score,
+							  int branding_score,
 							  List<String> palette_colors,
 							  String avg_difficulty_string,
 							  String avg_grade_level,
@@ -161,7 +175,7 @@ public class GeneratePDFReport {
 		addImageToPage(document, 240, 550, 0.08f, watermark_logo, content_stream);
 		
 		//company name/report title
-		content_stream.setFont(getMediumFont(), 36);
+		content_stream.setFont(getMediumFont(), HEADER_1);
 		content_stream.setNonStrokingColor(new Color( 255, 0, 80 ));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(220, 200);
@@ -178,7 +192,7 @@ public class GeneratePDFReport {
 		sb.append(" 2022");
 		String output = sb.toString() ;
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(250, 50);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.showText( output );
@@ -196,14 +210,14 @@ public class GeneratePDFReport {
 		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/report-background-4.png");
 		addImageToPage(document, 0, 0, 0.32f, background_url, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 24);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(100, 550);
 		content_stream.showText("Contents");
 
 		content_stream.endText();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(110, 500);
 		content_stream.showText("Introduction");
@@ -225,7 +239,7 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		//Write page numbers
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(450, 500);
 		content_stream.showText("3");
@@ -260,23 +274,23 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 
-		content_stream.setFont(getBaseFont(), 46);
+		content_stream.setFont(getBaseFont(), HEADER_0);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 550);
 		content_stream.showText("Welcome to");
 		content_stream.endText();
 		
-		content_stream.setFont(getBaseFont(), 68);
+		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.beginText();		
 		content_stream.newLineAtOffset(120, 480);
 		content_stream.showText("Look-see!");
 		content_stream.endText();
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 420);
 		content_stream.showText("The Look-see platform has analyzed the experience on your website and");
@@ -289,12 +303,12 @@ public class GeneratePDFReport {
 		
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("Experience design comprises two broad aspects: ");
-		content_stream.setFont(getBoldFont(), 12);
+		content_stream.setFont(getBoldFont(), TEXT_SIZE);
 
 		content_stream.newLineAtOffset(280, 0);
 		content_stream.showText("Aesthetics & Functionality.");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(-280, -30);
 		content_stream.showText("Our audit categories stemmed from these two aspects. We analyzed six");
 		content_stream.newLineAtOffset(0, -20);
@@ -317,16 +331,16 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 80, 450, 640);
+		content_stream.addRect(LEFT_MARGIN_SM, 80, 450, 640);
 		content_stream.fill();
 
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 650);
 		content_stream.showText("Look-see Scoring");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Our comprehensive Look-see scoring criteria encompasses");
 		content_stream.newLineAtOffset(0, -20);
@@ -345,14 +359,14 @@ public class GeneratePDFReport {
 		URL needs_work_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
 		addImageToPage(document, 120, 450, 0.3f, needs_work_emoji_url, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 22);
+		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(57, 183, 255));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 470);
 		content_stream.showText("Below 60%");
 		
 		content_stream.setNonStrokingColor(Color.BLACK);
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("Your experience “needs work”.");
 		content_stream.endText();
@@ -361,14 +375,14 @@ public class GeneratePDFReport {
 		URL almost_there_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
 		addImageToPage(document, 120, 370, 0.3f, almost_there_emoji_url, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 22);
+		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(249, 191, 7));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 390);
 		content_stream.showText("Between 60% to 80%");
 		
 		content_stream.setNonStrokingColor(Color.BLACK);
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("Your experience is “almost there”.");
 		content_stream.endText();
@@ -376,14 +390,14 @@ public class GeneratePDFReport {
 		//high score
 		URL delightful_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
 		addImageToPage(document, 120, 290, 0.3f, delightful_emoji_url, content_stream);
-		content_stream.setFont(getBoldFont(), 22);
+		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(35, 216, 164));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 310);
 		content_stream.showText("Above 80%");
 		
 		content_stream.setNonStrokingColor(Color.BLACK);
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("Your experience is “delightful”.");
 		content_stream.endText();
@@ -391,7 +405,7 @@ public class GeneratePDFReport {
 		
 		//final paragraph
 		content_stream.beginText();
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(120, 250);
 		content_stream.showText("We have also recommended research-backed, actionable");
 		content_stream.newLineAtOffset(0, -20);
@@ -425,20 +439,20 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 80, 450, 640);
+		content_stream.addRect(LEFT_MARGIN_SM, 80, 450, 640);
 		content_stream.fill();
 
 		//color management
 		URL color_management_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/color-management-icon.png");
 		addImageToPage(document, 120, 650, 0.6f, color_management_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 680);
 		content_stream.showText("Color Management");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The color palette, contrast of text and");
 		content_stream.newLineAtOffset(0, -20);
@@ -449,13 +463,13 @@ public class GeneratePDFReport {
 		URL branding_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/visuals-icon.png");
 		addImageToPage(document, 120, 550, 0.6f, branding_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 580);
 		content_stream.showText("Visuals");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The quality and relevance of images, consistency");
 		content_stream.newLineAtOffset(0, -20);
@@ -466,13 +480,13 @@ public class GeneratePDFReport {
 		URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
 		addImageToPage(document, 120, 450, 0.6f, visuals_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 480);
 		content_stream.showText("Visuals");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The quality and relevance of images, consistency");
 		content_stream.newLineAtOffset(0, -20);
@@ -484,13 +498,13 @@ public class GeneratePDFReport {
 		URL written_content_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/written-content-icon.png");
 		addImageToPage(document, 120, 350, 0.6f, written_content_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 380);
 		content_stream.showText("Written Content");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The readability, grammatical errors and");
 		content_stream.newLineAtOffset(0, -20);
@@ -501,13 +515,13 @@ public class GeneratePDFReport {
 		URL typography_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/typography-icon.png");
 		addImageToPage(document, 120, 250, 0.6f, typography_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 280);
 		content_stream.showText("Typography");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The consistency of type used across your website");
 		content_stream.endText();
@@ -516,13 +530,13 @@ public class GeneratePDFReport {
 		URL info_architecture_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/info-architecture-icon.png");
 		addImageToPage(document, 120, 150, 0.6f, info_architecture_icon, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 16);
+		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 180);
 		content_stream.showText("Information Architecture");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("The placement and usage of menus, interactions,");
 		content_stream.newLineAtOffset(0, -20);
@@ -542,7 +556,7 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateScoreOverviewPage(double overall_score, 
+	public void generateScoreOverviewPage(int overall_score, 
 										   String domain_host, 
 										   List<AuditSubcategory> improvement_areas
 	) throws IOException {
@@ -557,7 +571,7 @@ public class GeneratePDFReport {
 		content_stream.addRect(0, 0, 550, 800);
 		content_stream.fill();
 
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(60, 700);
@@ -567,7 +581,7 @@ public class GeneratePDFReport {
 		
 		drawScoreStatusBox(overall_score, content_stream, 40, 480, 450, 170);
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 
 		content_stream.beginText();
@@ -586,7 +600,7 @@ public class GeneratePDFReport {
 		content_stream.showText("enhance your website experience:");
 		
 		//heading 2 styling
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		
 		content_stream.newLineAtOffset(0, -75);
 		content_stream.showText("Areas that need improvement");
@@ -612,13 +626,13 @@ public class GeneratePDFReport {
 	 * @return
 	 * @throws IOException
 	 */
-	public PDPage generateScoreBreakdownPage(double overall_score, 
+	public PDPage generateScoreBreakdownPage(int overall_score, 
 											String domain_host,
-											double color_management_score,
-											double written_content_score,
-											double visuals_score,
-											double information_architecture_score,
-											double branding_score
+											int color_management_score,
+											int written_content_score,
+											int visuals_score,
+											int information_architecture_score,
+											int branding_score
 	) throws IOException {
 		PDPage page = new PDPage();
 		addPage(page);
@@ -631,13 +645,13 @@ public class GeneratePDFReport {
 		content_stream.addRect(0, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(40, 700);
 		content_stream.showText("Score Breakdown");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText("You scored "+overall_score+" on the Look-see Meter!");
 		content_stream.newLineAtOffset(0, -20);
@@ -707,7 +721,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateColorManagementCoverPage(double overall_score, 
+	public void generateColorManagementCoverPage(int overall_score, 
 												 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -720,25 +734,25 @@ public class GeneratePDFReport {
 		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/color_management_cover_1.png");
 		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
-		content_stream.setFont(getBaseFont(), 56);
+		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 650);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 650);
 		content_stream.showText("Color");
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("Management");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("Here is how "+domain_host+" performed on Color Management");
 		content_stream.endText();
 		
 		drawScoreStatusBox(overall_score, content_stream, 60, 330, 450, 170);
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 300);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 300);
 		content_stream.showText("The colors used on your website reflect your brand, create");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("the look and feel, and influence the user's emotion and");
@@ -781,7 +795,7 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateColorManagementColorPalettePage(double score, 
+	public void generateColorManagementColorPalettePage(int score, 
 			 									 		String domain_host,
 			 									 		List<String> primary_colors
 	) throws IOException {
@@ -796,22 +810,22 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Color Palette");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The main colors comprising the background, font, and elements");
 		content_stream.newLineAtOffset(0, -20);
@@ -820,13 +834,13 @@ public class GeneratePDFReport {
 		
 		drawScoreStatusBox(score, content_stream, 100, 430, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 380);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The following colors were identified on the "+ domain_host+" website:");
 		content_stream.endText();
@@ -834,13 +848,13 @@ public class GeneratePDFReport {
 		
 		drawColorPaletteColors(primary_colors, 120, 220, content_stream);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 150);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("There are no ADA compliance guidelines regarding the website color");
 
@@ -872,10 +886,10 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
@@ -910,21 +924,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Studies have found that it takes 90 seconds for a customer to form an");
@@ -944,12 +958,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("while creating a sense of familiarity for the user.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("We recommend increasing the usage of your brand colors throughout the");
@@ -988,12 +1002,12 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateColorManagementTextColorContrastPage(double score, 
+	public void generateColorManagementTextColorContrastPage(int score, 
 			 									 			String domain_host,
 			 									 			String example_image_url,
-			 									 			double percentage_of_passing_large_text_items,
-			 									 			double percent_failing_large_text_items,
-			 									 			double percent_failing_small_text_items
+			 									 			int percentage_of_passing_large_text_items,
+			 									 			int percent_failing_large_text_items,
+			 									 			int percent_failing_small_text_items
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1006,35 +1020,35 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Contrast of Text Items");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Color contrast between background and text color.");
 		content_stream.endText();
 		
 		drawScoreStatusBox(score, content_stream, 100, 430, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 380);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Large text items include headings and any content above 18 px.");
 		content_stream.newLineAtOffset(0, -20);
@@ -1047,12 +1061,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("color, creating low visibility and legibility.");
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText(percent_failing_small_text_items + "% of small text on your website doesn't meet the minimum ");
 		content_stream.newLineAtOffset(0, -20);
@@ -1083,21 +1097,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Color, just like the overall design, goes beyond aesthetics. It impacts the");
@@ -1111,34 +1125,34 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("through, creating a comfortable and engaging experience for your user.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Improve the contrast score by changing the low contrast colors to meet");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("minimum contrast requirements.");
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Small Text");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText("Contrast of 4.5 – 7 with the background for WCAG level AA compliance");
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Large Text");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText("Contrast of 3 – 4.5 with the background.");
@@ -1161,9 +1175,9 @@ public class GeneratePDFReport {
 	 * 
 	 * @throws IOException
 	 */
-	public void generateNonTextColorContrastPage(double score, 
+	public void generateNonTextColorContrastPage(int score, 
  									 			 String domain_host,
- 									 			 double percent_pages_failing_non_text_items
+ 									 			 int percent_pages_failing_non_text_items
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1176,22 +1190,22 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Contrast of Non-Text Items");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Color contrast between background and non-text elements");
 		content_stream.newLineAtOffset(0, -20);
@@ -1200,24 +1214,24 @@ public class GeneratePDFReport {
 		
 		drawScoreStatusBox(score, content_stream, 100, 430, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 380);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("There are only 2 icons on your website, on the Home page. They have a");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("high contrast ratio against the background color.");
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText(percent_pages_failing_non_text_items + "% of pages on your website have non-text elements");
 		content_stream.showText("that don't meet the minimum");
@@ -1245,21 +1259,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Icons are an easily recognizable, fun element, and a great way to");
@@ -1275,12 +1289,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("and be evidently clickable.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Change the CTA color buttons to high contrast colors, to captivate the user’s");
@@ -1314,7 +1328,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateWrittenContentCoverPage(double overall_score, 
+	public void generateWrittenContentCoverPage(int overall_score, 
 												 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -1327,25 +1341,25 @@ public class GeneratePDFReport {
 		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/written_content_cover_background.png");
 		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
-		content_stream.setFont(getBaseFont(), 56);
+		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 650);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 650);
 		content_stream.showText("Written");
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("Content");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("Here is how "+domain_host+" performed on Written Content:");
 		content_stream.endText();
 		
 		drawScoreStatusBox(overall_score, content_stream, 60, 330, 450, 170);
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 300);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 300);
 		content_stream.showText("The information and experiences that are directed towards an");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("end-user or audience. Written content is information expressed");
@@ -1388,7 +1402,7 @@ public class GeneratePDFReport {
 	 * @param number_of_non_ada_compliant_pages
 	 * @throws IOException
 	 */
-	public void generateWrittenContentEaseOfUnderstandingPage(double score, 
+	public void generateWrittenContentEaseOfUnderstandingPage(int score, 
  									 			 			  String domain_host,
  									 			 			  String avg_difficulty_string,
  									 			 			  String average_grade_level,
@@ -1405,48 +1419,48 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Ease of");
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText("Understanding");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The reading level of the content on the " + domain_host + " website.");
 		content_stream.endText();
 		
 		drawScoreStatusBox(score, content_stream, 100, 430, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 380);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The main navigation pages on your website are "+avg_difficulty_string+" to understand.");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("with an average reading level of "+average_grade_level);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("We found " + number_of_non_ada_compliant_pages + " page that do not meet accessibility standards");
 		content_stream.newLineAtOffset(0, -20);
@@ -1480,21 +1494,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Simple content makes reading comfortable for the user; the use of");
@@ -1505,12 +1519,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("which mirrors the reading capability of the average American adult.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Assess your target audience and adjust your text on the identified pages");
@@ -1535,11 +1549,11 @@ public class GeneratePDFReport {
 	 * @param average_words_per_sentence
 	 * @throws IOException
 	 */
-	public void generateWrittenContentParagraphingPage(double score, 
+	public void generateWrittenContentParagraphingPage(int score, 
 							 			 			  String domain_host,
 							 			 			  int number_of_pages_with_issues,
 							 			 			  int total_pages,
-							 			 			  double average_words_per_sentence
+							 			 			  int average_words_per_sentence
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1553,46 +1567,46 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Paragraphing");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The way your textual content is structured and organized.");
 		content_stream.endText();
 		
 		drawScoreStatusBox(score, content_stream, 100, 430, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 380);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText(percent_pages_with_issues+"% of the pages ("+number_of_pages_with_issues+"/"+total_pages+") contain lengthy and verbose sentences with over");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText(average_words_per_sentence+" words per sentence on average.");
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Even though there are no ADA compliance requirements specifically for");
 		content_stream.newLineAtOffset(0, -20);
@@ -1622,21 +1636,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The way users experience content has changed in the mobile phone era.");
@@ -1647,12 +1661,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("experience easy and convenient.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("No more than 25 words per sentence to comply with US and EU standards");
@@ -1695,22 +1709,22 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("SEO");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("A checklist of key SEO elements that should be");
 		content_stream.newLineAtOffset(0, -20);
@@ -1721,13 +1735,13 @@ public class GeneratePDFReport {
 		
 		drawScoreStatusBox(score, content_stream, 100, 380, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 330);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("We scored your website on 4 SEO elements:");
 		
@@ -1760,12 +1774,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText(average_words_per_sentence+" words per sentence on average.");
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Even though there are no ADA compliance requirements specifically for");
 		content_stream.newLineAtOffset(0, -20);
@@ -1795,21 +1809,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The meta-title and meta-description provide the user with a concise,");
@@ -1824,12 +1838,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("ability.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("We recommend ensuring all pages have meta-descriptions.");
@@ -1864,7 +1878,7 @@ public class GeneratePDFReport {
 	 * @pre domain_host != null
 	 * @pre !domain_host.isEmpty()
 	 */
-	public void generateVisualsCoverPage(double overall_score, 
+	public void generateVisualsCoverPage(int overall_score, 
 										 String domain_host
 	) throws IOException {
 		assert domain_host != null;
@@ -1880,20 +1894,20 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBaseFont(), 56);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 650);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 650);
 		content_stream.showText("Visuals");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("Here is how "+domain_host+" performed on Visuals");
 		content_stream.endText();
 		
 		drawScoreStatusBox(overall_score, content_stream, 60, 330, 450, 170);
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 300);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 300);
 		content_stream.showText("Visual appeal is what meets the eye. The overall visual balance of a");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("design.");
@@ -1930,10 +1944,10 @@ public class GeneratePDFReport {
 	 * @param number_of_non_ada_compliant_pages
 	 * @throws IOException
 	 */
-	public void generateVisualsImageryPage(double score, 
+	public void generateVisualsImageryPage(int score, 
 				 			 			   String domain_host,
-				 			 			   double percent_custom_images,
-				 			 			   double stock_image_percentage,
+				 			 			   int percent_custom_images,
+				 			 			   int stock_image_percentage,
 				 			 			   int page_count_wcag_compliance_issues,
 				 			 			   WCAGComplianceLevel company_compliance
 	) throws IOException {
@@ -1948,35 +1962,35 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 750);
 		content_stream.showText("VISUAL");
 		
 		
-		content_stream.setFont(getBoldFont(), 36);
+		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Imagery");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("The type of images, graphics, and illustrations used on your website.");
 		content_stream.endText();
 		
 		drawScoreStatusBox(score, content_stream, 100, 450, 450, 170);
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 410);
 		content_stream.showText("Observation");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText(percent_custom_images+"% of the images used are your own custom photography. This is the");
 		content_stream.newLineAtOffset(0, -20);
@@ -1998,12 +2012,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("and part of the best practices.");
 		
-		content_stream.setFont(getBoldFont(), 30);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -60);
 		content_stream.showText("ADA compliance");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		if(page_count_wcag_compliance_issues > 0) {
 			content_stream.newLineAtOffset(0, -40);
 			content_stream.showText("Your website does not meet the level "+company_compliance+" ADA compliance requirement for");
@@ -2038,21 +2052,21 @@ public class GeneratePDFReport {
 		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
-		content_stream.addRect(80, 0, 550, 800);
+		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
 		content_stream.fill();
 		
-		content_stream.setFont(getMediumFont(), 14);
+		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(120, 700);
 		content_stream.showText("MEANING");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Why is this important for your UX?");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("Images create a more immersive experience for the user, giving context");
@@ -2065,12 +2079,12 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("an emotional response from the user, creating a stronger connection.");
 		
-		content_stream.setFont(getBoldFont(), 28);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -80);
 		content_stream.showText("Recommendations");
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
 		content_stream.showText("From a performance perspective an image should be no larger than the");
@@ -2126,25 +2140,25 @@ public class GeneratePDFReport {
 		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/visuals-background-1.png");
 		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
-		content_stream.setFont(getBaseFont(), 56);
+		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 650);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 650);
 		content_stream.showText("Information");
-		content_stream.newLineAtOffset( 0, 30);
+		content_stream.newLineAtOffset( 0, HEADER_2);
 		content_stream.showText("Architecture");
 		
-		content_stream.setFont(getLightFont(), 14);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -50);
 		content_stream.showText("Here is how "+domain_host+" performed on Information Architecture");
 		content_stream.endText();
 		
 		drawScoreStatusBox(overall_score, content_stream, 60, 330, 450, 170);
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 300);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 300);
 		content_stream.showText("The effectiveness and functionality of the structure and different");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("interactive elements on your website such as menu, links and");
@@ -2201,7 +2215,7 @@ public class GeneratePDFReport {
 	 * @pre !domain_host.isEmpty()
 	 */
 	public void generateAppendixCoverPage() throws IOException {
-		
+		/*
 		PDPage page = new PDPage();
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
@@ -2212,13 +2226,13 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBaseFont(), 56);
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(80, 350);
+		content_stream.newLineAtOffset(LEFT_MARGIN_SM, 350);
 		content_stream.showText("Appendix");
 		
 		content_stream.endText();
 		
 		content_stream.close();
-		
+		*/
 		PDPage page2 = new PDPage();
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
@@ -2250,13 +2264,13 @@ public class GeneratePDFReport {
 		if(ColorUtils.isBlack(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Black");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Formal, dignified, sophisticated, and mysterious. Black often has an intense energy.");
 			content_stream.newLineAtOffset(0, -15);
@@ -2269,13 +2283,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isWhite(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("White");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Represents purity and innocence and often evokes a sense of space. Some of the positivity");
 			content_stream.newLineAtOffset(0, -15);
@@ -2286,13 +2300,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isRed(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Red");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Associated with strong emotions, such as love, passion, and anger. It's the");
 			content_stream.newLineAtOffset(0, -15);
@@ -2304,13 +2318,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isOrange(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Orange");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("The color of motivation, bringing a positive attitude and general zest");
 			content_stream.newLineAtOffset(0, -15);
@@ -2322,13 +2336,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isGold(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Gold");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("The color of success, achievement and triumph. Associated with abundance,");
 			content_stream.newLineAtOffset(0, -15);
@@ -2340,13 +2354,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isYellow(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Yellow");
 			   
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Associated with the intellect, logic; it has the ability to improve analytical");
 			content_stream.newLineAtOffset(0, -15);
@@ -2359,13 +2373,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isGreen(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Green");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Symbolizes harmony, tranquility, and peace. As a soothing, relaxing color, it ");
 			content_stream.newLineAtOffset(0, -15);
@@ -2378,13 +2392,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isCyan(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Cyan");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Represents natural and forestial environments and is regarded as the most restful");
 			content_stream.newLineAtOffset(0, -15);
@@ -2399,13 +2413,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isBlue(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Blue");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("The color of trust. Evokes feelings of calm, serenity, loyalty, and integrity. Blue is ");
 			content_stream.newLineAtOffset(0, -15);
@@ -2416,13 +2430,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isViolet(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Violet");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("The color of spirituality and luxury. This color inpsires reflection and self awareness.");
 			content_stream.newLineAtOffset(0, -15);
@@ -2434,13 +2448,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isPurple(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Purple");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("The color of spirituality and luxury. This color inpsires reflection and self awareness.");
 			content_stream.newLineAtOffset(0, -15);
@@ -2451,13 +2465,13 @@ public class GeneratePDFReport {
 		else if(ColorUtils.isMagenta(color_data)) {
 			//draw 50x50 square with the color in it
 			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
-			content_stream.setFont(getBoldFont(), 20);
+			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(180, y_offset+10);
 			content_stream.showText("Magenta");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset(-40, -40);
 			content_stream.showText("Represents universal harmony and emotional balance and it promotes compassion, kindness ");
 			content_stream.newLineAtOffset(0, -15);
@@ -2506,7 +2520,7 @@ public class GeneratePDFReport {
 		content_stream.addRect(x_offset, y_offset, 80, 80);
 		content_stream.fill();
 		
-		content_stream.setFont(getLightFont(), 12);
+		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(x_offset+20, y_offset-20);
@@ -2565,7 +2579,7 @@ public class GeneratePDFReport {
 			URL color_management_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/color-management-icon.png");
 			addImageToPage(document, x, y, 0.4f, color_management_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2576,7 +2590,7 @@ public class GeneratePDFReport {
 			URL typography_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/typography-icon.png");
 			addImageToPage(document, x, y, 0.4f, typography_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2587,7 +2601,7 @@ public class GeneratePDFReport {
 			URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
 			addImageToPage(document, x, y, 0.4f, visuals_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2598,7 +2612,7 @@ public class GeneratePDFReport {
 			URL written_content_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/written-content-icon.png");
 			addImageToPage(document, x, y, 0.4f, written_content_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2609,7 +2623,7 @@ public class GeneratePDFReport {
 			URL branding_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/visuals-icon.png");
 			addImageToPage(document, x, y, 0.4f, branding_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2620,7 +2634,7 @@ public class GeneratePDFReport {
 			URL info_architecture_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/info-architecture-icon.png");
 			addImageToPage(document, x, y, 0.4f, info_architecture_icon, content_stream);
 			
-			content_stream.setFont(getMediumFont(), 14);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
 			content_stream.newLineAtOffset(x+40, y+10);
@@ -2642,7 +2656,7 @@ public class GeneratePDFReport {
 	 * @param height
 	 * @throws IOException
 	 */
-	private void drawScoreBreakdownBox(double score, 
+	private void drawScoreBreakdownBox(int score, 
 									   PDPageContentStream content_stream,
 									   AuditSubcategory category,
 									   int x, 
@@ -2654,7 +2668,7 @@ public class GeneratePDFReport {
 		URL score_overview_card = new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/gray-rectangle-rounded.png");
 		addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
 		
-		content_stream.setFont(getMediumFont(), 40);
+		content_stream.setFont(getMediumFont(), HEADER_1);
 		content_stream.setNonStrokingColor(getScoreColor(score));
 		content_stream.beginText();
 		content_stream.newLineAtOffset(x+20, y+25);
@@ -2678,15 +2692,15 @@ public class GeneratePDFReport {
 	) throws IOException {
 		if(AuditSubcategory.COLOR_MANAGEMENT.equals(category)) {
 			System.out.println("Drawing color management box");
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 15);
 			content_stream.showText("Color");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("Management");
 			
-			content_stream.setFont(getLightFont(), 12);
-			content_stream.newLineAtOffset( 100, 30);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
+			content_stream.newLineAtOffset( 100, HEADER_2);
 			content_stream.showText("This score indicates that you have room for");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("improvement on the color scheme and color");
@@ -2696,15 +2710,15 @@ public class GeneratePDFReport {
 			content_stream.showText("details");
 		}
 		else if(AuditSubcategory.WRITTEN_CONTENT.equals(category)) {
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 15);
 			content_stream.showText("Written");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("Content");
 			
-			content_stream.setFont(getLightFont(), 12);
-			content_stream.newLineAtOffset( 100, 30);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
+			content_stream.newLineAtOffset( 100, HEADER_2);
 			content_stream.showText("Your content is well-written and organized,");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("but can be difficult to understand for the");
@@ -2714,25 +2728,25 @@ public class GeneratePDFReport {
 			content_stream.showText("this.");
 		}
 		else if(AuditSubcategory.BRANDING.equals(category)) {
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 7);
 			content_stream.showText("Branding");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset( 100, 7);
 			content_stream.showText("Optimize your logo placement for the best");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("branding practices. More details on page 31.");
 		}
 		else if(AuditSubcategory.TYPOGRAPHY.equals(category)) {
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 10);
 			content_stream.showText("Typography");
 			
-			content_stream.setFont(getLightFont(), 12);
-			content_stream.newLineAtOffset( 100, 30);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
+			content_stream.newLineAtOffset( 100, HEADER_2);
 			content_stream.showText("This is your biggest improvement area.");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("Maintain consistency in font styling and");
@@ -2742,12 +2756,12 @@ public class GeneratePDFReport {
 			content_stream.showText("element of experience. More on page 37.");
 		}
 		else if(AuditSubcategory.IMAGERY.equals(category)) {
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 7);
 			content_stream.showText("Visuals");
 			
-			content_stream.setFont(getLightFont(), 12);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
 			content_stream.newLineAtOffset( 100, 13);
 			content_stream.showText("This area follows good practices, but does");
 			content_stream.newLineAtOffset( 0, -15);
@@ -2756,15 +2770,15 @@ public class GeneratePDFReport {
 			content_stream.showText("Learn how to change this on page 43.");
 		}
 		else if(AuditSubcategory.INFORMATION_ARCHITECTURE.equals(category)) {
-			content_stream.setFont(getMediumFont(), 12);
+			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 15);
 			content_stream.showText("Information");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("Architecture");
 			
-			content_stream.setFont(getLightFont(), 12);
-			content_stream.newLineAtOffset( 100, 28);
+			content_stream.setFont(getLightFont(), TEXT_SIZE);
+			content_stream.newLineAtOffset( 100, HEADER_2);
 			content_stream.showText("A few adjustments around your CTA");
 			content_stream.newLineAtOffset( 0, -15);
 			content_stream.showText("buttons, Interactions, and Layout can");
@@ -2775,7 +2789,7 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private void drawScoreStatusBox(double score, 
+	private void drawScoreStatusBox(int score, 
 									PDPageContentStream content_stream, 
 									int x, 
 									int y, 
@@ -2791,12 +2805,12 @@ public class GeneratePDFReport {
 		
 		content_stream.beginText();
 		content_stream.setNonStrokingColor(Color.BLACK);
-		content_stream.setFont(getBoldFont(), 12);
+		content_stream.setFont(getBoldFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(x+120, y+150);
 		content_stream.showText(getScoreText(score));
 		
 		content_stream.setNonStrokingColor(getScoreColor(score));
-		content_stream.setFont(getBoldFont(), 26);
+		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText(getScoreCategoryText(score));
 		content_stream.endText();
@@ -2813,7 +2827,7 @@ public class GeneratePDFReport {
 	 * @param content_stream
 	 * @throws IOException 
 	 */
-	private void drawProgressBar(double score, 
+	private void drawProgressBar(int score, 
 								PDPageContentStream content_stream, 
 								int x, 
 								int y, 
@@ -2831,7 +2845,7 @@ public class GeneratePDFReport {
 		URL up_caret =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/Arrow_Up-128px.png");
 		addImageToPage(document, x+(int)(width*(score/100.0))-15, y-30, 0.25f, up_caret, content_stream);
 		
-		content_stream.setFont(getBaseFont(), 26);
+		content_stream.setFont(getBaseFont(), HEADER_2);
 		content_stream.beginText();
 		
 		int offset = 0;
@@ -2847,7 +2861,7 @@ public class GeneratePDFReport {
 		content_stream.endText();
 	}
 
-	private String getScoreCategoryText(double overall_score) {
+	private String getScoreCategoryText(int overall_score) {
 		if(overall_score >= 80.0) {
 			return "Delightful";
 		}
@@ -2859,7 +2873,7 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private Color getScoreColor(double overall_score) {
+	private Color getScoreColor(int overall_score) {
 		if(overall_score >= 80.0) {
 			return new Color(35, 216, 164);
 		}
@@ -2871,7 +2885,7 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private String getScoreText(double overall_score) {
+	private String getScoreText(int overall_score) {
 		if(overall_score >= 80.0) {
 			return "80% to 100%";
 		}
@@ -2883,7 +2897,7 @@ public class GeneratePDFReport {
 		}
 	}
 
-	private URL getScoreEmojiImage(double overall_score) throws MalformedURLException {
+	private URL getScoreEmojiImage(int overall_score) throws MalformedURLException {
 		if(overall_score >= 80.0) {
 			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
 		}
@@ -2973,6 +2987,11 @@ public class GeneratePDFReport {
 
 	public void setMediumFont(PDFont medium_font) {
 		this.medium_font = medium_font;
+	}
+
+	public void write(ByteArrayOutputStream outputStream) throws IOException {
+		document.save(outputStream);
+		document.close();
 	}
 	
 }

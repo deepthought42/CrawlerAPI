@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +38,6 @@ import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ColorUtils;
-import com.looksee.utils.ImageUtils;
 
 
 /**
@@ -158,6 +156,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 						if(parent_area > (element_area * 3)) {
 							//parent = element_state;
 							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
+							/*
 							String bg_color_css = element_state.getRenderedCssValues().get("background-color");
 							String bg_image = element_state.getRenderedCssValues().get("background-image");
 							String bg_color = "255,255,255";
@@ -184,10 +183,11 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 								bg_color = bkg_color.rgb();
 							}
 							
+							element_state = element_state_service.findById(element_state.getId());
 							element_state.setBackgroundColor(bg_color);
 							element_state = element_state_service.save(element_state);
-							
-							parent_bkg = new ColorData(bg_color);
+							*/
+							parent_bkg = new ColorData(element_state.getBackgroundColor());
 						}
 					}
 				}
@@ -249,10 +249,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					element_bkg = getBorderColor(element);
 				}
 				
+				/*
 				if(parent_bkg == null) {
 					parent_bkg = new ColorData("rgb(255,255,255)");
 				}
-				
+				*/
+				parent_bkg = new ColorData(element.getBackgroundColor());
 				double contrast = ColorData.computeContrast(parent_bkg, element_bkg);
 				double border_contrast = ColorData.computeContrast(parent_bkg, border_color);
 				double highest_contrast = 0.0;
@@ -262,8 +264,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 				else {
 					highest_contrast = border_contrast;
 				}
+				
+				/*
+				element = element_state_service.findById(element.getId());
 				element.setNonTextContrast(highest_contrast);
 				element = element_state_service.save(element);
+				*/
 				
 				//calculate contrast of button background with background of parent element
 				if(highest_contrast < 3.0){

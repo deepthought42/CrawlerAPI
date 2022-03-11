@@ -76,7 +76,6 @@ public class LinksAudit implements IExecutablePageStateAudit {
 		
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		List<ElementState> link_elements = page_state_service.getLinkElementStates(page_state.getId());
-		log.warn("link audit links :: "+link_elements.size());
 		String ada_compliance = "There is no ADA guideline for dead links";
 
 		Set<String> labels = new HashSet<>();
@@ -450,7 +449,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					if(link.getOuterHtml().contains("<img")) {
 						//link contains image
 					}
-					log.warn("link screenshot url :: "+link.getScreenshotUrl());
+
 					URL url = new URL( link.getScreenshotUrl() );
 					BufferedImage img_src = ImageIO.read( url );
 					List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);

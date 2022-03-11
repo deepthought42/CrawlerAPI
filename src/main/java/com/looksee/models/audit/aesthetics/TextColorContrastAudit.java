@@ -134,7 +134,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					String font_size_str = og_font_size_str.replace("px", "");
 					
 					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.strip()));
-					log.warn("element contrast :: "+element.getTextContrast());
 					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 ("A Compliance")
 					//NOTE: The following measures of font size are in pixels not font points
 					if(font_size >= 18 || (font_size >= 14 && BrowserUtils.isTextBold(font_weight))) {
@@ -167,7 +166,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																									2, 
 																									recommendation);
 
-							log.warn("text contrast audit :: "+low_header_contrast_observation.getContrast());
 							low_header_contrast_observation = issue_message_service.saveColorContrast(low_header_contrast_observation);
 							issue_message_service.addElement(low_header_contrast_observation.getId(), element.getId());
 							issue_messages.add(low_header_contrast_observation);							
@@ -204,7 +202,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																										2,
 																										recommendation);
 								
-								log.warn("text contrast audit :: "+low_header_contrast_observation.getContrast());
 								low_header_contrast_observation = issue_message_service.saveColorContrast(low_header_contrast_observation);
 								issue_message_service.addElement(low_header_contrast_observation.getId(), element.getId());
 								issue_messages.add(low_header_contrast_observation);							
@@ -237,7 +234,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																										2,
 																										"");
 								
-								log.warn("text contrast audit :: "+low_header_contrast_observation.getContrast());
 								low_header_contrast_observation = issue_message_service.saveColorContrast(low_header_contrast_observation);
 								issue_message_service.addElement(low_header_contrast_observation.getId(), element.getId());
 								issue_messages.add(low_header_contrast_observation);
@@ -272,7 +268,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																										2,
 																										"");
 								
-								log.warn("text contrast audit :: "+low_header_contrast_observation.getContrast());
 								low_header_contrast_observation = issue_message_service.saveColorContrast(low_header_contrast_observation);
 								issue_message_service.addElement(low_header_contrast_observation.getId(), element.getId());
 								issue_messages.add(low_header_contrast_observation);
@@ -307,7 +302,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							//observations.add(observation_service.save(low_text_observation));
 
 							//No points are rewarded for low contrast text
-							log.warn("text contrast audit :: "+low_text_observation.getContrast());
 							low_text_observation = issue_message_service.saveColorContrast(low_text_observation);
 							issue_message_service.addElement(low_text_observation.getId(), element.getId());
 							issue_messages.add(low_text_observation);
@@ -341,7 +335,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																							2, 
 																							recommendation);
 								
-								log.warn("text contrast audit :: "+med_contrast_text_observation.getContrast());
 								med_contrast_text_observation = issue_message_service.saveColorContrast(med_contrast_text_observation);
 								issue_message_service.addElement(med_contrast_text_observation.getId(), element.getId());
 								issue_messages.add(med_contrast_text_observation);
@@ -369,7 +362,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																							2, 
 																							"");
 								
-								log.warn("text contrast audit :: "+high_contrast_text_observation.getContrast());
 								high_contrast_text_observation = issue_message_service.saveColorContrast(high_contrast_text_observation);
 								issue_message_service.addElement(high_contrast_text_observation.getId(), element.getId());
 								issue_messages.add(high_contrast_text_observation);
@@ -400,7 +392,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 																							2, 
 																							"");
 								
-								log.warn("text contrast audit :: "+high_contrast_text_observation.getContrast());
 								high_contrast_text_observation = issue_message_service.saveColorContrast(high_contrast_text_observation);
 								issue_message_service.addElement(high_contrast_text_observation.getId(), element.getId());
 								issue_messages.add(high_contrast_text_observation);

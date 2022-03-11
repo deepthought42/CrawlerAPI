@@ -159,7 +159,7 @@ public class GeneratePDFReport {
 		this.generateImageryWhyItMattersPage();
 		
 		this.generateAppendixCoverPage();
-		this.writeToDoc();
+		//this.writeToDoc();
 	}
 	
 

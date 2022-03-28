@@ -72,15 +72,15 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredForm(Form form, String host, String user_id) throws JsonProcessingException {	
+	public static void broadcastDiscoveredForm(Form form, long domain_id) throws JsonProcessingException {	
 		log.info("Broadcasting discovered form !!!");
 		
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String form_json = mapper.writeValueAsString(form);
-        log.info("host ::   "+host);
-		pusher.trigger(user_id+host.trim(), "discovered-form", form_json);
+        
+		pusher.trigger(""+domain_id, "discovered-form", form_json);
 		log.info("broadcasted a discovered form");
 	}
 	
@@ -144,7 +144,7 @@ public class MessageBroadcaster {
      * @param record {@link DiscoveryRecord} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveryStatus(DiscoveryRecord record, String user_id) throws JsonProcessingException {
+	public static void broadcastDiscoveryStatus(DiscoveryRecord record) throws JsonProcessingException {
 		log.info("broadcasting discovery status");
 		
         ObjectMapper mapper = new ObjectMapper();

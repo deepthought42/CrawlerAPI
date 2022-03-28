@@ -41,8 +41,8 @@ public class FormService {
 		return form_repo.findByKeyForUserAndDomain(user_id, url, key);
 	}
 
-	public Form save(String user_id, String url, Form form) {
-		Form form_record = form_repo.findByKeyForUserAndDomain(user_id, url, form.getKey());
+	public Form save(String user_id, long domain_id, Form form) {
+		Form form_record = form_repo.findByKeyForUserAndDomain(user_id, domain_id, form.getKey());
 		if(form_record == null){
 			
 			List<Element> db_records = new ArrayList<Element>(form.getFormFields().size());

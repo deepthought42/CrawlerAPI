@@ -2,7 +2,6 @@ package com.looksee.models.message;
 
 import java.net.URL;
 
-import com.looksee.models.Domain;
 import com.looksee.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
@@ -12,10 +11,10 @@ public class UrlMessage {
 	private ActorRef discovery_actor;
 	private ActorRef domain_actor;
 	private BrowserType browser;
-	private Domain domain;
-	private String account;
+	private long domain;
+	private long account;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
+	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, long domain, long account_id){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
@@ -56,19 +55,19 @@ public class UrlMessage {
 		this.domain_actor = domain_actor;
 	}
 
-	public Domain getDomain() {
+	public long getDomain() {
 		return domain;
 	}
 
-	public void setDomain(Domain domain) {
+	public void setDomain(long domain) {
 		this.domain = domain;
 	}
 
-	public String getAccountId() {
+	public long getAccountId() {
 		return account;
 	}
 
-	public void setAccountId(String account) {
+	public void setAccountId(long account) {
 		this.account = account;
 	}
 }

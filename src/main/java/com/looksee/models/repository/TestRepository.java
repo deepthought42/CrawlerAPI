@@ -19,14 +19,14 @@ import com.looksee.models.TestRecord;
 public interface TestRepository extends Neo4jRepository<Test, Long> {
 	public Test findByName(@Param("name") String name);
 	
-	@Query("MATCH (:Account{username: $username})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH a=(t)-[r:HAS_PATH_OBJECT]->(p) return a")
-	public Test findByKey(@Param("key") String key, @Param("url") String url, @Param("username") String username);
+	@Query("MATCH (acct:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH a=(t)-[r:HAS_PATH_OBJECT]->(p) WHERE id(acct)=$account_id return a")
+	public Test findByKey(@Param("key") String key, @Param("url") String url, @Param("account_id") long account_id);
 
 	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH (t)-[r:HAS_TEST_RECORD]->(tr:TestRecord) RETURN tr ORDER BY tr.ran_at DESC LIMIT 1")
 	public TestRecord getMostRecentRecord(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
 
-	@Query("MATCH (a:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH (t)-[r:HAS_PATH_OBJECT]->(p) OPTIONAL MATCH b=(p)-[:HAS]->() RETURN p,b")
-	public List<LookseeObject> getPathObjects(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);
+	@Query("MATCH (a:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH (t)-[r:HAS_PATH_OBJECT]->(p) OPTIONAL MATCH b=(p)-[:HAS]->() WHERE id(a)=$account_id RETURN p,b")
+	public List<LookseeObject> getPathObjects(@Param("key") String key, @Param("url") String url, @Param("account_id") long account_id);
 	
 	@Query("MATCH (a:Account{user_id: $user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test{key:$key}) MATCH (t)-[r:HAS_TEST_RECORD]->(tr:TestRecord) MATCH ps=(tr)-[:HAS_PAGE_STATE]->(p) RETURN ps ORDER BY tr.ran_at DESC")
 	public List<TestRecord> findAllTestRecords(@Param("key") String key, @Param("url") String url, @Param("user_id") String user_id);

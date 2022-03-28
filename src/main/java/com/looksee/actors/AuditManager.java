@@ -27,12 +27,14 @@ import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.DiscoveryActionMessage;
 import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementProgressMessage;
 import com.looksee.models.message.ElementsSaveError;
@@ -159,6 +161,15 @@ public class AuditManager extends AbstractActor{
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_state_builder.tell(crawl_action_msg, getSelf());
+						
+						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(CrawlAction.START, 
+																						  message.getDomainId(),
+																						  message.getAccountId(), 
+																						  BrowserType.CHROME);
+
+						ActorRef discovery_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+																  .props("discoveryActor"), "discoveryActor"+UUID.randomUUID());
+						discovery_actor.tell(discovery_msg, getSelf());
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);

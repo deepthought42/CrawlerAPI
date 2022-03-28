@@ -3,32 +3,36 @@ package com.looksee.models.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.Domain;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 
 import akka.actor.ActorRef;
 
-public class PathMessage {
+public class PathMessage extends Message {
 
 	private List<String> keys;
 	private List<LookseeObject> path_objects;
 	private ActorRef discovery_actor;	
 	private ActorRef domain_actor;
-	private Domain domain;
 	private PathStatus status;
 	private BrowserType browser;
-	private String account;
 	
-	public PathMessage(List<String> keys, List<LookseeObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
+	public PathMessage(List<String> keys, 
+					   List<LookseeObject> path_objects, 
+					   ActorRef discovery_actor, 
+					   PathStatus status, 
+					   BrowserType browser, 
+					   ActorRef domain_actor, 
+					   long domain, 
+					   long account_id){
 		setKeys(keys);
 		setPathObjects(path_objects);
 		setDiscoveryActor(discovery_actor);
 		setStatus(status);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
-		setDomain(domain);
+		setDomainId(domain);
 		setAccountId(account_id);
 	}
 
@@ -49,7 +53,7 @@ public class PathMessage {
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomain(), getAccountId());
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomainId(), getAccountId());
 	}
 
 	public ActorRef getDiscoveryActor() {
@@ -82,21 +86,5 @@ public class PathMessage {
 
 	public void setDomainActor(ActorRef domain_actor) {
 		this.domain_actor = domain_actor;
-	}
-
-	public Domain getDomain() {
-		return domain;
-	}
-
-	public void setDomain(Domain domain) {
-		this.domain = domain;
-	}
-
-	public String getAccountId() {
-		return account;
-	}
-
-	public void setAccountId(String account) {
-		this.account = account;
 	}
 }

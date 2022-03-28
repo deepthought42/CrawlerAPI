@@ -41,13 +41,12 @@ public class SegmentAnalyticsHelper {
 	}
 	
 	public static void testCreated(String userId, String test_key) {
-		identify(userId);
 		//Fire test created event
 	   	Map<String, String> test_created_props= new HashMap<String, String>();
 	   	test_created_props.put("key", test_key);
 	   	buildSegment().enqueue(TrackMessage.builder("Test Created")
-   		    .userId(userId)
-   		    .properties(test_created_props)
+								   		    .userId(userId)
+								   		    .properties(test_created_props)
    		);
 	}
 	

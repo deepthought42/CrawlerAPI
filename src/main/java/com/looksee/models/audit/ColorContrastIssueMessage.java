@@ -2,8 +2,10 @@ package com.looksee.models.audit;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.looksee.models.ElementState;
-import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
@@ -13,6 +15,7 @@ import com.looksee.models.enums.Priority;
  * A observation of potential error for a given color palette 
  */
 public class ColorContrastIssueMessage extends ElementStateIssueMessage{
+	private static Logger log = LoggerFactory.getLogger(ColorContrastIssueMessage.class);
 
 	private double contrast;
 	private String foreground_color;
@@ -37,7 +40,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 	 * @param font_size TODO
 	 * @param points_earned TODO
 	 * @param max_points TODO
-	 * @param recommendations TODO
 	 * @param recommendation TODO
 	 * @pre priority != null
 	 * @pre recommendation != null
@@ -63,11 +65,9 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 			String font_size, 
 			int points_earned, 
 			int max_points, 
-			Set<Recommendation> recommendations, 
 			String recommendation
 	) {
 		assert priority != null;
-		assert element != null;
 		assert foreground_color != null;
 		assert !foreground_color.isEmpty();
 		assert background_color != null;
@@ -76,7 +76,6 @@ public class ColorContrastIssueMessage extends ElementStateIssueMessage{
 		setPriority(priority);
 		setDescription(description);
 		setRecommendation(recommendation);
-		setRecommendations(recommendations);
 		setContrast(contrast);
 		setForegroundColor(foreground_color);
 		setBackgroundColor(background_color);

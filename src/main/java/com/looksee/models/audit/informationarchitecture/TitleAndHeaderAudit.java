@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -24,6 +22,7 @@ import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
 import com.looksee.models.audit.PageStateIssueMessage;
 import com.looksee.models.audit.Score;
+import com.looksee.models.audit.SentenceIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
@@ -79,7 +78,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
-			
+		/*	
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.LINKS, 100);
@@ -92,6 +91,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 				element_issue_msg.setGoodExample(good_example);
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 		
 		//log.warn("TITLE FONT AUDIT SCORE   ::   "+points_earned +" / " +max_points);
@@ -99,17 +99,21 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 		String description = "";
 
 		//page_state = page_state_service.findById(page_state.getId()).get();
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.SEO,
-						 AuditName.TITLES,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(),
-						 why_it_matters, 
-						 description, 
-						 true);
+		Audit audit = new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+								 AuditSubcategory.SEO,
+								 AuditName.TITLES,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(),
+								 why_it_matters, 
+								 description, 
+								 true);
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 
 	/**
@@ -258,7 +262,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			String recommendation = "";
 
 			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
-															page_state, 
+															null, 
 															description, 
 															recommendation,
 															Priority.HIGH, 
@@ -269,6 +273,8 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															1,
 															1);
 			
+			favicon_issue = (PageStateIssueMessage) issue_message_service.save(favicon_issue);
+			issue_message_service.addPage(favicon_issue.getId(), page_state.getId());
 			issue_messages.add(favicon_issue);
 		}
 		else {
@@ -280,7 +286,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			String recommendation = "Create an icon that is 16x16 for your brand logo and include it as your favicon by inclding the following code in your head tag <link rel=\"shortcut icon\" href=\"your_favicon.ico\" type=\"image/x-icon\"> . Don't forget to put the location of your favicon in place of the href value";
 
 			PageStateIssueMessage favicon_issue = new PageStateIssueMessage(
-															page_state, 
+															null, 
 															description, 
 															recommendation,
 															Priority.HIGH, 
@@ -290,6 +296,9 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															title,
 															0,
 															1);
+			
+			favicon_issue = (PageStateIssueMessage) issue_message_service.save(favicon_issue);
+			issue_message_service.addPage(favicon_issue.getId(), page_state.getId());
 			issue_messages.add(favicon_issue);
 			points += 0;			
 		}
@@ -345,7 +354,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			categories.add(AuditCategory.AESTHETICS.toString());
 
 			PageStateIssueMessage title_issue = new PageStateIssueMessage(
-															page_state, 
+															null, 
 															description, 
 															recommendation,
 															Priority.HIGH,
@@ -355,10 +364,12 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															1,
 															1);
+
+			title_issue = (PageStateIssueMessage) issue_message_service.save(title_issue);
+			issue_message_service.addPage(title_issue.getId(), page_state.getId());
 			issue_messages.add(title_issue);
 		}
 		else {
-
 			String issue_title = "Page is missing a title";
 			String description = "This page doesn't have a title defined";
 			String why_it_matters = "Making sure each of your pages has a title is incredibly important for SEO. The title isn't just used to display as the page name in the browser. Search engines also use this information as part of their evaluation.";
@@ -370,7 +381,7 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 			categories.add(AuditCategory.AESTHETICS.toString());
 
 			PageStateIssueMessage title_issue = new PageStateIssueMessage(
-															page_state, 
+															null, 
 															description, 
 															recommendation,
 															Priority.HIGH,
@@ -380,8 +391,10 @@ public class TitleAndHeaderAudit implements IExecutablePageStateAudit {
 															issue_title,
 															0,
 															1);
+			
+			title_issue = (PageStateIssueMessage) issue_message_service.save(title_issue);
+			issue_message_service.addPage(title_issue.getId(), page_state.getId());
 			issue_messages.add(title_issue);
-
 			points += 0;				
 		}
 		

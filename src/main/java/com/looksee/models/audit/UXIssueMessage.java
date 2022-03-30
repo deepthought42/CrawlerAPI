@@ -1,18 +1,19 @@
 package com.looksee.models.audit;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.looksee.models.LookseeObject;
-import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
 public class UXIssueMessage extends LookseeObject {
+	private static Logger log = LoggerFactory.getLogger(UXIssueMessage.class);
+
 	private String title;
 	private String description;
 	private String why_it_matters;
@@ -25,13 +26,8 @@ public class UXIssueMessage extends LookseeObject {
 	private int points;
 	private int max_points;
 	private int score;
-	
-	@Relationship(type = "RECOMMEND")
-	private Set<Recommendation> recommendations;
 
-	public UXIssueMessage() {
-		setRecommendations(new HashSet<>());
-	}
+	public UXIssueMessage() {}
 	
 	public UXIssueMessage(
 			Priority priority,
@@ -44,14 +40,12 @@ public class UXIssueMessage extends LookseeObject {
 			String title, 
 			int points, 
 			int max_points, 
-			Set<Recommendation> recommendations, 
 			String recommendation
 	) {
 		assert priority != null;
 		assert category != null;
 		assert labels != null;
 
-		setRecommendations(recommendations);
 		setPriority(priority);
 		setDescription(description);
 		setType(type);
@@ -63,8 +57,25 @@ public class UXIssueMessage extends LookseeObject {
 		setPoints(points);
 		setMaxPoints(max_points);
 		setScore( (int)((points/(double)max_points)*100) );
-		setRecommendation(recommendation);
 		setKey(generateKey());
+	}
+	
+	public void print() {
+		log.warn("ux issue key :: "+getKey());
+		log.warn("ux issue desc :: "+getDescription());
+		log.warn("ux issue points :: "+getPoints());
+		log.warn("ux issue max point :: "+getMaxPoints());
+		log.warn("ux issue reco :: "+getRecommendation());
+		log.warn("ux issue score :: "+getScore());
+		log.warn("ux issue title ::"+ getTitle());
+		log.warn("ux issue wcag :: "+getWcagCompliance());
+		log.warn("ux issue why it matters :: "+getWhyItMatters());
+		log.warn("ux issue category :: "+getCategory());
+		log.warn("ux issue labels:: "+getLabels());
+		log.warn("ux issue priority :: "+getPriority());
+		log.warn("ux issue type :: "+getType());
+		log.warn("------------------------------------------------------------------------------");
+		
 	}
 	
 	public Priority getPriority() {
@@ -73,14 +84,6 @@ public class UXIssueMessage extends LookseeObject {
 	
 	public void setPriority(Priority priority) {
 		this.priority = priority.getShortName();
-	}
-
-	public Set<Recommendation> getRecommendations() {
-		return recommendations;
-	}
-
-	public void setRecommendations(Set<Recommendation> recommendations) {
-		this.recommendations = recommendations;
 	}
 	
 	public String getDescription() {

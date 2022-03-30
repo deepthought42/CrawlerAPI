@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -16,6 +15,7 @@ import com.google.cloud.language.v1.Sentence;
 import com.looksee.gcp.CloudNLPUtils;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
@@ -36,10 +36,10 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(ParagraphingAudit.class);
 	
 	@Autowired
-	private	PageStateService page_state_service;
+	private AuditService audit_service;
 	
 	@Autowired
-	private AuditService audit_service;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private UXIssueMessageService issue_message_service;
@@ -54,6 +54,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 	 * 
 	 * Scores links on a page based on if the link has an href value present, the url format is valid and the 
 	 *   url goes to a location that doesn't produce a 4xx error 
+	 *   
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */
@@ -64,7 +65,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		Set<UXIssueMessage> issue_messages = new HashSet<>();
 		
 		//get all elements that are text containers
-		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
+		List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
 		//filter elements that aren't text elements
 		List<ElementState> element_list = BrowserUtils.getTextElements(elements);
 		
@@ -105,7 +106,7 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
-			
+			/*
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.ALT_TEXT, 100);
@@ -118,15 +119,16 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				element_issue_msg.setGoodExample(good_example);
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 		
 		String description = "";
 
-		return new Audit(AuditCategory.CONTENT,
+		Audit audit = new Audit(AuditCategory.CONTENT,
 						 AuditSubcategory.WRITTEN_CONTENT, 
 						 AuditName.PARAGRAPHING, 
 						 points_earned, 
-						 issue_messages, 
+						 new HashSet<>(), 
 						 AuditLevel.PAGE, 
 						 max_points, 
 						 page_state.getUrl(),
@@ -134,7 +136,9 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 						 description,
 						 false); 
 						 
-		//the contstant 6 in this equation is the exact number of boolean checks for this audit
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 
 
@@ -166,19 +170,22 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				String recommendation = "Try reducing the size of the sentence or breaking it up into multiple sentences";
 				String title = "Sentence is too long";
 				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has more than 25 words which can make it difficult for users to understand";
-				
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+
+				SentenceIssueMessage issue_message = new SentenceIssueMessage(
 																Priority.MEDIUM, 
 																description, 
 																recommendation, 
-																element,
+																null,
 																AuditCategory.CONTENT,
 																labels,
 																ada_compliance,
 																title,
 																0,
-																1);
+																1,
+																words.length);
 				
+				issue_message = (SentenceIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), element.getId());
 				issue_messages.add(issue_message);
 				
 				points_earned += 0;
@@ -191,19 +198,22 @@ public class ParagraphingAudit implements IExecutablePageStateAudit {
 				String title = "Sentence meets EU and US governmental standards for sentence length";
 				String description = "The sentence  \"" + sentence.getText().getContent() + "\" has less than 25 words which is the standard for governmental documentation in the European Union(EU) and the United States(US)";
 				
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+				SentenceIssueMessage issue_message = new SentenceIssueMessage(
 																Priority.NONE, 
 																description, 
 																recommendation, 
-																element,
+																null,
 																AuditCategory.CONTENT,
 																labels,
 																ada_compliance,
 																title,
 																1,
-																1);
+																1,
+																words.length);
+				
+				issue_message = (SentenceIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), element.getId());
 				issue_messages.add(issue_message);
-
 			}
 		}
 		return new Score(points_earned, max_points, issue_messages);					

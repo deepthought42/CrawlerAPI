@@ -22,7 +22,8 @@ public enum AuditSubcategory {
 	BRANDING("Branding"),
 	SECURITY("Security"),
 	LINKS("Links"),					//REMOVE THIS
-	NAVIGATION("Navigation");
+	NAVIGATION("Navigation"), 
+	INFORMATION_ARCHITECTURE("Information Architecture");
 	
 	private String shortName;
 

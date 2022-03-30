@@ -41,12 +41,12 @@ public class SourceExtractionActor extends AbstractActor {
 			.match(DomainMessage.class, domain_msg -> {
 				Domain domain = domain_msg.getDomain();
 				URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(domain_msg.getRawUrl(), false));
-				String page_url = BrowserUtils.getPageUrl(sanitized_url);
+				//String page_url = BrowserUtils.getPageUrl(sanitized_url);
 				
-				getSender().tell(new AbstractMap.SimpleEntry<String, String>("visited", page_url), getSelf());
+				//getSender().tell(new AbstractMap.SimpleEntry<String, String>("visited", page_url), getSelf());
 				if(BrowserUtils.isValidUrl(sanitized_url.toString(), domain.getUrl())){
 				
-					if(BrowserUtils.hasValidHttpStatus(sanitized_url)) {
+					if(BrowserUtils.hasValidHttpStatus(sanitized_url)) { 
 						String page_src = BrowserUtils.extractPageSrc(sanitized_url, browser_service);
 						SourceMessage source = new SourceMessage(domain_msg, sanitized_url, page_src);
 		
@@ -54,8 +54,6 @@ public class SourceExtractionActor extends AbstractActor {
 					}
 					else {
 						log.warn("Recieved 404 status for link :: " + sanitized_url);
-
-						this.getContext().stop(getSelf());
 					}
 				}
 			})

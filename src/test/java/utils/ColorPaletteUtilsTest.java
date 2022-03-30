@@ -49,12 +49,12 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb( 212,238,231 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb( 213,238,231 )");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb( 1,6,22 )");
 
@@ -84,7 +84,7 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb( 53,60,53)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb( 95,88,80)");
 
@@ -94,17 +94,17 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb( 252,229,221)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertTrue(!is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb(  99,104,113)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb( 34,41,53)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 		
 		color = new ColorData("rgb(129,136,129)");
 
@@ -124,7 +124,7 @@ public class ColorPaletteUtilsTest {
 		color = new ColorData("rgb(47, 51, 47)");
 
 		is_gray = ColorPaletteUtils.isGrayScale(color);
-		assertFalse(is_gray);
+		assertTrue(is_gray);
 	}
 	
 	

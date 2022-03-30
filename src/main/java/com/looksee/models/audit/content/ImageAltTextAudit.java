@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -30,6 +29,7 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.AuditService;
+import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 
 /**
@@ -41,6 +41,9 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ImageAltTextAudit.class);
 
+	@Autowired
+	private PageStateService page_state_service;
+	
 	@Autowired
 	private AuditService audit_service;
 	
@@ -69,11 +72,12 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		Set<String> labels = new HashSet<>();
 		labels.add("accessibility");
 		labels.add("alt_text");
+		labels.add("wcag");
 		
 		String tag_name = "img";
-		//List<ElementState> link_elements = page_state_service.getLinkElementStates(user_id, page_state.getKey());
+		List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
 		List<ElementState> image_elements = new ArrayList<>();
-		for(ElementState element : page_state.getElements()) {
+		for(ElementState element : elements) {
 			if(element.getName().equalsIgnoreCase(tag_name)) {
 				image_elements.add(element);
 			}
@@ -84,10 +88,7 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		
 		String ada_compliance = "Your website does not meet the level A ADA compliance requirement for" + 
 				" ‘Alt’ text for images present on the website.";
-	
-		if(page_state.getUrl().contentEquals("look-see.com")) {
-			log.warn(image_elements.size()+" images found for evaluation on "+page_state.getUrl());
-		}
+
 		//score each link element
 		for(ElementState image_element : image_elements) {
 	
@@ -105,13 +106,16 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	Priority.HIGH, 
 																	description, 
 																	"Images without alternative text defined as a non empty string value", 
-																	image_element,
+																	null,
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
 																	title,
 																	0,
 																	1);
+					
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), image_element.getId());
 					issue_messages.add(issue_message);
 				}
 				else {
@@ -122,31 +126,37 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 																	Priority.NONE, 
 																	description, 
 																	"Images without alternative text defined as a non empty string value", 
-																	image_element,
+																	null,
 																	AuditCategory.CONTENT,
 																	labels,
 																	ada_compliance,
 																	title,
 																	1,
 																	1);
+
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), image_element.getId());
 					issue_messages.add(issue_message);
 				}
 			}
 			else {
 				String title= "Images without alternative text attribute";
 				String description = "Images without alternative text attribute";
-
+				
 				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																Priority.HIGH, 
 																description, 
 																"Images without alternative text attribute", 
-																image_element,
+																null,
 																AuditCategory.CONTENT, 
 																labels,
 																ada_compliance,
 																title,
 																0,
 																1);
+				
+				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+				issue_message_service.addElement(issue_message.getId(), image_element.getId());
 				issue_messages.add(issue_message);
 			}
 		}
@@ -156,9 +166,10 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
-			
+			/*
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
+				
 				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.ALT_TEXT, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
@@ -169,23 +180,26 @@ public class ImageAltTextAudit implements IExecutablePageStateAudit {
 				element_issue_msg.setGoodExample(good_example);
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 		
 		//log.warn("ALT TEXT AUDIT SCORE ::  "+ points_earned + " / " + max_points);
 		String description = "Images without alternative text defined as a non empty string value";
 
-		return new Audit(AuditCategory.CONTENT,
-						 AuditSubcategory.IMAGERY,
-						 AuditName.ALT_TEXT,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(), 
-						 why_it_matters, 
-						 description,
-						 true);
-		
+		Audit audit = new Audit(AuditCategory.CONTENT,
+								 AuditSubcategory.IMAGERY,
+								 AuditName.ALT_TEXT,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(), 
+								 why_it_matters, 
+								 description,
+								 true);
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 		//the contstant 2 in this equation is the exact number of boolean checks for this audit
 	}
 }

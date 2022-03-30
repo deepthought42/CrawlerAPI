@@ -116,13 +116,14 @@ public class PageStateService {
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
 		
+		/*
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 		
 		if(page_state_record == null) {
 			log.warn("page state wasn't found in database. Saving new page state to neo4j");
-
-			page_state_record = page_state_repo.save(page_state);
-		}
+*/
+			return page_state_repo.save(page_state);
+	/*	}
 		else {
 			page_state_record.setHttpStatus(page_state.getHttpStatus());
 			page_state_record.setFullPageScreenshotUrlOnload(page_state.getFullPageScreenshotUrlOnload());
@@ -131,6 +132,7 @@ public class PageStateService {
 		}
 		
 		return page_state_record;
+		*/
 	}
 	
 	public PageState findByKey(String page_key) {
@@ -164,8 +166,8 @@ public class PageStateService {
 		return page_state_repo.getElementStates(page_state_id);
 	}
 	
-	public List<ElementState> getLinkElementStates(String page_key){
-		return page_state_repo.getLinkElementStates(page_key);
+	public List<ElementState> getLinkElementStates(long page_state_id){
+		return page_state_repo.getLinkElementStates(page_state_id);
 	}
 	
 	public List<Screenshot> getScreenshots(String user_id, String page_key){

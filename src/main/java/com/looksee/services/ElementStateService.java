@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.ogm.exception.CypherException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +29,7 @@ public class ElementStateService {
 
 	@Autowired
 	private PageStateService page_state_service;
+	
 	/**
 	 * 
 	 * @param element
@@ -37,21 +37,20 @@ public class ElementStateService {
 	 * 
 	 * @pre element != null
 	 */
-	public ElementState save(ElementState element) throws CypherException{
+	public ElementState save(ElementState element) {
 		assert element != null;
-		ElementState element_record = element_repo.findByKey(element.getKey());
-		if(element_record == null){
-			//iterate over attributes		
-			
-			element_record = element_repo.save(element);
-		}
+		//ElementState element_record = element_repo.findByKey(element.getKey());
+		//if(element_record == null){
+			//iterate over attributes
+		return element_repo.save(element);
+		/*}
 		else {
 			element_record.setBackgroundColor(element.getBackgroundColor());
 			element_record.setForegroundColor(element.getForegroundColor());
 			element_repo.save(element_record);
 		}
-
 		return element_record;
+		 */
 	}
 	
 	/**
@@ -201,8 +200,8 @@ public class ElementStateService {
 	 * @param element_keys
 	 * @return
 	 */
-	public List<String> getAllExistingKeys(List<String> element_keys) {
-		return element_repo.getAllExistingKeys(element_keys);
+	public List<String> getAllExistingKeys(long page_state_id) {
+		return element_repo.getAllExistingKeys(page_state_id);
 	}
 
 	public List<ElementState> getElements(Set<String> existing_keys) {

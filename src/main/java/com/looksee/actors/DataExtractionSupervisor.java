@@ -1,15 +1,12 @@
 package com.looksee.actors;
 
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -25,9 +22,7 @@ import com.looksee.models.message.ElementsSaved;
 import com.looksee.services.ElementStateService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -117,29 +112,30 @@ public class DataExtractionSupervisor extends AbstractActor{
 	
 	private List<Long> saveNewElements(long page_state_id, List<ElementState> element_states) {
 		List<Long> element_ids = new ArrayList<>();
+		
+		/*
 		List<String> element_keys = new ArrayList<>();
 
 		for(ElementState element : element_states){
 			element_keys.add(element.getKey());
 	   	}
-		
+		*/
 		Set<String> existing_keys = new HashSet<>();
-		existing_keys.addAll(element_state_service.getAllExistingKeys(element_keys));
-		List<ElementState> existing_elements = element_state_service.getElements(existing_keys);
-		List<ElementState> new_element_states = element_states
-												   .stream()
-												   .filter(f -> !existing_keys.contains(f.getKey()))
-												   .collect(Collectors.toList());
-		
+		existing_keys.addAll(element_state_service.getAllExistingKeys(page_state_id));
+		//List<ElementState> existing_elements = element_state_service.getElements(existing_keys);
+		return element_states.parallelStream()
+									   .filter(f -> !existing_keys.contains(f.getKey()))
+									   .map(element -> element_state_service.save(element).getId())
+									   .collect(Collectors.toList());
+		/*
 		List<Long> existing_element_ids = existing_elements
-													   .stream()
+													   .parallelStream()
 													   .map(ElementState::getId)
 													   .collect(Collectors.toList());
-
 		for(ElementState element : new_element_states){
 			element_ids.add(element_state_service.save(element).getId());
 	   	}
-		element_ids.addAll(existing_element_ids);
 		return element_ids;
+		 */
 	}	
 }

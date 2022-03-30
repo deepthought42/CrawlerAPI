@@ -94,8 +94,6 @@ public class DesignSystemExtractor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PageAuditRecordMessage.class, message-> {
-					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("Page Audit record received by design system extraction");
 					try {
 						//extract design system from page
 						PageState page_state = audit_record_service.getPageStateForAuditRecord( message.getPageAuditId());
@@ -119,44 +117,50 @@ public class DesignSystemExtractor extends AbstractActor{
 						Map<String, ColorData> color_map = new HashMap<>();
 						for(ColorUsageStat stat : color_usage_list) {
 							ColorData color = new ColorData(stat);
-							if(color.getUsagePercent() < 0.0001) {
+							if(color.getUsagePercent() < 0.00001) {
 								continue;
 							}
-							color.setUsagePercent(stat.getPixelPercent());
-							log.warn("Color :: " + color.rgb() + "  :  " + color.getUsagePercent());
-							
+							color.setUsagePercent(stat.getPixelPercent());							
 							color_map.put(color.rgb().trim(), color);
 						}
 						
 						//generate palette, identify color scheme and score how well palette conforms to color scheme
 						List<ColorData> colors = new ArrayList<ColorData>(color_map.values());
 						Set<PaletteColor> palette_colors = new HashSet<>();
-						palette_colors.addAll( ColorPaletteUtils.extractColors(colors) );
-						//ColorScheme color_scheme = ColorPaletteUtils.getColorScheme(palette_colors);
-						log.warn("Palette colors found :: "+palette_colors );
+						palette_colors.addAll( ColorPaletteUtils.extractPalette(colors) );
+						
 						List<String> color_palette = new ArrayList<>();
 						for(PaletteColor color : palette_colors) {
 							color_palette.add(color.getPrimaryColor());
 						}
-						log.warn("color palette :: "+color_palette);
+						
 						AuditRecord audit_record = audit_record_service.findById( message.getAuditRecordId() ).get(); 
 						audit_record.setColors(color_palette);
 						audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
-						
 						
 						Optional<DesignSystem> design_system_opt = domain_service.getDesignSystem(message.getDomainId());
 						DesignSystem design_system = null;
 						
 						if(!design_system_opt.isPresent()) {
-							log.warn("design system couldn't be found for domain :: "+message.getDomainId());
 							design_system = design_system_service.save( new DesignSystem() );
 							domain_service.addDesignSystem(message.getDomainId(), design_system.getId());
+							AuditError audit_err = new AuditError(message.getDomainId(), 
+																  message.getAccountId(), 
+																  message.getAuditRecordId(), 
+																  "Design system not found.", 
+																  AuditCategory.AESTHETICS, 
+																  1.0);
+							getContext().getParent().tell(audit_err, getSelf());
+							return;
 						}
 						else {
 							design_system = design_system_opt.get();
 						}
 						
 						
+						if(design_system.getColorPalette().isEmpty()) {
+							return;
+						}
 						try {
 							Audit color_paelette_audit = color_palette_auditor.execute(page_state, audit_record, design_system);
 							if( color_paelette_audit != null ) {
@@ -164,7 +168,7 @@ public class DesignSystemExtractor extends AbstractActor{
 								AuditProgressUpdate audit_update3 = new AuditProgressUpdate(
 																			message.getAccountId(),
 																			audit_record.getId(),
-																			1.0,
+																			1/4.0,
 																			"Completed review of color palette",
 																			AuditCategory.AESTHETICS,
 																			AuditLevel.PAGE, 

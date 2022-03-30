@@ -140,7 +140,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						0, 
 						1,
-						recommendations,
 						recommendation);
 				issue_messages.add(ux_issue);
 			}
@@ -164,7 +163,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						1, 
 						1,
-						recommendations,
 						recommendation);
 				issue_messages.add(ux_issue);
 			}
@@ -191,7 +189,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						0,
 						1,
-						recommendations,
 						recommendation);
 				issue_messages.add(ux_issue);
 			}
@@ -216,7 +213,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						1,
 						1,
-						recommendations,
 						recommendation);
 				issue_messages.add(ux_issue);
 			}
@@ -254,7 +250,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						0,
 						1,
-						recommendations,
 						recommendation);
 				
 				issue_messages.add(ux_issue);
@@ -277,7 +272,6 @@ public class FontAudit implements IExecutablePageStateAudit {
 						title,
 						1,
 						1,
-						recommendations,
 						recommendation);
 				font_size_score++;
 			}

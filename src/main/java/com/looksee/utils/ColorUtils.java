@@ -408,4 +408,157 @@ public class ColorUtils {
 			}
 		}
 	}
+
+	/** COLOR CHECKS **/
+	
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Red.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's red, otherwise false
+	 */
+	public static boolean isRed(ColorData color_data) {
+		double red_low = 321.0;
+		double red_hi = 10.0;
+		
+		return color_data.getHue() >= red_low || color_data.getHue() <= red_hi;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Orange.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's orange, otherwise false
+	 */
+	public static boolean isOrange(ColorData color_data) {
+		double orange_low = 11.0;
+		double orange_hi = 40.0;
+		
+		return color_data.getHue() >= orange_low && color_data.getHue() <= orange_hi;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Gold.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's gold, otherwise false
+	 */
+	public static boolean isGold(ColorData color_data) {
+		double gold_low = 41.0;
+		double gold_high = 50.0;
+		
+		return color_data.getHue() >= gold_low && color_data.getHue() <= gold_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Yellow.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's yellow, otherwise false
+	 */
+	public static boolean isYellow(ColorData color_data) {
+		double yellow_low = 51.0;
+		double yellow_high = 72.0;
+		
+		return color_data.getHue() >= yellow_low && color_data.getHue() <= yellow_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Green.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's green, otherwise false
+	 */
+	public static boolean isGreen(ColorData color_data) {
+		double green_low = 73.0;
+		double green_high = 165.0;
+		
+		return color_data.getHue() >= green_low && color_data.getHue() <= green_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Cyan.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's cyan, otherwise false
+	 */
+	public static boolean isCyan(ColorData color_data) {
+		double cyan_low = 166.0;
+		double cyan_high = 195.0;
+		
+		return color_data.getHue() >= cyan_low && color_data.getHue() <= cyan_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Blue.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's blue, otherwise false
+	 */
+	public static boolean isBlue(ColorData color_data) {
+		double blue_low = 196.0;
+		double blue_high = 225.0;
+		
+		return color_data.getHue() >= blue_low && color_data.getHue() <= blue_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Violet.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's violet, otherwise false
+	 */
+	public static boolean isViolet(ColorData color_data) {
+		double violet_low = 226.0;
+		double violet_high = 250.0;
+		
+		return color_data.getHue() >= violet_low && color_data.getHue() <= violet_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Purple.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's purple, otherwise false
+	 */
+	public static boolean isPurple(ColorData color_data) {
+		double purple_low = 251.0;
+		double purple_high = 280.0;
+		
+		return color_data.getHue() >= purple_low && color_data.getHue() <= purple_high;
+	}
+
+	/**
+	 * Checks if the given {@link ColorData} hue is a variant of the color Magenta.
+	 * 
+	 * @param color_data
+	 * 
+	 * @return true if it's magenta, otherwise false
+	 */
+	public static boolean isMagenta(ColorData color_data) {
+		double magenta_low = 281.0;
+		double magenta_high = 320.0;	
+		
+		return color_data.getHue() >= magenta_low && color_data.getHue() <= magenta_high;
+	}
+
+	public static boolean isBlack(ColorData color_data) {
+		return color_data.getBrightness() < 15;
+	}
+	
+	public static boolean isWhite(ColorData color_data) {
+		return color_data.getSaturation() < 5 && color_data.getBrightness() > 90;
+	}
+	
+	
+	
 }

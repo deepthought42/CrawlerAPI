@@ -127,6 +127,9 @@ public class ImageElementState extends ElementState {
 	}
 
 	public boolean isAdultContent() {
+		if(getAdult() == null || getRacy() == null) {
+			return false;
+		}
 		return getAdult().contains("LIKELY")
 				|| getRacy().contains("LIKELY");					
 	}

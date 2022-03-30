@@ -19,7 +19,6 @@ public class StylingMissingIssueMessage extends UXIssueMessage {
 		super();
 		
 		assert description != null;
-		setRecommendations(recommendation);
 		setDescription(description);
 		setType(ObservationType.STYLE_MISSING);
 		setKey(generateKey());

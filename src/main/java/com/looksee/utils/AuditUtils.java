@@ -11,6 +11,9 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.ReadingComplexityIssueMessage;
+import com.looksee.models.audit.SentenceIssueMessage;
+import com.looksee.models.audit.StockImageIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
@@ -260,5 +263,171 @@ public class AuditUtils {
 		double category_score = (scores_total / (double)filtered_audits.size())*100;
 		
 		return category_score;
+	}
+
+	/**
+	 * Calculates percentage of failing large text items
+	 * 
+	 * @param audits
+	 * @return
+	 */
+	public static double getPercentPassingLargeTextItems(Set<Audit> audits) {
+		int count_large_text_items = 0;
+		int failing_large_text_items = 0;
+		
+		for(Audit audit: audits) {
+			//get audit issue messages
+			for(UXIssueMessage msg : audit.getMessages()){
+				if(msg.getTitle().contains("Large text")) {
+					count_large_text_items++;
+					if(msg.getPoints() == msg.getMaxPoints()) {
+						failing_large_text_items++;
+					}
+				}
+			}
+		}
+		
+		return count_large_text_items / (double)failing_large_text_items;
+	}
+
+	public static double getPercentFailingSmallTextItems(Set<Audit> audits) {
+		int count_text_items = 0;
+		int failing_text_items = 0;
+		
+		for(Audit audit: audits) {
+			//get audit issue messages
+			for(UXIssueMessage msg : audit.getMessages()){
+				if(msg.getDescription().contains("Text has")) {
+					count_text_items++;
+					if(msg.getPoints() == msg.getMaxPoints()) {
+						failing_text_items++;
+					}
+				}
+			}
+		}
+		
+		return count_text_items / (double)failing_text_items;
+	}
+
+	/**
+	 * Retrieves count of pages that have non text contrast issue
+	 * 
+	 * @param page_audits
+	 * @param subcategory TODO
+	 * @return
+	 */
+	public static int getCountPagesWithSubcategoryIssues(Set<PageAuditRecord> page_audits,
+														 AuditSubcategory subcategory) {
+		int count_failing_pages = 0;
+		for(PageAuditRecord page_audit : page_audits) {
+			for(Audit audit: page_audit.getAudits()) {
+				if(subcategory.equals( audit.getSubcategory() ) 
+						&& audit.getPoints() < audit.getTotalPossiblePoints()) {
+					count_failing_pages++;
+					break;
+				}
+			}
+		}
+		
+		return count_failing_pages;
+	}
+
+	/**
+	 * Retrieves count of pages that have non text contrast issue
+	 * 
+	 * @param page_audits
+	 * @return
+	 */
+	public static int getCountPagesWithIssuesByAuditName(Set<PageAuditRecord> page_audits, AuditName audit_name) {
+		int count_failing_pages = 0;
+		
+		for(PageAuditRecord page_audit : page_audits) {
+			for(Audit audit: page_audit.getAudits()) {
+				if(audit_name.equals( audit.getName() ) 
+						&& audit.getPoints() < audit.getTotalPossiblePoints()) {
+					count_failing_pages++;
+					break;
+				}
+			}
+		}
+		
+		return count_failing_pages;
+	}
+
+	/**
+	 * 
+	 * 
+	 * @param page_audits
+	 * @return
+	 */
+	public static int getCountOfPagesWithWcagComplianceIssues(Set<PageAuditRecord> page_audits) {
+		int pages_with_issues = 0;
+		
+		for(PageAuditRecord audit_record : page_audits) {
+			boolean has_issue = false;
+			for(Audit audit: audit_record.getAudits()) {
+				for(UXIssueMessage issue : audit.getMessages()) {
+					if(issue.getLabels().contains("wcag") && issue.getPoints() < issue.getMaxPoints()) {
+						pages_with_issues++;
+						has_issue = true;
+						break;
+					}
+				}
+				if(has_issue) {
+					break;
+				}
+			}
+		}
+		return pages_with_issues;
+	}
+
+	public static double calculateAverageWordsPerSentence(Set<Audit> audits) {
+		int issue_count = 0;
+		int word_count = 0;
+		
+		for(Audit audit: audits) {
+			for(UXIssueMessage issue_msg : audit.getMessages()) {
+				if(issue_msg instanceof SentenceIssueMessage) {
+					issue_count++;
+					word_count += ((SentenceIssueMessage) issue_msg).getWordCount();
+				}
+			}
+		}
+		
+		return word_count / (double)issue_count;
+	}
+
+	public static double calculatePercentStockImages(Set<Audit> audits) {
+		int image_count = 0;
+		int stock_image_count = 0;
+		
+		for(Audit audit: audits) {
+			for(UXIssueMessage issue_msg : audit.getMessages()) {
+				if(issue_msg instanceof StockImageIssueMessage) {
+					image_count++;
+					if(((StockImageIssueMessage) issue_msg).isStockImage()) {
+						stock_image_count++;
+					}
+				}
+			}
+		}
+		
+		return image_count / (double)stock_image_count;
+	}
+
+	public static double calculateAverageReadingComplexity(Set<Audit> audits) {
+		int reading_complexity_issues = 0;
+		double reading_complexity_total = 0;
+		
+		for(Audit audit: audits) {
+			for(UXIssueMessage issue_msg : audit.getMessages()) {
+				if(issue_msg instanceof ReadingComplexityIssueMessage) {
+					reading_complexity_issues++;
+					reading_complexity_total += ((ReadingComplexityIssueMessage) issue_msg).getEaseOfReadingScore();
+				}
+			}
+		}
+		
+		return reading_complexity_issues / reading_complexity_total;
 	}
 }

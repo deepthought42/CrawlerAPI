@@ -288,7 +288,7 @@ public class CloudVisionUtils {
 		
 		        // For full list of available annotations, see http://g.co/cloud/vision/docs
 		        for (EntityAnnotation annotation : res.getLogoAnnotationsList()) {
-		          System.out.println("Image logo description ::  "+annotation.getDescription());
+		          //System.out.println("Image logo description ::  "+annotation.getDescription());
 		          logos.add(new Logo(annotation.getDescription(),
 		        		  			 annotation.getLocale(),
 		        		  			 annotation.getScore(),

@@ -51,6 +51,12 @@ public class AuditRecordService {
 	@Autowired
 	private PageStateService page_state_service;
 	
+	public AuditRecord save(AuditRecord audit) {
+		assert audit != null;
+
+		return audit_record_repo.save(audit);
+	}
+	
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
 
@@ -286,22 +292,22 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAudits(id);
 	}
 
-	public boolean isDomainAuditComplete(AuditRecord audit_record) {
-		boolean is_complete = true;
-		
+	public boolean isDomainAuditComplete(AuditRecord audit_record, int total_pages, int page_state_experience) {		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
 		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
-
+		
+		if(page_audits.size() < page_state_experience) {
+			return false;
+		}
 		//check all page audit records. If all are complete then the domain is also complete
 		for(PageAuditRecord audit : page_audits) {
 			if(!audit.isComplete()) {
-				is_complete = false;
-				break;
+				return false;
 			}
 		}
 		
-		return is_complete;
+		return true;
 	}
 
 	public Optional<DomainAuditRecord> getDomainAuditRecordForPageRecord(long id) {

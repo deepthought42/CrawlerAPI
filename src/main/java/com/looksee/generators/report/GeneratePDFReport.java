@@ -469,7 +469,7 @@ public class GeneratePDFReport {
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("The quality and relevance of images, consistency");
+		content_stream.showText("The position and placement of your logo");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("of icons and visual hierarchy");
 		content_stream.endText();

@@ -395,20 +395,20 @@ public class Browser {
 		//String page_url = driver.getCurrentUrl();
 		//while scroll position isn't at end of page
 		do {
-			last_y_offset = extractYOffset(driver);
 			//scroll 75% of the height of the viewport
-			scrollDownPercent(percentage);
 			//capture screenshot
 			BufferedImage current_screenshot = getViewportScreenshot();
 			current_screenshot = current_screenshot.getSubimage(0, 
 																0, 
 																current_screenshot.getWidth()-20, 
 																current_screenshot.getHeight());
+			last_y_offset = extractYOffset(driver);
+			scrollDownPercent(percentage);
 
 			screenshots.add(current_screenshot);
 		}while(extractYOffset(driver) > last_y_offset);
 		
-		
+		log.warn("Screenshots captured. Starting stitching process");
 		BufferedImage original_image = null;
 		
 		if(screenshots.size() > 0) {
@@ -417,7 +417,7 @@ public class Browser {
 
 		//identify stitching points by using a sliding window with random sampling to determine
 		// if both images match. If a sliding window is found that matches for both images, then stitch images
-		int window_size = 200;
+		int window_size = (int)Math.ceil(viewport_height/4.0);
 
 		//stitch images together using following steps
 		//    1. retrieve row that is 25% from top of last screenshot
@@ -433,14 +433,19 @@ public class Browser {
 
 			do {			
 				doWindowsMatch = ImageUtils.areWindowsMatching(current_screenshot, 
-															current_screenshot_row, 
-															original_image, 
-															original_screenshot_row, 
-															window_size);
-	
+																current_screenshot_row, 
+																original_image, 
+																original_screenshot_row, 
+																window_size);
+
 				//doRowsMatch = areRowsMatching(current_screenshot, current_screenshot_row, original_image, original_screenshot_row);
 				if(doWindowsMatch) {
-					BufferedImage cropped_og_img = original_image.getSubimage(0, 0, original_image.getWidth(), original_screenshot_row);
+					BufferedImage cropped_og_img = original_image.getSubimage(0, 
+																			  0, 
+																			  original_image.getWidth(),
+																			  original_screenshot_row);
+					
+					
 					current_screenshot = current_screenshot.getSubimage(0, 
 																		current_screenshot_row, 
 																		current_screenshot.getWidth(), 

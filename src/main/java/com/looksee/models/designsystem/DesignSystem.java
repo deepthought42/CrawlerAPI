@@ -24,7 +24,7 @@ public class DesignSystem extends LookseeObject{
 	private List<String> color_palette;
 
 	public DesignSystem() {
-		wcag_compliance_level = WCAGComplianceLevel.AA.toString();
+		wcag_compliance_level = WCAGComplianceLevel.AAA.toString();
 		audience_proficiency = AudienceProficiency.GENERAL.toString();
 		allowed_image_characteristics = new ArrayList<String>();
 		color_palette = new ArrayList<>();

@@ -246,11 +246,6 @@ public class Element extends LookseeObject implements Comparable<Element> {
 	@Override
 	public int compareTo(Element o) {
         return this.getKey().compareTo(o.getKey());
-		/*
-		 if(this.getYLocation() == o.getYLocation())
-             return 0;
-         return this.getYLocation() < o.getYLocation() ? -1 : 1;
-         */
 	}
 
 	public String getCssSelector() {

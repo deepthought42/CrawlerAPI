@@ -102,9 +102,8 @@ public class WebCrawlerActor extends AbstractActor{
 					this.audit_manager = getContext().getSender();
 
 					/* perform site wide crawl */
-					//Domain domain = domain_service.findById(crawl_action.getDomainId()).get();
 					String initial_url = crawl_action.getHost();
-											
+
 					//add link to frontier
 					frontier.put(initial_url, Boolean.TRUE);
 					
@@ -116,7 +115,6 @@ public class WebCrawlerActor extends AbstractActor{
 					String page_url = BrowserUtils.getPageUrl(sanitized_url);
           
 					if(!visited.containsKey(page_url)){
-						log.warn(page_url +" not visited");
 						frontier.put(page_url, Boolean.TRUE);
 					}
 					processFrontier(crawl_action);
@@ -186,10 +184,8 @@ public class WebCrawlerActor extends AbstractActor{
 			frontier.remove(raw_url);
 			URL sanitized_url = new URL(BrowserUtils.sanitizeUrl(BrowserUtils.formatUrl("http", domain.getUrl(), raw_url, false), false));
 			String page_url = BrowserUtils.getPageUrl(sanitized_url);
-			this.visited.put(page_url, Boolean.TRUE);
-			log.warn("Sanitized url from frontier ... "+page_url);
-			if(!visited.containsKey(page_url)) { //?
-				log.warn("sending url to source extractor");
+			if(!visited.containsKey(page_url)) { 
+				this.visited.put(page_url, Boolean.TRUE); 
 				DomainMessage domain_msg = new DomainMessage(crawl_action, domain, page_url);
 				
 				this.source_extractor.tell(domain_msg, getSelf());

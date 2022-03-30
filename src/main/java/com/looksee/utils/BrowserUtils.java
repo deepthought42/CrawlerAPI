@@ -999,7 +999,12 @@ public class BrowserUtils {
 		
 		boolean parent_found = false;
 		
-		List<ElementState> elements = element_states.parallelStream().filter(p -> p.getOwnedText() != null && !p.getOwnedText().trim().isEmpty()).distinct().collect(Collectors.toList());
+		List<ElementState> elements = element_states.parallelStream()
+													.filter(p -> p.getOwnedText() != null 
+																	&& !p.getOwnedText().isEmpty() 
+																	&& !p.getOwnedText().trim().isEmpty())
+													.distinct()
+													.collect(Collectors.toList());
 		//remove all elements that are part of another element
 		List<ElementState> filtered_elements = new ArrayList<>();
 		for(ElementState element1: elements) {

@@ -21,7 +21,11 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 	private Set<String> colors = new HashSet<>();
 	private String color_scheme;
 	
-	public ColorPaletteIssueMessage() {}
+	public ColorPaletteIssueMessage() {
+		setPaletteColors(new ArrayList<>());
+		setColors(new HashSet<>());
+		setColorScheme(ColorScheme.UNKNOWN);
+	}
 	
 	/**
 	 * Constructs new object
@@ -64,12 +68,12 @@ public class ColorPaletteIssueMessage extends UXIssueMessage{
 				title,
 				points_earned,
 				max_points,
-				new HashSet<>(),
 				recommendation);
 		
 		assert colors != null;
 		assert palette_colors != null;
 		
+		setColorScheme(ColorScheme.UNKNOWN);
 		setColors(colors);
 		setPaletteColors(palette_colors);
 	}

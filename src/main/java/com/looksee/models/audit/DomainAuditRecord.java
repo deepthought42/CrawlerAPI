@@ -15,7 +15,8 @@ import com.looksee.models.enums.ExecutionStatus;
  * Record detailing an set of {@link Audit audits}.
  */
 public class DomainAuditRecord extends AuditRecord {
-		
+	private int total_pages;
+	
 	@Relationship(type = "HAS")
 	private Set<PageAuditRecord> page_audit_records;
 	
@@ -47,6 +48,7 @@ public class DomainAuditRecord extends AuditRecord {
 		setContentAuditProgress(0.0);
 		setInfoArchitectureAuditProgress(0.0);
 		setDataExtractionProgress(0.0);
+		setTotalPages(0);
 		setKey(generateKey());
 	}
 
@@ -76,5 +78,13 @@ public class DomainAuditRecord extends AuditRecord {
 
 	public void setDomain(Domain domain) {
 		this.domain = domain;
+	}
+
+	public int getTotalPages() {
+		return total_pages;
+	}
+
+	public void setTotalPages(int total_pages) {
+		this.total_pages = total_pages;
 	}
 }

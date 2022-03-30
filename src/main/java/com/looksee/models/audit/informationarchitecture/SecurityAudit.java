@@ -2,19 +2,16 @@ package com.looksee.models.audit.informationarchitecture;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
@@ -28,7 +25,7 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
-import com.looksee.services.PageStateService;
+import com.looksee.services.AuditService;
 import com.looksee.services.UXIssueMessageService;
 
 
@@ -40,8 +37,11 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(SecurityAudit.class);
 	
-	@Relationship(type="FLAGGED")
-	List<Element> flagged_elements = new ArrayList<>();
+	@Autowired
+	private AuditService audit_service;
+	
+	@Autowired
+	private UXIssueMessageService issue_message_service;
 	
 	public SecurityAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.TEXT_BACKGROUND_CONTRAST);
@@ -85,9 +85,9 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title,
 											0, 
 											1, 
-											recommendations,
 											recommendation);
-			issue_messages.add(ux_issue);
+			
+			issue_messages.add(issue_message_service.save(ux_issue));
 		}
 		else {
 			String title = "Page is secure";
@@ -108,9 +108,9 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 											title,
 											1, 
 											1, 
-											recommendations,
 											recommendation);
-			issue_messages.add(ux_issue);
+
+			issue_messages.add(issue_message_service.save(ux_issue));
 		}
 		
 		String description = "";
@@ -124,17 +124,21 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		
 		//log.warn("SECURITY AUDIT SCORE   ::   "+ points_earned +" / " +max_points);
 		//page_state = page_state_service.findById(page_state.getId()).get();
-		return new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
-						 AuditSubcategory.SECURITY,
-						 AuditName.FONT,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points,
-						 page_state.getUrl(), 
-						 why_it_matters,
-						 description,
-						 false);
+		Audit audit = new Audit(AuditCategory.INFORMATION_ARCHITECTURE,
+								 AuditSubcategory.SECURITY,
+								 AuditName.FONT,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points,
+								 page_state.getUrl(), 
+								 why_it_matters,
+								 description,
+								 false);
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 	
 

@@ -161,24 +161,24 @@ public class BrowserService {
 		}
 		
 		ElementState element_state = new ElementState(
-				element.ownText().trim(),
-				element.text(),
-				xpath, 
-				element.tagName(), 
-				attributes, 
-				rendered_css_values, 
-				screenshot_url, 
-				location.getX(), 
-				location.getY(), 
-				dimension.getWidth(), 
-				dimension.getHeight(), 
-				classification,
-				element.outerHtml(),
-				web_elem.isDisplayed(),
-				css_selector, 
-				foreground_color,
-				rendered_css_values.get("background-color"),
-				false);
+											element.ownText().trim(),
+											element.text(),
+											xpath, 
+											element.tagName(), 
+											attributes, 
+											rendered_css_values, 
+											screenshot_url, 
+											location.getX(), 
+											location.getY(), 
+											dimension.getWidth(), 
+											dimension.getHeight(), 
+											classification,
+											element.outerHtml(),
+											web_elem.isDisplayed(),
+											css_selector, 
+											foreground_color,
+											rendered_css_values.get("background-color"),
+											false);
 		
 		return element_state;
 	}
@@ -472,10 +472,11 @@ public class BrowserService {
 		
 		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
+		/*
 		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - viewport_screenshot.getHeight()) ) {
 			full_page_screenshot = shutterbug_fullpage_screenshot;
 		}
-		
+		*/
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, 
 																		url.getHost(), 
@@ -623,10 +624,6 @@ public class BrowserService {
 		}
 		return true;
 	}
-
-	private static String calculateSha256(String value) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
-	}
 	
 	/**
 	 * identify and collect data for elements within the Document Object Model 
@@ -738,7 +735,8 @@ public class BrowserService {
 				
 
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
-				
+				Map<String, String> attributes = browser.extractAttributes(web_element);
+
 				ElementClassification classification = null;
 				List<WebElement> children = getChildElements(web_element);
 				
@@ -770,12 +768,12 @@ public class BrowserService {
 					ImageSafeSearchAnnotation img_safe_search_annotation = CloudVisionUtils.detectSafeSearch(element_screenshot);
 					
 					//retrieve image logos from google cloud vision
-					Set<Logo> logos = CloudVisionUtils.extractImageLogos(element_screenshot);
-					
+					Set<Logo> logos = new HashSet<>();//CloudVisionUtils.extractImageLogos(element_screenshot);
+
 					//retrieve image labels
 					Set<Label> labels = CloudVisionUtils.extractImageLabels(element_screenshot);
 					ElementState element_state = buildImageElementState(xpath, 
-																	   new HashMap<>(), 
+																	   attributes, 
 																	   element, 
 																	   web_element, 
 																	   classification, 
@@ -794,7 +792,7 @@ public class BrowserService {
 				}
 				else {
 					ElementState element_state = buildElementState(xpath, 
-																   new HashMap<>(), 
+																   attributes, 
 																   element, 
 																   web_element, 
 																   classification, 

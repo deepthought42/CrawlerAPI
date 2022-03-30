@@ -33,7 +33,6 @@ import com.looksee.models.message.PageCandidateFound;
 import com.looksee.services.BrowserService;
 import com.looksee.services.CompetitorService;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.ColorUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;

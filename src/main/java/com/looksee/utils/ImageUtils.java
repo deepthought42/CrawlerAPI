@@ -167,7 +167,7 @@ public class ImageUtils {
 			desired_height = (int)(w_scale * height);
 		}
 		
-		buffered_image = ImageUtils.resize(buffered_image, desired_width, desired_height);
+		//buffered_image = ImageUtils.resize(buffered_image, desired_width, desired_height);
 		//return CloudVisionUtils.extractImageProperties(buffered_image);
 		
 		
@@ -176,8 +176,8 @@ public class ImageUtils {
 		height = buffered_image.getHeight();	
 		
 		Map<String, Integer> colors = new HashMap<>();
-		//extract colors using a random sample of 10% of image pixels
-		int sample_size = (int)( ( width * height) * 0.05 );
+		//extract colors using a random sample of image pixels
+		int sample_size = (int)( ( width * height) * 0.10 );
 		
 		for(int sample_idx=0; sample_idx < sample_size; sample_idx++) {
 			int x = getRandomNumberUsingNextInt(0, width-1);
@@ -370,13 +370,15 @@ public class ImageUtils {
 											int window_height
 	) {
 		
-		if( (original_screenshot_row+window_height-1) >= original_image.getHeight()
-				|| (current_screenshot_row+window_height-1) >= current_screenshot.getHeight()
+		if( (original_screenshot_row + window_height-1) >= original_image.getHeight()
+				|| (current_screenshot_row + window_height-1) >= current_screenshot.getHeight()
 				|| current_screenshot_row < 0) {
 			return false;
 		}
 		
+		
 		//perform random sampling to check equivalence
+		
 		Random random = new Random();
 		int sample_size = (current_screenshot.getWidth() * window_height) / 2;
 		for(int idx = 0; idx < sample_size; idx++) {
@@ -414,6 +416,17 @@ public class ImageUtils {
 		*/
 		return true;
 	}
+	
+	// convert BufferedImage to byte[]
+    public static byte[] toByteArray(BufferedImage bi, String format)
+        throws IOException {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(bi, format, baos);
+        byte[] bytes = baos.toByteArray();
+        return bytes;
+
+    }
 
 	@Retry(name="gcp")
 	public static BufferedImage readImageFromURL(URL full_page_screenshot_url) throws IOException {

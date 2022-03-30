@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -17,10 +16,11 @@ import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.IExecutablePageStateAudit;
+import com.looksee.models.audit.ReadingComplexityIssueMessage;
 import com.looksee.models.audit.Score;
 import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
@@ -28,7 +28,6 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.services.AuditService;
-import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ContentUtils;
 
@@ -36,6 +35,9 @@ import io.whelk.flesch.kincaid.ReadabilityCalculator;
 
 /**
  * Responsible for executing an audit on the hyperlinks on a page for the information architecture audit category
+ *
+ * WCAG Level - AAA
+ * WCAG Success Criterion - https://www.w3.org/TR/UNDERSTANDING-WCAG20/meaning-supplements.html
  */
 @Component
 public class ReadabilityAudit implements IExecutablePageStateAudit {
@@ -43,17 +45,12 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 	private static Logger log = LoggerFactory.getLogger(ReadabilityAudit.class);
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-
-	@Autowired
 	private AuditService audit_service;
 	
 	@Autowired
 	private UXIssueMessageService issue_message_service;
 	
-	public ReadabilityAudit() {
-	}
+	public ReadabilityAudit() {} 
 
 	
 	/**
@@ -74,21 +71,21 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		//filter any element state whose text exists within another element
 		List<ElementState> og_text_elements = new ArrayList<>();
 		
-		String ada_compliance = "Even though there are no ADA compliance requirements specifically for" + 
-				" this category, reading level needs to be taken into consideration when" + 
-				" writing content and paragraphing. ";
+		String ada_compliance = "Text content shouldn't require a reading ability more advanced than the lower"
+				+ " secondary education level (grades 5 through 8 ) after removal of proper names and titles.";
 		
 		Set<String> labels = new HashSet<>();
 		labels.add("written content");
 		labels.add("readability");
+		labels.add("wcag");
 		
-		List<ElementState> elements = page_state_service.getElementStates(page_state.getKey());
-		for(ElementState element: elements) {
+		//List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
+		for(ElementState element: page_state.getElements()) {
 			if(element.getName().contentEquals("button") || element.getName().contentEquals("a") || element.getOwnedText().isEmpty() || element.getAllText().split(" ").length <= 3) {
 				continue;
 			}
 			boolean is_child_text = false;
-			for(ElementState element2: elements) {
+			for(ElementState element2: page_state.getElements()) {
 				if(element2.getKey().contentEquals(element.getKey())) {
 					continue;
 				}
@@ -131,16 +128,20 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 					String description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
 					String recommendation = "Reduce the length of your sentences by breaking longer sentences into 2 or more shorter sentences. You can also use simpler words. Words that contain many syllables can also be difficult to understand.";
 					
-					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.LOW, 
-																						  description,
-																						  recommendation,
-																						  element,
-																						  AuditCategory.CONTENT,
-																						  labels,
-																						  ada_compliance,
-																						  title,
-																						  element_points,
-																						  4);
+					ReadingComplexityIssueMessage issue_message = new ReadingComplexityIssueMessage(Priority.LOW, 
+																								  description,
+																								  recommendation,
+																								  null,
+																								  AuditCategory.CONTENT,
+																								  labels,
+																								  ada_compliance,
+																								  title,
+																								  element_points,
+																								  4,
+																								  ease_of_reading_score);
+					
+					issue_message = (ReadingComplexityIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), element.getId());
 					issue_messages.add(issue_message);
 				}
 				else {
@@ -154,16 +155,21 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 						description = generateIssueDescription(element, difficulty_string, ease_of_reading_score, audit_record.getTargetUserEducation());
 					}
 					String title = "Content is easy to read";
-					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.NONE, 
-																						  description,
-																						  recommendation,
-																						  element,
-																						  AuditCategory.CONTENT,
-																						  labels,
-																						  ada_compliance,
-																						  title,
-																						  element_points,
-																						  4);
+					
+					ReadingComplexityIssueMessage issue_message = new ReadingComplexityIssueMessage(Priority.NONE, 
+																								  description,
+																								  recommendation,
+																								  null,
+																								  AuditCategory.CONTENT,
+																								  labels,
+																								  ada_compliance,
+																								  title,
+																								  element_points,
+																								  4,
+																								  ease_of_reading_score);
+					
+					issue_message = (ReadingComplexityIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), element.getId());
 					issue_messages.add(issue_message);
 				}
 			} catch(Exception e) {
@@ -171,20 +177,22 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 			}
 		}		
 
-		String why_it_matters = "The way users experience content has changed in the mobile phone era." + 
+		String why_it_matters = "For people with reading disabilities(including the most highly educated), it is important"
+				+ "to accomodate these users by providing text that is simpler to read."
+				+ "Beyond accessibility, the way users experience content online has changed." + 
 				" Attention spans are shorter, and users skim through most information." + 
 				" Presenting information in small, easy to digest chunks makes their" + 
-				" experience easy and convenient. ";
+				" experience easy and convenient.";
 		
 		int points_earned = 0;
 		int max_points = 0;
 		for(UXIssueMessage issue_msg : issue_messages) {
 			points_earned += issue_msg.getPoints();
 			max_points += issue_msg.getMaxPoints();
-			
+			/*
 			if(issue_msg.getScore() < 90 && issue_msg instanceof ElementStateIssueMessage) {
 				ElementStateIssueMessage element_issue_msg = (ElementStateIssueMessage)issue_msg;
-				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.PARAGRAPHING, 100);
+				List<ElementState> good_examples = audit_service.findGoodExample(AuditName.READING_COMPLEXITY, 100);
 				if(good_examples.isEmpty()) {
 					log.warn("Could not find element for good example...");
 					continue;
@@ -194,20 +202,25 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				element_issue_msg.setGoodExample(good_example);
 				issue_message_service.save(element_issue_msg);
 			}
+			*/
 		}
 
 		String description = "";		
-		return new Audit(AuditCategory.CONTENT,
-						 AuditSubcategory.WRITTEN_CONTENT,
-						 AuditName.PARAGRAPHING,
-						 points_earned,
-						 issue_messages,
-						 AuditLevel.PAGE,
-						 max_points, 
-						 page_state.getUrl(),
-						 why_it_matters, 
-						 description,
-						 false); 
+		Audit audit = new Audit(AuditCategory.CONTENT,
+								 AuditSubcategory.WRITTEN_CONTENT,
+								 AuditName.READING_COMPLEXITY,
+								 points_earned,
+								 new HashSet<>(),
+								 AuditLevel.PAGE,
+								 max_points, 
+								 page_state.getUrl(),
+								 why_it_matters, 
+								 description,
+								 false); 
+		
+		audit_service.save(audit);
+		audit_service.addAllIssues(audit.getId(), issue_messages);
+		return audit;
 	}
 
 

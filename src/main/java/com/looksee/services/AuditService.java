@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
@@ -95,15 +96,11 @@ public class AuditService {
 
 	public Set<UXIssueMessage> getIssues(long audit_id) {
 		Set<UXIssueMessage> raw_issue_set = audit_repo.findIssueMessages(audit_id);
-		Set<UXIssueMessage> filtered_issue_set = new HashSet<>();
 		
-		for(UXIssueMessage issue: raw_issue_set) {
-			if(issue.getPoints() != issue.getMaxPoints()) {
-				filtered_issue_set.add(issue);
-			}
-		}
-		
-		return filtered_issue_set;
+		return raw_issue_set.parallelStream()
+							.filter(issue -> issue.getPoints() != issue.getMaxPoints())
+							.distinct()
+							.collect(Collectors.toSet());
 	}
 	
 	/**
@@ -251,9 +248,10 @@ public class AuditService {
 			for(UXIssueMessage ux_issue: issue_set) {
 				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
 					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
+					/*
 					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
 					element_issue.setGoodExample(good_example);
-					
+					*/
 					issues.put(ux_issue.getKey(), element_issue);
 				}
 				else {
@@ -279,6 +277,9 @@ public class AuditService {
 					ux_issue.getType().equals(ObservationType.ELEMENT) ) {
 
 				ElementState element = ux_issue_service.getElement(ux_issue.getId());
+				if(element == null) {
+					return element_map.values();
+				}
 				if(element instanceof ImageElementState) {
 					ImageElementState img_element = (ImageElementState)element;
 					
@@ -338,15 +339,6 @@ public class AuditService {
 				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && category.equals(s.getSubcategory())))
 				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
 				  .sum();
-		/*
-		int issue_count = 0;
-	
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() > 0 && category.equals(audit.getSubcategory())) {
-				issue_count += audit_repo.getMessageCount(audit.getId());
-			}
-		}
-		*/
 		return issue_count;
 	}
 
@@ -358,13 +350,12 @@ public class AuditService {
 				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
 				  .mapToInt(s -> audit_repo.getMessageCount(s.getId()))
 				  .sum();
-		/*
-		for(Audit audit: audits) {
-			if(audit.getTotalPossiblePoints() > 0 && name.equals(audit.getName())) {
-				issue_count += audit_repo.getMessageCount(audit.getId());
-			}
-		}
-		*/
+		
 		return issue_count;	
+	}
+
+	public void addAllIssues(long audit_id, Set<UXIssueMessage> issue_messages) {
+		List<Long> issue_ids = issue_messages.stream().map(x -> x.getId()).collect(Collectors.toList());
+		addAllIssues(audit_id, issue_ids);
 	}
 }

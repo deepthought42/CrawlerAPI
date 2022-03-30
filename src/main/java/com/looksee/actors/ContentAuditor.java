@@ -89,8 +89,8 @@ public class ContentAuditor extends AbstractActor {
 				PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 				// generate audit report
 				// Set<Audit> audits = new HashSet<>();
-				page.setElements(page_state_service.getElementStates(page.getKey()));
-
+				page.setElements(page_state_service.getElementStates(page.getId()));
+				log.warn("evaluating "+page.getElements().size()+" element state for content audit");
 				AuditProgressUpdate audit_update = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
 						audit_record.getId(), (1.0 / 4.0), "checking images for alt text", AuditCategory.CONTENT,
 						AuditLevel.PAGE, null, page_audit_record_msg.getDomainId());

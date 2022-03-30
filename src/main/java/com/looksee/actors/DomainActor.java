@@ -12,18 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.looksee.api.MessageBroadcaster;
 import com.looksee.models.Domain;
-import com.looksee.models.LookseeObject;
-import com.looksee.models.Test;
 import com.looksee.models.enums.DiscoveryAction;
 import com.looksee.models.message.DiscoveryActionMessage;
 import com.looksee.models.message.DiscoveryActionRequest;
 import com.looksee.models.message.FormDiscoveryMessage;
-import com.looksee.models.message.TestMessage;
 import com.looksee.services.DomainService;
-import com.looksee.services.TestService;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -45,9 +39,6 @@ public class DomainActor extends AbstractActor{
 
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private TestService test_service;
 
 	@Autowired
 	private ActorSystem actor_system;
@@ -80,7 +71,7 @@ public class DomainActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
-					domain = message.getDomain();
+					domain = domain_service.findById(message.getDomainId()).get();
 					if(discovery_actor == null){
 						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());

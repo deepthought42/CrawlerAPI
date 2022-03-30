@@ -77,8 +77,8 @@ public class DomainService {
 		domain_repo.deleteTestUser(acct_username, domain_key, username);
 	}
 
-	public Set<Form> getForms(String username, String url) {
-		return domain_repo.getForms(username, url);
+	public Set<Form> getForms(long account_id, String url) {
+		return domain_repo.getForms(account_id, url);
 	}
 	
 	public int getFormCount(String user_id, String url) {

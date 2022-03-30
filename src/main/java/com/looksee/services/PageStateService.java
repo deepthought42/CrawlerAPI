@@ -35,9 +35,6 @@ public class PageStateService {
 	
 	@Autowired
 	private PageStateRepository page_state_repo;
-	
-	@Autowired
-	private ElementStateService element_state_service;
 
 	/**
 	 * Save a {@link PageState} object and its associated objects
@@ -110,8 +107,8 @@ public class PageStateService {
 		return screenshots;
 	}
 	
-	public List<PageState> findPageStatesWithForm(String user_id, String url, String page_key) {
-		return page_state_repo.findPageStatesWithForm(user_id, url, page_key);
+	public List<PageState> findPageStatesWithForm(long account_id, String url, String page_key) {
+		return page_state_repo.findPageStatesWithForm(account_id, url, page_key);
 	}
 
 	public Collection<ElementState> getExpandableElements(List<ElementState> elements) {

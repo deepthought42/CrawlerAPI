@@ -2,9 +2,7 @@ package com.looksee.actors;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -16,6 +14,7 @@ import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.Action;
 import com.looksee.models.DiscoveryRecord;
+import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.LookseeObject;
@@ -29,6 +28,7 @@ import com.looksee.models.repository.DiscoveryRecordRepository;
 import com.looksee.models.rules.NumericRule;
 import com.looksee.models.rules.Rule;
 import com.looksee.models.rules.RuleType;
+import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.TestService;
 import com.looksee.utils.BrowserUtils;
@@ -57,6 +57,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private TestService test_service;
 	
 	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private PageStateService page_state_service;
 	
 	@Autowired
@@ -81,13 +84,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				.match(FormDiscoveryMessage.class, message -> {
 					int cnt = 0;
 				  	Browser browser = null;
-				  	
+				  	Domain domain = domain_service.findById(message.getDomainId()).get();
 				  	//find page states that contains form
-				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), message.getDomain().getUrl(), message.getForm().getKey());
+				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), domain.getUrl(), message.getForm().getKey());
 				  	//find tests that contain page state
 				  	List<Test> tests = new ArrayList<>();
 				  	for(PageState page: page_states) {
-				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), message.getDomain().getUrl(), message.getAccountId()));
+				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), domain.getUrl(), message.getAccountId()));
 				  	}
 				  	
 				  	int last_path_size = Integer.MAX_VALUE;
@@ -130,8 +133,8 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		cnt = 0;
 						  		PageState result_page = null;
-						  		Map<Integer, Element> visible_element_map = new HashMap<>();
-						  		List<Element> visible_elements = new ArrayList<>();
+						  		//Map<Integer, Element> visible_element_map = new HashMap<>();
+						  		//List<Element> visible_elements = new ArrayList<>();
 						  		
 						  		do{
 						  			try{
@@ -152,7 +155,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		final long pathCrawlEndTime = System.currentTimeMillis();
 								long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getUrl(), result_page.getUrl(), test_path_objects);
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), test_path_objects);
 	
 						  		Test new_test = new Test(path_keys, test_path_objects, result_page, leaves_domain);
 			
@@ -163,9 +166,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getDiscovery().getKey());
 								discovery_record = discovery_repo.save(discovery_record);
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());  
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  
 								
-								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.CHROME, message.getDomainActor(), message.getDomain(), message.getAccountId());
+								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.CHROME, message.getDomainActor(), message.getDomainId(), message.getAccountId());
 								message.getDiscoveryActor().tell(test_message, getSelf());
 					  		}
 							break;

@@ -24,7 +24,7 @@ public class PathMessage extends Message {
 					   PathStatus status, 
 					   BrowserType browser, 
 					   ActorRef domain_actor, 
-					   long domain, 
+					   long domain_id, 
 					   long account_id){
 		setKeys(keys);
 		setPathObjects(path_objects);
@@ -32,7 +32,7 @@ public class PathMessage extends Message {
 		setStatus(status);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
-		setDomainId(domain);
+		setDomainId(domain_id);
 		setAccountId(account_id);
 	}
 

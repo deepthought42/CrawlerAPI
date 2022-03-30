@@ -144,17 +144,6 @@ public class DiscoveryActor extends AbstractActor{
 					}
 				})
 				.match(PathMessage.class, message -> {
-					/*
-					Timeout timeout = Timeout.create(Duration.ofSeconds(30));
-					Future<Object> future = Patterns.ask(message.getDomainIdActor(), new DiscoveryActionRequest(message.getDomainId(), message.getAccountId()), timeout);
-					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-					
-					if(discovery_action == DiscoveryAction.STOP) {
-						log.warn("path message discovery actor returning");
-						return;
-					}
-					*/
-					Domain domain = domain_service.findById(message.getDomainId()).get();
 					discovery_record = getDiscoveryRecord();
 
 					if(message.getStatus().equals(PathStatus.READY)){
@@ -306,7 +295,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					
 					try {
-					    form = form_service.save(form_msg.getUserId(), form_msg.getDomainId(), form);
+					    form = form_service.save(form);
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
@@ -321,7 +310,7 @@ public class DiscoveryActor extends AbstractActor{
 
 					
 					try {
-						page_state_service.saveUserAndDomain(form_msg.getUserId(), form_msg.getDomainId(), page_state_record);					    
+						page_state_service.save(page_state_record);					    
 					}catch(Exception e) {
 						try {
 							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());

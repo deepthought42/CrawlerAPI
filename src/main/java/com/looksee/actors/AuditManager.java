@@ -29,6 +29,7 @@ import com.looksee.models.audit.recommend.Recommendation;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.DiscoveryAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.AuditError;
@@ -162,7 +163,7 @@ public class AuditManager extends AbstractActor{
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_state_builder.tell(crawl_action_msg, getSelf());
 						
-						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(CrawlAction.START, 
+						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(DiscoveryAction.START, 
 																						  message.getDomainId(),
 																						  message.getAccountId(), 
 																						  BrowserType.CHROME);
@@ -238,7 +239,7 @@ public class AuditManager extends AbstractActor{
 																									 message.getUrl());
 								
 								ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
-							   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+							   											  .props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 								page_state_builder.tell(crawl_action_msg, getSelf());
 							}
 						}

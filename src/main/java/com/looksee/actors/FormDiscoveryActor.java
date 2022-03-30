@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.browsing.Browser;
-import com.looksee.browsing.Crawler;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.integrations.DeepthoughtApi;
+import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
@@ -21,9 +21,9 @@ import com.looksee.models.message.FormDiscoveredMessage;
 import com.looksee.models.message.PathMessage;
 import com.looksee.models.rules.Rule;
 import com.looksee.services.BrowserService;
+import com.looksee.services.DomainService;
 import com.looksee.services.FormService;
 import com.looksee.utils.PathUtils;
-import com.looksee.utils.TimingUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -44,13 +44,13 @@ public class FormDiscoveryActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private Crawler crawler;
-	
-	@Autowired
 	private BrowserService browser_service;
 	
 	@Autowired
 	private FormService form_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Autowired
 	private ElementRuleExtractor rule_extractor;
@@ -86,7 +86,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  	Browser browser = null;
 				  	boolean forms_created = false;
 				  	int count = 0;
-				  	
+				  	Domain domain = domain_service.findById(message.getDomainId()).get();
 				  	do{
 				  		try{
 				  			log.warning("form discovery getting browser connection ::   "+message.getBrowser().toString());
@@ -107,7 +107,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							 
 							log.warning("extracting all forms");
-						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), message.getDomain(), browser);
+						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), domain, browser);
 						  	log.warning("forms extracted :: "+forms.size());
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
@@ -119,8 +119,8 @@ public class FormDiscoveryActor extends AbstractActor{
 								}
 							    DeepthoughtApi.predict(form);
 							  
-							    form = form_service.save(message.getAccountId(), message.getDomain().getUrl(), form);
-							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
+							    form = form_service.save(form);
+							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomainId());
 							  	message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}
 						  	forms_created = true;

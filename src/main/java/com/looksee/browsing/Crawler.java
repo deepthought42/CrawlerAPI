@@ -153,7 +153,12 @@ public class Crawler {
 	 * @pre path != null
 	 */
 	@Deprecated
-	public void crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path, String user_id) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
+	public void crawlPathExplorer(List<String> keys, 
+								  List<LookseeObject> path_object_list, 
+								  Browser browser, 
+								  String host_channel, 
+								  ExploratoryPath path
+	) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
@@ -260,8 +265,12 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PathMessage crawlPathExplorer(List<String> keys, List<LookseeObject> path_object_list, Browser browser, String host_channel, PathMessage path, String user_id) 
-			throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
+	public PathMessage crawlPathExplorer(List<String> keys, 
+										 List<LookseeObject> path_object_list, 
+										 Browser browser, 
+										 String host_channel, 
+										 PathMessage path
+	) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
@@ -352,7 +361,14 @@ public class Crawler {
 		}
 		
 		if(path.getKeys().size() != path_keys.size()){
-			return new PathMessage(path_keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser(), path.getDomainActor(), path.getDomain(), path.getAccountId());
+			return new PathMessage(path_keys, 
+								   path_objects_explored, 
+								   path.getDiscoveryActor(), 
+								   path.getStatus(), 
+								   path.getBrowser(), 
+								   path.getDomainActor(), 
+								   path.getDomainId(), 
+								   path.getAccountId());
 		}
 		
 		return path;
@@ -408,7 +424,7 @@ public class Crawler {
 				browser.navigateTo(url);
 				browser.moveMouseToNonInteractive(new Point(300,300));
 
-				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path, user_id);
+				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
@@ -462,7 +478,7 @@ public class Crawler {
 	 * @throws Exception 
 	 */
 	@Deprecated
-	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, PathMessage path) throws Exception {
+	public PageState performPathExploratoryCrawl(long account_id, Domain domain, String browser_name, PathMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -488,7 +504,9 @@ public class Crawler {
 					//browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
-					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getUrl(), path, user_id);
+					ExploratoryPath exploratory_path = new ExploratoryPath(path.getKeys(), path.getPathObjects());
+					
+					crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getUrl(), exploratory_path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);

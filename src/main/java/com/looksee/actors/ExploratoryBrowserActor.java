@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.api.exception.DiscoveryStoppedException;
 import com.looksee.browsing.Crawler;
+import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
@@ -101,8 +102,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
 
+						Domain domain = domain_service.findById(message.getDomainId()).get();
 						try {
-							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), message.getDomain(), browser_name, message);
+							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, browser_name, message);
 						} catch(DiscoveryStoppedException e) {
 							return;
 						}
@@ -119,25 +121,40 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
 						log.warn("does result match path object in path   ??   "+is_result_matches_other_page_in_path);
 						if(is_result_matches_other_page_in_path ) {
-							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
+							PathMessage path = new PathMessage(message.getKeys(), 
+															   message.getPathObjects(), 
+															   message.getDiscoveryActor(), 
+															   PathStatus.EXAMINED, 
+															   message.getBrowser(), 
+															   message.getDomainActor(), 
+															   message.getDomainId(), 
+															   message.getAccountId());
+							
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 							return;
 						}
 						else {
 							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl(), result_page.isSecure())));
-							domain_service.addPage(message.getDomain().getId(), page.getKey());
+							domain_service.addPage(message.getDomainId(), page.getKey());
 
 							long start_time = System.currentTimeMillis();
 							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));
 							long end_time = System.currentTimeMillis();
 							log.warn("element state time to get all elements ::  "+(end_time-start_time));
 							result_page.addElements(elements);
-							result_page = page_state_service.saveUserAndDomain(message.getAccountId(), message.getDomain().getUrl(), result_page);
+							result_page = page_state_service.save(result_page);
 							
 							log.warn("DOM elements found :: "+elements.size());
 							
-							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain(), message.getAccountId());
+							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), 
+																				message.getPathObjects(), 
+																				message.getDiscoveryActor(), 
+																				result_page, 
+																				message.getBrowser(), 
+																				message.getDomainActor(), 
+																				message.getDomainId(), 
+																				message.getAccountId());
 							parent_path_explorer.tell(msg, getSelf());
 						}
 					}

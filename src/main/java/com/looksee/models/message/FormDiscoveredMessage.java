@@ -23,11 +23,11 @@ public class FormDiscoveredMessage extends Message {
 		setUserId(user_id);
 	}
 	
-	public FormDiscoveredMessage(Form form, PageState page, String user_id, long domain) {
+	public FormDiscoveredMessage(Form form, PageState page, long account_id, long domain) {
 		setForm(form);
 		setPage(page);
 		setDomainId(domain);
-		setUserId(user_id);
+		setAccountId(account_id);
 	}
 
 	public Form getForm() {

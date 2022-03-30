@@ -477,7 +477,10 @@ public class BrowserService {
 		}
 		
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
-		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, 
+																		url.getHost(), 
+																		full_page_screenshot_checksum, 
+																		BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		
 		String composite_url = full_page_screenshot_url;
@@ -1421,7 +1424,7 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public Set<Form> extractAllForms(String user_id, Domain domain, Browser browser) throws Exception {
+	public Set<Form> extractAllForms(long account_id, Domain domain, Browser browser) throws Exception {
 		Set<Form> form_list = new HashSet<Form>();
 		log.info("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));

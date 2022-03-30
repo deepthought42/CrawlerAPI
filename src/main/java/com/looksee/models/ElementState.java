@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Properties;
@@ -227,6 +228,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
         ElementState that = (ElementState)o;
 		return this.getId().equals(that.getId());
 	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(outer_html, height, width, foreground_color, background_color);
+	}
 
 	public void print() {
 		log.warn("element key :: "+getKey());
@@ -309,11 +315,6 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	@Override
 	public int compareTo(ElementState o) {
         return this.getKey().compareTo(o.getKey());
-		/*
-		 if(this.getYLocation() == o.getYLocation())
-             return 0;
-         return this.getYLocation() < o.getYLocation() ? -1 : 1;
-         */
 	}
 
 	public String getCssSelector() {

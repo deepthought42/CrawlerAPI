@@ -137,7 +137,7 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 			log.warn("-------------------------------------------------------------");
 		}
 		for(ElementState element : non_text_elements) {
-			ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
+			//ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));
 			//get parent element of button
 			try {
 				//retrieve all elements for page state
@@ -150,10 +150,11 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					}
 
 					if(element.getXpath().contains(element_state.getXpath())) {
+						/*
 						int element_area = element.getWidth() * element.getHeight();
 						int parent_area = element_state.getWidth() * element_state.getHeight();
-							
-						if(parent_area > (element_area * 3)) {
+							*/
+						//if(parent_area > (element_area * 3)) {
 							//parent = element_state;
 							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
 							/*
@@ -188,7 +189,8 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 							element_state = element_state_service.save(element_state);
 							*/
 							parent_bkg = new ColorData(element_state.getBackgroundColor());
-						}
+						//}
+							break;
 					}
 				}
 

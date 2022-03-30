@@ -921,8 +921,8 @@ public class DomainController {
 		double overall_score = AuditUtils.calculateScore(audits);
 		double aesthetic_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.COLOR_MANAGEMENT);
 		double color_palette_score = AuditUtils.calculateScoreByName(audits, AuditName.COLOR_PALETTE);
-		double text_contrast_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TEXT_CONTRAST);
-		double non_text_contrast_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.NON_TEXT_CONTRAST);
+		double text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+		double non_text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 		double written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 		double paragraphing_score = AuditUtils.calculateScoreByName(audits, AuditName.PARAGRAPHING);
 		double visuals_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);

@@ -181,7 +181,7 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(220, 200);
 		content_stream.showText(domain_host);
 		
-		content_stream.newLineAtOffset(-100, -50);
+		content_stream.newLineAtOffset(-80, -50);
 		content_stream.showText( "Website Audit Report" );
 		content_stream.endText();
 		
@@ -280,19 +280,17 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBaseFont(), HEADER_0);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 550);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 550);
 		content_stream.showText("Welcome to");
-		content_stream.endText();
 		
 		content_stream.setFont(getBaseFont(), HEADER_XL);
-		content_stream.beginText();		
-		content_stream.newLineAtOffset(120, 480);
+		content_stream.newLineAtOffset(0, -70);
 		content_stream.showText("Look-see!");
 		content_stream.endText();
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 420);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 420);
 		content_stream.showText("The Look-see platform has analyzed the experience on your website and");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("generated a report for "+domain_host+". We audited a total of "+pages_audited+" pages from");
@@ -337,7 +335,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 650);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 650);
 		content_stream.showText("Look-see Scoring");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -357,7 +355,7 @@ public class GeneratePDFReport {
 		//add emoji icons and scoring
 		//poor score
 		URL needs_work_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
-		addImageToPage(document, 120, 450, 0.3f, needs_work_emoji_url, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 450, 0.3f, needs_work_emoji_url, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(57, 183, 255));
@@ -373,7 +371,7 @@ public class GeneratePDFReport {
 		
 		//mid score
 		URL almost_there_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
-		addImageToPage(document, 120, 370, 0.3f, almost_there_emoji_url, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 370, 0.3f, almost_there_emoji_url, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(249, 191, 7));
@@ -389,7 +387,7 @@ public class GeneratePDFReport {
 		
 		//high score
 		URL delightful_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
-		addImageToPage(document, 120, 290, 0.3f, delightful_emoji_url, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 290, 0.3f, delightful_emoji_url, content_stream);
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(35, 216, 164));
 		content_stream.beginText();
@@ -406,7 +404,7 @@ public class GeneratePDFReport {
 		//final paragraph
 		content_stream.beginText();
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
-		content_stream.newLineAtOffset(120, 250);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 250);
 		content_stream.showText("We have also recommended research-backed, actionable");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("steps to upgrade your score to have an exact game plan for");
@@ -444,7 +442,7 @@ public class GeneratePDFReport {
 
 		//color management
 		URL color_management_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/color-management-icon.png");
-		addImageToPage(document, 120, 650, 0.6f, color_management_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 650, 0.6f, color_management_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -461,7 +459,7 @@ public class GeneratePDFReport {
 		
 		//branding
 		URL branding_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/visuals-icon.png");
-		addImageToPage(document, 120, 550, 0.6f, branding_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 550, 0.6f, branding_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -478,7 +476,7 @@ public class GeneratePDFReport {
 		
 		//visuals
 		URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
-		addImageToPage(document, 120, 450, 0.6f, visuals_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 450, 0.6f, visuals_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -496,7 +494,7 @@ public class GeneratePDFReport {
 		
 		//written content
 		URL written_content_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/written-content-icon.png");
-		addImageToPage(document, 120, 350, 0.6f, written_content_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 350, 0.6f, written_content_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -513,7 +511,7 @@ public class GeneratePDFReport {
 		
 		//typography
 		URL typography_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/typography-icon.png");
-		addImageToPage(document, 120, 250, 0.6f, typography_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 250, 0.6f, typography_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -528,7 +526,7 @@ public class GeneratePDFReport {
 		
 		//Information architecture
 		URL info_architecture_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/info-architecture-icon.png");
-		addImageToPage(document, 120, 150, 0.6f, info_architecture_icon, content_stream);
+		addImageToPage(document, LEFT_MARGIN_LG, 150, 0.6f, info_architecture_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -816,7 +814,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
@@ -837,7 +835,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 380);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 380);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -846,12 +844,12 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		
-		drawColorPaletteColors(primary_colors, 120, 220, content_stream);
+		drawColorPaletteColors(primary_colors, LEFT_MARGIN_LG, 220, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 150);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 150);
 		content_stream.showText("ADA compliance");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -892,7 +890,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("Accoring to color theory, this is");
 		content_stream.newLineAtOffset(0, -30);
 		content_stream.showText("what your colors communicate");
@@ -930,7 +928,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1026,7 +1024,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
@@ -1045,7 +1043,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 380);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 380);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -1103,7 +1101,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1196,7 +1194,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("COLOR MANAGEMENT");
 		
 		
@@ -1217,7 +1215,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 380);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 380);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -1265,7 +1263,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1425,7 +1423,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
@@ -1446,7 +1444,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 380);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 380);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -1500,7 +1498,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1573,7 +1571,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
@@ -1592,7 +1590,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 380);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 380);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -1642,7 +1640,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1715,7 +1713,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("WRITTEN CONTENT");
 		
 		
@@ -1738,7 +1736,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 330);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 330);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -1815,7 +1813,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -1968,7 +1966,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 750);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("VISUAL");
 		
 		
@@ -1987,7 +1985,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 410);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 410);
 		content_stream.showText("Observation");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
@@ -2058,7 +2056,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(new Color(255, 0, 80));
 		content_stream.beginText();
-		content_stream.newLineAtOffset(120, 700);
+		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 700);
 		content_stream.showText("MEANING");
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
@@ -2263,7 +2261,7 @@ public class GeneratePDFReport {
 		
 		if(ColorUtils.isBlack(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2282,7 +2280,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isWhite(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2299,7 +2297,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isRed(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2317,7 +2315,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isOrange(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2335,7 +2333,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isGold(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2353,7 +2351,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isYellow(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2372,7 +2370,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isGreen(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2391,7 +2389,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isCyan(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2412,7 +2410,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isBlue(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2429,7 +2427,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isViolet(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2447,7 +2445,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isPurple(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2464,7 +2462,7 @@ public class GeneratePDFReport {
 		}
 		else if(ColorUtils.isMagenta(color_data)) {
 			//draw 50x50 square with the color in it
-			drawColorBox(color_data, 120, y_offset, 30, 30, content_stream);
+			drawColorBox(color_data, LEFT_MARGIN_LG, y_offset, 30, 30, content_stream);
 			content_stream.setFont(getBoldFont(), HEADER_4);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.beginText();
@@ -2801,12 +2799,12 @@ public class GeneratePDFReport {
 		addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
 		
 		URL emoji = getScoreEmojiImage(score);
-		addImageToPage(document, x+40, y+120, 0.4f, emoji, content_stream);
+		addImageToPage(document, x+40, y+LEFT_MARGIN_LG, 0.4f, emoji, content_stream);
 		
 		content_stream.beginText();
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.setFont(getBoldFont(), TEXT_SIZE);
-		content_stream.newLineAtOffset(x+120, y+150);
+		content_stream.newLineAtOffset(x+LEFT_MARGIN_LG, y+150);
 		content_stream.showText(getScoreText(score));
 		
 		content_stream.setNonStrokingColor(getScoreColor(score));

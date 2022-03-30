@@ -143,8 +143,8 @@ public class PDFGeneratorTest {
 		colors.add("249, 191, 7");
 		colors.add("35, 216, 164");
 		
-		pdf_report.generateColorManagementColorPalettePage(98, "Acme.com", colors);
-		pdf_report.generateColorPsychologyDescriptionPage(colors);
+		//pdf_report.generateColorManagementColorPalettePage(98, "Acme.com", colors);
+		//pdf_report.generateColorPsychologyDescriptionPage(colors);
 		pdf_report.generateColorManagementTextColorContrastPage(69, "acme.com", "", 84, 8, 22);
 		pdf_report.generateTextColorContrastWhyItMattersPage();
 		

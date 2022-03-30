@@ -465,7 +465,7 @@ public class GeneratePDFReport {
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(180, 580);
-		content_stream.showText("Visuals");
+		content_stream.showText("Branding");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);

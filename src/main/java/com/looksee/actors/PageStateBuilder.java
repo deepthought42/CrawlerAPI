@@ -17,10 +17,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.PageState;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
 import com.looksee.models.message.ElementProgressMessage;
+import com.looksee.models.message.ElementsSaveError;
+import com.looksee.models.message.ElementsSaved;
+import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
@@ -47,8 +53,11 @@ public class PageStateBuilder extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(PageStateBuilder.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
+	private Map<String, Long> total_dispatches;
+	private Map<String, Long> total_dispatch_responses;
+	
 	private Map<String, Integer> total_xpaths;
-	private Map<String, Integer> total_dispatches;
+	//private Map<String, Integer> total_dispatches;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -121,7 +130,7 @@ public class PageStateBuilder extends AbstractActor{
 
 						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
-						this.total_dispatches.put(page_state.getUrl(), 0);
+						this.total_dispatches.put(page_state.getUrl(), 0L);
 						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
 						
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
@@ -176,9 +185,154 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
-					message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
-					message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
-					getContext().parent().forward(message, getContext());
+					//message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
+					//message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
+					
+					log.warn("sending elements to be saved");
+					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
+					data_extraction_supervisor.tell(message, getSelf());
+					//getContext().parent().forward(message, getContext());
+				})
+				.match(ElementExtractionError.class, message -> {
+					log.warn("error extracting elements");
+					long response_count = 0L; 
+					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
+						response_count = this.total_dispatch_responses.get(message.getPageUrl());
+					}
+					this.total_dispatch_responses.put(message.getPageUrl(), ++response_count);
+					
+					log.warn("an error occurred during element extraction   "+message.getPageUrl());
+					try {
+						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
+						//       system is done extracting element data and the page is ready for auditing
+						
+						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						if(response_count == this.total_dispatches.get(message.getPageUrl())) {
+							audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
+							audit_record.setDataExtractionMsg("Done!");
+							audit_record.setDataExtractionProgress(1.0);
+							audit_record.setAestheticAuditProgress(1/100.0);
+							audit_record.setAestheticMsg("Starting visual design audit");
+	
+							audit_record.setContentAuditProgress(1/100.0);
+							audit_record.setContentAuditMsg("Starting content audit");
+	
+							audit_record.setInfoArchitectureAuditProgress(1/100.0);
+							audit_record.setInfoArchMsg("Starting Information Architecture audit");
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()) );
+							audit_record = (PageAuditRecord) audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
+						
+							/*
+						   	log.warn("requesting performance audit from performance auditor....");
+						   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+						   	performance_insight_actor.tell(page_state, getSelf());
+						   	*/
+							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
+																				audit_record.getId(), 
+																				message.getDomainId(), 
+																				message.getAccountId(), 
+																				message.getAuditRecordId());
+							
+							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+
+							content_auditor.tell(audit_record_msg, getSelf());							
+
+							ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
+							info_architecture_auditor.tell(audit_record_msg, getSelf());
+
+							ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+										.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
+							aesthetic_auditor.tell(audit_record_msg, getSelf());
+						}
+						else {
+							audit_record.setDataExtractionMsg("Error Extracting elements in batch "+this.total_dispatch_responses.get(message.getPageUrl()) + " / "+this.total_dispatches.get(message.getPageUrl()));
+							audit_record.setDataExtractionProgress(this.total_dispatch_responses.get(message.getPageUrl())/ (double)this.total_dispatches.get(message.getPageUrl()));
+							audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
+						}
+					}catch(Exception e) {
+						log.error("Exception occurred while page state builder processed ElementProgressMessage!!");
+						e.printStackTrace();
+					}
+				})
+				.match(ElementsSaved.class, message -> {
+					//log.warn("Elements saved successfully");
+					long response_count = 0L; 
+					if(this.total_dispatch_responses.containsKey(message.getPageUrl())) {
+						response_count = this.total_dispatch_responses.get(message.getPageUrl());
+					}
+					this.total_dispatch_responses.put(message.getPageUrl(), ++response_count);
+
+					page_state_service.addAllElements(message.getPageStateId(), message.getElements());
+
+					try {
+						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
+						//       system is done extracting element data and the page is ready for auditing
+						
+						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						if(response_count == this.total_dispatches.get(message.getPageUrl())) {
+							audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
+
+							audit_record.setDataExtractionMsg("Done!");
+							audit_record.setDataExtractionProgress(1.0);
+							audit_record.setAestheticAuditProgress(1/100.0);
+							audit_record.setAestheticMsg("Starting visual design audit");
+	
+							audit_record.setContentAuditProgress(1/100.0);
+							audit_record.setContentAuditMsg("Starting content audit");
+	
+							audit_record.setInfoArchitectureAuditProgress(1/100.0);
+							audit_record.setInfoArchMsg("Starting Information Architecture audit");
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()) );
+							audit_record = (PageAuditRecord) audit_record_service.save(audit_record, 
+																						message.getAccountId(), 
+																						message.getDomainId());
+						
+							//send page audit record to design system extractor
+							/*
+							if(message.getDomainId() >= 0) {
+								ActorRef design_system_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							   			.props("designSystemExtractor"), "designSystemExtractor"+UUID.randomUUID());
+								log.warn("sending message to design system extractor ....");
+								PageAuditRecordMessage page_audit_msg = new PageAuditRecordMessage( audit_record.getId(), 
+																									message.getDomainId(), 
+																									message.getAccountId(), 
+																									message.getAuditRecordId());
+								design_system_extractor.tell(page_audit_msg, getSelf());
+							}
+							*/
+							/*
+						   	log.warn("requesting performance audit from performance auditor....");
+						   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
+						   	performance_insight_actor.tell(page_state, getSelf());
+						   	*/
+							getContext().getParent().tell(message, getSelf());
+							
+						}
+						else {
+							audit_record.setDataExtractionMsg("Elements saved successfully - batch "+this.total_dispatch_responses.get(message.getPageUrl()) + " / "+this.total_dispatches.get(message.getPageUrl()));
+							audit_record.setDataExtractionProgress(this.total_dispatch_responses.get(message.getPageUrl())/ (double)this.total_dispatches.get(message.getPageUrl()));
+							audit_record.setElementsReviewed(this.total_dispatch_responses.get(message.getPageUrl()));
+							audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
+						}
+					}catch(Exception e) {
+						log.error("Exception occurred while page state builder processed ElementProgressMessage!!");
+						e.printStackTrace();
+					}
+				})
+				.match(ElementsSaveError.class, message -> {
+					log.warn("error saving elements");
+					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+					audit_record.setDataExtractionMsg("Error Saving elements "+this.total_dispatch_responses.get(message.getPageUrl()) + " / "+this.total_dispatches.get(message.getPageUrl()));
+					
+					double responses = (double)this.total_dispatch_responses.get(message.getPageUrl());
+					double dispatches = (double)this.total_dispatches.get(message.getPageUrl());
+					audit_record.setDataExtractionProgress( responses / dispatches);
+					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(AuditProgressUpdate.class, message -> {
 					getContext().parent().forward(message, getContext());

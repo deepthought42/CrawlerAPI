@@ -152,9 +152,6 @@ public class PathCrawlerActor extends AbstractActor{
 						break;
 					}
 				})
-				.match(StepMessage.class, mUp -> {
-					log.info("Member is Up: {}", mUp.member());
-				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
 				})

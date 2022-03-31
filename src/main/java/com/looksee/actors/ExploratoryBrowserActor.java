@@ -104,7 +104,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 						Domain domain = domain_service.findById(message.getDomainId()).get();
 						try {
-							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), domain, browser_name, message);
+							result_page = crawler.performPathExploratoryCrawl(message.getAccountId(), 
+																			  domain, 
+																			  browser_name, 
+																			  message);
 						} catch(DiscoveryStoppedException e) {
 							return;
 						}
@@ -136,7 +139,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 						else {
 							PageState page = browser_service.buildPageState(new URL(BrowserUtils.sanitizeUrl(result_page.getUrl(), result_page.isSecure())));
-							domain_service.addPage(message.getDomainId(), page.getKey());
+							domain_service.addPage(message.getDomainId(), page.getId());
 
 							long start_time = System.currentTimeMillis();
 							List<ElementState> elements = new ArrayList<>(); //browser_service.extractElementStates(message, BrowserType.create(browser_name));

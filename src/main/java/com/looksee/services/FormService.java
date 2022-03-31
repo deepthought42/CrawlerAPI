@@ -37,8 +37,8 @@ public class FormService {
 		return form_repo.getPageState(user_id, url, form.getKey());
 	}
 	
-	public Form findByKey(String user_id, String url, String key){
-		return form_repo.findByKeyForUserAndDomain(user_id, url, key);
+	public Form findByKey(long account_id, String url, String key){
+		return form_repo.findByKeyForUserAndDomain(account_id, url, key);
 	}
 
 	public Form save(Form form) {

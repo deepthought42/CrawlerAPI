@@ -1,9 +1,11 @@
 package com.looksee.models;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.codec.binary.Hex;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
@@ -300,6 +305,33 @@ public class PageState extends LookseeObject {
 		} catch(MalformedURLException e){}
 		
 		return url;
+	}
+	
+	/**
+	 * 
+	 * @param buff_img
+	 * @return
+	 * @throws IOException
+	 */
+	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
+		assert buff_img != null;
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
+		} catch (NoSuchAlgorithmException e) {
+			log.error("Error generating checksum of buffered image");
+		}
+		return "";
+
 	}
 	
 	/**

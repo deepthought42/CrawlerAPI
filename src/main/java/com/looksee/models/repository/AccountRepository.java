@@ -42,11 +42,8 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	public int getTestCountByMonth(@Param("acct_key") String acct_key, 
 								   @Param("month") int month);
 
-	@Query("MATCH (account:Account{user_id:$user_id})-[edge]->() DELETE edge")
-	public void deleteAccountEdges(@Param("user_id") String user_id);
-	
-	@Query("MATCH (account:Account{user_id:$user_id}) DELETE account")
-	public void deleteAccount(@Param("user_id") String user_id);
+	@Query("MATCH (account:Account) WHERE id(account)=$account_id DETACH DELETE account")
+	public void deleteAccount(@Param("account_id") long account_id);
 
 	@Query("MATCH (account:Account{api_key:$api_key}) RETURN account")
 	public Account getAccountByApiKey(@Param("api_key") String api_key);

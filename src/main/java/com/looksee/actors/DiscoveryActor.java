@@ -288,8 +288,9 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(FormDiscoveredMessage.class, form_msg -> {
 					Form form = form_msg.getForm();
+					Account account = account_service.findById(form_msg.getAccountId()).get();
 					try {
-						SegmentAnalyticsHelper.formDiscovered(form_msg.getUserId(), form.getKey());
+						SegmentAnalyticsHelper.formDiscovered(account.getUserId(), form.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -298,7 +299,7 @@ public class DiscoveryActor extends AbstractActor{
 					    form = form_service.save(form);
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendFormSaveError(form_msg.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendFormSaveError(account.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}
@@ -313,7 +314,7 @@ public class DiscoveryActor extends AbstractActor{
 						page_state_service.save(page_state_record);					    
 					}catch(Exception e) {
 						try {
-							SegmentAnalyticsHelper.sendPageStateError(form_msg.getUserId(), e.getMessage());
+							SegmentAnalyticsHelper.sendPageStateError(account.getUserId(), e.getMessage());
 						} catch (Exception se) {
 							se.printStackTrace();
 						}

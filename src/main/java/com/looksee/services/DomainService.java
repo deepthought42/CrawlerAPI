@@ -61,8 +61,8 @@ public class DomainService {
 		return domain_repo.save(domain);	
 	}
 	
-	public int getTestCount(String user_id, String url) {
-		return domain_repo.getTestCount(user_id, url);
+	public int getTestCount(long account_id, String url) {
+		return domain_repo.getTestCount(account_id, url);
 	}
 
 	public Optional<Domain> findById(long domain_id) {
@@ -81,16 +81,16 @@ public class DomainService {
 		return domain_repo.getForms(account_id, url);
 	}
 	
-	public int getFormCount(String user_id, String url) {
-		return domain_repo.getFormCount(user_id, url);
+	public int getFormCount(long account_id, String url) {
+		return domain_repo.getFormCount(account_id, url);
 	}
 
 	public Set<Element> getElementStates(String url, String username) {
 		return domain_repo.getElementStates(url, username);
 	}
 
-	public Set<Action> getActions(String user_id, String url) {
-		return domain_repo.getActions(user_id, url);
+	public Set<Action> getActions(long account_id, String url) {
+		return domain_repo.getActions(account_id, url);
 	}
 
 	public Set<PageState> getPageStates(long domain_id) {
@@ -101,16 +101,16 @@ public class DomainService {
 		return domain_repo.findByKey(key, username);
 	}
 
-	public Set<Test> getTests(String user_id, String url) {
-		return domain_repo.getTests(user_id, url);
+	public Set<Test> getTests(long account_id, String url) {
+		return domain_repo.getTests(account_id, url);
 	}
 	
-	public Set<TestRecord> getTestRecords(String user_id, String url) {
-		return domain_repo.getTestRecords(user_id, url);
+	public Set<TestRecord> getTestRecords(long account_id, String url) {
+		return domain_repo.getTestRecords(account_id, url);
 	}
 
-	public Set<PageLoadAnimation> getAnimations(String user_id, String url) {
-		return domain_repo.getAnimations(user_id, url);
+	public Set<PageLoadAnimation> getAnimations(long account_id, String url) {
+		return domain_repo.getAnimations(account_id, url);
 	}
 
 	/**
@@ -126,16 +126,14 @@ public class DomainService {
 	 * @pre !page_version_key.isEmpty()
 	 * 
 	 */
-	public boolean addPage(long domain_id, String page_version_key) {
-		assert page_version_key != null;
-		assert !page_version_key.isEmpty();
+	public boolean addPage(long domain_id, long page_id) {
 		//check if page already exists. If it does then return true;
-		Optional<PageState> page = domain_repo.getPage(domain_id, page_version_key);
+		Optional<PageState> page = domain_repo.getPage(domain_id, page_id);
 		if(page.isPresent()) {
 			return true;
 		}
 		
-		return domain_repo.addPage(domain_id, page_version_key) != null;
+		return domain_repo.addPage(domain_id, page_id) != null;
 	}
 
 	@Deprecated

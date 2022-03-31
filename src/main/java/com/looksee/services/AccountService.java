@@ -53,9 +53,8 @@ public class AccountService {
 		return account_repo.findByUserId(id);
 	}
 
-	public void deleteAccount(String userId) {
-        account_repo.deleteAccountEdges(userId);
-        account_repo.deleteAccount(userId);
+	public void deleteAccount(long account_id) {
+        account_repo.deleteAccount(account_id);
 	}
 	
 	public void removeDomain(long account_id, long domain_id) {

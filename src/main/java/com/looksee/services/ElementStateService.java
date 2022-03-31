@@ -109,12 +109,12 @@ public class ElementStateService {
 		}
 	}
 
-	public ElementState findByOuterHtml(String user_id, String snippet) {
-		return element_repo.findByOuterHtml(user_id, snippet);
+	public ElementState findByOuterHtml(long account_id, String snippet) {
+		return element_repo.findByOuterHtml(account_id, snippet);
 	}
 
-	public void clearBugMessages(String user_id, String form_key) {
-		element_repo.clearBugMessages(user_id, form_key);
+	public void clearBugMessages(long account_id, String form_key) {
+		element_repo.clearBugMessages(account_id, form_key);
 	}
 
 	public List<ElementState> getChildElementsForUser(String user_id, String element_key) {

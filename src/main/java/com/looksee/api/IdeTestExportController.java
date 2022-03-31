@@ -110,7 +110,7 @@ public class IdeTestExportController {
 		if(test_json.has("key")){
 			String test_key = test_json.getString("key");
 			
-			Test test = test_repo.findByKey(test_key, formatted_url, acct.getEmail());
+			Test test = test_repo.findByKey(test_key, formatted_url, acct.getId());
 			if(test != null){
 				test.setArchived(true);
 				test_repo.save(test);

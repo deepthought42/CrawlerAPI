@@ -6,20 +6,23 @@ import com.looksee.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
 
-public class UrlMessage {
+public class UrlMessage extends Message{
 	private URL url;
 	private ActorRef discovery_actor;
 	private ActorRef domain_actor;
 	private BrowserType browser;
-	private long domain;
-	private long account;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, long domain, long account_id){
+	public UrlMessage(ActorRef discovery_actor, 
+					  URL url, 
+					  BrowserType browser, 
+					  ActorRef domain_actor, 
+					  long domain_id, 
+					  long account_id){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
-		setDomain(domain);
+		setDomainId(domain_id);
 		setAccountId(account_id);
 	}
 
@@ -53,21 +56,5 @@ public class UrlMessage {
 
 	public void setDomainActor(ActorRef domain_actor) {
 		this.domain_actor = domain_actor;
-	}
-
-	public long getDomain() {
-		return domain;
-	}
-
-	public void setDomain(long domain) {
-		this.domain = domain;
-	}
-
-	public long getAccountId() {
-		return account;
-	}
-
-	public void setAccountId(long account) {
-		this.account = account;
 	}
 }

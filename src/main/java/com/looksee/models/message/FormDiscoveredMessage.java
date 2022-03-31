@@ -14,19 +14,12 @@ public class FormDiscoveredMessage extends Message {
 	private PageState page;
 	private ActorRef domain_actor;
 	private ActorRef discovery_actor;
-	private String user_id;
+
 	
-	@Deprecated
-	public FormDiscoveredMessage(Form form, PageState page, String user_id) {
+	public FormDiscoveredMessage(Form form, PageState page, long account_id, long domain_id) {
 		setForm(form);
 		setPage(page);
-		setUserId(user_id);
-	}
-	
-	public FormDiscoveredMessage(Form form, PageState page, long account_id, long domain) {
-		setForm(form);
-		setPage(page);
-		setDomainId(domain);
+		setDomainId(domain_id);
 		setAccountId(account_id);
 	}
 
@@ -60,13 +53,5 @@ public class FormDiscoveredMessage extends Message {
 
 	public void setPage(PageState page) {
 		this.page = page;
-	}
-
-	public String getUserId() {
-		return user_id;
-	}
-
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
 	}
 }

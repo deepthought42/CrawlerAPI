@@ -1,0 +1,219 @@
+package com.looksee.actors;
+
+import static com.looksee.config.SpringExtension.SpringExtProvider;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.openqa.selenium.Point;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.UnreachableMember;
+
+import com.looksee.browsing.Browser;
+import com.looksee.models.Test;
+
+import com.looksee.models.enums.BrowserEnvironment;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.PathStatus;
+import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.TestMessage;
+import com.looksee.models.message.UrlMessage;
+import com.looksee.helpers.BrowserConnectionHelper;
+import com.looksee.models.Domain;
+import com.looksee.models.Page;
+import com.looksee.models.PageLoadAnimation;
+import com.looksee.models.PageState;
+import com.looksee.models.LookseeObject;
+import com.looksee.models.Redirect;
+import com.looksee.services.BrowserService;
+import com.looksee.services.DomainService;
+import com.looksee.services.PageService;
+import com.looksee.services.PageStateService;
+import com.looksee.services.TestCreatorService;
+import com.looksee.utils.BrowserUtils;
+
+/**
+ * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
+ *
+ */
+@Component
+@Scope("prototype")
+public class UrlBrowserActor extends AbstractActor {
+	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
+	private Cluster cluster = Cluster.get(getContext().getSystem());
+
+	@Autowired
+	private ActorSystem actor_system;
+
+	@Autowired
+	private TestCreatorService test_creator_service;
+	
+	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
+	private PageService page_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private DomainService domain_service;
+
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 */
+	@Override
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(UrlMessage.class, message -> {
+					/*
+					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
+					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					
+					if(discovery_action == DiscoveryAction.STOP) {
+						log.warn("path message discovery actor returning");
+						return;
+					}
+					*/
+					
+					String url = message.getUrl().toString();
+					String host = message.getUrl().getHost();
+					Domain domain = domain_service.findById(message.getDomainId()).get();
+					String browser_name = BrowserType.CHROME.toString();
+					Redirect redirect = null;
+					PageLoadAnimation animation = null;
+					BrowserType browser_type = BrowserType.create(browser_name);
+					List<String> path_keys = null;
+					List<LookseeObject> path_objects = null;
+					PageState page_state = null;
+					
+					do{
+						path_keys = new ArrayList<>();
+						path_objects = new ArrayList<>();
+						Browser browser = null;
+						log.warn("Trying to retrieve new browser connection");
+						try{
+							browser = BrowserConnectionHelper.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
+							log.warn("navigating to url :: "+url);
+							browser.navigateTo(url);
+								
+							redirect = BrowserUtils.getPageTransition(url, browser, host);
+							log.warn("redirect detected as :: " + redirect.getKey());
+							log.warn("redirect urls :: "+redirect.getUrls().size());
+							log.warn("redirect start url     ::  "+redirect.getStartUrl());
+						  	
+						  	if(redirect != null && ((redirect.getUrls().size() > 0 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
+								log.warn("redirect added to path objects list");
+						  		path_keys.add(redirect.getKey());
+								path_objects.add(redirect);
+							}
+
+						  	animation = BrowserUtils.getLoadingAnimation(browser, host);
+							if(animation != null){
+								path_keys.add(animation.getKey());
+								path_objects.add(animation);
+							}
+							browser.moveMouseToNonInteractive(new Point(300, 300));
+							
+							//build page
+							Page page = browser_service.buildPage(browser.getSource(), url, "");
+							page = page_service.save(page);
+							domain_service.addPage(message.getDomainId(), page.getId());
+							
+							//log.warn("parent only list size :: " + all_elements_list.size());
+							log.warn("building page state...");
+							page_state = browser_service.performBuildPageProcess(message.getUrl(), browser);
+							
+							long start_time = System.currentTimeMillis();
+						  	//List<ElementState> elements = browser_service.extractElementStatesWithUserAndDomain(page_state.getSrc(), message.getAccountId(), message.getDomain());
+						  	long end_time = System.currentTimeMillis();
+							log.warn("element state time to get all elements ::  "+(end_time-start_time));
+							//page_state.addElements(elements);
+							page_state = page_state_service.save(page_state);
+							//log.warn("DOM elements found :: "+elements.size());
+							page_service.addPageState(page.getKey(), page_state.getId());
+							log.warn("page state elements :: " + page_state.getElements().size());
+							break;
+						}
+						catch(Exception e){
+							log.warn("URL BROWSER ACTOR EXCEPTION :: "+e.getMessage());
+							e.printStackTrace();
+						}
+						finally {
+							if(browser != null){
+								browser.close();
+							}
+						}
+					}while(page_state == null);
+					
+					path_keys.add(page_state.getKey());
+					path_objects.add(page_state);
+
+					log.warn("creating landing page test");
+					Test test = test_creator_service.createLandingPageTest(path_keys, path_objects, page_state, browser_name, domain, message.getAccountId());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomainId(), message.getAccountId());
+					message.getDiscoveryActor().tell(test_message, getSelf());
+					
+					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
+
+					PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomainId(), message.getAccountId());
+					
+					//send message to animation detection actor
+					animation_actor.tell(path_message, getSelf() );
+					
+					ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("performanceInsightActor"), "performanceInsightActor"+UUID.randomUUID());
+					
+					performance_insight_actor.tell( message, getSelf() );
+					
+					ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
+					form_discoverer.tell(path_message, getSelf());
+				})
+				.match(MemberUp.class, mUp -> {
+					log.info("Member is Up: {}", mUp.member());
+				})
+				.match(UnreachableMember.class, mUnreachable -> {
+					log.info("Member detected as unreachable: {}", mUnreachable.member());
+				})
+				.match(MemberRemoved.class, mRemoved -> {
+					log.info("Member is Removed: {}", mRemoved.member());
+				})
+				.matchAny(o -> {
+					log.info("received unknown message");
+				})
+				.build();
+	}
+	
+}

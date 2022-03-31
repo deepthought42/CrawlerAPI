@@ -12,7 +12,13 @@ public class TestMessage extends Message{
 	private ActorRef domain_actor;
 	private BrowserType browser;
 	
-	public TestMessage(Test test, ActorRef discovery_actor, BrowserType browser, ActorRef domain_actor, long domain_id, long account_id){
+	public TestMessage(Test test, 
+					   ActorRef discovery_actor, 
+					   BrowserType browser, 
+					   ActorRef domain_actor, 
+					   long domain_id, 
+					   long account_id
+    ){
 		setTest(test);
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);

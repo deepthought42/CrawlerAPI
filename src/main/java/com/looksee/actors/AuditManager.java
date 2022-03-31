@@ -145,6 +145,8 @@ public class AuditManager extends AbstractActor{
 						this.is_domain_audit = false;
 						log.warn("starting single page audit for  :: "+message.getUrl());
 						PageAuditRecord page_audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						
+						/*
 						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, 
 																							 message.getAccountId(), 
 																							 page_audit_record, 
@@ -154,7 +156,7 @@ public class AuditManager extends AbstractActor{
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_state_builder.tell(crawl_action_msg, getSelf());
-						
+						*/
 						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(DiscoveryAction.START, 
 																						  message.getDomainId(),
 																						  message.getAccountId(), 

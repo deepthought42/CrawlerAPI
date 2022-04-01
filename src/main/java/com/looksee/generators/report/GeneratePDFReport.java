@@ -119,8 +119,8 @@ public class GeneratePDFReport {
 		colors.add("35, 216, 164");
 		*/
 		
-		this.generateColorManagementColorPalettePage(color_palette_score, domain_host, palette_colors);
-		this.generateColorPsychologyDescriptionPage(palette_colors);
+		//this.generateColorManagementColorPalettePage(color_palette_score, domain_host, palette_colors);
+		//this.generateColorPsychologyDescriptionPage(palette_colors);
 		this.generateColorManagementTextColorContrastPage(text_contrast_score, 
 														  domain_host, 
 														  "", 

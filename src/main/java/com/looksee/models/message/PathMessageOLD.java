@@ -9,7 +9,7 @@ import com.looksee.models.enums.PathStatus;
 
 import akka.actor.ActorRef;
 
-public class PathMessage extends Message {
+public class PathMessageOLD extends Message {
 
 	private List<String> keys;
 	private List<LookseeObject> path_objects;
@@ -18,7 +18,7 @@ public class PathMessage extends Message {
 	private PathStatus status;
 	private BrowserType browser;
 	
-	public PathMessage(List<String> keys, 
+	public PathMessageOLD(List<String> keys, 
 					   List<LookseeObject> path_objects, 
 					   ActorRef discovery_actor, 
 					   PathStatus status, 
@@ -52,8 +52,8 @@ public class PathMessage extends Message {
 		this.path_objects = path_objects;
 	}
 	
-	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomainId(), getAccountId());
+	public PathMessageOLD clone(){
+		return new PathMessageOLD(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor(), getDomainId(), getAccountId());
 	}
 
 	public ActorRef getDiscoveryActor() {

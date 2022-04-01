@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.api.exception.PagesAreNotMatchingException;
 import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Animation;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
@@ -130,8 +130,8 @@ public class TestService {
 				}
 				else if(path_obj instanceof Element){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
-				else if(path_obj instanceof Action){
-					path_objects.add(action_service.save((Action)path_obj));
+				else if(path_obj instanceof ActionOLD){
+					path_objects.add(action_service.save((ActionOLD)path_obj));
 				}
 				else if(path_obj instanceof Redirect){
 					path_objects.add(redirect_service.save((Redirect)path_obj));

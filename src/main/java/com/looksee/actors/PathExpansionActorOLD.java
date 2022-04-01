@@ -1,7 +1,5 @@
 package com.looksee.actors;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,9 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +14,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -33,15 +26,13 @@ import com.looksee.models.ActionOLD;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.ExploratoryPath;
+import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.Test;
-import com.looksee.models.enums.Action;
-import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.journeys.Step;
-import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PathMessageOLD;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.PathUtils;
 
@@ -51,17 +42,12 @@ import com.looksee.utils.PathUtils;
  */
 @Component
 @Scope("prototype")
-public class PathExpansionActor extends AbstractActor {
-	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
+public class PathExpansionActorOLD extends AbstractActor {
+	private static Logger log = LoggerFactory.getLogger(PathExpansionActorOLD.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	private ActorSystem actor_system;
-	
-	@Autowired
 	private PageStateService page_state_service;
-	
-	private Map<String, List<ElementState>> explored_elements = new HashMap<>();
 	
 	//subscribe to cluster changes
 	@Override
@@ -82,40 +68,24 @@ public class PathExpansionActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-			.match(JourneyMessage.class, message -> {
-				//Retrieve last PageState in path
-				PageState last_page = PathUtils.getLastPageState(message.getSteps());
-				//retrieve all ElementStates from journey
-				List<ElementState> elements = last_page.getElements();
+			.match(PathMessageOLD.class, message -> {
+				log.warn("STARTING PATH EXPANSION....  "+message.getPathObjects().size());
 				
-				//Filter out non interactive elements
-				//Filter out elements that are in explored map for PageState with key
-				//Filter out form elements
-				List<ElementState> filtered_elements = elements.parallelStream()
-																.filter(element -> isListElement(element))
-																.filter(element -> isInteractiveElement(element))
-																.filter(element -> !isElementExplored(last_page, element))
-																.filter(element -> !isFormElement(element))
-																.collect(Collectors.toList());
-				
-				//send form elements to form journey actor
-				//Add interactive elements to explored map for PageState key
-				addElementsToExploredMap(last_page, filtered_elements);
-				//Build Steps for all elements in list
-				List<Step> new_steps = generateSteps(last_page, filtered_elements);
-				
-				//generate new journeys with new steps and send to journey executor to be evaluated
-				for(Step step: new_steps) {
-					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
-					cloned_steps.add(step);
-					JourneyMessage journey_msg = new JourneyMessage(cloned_steps, PathStatus.EXPANDED, BrowserType.CHROME, message.getDomainId(), message.getAccountId());
-					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
-															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
-					journey_executor.tell(journey_msg, getSelf());
+				//get sublist of path from beginning to page state index
+				List<ExploratoryPath> exploratory_paths = expandPath(message);
+				log.warn("total path expansions found :: "+exploratory_paths.size());
+
+				for(ExploratoryPath expanded : exploratory_paths){
+					PathMessageOLD path = new PathMessageOLD(expanded.getPathKeys(), 
+													   expanded.getPathObjects(), 
+													   message.getDiscoveryActor(), 
+													   PathStatus.EXPANDED, 
+													   message.getBrowser(), 
+													   message.getDomainActor(), 
+													   message.getDomainId(), 
+													   message.getAccountId());
+					message.getDiscoveryActor().tell(path, getSelf());
 				}
-			})
-			.match(ConfirmedJourneyMessage.class, message -> {
-				getContext().getParent().tell(message, getSelf());
 			})
 			.match(MemberUp.class, mUp -> {
 				log.info("Member is Up: {}", mUp.member());
@@ -130,31 +100,6 @@ public class PathExpansionActor extends AbstractActor {
 				log.info("received unknown message :: "+o);
 			})
 			.build();
-	}
-
-	/**
-	 * Generate {@link List} of {@link Step steps}
-	 * 
-	 * @param last_page
-	 * @param elements
-	 * @return
-	 */
-	private List<Step> generateSteps(PageState last_page, List<ElementState> elements) {
-		List<Step> steps = new ArrayList<>();
-		for(ElementState element: elements) {
-			Step step = new Step(last_page, element, Action.CLICK, "", null);
-			steps.add(step);
-		}
-		return steps;
-	}
-
-	private void addElementsToExploredMap(PageState last_page, List<ElementState> filtered_elements) {
-		if(explored_elements.containsKey(last_page.getKey())) {
-			explored_elements.get(last_page.getKey()).addAll(filtered_elements);
-		}
-		else {
-			explored_elements.put(last_page.getKey(), filtered_elements);
-		}
 	}
 
 	/**
@@ -175,14 +120,13 @@ public class PathExpansionActor extends AbstractActor {
 	 * 
 	 * @pre path != null
 	 */
-	@Deprecated
-	public ArrayList<ExploratoryPath> expandPath(JourneyMessage path)  {
+	public ArrayList<ExploratoryPath> expandPath(PathMessageOLD path)  {
 		assert path != null;
 		
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		//get last page states for page
 	
-		Collection<ElementState> elements = getElementStatesForExpansion(path.getSteps());
+		Collection<ElementState> elements = getElementStatesForExpansion(path.getPathObjects());
 		log.warn("element states to be expanded :: "+elements.size());
 
 		//iterate over all elements
@@ -208,26 +152,29 @@ public class PathExpansionActor extends AbstractActor {
 
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
 			//page element is not an input or a form
-			JourneyMessage new_path = new JourneyMessage(new ArrayList<>(path.getSteps()), 
-														   PathStatus.EXPANDED, 
-														   path.getBrowser(), 
-														   path.getDomainId(), 
-														   path.getAccountId());
+			PathMessageOLD new_path = new PathMessageOLD(new ArrayList<>(path.getKeys()), 
+													   new ArrayList<>(path.getPathObjects()), 
+													   path.getDiscoveryActor(), 
+													   PathStatus.EXPANDED, 
+													   path.getBrowser(), 
+													   path.getDomainActor(), 
+													   path.getDomainId(), 
+													   path.getAccountId());
 
 			//new_path.getPathObjects().add(element);
 			//new_path.getKeys().add(element.getKey());
 
 			for(List<ActionOLD> action_list : ActionHelper.getActionLists()){
 				for(ActionOLD action : action_list){
-					//ArrayList<String> keys = new ArrayList<String>(new_path.);
-					ArrayList<Step> path_objects = new ArrayList<Step>(new_path.getSteps());
+					ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
+					ArrayList<LookseeObject> path_objects = new ArrayList<LookseeObject>(new_path.getPathObjects());
 
-					//keys.add(action.getKey());
-					//path_objects.add(action);
+					keys.add(action.getKey());
+					path_objects.add(action);
 
-					//ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
+					ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
 
-					//pathList.add(action_path);
+					pathList.add(action_path);
 				}
 			}
 		
@@ -246,14 +193,14 @@ public class PathExpansionActor extends AbstractActor {
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	private Collection<ElementState> getElementStatesForExpansion(List<Step> steps) {
-		assert(steps != null);
-		assert(!steps.isEmpty());
+	private Collection<ElementState> getElementStatesForExpansion(List<LookseeObject> path_objects) {
+		assert(path_objects != null);
+		assert(!path_objects.isEmpty());
 
-		log.warn("getting element states for expansion ....."+steps.size());
+		log.warn("getting element states for expansion ....."+path_objects.size());
 		//get last page
-		PageState last_page_state = PathUtils.getLastPageState(steps);
-		PageState second_to_last_page = PathUtils.getSecondToLastPageState(steps);
+		PageState last_page_state = PathUtils.getLastPageStateOLD(path_objects);
+		PageState second_to_last_page = PathUtils.getSecondToLastPageStateOLD(path_objects);
 
 		if(last_page_state == null){
 			log.warn("last page state is null. returning emtpy hash");
@@ -293,7 +240,6 @@ public class PathExpansionActor extends AbstractActor {
 		return filtered_list;
 	}
 
-	@Deprecated
 	private List<ElementState> filterListElements(
 		List<ElementState> elements
 	) {
@@ -306,40 +252,5 @@ public class PathExpansionActor extends AbstractActor {
 			}
 		}
 		return filtered_elements;
-	}
-	
-	private boolean isListElement(ElementState element) {
-		return element.getClassification().equals(ElementClassification.TEMPLATE) 
-				|| element.getClassification().equals(ElementClassification.SLIDER);
-	}
-	
-	/**
-	 * Checks if element is a link, a button element or class contains "btn or button"
-	 * @param element {@link ElementState}
-	 * 
-	 * @return true if element is a link or button element or if element class contains "btn or button"
-	 */
-	private boolean isInteractiveElement(ElementState element) {
-		return element.getName().contentEquals("a") 
-				|| element.getName().contentEquals("button")
-				|| (element.getAttributes().containsKey("class")
-					&& (element.getAttribute("class").contains("btn")
-						|| element.getAttribute("class").contains("button")))
-				|| (element.getAttributes().containsKey("type") 
-					&& (element.getAttribute("type").contains("button")
-						|| element.getAttribute("type").contains("checkbox")
-						|| element.getAttribute("type").contains("email")
-						|| element.getAttribute("type").contains("file")
-						|| element.getAttribute("type").contains("radio")
-						|| element.getAttribute("type").contains("tel")))
-				|| element.getAttributes().containsKey("onclick");
-	}
-	
-	private boolean isElementExplored(PageState page_state, ElementState element) {
-		return explored_elements.containsKey(page_state.getKey()) && explored_elements.get(page_state.getKey()).contains(element.getId());
-	}
-	
-	private boolean isFormElement(ElementState element) {
-		return element.getXpath().contains("form");
 	}
 }

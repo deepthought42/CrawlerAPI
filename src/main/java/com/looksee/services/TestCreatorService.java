@@ -115,7 +115,7 @@ public class TestCreatorService {
 		log.warn("Creating test........");
 		
 		log.warn("path objects ::  "+path_objects.size());
-		String last_page_state_url = PathUtils.getLastPageState(path_objects).getUrl();
+		String last_page_state_url = PathUtils.getLastPageStateOLD(path_objects).getUrl();
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_url).getHost()) || result_url.contains(new URL(last_page_state_url).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 

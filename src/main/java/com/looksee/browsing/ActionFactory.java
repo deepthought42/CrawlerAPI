@@ -2,6 +2,9 @@ package com.looksee.browsing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.looksee.models.enums.Action;
+
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -16,11 +19,6 @@ public class ActionFactory {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ActionFactory.class);
 
-	private static String[] actions = {"click",
-								"doubleClick",
-								"mouseover",
-								"scroll",
-								"sendKeys"};
 	private Actions builder;
 	
 	public ActionFactory(WebDriver driver){
@@ -33,18 +31,18 @@ public class ActionFactory {
 	 * @param elem
 	 * @param action
 	 */
-	public void execAction(WebElement elem, String input, String action) throws WebDriverException{
-		if("click".equals(action)){
+	public void execAction(WebElement elem, String input, Action action) throws WebDriverException{
+		if(Action.CLICK.equals(action)){
 			builder.click(elem);
 		}
-		else if("clickAndHold".equals(action)){
+		else if(Action.CLICK_AND_HOLD.equals(action)){
 			builder.clickAndHold(elem);
 		}
 		//Context click clicks select/options box
-		else if("contextClick".equals(action)){
+		else if(Action.CONTEXT_CLICK.equals(action)){
 			builder.contextClick(elem);
 		}
-		else if("doubleClick".equals(action)){
+		else if(Action.DOUBLE_CLICK.equals(action)){
 			builder.doubleClick(elem);
 		}
 		/*else if("dragAndDrop".equals(action)){
@@ -57,14 +55,14 @@ public class ActionFactory {
 			//builder.keyUp(theKey);
 		}
 		*/
-		else if("release".equals(action)){
+		else if(Action.RELEASE.equals(action)){
 			builder.release(elem);
 		}
-		else if("sendKeys".equals(action)){
+		else if(Action.SEND_KEYS.equals(action)){
 			//builder.sendKeys(elem, Keys.chord(Keys.CONTROL, Keys.ALT, Keys.DELETE));
 			builder.sendKeys(elem, input);
 		}
-		else if("mouseover".equals(action)){
+		else if(Action.MOUSE_OVER.equals(action)){
 			builder.moveToElement(elem);
 		}
 
@@ -113,13 +111,5 @@ public class ActionFactory {
 		}
 
 		builder.build().perform();
-	}
-	
-	/**
-	 * The list of actions possible
-	 * @return
-	 */
-	public static String[] getActions(){
-		return actions;
 	}
 }

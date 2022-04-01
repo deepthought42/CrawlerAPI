@@ -431,8 +431,8 @@ public class Test implements Persistable {
 					test_name += tag_name + " ";
 					element_action_cnt++;
 				}
-				else if(obj instanceof Action){
-					Action action = ((Action)obj);
+				else if(obj instanceof ActionOLD){
+					ActionOLD action = ((ActionOLD)obj);
 					test_name += action.getName() + " ";
 					if(action.getValue() != null ){
 						test_name += action.getValue() + " ";

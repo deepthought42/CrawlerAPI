@@ -5,9 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.enums.Action;
 
 /**
  * A set of Steps
@@ -23,15 +24,14 @@ public class ElementInteractionStep extends Step {
 	@Relationship(type = "HAS")
 	private ElementState element;
 	
-	@Relationship(type = "HAS")
-	private Action action;
+	private String action;
 	
 	@Relationship(type = "ENDS")
 	private PageState end_page;
 	
 	public ElementInteractionStep() {}
 	
-	public ElementInteractionStep(PageState start_page, ElementState element, Action action, PageState end_page) {
+	public ElementInteractionStep(PageState start_page, ElementState element, ActionOLD action, PageState end_page) {
 		assert start_page != null;
 		assert element != null;
 		assert action != null;
@@ -66,11 +66,11 @@ public class ElementInteractionStep extends Step {
 	}
 
 	public Action getAction() {
-		return action;
+		return Action.create(action);
 	}
 
 	public void setAction(Action action) {
-		this.action = action;
+		this.action = action.getShortName();
 	}
 
 	public PageState getEndPage() {

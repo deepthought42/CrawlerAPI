@@ -36,7 +36,8 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.message.DiscoveryActionMessage;
 import com.looksee.models.message.FormDiscoveredMessage;
 import com.looksee.models.message.FormDiscoveryMessage;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PathMessageOLD;
 import com.looksee.models.message.TestMessage;
 import com.looksee.models.message.UrlMessage;
 import com.looksee.services.AccountService;
@@ -143,11 +144,11 @@ public class DiscoveryActor extends AbstractActor{
 						stopDiscovery(message);
 					}
 				})
-				.match(PathMessage.class, message -> {
+				.match(PathMessageOLD.class, message -> {
 					discovery_record = getDiscoveryRecord();
 
 					if(message.getStatus().equals(PathStatus.READY)){
-						PathMessage path_message = message.clone();
+						PathMessageOLD path_message = message.clone();
 						log.warn("discovery record in discovery actor :: " + discovery_record);
 						
 						discovery_record = getDiscoveryRecord();
@@ -243,7 +244,7 @@ public class DiscoveryActor extends AbstractActor{
 						final_key_list = PathUtils.reducePathKeys(final_key_list);
 						final_object_list = PathUtils.reducePathObjects(final_object_list);
 						
-						PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomainId(), test_msg.getAccountId());
+						PathMessageOLD path = new PathMessageOLD(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomainId(), test_msg.getAccountId());
 						
 						if( !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							log.warn("explored pages contains element...."+(!explored_pages.containsKey(test.getResult().getUrl())));
@@ -253,7 +254,7 @@ public class DiscoveryActor extends AbstractActor{
 									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 								}
-								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomainId(), test_msg.getAccountId());
+								UrlMessage url_message = new UrlMessage(new URL(test.getResult().getUrl()), browser, test_msg.getDomainId(), test_msg.getAccountId());
 								url_browser_actor.tell( url_message, getSelf() );
 						    }
 						}
@@ -379,7 +380,7 @@ public class DiscoveryActor extends AbstractActor{
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
 		URL url = new URL(domain_service.findById(message.getDomainId()).get().getUrl());
-		UrlMessage url_message = new UrlMessage(getSelf(), url, message.getBrowser(), domain_actor, message.getDomainId(), message.getAccountId());
+		UrlMessage url_message = new UrlMessage( url, message.getBrowser(), message.getDomainId(), message.getAccountId());
 		
 		url_browser_actor.tell(url_message, getSelf() );
 	}

@@ -29,7 +29,7 @@ import com.looksee.models.Test;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.TestMessage;
 import com.looksee.models.message.UrlMessage;
 import com.looksee.helpers.BrowserConnectionHelper;
@@ -187,7 +187,7 @@ public class UrlBrowserActor extends AbstractActor {
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
-					PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomainId(), message.getAccountId());
+					JourneyMessage path_message = new JourneyMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomainId(), message.getAccountId());
 					
 					//send message to animation detection actor
 					animation_actor.tell(path_message, getSelf() );

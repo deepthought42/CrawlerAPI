@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.ElementState;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.StepRepository;
@@ -41,7 +41,7 @@ public class StepService {
 		return step_repo.getElementState(step_key);
 	}
 
-	public Action getAction(String step_key) {
+	public ActionOLD getAction(String step_key) {
 		return step_repo.getAction(step_key);
 	}
 }

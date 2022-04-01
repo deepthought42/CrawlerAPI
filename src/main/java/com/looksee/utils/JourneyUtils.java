@@ -9,9 +9,9 @@ public class JourneyUtils {
 
 	public static ElementState extractLastElement(Journey journey) {
 		
-		for(int idx = journey.getOrderedKeys().size()-1; idx >= 0; idx--) {
+		for(int idx = journey.getOrderedIds().size()-1; idx >= 0; idx--) {
 			
-			String step_key = journey.getOrderedKeys().get(idx);
+			String step_key = journey.getOrderedIds().get(idx);
 			
 			//get step from step set
 			for(Step step : journey.getSteps()) {

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 
 /**
  * Contains the Order of operations for actions. A lower value indicates that
@@ -15,7 +15,7 @@ public class ActionHelper {
 	public static HashMap<String, Integer> actionOrderOfOperationsMap 
 		= new HashMap<String, Integer>();
 	
-	private static List<List<Action>> action_lists = new ArrayList<List<Action>>();
+	private static List<List<ActionOLD>> action_lists = new ArrayList<List<ActionOLD>>();
 	
 	/*
 	 * ACTION POLICIES
@@ -37,13 +37,13 @@ public class ActionHelper {
 	 * -------------------------
 	 */
 	static {
-		List<Action> mouse_motion_actions = new ArrayList<Action>();
+		List<ActionOLD> mouse_motion_actions = new ArrayList<ActionOLD>();
 		//mouse_motion_actions.add(new Action("mouseover"));
 		//mouse_motion_actions.add(new Action("scroll","100"));
 		
-		List<Action> click_actions = new ArrayList<Action>();
+		List<ActionOLD> click_actions = new ArrayList<ActionOLD>();
 		//click_actions.add(new Action("clickAndHold"));
-		click_actions.add(new Action("click"));
+		click_actions.add(new ActionOLD("click"));
 		//click_actions.add(new Action("clickAt"));
 		//click_actions.add(new Action("clickAndWait"));
 		//click_actions.add(new Action("clickAtAndWait"));
@@ -62,7 +62,7 @@ public class ActionHelper {
 		return actionOrderOfOperationsMap.get(actionName);
 	}
 
-	public static List<List<Action>> getActionLists() {
+	public static List<List<ActionOLD>> getActionLists() {
 		return action_lists;
 	}
 }

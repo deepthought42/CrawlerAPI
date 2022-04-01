@@ -9,7 +9,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
@@ -56,7 +56,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Set<Element> getElementStates(@Param("url") String url, @Param("username") String username);
 	
 	@Query("MATCH(account:Account)-[]-(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) WHERE id(account)=$account_id RETURN a")
-	public Set<Action> getActions(@Param("account_id") long account_id, @Param("url") String url);
+	public Set<ActionOLD> getActions(@Param("account_id") long account_id, @Param("url") String url);
 
 	@Query("MATCH(account:Account)-[]-(d:Domain{host:$domain_host}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() OPTIONAL MATCH y=(t)-->(:Group) WHERE id(account)=$account_id RETURN a,b,y,c as d")
 	public Set<Test> getTests(@Param("account_id") long account_id, @Param("domain_host") String host);

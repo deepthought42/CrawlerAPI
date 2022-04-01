@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.message.PageCrawlActionMessage;
+import com.looksee.models.message.PageDataExtractionMessage;
+import com.looksee.models.message.PathMessage;
 import com.looksee.models.message.UrlMessage;
 
 import akka.actor.AbstractActor;
@@ -72,6 +74,32 @@ public class CrawlerActor extends AbstractActor{
 					else if(CrawlAction.STOP.equals(page_crawl_action_msg.getAction())) {
 						
 					}
+				})
+				.match(PageDataExtractionMessage.class, msg -> {
+					//Add page state to frontier
+					//Add page state to path
+					//send path to path expansion actor
+					
+					ActorRef path_expansion_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							  .props("pathExpansionActor"), "pathExpansionActor"+UUID.randomUUID());
+					path_expansion_actor.tell(msg, getSelf());
+				})
+				.match(PathMessage.class, msg -> {
+					if( /*final PageState URL is an outside domain || pageState is in visited list*/) {
+						getContext().getParent().tell(msg, getSelf());
+					}
+					
+					if( /* is NOT PageState in frontier list */) {
+						//add page state to frontier
+					}
+					
+					//Remove page state from frontier
+					//Add page state to visited list
+					
+					ActorRef path_expansion_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							  .props("pathExpansionActor"), "pathExpansionActor"+UUID.randomUUID());
+					path_expansion_actor.tell(msg, getSelf());
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

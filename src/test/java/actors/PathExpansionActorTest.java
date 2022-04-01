@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.looksee.actors.PathExpansionActor;
+import com.looksee.actors.PathExpansionActorOLD;
 
 public class PathExpansionActorTest {
 
@@ -14,7 +14,7 @@ public class PathExpansionActorTest {
 		String internal_link = "staging-app.qanairy.com/#steps";
 		String noninternal_link = "staging-app.qanairy.com/";
 		
-		assertTrue(PathExpansionActor.isInternalLink(internal_link));
-		assertFalse(PathExpansionActor.isInternalLink(noninternal_link));
+		assertTrue(PathExpansionActorOLD.isInternalLink(internal_link));
+		assertFalse(PathExpansionActorOLD.isInternalLink(noninternal_link));
 	}
 }

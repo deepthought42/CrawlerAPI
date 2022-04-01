@@ -33,9 +33,6 @@ import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.DiscoveryActionMessage;
-import com.looksee.models.message.ElementExtractionError;
-import com.looksee.models.message.ElementProgressMessage;
-import com.looksee.models.message.ElementsSaveError;
 import com.looksee.models.message.ElementsSaved;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageCandidateFound;
@@ -45,7 +42,6 @@ import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
-import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.services.SubscriptionService;
 import com.looksee.utils.AuditUtils;
@@ -80,9 +76,6 @@ public class AuditManager extends AbstractActor{
 	
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
@@ -142,25 +135,25 @@ public class AuditManager extends AbstractActor{
 						log.warn("starting single page audit for  :: "+message.getUrl());
 						PageAuditRecord page_audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
 						
-						/*
 						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, 
 																							 message.getAccountId(), 
 																							 page_audit_record, 
 																							 message.getUrl(), 
 																							 message.getDomainId());
 						
+						/*
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_state_builder.tell(crawl_action_msg, getSelf());
-						*/
 						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(DiscoveryAction.START, 
 																						  message.getDomainId(),
 																						  message.getAccountId(), 
 																						  BrowserType.CHROME);
+						 */
 
 						ActorRef discovery_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 																  .props("discoveryActor"), "discoveryActor"+UUID.randomUUID());
-						discovery_actor.tell(discovery_msg, getSelf());
+						discovery_actor.tell(crawl_action_msg, getSelf());
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);

@@ -22,7 +22,8 @@ import com.looksee.models.ElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PathMessageOLD;
 import com.looksee.models.message.TestCandidateMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
@@ -96,7 +97,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message-> {
+				.match(PathMessageOLD.class, message-> {
 					String browser_name = BrowserType.CHROME.toString();					
 					
 					if(message.getPathObjects() != null){
@@ -124,7 +125,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
 						log.warn("does result match path object in path   ??   "+is_result_matches_other_page_in_path);
 						if(is_result_matches_other_page_in_path ) {
-							PathMessage path = new PathMessage(message.getKeys(), 
+							PathMessageOLD path = new PathMessageOLD(message.getKeys(), 
 															   message.getPathObjects(), 
 															   message.getDiscoveryActor(), 
 															   PathStatus.EXAMINED, 

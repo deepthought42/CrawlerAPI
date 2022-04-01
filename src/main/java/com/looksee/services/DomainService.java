@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
@@ -89,7 +89,7 @@ public class DomainService {
 		return domain_repo.getElementStates(url, username);
 	}
 
-	public Set<Action> getActions(long account_id, String url) {
+	public Set<ActionOLD> getActions(long account_id, String url) {
 		return domain_repo.getActions(account_id, url);
 	}
 

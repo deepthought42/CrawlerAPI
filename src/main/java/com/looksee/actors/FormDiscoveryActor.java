@@ -18,7 +18,7 @@ import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.message.FormDiscoveredMessage;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.rules.Rule;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
@@ -75,7 +75,7 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {		
+				.match(JourneyMessage.class, message -> {		
 					log.warning("-------------------------------------------------------------------------------------------------");
 					log.info("Retrieving first url in path objects");
 					//get first url

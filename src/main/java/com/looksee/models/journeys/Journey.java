@@ -1,9 +1,7 @@
 package com.looksee.models.journeys;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,18 +12,18 @@ import com.looksee.models.LookseeObject;
  */
 public class Journey extends LookseeObject {
 
-	private Set<Step> steps;
-	private List<String> ordered_keys;
+	private List<Step> steps;
+	private List<Long> ordered_ids;
 	
 	public Journey() {
-		setSteps(new HashSet<>());
-		setOrderedKeys(new ArrayList<>());
+		setSteps(new ArrayList<>());
+		setOrderedIds(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
-	public Journey(Set<Step> steps, List<String> ordered_keys) {
+	public Journey(List<Step> steps, List<Long> ordered_keys) {
 		setSteps(steps);
-		setOrderedKeys(ordered_keys);
+		setOrderedIds(ordered_keys);
 		setKey(generateKey());
 	}
 	
@@ -34,7 +32,7 @@ public class Journey extends LookseeObject {
 	 */
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(ordered_keys, "|"));
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(ordered_ids, "|"));
 	}
 
 	/**
@@ -42,14 +40,14 @@ public class Journey extends LookseeObject {
 	 */
 	@Override
 	public Journey clone() {
-		return new Journey(new HashSet<>(getSteps()), new ArrayList<>(getOrderedKeys()));
+		return new Journey(new ArrayList<>(getSteps()), new ArrayList<>(getOrderedIds()));
 	}
 	
-	public Set<Step> getSteps() {
+	public List<Step> getSteps() {
 		return steps;
 	}
 
-	public void setSteps(Set<Step> steps) {
+	public void setSteps(List<Step> steps) {
 		this.steps = steps;
 	}
 
@@ -57,11 +55,11 @@ public class Journey extends LookseeObject {
 		return this.steps.add(step);
 	}
 	
-	public List<String> getOrderedKeys() {
-		return ordered_keys;
+	public List<Long> getOrderedIds() {
+		return ordered_ids;
 	}
 	
-	public void setOrderedKeys(List<String> ordered_keys) {
-		this.ordered_keys = ordered_keys;
+	public void setOrderedIds(List<Long> ordered_ids) {
+		this.ordered_ids = ordered_ids;
 	}
 }

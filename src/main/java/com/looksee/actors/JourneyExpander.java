@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
@@ -33,7 +33,6 @@ import com.looksee.models.journeys.Step;
 import com.looksee.models.journeys.StepExecutor;
 import com.looksee.services.ActionService;
 import com.looksee.services.BrowserService;
-import com.looksee.services.DomainService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.StepService;
@@ -54,6 +53,7 @@ import us.codecraft.xsoup.Xsoup;
  */
 @Component
 @Scope("prototype")
+@Deprecated
 public class JourneyExpander extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(JourneyExpander.class.getName());
 
@@ -168,7 +168,7 @@ public class JourneyExpander extends AbstractActor{
 								log.warn("journey result matches exploration result?   " + journey_result_page.equals(exploration_result_page));
 								//check if page state is same as original page state. If not then add new ElementInteractionStep 
 								if(!journey_result_page.equals(exploration_result_page)) {
-									Action action = new Action("mouseover");
+									ActionOLD action = new ActionOLD("mouseover");
 									action = action_service.save(action);
 									exploration_result_page = page_state_service.save(exploration_result_page);
 									
@@ -182,7 +182,7 @@ public class JourneyExpander extends AbstractActor{
 									//clone journey and add this step at the end
 									Set<Step> steps = new HashSet<>(journey.getSteps());
 									steps.add(step);
-									List<String> ordered_keys = new ArrayList<>(journey.getOrderedKeys());
+									List<String> ordered_keys = new ArrayList<>(journey.getOrderedIds());
 									ordered_keys.add(step.getKey());
 									Journey new_journey = new Journey(steps, ordered_keys);
 									
@@ -343,7 +343,7 @@ public class JourneyExpander extends AbstractActor{
 		
 		List<Step> ordered_steps = new ArrayList<>();
 		//execute journey steps
-		for(String step_key : journey.getOrderedKeys()) {
+		for(String step_key : journey.getOrderedIds()) {
 			
 			for(Step step: journey.getSteps()) {
 				if(step.getKey().contentEquals(step_key)) {

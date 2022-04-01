@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 
 import com.looksee.api.exception.PagesAreNotMatchingException;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.ExploratoryPath;
@@ -38,7 +38,7 @@ import com.looksee.models.Redirect;
 import com.looksee.models.enums.AlertChoice;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.repository.ActionRepository;
 import com.looksee.services.BrowserService;
 import com.looksee.utils.BrowserUtils;
@@ -202,9 +202,9 @@ public class Crawler {
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
-			else if(current_obj instanceof Action){
-				Action action = (Action)current_obj;
-				Action action_record = action_repo.findByKey(action.getKey());
+			else if(current_obj instanceof ActionOLD){
+				ActionOLD action = (ActionOLD)current_obj;
+				ActionOLD action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
 					action_repo.save(action);
 				}
@@ -265,11 +265,11 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PathMessage crawlPathExplorer(List<String> keys, 
+	public JourneyMessage crawlPathExplorer(List<String> keys, 
 										 List<LookseeObject> path_object_list, 
 										 Browser browser, 
 										 String host_channel, 
-										 PathMessage path
+										 JourneyMessage path
 	) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
@@ -317,9 +317,9 @@ public class Crawler {
 				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
-			else if(current_obj instanceof Action){
-				Action action = (Action)current_obj;
-				Action action_record = action_repo.findByKey(action.getKey());
+			else if(current_obj instanceof ActionOLD){
+				ActionOLD action = (ActionOLD)current_obj;
+				ActionOLD action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
 					action_repo.save(action);
 				}
@@ -361,12 +361,10 @@ public class Crawler {
 		}
 		
 		if(path.getKeys().size() != path_keys.size()){
-			return new PathMessage(path_keys, 
+			return new JourneyMessage(path_keys, 
 								   path_objects_explored, 
-								   path.getDiscoveryActor(), 
 								   path.getStatus(), 
 								   path.getBrowser(), 
-								   path.getDomainActor(), 
 								   path.getDomainId(), 
 								   path.getAccountId());
 		}
@@ -380,7 +378,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, com.looksee.models.Element elem, WebDriver driver) throws NoSuchElementException{
+	public static void performAction(ActionOLD action, com.looksee.models.Element elem, WebDriver driver) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -393,7 +391,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, com.looksee.models.Element elem, WebDriver driver, Point location) throws NoSuchElementException{
+	public static void performAction(ActionOLD action, com.looksee.models.Element elem, WebDriver driver, Point location) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -429,12 +427,12 @@ public class Crawler {
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
 				//get last page state
-				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
+				PageState last_page_state = PathUtils.getLastPageStateOLD(path.getPathObjects());
 						
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));
 				
-				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
+				PageState last_page = PathUtils.getLastPageStateOLD(path.getPathObjects());
 				//result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(NullPointerException e){
@@ -478,11 +476,11 @@ public class Crawler {
 	 * @throws Exception 
 	 */
 	@Deprecated
-	public PageState performPathExploratoryCrawl(long account_id, Domain domain, String browser_name, PathMessage path) throws Exception {
+	public PageState performPathExploratoryCrawl(long account_id, Domain domain, String browser_name, JourneyMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-		PathMessage new_path = path.clone();
+		JourneyMessage new_path = path.clone();
 		boolean no_such_element_exception = false;
 		
 		do{
@@ -511,7 +509,7 @@ public class Crawler {
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
 				//get last page state
-				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
+				PageState last_page_state = PathUtils.getLastPageStateOLD(new_path.getPathObjects());
 								
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));

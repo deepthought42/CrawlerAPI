@@ -6,7 +6,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Element;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
@@ -25,7 +25,7 @@ public class TestTests {
 		Element element = new Element();
 		element.setName("a");
 		
-		Action action = new Action();
+		ActionOLD action = new ActionOLD();
 		action.setName("click");
 		
 		objects.add(element);
@@ -50,7 +50,7 @@ public class TestTests {
 		Element element = new Element();
 		element.setName("a");
 		
-		Action action = new Action();
+		ActionOLD action = new ActionOLD();
 		action.setName("click");
 		
 		objects.add(element);
@@ -76,7 +76,7 @@ public class TestTests {
 		element.addAttribute("id", "id-attr-1");
 		element.setName("a");
 		
-		Action action = new Action();
+		ActionOLD action = new ActionOLD();
 		action.setName("click");
 		
 		objects.add(element);

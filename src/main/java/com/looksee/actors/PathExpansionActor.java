@@ -85,16 +85,19 @@ public class PathExpansionActor extends AbstractActor {
 			.match(JourneyMessage.class, message -> {
 				//Retrieve last PageState in path
 				PageState last_page = PathUtils.getLastPageState(message.getSteps());
+				if(last_page == null) {
+					last_page = PathUtils.getSecondToLastPageState(message.getSteps());
+				}
 				//retrieve all ElementStates from journey
 				List<ElementState> elements = last_page.getElements();
-				
+				final String last_page_key = last_page.getKey();
 				//Filter out non interactive elements
 				//Filter out elements that are in explored map for PageState with key
 				//Filter out form elements
 				List<ElementState> filtered_elements = elements.parallelStream()
 																.filter(element -> isListElement(element))
 																.filter(element -> isInteractiveElement(element))
-																.filter(element -> !isElementExplored(last_page, element))
+																.filter(element -> !isElementExplored(last_page_key, element))
 																.filter(element -> !isFormElement(element))
 																.collect(Collectors.toList());
 				
@@ -335,8 +338,8 @@ public class PathExpansionActor extends AbstractActor {
 				|| element.getAttributes().containsKey("onclick");
 	}
 	
-	private boolean isElementExplored(PageState page_state, ElementState element) {
-		return explored_elements.containsKey(page_state.getKey()) && explored_elements.get(page_state.getKey()).contains(element.getId());
+	private boolean isElementExplored(String page_state_key, ElementState element) {
+		return explored_elements.containsKey(page_state_key) && explored_elements.get(page_state_key).contains(element.getId());
 	}
 	
 	private boolean isFormElement(ElementState element) {

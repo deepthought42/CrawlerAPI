@@ -35,6 +35,7 @@ import com.looksee.models.PageAlert;
 import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
 import com.looksee.models.Redirect;
+import com.looksee.models.enums.Action;
 import com.looksee.models.enums.AlertChoice;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
@@ -176,13 +177,6 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
 				
-				/*
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
-				}
-				*/
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -212,7 +206,7 @@ public class Crawler {
 					action = action_record;
 				}
 
-				performAction(action, last_element, browser.getDriver());
+				//performAction(action, last_element, browser.getDriver());
 
 				//check for page alert presence
 				Alert alert = browser.isAlertPresent();
@@ -265,6 +259,8 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
+	@Deprecated
+	/*
 	public JourneyMessage crawlPathExplorer(List<String> keys, 
 										 List<LookseeObject> path_object_list, 
 										 Browser browser, 
@@ -290,14 +286,6 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				
-				/**
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl(), user_id);
-				}
-				*/
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -360,9 +348,8 @@ public class Crawler {
 			current_idx++;
 		}
 		
-		if(path.getKeys().size() != path_keys.size()){
-			return new JourneyMessage(path_keys, 
-								   path_objects_explored, 
+		if(path.getSteps().size() != path_keys.size()){
+			return new JourneyMessage(path.getSteps(), 
 								   path.getStatus(), 
 								   path.getBrowser(), 
 								   path.getDomainId(), 
@@ -371,6 +358,7 @@ public class Crawler {
 		
 		return path;
 	}
+	*/
 	
 	/**
 	 * Executes the given {@link ElementAction element action} pair such that
@@ -378,10 +366,10 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(ActionOLD action, com.looksee.models.Element elem, WebDriver driver) throws NoSuchElementException{
+	public static void performAction(Action action, com.looksee.models.Element elem, WebDriver driver) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName());
+		actionFactory.execAction(element, "", action);
 		TimingUtils.pauseThread(1500L);
 	}
 
@@ -391,10 +379,10 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(ActionOLD action, com.looksee.models.Element elem, WebDriver driver, Point location) throws NoSuchElementException{
+	public static void performAction(Action action, com.looksee.models.Element elem, WebDriver driver, Point location) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName());
+		actionFactory.execAction(element, "", action);
 		TimingUtils.pauseThread(1500L);
 	}
 	
@@ -410,6 +398,7 @@ public class Crawler {
 	 * @param host
 	 * @return
 	 */
+	/*
 	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, ExploratoryPath path, String host) {
 		PageState result_page = null;
 		int tries = 0;
@@ -417,7 +406,7 @@ public class Crawler {
 		do{
 			try{
 				browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-				String url = PathUtils.getFirstUrl(path.getPathObjects());
+				String url = PathUtils.getFirstUrl(path.getSteps());
 				log.warn("expected path url : "+url);
 				browser.navigateTo(url);
 				browser.moveMouseToNonInteractive(new Point(300,300));
@@ -466,6 +455,7 @@ public class Crawler {
 		log.warn("done crawling exploratory path");
 		return result_page;
 	}
+	*/
 
 	/**
 	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
@@ -476,6 +466,7 @@ public class Crawler {
 	 * @throws Exception 
 	 */
 	@Deprecated
+	/*
 	public PageState performPathExploratoryCrawl(long account_id, Domain domain, String browser_name, JourneyMessage path) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
@@ -484,27 +475,18 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		
 		do{
-			/*
-			Timeout timeout = Timeout.create(Duration.ofSeconds(30));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain(), path.getAccountId()), timeout);
-			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-			
-			if(discovery_action == DiscoveryAction.STOP) {
-				throw new DiscoveryStoppedException();
-			}
-			*/
 			
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
 					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					PageState expected_page = PathUtils.getFirstPage(path.getSteps());
 					//browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
-					ExploratoryPath exploratory_path = new ExploratoryPath(path.getKeys(), path.getPathObjects());
+					ExploratoryPath exploratory_path = new ExploratoryPath(path.getSteps(), path.getPathObjects());
 					
-					crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, domain.getUrl(), exploratory_path);
+					crawlPathExplorer(new_path.getSteps(), new_path.getPathObjects(), browser, domain.getUrl(), exploratory_path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
@@ -548,6 +530,7 @@ public class Crawler {
 		}while(result_page == null && tries < 100);
 		return result_page;
 	}
+	*/
 	
 	/**
 	 * 

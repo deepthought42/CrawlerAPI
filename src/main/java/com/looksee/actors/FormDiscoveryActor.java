@@ -79,7 +79,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					log.warning("-------------------------------------------------------------------------------------------------");
 					log.info("Retrieving first url in path objects");
 					//get first url
-					String url = PathUtils.getFirstUrl(message.getPathObjects());
+					String url = PathUtils.getFirstUrl(message.getSteps());
 					//get first page in path
 					log.info("extracting host from url :: "+url);
 				  	String host = new URL(url).getHost();
@@ -95,16 +95,10 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser.navigateTo(url);
 							browser.removeDriftChat();
 
-					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
+					  		log.warning("total path objects    ::   "+message.getSteps().size());
 					  		//crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host, message.getAccountId());
 
-					  		PageState page_state = null;
-							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
-								if(message.getPathObjects().get(idx) instanceof PageState){
-									page_state = (PageState)message.getPathObjects().get(idx);
-									break;
-								}
-							}
+					  		PageState page_state = PathUtils.getLastPageState(message.getSteps());
 							 
 							log.warning("extracting all forms");
 						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), domain, browser);
@@ -121,7 +115,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							  
 							    form = form_service.save(form);
 							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomainId());
-							  	message.getDiscoveryActor().tell(form_message, getSelf());
+							  	//message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}
 						  	forms_created = true;
 						  	return;

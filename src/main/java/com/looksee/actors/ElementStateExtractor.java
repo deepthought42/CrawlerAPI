@@ -73,6 +73,7 @@ public class ElementStateExtractor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(ElementExtractionMessage.class, message-> {
+					log.warn("Element extraction message received...");
 					try {
 						URL full_page_screenshot_url = new URL(message.getPageState().getFullPageScreenshotUrlOnload());
 						BufferedImage page_screenshot = ImageUtils.readImageFromURL(full_page_screenshot_url);

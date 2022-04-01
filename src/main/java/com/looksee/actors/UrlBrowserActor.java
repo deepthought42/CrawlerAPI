@@ -94,17 +94,9 @@ public class UrlBrowserActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
+				/* commented out because it is legacy code that is in the process of being refactored elsewhere. REMOVE IF STILL HERE AFTER 12-1-2022 */
+				/*
 				.match(UrlMessage.class, message -> {
-					/*
-					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain(), message.getAccountId()), timeout);
-					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-					
-					if(discovery_action == DiscoveryAction.STOP) {
-						log.warn("path message discovery actor returning");
-						return;
-					}
-					*/
 					
 					String url = message.getUrl().toString();
 					String host = message.getUrl().getHost();
@@ -201,6 +193,7 @@ public class UrlBrowserActor extends AbstractActor {
 								  .props("formDiscoveryActor"), "form_discovery_actor"+UUID.randomUUID());
 					form_discoverer.tell(path_message, getSelf());
 				})
+				*/
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
 				})

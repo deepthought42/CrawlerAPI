@@ -97,6 +97,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
+				/*
 				.match(PathMessageOLD.class, message-> {
 					String browser_name = BrowserType.CHROME.toString();					
 					
@@ -169,6 +170,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 				})
+				*/
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
 				})

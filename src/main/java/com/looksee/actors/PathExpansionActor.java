@@ -42,6 +42,7 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.PathUtils;
 

@@ -23,6 +23,7 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.DomainRepository;
 
 @Service

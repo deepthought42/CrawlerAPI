@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.ActionOLD;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
@@ -31,7 +30,7 @@ public class ElementInteractionStep extends Step {
 	
 	public ElementInteractionStep() {}
 	
-	public ElementInteractionStep(PageState start_page, ElementState element, ActionOLD action, PageState end_page) {
+	public ElementInteractionStep(PageState start_page, ElementState element, Action action, PageState end_page) {
 		assert start_page != null;
 		assert element != null;
 		assert action != null;
@@ -46,7 +45,7 @@ public class ElementInteractionStep extends Step {
 	
 	@Override
 	public String generateKey() {
-		return "elementinteractionstep:"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(start_page.getKey() + element.getKey() + action.getKey() + end_page.getKey());
+		return "elementinteractionstep:"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(start_page.getKey() + element.getKey() + action + end_page.getKey());
 	}
 
 	public PageState getStartPage() {

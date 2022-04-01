@@ -11,11 +11,11 @@ public class JourneyUtils {
 		
 		for(int idx = journey.getOrderedIds().size()-1; idx >= 0; idx--) {
 			
-			String step_key = journey.getOrderedIds().get(idx);
+			long step_id = journey.getOrderedIds().get(idx);
 			
 			//get step from step set
 			for(Step step : journey.getSteps()) {
-				if(step.getKey().equals(step_key) && step instanceof ElementInteractionStep ) {
+				if(step.getId() == step_id && step instanceof ElementInteractionStep ) {
 						//get last element interation journey step
 						return ((ElementInteractionStep)step).getElement();
 				}

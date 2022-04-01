@@ -3,10 +3,8 @@ package com.looksee.actors;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,16 +20,15 @@ import org.springframework.stereotype.Component;
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.ActionOLD;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
+import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.journeys.ElementInteractionStep;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.journeys.StepExecutor;
-import com.looksee.services.ActionService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -70,9 +67,6 @@ public class JourneyExpander extends AbstractActor{
 	
 	@Autowired
 	private StepService step_service;
-	
-	@Autowired
-	private ActionService action_service;
 	
 	@Autowired
 	private StepExecutor step_executor;
@@ -140,21 +134,21 @@ public class JourneyExpander extends AbstractActor{
 								
 								//check each leaf element for mouseover interaction
 								WebElement web_element = browser.getDriver().findElement(By.xpath(leaf_element.getXpath()));
-								action_factory.execAction(web_element, "", "mouseover");
+								action_factory.execAction(web_element, "", Action.MOUSE_OVER);
 		
 								Element element = Xsoup.compile(leaf_element.getXpath()).evaluate(doc).getElements().get(0);
 								String css_selector = "";//generateXpathUsingJsoup(element, doc, attributes, xpath_cnt);
 
 								ElementState new_element_state = BrowserService.buildElementState(
-										leaf_element.getXpath(), 
-										browser.extractAttributes(web_element), 
-										element,
-										web_element, 
-										leaf_element.getClassification(), 
-										Browser.loadCssProperties(web_element, 
-										browser.getDriver()),
-										"",
-										css_selector);
+																					leaf_element.getXpath(), 
+																					browser.extractAttributes(web_element), 
+																					element,
+																					web_element, 
+																					leaf_element.getClassification(), 
+																					Browser.loadCssProperties(web_element, 
+																					browser.getDriver()),
+																					"",
+																					css_selector);
 								
 								new_element_state = element_state_service.save(new_element_state);
 								//if page url is not the same as journey result page url then load new page for this
@@ -168,23 +162,21 @@ public class JourneyExpander extends AbstractActor{
 								log.warn("journey result matches exploration result?   " + journey_result_page.equals(exploration_result_page));
 								//check if page state is same as original page state. If not then add new ElementInteractionStep 
 								if(!journey_result_page.equals(exploration_result_page)) {
-									ActionOLD action = new ActionOLD("mouseover");
-									action = action_service.save(action);
 									exploration_result_page = page_state_service.save(exploration_result_page);
 									
 									log.warn("creating new element interaction step .... "+new_element_state);
-									Step step = new ElementInteractionStep(journey_result_page, new_element_state, action, exploration_result_page);
+									Step step = new ElementInteractionStep(journey_result_page, new_element_state, Action.MOUSE_OVER, exploration_result_page);
 									if(existsInJourney(journey, step)) {
 										continue;
 									}
 									step = step_service.save(step);
 									//add element back to service step
 									//clone journey and add this step at the end
-									Set<Step> steps = new HashSet<>(journey.getSteps());
+									List<Step> steps = new ArrayList<>(journey.getSteps());
 									steps.add(step);
-									List<String> ordered_keys = new ArrayList<>(journey.getOrderedIds());
-									ordered_keys.add(step.getKey());
-									Journey new_journey = new Journey(steps, ordered_keys);
+									List<Long> ordered_ids = new ArrayList<>(journey.getOrderedIds());
+									ordered_ids.add(step.getId());
+									Journey new_journey = new Journey(steps, ordered_ids);
 									
 									//add journey to list of elements to explore for click or typing interactions
 									getSender().tell(new_journey, getSelf());
@@ -343,10 +335,10 @@ public class JourneyExpander extends AbstractActor{
 		
 		List<Step> ordered_steps = new ArrayList<>();
 		//execute journey steps
-		for(String step_key : journey.getOrderedIds()) {
+		for(long step_id : journey.getOrderedIds()) {
 			
 			for(Step step: journey.getSteps()) {
-				if(step.getKey().contentEquals(step_key)) {
+				if(step.getId() == step_id) {
 					ordered_steps.add(step);
 					break;
 				}

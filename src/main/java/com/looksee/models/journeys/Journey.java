@@ -2,6 +2,7 @@ package com.looksee.models.journeys;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -18,6 +19,13 @@ public class Journey extends LookseeObject {
 	public Journey() {
 		setSteps(new ArrayList<>());
 		setOrderedIds(new ArrayList<>());
+		setKey(generateKey());
+	}
+	
+	public Journey(List<Step> steps) {
+		List<Long> ordered_ids = steps.stream().map(step -> step.getId()).collect(Collectors.toList());
+		setSteps(steps);
+		setOrderedIds(ordered_ids);
 		setKey(generateKey());
 	}
 	

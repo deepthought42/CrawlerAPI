@@ -184,7 +184,7 @@ public class PathUtils {
 	 * 
 	 * @pre !pathObjects.isEmpty()
 	 */
-	public static String getFirstUrl(List<LookseeObject> pathObjects) {
+	public static String getFirstUrl_OLD(List<LookseeObject> pathObjects) {
 		assert !pathObjects.isEmpty();
 		
 		LookseeObject obj = pathObjects.get(0);
@@ -200,5 +200,27 @@ public class PathUtils {
 			return page_state.getUrl();
 		}
 		return null;
+	}
+	
+	/**
+	 * 
+	 * @param steps
+	 * @return
+	 * 
+	 * @pre !pathObjects.isEmpty()
+	 */
+	public static String getFirstUrl(List<Step> steps) {
+		assert !steps.isEmpty();
+		
+		Step obj = steps.get(0);
+		
+		if(obj instanceof Redirect) {
+			log.warn("first path object is a redirect");
+			Redirect redirect = (Redirect)obj;
+			return redirect.getStartUrl();
+		}
+		else {
+			return obj.getStartPage().getUrl();
+		}
 	}
 }

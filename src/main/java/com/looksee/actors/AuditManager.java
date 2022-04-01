@@ -31,6 +31,7 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
+import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
@@ -45,7 +46,9 @@ import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
+import com.looksee.services.JourneyService;
 import com.looksee.services.SendGridMailService;
+import com.looksee.services.StepService;
 import com.looksee.services.SubscriptionService;
 import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
@@ -87,12 +90,19 @@ public class AuditManager extends AbstractActor{
 	private AccountService account_service;
 
 	@Autowired
+	private StepService step_service;
+	
+	@Autowired
+	private JourneyService journey_service;
+	
+	@Autowired
 	private SendGridMailService mail_service;
 	
 	@Autowired
 	private SubscriptionService subscription_service;
 	
 	private boolean is_domain_audit = false;
+	private long domain_audit_id = 0L;
 	private int total_pages = 0;
 	private int total_pages_audited = 0;
 	private Map<String, Boolean> page_states_experienced;
@@ -145,19 +155,10 @@ public class AuditManager extends AbstractActor{
 																							 message.getUrl(), 
 																							 message.getDomainId());
 						
-						/*
+						
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_state_builder.tell(crawl_action_msg, getSelf());
-						DiscoveryActionMessage discovery_msg = new DiscoveryActionMessage(DiscoveryAction.START, 
-																						  message.getDomainId(),
-																						  message.getAccountId(), 
-																						  BrowserType.CHROME);
-						 */
-
-						ActorRef discovery_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																  .props("discoveryActor"), "discoveryActor"+UUID.randomUUID());
-						discovery_actor.tell(crawl_action_msg, getSelf());
+						page_state_builder.tell(crawl_action_msg, getSelf());					
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);
@@ -170,11 +171,18 @@ public class AuditManager extends AbstractActor{
 					if(message.getAction().equals(CrawlAction.START)){
 						log.warn("starting domain audit");
 						this.is_domain_audit = true;
+						this.domain_audit_id = message.getAuditRecordId();
 						//send message to webCrawlerActor to get pages
+						/*
 						ActorRef web_crawl_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 								.props("webCrawlerActor"), "webCrawlerActor"+UUID.randomUUID());
 						
 						web_crawl_actor.tell(message, getSelf());
+						*/
+						ActorRef crawler_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+								  .props("crawlerActor"), "crawlerActor"+UUID.randomUUID());
+						crawler_actor.tell(message, getSelf());
+
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);
@@ -285,6 +293,20 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
+					log.warn("Handling confirmed journey message");
+					//save journey steps
+					for(Step step : message.getSteps()) {
+						step = step_service.save(step);
+					}
+					
+					//build create and save journey
+					Journey journey = new Journey(message.getSteps());
+					journey = journey_service.save(journey);
+					//add journey to domain audit
+					audit_record_service.addJourney(this.domain_audit_id, journey.getId());
+					
+					
+					
 					//retrieve all unique page states for journey steps
 					List<PageState> page_states = getAllUniquePageStates(message.getSteps());
 					//remove all unique pageStates that have already been analyzed
@@ -294,6 +316,13 @@ public class AuditManager extends AbstractActor{
 			    	SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 					//For each page audit record perform audits
 					for(PageState page_state : page_states) {
+						PageAuditRecord page_audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
+																				new HashSet<>(), 
+																				null, 
+																				true);
+						page_audit_record = (PageAuditRecord)audit_record_service.save(page_audit_record);
+						audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), page_audit_record.getId());
+
 						String url_without_protocol = BrowserUtils.getPageUrl(new URL(page_state.getUrl()));
 
 						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, total_pages_audited)) {

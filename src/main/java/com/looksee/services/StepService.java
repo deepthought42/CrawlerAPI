@@ -28,13 +28,7 @@ public class StepService {
 	}
 
 	public Step save(Step step) {
-		log.warn("Step being saved..."+step);
-		log.warn("step class :: "+step.getClass().getSimpleName());
-		Step step_record = step_repo.findByKey(step.getKey());
-		if(step_record == null) {
-			step_record = step_repo.save(step);
-		}
-		return step_record;
+		return step_repo.save(step);
 	}
 
 	public ElementState getElementState(String step_key) {

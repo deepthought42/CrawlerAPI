@@ -28,7 +28,11 @@ public class JourneyMessage extends Message {
 	}
 	
 	public JourneyMessage clone(){
-		return new JourneyMessage(new ArrayList<>(getSteps()), getStatus(), getBrowser(), getDomainId(), getAccountId());
+		return new JourneyMessage(new ArrayList<>(getSteps()), 
+								  getStatus(), 
+								  getBrowser(), 
+								  getDomainId(), 
+								  getAccountId());
 	}
 
 	public PathStatus getStatus() {

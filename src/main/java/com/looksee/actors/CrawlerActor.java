@@ -4,6 +4,7 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -16,8 +17,10 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
@@ -25,6 +28,7 @@ import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.models.message.UrlMessage;
+import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
@@ -48,6 +52,9 @@ public class CrawlerActor extends AbstractActor{
 	
 	@Autowired
 	private ActorSystem actor_system;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -80,22 +87,24 @@ public class CrawlerActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(CrawlActionMessage.class, crawl_action_msg -> {
-					if(CrawlAction.START.equals(crawl_action_msg.getAction())) {
+				.match(CrawlActionMessage.class, message -> {
+					if(CrawlAction.START.equals(message.getAction())) {
+						log.warn("STARTING crawl actor. Sending message to page state builder");
+						
 						
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 								  .props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_state_builder.tell(crawl_action_msg, getSelf());
+						page_state_builder.tell(message, getSelf());
 					}
-					else if(CrawlAction.STOP.equals(crawl_action_msg.getAction())) {
+					else if(CrawlAction.STOP.equals(message.getAction())) {
 						
 					}
 				})
 				.match(PageDataExtractionMessage.class, msg -> {
-					//Add page state to frontier
-					//Add page state to path
+					//Add page state to Step
+					//add step to Journey
 					//send path to path expansion actor
-					
+					log.warn("Crawler actor recieved Page data extraction message...");
 					ActorRef path_expansion_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							  .props("pathExpansionActor"), "pathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(msg, getSelf());

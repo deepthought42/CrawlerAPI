@@ -363,7 +363,18 @@ public class PageStateBuilder extends AbstractActor{
 						})
 						.collect(Collectors.toList());
 						
+						//tell page state builder of element states
+						ElementProgressMessage element_message = new ElementProgressMessage(crawl_action.getAccountId(), 
+																							crawl_action.getAuditRecordId(),
+																							page_state.getId(), 
+																							xpaths,
+																							element_states,
+																							0L,
+																							0L, 
+																							page_state.getUrl(),
+																							crawl_action.getDomainId());
 						
+						getContext().parent().tell(element_message, getSelf());
 						/*
 					   	int start_xpath_index = 0;
 					   	int last_xpath_index = 0;

@@ -3,12 +3,14 @@ package com.looksee.actors;
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +18,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditProgressUpdate;
+import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
@@ -35,6 +40,7 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -181,11 +187,11 @@ public class PageStateBuilder extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
-				.match(CrawlActionMessage.class, crawl_action-> {
+				.match(BrowserCrawlActionMessage.class, crawl_action-> {
 					log.warn("Page state recieved CrawlActionMessage");
 					try {						
 						int http_status = BrowserUtils.getHttpStatus(crawl_action.getUrl());
-	
+						boolean requires_authentication = false;
 						//usually code 301 is returned which is a redirect, which is usually transferring to https
 						if(http_status == 404 || http_status == 408) {
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
@@ -199,9 +205,17 @@ public class PageStateBuilder extends AbstractActor{
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;
 						}
+						else if(http_status == 401) {
+							requires_authentication = true;
+						}
+						else if(http_status == 403) {
+							
+						}
 						
 						//update audit record with progress
-						this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						//this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						this.page_state = browser_service.performBuildPageProcess(crawl_action.getUrl(), crawl_action.getBrowser()); 
+
 						this.page_state = page_state_service.save(this.page_state);
 						final PageState page_state_record = this.page_state;
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
@@ -214,6 +228,53 @@ public class PageStateBuilder extends AbstractActor{
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
 						//crawl_action.getAuditRecord().setPageState(page_state_record);
 						
+						List<ElementState> element_states = browser_service.buildPageElementsWithoutNavigation( page_state, 
+																												xpaths,
+																												crawl_action.getAuditRecordId(),
+																												page_state.getFullPageHeight(),
+																												crawl_action.getBrowser());
+
+
+						//ENRICHMENT : BACKGROUND COLORS
+						element_states = element_states.parallelStream()
+														.filter(element -> element != null)
+														.map(element -> {
+								try {
+									ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));				
+									//extract opacity color
+									ColorData bkg_color = null;
+									if(element.getScreenshotUrl().trim().isEmpty()) {
+									bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
+									}
+									else {
+									//log.warn("extracting background color");
+									bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
+																   font_color);
+									
+									//log.warn("done extracting background color");
+									}
+									String bg_color = bkg_color.rgb();	
+									
+									//Identify background color by getting largest color used in picture
+									//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
+									ColorData background_color = new ColorData(bg_color);
+									element.setBackgroundColor(background_color.rgb());
+									element.setForegroundColor(font_color.rgb());
+									
+									double contrast = ColorData.computeContrast(background_color, font_color);
+									element.setTextContrast(contrast);
+									return element;
+								}
+								catch (Exception e) {
+									log.warn("element screenshot url  :: "+element.getScreenshotUrl());
+									e.printStackTrace();
+								}
+							return element;
+						})
+						.collect(Collectors.toList());
+						
+						
+						/*
 					   	int start_xpath_index = 0;
 					   	int last_xpath_index = 0;
 						List<List<String>> xpath_lists = new ArrayList<>();
@@ -242,7 +303,7 @@ public class PageStateBuilder extends AbstractActor{
 							//page_state_record.addElements(elements);
 							start_xpath_index = last_xpath_index;
 					   	}
-						
+						*/
 						/*
 						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
 																									 crawl_action.getAccountId(), 

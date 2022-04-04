@@ -421,6 +421,8 @@ public class BrowserService {
 			Browser browser = null;
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url.toString());
+
 				page_state = performBuildPageProcess(url, browser);
 				complete = true;
 				cnt=Integer.MAX_VALUE;
@@ -476,7 +478,6 @@ public class BrowserService {
 		assert url != null;
 		assert browser != null;
 		
-		browser.navigateTo(url.toString());
 		if(browser.is503Error()) {
 			browser.close();
 			throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
@@ -627,6 +628,70 @@ public class BrowserService {
 			}
 			cnt++;
 		}while(rendering_incomplete && cnt < 10000);
+
+		return elements;
+	}
+	
+	/**
+	 * Process used by the web crawler to build {@link PageElement} list based on the xpaths on the page
+	 * @param xpaths TODO
+	 * @param audit_id TODO
+	 * @param url TODO
+	 * @param url
+	 * @param height TODO
+	 * @param audit_record TODO
+	 * @return
+	 * @throws MalformedURLException 
+	 */
+	public List<ElementState> buildPageElementsWithoutNavigation(PageState page_state, 
+																 List<String> xpaths, 
+															 	 long audit_id, 
+															 	 int page_height,
+															 	 Browser browser
+	) throws MalformedURLException {
+		assert page_state != null;
+   				
+		List<ElementState> elements = new ArrayList<>();
+		Map<String, ElementState> elements_mapped = new HashMap<>();
+		//boolean rendering_incomplete = true;
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
+		String page_url = sanitized_url.toString();
+		
+		//int cnt = 0;
+		//do {
+			//Browser browser = null;
+			
+			try {/*
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(page_url);
+				if(browser.is503Error()) {
+					throw new FiveZeroThreeException("503 Error encountered. Starting over..");
+				}
+				browser.removeDriftChat();
+				*/
+				//get ElementState List by asking multiple bots to build xpaths in parallel
+				//for each xpath then extract element state
+				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+				//break;
+			}
+			catch (NullPointerException e) {
+				log.warn("NPE thrown during element state extraction");
+				//e.printStackTrace();
+			}
+			catch(FiveZeroThreeException e) {
+				log.warn("503 exception occurred while accessing "+page_url);
+			}
+			catch(WebDriverException | GridException e) {
+				log.warn("Webdriver exception occurred ... "+page_url);
+				//e.printStackTrace();
+			}	
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			//cnt++;
+		//}while(rendering_incomplete && cnt < 10000);
 
 		return elements;
 	}

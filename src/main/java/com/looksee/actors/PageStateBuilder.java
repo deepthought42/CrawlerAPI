@@ -187,6 +187,96 @@ public class PageStateBuilder extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
+				.match(CrawlActionMessage.class, crawl_action-> {
+					log.warn("Page state recieved CrawlActionMessage");
+					try {						
+						int http_status = BrowserUtils.getHttpStatus(crawl_action.getUrl());
+						boolean requires_authentication = false;
+						//usually code 301 is returned which is a redirect, which is usually transferring to https
+						if(http_status == 404 || http_status == 408) {
+							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
+							//send message to audit manager letting it know that an error occurred
+							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
+													 crawl_action.getAccountId(), 
+													 crawl_action.getAuditRecordId(), 
+													 crawl_action.getUrl().toString(), 
+													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
+
+							getContext().getParent().tell(extraction_tracker, getSelf());
+							return;
+						}
+						else if(http_status == 401) {
+							requires_authentication = true;
+						}
+						else if(http_status == 403) {
+							
+						}
+						
+						//update audit record with progress
+						this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						this.page_state = page_state_service.save(this.page_state);
+						final PageState page_state_record = this.page_state;
+						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
+
+						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
+						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
+						this.total_dispatches = 0L;
+						this.xpaths.addAll(xpaths);
+						
+						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
+						//crawl_action.getAuditRecord().setPageState(page_state_record);
+						
+					   	int start_xpath_index = 0;
+					   	int last_xpath_index = 0;
+						List<List<String>> xpath_lists = new ArrayList<>();
+
+						while(start_xpath_index < (xpaths.size()-1)) {
+					   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
+					   		if(last_xpath_index >= xpaths.size()) {
+					   			last_xpath_index = xpaths.size()-1;
+					   		}
+					   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
+					   		xpath_lists.add(xpath_subset);
+						   
+					   		ElementExtractionMessage element_extraction_msg = 
+						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
+						   															 page_state_record, 
+						   															 crawl_action.getAuditRecordId(), 
+						   															 xpath_subset, 
+						   															 crawl_action.getDomainId());
+							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
+		
+							element_extractor.tell(element_extraction_msg, getSelf());					
+						
+							this.total_dispatches++;
+							//log.warn("Element state list length   =   "+elements.size());
+							//page_state_record.addElements(elements);
+							start_xpath_index = last_xpath_index;
+					   	}
+						
+						/*
+						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
+																									 crawl_action.getAccountId(), 
+																									 crawl_action.getAuditRecordId(), 
+																									 page_state.getUrl(), 
+																									 xpath_lists.size());
+						
+						getContext().getParent().tell(extraction_tracker, getSelf());
+						*/
+					}catch(Exception e) {
+						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
+																								 crawl_action.getAccountId(), 
+																								 crawl_action.getAuditRecordId(), 
+																								 crawl_action.getUrl().toString(), 
+																								 "An exception occurred while building page state "+crawl_action.getUrl()+".\n"+e.getMessage());
+
+						getContext().getParent().tell(extraction_tracker, getSelf());
+
+						log.error("An exception occurred that bubbled up to the page state builder");
+						e.printStackTrace();
+					}
+				})
 				.match(BrowserCrawlActionMessage.class, crawl_action-> {
 					log.warn("Page state recieved CrawlActionMessage");
 					try {						

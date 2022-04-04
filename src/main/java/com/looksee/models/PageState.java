@@ -453,7 +453,7 @@ public class PageState extends LookseeObject {
 	public void addElements(List<ElementState> elements) {
 		//check for duplicates before adding
 		for(ElementState element : elements) {
-			if(!this.elements.contains(element)) {				
+			if(element != null && !this.elements.contains(element)) {				
 				this.elements.add(element);
 			}
 		}

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.openqa.selenium.Dimension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
+import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.PathUtils;
 
@@ -84,6 +86,7 @@ public class PathExpansionActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 			.match(JourneyMessage.class, message -> {
+				log.warn("Path extraction actor received Journey message");
 				//Retrieve last PageState in path
 				PageState last_page = PathUtils.getLastPageState(message.getSteps());
 				if(last_page == null) {
@@ -95,13 +98,21 @@ public class PathExpansionActor extends AbstractActor {
 				//Filter out non interactive elements
 				//Filter out elements that are in explored map for PageState with key
 				//Filter out form elements
+				log.warn("total page elements before filtering ... "+elements.size());
 				List<ElementState> filtered_elements = elements.parallelStream()
-																.filter(element -> isListElement(element))
+																.filter(element -> element.isVisible())
+																.filter(element -> {
+																		Dimension dimension = new Dimension(element.getWidth(), element.getHeight()); 
+																		return BrowserService.hasWidthAndHeight(dimension);
+																})
+																.filter(element -> element.getXLocation() > 0 && element.getYLocation() > 0)
 																.filter(element -> isInteractiveElement(element))
 																.filter(element -> !isElementExplored(last_page_key, element))
 																.filter(element -> !isFormElement(element))
 																.collect(Collectors.toList());
 				
+				log.warn("Total journey elements after filtering ... "+filtered_elements.size());
+
 				//send form elements to form journey actor
 				//Add interactive elements to explored map for PageState key
 				addElementsToExploredMap(last_page, filtered_elements);
@@ -112,12 +123,50 @@ public class PathExpansionActor extends AbstractActor {
 				for(Step step: new_steps) {
 					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 					cloned_steps.add(step);
+					log.warn("Cloned steps size :: "+cloned_steps.size());
 					JourneyMessage journey_msg = new JourneyMessage(cloned_steps, PathStatus.EXPANDED, BrowserType.CHROME, message.getDomainId(), message.getAccountId());
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 					journey_executor.tell(journey_msg, getSelf());
 				}
 			})
+			.match(PageDataExtractionMessage.class, message -> {
+				log.warn("path expansion actor received PageDataExtraction Message");
+				List<ElementState> elements = message.getPageState().getElements();
+
+				//Filter out non interactive elements
+				//Filter out elements that are in explored map for PageState with key
+				//Filter out form elements
+				List<ElementState> filtered_elements = elements.parallelStream()
+																.filter(element -> element.isVisible())
+																.filter(element -> {
+																		Dimension dimension = new Dimension(element.getWidth(), element.getHeight()); 
+																		return BrowserService.hasWidthAndHeight(dimension);
+																})
+																.filter(element -> element.getXLocation() >= 0 && element.getYLocation() >= 0)
+																.filter(element -> isInteractiveElement(element))
+																.filter(element -> !isElementExplored(message.getPageState().getKey(), element))
+																.filter(element -> !isFormElement(element))
+																.collect(Collectors.toList());
+				log.warn("Total elements after filtering ... "+filtered_elements.size());
+				//send form elements to form journey actor
+				//Add interactive elements to explored map for PageState key
+				addElementsToExploredMap(message.getPageState(), filtered_elements);
+				//Build Steps for all elements in list
+				List<Step> new_steps = generateSteps(message.getPageState(), filtered_elements);
+				
+				log.warn("new steps found ... "+new_steps.size());
+				//generate new journeys with new steps and send to journey executor to be evaluated
+				for(Step step: new_steps) {
+					List<Step> steps = new ArrayList<>();
+					steps.add(step);
+					JourneyMessage journey_msg = new JourneyMessage(steps, PathStatus.EXPANDED, BrowserType.CHROME, message.getDomainId(), message.getAccountId());
+					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
+															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
+					journey_executor.tell(journey_msg, getSelf());
+					log.warn("sending journey message to Journey Executor actor");
+				}
+			})			
 			.match(ConfirmedJourneyMessage.class, message -> {
 				getContext().getParent().tell(message, getSelf());
 			})
@@ -340,7 +389,8 @@ public class PathExpansionActor extends AbstractActor {
 	}
 	
 	private boolean isElementExplored(String page_state_key, ElementState element) {
-		return explored_elements.containsKey(page_state_key) && explored_elements.get(page_state_key).contains(element.getId());
+		return explored_elements.containsKey(page_state_key) 
+				&& explored_elements.get(page_state_key).contains(element);
 	}
 	
 	private boolean isFormElement(ElementState element) {

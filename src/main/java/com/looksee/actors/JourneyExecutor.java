@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import com.looksee.models.journeys.Step;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.JourneyService;
+import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -95,26 +97,33 @@ public class JourneyExecutor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(JourneyMessage.class, message-> {
+					try {
 					log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
-					PageState initial_page = message.getSteps().get(0).getStartPage();
-					//navigate to url of first page state in first journey step
-					Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-					browser.navigateTo(initial_page.getUrl());
-					
-					//execute all steps sequentially in the journey
-					executeAllStepsInJourney(message.getSteps(), browser);
-					
-					//build final page state
-					PageState end_page = browser_service.buildPageState(new URL(initial_page.getUrl()), browser, new URL(browser.getDriver().getCurrentUrl()));
-					message.getSteps().get(message.getSteps().size()-1).setEndPage(end_page);
-					
-					PageState second_to_last_page = PathUtils.getSecondToLastPageState(message.getSteps());
-					//is end_page PageState different from second to last PageState
-					if(end_page.equals(second_to_last_page)) {
-						return;
+						PageState initial_page = message.getSteps().get(0).getStartPage();
+						//navigate to url of first page state in first journey step
+						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+						log.warn("navigating to url :: "+initial_page.getUrl());
+						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
+						browser.navigateTo(sanitized_url);
+						
+						//execute all steps sequentially in the journey
+						executeAllStepsInJourney(message.getSteps(), browser);
+						
+						//build final page state
+						PageState end_page = browser_service.buildPageState(new URL(sanitized_url), browser, new URL(browser.getDriver().getCurrentUrl()));
+						message.getSteps().get(message.getSteps().size()-1).setEndPage(end_page);
+						
+						PageState second_to_last_page = PathUtils.getSecondToLastPageState(message.getSteps());
+						//is end_page PageState different from second to last PageState
+						if(end_page.equals(second_to_last_page)) {
+							return;
+						}
+						
+						getContext().getParent().tell(message, getSelf());
 					}
-					
-					getContext().getParent().tell(message, getSelf());
+					catch(ElementNotInteractableException e) {
+						e.printStackTrace();
+					}
 					
 					//create navigation step
 					/*

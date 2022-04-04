@@ -56,8 +56,11 @@ public class PageStateBuilder extends AbstractActor{
 	
 	private long total_dispatches = 0;
 	private long total_dispatch_responses = 0;
+	private long total_save_dispatches = 0;
+
 	
-	private Map<String, Integer> total_xpaths;
+	private List<String> xpaths;
+	private PageState page_state;
 	//private Map<String, Integer> total_dispatches;
 	
 	@Autowired
@@ -78,7 +81,7 @@ public class PageStateBuilder extends AbstractActor{
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		this.total_xpaths = new HashMap<>();
+		this.xpaths = new ArrayList<>();
 		this.total_dispatches = 0L;
 	}
 
@@ -132,7 +135,7 @@ public class PageStateBuilder extends AbstractActor{
 						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 						this.total_dispatches = 0L;
-						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
+						this.xpaths.addAll(xpaths);
 						
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
 						//crawl_action.getAuditRecord().setPageState(page_state_record);
@@ -165,13 +168,6 @@ public class PageStateBuilder extends AbstractActor{
 							start_xpath_index = last_xpath_index;
 					   	}
 						
-						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
-																									 crawl_action.getAccountId(), 
-																									 crawl_action.getAuditRecordId(), 
-																									 page_state.getUrl(), 
-																									 xpath_lists.size());
-						
-						getContext().getParent().tell(extraction_tracker, getSelf());
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
 																								 crawl_action.getAccountId(), 
@@ -205,15 +201,15 @@ public class PageStateBuilder extends AbstractActor{
 						}
 						
 						//update audit record with progress
-						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						
-						final PageState page_state_record = page_state_service.save(page_state);
+						this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						this.page_state = page_state_service.save(this.page_state);
+						final PageState page_state_record = this.page_state;
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
 						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 						this.total_dispatches = 0L;
-						this.total_xpaths.put(page_state.getUrl(), xpaths.size());
+						this.xpaths.addAll(xpaths);
 						
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
 						//crawl_action.getAuditRecord().setPageState(page_state_record);
@@ -241,6 +237,7 @@ public class PageStateBuilder extends AbstractActor{
 		
 							element_extractor.tell(element_extraction_msg, getSelf());					
 						
+							this.total_dispatches++;
 							//log.warn("Element state list length   =   "+elements.size());
 							//page_state_record.addElements(elements);
 							start_xpath_index = last_xpath_index;
@@ -269,21 +266,15 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
-					//message.setTotalXpaths(this.total_xpaths.get(message.getPageUrl()));
-					//message.setTotalDispatches(this.total_dispatches.get(message.getPageUrl()));
-					
 					log.warn("sending elements to be saved");
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
-					//getContext().parent().forward(message, getContext());
 				})
 				.match(ElementExtractionError.class, message -> {
 					log.warn("error extracting elements");
-					long response_count = this.total_dispatch_responses;
-					
-					this.total_dispatch_responses++;
-					
+					long response_count = this.total_dispatch_responses++;
+										
 					log.warn("an error occurred during element extraction   "+message.getPageUrl());
 					try {
 						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
@@ -341,20 +332,19 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementsSaved.class, message -> {
-					//log.warn("Elements saved successfully");
-					long response_count = this.total_dispatch_responses;
+					this.total_save_dispatches++;
+					log.warn("Elements saved successfully :: batch "+this.total_save_dispatches + " of "+this.total_dispatches);
 					
-					this.total_dispatch_responses++;
-
 					page_state_service.addAllElements(message.getPageStateId(), message.getElements());
-
+					this.page_state.setElements(page_state_service.getElementStates(this.page_state.getId()));
 					try {
 						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
 						//       system is done extracting element data and the page is ready for auditing
 						
 						
 						//PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
-						if(response_count == this.total_dispatches) {
+						if(this.total_save_dispatches == this.total_dispatches) {
+							log.warn("all dispatches have been processed!!!!");
 							/*NOTE: THIS LOGIC SHOULD BE HANDLED IN THE AUDIT MANAGER. MOVE IT THERE ONCE IT'S CLEAR WHERE IT BELONGS */
 							/*
 							audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
@@ -393,10 +383,19 @@ public class PageStateBuilder extends AbstractActor{
 						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
-							getContext().getParent().tell(message, getSelf());
+							log.warn("sending PageDataExtraction to parent actor :: "+getContext().getParent().getClass());
+							PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(message.getDomainId(), 
+																										 message.getAccountId(), 
+																										 message.getAuditRecordId(), 
+																										 message.getPageUrl(), 
+																										 this.xpaths.size(),
+																										 this.page_state);
+							
+							getContext().getParent().tell(extraction_tracker, getSelf());
 							
 						}
 						else {
+							log.warn("total save dispatches does not match total dispatch responses");
 							/*NOTE: THIS LOGIC SHOULD BE HANDLED IN THE AUDIT MANAGER. MOVE IT THERE ONCE IT'S CLEAR WHERE IT BELONGS */
 							/*
 							audit_record.setDataExtractionMsg("Elements saved successfully - batch "+this.total_dispatch_responses + " / "+this.total_dispatches);
@@ -411,6 +410,7 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementsSaveError.class, message -> {
+					this.total_save_dispatches++;
 					log.warn("error saving elements");
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					audit_record.setDataExtractionMsg("Error Saving elements "+this.total_dispatch_responses + " / "+this.total_dispatches);

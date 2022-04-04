@@ -22,6 +22,8 @@ import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.PathStatus;
+import com.looksee.models.journeys.Journey;
+import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.JourneyMessage;
@@ -100,9 +102,7 @@ public class CrawlerActor extends AbstractActor{
 						
 					}
 				})
-				.match(PageDataExtractionMessage.class, msg -> {
-					//Add page state to Step
-					//add step to Journey
+				.match(PageDataExtractionMessage.class, msg -> {					
 					//send path to path expansion actor
 					log.warn("Crawler actor recieved Page data extraction message...");
 					ActorRef path_expansion_actor = getContext().actorOf(SpringExtProvider.get(actor_system)

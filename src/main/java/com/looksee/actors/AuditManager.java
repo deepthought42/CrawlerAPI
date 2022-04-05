@@ -38,6 +38,7 @@ import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.ElementsSaved;
+import com.looksee.models.message.JourneyCrawlActionMessage;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageCandidateFound;
 import com.looksee.models.message.PageCrawlActionMessage;
@@ -163,7 +164,6 @@ public class AuditManager extends AbstractActor{
 					else if(message.getAction().equals(CrawlAction.STOP)){
 						stopAudit(message);
 					}
-					
 				})
 				.match(CrawlActionMessage.class, message-> {
 					this.total_aesthetic_audits = 4;
@@ -185,7 +185,26 @@ public class AuditManager extends AbstractActor{
 
 					}
 					else if(message.getAction().equals(CrawlAction.STOP)){
-						stopAudit(message);
+						stopAudit();
+					}
+					
+				})
+				.match(JourneyCrawlActionMessage.class, message-> {
+					this.total_aesthetic_audits = 4;
+
+					if(message.getAction().equals(CrawlAction.START)){
+						log.warn("starting domain audit");
+						this.is_domain_audit = true;
+						this.domain_audit_id = message.getAuditRecordId();
+						//send message to webCrawlerActor to get pages
+						
+						ActorRef crawler_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
+								  .props("crawlerActor"), "crawlerActor"+UUID.randomUUID());
+						crawler_actor.tell(message, getSelf());
+
+					}
+					else if(message.getAction().equals(CrawlAction.STOP)){
+						stopAudit();
 					}
 					
 				})
@@ -529,7 +548,7 @@ public class AuditManager extends AbstractActor{
 		return page_states.stream().distinct().collect(Collectors.toList());
 	}
 
-	private void stopAudit(CrawlActionMessage message) {		
+	private void stopAudit() {		
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

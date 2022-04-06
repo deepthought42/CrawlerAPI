@@ -39,6 +39,7 @@ import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.ElementsSaved;
 import com.looksee.models.message.JourneyCrawlActionMessage;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageCandidateFound;
 import com.looksee.models.message.PageCrawlActionMessage;
@@ -315,6 +316,7 @@ public class AuditManager extends AbstractActor{
 					log.warn("Handling confirmed journey message");
 					//save journey steps
 					for(Step step : message.getSteps()) {
+						log.warn("step before save :: "+step);
 						step = step_service.save(step);
 					}
 					

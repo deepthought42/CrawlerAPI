@@ -29,6 +29,7 @@ import com.looksee.models.journeys.ElementInteractionStep;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.journeys.StepExecutor;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -296,9 +297,6 @@ public class JourneyExpander extends AbstractActor{
 									
 						}
 					*/
-				})
-				.match(Journey.class, journey -> {
-
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

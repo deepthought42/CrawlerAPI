@@ -32,7 +32,9 @@ import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.NavigationStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
+import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.JourneyService;
@@ -42,6 +44,7 @@ import com.looksee.utils.PathUtils;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -71,6 +74,7 @@ public class JourneyExecutor extends AbstractActor{
 	
 	private Account account;
 
+	private ActorRef crawl_actor;
 	private int page_audits_completed;
 	private List<Step> steps;
 
@@ -101,6 +105,7 @@ public class JourneyExecutor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(JourneyMessage.class, message-> {
+					this.crawl_actor = getContext().getParent();
 					try {
 						log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
 						this.steps = message.getSteps();
@@ -123,7 +128,7 @@ public class JourneyExecutor extends AbstractActor{
 						
 						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_builder.tell(message, getSelf());
+						page_builder.tell(browser_page_builder_message, getSelf());
 						
 						
 						
@@ -164,6 +169,7 @@ public class JourneyExecutor extends AbstractActor{
 					
 				})
 				.match(PageDataExtractionMessage.class, message -> {
+					log.warn("Journey extraction received page data extraction message");
 					this.steps.get(this.steps.size()-1).setEndPage(message.getPageState());
 					PageState second_to_last_page = PathUtils.getSecondToLastPageState(this.steps);
 					//is end_page PageState different from second to last PageState
@@ -171,12 +177,57 @@ public class JourneyExecutor extends AbstractActor{
 						return;
 					}
 					
-					JourneyMessage journey_message = new JourneyMessage(this.steps, 
-																		PathStatus.EXAMINED, 
-																		BrowserType.CHROME, 
-																		message.getDomainId(), 
-																		message.getAccountId());
-					getContext().getParent().tell(journey_message, getSelf());
+					ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(this.steps, 
+																						PathStatus.EXAMINED, 
+																						BrowserType.CHROME, 
+																						message.getDomainId(), 
+																						message.getAccountId());
+					
+					crawl_actor.tell(journey_message, getSelf());
+					getContext().getSender().tell(PoisonPill.class, getSelf());
+				})
+				.match(PageDataExtractionError.class, message -> {
+					try {
+						log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
+						PageState initial_page = this.steps.get(0).getStartPage();
+						//navigate to url of first page state in first journey step
+						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+						log.warn("navigating to url :: "+initial_page.getUrl());
+						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
+						browser.navigateTo(sanitized_url);
+						
+						//execute all steps sequentially in the journey
+						executeAllStepsInJourney(this.steps, browser);
+						
+						//send build page message to PageStateBuilder
+						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
+																												message.getAccountId(), 
+																												message.getAuditRecordId(), 
+																												new URL(browser.getDriver().getCurrentUrl()), 
+																												browser);
+						
+						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+						page_builder.tell(browser_page_builder_message, getSelf());
+						
+						
+						
+						//build final page state
+						//PageState end_page = browser_service.buildPageState(new URL(sanitized_url), browser, new URL(browser.getDriver().getCurrentUrl()));
+						//message.getSteps().get(message.getSteps().size()-1).setEndPage(end_page);
+						/*
+						PageState second_to_last_page = PathUtils.getSecondToLastPageState(message.getSteps());
+						//is end_page PageState different from second to last PageState
+						if(end_page.equals(second_to_last_page)) {
+							return;
+						}
+						
+						getContext().getParent().tell(message, getSelf());
+						*/
+					}
+					catch(ElementNotInteractableException e) {
+						e.printStackTrace();
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

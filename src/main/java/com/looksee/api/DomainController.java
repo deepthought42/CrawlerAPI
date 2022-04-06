@@ -1091,10 +1091,12 @@ public class DomainController {
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
 
 		// create new audit record
+		log.warn("creating Domain audit record");
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
 
+		log.warn("adding audit record to domain");
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 

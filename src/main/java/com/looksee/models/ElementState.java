@@ -231,7 +231,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(outer_html, height, width, foreground_color, background_color);
+		return Objects.hash(outer_html, xpath);
 	}
 
 	public void print() {

@@ -5,9 +5,7 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -213,8 +211,8 @@ public class PageStateBuilder extends AbstractActor{
 						}
 						
 						//update audit record with progress
-						this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						this.page_state = page_state_service.save(this.page_state);
+						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+						this.page_state = page_state_service.save(page_state);
 						final PageState page_state_record = this.page_state;
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
@@ -304,7 +302,8 @@ public class PageStateBuilder extends AbstractActor{
 						
 						//update audit record with progress
 						//this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						this.page_state = browser_service.performBuildPageProcess(crawl_action.getUrl(), crawl_action.getBrowser()); 
+						this.page_state = browser_service.performBuildPageProcess(crawl_action.getUrl(), 
+																				  crawl_action.getBrowser()); 
 
 						this.page_state = page_state_service.save(this.page_state);
 						final PageState page_state_record = this.page_state;
@@ -312,7 +311,7 @@ public class PageStateBuilder extends AbstractActor{
 
 						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
-						this.total_dispatches = 0L;
+						this.total_dispatches = 1L;
 						this.xpaths.addAll(xpaths);
 						
 						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
@@ -369,51 +368,13 @@ public class PageStateBuilder extends AbstractActor{
 																							page_state.getId(), 
 																							xpaths,
 																							element_states,
-																							0L,
-																							0L, 
+																							xpaths.size(),
+																							this.total_dispatches, 
 																							page_state.getUrl(),
 																							crawl_action.getDomainId());
 						
-						getContext().parent().tell(element_message, getSelf());
-						/*
-					   	int start_xpath_index = 0;
-					   	int last_xpath_index = 0;
-						List<List<String>> xpath_lists = new ArrayList<>();
-
-						while(start_xpath_index < (xpaths.size()-1)) {
-					   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
-					   		if(last_xpath_index >= xpaths.size()) {
-					   			last_xpath_index = xpaths.size()-1;
-					   		}
-					   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
-					   		xpath_lists.add(xpath_subset);
-						   
-					   		ElementExtractionMessage element_extraction_msg = 
-						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
-						   															 page_state_record, 
-						   															 crawl_action.getAuditRecordId(), 
-						   															 xpath_subset, 
-						   															 crawl_action.getDomainId());
-							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
-						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
-		
-							element_extractor.tell(element_extraction_msg, getSelf());					
+						getContext().getSelf().tell(element_message, getSelf());
 						
-							this.total_dispatches++;
-							//log.warn("Element state list length   =   "+elements.size());
-							//page_state_record.addElements(elements);
-							start_xpath_index = last_xpath_index;
-					   	}
-						*/
-						/*
-						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
-																									 crawl_action.getAccountId(), 
-																									 crawl_action.getAuditRecordId(), 
-																									 page_state.getUrl(), 
-																									 xpath_lists.size());
-						
-						getContext().getParent().tell(extraction_tracker, getSelf());
-						*/
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
 																								 crawl_action.getAccountId(), 

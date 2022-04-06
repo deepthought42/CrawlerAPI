@@ -26,6 +26,10 @@ public class FormField {
 	private List<Rule> rules;
 	private Element form_field;
 	
+	public FormField() {
+		rules = new ArrayList<>();
+	}
+	
 	/**
 	 * Constructs new FormField
 	 * 
@@ -38,7 +42,7 @@ public class FormField {
 	}
 	
 	private String generateKey() {
-		return form_field.getKey()+""+rules.hashCode();
+		return form_field.getKey();
 	}
 
 	/**

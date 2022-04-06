@@ -1,5 +1,7 @@
 package com.looksee.models;
 
+import java.util.Objects;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
@@ -60,7 +62,7 @@ public class ActionOLD extends LookseeObject {
 	 */
 	@Override
 	public int hashCode(){
-		return this.name.hashCode();
+		return Objects.hashCode(name);
 	}
 	
 	public String getValue() {

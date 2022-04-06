@@ -849,7 +849,7 @@ public class BrowserService {
 					//TODO: extract image from full page screenshot manually
 				}
 				
-
+				
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				Map<String, String> attributes = browser.extractAttributes(web_element);
 
@@ -2032,7 +2032,10 @@ public class BrowserService {
 		Set<String> script_urls = new HashSet<String>();
 		
 		for(Element script_tag : script_tags) {
-			script_urls.add(script_tag.absUrl("src"));
+			String src_url = script_tag.absUrl("src");
+			if(src_url != null && !src_url.isEmpty()) {
+				script_urls.add(script_tag.absUrl("src"));
+			}
 		}
 		return script_urls;
 	}

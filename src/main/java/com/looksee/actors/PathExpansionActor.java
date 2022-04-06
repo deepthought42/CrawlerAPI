@@ -124,7 +124,11 @@ public class PathExpansionActor extends AbstractActor {
 					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 					cloned_steps.add(step);
 					log.warn("Cloned steps size :: "+cloned_steps.size());
-					JourneyMessage journey_msg = new JourneyMessage(cloned_steps, PathStatus.EXPANDED, BrowserType.CHROME, message.getDomainId(), message.getAccountId());
+					JourneyMessage journey_msg = new JourneyMessage(cloned_steps, 
+																	PathStatus.EXPANDED, 
+																	BrowserType.CHROME, 
+																	message.getDomainId(), 
+																	message.getAccountId());
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 					journey_executor.tell(journey_msg, getSelf());

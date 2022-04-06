@@ -1,5 +1,7 @@
 package com.looksee.models.journeys;
 
+import java.util.Objects;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -38,6 +40,7 @@ public class Step extends LookseeObject {
 		setAction(action);
 		setActionInput(action_input);
 		setEndPage(end_page);
+		setKey(generateKey());
 	}
 	
 	public PageState getStartPage() {
@@ -74,8 +77,7 @@ public class Step extends LookseeObject {
 
 	@Override
 	public String generateKey() {
-		// TODO Auto-generated method stub
-		return null;
+		return Objects.hash(start_page, element, action, end_page)+"";
 	}
 
 	public String getActionInput() {

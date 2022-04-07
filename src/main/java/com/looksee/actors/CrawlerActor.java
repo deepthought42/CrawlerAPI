@@ -33,6 +33,7 @@ import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
+import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
 
@@ -59,6 +60,9 @@ public class CrawlerActor extends AbstractActor{
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -286,7 +290,11 @@ public class CrawlerActor extends AbstractActor{
 	private List<Step> generateSteps(PageState last_page, List<ElementState> elements) {
 		List<Step> steps = new ArrayList<>();
 		for(ElementState element: elements) {
-			Step step = new Step(last_page, element, Action.CLICK, "", null);
+			Step step = new Step(last_page, 
+								 element, 
+								 Action.CLICK, 
+								 "", 
+								 null);
 			steps.add(step);
 		}
 		return steps;

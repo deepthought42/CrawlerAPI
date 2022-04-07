@@ -23,6 +23,7 @@ import com.looksee.models.rules.Rule;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.FormService;
+import com.looksee.services.PageStateService;
 import com.looksee.utils.PathUtils;
 
 import akka.actor.Props;
@@ -54,6 +55,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private ElementRuleExtractor rule_extractor;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);

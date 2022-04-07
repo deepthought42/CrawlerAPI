@@ -49,6 +49,7 @@ import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
 import com.looksee.services.JourneyService;
+import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.services.StepService;
 import com.looksee.services.SubscriptionService;
@@ -99,6 +100,9 @@ public class AuditManager extends AbstractActor{
 	
 	@Autowired
 	private SendGridMailService mail_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private SubscriptionService subscription_service;
@@ -344,7 +348,7 @@ public class AuditManager extends AbstractActor{
 						page_audit_record = (PageAuditRecord)audit_record_service.save(page_audit_record);
 						audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), page_audit_record.getId());
 
-						String url_without_protocol = BrowserUtils.getPageUrl(new URL(page_state.getUrl()));
+						String url_without_protocol = page_state.getUrl();
 
 						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, total_pages_audited)) {
 							total_pages_audited++;
@@ -558,7 +562,7 @@ public class AuditManager extends AbstractActor{
 		}
 	}
 	
-	private void stopAudit(PageCrawlActionMessage message) {		
+	private void stopAudit(PageCrawlActionMessage message) {
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

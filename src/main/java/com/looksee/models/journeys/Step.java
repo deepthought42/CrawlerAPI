@@ -1,6 +1,6 @@
 package com.looksee.models.journeys;
 
-import java.util.Objects;
+import java.util.UUID;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -16,7 +16,7 @@ import com.looksee.models.enums.Action;
  */
 @NodeEntity
 public class Step extends LookseeObject {
-	@Relationship(type = "STARTS")
+	@Relationship(type = "STARTS_WITH")
 	private PageState start_page;
 	
 	@Relationship(type = "HAS")
@@ -25,7 +25,7 @@ public class Step extends LookseeObject {
 	private String action;
 	private String action_input;
 	
-	@Relationship(type = "ENDS")
+	@Relationship(type = "ENDS_WITH")
 	private PageState end_page;
 	
 	public Step() {}
@@ -77,7 +77,7 @@ public class Step extends LookseeObject {
 
 	@Override
 	public String generateKey() {
-		return Objects.hash(start_page, element, action, end_page)+"";
+		return "step"+UUID.randomUUID();
 	}
 
 	public String getActionInput() {

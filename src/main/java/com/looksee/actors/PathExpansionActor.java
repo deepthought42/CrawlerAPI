@@ -46,6 +46,7 @@ import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.StepService;
 import com.looksee.utils.PathUtils;
 
 /**
@@ -63,6 +64,9 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private StepService step_service;
 	
 	private Map<String, List<ElementState>> explored_elements = new HashMap<>();
 	
@@ -196,10 +200,13 @@ public class PathExpansionActor extends AbstractActor {
 	 * @param elements
 	 * @return
 	 */
-	private List<Step> generateSteps(PageState last_page, List<ElementState> elements) {
+	private List<Step> generateSteps(PageState page_state, List<ElementState> elements) {
 		List<Step> steps = new ArrayList<>();
 		for(ElementState element: elements) {
-			Step step = new Step(last_page, element, Action.CLICK, "", null);
+			//Step step = step_service.save(new Step(null, null, Action.CLICK, "", null));
+			//step_service.addStartPage(page_state);
+			//step_service.addElement(element);
+			Step step = new Step(page_state, element, Action.CLICK, "", null);
 			steps.add(step);
 		}
 		return steps;

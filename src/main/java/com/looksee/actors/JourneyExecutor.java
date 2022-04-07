@@ -29,7 +29,6 @@ import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.Journey;
-import com.looksee.models.journeys.NavigationStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
@@ -166,7 +165,7 @@ public class JourneyExecutor extends AbstractActor{
 							.props("journeyExpander"), "journeyExpander"+UUID.randomUUID());
 					journeyExpander.tell(journey, getSelf());	
 					*/
-					
+				
 				})
 				.match(PageDataExtractionMessage.class, message -> {
 					log.warn("Journey extraction received page data extraction message");

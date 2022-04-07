@@ -1,4 +1,4 @@
-package com.looksee.models.journeys;
+package com.looksee.services;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
-import com.looksee.services.StepService;
+import com.looksee.models.journeys.Step;
 
 @Service
 public class StepExecutor {
@@ -22,6 +22,13 @@ public class StepExecutor {
 		assert browser != null;
 		assert step != null;
 		
+		//step.setElementState(step_service.getElementState(step.getKey()));
+
+		WebElement interactive_elem = browser.getDriver().findElement(By.xpath(step.getElementState().getXpath()));
+		ActionFactory action_factory = new ActionFactory(browser.getDriver());
+		action_factory.execAction(interactive_elem, step.getActionInput(), step.getAction());
+
+		/*
 		if(step instanceof ElementInteractionStep) {
 			ElementInteractionStep interaction_step = (ElementInteractionStep)step;
 			
@@ -37,5 +44,6 @@ public class StepExecutor {
 			browser.navigateTo(((NavigationStep) step).getUrl());
 			browser.removeDriftChat();
 		}
+		*/
 	}
 }

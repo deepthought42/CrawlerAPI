@@ -25,14 +25,13 @@ import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.journeys.ElementInteractionStep;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
-import com.looksee.models.journeys.StepExecutor;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
+import com.looksee.services.StepExecutor;
 import com.looksee.services.StepService;
 import com.looksee.utils.TimingUtils;
 
@@ -166,7 +165,11 @@ public class JourneyExpander extends AbstractActor{
 									exploration_result_page = page_state_service.save(exploration_result_page);
 									
 									log.warn("creating new element interaction step .... "+new_element_state);
-									Step step = new ElementInteractionStep(journey_result_page, new_element_state, Action.MOUSE_OVER, exploration_result_page);
+									Step step = new Step(journey_result_page, 
+														 new_element_state, 
+														 Action.MOUSE_OVER, 
+														 "", 
+														 exploration_result_page);
 									if(existsInJourney(journey, step)) {
 										continue;
 									}

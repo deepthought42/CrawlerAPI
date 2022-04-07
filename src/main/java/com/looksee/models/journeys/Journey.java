@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.LookseeObject;
 
@@ -13,6 +14,7 @@ import com.looksee.models.LookseeObject;
  */
 public class Journey extends LookseeObject {
 
+	@Relationship(type = "HAS")
 	private List<Step> steps;
 	private List<Long> ordered_ids;
 	
@@ -23,7 +25,10 @@ public class Journey extends LookseeObject {
 	}
 	
 	public Journey(List<Step> steps) {
-		List<Long> ordered_ids = steps.stream().map(step -> step.getId()).collect(Collectors.toList());
+		List<Long> ordered_ids = steps.stream()
+									  .map(step -> step.getId())
+									  .filter(id -> id != null)
+									  .collect(Collectors.toList());
 		setSteps(steps);
 		setOrderedIds(ordered_ids);
 		setKey(generateKey());

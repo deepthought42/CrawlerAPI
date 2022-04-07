@@ -1,7 +1,6 @@
 package com.looksee.utils;
 
 import com.looksee.models.ElementState;
-import com.looksee.models.journeys.ElementInteractionStep;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 
@@ -15,10 +14,7 @@ public class JourneyUtils {
 			
 			//get step from step set
 			for(Step step : journey.getSteps()) {
-				if(step.getId() == step_id && step instanceof ElementInteractionStep ) {
-						//get last element interation journey step
-						return ((ElementInteractionStep)step).getElement();
-				}
+				return step.getElementState();
 			}
 		}
 		

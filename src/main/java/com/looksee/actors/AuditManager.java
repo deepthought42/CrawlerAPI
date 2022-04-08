@@ -214,6 +214,7 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
+					log.warn("Page candidate found message recieved by AUDIT MANAGER");
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
 						if(!this.page_states_experienced.containsKey(url_without_protocol)) {
@@ -279,6 +280,7 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(PageDataExtractionMessage.class, message -> {
+					log.warn("audit manager received page data extracton message");
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					audit_record.setDataExtractionMsg("Extracting elements");
 					audit_record.setDataExtractionProgress(0.1);

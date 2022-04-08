@@ -111,7 +111,7 @@ public class CrawlerActor extends AbstractActor{
 						
 					}
 				})
-				.match(PageDataExtractionMessage.class, msg -> {					
+				.match(PageDataExtractionMessage.class, msg -> {			
 					log.warn("path expansion actor received PageDataExtraction Message");
 					List<ElementState> elements = msg.getPageState().getElements();
 

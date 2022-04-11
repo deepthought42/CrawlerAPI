@@ -425,11 +425,14 @@ public class PageStateBuilder extends AbstractActor{
 						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
+							PageState page_state = page_state_service.findById(message.getPageId()).get();
+
 							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
 																				audit_record.getId(), 
 																				message.getDomainId(), 
 																				message.getAccountId(), 
-																				message.getAuditRecordId());
+																				message.getAuditRecordId(),
+																				page_state);
 							
 							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 						   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());

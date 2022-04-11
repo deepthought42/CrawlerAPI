@@ -37,12 +37,20 @@ public class StepService {
 	public Step save(Step step) {
 		assert step != null;
 		
-		Step step_record = new Step();
+		Step step_record = step_repo.findByKey(step.getKey());
+		if(step_record != null) {
+			return step_record;
+		}
+		step_record = new Step();
+		step_record.setAction(step.getAction());
+		step_record.setActionInput(step.getActionInput());
 		step_record = step_repo.save(step_record);
 		step_record.setStartPage(step_repo.addStartPage(step_record.getId(), step.getStartPage().getId()));
 		step_record.setEndPage(step_repo.addEndPage(step_record.getId(), step.getEndPage().getId()));
 		step_record.setElementState(step_repo.addElementState(step_record.getId(), step.getElementState().getId()));
-		
+		step_record.setKey(step_record.generateKey());
+		step_record = step_repo.save(step_record);
+
 		/*
 		log.warn("step :: "+step);
 		log.warn("step key :: "+step.getKey());

@@ -170,6 +170,7 @@ public class JourneyExecutor extends AbstractActor{
 				.match(PageDataExtractionMessage.class, message -> {
 					log.warn("Journey extraction received page data extraction message");
 					this.steps.get(this.steps.size()-1).setEndPage(message.getPageState());
+					this.steps.get(this.steps.size()-1).setKey(this.steps.get(this.steps.size()-1).generateKey());
 					PageState second_to_last_page = PathUtils.getSecondToLastPageState(this.steps);
 					//is end_page PageState different from second to last PageState
 					if(message.getPageState().equals(second_to_last_page)) {

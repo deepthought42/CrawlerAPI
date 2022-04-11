@@ -12,7 +12,7 @@ import com.looksee.models.journeys.Step;
 @Repository
 public interface StepRepository extends Neo4jRepository<Step, Long>{
 
-	public Step findByKey(@Param("step_key") String step_key);
+	public Step findByKey(@Param("key") String step_key);
 
 	@Query("MATCH (:ElementInteractionStep{key:$step_key})-[:HAS]->(e:ElementState) RETURN e")
 	public ElementState getElementState(@Param("step_key") String step_key);

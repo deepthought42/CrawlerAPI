@@ -299,14 +299,17 @@ public class AuditManager extends AbstractActor{
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(ElementsSaved.class, message -> {
+					PageState page_state = page_state_service.findById(message.getPageStateId()).get();
+
 					PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
 																	message.getAuditRecordId(), 
 																	message.getDomainId(), 
 																	message.getAccountId(), 
-																	message.getAuditRecordId());
+																	message.getAuditRecordId(),
+																	page_state);
 					
 					ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-				   			.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+		   											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
 					log.warn("sending message to content auditor....");
 					content_auditor.tell(audit_record_msg, getSelf());							
 
@@ -374,7 +377,8 @@ public class AuditManager extends AbstractActor{
 						   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, 
 						   														   	  message.getAccountId(), 
 						   														   	  message.getDomainId());
-						   	
+						   	log.warn("Page state id :: "+page_state.getId());
+						   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state.getId());
 						   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
 						   												   audit_record.getKey());
 							
@@ -382,7 +386,8 @@ public class AuditManager extends AbstractActor{
 																				audit_record.getId(), 
 																				message.getDomainId(), 
 																				message.getAccountId(), 
-																				message.getAuditRecordId());
+																				message.getAuditRecordId(),
+																				page_state);
 		
 							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 																   .props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
@@ -401,6 +406,7 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(AuditProgressUpdate.class, message -> {
 					try {
+						log.warn("Audit progress update message received by AuditManager :: "+message.getAuditRecordId());
 						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 						audit_record.setDataExtractionProgress(1.0);
 						audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
@@ -419,7 +425,9 @@ public class AuditManager extends AbstractActor{
 							audit_record.setInfoArchMsg(message.getMessage());
 						}
 						
-						audit_record =  audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
+						audit_record =  audit_record_service.save(audit_record, 
+																  message.getAccountId(), 
+																  message.getDomainId());	
 	
 						if(message.getAudit() != null) {
 							/*
@@ -454,7 +462,8 @@ public class AuditManager extends AbstractActor{
 							
 							try {
 								if(audit_record instanceof PageAuditRecord) {
-									audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();
+									//audit_record = audit_record_service.getDomainAuditRecordForPageRecord(audit_record.getId()).get();
+									audit_record = audit_record_service.findById(audit_record.getId()).get();
 								}
 								
 								Account account = account_service.findById(message.getAccountId()).get();

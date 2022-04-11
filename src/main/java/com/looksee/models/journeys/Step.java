@@ -1,7 +1,5 @@
 package com.looksee.models.journeys;
 
-import java.util.UUID;
-
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -77,7 +75,17 @@ public class Step extends LookseeObject {
 
 	@Override
 	public String generateKey() {
-		return "step"+UUID.randomUUID();
+		String key = "";
+		if(start_page != null) {
+			key += start_page.getId();
+		}
+		if(element != null) {
+			key += element.getId();
+		}
+		if(end_page != null) {
+			key += end_page.getId();
+		}
+		return "step"+key+action+action_input;
 	}
 
 	public String getActionInput() {

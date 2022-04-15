@@ -32,6 +32,7 @@ import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.journeys.Journey;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
@@ -558,8 +559,10 @@ public class AuditManager extends AbstractActor{
 		List<PageState> page_states = new ArrayList<>();
 		
 		for(Step step : steps) {
-			page_states.add(step.getStartPage());
-			page_states.add(step.getEndPage());
+			if(step instanceof SimpleStep) {
+				page_states.add(((SimpleStep)step).getStartPage());
+				page_states.add(((SimpleStep)step).getEndPage());
+			}
 		}
 		
 		return page_states.stream().distinct().collect(Collectors.toList());

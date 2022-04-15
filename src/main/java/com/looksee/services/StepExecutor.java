@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 
 @Service
@@ -23,11 +24,12 @@ public class StepExecutor {
 		assert step != null;
 		
 		//step.setElementState(step_service.getElementState(step.getKey()));
-
-		WebElement interactive_elem = browser.getDriver().findElement(By.xpath(step.getElementState().getXpath()));
-		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-		action_factory.execAction(interactive_elem, step.getActionInput(), step.getAction());
-
+		if(step instanceof SimpleStep) {
+	
+			WebElement interactive_elem = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
+			ActionFactory action_factory = new ActionFactory(browser.getDriver());
+			action_factory.execAction(interactive_elem, ((SimpleStep)step).getActionInput(), ((SimpleStep)step).getAction());
+		}
 		/*
 		if(step instanceof ElementInteractionStep) {
 			ElementInteractionStep interaction_step = (ElementInteractionStep)step;

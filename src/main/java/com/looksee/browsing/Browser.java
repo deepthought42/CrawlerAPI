@@ -921,9 +921,8 @@ public class Browser {
 	 */
 	private Map<String, String> loadAttributes( List<String> attributeList){
 		Map<String, String> attributes_seen = new HashMap<String, String>();
-		
 		for(int i = 0; i < attributeList.size(); i++){
-			String[] attributes = attributeList.get(i).split("");
+			String[] attributes = attributeList.get(i).split("::");
 			
 			if(attributes.length > 1){
 				String attribute_name = attributes[0].trim().replace("\'", "'");

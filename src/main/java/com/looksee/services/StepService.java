@@ -6,14 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
-import com.looksee.models.PageState;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.StepRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
 /**
- * Enables interacting with database for {@link Step Steps}
+ * Enables interacting with database for {@link SimpleStep Steps}
  */
 @Service
 @Retry(name = "neoforj")
@@ -30,18 +30,19 @@ public class StepService {
 	@Autowired
 	private PageStateService page_state_service;
 	
-	public Step findByKey(String step_key) {
+	public SimpleStep findByKey(String step_key) {
 		return step_repo.findByKey(step_key);
 	}
 
 	public Step save(Step step) {
 		assert step != null;
 		
-		Step step_record = step_repo.findByKey(step.getKey());
+		SimpleStep step_record = step_repo.findByKey(step.getKey());
 		if(step_record != null) {
 			return step_record;
 		}
-		step_record = new Step();
+		/*
+		step_record = new SimpleStep();
 		step_record.setAction(step.getAction());
 		step_record.setActionInput(step.getActionInput());
 		step_record = step_repo.save(step_record);
@@ -50,7 +51,9 @@ public class StepService {
 		step_record.setElementState(step_repo.addElementState(step_record.getId(), step.getElementState().getId()));
 		step_record.setKey(step_record.generateKey());
 		step_record = step_repo.save(step_record);
-
+*/
+		
+		
 		/*
 		log.warn("step :: "+step);
 		log.warn("step key :: "+step.getKey());

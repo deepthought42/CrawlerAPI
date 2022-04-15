@@ -10,8 +10,6 @@ import com.looksee.models.journeys.Step;
 public class JourneyMessage extends Message {
 
 	private List<Step> steps;
-//	private List<String> keys;
-//	private List<LookseeObject> path_objects;
 	private PathStatus status;
 	private BrowserType browser;
 	

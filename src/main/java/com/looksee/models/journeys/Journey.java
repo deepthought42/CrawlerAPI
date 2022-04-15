@@ -64,7 +64,7 @@ public class Journey extends LookseeObject {
 		this.steps = steps;
 	}
 
-	public boolean addStep(Step step) {
+	public boolean addStep(SimpleStep step) {
 		return this.steps.add(step);
 	}
 	

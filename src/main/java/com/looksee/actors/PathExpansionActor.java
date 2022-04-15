@@ -40,6 +40,7 @@ import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
 import com.looksee.models.enums.PathStatus;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
@@ -121,7 +122,7 @@ public class PathExpansionActor extends AbstractActor {
 				//Add interactive elements to explored map for PageState key
 				addElementsToExploredMap(last_page, filtered_elements);
 				//Build Steps for all elements in list
-				List<Step> new_steps = generateSteps(last_page, filtered_elements);
+				List<Step> new_steps = generateSimpleSteps(last_page, filtered_elements);
 				
 				//generate new journeys with new steps and send to journey executor to be evaluated
 				for(Step step: new_steps) {
@@ -161,7 +162,7 @@ public class PathExpansionActor extends AbstractActor {
 				//Add interactive elements to explored map for PageState key
 				addElementsToExploredMap(message.getPageState(), filtered_elements);
 				//Build Steps for all elements in list
-				List<Step> new_steps = generateSteps(message.getPageState(), filtered_elements);
+				List<Step> new_steps = generateSimpleSteps(message.getPageState(), filtered_elements);
 				
 				log.warn("new steps found ... "+new_steps.size());
 				//generate new journeys with new steps and send to journey executor to be evaluated
@@ -194,19 +195,19 @@ public class PathExpansionActor extends AbstractActor {
 	}
 
 	/**
-	 * Generate {@link List} of {@link Step steps}
+	 * Generate {@link List} of {@link SimpleStep steps}
 	 * 
 	 * @param last_page
 	 * @param elements
 	 * @return
 	 */
-	private List<Step> generateSteps(PageState page_state, List<ElementState> elements) {
+	private List<Step> generateSimpleSteps(PageState page_state, List<ElementState> elements) {
 		List<Step> steps = new ArrayList<>();
 		for(ElementState element: elements) {
 			//Step step = step_service.save(new Step(null, null, Action.CLICK, "", null));
 			//step_service.addStartPage(page_state);
 			//step_service.addElement(element);
-			Step step = new Step(page_state, element, Action.CLICK, "", null);
+			SimpleStep step = new SimpleStep(page_state, element, Action.CLICK, "", null);
 			steps.add(step);
 		}
 		return steps;

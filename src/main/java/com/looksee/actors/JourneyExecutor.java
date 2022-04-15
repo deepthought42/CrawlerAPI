@@ -29,6 +29,7 @@ import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.Journey;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
@@ -248,9 +249,11 @@ public class JourneyExecutor extends AbstractActor{
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
 
 		for(Step step: steps) {
-			WebElement web_element = browser.getDriver().findElement(By.xpath(step.getElementState().getXpath()));
-			
-			action_factory.execAction(web_element, "", step.getAction());
+			if(step instanceof SimpleStep) {
+				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
+				
+				action_factory.execAction(web_element, "", ((SimpleStep)step).getAction());
+			}
 		}
 	}
 

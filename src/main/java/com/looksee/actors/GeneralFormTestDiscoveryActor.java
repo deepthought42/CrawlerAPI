@@ -16,6 +16,7 @@ import com.looksee.models.ActionOLD;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
@@ -208,7 +209,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> form_tests = new ArrayList<List<LookseeObject>>();
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(Element input_elem : form.getFormFields()){
+		for(ElementState input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
@@ -227,12 +228,15 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				log.info("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
 				continue;
 			}
+			
+			/*
 			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
 			for(Rule rule : rules){
 				List<List<LookseeObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 				form_tests.addAll(path_list);
 			}
+			*/
 			log.info("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;
@@ -249,14 +253,16 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		
 		//for each field in the complex field generate a set of tests for all known rules
-		for(Element input_elem : form.getFormFields()){			
+		for(ElementState input_elem : form.getFormFields()){			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
+			/*
 			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
 			for(Rule rule : rules){
 				List<List<LookseeObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 				form_tests.addAll(path_list);
 			}
+			*/
 			log.info("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;

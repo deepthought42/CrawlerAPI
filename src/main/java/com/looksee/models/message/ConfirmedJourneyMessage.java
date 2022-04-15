@@ -5,13 +5,12 @@ import java.util.List;
 
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 
 public class ConfirmedJourneyMessage extends Message {
 
 	private List<Step> steps;
-//	private List<String> keys;
-//	private List<LookseeObject> path_objects;
 	private PathStatus status;
 	private BrowserType browser;
 	

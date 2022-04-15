@@ -7,12 +7,12 @@ import org.springframework.stereotype.Repository;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
-import com.looksee.models.journeys.Step;
+import com.looksee.models.journeys.SimpleStep;
 
 @Repository
-public interface StepRepository extends Neo4jRepository<Step, Long>{
+public interface StepRepository extends Neo4jRepository<SimpleStep, Long>{
 
-	public Step findByKey(@Param("key") String step_key);
+	public SimpleStep findByKey(@Param("key") String step_key);
 
 	@Query("MATCH (:ElementInteractionStep{key:$step_key})-[:HAS]->(e:ElementState) RETURN e")
 	public ElementState getElementState(@Param("step_key") String step_key);

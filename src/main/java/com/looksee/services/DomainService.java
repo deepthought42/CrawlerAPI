@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.looksee.config.SpringExtension.SpringExt;
 import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
@@ -25,6 +26,8 @@ import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.DomainRepository;
+
+import akka.actor.AbstractExtensionId;
 
 @Service
 public class DomainService {
@@ -222,5 +225,9 @@ public class DomainService {
 
 	public List<Competitor> getCompetitors(long domain_id) {
 		return domain_repo.getCompetitors(domain_id);
+	}
+
+	public List<TestUser> findTestUser(long domain_id) {
+		return domain_repo.findTestUser(domain_id);
 	}
 }

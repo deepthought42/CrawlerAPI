@@ -1,15 +1,10 @@
 package com.looksee.services;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.actors.AuditManager;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.JourneyRepository;
@@ -32,6 +27,8 @@ public class JourneyService {
 		journey_record.setOrderedIds(journey.getOrderedIds());
 		journey_record = journey_repo.save(journey_record);
 		for(Step step : journey.getSteps()) {
+			log.warn("journey id :: "+journey_record.getId());
+			log.warn("step id :: "+step.getId());
 			journey_repo.addStep(journey_record.getId(), step.getId());
 		}
 		return journey_repo.save(journey);	

@@ -26,8 +26,8 @@ import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.journeys.Journey;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
-import com.looksee.models.message.JourneyMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
@@ -165,7 +165,7 @@ public class JourneyExpander extends AbstractActor{
 									exploration_result_page = page_state_service.save(exploration_result_page);
 									
 									log.warn("creating new element interaction step .... "+new_element_state);
-									Step step = new Step(journey_result_page, 
+									Step step = new SimpleStep(journey_result_page, 
 														 new_element_state, 
 														 Action.MOUSE_OVER, 
 														 "", 
@@ -318,7 +318,7 @@ public class JourneyExpander extends AbstractActor{
 	
 	private boolean existsInJourney(Journey journey, Step step) {
 		for(Step journey_step : journey.getSteps()) {
-			if(step.getKey().contentEquals(step.getKey())) {
+			if(journey_step.getKey().contentEquals(step.getKey())) {
 				return true;
 			}
 		}

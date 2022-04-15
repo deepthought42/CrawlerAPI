@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,11 +21,16 @@ import org.springframework.stereotype.Component;
 
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
+import com.looksee.models.Form;
 import com.looksee.models.PageState;
+import com.looksee.models.TestUser;
 import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.PathStatus;
+import com.looksee.models.journeys.LoginStep;
+import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
@@ -35,12 +41,12 @@ import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.PageUtils;
 import com.looksee.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -57,12 +63,6 @@ public class CrawlerActor extends AbstractActor{
 	
 	@Autowired
 	private ActorSystem actor_system;
-	
-	@Autowired
-	private AuditRecordService audit_record_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -129,6 +129,16 @@ public class CrawlerActor extends AbstractActor{
 																	.filter(element -> !isElementExplored(msg.getPageState().getKey(), element))
 																	.filter(element -> !isFormElement(element))
 																	.collect(Collectors.toList());
+					
+					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					Set<Form> forms = PageUtils.extractAllForms(msg.getPageState());
+					log.warn("Forms found :: "+forms.size());
+					//generate form journeys
+					for(Form form: forms) {
+						List<Step> steps = generateFormSteps(msg.getDomainId(), msg.getPageState(), forms);
+					}
+					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					
 					log.warn("Total elements after filtering ... "+filtered_elements.size());
 					//send form elements to form journey actor
 					//Add interactive elements to explored map for PageState key
@@ -280,8 +290,63 @@ public class CrawlerActor extends AbstractActor{
 				.build();
 	}
 	
+	private List<Step> generateFormSteps(long domain_id, PageState pageState, Set<Form> forms) {
+		List<Step> steps = new ArrayList<>();
+		for(Form form: forms) {
+			if(FormType.LOGIN.equals(form.getType())){
+				//retrieve user credentials
+				TestUser user = domain_service.findTestUser(domain_id).get(0);
+				
+				//get username field
+				ElementState username_element = getFormField(form.getFormFields(), "username");
+				//create step to enter username into username field
+				
+				//get password field
+				ElementState password_element = getFormField(form.getFormFields(), "password");
+
+				//create step to enter password into password field
+				
+				//get submit button
+				ElementState submit_btn = getFormField(form.getFormFields(), "submit");
+				
+				//create step to click on submit button
+				Step step = new LoginStep(pageState, null, username_element, password_element, submit_btn, user);
+				steps.add(step);
+			}
+			else if(FormType.REGISTRATION.equals(form.getType())) {
+				//generate username value
+				//generate password value
+				//save user credentials
+				
+				//get username field
+				//create step to enter username into username field
+				
+				//get password field
+				//create step to enter password into password field
+				
+				//get password confirmation field if it exists
+				//create step to enter password into password confirmation field
+				
+				//get submit button
+				//create step to click on submit button
+			}
+		}
+		return steps;
+	}
+
+	private ElementState getFormField(List<ElementState> formFields, String string) {
+		for(ElementState element: formFields) {
+			for(String attr_value : element.getAttributes().values()) {
+				if("username".contentEquals(attr_value)) {
+					return element;
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
-	 * Generate {@link List} of {@link Step steps}
+	 * Generate {@link List} of {@link SimpleStep steps}
 	 * 
 	 * @param last_page
 	 * @param elements
@@ -290,7 +355,7 @@ public class CrawlerActor extends AbstractActor{
 	private List<Step> generateSteps(PageState last_page, List<ElementState> elements) {
 		List<Step> steps = new ArrayList<>();
 		for(ElementState element: elements) {
-			Step step = new Step(last_page, 
+			SimpleStep step = new SimpleStep(last_page, 
 								 element, 
 								 Action.CLICK, 
 								 "", 

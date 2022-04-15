@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
@@ -69,6 +70,7 @@ import com.looksee.models.enums.FormStatus;
 import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.FormUtils;
 import com.looksee.utils.ImageUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -1538,6 +1540,7 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
+	@Deprecated
 	public Set<Form> extractAllForms(long account_id, Domain domain, Browser browser) throws Exception {
 		Set<Form> form_list = new HashSet<Form>();
 		log.info("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
@@ -1566,6 +1569,7 @@ public class BrowserService {
 			//form_tag.setScreenshotUrl(screenshot_url);
 			form_tag = element_service.saveFormElement(form_tag);
 			
+			/*
 			double[] weights = new double[1];
 		
 			Set<Form> forms = domain_service.getForms(account_id, domain.getUrl());
@@ -1598,9 +1602,12 @@ public class BrowserService {
 			log.info("name :: "+form.getName());
 			
 			form_list.add(form);
+			*/
 		}
 		return form_list;
 	}
+	
+	
 
 	private List<com.looksee.models.Element> buildFormFields(long account_id, List<WebElement> input_elements, Browser browser) throws IOException {
 		List<com.looksee.models.Element> elements = new ArrayList<>();
@@ -1668,6 +1675,7 @@ public class BrowserService {
 	 * @pre form_elem != null
 	 * @pre browser != null;
 	 */
+	@Deprecated
 	private com.looksee.models.Element findFormSubmitButton(WebElement form_elem, 
 															Browser browser
 	) throws Exception {
@@ -1713,6 +1721,7 @@ public class BrowserService {
 
 		return elem;
 	}
+	
 
 	public Map<String, Template> findTemplates(List<com.looksee.models.Element> element_list){
 		//create a map for the various duplicate elements

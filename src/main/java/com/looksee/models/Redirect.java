@@ -4,9 +4,9 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.journeys.Step;
+import com.looksee.models.journeys.SimpleStep;
 
-public class Redirect extends Step {
+public class Redirect extends SimpleStep {
 	private String start_url;
 	private List<String> urls;
 	private List<String> image_checksums;

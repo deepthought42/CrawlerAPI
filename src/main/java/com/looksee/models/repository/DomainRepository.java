@@ -70,8 +70,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH(account:Account)-[]-(d:Domain{host:$host}) MATCH (d)-[:HAS_TEST]->(t:Test) WHERE id(account)=$account_id  RETURN COUNT(t)")
 	public int getTestCount(@Param("account_id") long account_id, @Param("host") String host);
 
-	@Query("MATCH (:Account{username:$username})-[:HAS_DOMAIN]->(d:Domain{key:$domain_key}) MATCH (d)-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
-	public Set<TestUser> getTestUsers(@Param("username") String username, @Param("domain_key") String domain_key);
+	@Query("MATCH (d:Domain)-[:HAS_TEST_USER]->(t:TestUser) WHERE id(d)=$domain_id RETURN t")
+	public Set<TestUser> getTestUsers(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (:Account{acct_username:$acct_username})-[:HAS_DOMAIN]->(d:Domain{key:$domain_key}) MATCH (d)-[r:HAS_TEST_USER]->(t:TestUser{username:$username}) DELETE r,t")
 	public Set<TestUser> deleteTestUser(@Param("acct_username") String acct_username, @Param("domain_key") String domain_key, @Param("username") String username);
@@ -147,4 +147,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain)-[]->(user:TestUser) WHERE id(d)=$domain_id RETURN user")
 	public List<TestUser> findTestUser(long domain_id);
+
+	@Query("MATCH (d:Domain),(user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
+	public void addTestUser(@Param("domain_id") long domain_id, @Param("test_user_id") long test_user_id);
 }

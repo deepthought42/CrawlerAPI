@@ -81,7 +81,11 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 		
 		//List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
 		for(ElementState element: page_state.getElements()) {
-			if(element.getName().contentEquals("button") || element.getName().contentEquals("a") || element.getOwnedText().isEmpty() || element.getAllText().split(" ").length <= 3) {
+			if(element.getName().contentEquals("button") 
+					|| element.getName().contentEquals("a") 
+					|| element.getOwnedText().isEmpty() 
+					|| element.getAllText().split(" ").length <= 3
+			) {
 				continue;
 			}
 			boolean is_child_text = false;
@@ -89,11 +93,16 @@ public class ReadabilityAudit implements IExecutablePageStateAudit {
 				if(element2.getKey().contentEquals(element.getKey())) {
 					continue;
 				}
-				if(!element2.getOwnedText().isEmpty() && element2.getAllText().contains(element.getAllText()) && !element2.getAllText().contentEquals(element.getAllText())) {
+				if(!element2.getOwnedText().isEmpty() 
+						&& element2.getAllText().contains(element.getAllText()) 
+						&& !element2.getAllText().contentEquals(element.getAllText())
+				) {
 					is_child_text = true;
 					break;
 				}
-				else if(element2.getAllText().contentEquals(element.getAllText()) && !element2.getXpath().contains(element.getXpath())) {
+				else if(element2.getAllText().contentEquals(element.getAllText())
+						&& !element2.getXpath().contains(element.getXpath())
+				) {
 					is_child_text = true;
 					break;
 				}

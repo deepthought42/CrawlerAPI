@@ -45,8 +45,8 @@ public class DomainService {
 		return domain_repo.getDomains();
 	}
 	
-	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
-		return domain_repo.getTestUsers(user_id, domain.getKey());
+	public Set<TestUser> getTestUsers(long domain_id) {
+		return domain_repo.getTestUsers(domain_id);
 	}
 
 	public Domain findByHostForUser(String host, String username) {
@@ -71,10 +71,6 @@ public class DomainService {
 
 	public Optional<Domain> findById(long domain_id) {
 		return domain_repo.findById(domain_id);
-	}
-
-	public Set<TestUser> getTestUsers(String username, String key) {
-		return domain_repo.getTestUsers(username, key);
 	}
 
 	public void deleteTestUser(String acct_username, String domain_key, String username) {
@@ -229,5 +225,9 @@ public class DomainService {
 
 	public List<TestUser> findTestUser(long domain_id) {
 		return domain_repo.findTestUser(domain_id);
+	}
+
+	public void addTestUser(long domain_id, long test_user_id) {
+		domain_repo.addTestUser(domain_id, test_user_id);	
 	}
 }

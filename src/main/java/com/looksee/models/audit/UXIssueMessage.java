@@ -50,6 +50,7 @@ public class UXIssueMessage extends LookseeObject {
 		setDescription(description);
 		setType(type);
 		setCategory(category);
+		setRecommendation(recommendation);
 		setWcagCompliance(wcag_compliance);
 		setLabels(labels);
 		setWhyItMatters(why_it_matters);

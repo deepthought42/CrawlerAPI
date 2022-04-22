@@ -59,9 +59,7 @@ public class TestUserController {
     	if(optional_user.isPresent()){
     		TestUser test_user_record = optional_user.get();
     		    		
-    		test_user_record.setIsEnabled(isEnabled);
     		test_user_record.setPassword(password);
-    		test_user_record.setRole(role);
     		test_user_record.setUsername(username);
     		test_user_repo.save(test_user_record);
     	}

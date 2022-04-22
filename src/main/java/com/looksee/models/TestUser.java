@@ -16,16 +16,12 @@ public class TestUser{
 	
 	private String username;
 	private String password;
-	private String role;
-	private boolean enabled;
 	
 	public TestUser(){}
 	
-	public TestUser(String username, String password, String role, boolean isEnabled){
+	public TestUser(String username, String password){
 		setUsername(username);
 		setPassword(password);
-		setRole(role);
-		setIsEnabled(isEnabled);
 	}
 	
 	public long getId(){
@@ -40,27 +36,11 @@ public class TestUser{
 		return this.password;
 	}
 
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
-	}
-
 	public void setUsername(String username) {
 		this.username = username;
 	}
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-	
-	public void setIsEnabled(boolean isEnabled){
-		this.enabled = isEnabled;
-	}
-	
-	public boolean isEnabled(){
-		return this.enabled;
 	}
 }

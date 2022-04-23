@@ -30,11 +30,11 @@ public class LoginStep extends Step {
 	public LoginStep() {}
 	
 	public LoginStep(PageState start_page,
-				PageState end_page,
-				ElementState username_element,
-				ElementState password_element,
-				ElementState submit_btn,
-				TestUser user) {
+					 PageState end_page,
+					 ElementState username_element,
+					 ElementState password_element,
+					 ElementState submit_btn,
+					 TestUser user) {
 		setStartPage(start_page);
 		setEndPage(end_page);
 		setUsernameElement(username_element);

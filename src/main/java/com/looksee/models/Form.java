@@ -39,15 +39,13 @@ public class Form extends LookseeObject{
 	public Form(ElementState form_tag, 
 				List<ElementState> form_fields, 
 				ElementState submit_field, 
-				String name, 
-				FormType type){
+				String name){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);
 		setType(determineFormType());
 		log.warn("FORM TYPE IDENTIFIED :: "+getType());
 		setName(name);
-		setType(type);
 		setKey(generateKey());
 	}
 	
@@ -200,7 +198,7 @@ public class Form extends LookseeObject{
 	
 	@Override
 	public Form clone(){
-		return new Form(form_tag, form_fields, submit_field, name, this.getType());
+		return new Form(form_tag, form_fields, submit_field, name);
 	}
 
 	public List<BugMessage> getBugMessages() {

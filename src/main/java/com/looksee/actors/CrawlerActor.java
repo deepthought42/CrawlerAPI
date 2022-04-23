@@ -36,10 +36,8 @@ import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
-import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
-import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PageUtils;
 import com.looksee.utils.PathUtils;
@@ -57,7 +55,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class CrawlerActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(AestheticAuditor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(CrawlerActor.class.getName());
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
@@ -133,9 +131,25 @@ public class CrawlerActor extends AbstractActor{
 					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					Set<Form> forms = PageUtils.extractAllForms(msg.getPageState());
 					log.warn("Forms found :: "+forms.size());
-					//generate form journeys
 					for(Form form: forms) {
-						List<Step> steps = generateFormSteps(msg.getDomainId(), msg.getPageState(), forms);
+						log.warn("Form type :: "+form.getType());
+					}
+					//generate form journeys
+					List<Step> form_steps = generateFormSteps(msg.getDomainId(), msg.getPageState(), forms);
+					log.warn("form steps created :: "+form_steps.size());
+					for(Step step: form_steps) {
+						List<Step> step_list = new ArrayList<>();
+						step_list.add(step);
+						log.warn("form step list size :: "+step_list.size());
+						JourneyMessage journey_msg = new JourneyMessage(step_list, 
+																		PathStatus.EXPANDED, 
+																		BrowserType.CHROME, 
+																		msg.getDomainId(), 
+																		msg.getAccountId());
+						
+						ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
+								.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
+						journey_executor.tell(journey_msg, getSelf());
 					}
 					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
@@ -173,26 +187,6 @@ public class CrawlerActor extends AbstractActor{
 					//Add page state to visited list
 					visited_pages.add(final_page);
 					
-					/*
-					JourneyMessage journey_message = new JourneyMessage(message.getSteps(), 
-																		PathStatus.EXAMINED, 
-																		BrowserType.CHROME, 
-																		message.getDomainId(), 
-																		message.getAccountId());
-					ActorRef path_expansion_actor = getContext().actorOf(SpringExtProvider.get(actor_system)
-							  .props("pathExpansionActor"), "pathExpansionActor"+UUID.randomUUID());
-					path_expansion_actor.tell(message, getSelf());
-					getContext().getSender().tell(PoisonPill.class, getSelf());
-					
-				})
-				.match(JourneyMessage.class, message -> {
-					log.warn("Path extraction actor received Journey message");
-					//Retrieve last PageState in path
-					PageState last_page = PathUtils.getLastPageState(message.getSteps());
-					if(last_page == null) {
-						last_page = PathUtils.getSecondToLastPageState(message.getSteps());
-					}
-					 */
 					//retrieve all ElementStates from journey
 					List<ElementState> elements = final_page.getElements();
 					final String last_page_key = final_page.getKey();
@@ -214,6 +208,25 @@ public class CrawlerActor extends AbstractActor{
 					
 					log.warn("Total journey elements after filtering ... "+filtered_elements.size());
 
+					Set<Form> forms = PageUtils.extractAllForms(final_page);
+					log.warn("Forms found :: "+forms.size());
+					//generate form journeys
+					List<Step> steps = generateFormSteps(message.getDomainId(), final_page, forms);
+					for(Step step: steps) {
+						List<Step> steps_list = new ArrayList<>(message.getSteps());
+						steps_list.add(step);
+						
+						JourneyMessage journey_msg = new JourneyMessage(steps_list, 
+																		PathStatus.EXPANDED, 
+																		BrowserType.CHROME, 
+																		message.getDomainId(), 
+																		message.getAccountId());
+						
+						ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
+													.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
+						journey_executor.tell(journey_msg, getSelf());
+					}
+					
 					//send form elements to form journey actor
 					//Add interactive elements to explored map for PageState key
 					addElementsToExploredMap(final_page, filtered_elements);
@@ -293,6 +306,9 @@ public class CrawlerActor extends AbstractActor{
 	private List<Step> generateFormSteps(long domain_id, PageState pageState, Set<Form> forms) {
 		List<Step> steps = new ArrayList<>();
 		for(Form form: forms) {
+			log.warn("form type :: "+form.getType());
+			log.warn("form type is LOGIN :: "+FormType.LOGIN.equals(form.getType()));
+			
 			if(FormType.LOGIN.equals(form.getType())){
 				//retrieve user credentials
 				TestUser user = domain_service.findTestUser(domain_id).get(0);
@@ -310,8 +326,7 @@ public class CrawlerActor extends AbstractActor{
 				ElementState submit_btn = getFormField(form.getFormFields(), "submit");
 				
 				//create step to click on submit button
-				Step step = new LoginStep(pageState, null, username_element, password_element, submit_btn, user);
-				steps.add(step);
+				steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user) );
 			}
 			else if(FormType.REGISTRATION.equals(form.getType())) {
 				//generate username value

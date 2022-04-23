@@ -60,8 +60,7 @@ public class PageUtils {
 			Form form = new Form(form_element, 
 								 input_elements, 
 								 FormUtils.findFormSubmitButton(form_element, form_elements),
-								 "Form #"+(forms.size()+1), 
-								 FormUtils.classifyForm(form_element, form_elements));
+								 "Form #"+(forms.size()+1));
 			
 			form_list.add(form);
 		}

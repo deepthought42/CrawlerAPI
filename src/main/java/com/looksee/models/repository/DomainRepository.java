@@ -146,7 +146,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
 
 	@Query("MATCH (d:Domain)-[]->(user:TestUser) WHERE id(d)=$domain_id RETURN user")
-	public List<TestUser> findTestUser(long domain_id);
+	public List<TestUser> findTestUser(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (d:Domain),(user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
 	public void addTestUser(@Param("domain_id") long domain_id, @Param("test_user_id") long test_user_id);

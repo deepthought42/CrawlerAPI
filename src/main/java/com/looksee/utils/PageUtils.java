@@ -53,7 +53,11 @@ public class PageUtils {
 		
 			log.warn("form elements identified :: "+form_elements.size());
 			List<ElementState> input_elements =  form_elements.parallelStream()
-															.filter(element -> element.getName().contentEquals("input"))
+															.filter(element -> { 
+																return element.getName().contentEquals("input") 
+																			|| element.getName().contentEquals("button")
+																			|| element.getAllText().toLowerCase().contains("sign in");
+															})
 															.collect(Collectors.toList());
 
 			log.warn("form input elements :: "+input_elements);

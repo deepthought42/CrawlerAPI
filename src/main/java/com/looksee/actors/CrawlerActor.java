@@ -32,6 +32,7 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.LoginStep;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
+import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.JourneyMessage;
@@ -176,7 +177,13 @@ public class CrawlerActor extends AbstractActor{
 						log.warn("sending journey message to Journey Executor actor");
 					}
 				})
+				.match(BrowserCrawlActionMessage.class, message -> {
+					ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+														.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+					page_builder.tell(message, getSelf());
+				})
 				.match(ConfirmedJourneyMessage.class, message -> {
+					log.warn("crawler received confirmed journey message");
 					PageState final_page = PathUtils.getLastPageState(message.getSteps());
 					Domain domain = domain_service.findById(message.getDomainId()).get();
 					if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
@@ -321,10 +328,9 @@ public class CrawlerActor extends AbstractActor{
 				ElementState password_element = getFormField(form.getFormFields(), "password");
 
 				//create step to enter password into password field
-				
 				//get submit button
 				ElementState submit_btn = getFormField(form.getFormFields(), "submit");
-				
+				log.warn("submit btn found :: "+submit_btn);
 				//create step to click on submit button
 				steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user) );
 			}
@@ -349,10 +355,11 @@ public class CrawlerActor extends AbstractActor{
 		return steps;
 	}
 
-	private ElementState getFormField(List<ElementState> formFields, String string) {
+	private ElementState getFormField(List<ElementState> formFields, String form_string) {
 		for(ElementState element: formFields) {
 			for(String attr_value : element.getAttributes().values()) {
-				if("username".contentEquals(attr_value)) {
+				if(attr_value.toLowerCase().contains(form_string)) {
+					log.warn("element attribute value :: "+attr_value);
 					return element;
 				}
 			}

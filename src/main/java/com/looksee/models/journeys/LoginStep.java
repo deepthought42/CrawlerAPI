@@ -14,7 +14,7 @@ import com.looksee.models.enums.Action;
  */
 @NodeEntity
 public class LoginStep extends Step {
-	
+
 	@Relationship(type = "USES")
 	private TestUser test_user;
 	
@@ -39,6 +39,7 @@ public class LoginStep extends Step {
 		setEndPage(end_page);
 		setUsernameElement(username_element);
 		setPasswordElement(password_element);
+		setSubmitElement(submit_btn);
 		setTestUser(user);
 		setKey(generateKey());
 	}
@@ -76,12 +77,15 @@ public class LoginStep extends Step {
 	public void setSubmitElement(ElementState submit_element) {
 		this.submit_element = submit_element;
 	}
-	
+
 	@Override
 	public String generateKey() {
 		String key = "";
 		if(getStartPage() != null) {
 			key += getStartPage().getId();
+		}
+		if(getEndPage() != null) {
+			key += getEndPage().getId();
 		}
 		if(username_element != null) {
 			key += username_element.getId();
@@ -95,6 +99,6 @@ public class LoginStep extends Step {
 		if(test_user != null) {
 			key += test_user.getId();
 		}
-		return "step"+key;
+		return "loginstep"+key;
 	}
 }

@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.models.enums.Action;
+import com.looksee.utils.TimingUtils;
 
+import org.apache.commons.lang3.ThreadUtils;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;

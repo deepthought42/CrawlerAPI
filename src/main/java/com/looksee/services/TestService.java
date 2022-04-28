@@ -26,12 +26,12 @@ import com.looksee.models.Group;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.TestStatus;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.models.repository.TestRepository;
 import com.looksee.utils.PathUtils;
 

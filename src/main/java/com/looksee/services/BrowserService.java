@@ -246,6 +246,11 @@ public class BrowserService {
 			foreground_color = "rgb(0,0,0)";
 		}
 		
+		String background_color = rendered_css_values.get("background-color");
+		if(background_color == null) {
+			background_color = "rgb(255,255,255)";
+		}
+		
 		ElementState element_state = new ImageElementState(
 													element.ownText().trim(),
 													element.text(),
@@ -263,7 +268,7 @@ public class BrowserService {
 													web_elem.isDisplayed(),
 													css_selector, 
 													foreground_color,
-													rendered_css_values.get("background-color"),
+													background_color,
 													landmark_info_set,
 													faces,
 													image_search_set,

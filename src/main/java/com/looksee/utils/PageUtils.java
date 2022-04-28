@@ -13,6 +13,7 @@ import com.looksee.models.Form;
 import com.looksee.models.PageState;
 
 public class PageUtils {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageUtils.class);
 
 	/**
@@ -41,7 +42,6 @@ public class PageUtils {
 											}
 										})
 										.collect(Collectors.toList());
-		log.warn("FORMS FOUND :: "+forms.size());
 		for(ElementState form_element : forms){
 			
 			
@@ -51,19 +51,14 @@ public class PageUtils {
 													.filter(element -> !element.getXpath().equals(form_element.getXpath()))
 													.collect(Collectors.toList());
 		
-			log.warn("form elements identified :: "+form_elements.size());
 			List<ElementState> input_elements =  form_elements.parallelStream()
-															.filter(element -> { 
-																return element.getName().contentEquals("input") 
-																			|| element.getName().contentEquals("button")
-																			|| element.getAllText().toLowerCase().contains("sign in");
-															})
+															.filter(element -> element.getName().contentEquals("input"))
 															.collect(Collectors.toList());
-
-			log.warn("form input elements :: "+input_elements);
+			
+			ElementState submit_element = FormUtils.findFormSubmitButton(form_elements);
 			Form form = new Form(form_element, 
 								 input_elements, 
-								 FormUtils.findFormSubmitButton(form_element, form_elements),
+								 submit_element,
 								 "Form #"+(forms.size()+1));
 			
 			form_list.add(form);

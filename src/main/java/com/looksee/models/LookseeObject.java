@@ -26,7 +26,7 @@ public abstract class LookseeObject {
     @Id
 	private Long id;
 
-	@Index(unique=true)
+	@Index(unique=false)
 	@Property
 	private String key;
 	

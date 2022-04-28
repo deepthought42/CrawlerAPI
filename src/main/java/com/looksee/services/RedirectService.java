@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.Redirect;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.models.repository.DomainRepository;
 import com.looksee.models.repository.RedirectRepository;
 

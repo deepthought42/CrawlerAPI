@@ -16,6 +16,7 @@ public class Journey extends LookseeObject {
 
 	@Relationship(type = "HAS")
 	private List<Step> steps;
+	
 	private List<Long> ordered_ids;
 	
 	public Journey() {

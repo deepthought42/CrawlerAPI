@@ -1,12 +1,10 @@
-package com.looksee.models;
+package com.looksee.models.journeys;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.journeys.SimpleStep;
-
-public class Redirect extends SimpleStep {
+public class Redirect extends Step {
 	private String start_url;
 	private List<String> urls;
 	private List<String> image_checksums;

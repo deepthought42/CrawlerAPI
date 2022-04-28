@@ -32,6 +32,7 @@ import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.journeys.Journey;
+import com.looksee.models.journeys.LoginStep;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.AuditError;
@@ -323,30 +324,36 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					log.warn("Handling confirmed journey message");
+					log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
 					//save journey steps
+					List<Step> saved_steps = new ArrayList<>();
 					for(Step step : message.getSteps()) {
-						log.warn("step before save :: "+step);
-						step = step_service.save(step);
+						log.warn("saving step :: "+step.getKey());
+						saved_steps.add(step_service.save(step));
 					}
-					
+					log.warn("save steps :: "+saved_steps.size());
+					message.setSteps(saved_steps);
 					//build create and save journey
 					Journey journey = new Journey(message.getSteps());
 					journey = journey_service.save(journey);
+					
+					log.warn("Adding journey to domain ...");
 					//add journey to domain audit
 					audit_record_service.addJourney(this.domain_audit_id, journey.getId());
 					
-					
-					
 					//retrieve all unique page states for journey steps
 					List<PageState> page_states = getAllUniquePageStates(message.getSteps());
+					log.warn("unique pages before filter :: "+page_states.size());
 					//remove all unique pageStates that have already been analyzed
 					page_states = page_states.stream().filter(page -> !analyzed_pages.contains(page)).collect(Collectors.toList());
+					log.warn("unique pages AFTER filter :: "+page_states.size());
+					
 					//create PageAuditRecord for each page that hasn't been analyzed. 
 					Account account = account_service.findById(message.getAccountId()).get();
 			    	SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 					//For each page audit record perform audits
 					for(PageState page_state : page_states) {
+						log.warn("Auditing page state :: "+page_state.getKey());
 						PageAuditRecord page_audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
 																				new HashSet<>(), 
 																				null, 
@@ -356,7 +363,9 @@ public class AuditManager extends AbstractActor{
 
 						String url_without_protocol = page_state.getUrl();
 
+						log.warn("total pages audited :: "+total_pages_audited);
 						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, total_pages_audited)) {
+							log.warn("Audit hasn't exceeded subscription. Continuing with page state audit...");
 							total_pages_audited++;
 							
 							//Account is still within page limit. continue with mapping page 

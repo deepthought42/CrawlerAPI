@@ -46,10 +46,10 @@ import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.services.BrowserService;
 
 /**

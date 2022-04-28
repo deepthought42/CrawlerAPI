@@ -10,7 +10,9 @@ public enum Action {
 	CONTEXT_CLICK("contextClick"), 
 	RELEASE("release"),
 	SEND_KEYS("sendKeys"),
-	MOUSE_OVER("mouseover");
+	MOUSE_OVER("mouseover"), 
+	UNKNOWN("unkown");
+	
 
 	private String shortName;
 

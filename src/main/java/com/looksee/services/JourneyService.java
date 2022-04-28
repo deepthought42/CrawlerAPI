@@ -17,21 +17,27 @@ public class JourneyService {
 	private JourneyRepository journey_repo;
 	
 	public Journey save(Journey journey) {
+		log.warn("*****************************************");
+		log.warn("Saving journey :: "+journey.getKey());
 		Journey journey_record = journey_repo.findByKey(journey.getKey());
 		if(journey_record != null) {
+			log.warn("found journey with key :: "+journey_record.getKey());
 			return journey_record;
 		}
 		journey_record = new Journey();
 
 		log.warn("journey sorted ids :: "+journey.getOrderedIds());
 		journey_record.setOrderedIds(journey.getOrderedIds());
+		journey_record.setKey(journey.generateKey());
 		journey_record = journey_repo.save(journey_record);
 		for(Step step : journey.getSteps()) {
 			log.warn("journey id :: "+journey_record.getId());
 			log.warn("step id :: "+step.getId());
 			journey_repo.addStep(journey_record.getId(), step.getId());
 		}
-		return journey_repo.save(journey);	
+		
+		journey_record.setSteps(journey.getSteps());
+		return journey_record;	
 	}
 	
 }

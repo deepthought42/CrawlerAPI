@@ -785,7 +785,7 @@ public class DomainController {
 			}
 
 			log.info("Test user does not exist for domain yet");
-
+			test_user.setKey(test_user.generateKey());
 			test_user = test_user_repo.save(test_user);
 			domain_service.addTestUser(domain_id, test_user.getId());
 			log.info("saved domain :: " + domain_id);

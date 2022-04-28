@@ -3,6 +3,7 @@ package com.looksee.models.journeys;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
@@ -14,14 +15,18 @@ import com.looksee.models.enums.Action;
 @NodeEntity
 public class SimpleStep extends Step {
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS", direction = Relationship.OUTGOING)
 	private ElementState element;
 	
 	private String action;
 	private String action_input;
 
 	
-	public SimpleStep() {}
+	public SimpleStep() {
+		super();
+		setActionInput("");
+		setAction(Action.UNKNOWN);
+	}
 	
 	public SimpleStep(PageState start_page,
 				ElementState element,
@@ -35,8 +40,6 @@ public class SimpleStep extends Step {
 		setEndPage(end_page);
 		setKey(generateKey());
 	}
-	
-	
 	
 	public ElementState getElementState() {
 		return this.element;
@@ -66,7 +69,7 @@ public class SimpleStep extends Step {
 		if(getEndPage() != null) {
 			key += getEndPage().getId();
 		}
-		return "step"+key+action+action_input;
+		return "simplestep"+key+action+action_input;
 	}
 
 	public String getActionInput() {

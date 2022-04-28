@@ -389,7 +389,6 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(ElementProgressMessage.class, message -> {
-					log.warn("sending elements to be saved");
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
@@ -470,7 +469,6 @@ public class PageStateBuilder extends AbstractActor{
 						
 						//PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
 						if(this.total_save_dispatches == this.total_dispatches) {
-							log.warn("all dispatches have been processed!!!!");
 							/*NOTE: THIS LOGIC SHOULD BE HANDLED IN THE AUDIT MANAGER. MOVE IT THERE ONCE IT'S CLEAR WHERE IT BELONGS */
 							/*
 							audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);

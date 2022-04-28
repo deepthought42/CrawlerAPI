@@ -5,6 +5,7 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -131,15 +132,22 @@ public class CrawlerActor extends AbstractActor{
 					
 					log.warn("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					Set<Form> forms = PageUtils.extractAllForms(msg.getPageState());
-					log.warn("Forms found :: "+forms.size());
+					Set<Form> unexplored_forms = new HashSet<>();
+					
 					for(Form form: forms) {
-						log.warn("Form type :: "+form.getType());
+						if(!isElementExplored(msg.getPageState().getKey(), form.getFormTag())) {
+							unexplored_forms.add(form);
+						}
+						addElementsToExploredMap(msg.getPageState(), form.getFormTag());
 					}
+					
+					log.warn("Forms found :: "+forms.size());
 					//generate form journeys
-					List<Step> form_steps = generateFormSteps(msg.getDomainId(), msg.getPageState(), forms);
+					List<Step> form_steps = generateFormSteps(msg.getDomainId(), msg.getPageState(), unexplored_forms);
 					log.warn("form steps created :: "+form_steps.size());
 					for(Step step: form_steps) {
 						List<Step> step_list = new ArrayList<>();
+						log.warn("adding step to step list :: "+step.getKey());
 						step_list.add(step);
 						log.warn("form step list size :: "+step_list.size());
 						JourneyMessage journey_msg = new JourneyMessage(step_list, 
@@ -183,14 +191,22 @@ public class CrawlerActor extends AbstractActor{
 					page_builder.tell(message, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					log.warn("crawler received confirmed journey message");
+					log.warn("crawler received confirmed journey message :: "+message.getSteps().size() + " steps");
 					PageState final_page = PathUtils.getLastPageState(message.getSteps());
 					Domain domain = domain_service.findById(message.getDomainId()).get();
 					if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
 							|| visited_pages.contains(final_page)/*|| pageState is in visited list*/) {
+						log.warn("final page has already been visited --------------------------");
 						audit_manager.tell(message, getSelf());
+						return;
 					}
 					
+					log.warn("$$$$$$$$$$$$  START  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+					for(Step step : message.getSteps()) {
+						log.warn("step key :: "+step.getKey());
+					}
+					log.warn("&&&&&&&&&&& END $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
 					//Add page state to visited list
 					visited_pages.add(final_page);
 					
@@ -200,7 +216,6 @@ public class CrawlerActor extends AbstractActor{
 					//Filter out non interactive elements
 					//Filter out elements that are in explored map for PageState with key
 					//Filter out form elements
-					log.warn("total page elements before filtering ... "+elements.size());
 					List<ElementState> filtered_elements = elements.parallelStream()
 																	.filter(element -> element.isVisible())
 																	.filter(element -> {
@@ -213,15 +228,28 @@ public class CrawlerActor extends AbstractActor{
 																	.filter(element -> !isFormElement(element))
 																	.collect(Collectors.toList());
 					
-					log.warn("Total journey elements after filtering ... "+filtered_elements.size());
-
 					Set<Form> forms = PageUtils.extractAllForms(final_page);
-					log.warn("Forms found :: "+forms.size());
+					Set<Form> unexplored_forms = new HashSet<>();
+					
+					for(Form form: forms) {
+						if(!isElementExplored(final_page.getKey(), form.getFormTag())) {
+							unexplored_forms.add(form);
+						}
+						addElementsToExploredMap(final_page, form.getFormTag());
+					}
+					
 					//generate form journeys
-					List<Step> steps = generateFormSteps(message.getDomainId(), final_page, forms);
+					List<Step> steps = generateFormSteps(message.getDomainId(), final_page, unexplored_forms);
+					log.warn("confirmed journey expanded with form steps :: "+steps.size());
 					for(Step step: steps) {
 						List<Step> steps_list = new ArrayList<>(message.getSteps());
-						steps_list.add(step);
+						
+						if(!steps.contains(step)) {
+							steps_list.add(step);
+						}
+						else {
+							log.warn("FORM STEP EXISTS IN STEP LIST ALREADY");
+						}
 						
 						JourneyMessage journey_msg = new JourneyMessage(steps_list, 
 																		PathStatus.EXPANDED, 
@@ -234,17 +262,24 @@ public class CrawlerActor extends AbstractActor{
 						journey_executor.tell(journey_msg, getSelf());
 					}
 					
+					log.warn("confirmed journey preparing to expand with elements :: "+filtered_elements.size());
 					//send form elements to form journey actor
 					//Add interactive elements to explored map for PageState key
 					addElementsToExploredMap(final_page, filtered_elements);
 					//Build Steps for all elements in list
 					List<Step> new_steps = generateSteps(final_page, filtered_elements);
 					
+					if(new_steps.isEmpty()) {
+						log.warn("new steps is empty...sending confirmed journey message to audit manager");
+						audit_manager.tell(message, getSelf());
+						return;
+					}
+					
 					//generate new journeys with new steps and send to journey executor to be evaluated
+					log.warn("confirmed journey expanded with element expansion steps :: "+new_steps.size());
 					for(Step step: new_steps) {
 						List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 						cloned_steps.add(step);
-						log.warn("Cloned steps size :: "+cloned_steps.size());
 						JourneyMessage journey_msg = new JourneyMessage(cloned_steps, 
 																		PathStatus.EXPANDED, 
 																		BrowserType.CHROME, 
@@ -313,13 +348,11 @@ public class CrawlerActor extends AbstractActor{
 	private List<Step> generateFormSteps(long domain_id, PageState pageState, Set<Form> forms) {
 		List<Step> steps = new ArrayList<>();
 		for(Form form: forms) {
-			log.warn("form type :: "+form.getType());
-			log.warn("form type is LOGIN :: "+FormType.LOGIN.equals(form.getType()));
 			
 			if(FormType.LOGIN.equals(form.getType())){
 				//retrieve user credentials
 				TestUser user = domain_service.findTestUser(domain_id).get(0);
-				
+				log.warn("test user found for domain :: "+user);
 				//get username field
 				ElementState username_element = getFormField(form.getFormFields(), "username");
 				//create step to enter username into username field
@@ -329,8 +362,7 @@ public class CrawlerActor extends AbstractActor{
 
 				//create step to enter password into password field
 				//get submit button
-				ElementState submit_btn = getFormField(form.getFormFields(), "submit");
-				log.warn("submit btn found :: "+submit_btn);
+				ElementState submit_btn = form.getSubmitField();
 				//create step to click on submit button
 				steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user) );
 			}
@@ -359,7 +391,6 @@ public class CrawlerActor extends AbstractActor{
 		for(ElementState element: formFields) {
 			for(String attr_value : element.getAttributes().values()) {
 				if(attr_value.toLowerCase().contains(form_string)) {
-					log.warn("element attribute value :: "+attr_value);
 					return element;
 				}
 			}
@@ -393,6 +424,18 @@ public class CrawlerActor extends AbstractActor{
 		}
 		else {
 			explored_elements.put(last_page.getKey(), filtered_elements);
+		}
+	}
+	
+
+	private void addElementsToExploredMap(PageState last_page, ElementState element) {
+		if(explored_elements.containsKey(last_page.getKey())) {
+			explored_elements.get(last_page.getKey()).add(element);
+		}
+		else {
+			List<ElementState> elements = new ArrayList<>();
+			elements.add(element);
+			explored_elements.put(last_page.getKey(), elements);
 		}
 	}
 	

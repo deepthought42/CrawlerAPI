@@ -166,10 +166,10 @@ public class JourneyExpander extends AbstractActor{
 									
 									log.warn("creating new element interaction step .... "+new_element_state);
 									Step step = new SimpleStep(journey_result_page, 
-														 new_element_state, 
-														 Action.MOUSE_OVER, 
-														 "", 
-														 exploration_result_page);
+															 new_element_state, 
+															 Action.MOUSE_OVER, 
+															 "", 
+															 exploration_result_page);
 									if(existsInJourney(journey, step)) {
 										continue;
 									}

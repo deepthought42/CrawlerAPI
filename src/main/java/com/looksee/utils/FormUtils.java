@@ -46,7 +46,6 @@ public class FormUtils {
 	/**
 	 * locates and returns the form submit button
 	 * 
-	 * @param form_elem
 	 * @return
 	 * @throws Exception
 	 * 
@@ -55,36 +54,21 @@ public class FormUtils {
 	 * @pre form_elem != null
 	 * @pre browser != null;
 	 */
-	public static ElementState findFormSubmitButton(ElementState form_elem, 
-												List<ElementState> nested_elements
-	) throws Exception {
-		assert form_elem != null;
+	public static ElementState findFormSubmitButton(List<ElementState> nested_elements) throws Exception {
 		assert nested_elements != null;
-		
-		ElementState submit_element = null;
-
-		boolean submit_elem_found = false;
 
 		Map<String, String> attributes = new HashMap<>();
 		for(ElementState elem : nested_elements){
 			attributes = elem.getAttributes();
-			for(String attribute : attributes.keySet()){
-				if(attributes.get(attribute).contains("submit")){
-					submit_elem_found = true;
-					break;
+			if(elem.getAllText().toLowerCase().contains("sign in")){
+				return elem;
+			}
+			for(String attribute : attributes.values()){
+				if(attribute.toLowerCase().contains("submit")){
+					return elem;
 				}
 			}
-
-			if(submit_elem_found){
-				submit_element = elem;
-				break;
-			}
 		}
-
-		if(submit_element == null){
-			return null;
-		}
-
-		return submit_element;
+		return null;
 	}
 }

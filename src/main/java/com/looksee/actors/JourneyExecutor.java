@@ -37,6 +37,7 @@ import com.looksee.services.BrowserService;
 import com.looksee.services.JourneyService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
+import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -61,9 +62,6 @@ public class JourneyExecutor extends AbstractActor{
 
 	@Autowired
 	private ActorSystem actor_system;
-	
-	@Autowired
-	private JourneyService journey_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -112,9 +110,11 @@ public class JourneyExecutor extends AbstractActor{
 						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
 						browser.navigateTo(sanitized_url);
 						
+						log.warn("++++++++++++++++++++++++++++++++++++");
+						log.warn("executing step count :: "+message.getSteps().size());
 						//execute all steps sequentially in the journey
 						executeAllStepsInJourney(message.getSteps(), browser);
-						
+						log.warn("+++++++++++ END ++++++++++++++++++++");
 						//send build page message to PageStateBuilder
 						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
 																												message.getAccountId(), 
@@ -165,7 +165,7 @@ public class JourneyExecutor extends AbstractActor{
 				
 				})
 				.match(PageDataExtractionMessage.class, message -> {
-					log.warn("Journey executor received page data extraction message");
+					log.warn("Journey executor received page data extraction message :: "+message.getPageState().getKey());
 					this.steps.get(this.steps.size()-1).setEndPage(message.getPageState());
 					this.steps.get(this.steps.size()-1).setKey(this.steps.get(this.steps.size()-1).generateKey());
 					PageState second_to_last_page = PathUtils.getSecondToLastPageState(this.steps);
@@ -175,14 +175,12 @@ public class JourneyExecutor extends AbstractActor{
 						return;
 					}
 					
-					
 					ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(this.steps, 
 																						PathStatus.EXAMINED, 
 																						BrowserType.CHROME, 
 																						message.getDomainId(), 
 																						message.getAccountId());
 					
-					log.warn("sending confirmedJourneyMessage to "+crawl_actor);
 					crawl_actor.tell(journey_message, getSelf());
 					//getContext().getSender().tell(PoisonPill.class, getSelf());
 				})
@@ -246,31 +244,27 @@ public class JourneyExecutor extends AbstractActor{
 	
 	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-
+		log.warn("step count :: "+steps.size());
 		for(Step step: steps) {
+			log.warn("executing step :: "+step.getKey());
 			if(step instanceof SimpleStep) {
+				log.warn("performing "+((SimpleStep)step).getAction() + "  on element with xpath :: "+((SimpleStep)step).getElementState().getXpath());
 				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
 				
 				action_factory.execAction(web_element, "", ((SimpleStep)step).getAction());
 			}
 			else if(step instanceof LoginStep) {
-				log.warn("performing login step");
 				LoginStep login_step = (LoginStep)step;
-				log.warn("login step :: "+login_step);
-				log.warn("username element :: "+login_step.getUsernameElement());
-
-				log.warn("username element xpath :: "+login_step.getUsernameElement().getXpath());
-				
 				WebElement username_element = browser.getDriver().findElement(By.xpath(login_step.getUsernameElement().getXpath()));
-				log.warn("username element :: "+username_element);
 				action_factory.execAction(username_element, login_step.getTestUser().getUsername(), Action.SEND_KEYS);
 				
 				WebElement password_element = browser.getDriver().findElement(By.xpath(login_step.getPasswordElement().getXpath()));
-				action_factory.execAction(password_element, login_step.getTestUser().getUsername(), Action.SEND_KEYS);
-
+				action_factory.execAction(password_element, login_step.getTestUser().getPassword(), Action.SEND_KEYS);
 				WebElement submit_element = browser.getDriver().findElement(By.xpath(login_step.getSubmitElement().getXpath()));
 				action_factory.execAction(submit_element, "", Action.CLICK);
-				
+			}
+			if(step.getEndPage() == null || step.getEndPage().getKey() != step.getStartPage().getKey()) {
+				TimingUtils.pauseThread(5000L);
 			}
 		}
 	}

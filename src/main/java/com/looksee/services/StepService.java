@@ -6,12 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
-import com.looksee.models.PageState;
-import com.looksee.models.TestUser;
 import com.looksee.models.journeys.LoginStep;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.LoginStepRepository;
+import com.looksee.models.repository.SimpleStepRepository;
 import com.looksee.models.repository.StepRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -27,6 +26,9 @@ public class StepService {
 
 	@Autowired
 	private StepRepository step_repo;
+	
+	@Autowired
+	private SimpleStepRepository simple_step_repo;
 
 	@Autowired
 	private LoginStepRepository login_step_repo;
@@ -50,7 +52,7 @@ public class StepService {
 		log.warn("Step :: "+step);
 		log.warn("step key :: "+step.getKey());
 		if(step instanceof SimpleStep) {
-			Step step_record = step_repo.findByKey(step.getKey());
+			Step step_record = simple_step_repo.findByKey(step.getKey());
 			
 			if(step_record != null) {
 				log.warn("found step with key :: "+step_record.getKey());
@@ -75,10 +77,10 @@ public class StepService {
 			new_simple_step.setAction(simple_step.getAction());
 			new_simple_step.setActionInput(simple_step.getActionInput());
 			new_simple_step.setKey(step.generateKey());
-			new_simple_step = (SimpleStep)step_repo.save(step_record);
-			new_simple_step.setStartPage(step_repo.addStartPage(new_simple_step.getId(), simple_step.getStartPage().getId()));
-			new_simple_step.setEndPage(step_repo.addEndPage(new_simple_step.getId(), simple_step.getEndPage().getId()));
-			new_simple_step.setElementState(step_repo.addElementState(new_simple_step.getId(), simple_step.getElementState().getId()));
+			new_simple_step = simple_step_repo.save(new_simple_step);
+			new_simple_step.setStartPage(simple_step_repo.addStartPage(new_simple_step.getId(), simple_step.getStartPage().getId()));
+			new_simple_step.setEndPage(simple_step_repo.addEndPage(new_simple_step.getId(), simple_step.getEndPage().getId()));
+			new_simple_step.setElementState(simple_step_repo.addElementState(new_simple_step.getId(), simple_step.getElementState().getId()));
 			return new_simple_step;
 		}
 		else if(step instanceof LoginStep) {

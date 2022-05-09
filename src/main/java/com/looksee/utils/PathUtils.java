@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
+import com.looksee.models.journeys.Redirect;
+import com.looksee.models.journeys.Step;
 import com.looksee.services.TestService;
 
 public class PathUtils {
@@ -24,7 +25,7 @@ public class PathUtils {
 	 * 
 	 * @pre pathObjects != null
 	 */
-	public static PageState getLastPageState(List<LookseeObject> path_objects) {
+	public static PageState getLastPageStateOLD(List<LookseeObject> path_objects) {
 		assert(path_objects != null);
 				
 		for(int idx = path_objects.size()-1; idx >= 0; idx--){
@@ -36,6 +37,50 @@ public class PathUtils {
 		return null;
 	}
 	
+	/**
+	 * Retrieves the last {@link PageState} in the given list of {@link LookseeObject}s
+	 * 
+	 * @param pathObjects list of {@link LookseeObject}s in sequential order
+	 * 
+	 * @return last page state in list
+	 * 
+	 * @pre pathObjects != null
+	 */
+	public static PageState getLastPageState(List<Step> steps) {
+		assert(steps != null);
+			
+		//get last step
+		Step last_step = steps.get(steps.size()-1);
+		PageState last_page = last_step.getEndPage();
+		
+		return last_page;
+	}
+	
+	/**
+	 * Retrieves the last {@link PageState} in the given list of {@link LookseeObject}s
+	 * 
+	 * @param pathObjects list of {@link LookseeObject}s in sequential order
+	 * 
+	 * @return last page state in list
+	 * 
+	 * @pre pathObjects != null
+	 */
+	public static PageState getSecondToLastPageState(List<Step> steps) {
+		assert(steps != null);
+			
+		//get last step
+		Step last_step = steps.get(steps.size()-1);
+		PageState start_page = last_step.getStartPage();
+		
+		return start_page;
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param path_keys
+	 * @return
+	 */
 	public static int getIndexOfLastElementState(List<String> path_keys){
 		for(int element_idx=path_keys.size()-1; element_idx >= 0; element_idx--){
 			if(path_keys.get(element_idx).contains("elementstate")){
@@ -46,6 +91,12 @@ public class PathUtils {
 		return -1;
 	}
 
+	/**
+	 * 
+	 * @param path_keys
+	 * @param path_objects
+	 * @return
+	 */
 	public static List<LookseeObject> orderPathObjects(List<String> path_keys, List<LookseeObject> path_objects) {
 		List<LookseeObject> ordered_path_objects = new ArrayList<>();
 		List<String> temp_path_keys = new ArrayList<>(path_keys);
@@ -96,7 +147,7 @@ public class PathUtils {
 		return null;
 	}
 
-	public static PageState getSecondToLastPageState(List<LookseeObject> path_objects) {
+	public static PageState getSecondToLastPageStateOLD(List<LookseeObject> path_objects) {
 		assert(path_objects != null);
 		
 		int page_states_seen = 0;
@@ -133,7 +184,7 @@ public class PathUtils {
 	 * 
 	 * @pre !pathObjects.isEmpty()
 	 */
-	public static String getFirstUrl(List<LookseeObject> pathObjects) {
+	public static String getFirstUrl_OLD(List<LookseeObject> pathObjects) {
 		assert !pathObjects.isEmpty();
 		
 		LookseeObject obj = pathObjects.get(0);
@@ -149,5 +200,27 @@ public class PathUtils {
 			return page_state.getUrl();
 		}
 		return null;
+	}
+	
+	/**
+	 * 
+	 * @param steps
+	 * @return
+	 * 
+	 * @pre !pathObjects.isEmpty()
+	 */
+	public static String getFirstUrl(List<Step> steps) {
+		assert !steps.isEmpty();
+		
+		Step obj = steps.get(0);
+		
+		if(obj instanceof Redirect) {
+			log.warn("first path object is a redirect");
+			Redirect redirect = (Redirect)obj;
+			return redirect.getStartUrl();
+		}
+		else {
+			return obj.getStartPage().getUrl();
+		}
 	}
 }

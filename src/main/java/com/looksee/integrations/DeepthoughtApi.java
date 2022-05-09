@@ -95,7 +95,7 @@ public class DeepthoughtApi {
 	     
          log.warn("set predictions :: " + obj);
 
-	  	 form.setPredictions(weights);
+	  	// form.setPredictions(weights);
 	}
 	
 	public static void learn(Form form, Long memory_id) throws UnsupportedOperationException, IOException{

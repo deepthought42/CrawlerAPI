@@ -83,12 +83,12 @@ public class ElementService {
 		return element_repo.findByKey(key);
 	}
 
-	public Element findByKeyAndUserId(String user_id, String key){
-		return element_repo.findByKeyAndUserId(user_id, key);
+	public Element findByKeyAndUserId(long account_id, String key){
+		return element_repo.findByKeyAndUserId(account_id, key);
 	}
 
-	public void removeRule(String user_id, String element_key, String rule_key){
-		element_repo.removeRule(user_id, element_key, rule_key);
+	public void removeRule(long element_id, String rule_key){
+		element_repo.removeRule(element_id, rule_key);
 	}
 	
 	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(Element element){
@@ -99,16 +99,16 @@ public class ElementService {
 		return element_repo.findById(id).get();
 	}
 
-	public Set<Rule> getRules(String user_id, String element_key) {
-		return element_repo.getRules(user_id, element_key);
+	public Set<Rule> getRules(long element_id) {
+		return element_repo.getRules(element_id);
 	}
 
-	public Set<Rule> addRuleToFormElement(String user_id, String element_key, Rule rule) {
+	public Set<Rule> addRuleToFormElement(long element_id, Rule rule) {
 		//Check that rule doesn't already exist
-		Rule rule_record = element_repo.getElementRule(user_id, element_key, rule.getKey());
+		Rule rule_record = element_repo.getElementRule(element_id, rule.getKey());
 		if(rule_record == null) {
-			rule_record = element_repo.addRuleToFormElement(user_id, element_key, rule.getKey());
-			return element_repo.getRules(user_id, element_key);
+			rule_record = element_repo.addRuleToFormElement(element_id, rule.getKey());
+			return element_repo.getRules(element_id);
 		}
 		else {
 			throw new ExistingRuleException(rule.getType().toString());

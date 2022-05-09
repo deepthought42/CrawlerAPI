@@ -69,6 +69,7 @@ import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.dto.CompetitorDto;
+import com.looksee.models.dto.DomainSettingsDto;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
@@ -256,20 +257,26 @@ public class DomainController {
 	 * @return list of competitors
 	 */
 	@RequestMapping(method = RequestMethod.GET, path = "{domain_id}/settings")
-	public @ResponseBody DesignSystem getDesignSystem(@PathVariable("domain_id") long domain_id,
+	public @ResponseBody DomainSettingsDto getDesignSystem(@PathVariable("domain_id") long domain_id,
 			HttpServletRequest request) {
 		log.warn("retrieving design system");
-		Optional<DesignSystem> design_system = domain_service.getDesignSystem(domain_id);
-		if (!design_system.isPresent()) {
+		DesignSystem design_system = null;
+		Optional<DesignSystem> design_system_opt = domain_service.getDesignSystem(domain_id);
+		if (!design_system_opt.isPresent()) {
 			log.warn("no design system present. Creating new design system with default settings");
 			DesignSystem design = new DesignSystem();
 			design = design_system_service.save(design);
 			domain_service.addDesignSystem(domain_id, design.getId());
-			return design;
+			design_system = design;
 		}
 
 		log.warn("returning existing design system");
-		return design_system.get();
+		design_system = design_system_opt.get();
+		
+		//get TestUser set
+		Set<TestUser> test_users = domain_service.getTestUsers(domain_id);
+		DomainSettingsDto domain_settings = new DomainSettingsDto(design_system, test_users);
+		return domain_settings;
 	}
 
 	/**
@@ -751,10 +758,7 @@ public class DomainController {
 	@RequestMapping(path = "/{domain_id}/users", method = RequestMethod.POST)
 	public @ResponseBody TestUser addUser(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id,
-			@RequestParam(value = "username", required = true) String username,
-			@RequestParam(value = "password", required = true) String password,
-			@RequestParam(value = "role", required = false) String role,
-			@RequestParam(value = "enabled", required = true) boolean enabled)
+			@RequestBody TestUser test_user)
 			throws UnknownAccountException, MalformedURLException {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName().replace("auth0|", "");
@@ -769,28 +773,23 @@ public class DomainController {
 		log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 		log.info("starting to add user");
 		if (optional_domain.isPresent()) {
-			Domain domain = optional_domain.get();
-			log.info("domain : " + domain);
-			Set<TestUser> test_users = domain_service.getTestUsers(account.getEmail(), domain.getKey());
+			log.info("domain : " + domain_id);
+			Set<TestUser> test_users = domain_service.getTestUsers(domain_id);
 
 			log.info("Test users : " + test_users.size());
 			for (TestUser user : test_users) {
-				if (user.getUsername().equals(username)) {
+				if (user.getUsername().equals(test_user.getUsername())) {
 					log.info("User exists, returning user : " + user);
 					return user;
 				}
 			}
 
 			log.info("Test user does not exist for domain yet");
-
-			TestUser user = new TestUser(username, password, role, enabled);
-			user = test_user_repo.save(user);
-			Set<TestUser> users = new HashSet<TestUser>();
-			users.add(user);
-			domain.setTestUsers(users);
-			domain = domain_service.save(domain);
-			log.info("saved domain :: " + domain.getKey());
-			return user;
+			test_user.setKey(test_user.generateKey());
+			test_user = test_user_repo.save(test_user);
+			domain_service.addTestUser(domain_id, test_user.getId());
+			log.info("saved domain :: " + domain_id);
+			return test_user;
 		}
 		throw new DomainNotFoundException();
 	}
@@ -1037,15 +1036,7 @@ public class DomainController {
 			throw new UnknownAccountException();
 		}
 
-		Optional<Domain> optional_domain = domain_service.findById(domain_id);
-		if (optional_domain.isPresent()) {
-			Domain domain = optional_domain.get();
-			Set<TestUser> users = domain_service.getTestUsers(account.getEmail(), domain.getKey());
-
-			return users;
-		} else {
-			throw new DomainNotFoundException();
-		}
+		return domain_service.getTestUsers(domain_id);
 	}
 
 	/**
@@ -1091,10 +1082,12 @@ public class DomainController {
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
 
 		// create new audit record
+		log.warn("creating Domain audit record");
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
 
+		log.warn("adding audit record to domain");
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 
@@ -1154,7 +1147,8 @@ public class DomainController {
 	 */
 	@RequestMapping(method = RequestMethod.POST, path = "{domain_id}/competitors")
 	public @ResponseBody Competitor createCompetitor(HttpServletRequest request,
-			@PathVariable("domain_id") long domain_id, @RequestBody Competitor competitor) {
+			@PathVariable("domain_id") long domain_id, 
+			@RequestBody Competitor competitor) {
 		competitor = competitor_service.save(competitor);
 		domain_service.addCompetitor(domain_id, competitor.getId());
 

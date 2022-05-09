@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
@@ -59,6 +60,7 @@ import com.looksee.models.ImageLandmarkInfo;
 import com.looksee.models.ImageSearchAnnotation;
 import com.looksee.models.Label;
 import com.looksee.models.Logo;
+import com.looksee.models.Page;
 import com.looksee.models.PageState;
 import com.looksee.models.Template;
 import com.looksee.models.enums.BrowserEnvironment;
@@ -68,8 +70,10 @@ import com.looksee.models.enums.FormStatus;
 import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.FormUtils;
 import com.looksee.utils.ImageUtils;
 
+import cz.vutbr.web.css.RuleSet;
 import io.github.resilience4j.retry.annotation.Retry;
 import us.codecraft.xsoup.Xsoup;
 
@@ -86,6 +90,12 @@ public class BrowserService {
 	
 	@Autowired
 	private ElementService element_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private PageService page_service;
 	
 	@Autowired
 	private FormService form_service;
@@ -236,6 +246,11 @@ public class BrowserService {
 			foreground_color = "rgb(0,0,0)";
 		}
 		
+		String background_color = rendered_css_values.get("background-color");
+		if(background_color == null) {
+			background_color = "rgb(255,255,255)";
+		}
+		
 		ElementState element_state = new ImageElementState(
 													element.ownText().trim(),
 													element.text(),
@@ -253,7 +268,7 @@ public class BrowserService {
 													web_elem.isDisplayed(),
 													css_selector, 
 													foreground_color,
-													rendered_css_values.get("background-color"),
+													background_color,
 													landmark_info_set,
 													faces,
 													image_search_set,
@@ -262,6 +277,49 @@ public class BrowserService {
 													safe_search_annotation);
 		
 		return element_state;
+	}
+	
+	/**
+	 *Constructs a page object that contains all child elements that are considered to be potentially expandable.
+	 * @param title TODO
+	 * @return page {@linkplain PageState}
+	 * @throws IOException 
+	 * @throws XPathExpressionException 
+	 * @throws Exception 
+	 * 
+	 * @pre browser != null
+	 */
+	public Page buildPage( String page_src, 
+						   String page_url, 
+						   String title 
+    ) throws IOException, XPathExpressionException{
+		assert page_url != null;
+		assert page_src != null;
+		log.warn("building page....");
+		String url_without_params = BrowserUtils.sanitizeUrl(page_url, true);
+		
+		//Element root = html_doc.getElementsByTag("body").get(0);
+		List<String> raw_stylesheets = Browser.extractStylesheets(page_src); 
+		List<RuleSet> rule_sets = Browser.extractRuleSetsFromStylesheets(raw_stylesheets, new URL(page_url)); 
+		
+		String clean_source = Browser.cleanSrc(page_src);
+		URL clean_url = new URL(url_without_params);
+		List<com.looksee.models.Element> elements = extractElements(clean_source, clean_url, rule_sets);
+				
+		Page page = new Page(
+				elements,
+				clean_source,
+				title,
+				clean_url.toString(),
+				clean_url.getPath());
+
+		
+		Page record = page_service.findByKey(page.getKey());
+		if(record != null) {
+			return record;
+		}
+		log.warn("built page...now saving page state...");
+		return page;
 	}
 	
 	/**
@@ -370,6 +428,8 @@ public class BrowserService {
 			Browser browser = null;
 			try {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url.toString());
+
 				page_state = performBuildPageProcess(url, browser);
 				complete = true;
 				cnt=Integer.MAX_VALUE;
@@ -419,13 +479,12 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	private PageState performBuildPageProcess(URL url, Browser browser) 
+	public PageState performBuildPageProcess(URL url, Browser browser) 
 			throws GridException, ServiceUnavailableException, MalformedURLException, IOException 
 	{
 		assert url != null;
 		assert browser != null;
 		
-		browser.navigateTo(url.toString());
 		if(browser.is503Error()) {
 			browser.close();
 			throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
@@ -478,7 +537,10 @@ public class BrowserService {
 		}
 		*/
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
-		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, url.getHost(), full_page_screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, 
+																		url.getHost(), 
+																		full_page_screenshot_checksum, 
+																		BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
 		
 		String composite_url = full_page_screenshot_url;
@@ -573,6 +635,70 @@ public class BrowserService {
 			}
 			cnt++;
 		}while(rendering_incomplete && cnt < 10000);
+
+		return elements;
+	}
+	
+	/**
+	 * Process used by the web crawler to build {@link PageElement} list based on the xpaths on the page
+	 * @param xpaths TODO
+	 * @param audit_id TODO
+	 * @param url TODO
+	 * @param url
+	 * @param height TODO
+	 * @param audit_record TODO
+	 * @return
+	 * @throws MalformedURLException 
+	 */
+	public List<ElementState> buildPageElementsWithoutNavigation(PageState page_state, 
+																 List<String> xpaths, 
+															 	 long audit_id, 
+															 	 int page_height,
+															 	 Browser browser
+	) throws MalformedURLException {
+		assert page_state != null;
+   				
+		List<ElementState> elements = new ArrayList<>();
+		Map<String, ElementState> elements_mapped = new HashMap<>();
+		//boolean rendering_incomplete = true;
+		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
+		String page_url = sanitized_url.toString();
+		
+		//int cnt = 0;
+		//do {
+			//Browser browser = null;
+			
+			try {/*
+				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(page_url);
+				if(browser.is503Error()) {
+					throw new FiveZeroThreeException("503 Error encountered. Starting over..");
+				}
+				browser.removeDriftChat();
+				*/
+				//get ElementState List by asking multiple bots to build xpaths in parallel
+				//for each xpath then extract element state
+				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+				//break;
+			}
+			catch (NullPointerException e) {
+				log.warn("NPE thrown during element state extraction");
+				//e.printStackTrace();
+			}
+			catch(FiveZeroThreeException e) {
+				log.warn("503 exception occurred while accessing "+page_url);
+			}
+			catch(WebDriverException | GridException e) {
+				log.warn("Webdriver exception occurred ... "+page_url);
+				//e.printStackTrace();
+			}	
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			//cnt++;
+		//}while(rendering_incomplete && cnt < 10000);
 
 		return elements;
 	}
@@ -730,7 +856,7 @@ public class BrowserService {
 					//TODO: extract image from full page screenshot manually
 				}
 				
-
+				
 				Map<String, String> rendered_css_props = Browser.loadCssProperties(web_element, browser.getDriver());
 				Map<String, String> attributes = browser.extractAttributes(web_element);
 
@@ -1419,7 +1545,8 @@ public class BrowserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public Set<Form> extractAllForms(String user_id, Domain domain, Browser browser) throws Exception {
+	@Deprecated
+	public Set<Form> extractAllForms(long account_id, Domain domain, Browser browser) throws Exception {
 		Set<Form> form_list = new HashSet<Form>();
 		log.info("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
@@ -1447,37 +1574,47 @@ public class BrowserService {
 			//form_tag.setScreenshotUrl(screenshot_url);
 			form_tag = element_service.saveFormElement(form_tag);
 			
+			/*
 			double[] weights = new double[1];
 		
-			Set<Form> forms = domain_service.getForms(user_id, domain.getUrl());
-			Form form = new Form(form_tag, new ArrayList<com.looksee.models.Element>(), findFormSubmitButton(user_id, form_elem, browser),
-									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
+			Set<Form> forms = domain_service.getForms(account_id, domain.getUrl());
+			Form form = new Form(form_tag, 
+								 new ArrayList<com.looksee.models.Element>(), 
+								 findFormSubmitButton(form_elem, browser),
+								 "Form #"+(forms.size()+1), 
+								 weights, 
+								 FormType.UNKNOWN, 
+								 new Date(), 
+								 FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.tagName("input"));
 			
 			input_elements = BrowserService.filterNonDisplayedElements(input_elements);
-			form.setFormFields(buildFormFields(user_id, input_elements, browser));
+			form.setFormFields(buildFormFields(account_id, input_elements, browser));
 
 			log.info("weights :: "+ form.getPrediction());
 			form.setType(FormType.UNKNOWN);
 			form.setDateDiscovered(new Date());
 			log.info("form record discovered date :: "+form.getDateDiscovered());
 
-			Form form_record = form_service.findByKey(user_id, domain.getUrl(), form.getKey());
+			Form form_record = form_service.findByKey(account_id, domain.getUrl(), form.getKey());
 			if(form_record != null) {
 				continue;
 			}
 
-			int form_count = domain_service.getFormCount(user_id, domain.getUrl());
+			int form_count = domain_service.getFormCount(account_id, domain.getUrl());
 			form.setName("Form #"+(form_count+1));
 			log.info("name :: "+form.getName());
 			
 			form_list.add(form);
+			*/
 		}
 		return form_list;
 	}
+	
+	
 
-	private List<com.looksee.models.Element> buildFormFields(String user_id, List<WebElement> input_elements, Browser browser) throws IOException {
+	private List<com.looksee.models.Element> buildFormFields(long account_id, List<WebElement> input_elements, Browser browser) throws IOException {
 		List<com.looksee.models.Element> elements = new ArrayList<>();
 		for(WebElement input_elem : input_elements){
 			boolean submit_elem_found = false;
@@ -1506,7 +1643,7 @@ public class BrowserService {
 					new HashMap<>(), 
 					input_elem.getAttribute("innerHTML"), 
 					input_elem.getAttribute("outerHTML"));
-			com.looksee.models.Element tag_record = element_service.findByKeyAndUserId(user_id, input_tag.getKey());
+			com.looksee.models.Element tag_record = element_service.findByKeyAndUserId(account_id, input_tag.getKey());
 			if( tag_record != null ) {
 				input_tag = tag_record;
 			}
@@ -1543,9 +1680,10 @@ public class BrowserService {
 	 * @pre form_elem != null
 	 * @pre browser != null;
 	 */
-	private com.looksee.models.Element findFormSubmitButton(String user_id, WebElement form_elem, Browser browser) throws Exception {
-		assert user_id != null;
-		assert !user_id.isEmpty();
+	@Deprecated
+	private com.looksee.models.Element findFormSubmitButton(WebElement form_elem, 
+															Browser browser
+	) throws Exception {
 		assert form_elem != null;
 		assert browser != null;
 		
@@ -1575,13 +1713,20 @@ public class BrowserService {
 		}
 		
 		//Map<String, String> css_map = Browser.loadCssProperties(submit_element);
-		com.looksee.models.Element elem = new com.looksee.models.Element(submit_element.getText(), generateXpath(submit_element, browser.getDriver(), attributes), submit_element.getTagName(), attributes, new HashMap<>(), submit_element.getAttribute("innerHTML"), submit_element.getAttribute("outerHTML"));
+		com.looksee.models.Element elem = new com.looksee.models.Element(submit_element.getText(), 
+																		 generateXpath(submit_element, browser.getDriver(), attributes), 
+																		 submit_element.getTagName(), 
+																		 attributes, 
+																		 new HashMap<>(), 
+																		 submit_element.getAttribute("innerHTML"), 
+																		 submit_element.getAttribute("outerHTML"));
 		//String screenshot_url = UploadObjectSingleOperation.saveImageToS3ForUser(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, BrowserType.create(browser.getBrowserName()), user_id);
 		//elem.setViewportScreenshotUrl(screenshot_url);
 		elem = element_service.saveFormElement(elem);
 
 		return elem;
 	}
+	
 
 	public Map<String, Template> findTemplates(List<com.looksee.models.Element> element_list){
 		//create a map for the various duplicate elements
@@ -1901,7 +2046,10 @@ public class BrowserService {
 		Set<String> script_urls = new HashSet<String>();
 		
 		for(Element script_tag : script_tags) {
-			script_urls.add(script_tag.absUrl("src"));
+			String src_url = script_tag.absUrl("src");
+			if(src_url != null && !src_url.isEmpty()) {
+				script_urls.add(script_tag.absUrl("src"));
+			}
 		}
 		return script_urls;
 	}
@@ -1924,6 +2072,120 @@ public class BrowserService {
 		assert sanitized_url != null;
 		
 		return browser.getSource();
+	}
+	
+	public List<com.looksee.models.Element> extractElements(String page_src, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		return getDomElements(page_src, url, rule_sets);
+	}
+	
+	/**
+	 * 
+	 * @param page_source
+	 * @param url
+	 * @param rule_sets TODO
+	 * @param reviewed_xpaths
+	 * @return
+	 * @throws IOException
+	 * @throws XPathExpressionException 
+	 */
+	private synchronized List<com.looksee.models.Element> getDomElements(String page_source, URL url, List<RuleSet> rule_sets) throws IOException, XPathExpressionException {
+		assert page_source != null;
+		assert !page_source.isEmpty();
+		assert url != null;
+		assert rule_sets != null;
+		
+		List<com.looksee.models.Element> visited_elements = new ArrayList<>();
+		Map<String, String> frontier = new HashMap<>();
+		Map<String, Integer> xpath_cnt = new HashMap<>();
+		
+		//get html doc and get root element
+		Document html_doc = Jsoup.parse(page_source);
+		Element root = html_doc.getElementsByTag("body").get(0);
+			
+		//create element state from root node
+		Map<String, String> attributes = generateAttributesMapUsingJsoup(root);
+		log.warn("page source 1 :: "+page_source.length());
+		log.warn("url 1  :: "+url);
+		Map<String, String> css_props = new HashMap<>();
+		try{
+			css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, root));
+		}
+		catch(Exception e) {
+			log.warn(e.getMessage());
+		}
+		
+		com.looksee.models.Element root_element = buildElement("//body", attributes, root, ElementClassification.ANCESTOR, css_props );
+		root_element = element_service.save(root_element);
+
+		//put element on frontier
+		frontier.put("//body",root_element.getKey());
+		while(!frontier.isEmpty()) {
+			String next_xpath = frontier.keySet().iterator().next();
+			String parent_element_key = frontier.remove(next_xpath);
+			//ElementState root_element = frontier.remove(next_xpath);
+			//visited_elements.add(root_element);
+			//get Element by xpath
+			
+			Elements elements = Xsoup.compile(next_xpath).evaluate(html_doc).getElements();
+			if(elements.size() == 0) {
+				log.warn("NO ELEMENTS WITH XPATH FOUND :: "+next_xpath + "   :     url :   "  + url.toString());
+			}
+			Element element = elements.first();
+			//get child elements for element
+			attributes = generateAttributesMapUsingJsoup(element);
+			
+			Map<String, String> pre_render_css_props = new HashMap<>();
+			
+			try{
+				pre_render_css_props.putAll(Browser.loadCssPrerenderedPropertiesUsingParser(rule_sets, element));
+			}
+			catch(Exception e) {
+				log.warn(e.getMessage());
+			}
+			
+			ElementClassification classification = null;
+			List<Element> children = new ArrayList<Element>(element.children());
+			if(children.isEmpty()) {
+				classification = ElementClassification.LEAF;
+			}
+			else if(isSliderElement(element)) {
+				classification = ElementClassification.SLIDER;
+			}
+			else {
+				classification = ElementClassification.ANCESTOR;
+			}
+			
+			com.looksee.models.Element element_state = buildElement(next_xpath, attributes, element, classification, pre_render_css_props);
+			
+			element_state = element_service.save(element_state);
+			visited_elements.add(element_state);
+			element_service.addChildElement(parent_element_key, element_state.getKey());
+			
+			
+			for(Element child : children) {
+				if(isStructureTag(child.tagName())) {
+					continue;
+				}
+				String xpath = next_xpath + "/" + child.tagName();
+				
+				if(xpath_cnt.containsKey(xpath)) {
+					xpath_cnt.put(xpath, xpath_cnt.get(xpath)+1);
+				}
+				else {
+					xpath_cnt.put(xpath, 1);
+				}
+				
+				xpath = xpath + "["+xpath_cnt.get(xpath)+"]";
+
+				frontier.put(xpath, element_state.getKey());
+			}
+		}
+		return visited_elements;
+	}
+	
+	
+	private static String calculateSha256(String value) {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(value);
 	}
 }
 

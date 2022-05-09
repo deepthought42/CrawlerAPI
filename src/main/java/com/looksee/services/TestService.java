@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.api.exception.PagesAreNotMatchingException;
 import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Animation;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
@@ -26,12 +26,12 @@ import com.looksee.models.Group;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.TestStatus;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.models.repository.TestRepository;
 import com.looksee.utils.PathUtils;
 
@@ -116,22 +116,22 @@ public class TestService {
 		 return test_record;
 	 }
 
-	 public Test save(Test test, String url, String user_id) throws Exception {
+	 public Test save(Test test, String url, long account_id) throws Exception {
 		 assert test != null;
-		 Test record = test_repo.findByKey(test.getKey(), url, user_id);
+		 Test record = test_repo.findByKey(test.getKey(), url, account_id);
 
 		if(record == null){
 			log.warn("test record is null while saving");
 			List<LookseeObject> path_objects = new ArrayList<LookseeObject>();
 			for(LookseeObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
-					path_objects.add(page_state_service.saveUserAndDomain(user_id, url, (PageState)path_obj));
+					path_objects.add(page_state_service.save((PageState)path_obj));
 					
 				}
 				else if(path_obj instanceof Element){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
-				else if(path_obj instanceof Action){
-					path_objects.add(action_service.save((Action)path_obj));
+				else if(path_obj instanceof ActionOLD){
+					path_objects.add(action_service.save((ActionOLD)path_obj));
 				}
 				else if(path_obj instanceof Redirect){
 					path_objects.add(redirect_service.save((Redirect)path_obj));
@@ -145,7 +145,7 @@ public class TestService {
 			}
 			test.setPathObjects(path_objects);
 			if(test.getResult() != null){
-				test.setResult(page_state_service.saveUserAndDomain(user_id, url, test.getResult()));			}
+				test.setResult(page_state_service.save(test.getResult()));			}
 			
 			Set<Group> groups = new HashSet<>();
 			for(Group group : test.getGroups()){
@@ -156,12 +156,12 @@ public class TestService {
 		}
 		else{
 			log.warn("test record already exists");
-			List<LookseeObject> path_objects = test_repo.getPathObjects(test.getKey(), url, user_id );
+			List<LookseeObject> path_objects = test_repo.getPathObjects(test.getKey(), url, account_id );
 			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
 			record.setPathObjects(path_objects);
 			
 			if(test.getResult() == null){
-				PageState result = page_state_service.saveUserAndDomain(user_id, url, test.getResult());
+				PageState result = page_state_service.save(test.getResult());
 				log.warn("result of saving result :: " + result);
 				record.setResult(result);
 			}
@@ -184,12 +184,12 @@ public class TestService {
      return test_repo.findTestWithElementState(page_state_key, element_state_key);
    }
 
-   public Test findByKey(String key, String url, String user_id){
-     return test_repo.findByKey(key, url, user_id);
+   public Test findByKey(String key, String url, long account_id){
+     return test_repo.findByKey(key, url, account_id);
    }
 
-   public List<Test> findTestsWithPageState(String page_state_key, String url, String user_id) {
-     return test_repo.findTestWithPageState(page_state_key, url, user_id);
+   public List<Test> findTestsWithPageState(String page_state_key, String url, long account_id) {
+     return test_repo.findTestWithPageState(page_state_key, url, account_id);
    }
 
    /**
@@ -199,9 +199,9 @@ public class TestService {
     * 
     * @return List of ordered {@link LookseeObject}s
     */
-   public List<LookseeObject> getPathObjects(String test_key, String url, String user_id) {
-	   Test test = test_repo.findByKey(test_key, url, user_id);
-	   List<LookseeObject> path_obj_list = test_repo.getPathObjects(test_key, url, user_id);
+   public List<LookseeObject> getPathObjects(String test_key, String url, long account_id) {
+	   Test test = test_repo.findByKey(test_key, url, account_id);
+	   List<LookseeObject> path_obj_list = test_repo.getPathObjects(test_key, url, account_id);
 	   //order path objects
 	   List<LookseeObject> ordered_list = new ArrayList<LookseeObject>();
 	   for(String key : test.getPathKeys()) {

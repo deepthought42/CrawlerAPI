@@ -85,30 +85,45 @@ public class ContentAuditor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder().match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 			try {
-				AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getPageAuditId()).get();
-				PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
+				AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getPageAuditId())
+																.get();
+				//PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 				// generate audit report
 				// Set<Audit> audits = new HashSet<>();
-				page.setElements(page_state_service.getElementStates(page.getId()));
+				//long page_id = page.getId();
+				PageState page = page_audit_record_msg.getPageState();
+				page.setElements(page_state_service.getElementStates(page_audit_record_msg.getPageState().getId()));
 				log.warn("evaluating "+page.getElements().size()+" element state for content audit");
 				AuditProgressUpdate audit_update = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
-						audit_record.getId(), (1.0 / 4.0), "checking images for alt text", AuditCategory.CONTENT,
-						AuditLevel.PAGE, null, page_audit_record_msg.getDomainId());
+																			audit_record.getId(), 
+																			(1.0 / 4.0), 
+																			"checking images for alt text", 
+																			AuditCategory.CONTENT,
+																			AuditLevel.PAGE, 
+																			null, 
+																			page_audit_record_msg.getDomainId());
 
 				getContext().getParent().tell(audit_update, getSelf());
 
 				try {
 					Audit alt_text_audit = image_alt_text_auditor.execute(page, audit_record, null);
 					AuditProgressUpdate audit_update2 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
-							audit_record.getId(), (2.0 / 4.0), "Reviewing content for readability",
-							AuditCategory.CONTENT, AuditLevel.PAGE, alt_text_audit,
-							page_audit_record_msg.getDomainId());
+																				audit_record.getId(), 
+																				(2.0 / 4.0), 
+																				"Reviewing content for readability",
+																				AuditCategory.CONTENT, 
+																				AuditLevel.PAGE, 
+																				alt_text_audit,
+																				page_audit_record_msg.getDomainId());
 
 					getContext().getParent().tell(audit_update2, getSelf());
 				} catch (Exception e) {
 					AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(),
-							page_audit_record_msg.getAccountId(), page_audit_record_msg.getAuditRecordId(),
-							"An error occurred while reviewing image alt-text", AuditCategory.CONTENT, (2.0 / 4.0));
+														  page_audit_record_msg.getAccountId(), 
+														  page_audit_record_msg.getAuditRecordId(),
+													  	  "An error occurred while reviewing image alt-text", 
+													  	  AuditCategory.CONTENT, 
+													  	  (2.0 / 4.0));
 					getContext().getParent().tell(audit_err, getSelf());
 					e.printStackTrace();
 				}
@@ -116,14 +131,22 @@ public class ContentAuditor extends AbstractActor {
 				try {
 					Audit readability_audit = readability_auditor.execute(page, audit_record, null);
 					AuditProgressUpdate audit_update3 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
-							audit_record.getId(), (3.0 / 4.0), "Reviewing paragraph length", AuditCategory.CONTENT,
-							AuditLevel.PAGE, readability_audit, page_audit_record_msg.getDomainId());
+																				audit_record.getId(), 
+																				(3.0 / 4.0), 
+																				"Reviewing paragraph length", 
+																				AuditCategory.CONTENT,
+																				AuditLevel.PAGE, 
+																				readability_audit, 
+																				page_audit_record_msg.getDomainId());
 
 					getSender().tell(audit_update3, getSelf());
 				} catch (Exception e) {
 					AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(),
-							page_audit_record_msg.getAccountId(), page_audit_record_msg.getAuditRecordId(),
-							"An error occurred while reviewing readability", AuditCategory.CONTENT, (3.0 / 4.0));
+														  page_audit_record_msg.getAccountId(), 
+														  page_audit_record_msg.getAuditRecordId(),
+														  "An error occurred while reviewing readability", 
+														  AuditCategory.CONTENT, 
+														  (3.0 / 4.0));
 					getContext().getParent().tell(audit_err, getSelf());
 					e.printStackTrace();
 				}
@@ -131,14 +154,22 @@ public class ContentAuditor extends AbstractActor {
 				try {
 					Audit paragraph_audit = paragraph_auditor.execute(page, audit_record, null);
 					AuditProgressUpdate audit_update4 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
-							audit_record.getId(), 1.0, "Content Audit Compelete!", AuditCategory.CONTENT,
-							AuditLevel.PAGE, paragraph_audit, page_audit_record_msg.getDomainId());
+																				audit_record.getId(), 
+																				1.0, 
+																				"Content Audit Compelete!", 
+																				AuditCategory.CONTENT,
+																				AuditLevel.PAGE, 
+																				paragraph_audit, 
+																				page_audit_record_msg.getDomainId());
 
 					getContext().getParent().tell(audit_update4, getSelf());
 				} catch (Exception e) {
 					AuditError audit_err = new AuditError(page_audit_record_msg.getDomainId(),
-							page_audit_record_msg.getAccountId(), page_audit_record_msg.getAuditRecordId(),
-							"An error occurred while reviewing paragraph structure", AuditCategory.CONTENT, 1.0);
+														  page_audit_record_msg.getAccountId(),
+														  page_audit_record_msg.getAuditRecordId(),
+														  "An error occurred while reviewing paragraph structure", 
+														  AuditCategory.CONTENT, 
+														  1.0);
 					getContext().getParent().tell(audit_err, getSelf());
 					e.printStackTrace();
 				}
@@ -146,8 +177,13 @@ public class ContentAuditor extends AbstractActor {
 				try {
 					Audit image_copyright_audit = image_audit.execute(page, audit_record, null);
 					AuditProgressUpdate audit_update5 = new AuditProgressUpdate(page_audit_record_msg.getAccountId(),
-							audit_record.getId(), (2.0 / 4.0), "Reviewing images for uniqueness", AuditCategory.CONTENT,
-							AuditLevel.PAGE, image_copyright_audit, page_audit_record_msg.getDomainId());
+																				audit_record.getId(), 
+																				(2.0 / 4.0), 
+																				"Reviewing images for uniqueness", 
+																				AuditCategory.CONTENT,
+																				AuditLevel.PAGE, 
+																				image_copyright_audit, 
+																				page_audit_record_msg.getDomainId());
 
 					getContext().getParent().tell(audit_update5, getSelf());
 				} catch (Exception e) {

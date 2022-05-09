@@ -9,21 +9,22 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.browsing.Browser;
-import com.looksee.browsing.Crawler;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.integrations.DeepthoughtApi;
+import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.message.FormDiscoveredMessage;
-import com.looksee.models.message.PathMessage;
+import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.rules.Rule;
 import com.looksee.services.BrowserService;
+import com.looksee.services.DomainService;
 import com.looksee.services.FormService;
+import com.looksee.services.PageStateService;
 import com.looksee.utils.PathUtils;
-import com.looksee.utils.TimingUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -44,16 +45,19 @@ public class FormDiscoveryActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private Crawler crawler;
-	
-	@Autowired
 	private BrowserService browser_service;
 	
 	@Autowired
 	private FormService form_service;
 	
 	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private ElementRuleExtractor rule_extractor;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -75,18 +79,18 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {		
+				.match(JourneyMessage.class, message -> {		
 					log.warning("-------------------------------------------------------------------------------------------------");
 					log.info("Retrieving first url in path objects");
 					//get first url
-					String url = PathUtils.getFirstUrl(message.getPathObjects());
+					String url = PathUtils.getFirstUrl(message.getSteps());
 					//get first page in path
 					log.info("extracting host from url :: "+url);
 				  	String host = new URL(url).getHost();
 				  	Browser browser = null;
 				  	boolean forms_created = false;
 				  	int count = 0;
-				  	
+				  	Domain domain = domain_service.findById(message.getDomainId()).get();
 				  	do{
 				  		try{
 				  			log.warning("form discovery getting browser connection ::   "+message.getBrowser().toString());
@@ -95,33 +99,29 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser.navigateTo(url);
 							browser.removeDriftChat();
 
-					  		log.warning("total path objects    ::   "+message.getPathObjects().size());
+					  		log.warning("total path objects    ::   "+message.getSteps().size());
 					  		//crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host, message.getAccountId());
 
-					  		PageState page_state = null;
-							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
-								if(message.getPathObjects().get(idx) instanceof PageState){
-									page_state = (PageState)message.getPathObjects().get(idx);
-									break;
-								}
-							}
+					  		PageState page_state = PathUtils.getLastPageState(message.getSteps());
 							 
 							log.warning("extracting all forms");
-						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), message.getDomain(), browser);
+						  	Set<Form> forms = browser_service.extractAllForms(message.getAccountId(), domain, browser);
 						  	log.warning("forms extracted :: "+forms.size());
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
 						  		
+						  		/*
 							  	for(Element field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									field.getRules().addAll(rules);
 								}
+								*/
 							    DeepthoughtApi.predict(form);
 							  
-							    form = form_service.save(message.getAccountId(), message.getDomain().getUrl(), form);
-							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomain());
-							  	message.getDiscoveryActor().tell(form_message, getSelf());
+							    form = form_service.save(form);
+							    FormDiscoveredMessage form_message = new FormDiscoveredMessage(form, page_state, message.getAccountId(), message.getDomainId());
+							  	//message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}
 						  	forms_created = true;
 						  	return;

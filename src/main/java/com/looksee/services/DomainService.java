@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.Action;
+import com.looksee.config.SpringExtension.SpringExt;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
@@ -23,7 +24,10 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.DomainRepository;
+
+import akka.actor.AbstractExtensionId;
 
 @Service
 public class DomainService {
@@ -41,8 +45,8 @@ public class DomainService {
 		return domain_repo.getDomains();
 	}
 	
-	public Set<TestUser> getTestUsers(String user_id, Domain domain) {
-		return domain_repo.getTestUsers(user_id, domain.getKey());
+	public Set<TestUser> getTestUsers(long domain_id) {
+		return domain_repo.getTestUsers(domain_id);
 	}
 
 	public Domain findByHostForUser(String host, String username) {
@@ -61,36 +65,32 @@ public class DomainService {
 		return domain_repo.save(domain);	
 	}
 	
-	public int getTestCount(String user_id, String url) {
-		return domain_repo.getTestCount(user_id, url);
+	public int getTestCount(long account_id, String url) {
+		return domain_repo.getTestCount(account_id, url);
 	}
 
 	public Optional<Domain> findById(long domain_id) {
 		return domain_repo.findById(domain_id);
 	}
 
-	public Set<TestUser> getTestUsers(String username, String key) {
-		return domain_repo.getTestUsers(username, key);
-	}
-
 	public void deleteTestUser(String acct_username, String domain_key, String username) {
 		domain_repo.deleteTestUser(acct_username, domain_key, username);
 	}
 
-	public Set<Form> getForms(String username, String url) {
-		return domain_repo.getForms(username, url);
+	public Set<Form> getForms(long account_id, String url) {
+		return domain_repo.getForms(account_id, url);
 	}
 	
-	public int getFormCount(String user_id, String url) {
-		return domain_repo.getFormCount(user_id, url);
+	public int getFormCount(long account_id, String url) {
+		return domain_repo.getFormCount(account_id, url);
 	}
 
 	public Set<Element> getElementStates(String url, String username) {
 		return domain_repo.getElementStates(url, username);
 	}
 
-	public Set<Action> getActions(String user_id, String url) {
-		return domain_repo.getActions(user_id, url);
+	public Set<ActionOLD> getActions(long account_id, String url) {
+		return domain_repo.getActions(account_id, url);
 	}
 
 	public Set<PageState> getPageStates(long domain_id) {
@@ -101,16 +101,16 @@ public class DomainService {
 		return domain_repo.findByKey(key, username);
 	}
 
-	public Set<Test> getTests(String user_id, String url) {
-		return domain_repo.getTests(user_id, url);
+	public Set<Test> getTests(long account_id, String url) {
+		return domain_repo.getTests(account_id, url);
 	}
 	
-	public Set<TestRecord> getTestRecords(String user_id, String url) {
-		return domain_repo.getTestRecords(user_id, url);
+	public Set<TestRecord> getTestRecords(long account_id, String url) {
+		return domain_repo.getTestRecords(account_id, url);
 	}
 
-	public Set<PageLoadAnimation> getAnimations(String user_id, String url) {
-		return domain_repo.getAnimations(user_id, url);
+	public Set<PageLoadAnimation> getAnimations(long account_id, String url) {
+		return domain_repo.getAnimations(account_id, url);
 	}
 
 	/**
@@ -126,16 +126,14 @@ public class DomainService {
 	 * @pre !page_version_key.isEmpty()
 	 * 
 	 */
-	public boolean addPage(long domain_id, String page_version_key) {
-		assert page_version_key != null;
-		assert !page_version_key.isEmpty();
+	public boolean addPage(long domain_id, long page_id) {
 		//check if page already exists. If it does then return true;
-		Optional<PageState> page = domain_repo.getPage(domain_id, page_version_key);
+		Optional<PageState> page = domain_repo.getPage(domain_id, page_id);
 		if(page.isPresent()) {
 			return true;
 		}
 		
-		return domain_repo.addPage(domain_id, page_version_key) != null;
+		return domain_repo.addPage(domain_id, page_id) != null;
 	}
 
 	@Deprecated
@@ -223,5 +221,13 @@ public class DomainService {
 
 	public List<Competitor> getCompetitors(long domain_id) {
 		return domain_repo.getCompetitors(domain_id);
+	}
+
+	public List<TestUser> findTestUser(long domain_id) {
+		return domain_repo.findTestUser(domain_id);
+	}
+
+	public void addTestUser(long domain_id, long test_user_id) {
+		domain_repo.addTestUser(domain_id, test_user_id);	
 	}
 }

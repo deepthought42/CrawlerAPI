@@ -138,8 +138,8 @@ public class Browser {
 		else if("opera".equals(browser)){
 			this.driver = openWithOpera(hub_node_url);
 		}
-		setYScrollOffset(extractYOffset(driver));
-		setXScrollOffset(extractXOffset(driver));
+		setYScrollOffset(0);
+		setXScrollOffset(0);
 		setViewportSize(getViewportSize(driver));
 	}
 	
@@ -408,7 +408,6 @@ public class Browser {
 			screenshots.add(current_screenshot);
 		}while(extractYOffset(driver) > last_y_offset);
 		
-		log.warn("Screenshots captured. Starting stitching process");
 		BufferedImage original_image = null;
 		
 		if(screenshots.size() > 0) {
@@ -922,9 +921,8 @@ public class Browser {
 	 */
 	private Map<String, String> loadAttributes( List<String> attributeList){
 		Map<String, String> attributes_seen = new HashMap<String, String>();
-		
 		for(int i = 0; i < attributeList.size(); i++){
-			String[] attributes = attributeList.get(i).split("");
+			String[] attributes = attributeList.get(i).split("::");
 			
 			if(attributes.length > 1){
 				String attribute_name = attributes[0].trim().replace("\'", "'");

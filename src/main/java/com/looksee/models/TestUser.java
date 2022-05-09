@@ -1,35 +1,22 @@
 package com.looksee.models;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Defines user information that can be used during testing and discovery
  */
 @NodeEntity
-public class TestUser{
-	
-	@GeneratedValue
-    @Id
-	private Long id;
-	
+public class TestUser extends LookseeObject{
+
 	private String username;
 	private String password;
-	private String role;
-	private boolean enabled;
 	
 	public TestUser(){}
 	
-	public TestUser(String username, String password, String role, boolean isEnabled){
+	public TestUser(String username, String password){
 		setUsername(username);
 		setPassword(password);
-		setRole(role);
-		setIsEnabled(isEnabled);
-	}
-	
-	public long getId(){
-		return this.id;
+		setKey(generateKey());
 	}
 	
 	public String getUsername(){
@@ -40,14 +27,6 @@ public class TestUser{
 		return this.password;
 	}
 
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
-	}
-
 	public void setUsername(String username) {
 		this.username = username;
 	}
@@ -55,12 +34,9 @@ public class TestUser{
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
-	public void setIsEnabled(boolean isEnabled){
-		this.enabled = isEnabled;
-	}
-	
-	public boolean isEnabled(){
-		return this.enabled;
+
+	@Override
+	public String generateKey() {
+		return "user"+username+password;
 	}
 }

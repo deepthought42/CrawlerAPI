@@ -1,10 +1,10 @@
 package com.looksee.dto;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Element;
 
 /**
- * Data Transfer object that describes an object composed of both {@link Element} and {@link Action}
+ * Data Transfer object that describes an object composed of both {@link Element} and {@link ActionOLD}
  * 
  */
 public class ElementActionDto{
@@ -12,7 +12,7 @@ public class ElementActionDto{
 	private ElementStateDto element;
 	private ActionDto action;
 	
-	public ElementActionDto(Element elem, Action action){
+	public ElementActionDto(Element elem, ActionOLD action){
 		setElement(new ElementStateDto(elem));
 		setAction(new ActionDto(action));
 	}

@@ -14,7 +14,7 @@ public class ExploratoryPath {
 	
 	private List<String> path_keys;
 	private List<LookseeObject> path_objects;
-	private List<Action> possible_actions;
+	private List<ActionOLD> possible_actions;
 
 	/**
 	 * Creates new instance of path setting it to the given path
@@ -22,7 +22,7 @@ public class ExploratoryPath {
 	 * @param current_path
 	 */
 	@Deprecated
-	public ExploratoryPath(List<String> path_keys, List<LookseeObject> current_path, List<Action> actions){
+	public ExploratoryPath(List<String> path_keys, List<LookseeObject> current_path, List<ActionOLD> actions){
 		setPathKeys(path_keys);
 		setPathObjects(current_path);
 		setPossibleActions(actions);
@@ -152,11 +152,11 @@ public class ExploratoryPath {
 		this.path_objects = path_objects;
 	}
 	
-	public List<Action> getPossibleActions() {
+	public List<ActionOLD> getPossibleActions() {
 		return possible_actions;
 	}
 
-	public void setPossibleActions(List<Action> possible_actions) {
+	public void setPossibleActions(List<ActionOLD> possible_actions) {
 		this.possible_actions = possible_actions;
 	}
 

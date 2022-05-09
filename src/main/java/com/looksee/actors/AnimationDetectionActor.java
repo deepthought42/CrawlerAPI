@@ -1,6 +1,5 @@
 package com.looksee.actors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -16,14 +15,12 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 import com.looksee.browsing.Browser;
-import com.looksee.browsing.Crawler;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Animation;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.PathStatus;
-import com.looksee.models.message.PathMessage;
-import com.looksee.utils.BrowserUtils;
+import com.looksee.models.message.JourneyMessage;
+import com.looksee.models.message.PathMessageOLD;
 import com.looksee.utils.PathUtils;
 
 /**
@@ -36,9 +33,6 @@ import com.looksee.utils.PathUtils;
 public class AnimationDetectionActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), AnimationDetectionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private Crawler crawler;
 
 	public static Props props() {
 	  return Props.create(AnimationDetectionActor.class);
@@ -60,7 +54,7 @@ public class AnimationDetectionActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-			.match(PathMessage.class, msg -> {
+			.match(PathMessageOLD.class, msg -> {
 					boolean err = false;
 					do{
 						err = false;
@@ -76,7 +70,13 @@ public class AnimationDetectionActor extends AbstractActor{
 							//crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, first_page_state.getUrl(), msg.getAccountId());
 							log.warning("getting animation...");
 
-							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor(), msg.getDomain(), msg.getAccountId());
+							PathMessageOLD updated_path_msg = new PathMessageOLD(msg.getKeys(), 
+																		   msg.getPathObjects(), 
+																		   msg.getDiscoveryActor(), 
+																		   PathStatus.EXAMINED, 
+																		   msg.getBrowser(), 
+																		   msg.getDomainActor(), 
+																		   msg.getDomainId(), msg.getAccountId());
 							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
 							
 						}catch(Exception e){

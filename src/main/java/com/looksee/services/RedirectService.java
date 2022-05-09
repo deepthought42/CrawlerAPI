@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.models.Redirect;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.models.repository.DomainRepository;
 import com.looksee.models.repository.RedirectRepository;
 
@@ -36,7 +36,7 @@ public class RedirectService {
 		return record;
 	}
 
-	public Set<Redirect> getRedirects(String user_id, String url) {
-		return domain_repo.getRedirects(user_id, url);
+	public Set<Redirect> getRedirects(long account_id, String url) {
+		return domain_repo.getRedirects(account_id, url);
 	}
 }

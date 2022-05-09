@@ -12,7 +12,8 @@ import com.looksee.models.journeys.SimpleStep;
 @Repository
 public interface SimpleStepRepository extends Neo4jRepository<SimpleStep, Long> {
 
-	public SimpleStep findByKey(@Param("key") String step_key);
+	@Query("MATCH (step:SimpleStep{key:$step_key}) MATCH p=(step)-[*1]->(e) RETURN p")
+	public SimpleStep findByKey(@Param("step_key") String step_key);
 
 	@Query("MATCH (:ElementInteractionStep{key:$step_key})-[:HAS]->(e:ElementState) RETURN e")
 	public ElementState getElementState(@Param("step_key") String step_key);

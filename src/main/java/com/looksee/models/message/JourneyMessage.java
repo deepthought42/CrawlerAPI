@@ -17,12 +17,14 @@ public class JourneyMessage extends Message {
 					   PathStatus status, 
 					   BrowserType browser, 
 					   long domain_id, 
-					   long account_id){
+					   long account_id, 
+					   long audit_record_id){
 		setSteps(steps);
 		setStatus(status);
 		setBrowser(browser);
 		setDomainId(domain_id);
 		setAccountId(account_id);
+		setAuditRecordId(audit_record_id);
 	}
 	
 	public JourneyMessage clone(){
@@ -30,7 +32,8 @@ public class JourneyMessage extends Message {
 								  getStatus(), 
 								  getBrowser(), 
 								  getDomainId(), 
-								  getAccountId());
+								  getAccountId(),
+								  getAuditRecordId());
 	}
 
 	public PathStatus getStatus() {

@@ -9,10 +9,10 @@ import com.looksee.models.PageState;
 @NodeEntity
 public class Step extends LookseeObject {
 	
-	@Relationship(type = "STARTS_WITH", direction = Relationship.OUTGOING)
+	@Relationship(type = "STARTS_WITH")
 	private PageState start_page;
 	
-	@Relationship(type = "ENDS_WITH", direction = Relationship.OUTGOING)
+	@Relationship(type = "ENDS_WITH")
 	private PageState end_page;
 
 	public Step() {}

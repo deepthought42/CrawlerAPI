@@ -133,7 +133,8 @@ public class PathExpansionActor extends AbstractActor {
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
 																	message.getDomainId(), 
-																	message.getAccountId());
+																	message.getAccountId(),
+																	message.getAuditRecordId());
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 					journey_executor.tell(journey_msg, getSelf());
@@ -169,7 +170,13 @@ public class PathExpansionActor extends AbstractActor {
 				for(Step step: new_steps) {
 					List<Step> steps = new ArrayList<>();
 					steps.add(step);
-					JourneyMessage journey_msg = new JourneyMessage(steps, PathStatus.EXPANDED, BrowserType.CHROME, message.getDomainId(), message.getAccountId());
+					JourneyMessage journey_msg = new JourneyMessage(steps, 
+																	PathStatus.EXPANDED, 
+																	BrowserType.CHROME, 
+																	message.getDomainId(), 
+																	message.getAccountId(),
+																	message.getAuditRecordId());
+					
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 					journey_executor.tell(journey_msg, getSelf());
@@ -229,74 +236,6 @@ public class PathExpansionActor extends AbstractActor {
 	 */
 	public static boolean isInternalLink(String url) {
 		return url.matches(".*/#[a-zA-Z0-9]+$");
-	}
-	
-	/**
-	 * Produces all possible element, action combinations that can be produced from the given path
-	 *
-	 * @throws MalformedURLException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 * 
-	 * @pre path != null
-	 */
-	@Deprecated
-	public ArrayList<ExploratoryPath> expandPath(JourneyMessage path)  {
-		assert path != null;
-		
-		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
-		//get last page states for page
-	
-		Collection<ElementState> elements = getElementStatesForExpansion(path.getSteps());
-		log.warn("element states to be expanded :: "+elements.size());
-
-		//iterate over all elements
-		for(ElementState element : elements){
-			if(element.getClassification().equals(ElementClassification.SLIDER) || 
-				element.getClassification().equals(ElementClassification.TEMPLATE));
-				log.warn("skipping element :: "+element.getXpath());
-				continue;
-			}
-			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
-			
-			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
-			/*DataDecomposer data_decomp = new DataDecomposer();
-			try {
-				Brain.predict(DataDecomposer.decompose(page_element), actions);
-			} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			*/
-			//END OF PREDICTION CODE
-
-
-			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
-			//page element is not an input or a form
-			JourneyMessage new_path = new JourneyMessage(new ArrayList<>(path.getSteps()), 
-														   PathStatus.EXPANDED, 
-														   path.getBrowser(), 
-														   path.getDomainId(), 
-														   path.getAccountId());
-
-			//new_path.getPathObjects().add(element);
-			//new_path.getKeys().add(element.getKey());
-
-			for(List<ActionOLD> action_list : ActionHelper.getActionLists()){
-				for(ActionOLD action : action_list){
-					//ArrayList<String> keys = new ArrayList<String>(new_path.);
-					ArrayList<Step> path_objects = new ArrayList<Step>(new_path.getSteps());
-
-					//keys.add(action.getKey());
-					//path_objects.add(action);
-
-					//ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
-
-					//pathList.add(action_path);
-				}
-			}
-		
-		return null;
 	}
 
 	/**

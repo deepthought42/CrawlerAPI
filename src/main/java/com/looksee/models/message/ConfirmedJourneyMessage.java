@@ -18,16 +18,23 @@ public class ConfirmedJourneyMessage extends Message {
 					   PathStatus status, 
 					   BrowserType browser, 
 					   long domain_id, 
-					   long account_id){
+					   long account_id,
+					   long audit_record_id){
 		setSteps(steps);
 		setStatus(status);
 		setBrowser(browser);
 		setDomainId(domain_id);
 		setAccountId(account_id);
+		setAuditRecordId(audit_record_id);
 	}
 	
 	public ConfirmedJourneyMessage clone(){
-		return new ConfirmedJourneyMessage(new ArrayList<>(getSteps()), getStatus(), getBrowser(), getDomainId(), getAccountId());
+		return new ConfirmedJourneyMessage(new ArrayList<>(getSteps()), 
+											getStatus(), 
+											getBrowser(), 
+											getDomainId(), 
+											getAccountId(), 
+											getAuditRecordId());
 	}
 
 	public PathStatus getStatus() {

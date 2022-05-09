@@ -34,7 +34,6 @@ import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
-import com.looksee.services.JourneyService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
 import com.looksee.utils.TimingUtils;
@@ -106,15 +105,11 @@ public class JourneyExecutor extends AbstractActor{
 						PageState initial_page = message.getSteps().get(0).getStartPage();
 						//navigate to url of first page state in first journey step
 						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-						log.warn("navigating to url :: "+initial_page.getUrl());
 						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
 						browser.navigateTo(sanitized_url);
 						
-						log.warn("++++++++++++++++++++++++++++++++++++");
-						log.warn("executing step count :: "+message.getSteps().size());
 						//execute all steps sequentially in the journey
 						executeAllStepsInJourney(message.getSteps(), browser);
-						log.warn("+++++++++++ END ++++++++++++++++++++");
 						//send build page message to PageStateBuilder
 						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
 																												message.getAccountId(), 
@@ -125,44 +120,11 @@ public class JourneyExecutor extends AbstractActor{
 						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_builder.tell(browser_page_builder_message, getSelf());
-						
-						
-						
-						//build final page state
-						//PageState end_page = browser_service.buildPageState(new URL(sanitized_url), browser, new URL(browser.getDriver().getCurrentUrl()));
-						//message.getSteps().get(message.getSteps().size()-1).setEndPage(end_page);
-						/*
-						PageState second_to_last_page = PathUtils.getSecondToLastPageState(message.getSteps());
-						//is end_page PageState different from second to last PageState
-						if(end_page.equals(second_to_last_page)) {
-							return;
-						}
-						
-						getContext().getParent().tell(message, getSelf());
-						*/
+
 					}
 					catch(ElementNotInteractableException e) {
 						e.printStackTrace();
-					}
-					
-					//create navigation step
-					/*
-					NavigationStep step = new NavigationStep(url);
-					
-					Set<Step> steps = new HashSet<>();
-					steps.add(step);
-					List<String> ordered_keys = new ArrayList<>();
-					ordered_keys.add(step.getKey());
-					
-					//Create new Journey with navigation step
-					Journey journey = new Journey(steps, ordered_keys);
-					journey_service.save(journey);
-					//send Journey to JourneyExplorer actor
-					ActorRef journeyExpander = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							.props("journeyExpander"), "journeyExpander"+UUID.randomUUID());
-					journeyExpander.tell(journey, getSelf());	
-					*/
-				
+					}				
 				})
 				.match(PageDataExtractionMessage.class, message -> {
 					log.warn("Journey executor received page data extraction message :: "+message.getPageState().getKey());
@@ -179,10 +141,10 @@ public class JourneyExecutor extends AbstractActor{
 																						PathStatus.EXAMINED, 
 																						BrowserType.CHROME, 
 																						message.getDomainId(), 
-																						message.getAccountId());
+																						message.getAccountId(),
+																						message.getAuditRecordId());
 					
 					crawl_actor.tell(journey_message, getSelf());
-					//getContext().getSender().tell(PoisonPill.class, getSelf());
 				})
 				.match(PageDataExtractionError.class, message -> {
 					try {
@@ -190,7 +152,6 @@ public class JourneyExecutor extends AbstractActor{
 						PageState initial_page = this.steps.get(0).getStartPage();
 						//navigate to url of first page state in first journey step
 						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-						log.warn("navigating to url :: "+initial_page.getUrl());
 						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
 						browser.navigateTo(sanitized_url);
 						
@@ -207,21 +168,6 @@ public class JourneyExecutor extends AbstractActor{
 						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 						page_builder.tell(browser_page_builder_message, getSelf());
-						
-						
-						
-						//build final page state
-						//PageState end_page = browser_service.buildPageState(new URL(sanitized_url), browser, new URL(browser.getDriver().getCurrentUrl()));
-						//message.getSteps().get(message.getSteps().size()-1).setEndPage(end_page);
-						/*
-						PageState second_to_last_page = PathUtils.getSecondToLastPageState(message.getSteps());
-						//is end_page PageState different from second to last PageState
-						if(end_page.equals(second_to_last_page)) {
-							return;
-						}
-						
-						getContext().getParent().tell(message, getSelf());
-						*/
 					}
 					catch(ElementNotInteractableException e) {
 						e.printStackTrace();
@@ -242,6 +188,12 @@ public class JourneyExecutor extends AbstractActor{
 				.build();
 	}
 	
+	/**
+	 * Executes all {@link Step steps} within a browser
+	 * 
+	 * @param steps
+	 * @param browser
+	 */
 	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
 		log.warn("step count :: "+steps.size());

@@ -21,20 +21,20 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 	@Query("MATCH (e:Element{key:$key}) RETURN e LIMIT 1")
 	public Element findByKey(@Param("key") String key);
 	
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$key}) OPTIONAL MATCH z=(e)-->(x) RETURN e LIMIT 1")
-	public Element findByKeyAndUserId(@Param("user_id") String user_id, @Param("key") String key);
+	@Query("MATCH (account:Account)-[*]->(e:Element{key:$key}) OPTIONAL MATCH z=(e)-->(x) WHERE id(account)=$account_id RETURN e LIMIT 1")
+	public Element findByKeyAndUserId(@Param("account_id") long account_id, @Param("key") String key);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}) MATCH (e)-[hr:HAS]->(:Rule{key:$key}) DELETE hr")
-	public void removeRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("key") String key);
+	@Query("MATCH (e:Element)-[hr:HAS]->(:Rule{key:$key}) WHERE id(e)=$element_id DELETE hr")
+	public void removeRule(@Param("element_id") long element_id, @Param("key") String key);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}) MATCH (e)-[hr:HAS]->(r) RETURN r")
-	public Set<Rule> getRules(@Param("user_id") String user_id, @Param("element_key") String element_key);
+	@Query("MATCH (e:Element)-[hr:HAS]->(r) WHERE id(e)=$element_id RETURN r")
+	public Set<Rule> getRules(@Param("element_id") long element_id);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}),(r:Rule{key:$rule_key}) MERGE element=(e)-[hr:HAS]->(r) RETURN r")
-	public Rule addRuleToFormElement(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
+	@Query("MATCH (e:Element),(r:Rule{key:$rule_key}) WHERE id(e)=$element_id MERGE element=(e)-[hr:HAS]->(r) RETURN r")
+	public Rule addRuleToFormElement(@Param("element_id") long element_id, @Param("rule_key") String rule_key);
 
-	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
-	public Rule getElementRule(@Param("user_id") String user_id, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
+	@Query("MATCH (e:Element)-[:HAS]->(r:Rule{key:$rule_key}) WHERE id(e)=$element_id RETURN r LIMIT 1")
+	public Rule getElementRule(@Param("element_id") long element_id, @Param("rule_key") String rule_key);
 
 	@Query("MATCH (:Account{user_id:$user_key})-[*]->(e:Element{outer_html:$outer_html}) RETURN e LIMIT 1")
 	public Element findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);

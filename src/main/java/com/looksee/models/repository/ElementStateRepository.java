@@ -33,11 +33,11 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (:Account{username:$username})-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS]->(r:Rule{key:$rule_key}) RETURN r LIMIT 1")
 	public Rule getElementRule(@Param("username") String username, @Param("element_key") String element_key, @Param("rule_key") String rule_key);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(e:ElementState{outer_html:$outer_html}) RETURN e LIMIT 1")
-	public ElementState findByOuterHtml(@Param("user_id") String user_id, @Param("outer_html") String snippet);
+	@Query("MATCH (account:Account)-[*]->(e:ElementState{outer_html:$outer_html}) WHERE id(account)=$account_id RETURN e LIMIT 1")
+	public ElementState findByOuterHtml(@Param("account_id") long account_id, @Param("outer_html") String snippet);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[*]->(es:ElementState{key:$element_key}) Match (es)-[:HAS]->(b:BugMessage) DETACH DELETE b")
-	public void clearBugMessages(@Param("user_id") String user_id, @Param("element_key") String element_key);
+	@Query("MATCH (account:Account)-[*]->(es:ElementState{key:$element_key}) Match (es)-[:HAS]->(b:BugMessage) WHERE id(account)=$account_id DETACH DELETE b")
+	public void clearBugMessages(@Param("account_id") long account_id, @Param("element_key") String element_key);
 
 	@Query("MATCH (:Account{user_id:$user_id})-[]-(d:Domain) MATCH (d)-[]->(page:PageVersion) MATCH (page)-[*]->(e:ElementState{key:$element_key}) MATCH (e)-[:HAS_CHILD]->(es:ElementState) RETURN es")
 	public List<ElementState> getChildElementsForUser(@Param("user_id") String user_id, @Param("element_key") String element_key);

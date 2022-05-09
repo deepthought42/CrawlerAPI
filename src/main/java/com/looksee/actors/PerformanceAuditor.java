@@ -301,9 +301,7 @@ public class PerformanceAuditor extends AbstractActor {
 	 * 
 	 * @pre details != null;
 	 */
-	private List<AuditDetail> extractAuditDetails(String user_id, String name, Map<String, Object> details) {
-		assert user_id != null;
-		assert !user_id.isEmpty();
+	private List<AuditDetail> extractAuditDetails(long account_id, String name, Map<String, Object> details) {
 		assert name != null;
 		assert !name.isEmpty();
 		assert details != null;
@@ -371,7 +369,7 @@ public class PerformanceAuditor extends AbstractActor {
 						|| "meta-viewport".contentEquals(name) 
 						|| "label".contentEquals(name)
 				) {
-					ElementState element_state = element_state_service.findByOuterHtml(user_id,  getStringValue(detail_obj, "snippet"));
+					ElementState element_state = element_state_service.findByOuterHtml(account_id,  getStringValue(detail_obj, "snippet"));
 					String explanation = getStringValue(detail_obj, "explanation");
 
 					int fix_all_idx = explanation.indexOf("Fix all of the following:");

@@ -2,9 +2,7 @@ package com.looksee.actors;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -14,9 +12,11 @@ import com.looksee.api.MessageBroadcaster;
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.helpers.BrowserConnectionHelper;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.DiscoveryRecord;
+import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
@@ -29,6 +29,7 @@ import com.looksee.models.repository.DiscoveryRecordRepository;
 import com.looksee.models.rules.NumericRule;
 import com.looksee.models.rules.Rule;
 import com.looksee.models.rules.RuleType;
+import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.TestService;
 import com.looksee.utils.BrowserUtils;
@@ -57,6 +58,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private TestService test_service;
 	
 	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private PageStateService page_state_service;
 	
 	@Autowired
@@ -81,13 +85,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				.match(FormDiscoveryMessage.class, message -> {
 					int cnt = 0;
 				  	Browser browser = null;
-				  	
+				  	Domain domain = domain_service.findById(message.getDomainId()).get();
 				  	//find page states that contains form
-				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), message.getDomain().getUrl(), message.getForm().getKey());
+				  	List<PageState> page_states = page_state_service.findPageStatesWithForm(message.getAccountId(), domain.getUrl(), message.getForm().getKey());
 				  	//find tests that contain page state
 				  	List<Test> tests = new ArrayList<>();
 				  	for(PageState page: page_states) {
-				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), message.getDomain().getUrl(), message.getAccountId()));
+				  		tests.addAll(test_service.findTestsWithPageState(page.getKey(), domain.getUrl(), message.getAccountId()));
 				  	}
 				  	
 				  	int last_path_size = Integer.MAX_VALUE;
@@ -130,14 +134,14 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		cnt = 0;
 						  		PageState result_page = null;
-						  		Map<Integer, Element> visible_element_map = new HashMap<>();
-						  		List<Element> visible_elements = new ArrayList<>();
+						  		//Map<Integer, Element> visible_element_map = new HashMap<>();
+						  		//List<Element> visible_elements = new ArrayList<>();
 						  		
 						  		do{
 						  			try{
 								  		browser = BrowserConnectionHelper.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 						  				//result_page = crawler.crawlPath(message.getAccountId(), message.getDomain(), path_keys, test_path_objects, browser, message.getDomain().getEntryPath(), visible_element_map, visible_elements);
-						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
+						  				PageState last_page = PathUtils.getLastPageStateOLD(test_path_objects);
 										result_page.setLoginRequired(last_page.isLoginRequired());
 						  				break;
 						  			}catch(Exception e){
@@ -152,7 +156,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		final long pathCrawlEndTime = System.currentTimeMillis();
 								long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getUrl(), result_page.getUrl(), test_path_objects);
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), test_path_objects);
 	
 						  		Test new_test = new Test(path_keys, test_path_objects, result_page, leaves_domain);
 			
@@ -163,9 +167,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		
 						  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getDiscovery().getKey());
 								discovery_record = discovery_repo.save(discovery_record);
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record, message.getAccountId());  
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  
 								
-								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.CHROME, message.getDomainActor(), message.getDomain(), message.getAccountId());
+								TestMessage test_message = new TestMessage(new_test, message.getDiscoveryActor(), BrowserType.CHROME, message.getDomainActor(), message.getDomainId(), message.getAccountId());
 								message.getDiscoveryActor().tell(test_message, getSelf());
 					  		}
 							break;
@@ -205,7 +209,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> form_tests = new ArrayList<List<LookseeObject>>();
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(Element input_elem : form.getFormFields()){
+		for(ElementState input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
@@ -224,12 +228,15 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				log.info("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
 				continue;
 			}
+			
+			/*
 			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
 			for(Rule rule : rules){
 				List<List<LookseeObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 				form_tests.addAll(path_list);
 			}
+			*/
 			log.info("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;
@@ -246,14 +253,16 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		
 		//for each field in the complex field generate a set of tests for all known rules
-		for(Element input_elem : form.getFormFields()){			
+		for(ElementState input_elem : form.getFormFields()){			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
+			/*
 			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
 			for(Rule rule : rules){
 				List<List<LookseeObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 				form_tests.addAll(path_list);
 			}
+			*/
 			log.info("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;
@@ -267,91 +276,91 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			
-			path_obj_list.add(new Action("sendKeys", short_str));
+			path_obj_list.add(new ActionOLD("sendKeys", short_str));
 			tests.add(path_obj_list);
 
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
-			path_obj_list.add(new Action("sendKeys", large_str));
+			path_obj_list.add(new ActionOLD("sendKeys", large_str));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 
-			path_obj_list.add(new Action("sendKeys", short_str));
+			path_obj_list.add(new ActionOLD("sendKeys", short_str));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())-1);
 
-			path_obj_list.add(new Action("sendKeys", large_str));
+			path_obj_list.add(new ActionOLD("sendKeys", large_str));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
 			tests.add(path_obj_list);
 		}
 		return tests;
@@ -369,9 +378,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "a"));
+		path_obj_list.add(new ActionOLD("sendKeys", "a"));
 		tests.add(path_obj_list);		
 		return tests;
 	}
@@ -381,9 +390,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "0"));
+		path_obj_list.add(new ActionOLD("sendKeys", "0"));
 		tests.add(path_obj_list);
 		
 		return tests;
@@ -394,9 +403,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "!"));
+		path_obj_list.add(new ActionOLD("sendKeys", "!"));
 		tests.add(path_obj_list);
 		
 		return tests;
@@ -422,38 +431,38 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "!test@test.com"));
+		path_obj_list.add(new ActionOLD("sendKeys", "!test@test.com"));
 		tests.add(path_obj_list);		
 
 		//generate single character str test	
 		List<LookseeObject> path_obj_list1 = new ArrayList<LookseeObject>();
 		path_obj_list1.add(input_elem);
-		path_obj_list1.add(new Action("click", ""));
+		path_obj_list1.add(new ActionOLD("click", ""));
 		path_obj_list1.add(input_elem);
-		path_obj_list1.add(new Action("sendKeys", "test!test.com"));
+		path_obj_list1.add(new ActionOLD("sendKeys", "test!test.com"));
 		tests.add(path_obj_list1);
 
 		List<LookseeObject> path_obj_list2 = new ArrayList<LookseeObject>();
 		path_obj_list2.add(input_elem);
-		path_obj_list2.add(new Action("click", ""));
+		path_obj_list2.add(new ActionOLD("click", ""));
 		path_obj_list2.add(input_elem);
-		path_obj_list2.add(new Action("sendKeys", "test@test"));
+		path_obj_list2.add(new ActionOLD("sendKeys", "test@test"));
 		tests.add(path_obj_list2);
 		
 		List<LookseeObject> path_obj_list3 = new ArrayList<LookseeObject>();
 		path_obj_list3.add(input_elem);
-		path_obj_list3.add(new Action("click", ""));
+		path_obj_list3.add(new ActionOLD("click", ""));
 		path_obj_list3.add(input_elem);
-		path_obj_list3.add(new Action("sendKeys", "test.test@test"));
+		path_obj_list3.add(new ActionOLD("sendKeys", "test.test@test"));
 		tests.add(path_obj_list3);
 		
 		List<LookseeObject> path_obj_list4 = new ArrayList<LookseeObject>();
 		path_obj_list4.add(input_elem);
-		path_obj_list4.add(new Action("click", ""));
+		path_obj_list4.add(new ActionOLD("click", ""));
 		path_obj_list4.add(input_elem);
-		path_obj_list4.add(new Action("sendKeys", "test_test@test"));
+		path_obj_list4.add(new ActionOLD("sendKeys", "test_test@test"));
 		tests.add(path_obj_list4);
 		
 		return tests;
@@ -564,107 +573,107 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			
-			path_obj_list.add(new Action("sendKeys", short_str));
+			path_obj_list.add(new ActionOLD("sendKeys", short_str));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 	
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
-			path_obj_list.add(new Action("sendKeys", large_str));
+			path_obj_list.add(new ActionOLD("sendKeys", large_str));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 
-			path_obj_list.add(new Action("sendKeys", short_str));
+			path_obj_list.add(new ActionOLD("sendKeys", short_str));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())-1);
 
-			path_obj_list.add(new Action("sendKeys", large_str));
+			path_obj_list.add(new ActionOLD("sendKeys", large_str));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			//generate empty string test
 			List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 			
 			//generate single character str test
 			path_obj_list = new ArrayList<LookseeObject>();
 			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path_obj_list.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
+			path_obj_list.add(new ActionOLD("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
 			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
+			path_obj_list.add(new ActionOLD("click", ""));
 			tests.add(path_obj_list);
 		}
 		return tests;
@@ -688,42 +697,42 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					//generate empty string test
 					List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 					path_obj_list.add(input);
-					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(new ActionOLD("click", ""));
 					path_obj_list.add(input);
-					path_obj_list.add(new Action("sendKeys", ""));
+					path_obj_list.add(new ActionOLD("sendKeys", ""));
 					path_obj_list.add(submit);
-					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(new ActionOLD("click", ""));
 					tests.add(path_obj_list);
 					
 					//generate single character str test
 					List<LookseeObject> path_obj_list_2 = new ArrayList<LookseeObject>();
 					path_obj_list_2.add(input);
-					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(new ActionOLD("click", ""));
 					path_obj_list_2.add(input);
-					path_obj_list_2.add(new Action("sendKeys", "a"));
+					path_obj_list_2.add(new ActionOLD("sendKeys", "a"));
 					path_obj_list_2.add(submit);
-					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(new ActionOLD("click", ""));
 					tests.add(path_obj_list_2);
 				}
 				else if( input_type.contains("number")){
 					//generate empty string test
 					List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 					path_obj_list.add(input);
-					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(new ActionOLD("click", ""));
 					path_obj_list.add(input);
-					path_obj_list.add(new Action("sendKeys", ""));
+					path_obj_list.add(new ActionOLD("sendKeys", ""));
 					path_obj_list.add(submit);
-					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(new ActionOLD("click", ""));
 					tests.add(path_obj_list);
 					
 					//generate single character str test
 					List<LookseeObject> path_obj_list_2 = new ArrayList<LookseeObject>();
 					path_obj_list_2.add(input);
-					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(new ActionOLD("click", ""));
 					path_obj_list_2.add(input);
-					path_obj_list_2.add(new Action("sendKeys", "0"));
+					path_obj_list_2.add(new ActionOLD("sendKeys", "0"));
 					path_obj_list_2.add(submit);
-					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(new ActionOLD("click", ""));
 					tests.add(path_obj_list_2);
 				}
 			}
@@ -743,11 +752,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "abcdefghijklmopqrstuvwxyz"));
+		path_obj_list.add(new ActionOLD("sendKeys", "abcdefghijklmopqrstuvwxyz"));
 		path_obj_list.add(submit);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list);		
 		return tests;
 	}
@@ -757,11 +766,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "0"));
+		path_obj_list.add(new ActionOLD("sendKeys", "0"));
 		path_obj_list.add(submit);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list);
 		
 		return tests;
@@ -772,11 +781,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<LookseeObject>> tests = new ArrayList<List<LookseeObject>>();
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "!"));
+		path_obj_list.add(new ActionOLD("sendKeys", "!"));
 		path_obj_list.add(submit);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list);
 		
 		return tests;
@@ -802,29 +811,29 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 		List<LookseeObject> path_obj_list = new ArrayList<LookseeObject>();
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		path_obj_list.add(input_elem);
-		path_obj_list.add(new Action("sendKeys", "!test@test.com"));
+		path_obj_list.add(new ActionOLD("sendKeys", "!test@test.com"));
 		path_obj_list.add(submit);
-		path_obj_list.add(new Action("click", ""));
+		path_obj_list.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list);		
 
 		//generate single character str test	
 		List<LookseeObject> path_obj_list1 = new ArrayList<LookseeObject>();
 		path_obj_list1.add(input_elem);
-		path_obj_list1.add(new Action("click", ""));
+		path_obj_list1.add(new ActionOLD("click", ""));
 		path_obj_list1.add(input_elem);
-		path_obj_list1.add(new Action("sendKeys", "test!test.com"));
+		path_obj_list1.add(new ActionOLD("sendKeys", "test!test.com"));
 		path_obj_list1.add(submit);
-		path_obj_list1.add(new Action("click", ""));
+		path_obj_list1.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list1);
 		List<LookseeObject> path_obj_list2 = new ArrayList<LookseeObject>();
 		path_obj_list2.add(input_elem);
-		path_obj_list2.add(new Action("click", ""));
+		path_obj_list2.add(new ActionOLD("click", ""));
 		path_obj_list2.add(input_elem);
-		path_obj_list2.add(new Action("sendKeys", "test@test"));
+		path_obj_list2.add(new ActionOLD("sendKeys", "test@test"));
 		path_obj_list2.add(submit);
-		path_obj_list2.add(new Action("click", ""));
+		path_obj_list2.add(new ActionOLD("click", ""));
 		tests.add(path_obj_list2);
 		
 		return tests;

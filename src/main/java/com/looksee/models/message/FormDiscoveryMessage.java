@@ -10,20 +10,18 @@ import akka.actor.ActorRef;
 /**
  * Message that transports {@link Form}, {@link DiscoveryRecord}, {@link PageState}, and {@link Domain} objects
  */
-public class FormDiscoveryMessage {
+public class FormDiscoveryMessage extends Message{
 
 	private Form form;
 	private DiscoveryRecord discovery;
 	private PageState page;
 	private ActorRef domain_actor;
-	private ActorRef discovery_actor; 
-	private Domain domain;
-	private String account_id;
+	private ActorRef discovery_actor;
 	
-	public FormDiscoveryMessage(Form form, DiscoveryRecord discovery, Domain domain, PageState page, String account_id) {
+	public FormDiscoveryMessage(Form form, DiscoveryRecord discovery, long domain_id, PageState page, long account_id) {
 		setForm(form);
 		setDiscovery(discovery);
-		setDomain(domain);
+		setDomainId(domain_id);
 		setPage(page);
 		setAccountId(account_id);
 	}
@@ -52,14 +50,6 @@ public class FormDiscoveryMessage {
 		this.discovery_actor = discovery_actor;
 	}
 
-	public Domain getDomain() {
-		return domain;
-	}
-
-	private void setDomain(Domain domain) {
-		this.domain = domain;
-	}
-
 	public DiscoveryRecord getDiscovery() {
 		return discovery;
 	}
@@ -74,13 +64,5 @@ public class FormDiscoveryMessage {
 
 	public void setPage(PageState page) {
 		this.page = page;
-	}
-
-	public String getAccountId() {
-		return account_id;
-	}
-
-	public void setAccountId(String account_id) {
-		this.account_id = account_id;
 	}
 }

@@ -10,6 +10,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import com.looksee.models.Domain;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.journeys.Journey;
 
 /**
  * Record detailing an set of {@link Audit audits}.
@@ -22,6 +23,9 @@ public class DomainAuditRecord extends AuditRecord {
 	
 	@Relationship(type = "BELONGS_TO")
 	private Domain domain;
+	
+	@Relationship(type = "HAS_PATH")
+	private Journey journey;
 	
 	public DomainAuditRecord() {
 		super();

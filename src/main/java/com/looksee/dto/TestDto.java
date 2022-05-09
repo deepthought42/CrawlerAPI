@@ -3,7 +3,7 @@ package com.looksee.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Element;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
@@ -44,7 +44,7 @@ public class TestDto {
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
 			else if(ordered_path_objects.get(idx) instanceof Element ){
-				this.path.add(new ElementActionDto((Element)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
+				this.path.add(new ElementActionDto((Element)ordered_path_objects.get(idx), (ActionOLD)ordered_path_objects.get(++idx)));
 			}
 		}
 	}

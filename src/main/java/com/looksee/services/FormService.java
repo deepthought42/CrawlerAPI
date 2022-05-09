@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.performance.BugMessage;
@@ -37,20 +38,20 @@ public class FormService {
 		return form_repo.getPageState(user_id, url, form.getKey());
 	}
 	
-	public Form findByKey(String user_id, String url, String key){
-		return form_repo.findByKeyForUserAndDomain(user_id, url, key);
+	public Form findByKey(long account_id, String url, String key){
+		return form_repo.findByKeyForUserAndDomain(account_id, url, key);
 	}
 
-	public Form save(String user_id, String url, Form form) {
-		Form form_record = form_repo.findByKeyForUserAndDomain(user_id, url, form.getKey());
+	public Form save(Form form) {
+		Form form_record = form_repo.findById(form.getId()).get();
 		if(form_record == null){
 			
-			List<Element> db_records = new ArrayList<Element>(form.getFormFields().size());
-			for(Element element : form.getFormFields()){
+			//List<Element> db_records = new ArrayList<Element>(form.getFormFields().size());
+			//for(Element element : form.getFormFields()){
 				//db_records.add(element_service.saveFormElement(element));
-			}
+			//}
 			
-			form.setFormFields(db_records);
+			//form.setFormFields(db_records);
 			//form.setSubmitField(element_service.saveFormElement(form.getSubmitField()));
 			//form.setFormTag(element_service.saveFormElement(form.getFormTag()));
 
@@ -71,9 +72,11 @@ public class FormService {
 	    		Domain domain = optional_domain.get();
 		    	
 				form.setFormFields(form_repo.getElementStates(user_id, domain.getUrl(), form.getKey()));
-				for(Element element : form.getFormFields()){
+				/*
+				for(ElementState element : form.getFormFields()){
 					element.setRules(element_service.getRules(user_id, element.getKey()));
 				}
+				*/
 				form.setFormTag(form_repo.getFormElement(user_id, domain.getUrl(), form.getKey()));
 				form.setSubmitField(form_repo.getSubmitElement(user_id, domain.getUrl(), form.getKey()));
 				return form;
@@ -106,14 +109,11 @@ public class FormService {
 			log.warn("form bug message size :: "+form.getBugMessages().size());
 			log.warn("form name :: "+form.getName());
 			log.warn("form memory id :: "+form.getMemoryId());
-			log.warn("form date discovered :: "+form.getDateDiscovered());
 			log.warn("form fields :: "+form.getFormFields());
 			log.warn("form tag  :: "+form.getFormTag());
 			log.warn("form submit field :: "+form.getSubmitField());
-			log.warn("form status  :: "+form.getStatus());
 			log.warn("form type :: "+form.getType());
 			log.warn("form key :: "+form.getKey());
-			log.warn("form prediction ::  "+form.getPrediction());
 			log.warn("form repo   :: "+form_repo);
 			
 			return form_repo.save(form);

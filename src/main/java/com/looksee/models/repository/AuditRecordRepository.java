@@ -43,6 +43,9 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (dar:DomainAuditRecord),(par:PageAuditRecord{key:$page_audit_key}) WHERE id(dar)=$domain_audit_record_id MERGE (dar)-[h:HAS]->(par) RETURN dar")
 	public void addPageAuditRecord(@Param("domain_audit_record_id") long domain_audit_record_id, @Param("page_audit_key") String page_audit_key);
 
+	@Query("MATCH (dar:DomainAuditRecord),(par:PageAuditRecord) WHERE id(dar)=$domain_audit_record_id AND id(par)=$page_audit_id MERGE (dar)-[h:HAS]->(par) RETURN dar")
+	public void addPageAuditRecord(@Param("domain_audit_record_id") long domain_audit_record_id, @Param("page_audit_id") long page_audit_record_id);
+	
 	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllAudits(@Param("audit_record_id") long audit_record_id);
 
@@ -163,5 +166,9 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (audit_record:AuditRecord) WITH audit_record WHERE id(audit_record)=$audit_record_id MATCH (audit_record)-[:DETECTED]->(design_system:DesignSystem) RETURN design_system")
 	public Optional<DesignSystem> getDesignSystem(@Param("audit_record_id") long audit_record_id);
+
+	@Query("MATCH (ar:DomainAuditRecord),(journey:Journey) WHERE id(ar)=$audit_record_id AND id(journey)=$journey_id MERGE (ar)-[:HAS_PATH]->(journey) RETURN ar")
+	public AuditRecord addJourney(@Param("audit_record_id") long audit_record_id, @Param("journey_id")  long journey_id);
+
 	
 }

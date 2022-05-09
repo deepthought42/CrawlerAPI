@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.looksee.analytics.SegmentAnalyticsHelper;
 import com.looksee.models.Account;
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
@@ -66,7 +66,7 @@ public class IdeTestExportController {
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link Action}s
+     *  {@link Element}s and {@link ActionOLD}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -84,7 +84,7 @@ public class IdeTestExportController {
 
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link Action}s
+     *  {@link Element}s and {@link ActionOLD}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -110,7 +110,7 @@ public class IdeTestExportController {
 		if(test_json.has("key")){
 			String test_key = test_json.getString("key");
 			
-			Test test = test_repo.findByKey(test_key, formatted_url, acct.getEmail());
+			Test test = test_repo.findByKey(test_key, formatted_url, acct.getId());
 			if(test != null){
 				test.setArchived(true);
 				test_repo.save(test);

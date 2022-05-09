@@ -1,6 +1,5 @@
 package com.looksee.models.message;
 
-import com.looksee.models.Domain;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 
@@ -9,35 +8,19 @@ import akka.actor.ActorRef;
 /**
  * Message that transports {@link Form} and {@link PageState}
  */
-public class FormDiscoveredMessage {
+public class FormDiscoveredMessage extends Message {
 
 	private Form form;
 	private PageState page;
 	private ActorRef domain_actor;
 	private ActorRef discovery_actor;
-	private Domain domain;
-	private String user_id;
+
 	
-	@Deprecated
-	public FormDiscoveredMessage(Form form, PageState page, String user_id) {
+	public FormDiscoveredMessage(Form form, PageState page, long account_id, long domain_id) {
 		setForm(form);
 		setPage(page);
-		setUserId(user_id);
-	}
-	
-	public FormDiscoveredMessage(Form form, PageState page, String user_id, Domain domain) {
-		setForm(form);
-		setPage(page);
-		setDomain(domain);
-		setUserId(user_id);
-	}
-
-	public Domain getDomain() {
-		return domain;
-	}
-
-	public void setDomain(Domain domain) {
-		this.domain = domain;
+		setDomainId(domain_id);
+		setAccountId(account_id);
 	}
 
 	public Form getForm() {
@@ -70,13 +53,5 @@ public class FormDiscoveredMessage {
 
 	public void setPage(PageState page) {
 		this.page = page;
-	}
-
-	public String getUserId() {
-		return user_id;
-	}
-
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
 	}
 }

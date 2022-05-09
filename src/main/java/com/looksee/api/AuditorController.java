@@ -113,7 +113,10 @@ public class AuditorController {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
 	   	//create new audit record
-	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, new HashSet<>(), null, false);
+	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
+	   														new HashSet<>(), 
+	   														null, 
+	   														false);
 		audit_record.setUrl(sanitized_url.toString());
 	   	audit_record.setDataExtractionMsg("loading page");
 	   	audit_record.setDataExtractionProgress(1.0/50.0);

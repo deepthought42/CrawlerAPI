@@ -1,39 +1,34 @@
 package com.looksee.models.message;
 
-import com.looksee.models.Domain;
 import com.looksee.models.Test;
 import com.looksee.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
 
-public class TestMessage {
+public class TestMessage extends Message{
 
 	private Test test;
-	private Domain domain;
 	private ActorRef discovery_actor;	
 	private ActorRef domain_actor;
 	private BrowserType browser;
-	private String account;
 	
-	public TestMessage(Test test, ActorRef discovery_actor, BrowserType browser, ActorRef domain_actor, Domain domain, String account_id){
+	public TestMessage(Test test, 
+					   ActorRef discovery_actor, 
+					   BrowserType browser, 
+					   ActorRef domain_actor, 
+					   long domain_id, 
+					   long account_id
+    ){
 		setTest(test);
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
-		setDomain(domain);
-		setAccount(account_id);
-	}
-	
-	public String getAccount() {
-		return account;
-	}
-
-	public void setAccount(String account_id) {
-		this.account = account_id;
+		setDomainId(domain_id);
+		setAccountId(account_id);
 	}
 
 	public TestMessage clone(){
-		return new TestMessage(test, getDiscoveryActor(), getBrowser(), getDomainActor(), getDomain(), getAccount());
+		return new TestMessage(test, getDiscoveryActor(), getBrowser(), getDomainActor(), getDomainId(), getAccountId());
 	}
 
 	public ActorRef getDiscoveryActor() {
@@ -66,13 +61,5 @@ public class TestMessage {
 
 	public void setTest(Test test) {
 		this.test = test;
-	}
-
-	public Domain getDomain() {
-		return domain;
-	}
-
-	public void setDomain(Domain domain) {
-		this.domain = domain;
 	}
 }

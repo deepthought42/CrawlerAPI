@@ -9,13 +9,12 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.Form;
 import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
-import com.looksee.models.Redirect;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.TestUser;
@@ -24,6 +23,7 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.journeys.Redirect;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -55,20 +55,20 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{username:$username})-[:HAS_DOMAIN]-(d:Domain{url:$url}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
 	public Set<Element> getElementStates(@Param("url") String url, @Param("username") String username);
 	
-	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
-	public Set<Action> getActions(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH(account:Account)-[]-(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) WHERE id(account)=$account_id RETURN a")
+	public Set<ActionOLD> getActions(@Param("account_id") long account_id, @Param("url") String url);
 
-	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{host:$domain_host}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() OPTIONAL MATCH y=(t)-->(:Group) RETURN a,b,y,c as d")
-	public Set<Test> getTests(@Param("user_id") String user_id, @Param("domain_host") String host);
+	@Query("MATCH(account:Account)-[]-(d:Domain{host:$domain_host}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() OPTIONAL MATCH y=(t)-->(:Group) WHERE id(account)=$account_id RETURN a,b,y,c as d")
+	public Set<Test> getTests(@Param("account_id") long account_id, @Param("domain_host") String host);
 
-	@Query("MATCH (:Account{username:$username})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:Page) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) MATCH a=(f)-[:DEFINED_BY]->() MATCH b=(f)-[:HAS]->(e) OPTIONAL MATCH c=(e)-->() return a,b,c")
-	public Set<Form> getForms(@Param("username") String username, @Param("url") String url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:Page) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) MATCH a=(f)-[:DEFINED_BY]->() MATCH b=(f)-[:HAS]->(e) OPTIONAL MATCH c=(e)-->() WHERE id(account)=$account_id return a,b,c")
+	public Set<Form> getForms(@Param("account_id") long account_id, @Param("url") String url);
 	
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) RETURN COUNT(f)")
-	public int getFormCount(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState) MATCH (p)-[]->(ps:PageState) MATCH (ps)-[]->(f:Form) WHERE id(account)=$account_id RETURN COUNT(f)")
+	public int getFormCount(@Param("account_id") long account_id, @Param("url") String url);
 
-	@Query("MATCH(:Account{user_id:$user_id})-[]-(d:Domain{host:$host}) MATCH (d)-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
-	public int getTestCount(@Param("user_id") String user_id, @Param("host") String host);
+	@Query("MATCH(account:Account)-[]-(d:Domain{host:$host}) MATCH (d)-[:HAS_TEST]->(t:Test) WHERE id(account)=$account_id  RETURN COUNT(t)")
+	public int getTestCount(@Param("account_id") long account_id, @Param("host") String host);
 
 	@Query("MATCH (d:Domain)-[:HAS_TEST_USER]->(t:TestUser) WHERE id(d)=$domain_id RETURN t")
 	public Set<TestUser> getTestUsers(@Param("domain_id") long domain_id);
@@ -76,26 +76,23 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Account{acct_username:$acct_username})-[:HAS_DOMAIN]->(d:Domain{key:$domain_key}) MATCH (d)-[r:HAS_TEST_USER]->(t:TestUser{username:$username}) DELETE r,t")
 	public Set<TestUser> deleteTestUser(@Param("acct_username") String acct_username, @Param("domain_key") String domain_key, @Param("username") String username);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Redirect) RETURN a")
-	public Set<Redirect> getRedirects(@Param("user_id") String user_id, @Param("url") String host);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Redirect) WHERE id(account)=$account_id RETURN a")
+	public Set<Redirect> getRedirects(@Param("account_id") long account_id, @Param("url") String host);
 	
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH b=(t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
-	public Set<TestRecord> getTestRecords(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH b=(t)-[:HAS_TEST_RECORD]->(tr) WHERE id(account)=$account_id RETURN tr")
+	public Set<TestRecord> getTestRecords(@Param("account_id") long account_id, @Param("url") String url);
 	
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{host:$url}) MATCH (d)-[:HAS_TEST]->(:Test) MATCH (t)-[]->(p:PageLoadAnimation) RETURN p")
-	public Set<PageLoadAnimation> getAnimations(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{host:$url}) MATCH (d)-[:HAS_TEST]->(:Test) MATCH (t)-[]->(p:PageLoadAnimation) WHERE id(account)=$account_id RETURN p")
+	public Set<PageLoadAnimation> getAnimations(@Param("account_id") long account_id, @Param("url") String url);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(:PerformanceInsight)")
-	public Set<PerformanceInsight> getPerformanceInsights(@Param("user_id") String user_id, @Param("url") String url, @Param("page_url") String page_url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) WHERE id(account)=$account_id RETURN pi")
+	public Set<PerformanceInsight> getPerformanceInsights(@Param("account_id") long account_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH (:Account{user_id:$user_id})-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) ORDER BY pi.executed_at DESC LIMIT 1")
-	public PerformanceInsight getMostRecentPerformanceInsight(@Param("user_id") String user_id, @Param("url") String url, @Param("page_url") String page_url);
+	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) WHERE id(account)=$account_id ORDER BY pi.executed_at DESC LIMIT 1")
+	public PerformanceInsight getMostRecentPerformanceInsight(@Param("account_id") long account_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH (d:Domain),(p:PageState{key:$page_key}) WHERE id(d)=$domain_id MERGE (d)-[:HAS]->(p) RETURN p")
-	public PageState addPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
-	
-	@Query("MATCH (:Account{user_id:$user_id})-[]-(d:Domain{url:$url}) MATCH (d)-[]-(p:PageState) RETURN p")
-	public Set<PageState> getPagesForUserId(@Param("user_id") String user_id, @Param("url") String url);
+	@Query("MATCH (d:Domain),(p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id MERGE (d)-[:HAS]->(p) RETURN p")
+	public PageState addPage(@Param("domain_id") long domain_id, @Param("page_id") long page_id);
 
 	@Query("MATCH (d:Domain{url:$url})-[]->(audit:DomainAuditRecord) RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(@Param("url") String url);
@@ -121,8 +118,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (domain:Domain) RETURN domain")
 	public Set<Domain> getDomains();
 	
-	@Query("MATCH (d:Domain)-[]->(p:PageState{key:$page_key}) WHERE id(d)=$domain_id RETURN p")
-	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_key") String page_key);
+	@Query("MATCH (d:Domain)-[]->(p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id RETURN p")
+	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_id") long page_id);
 
 	@Query("MATCH (d:Domain)-[:USES]->(setting:DesignSystem) WHERE id(d)=$domain_id SET setting.audience_proficiency=$audience_proficiency RETURN setting")
 	public DesignSystem updateExpertiseSetting(@Param("domain_id") long domain_id, @Param("audience_proficiency") String audience_proficiency);
@@ -147,6 +144,9 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	
 	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
 	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
+
+	@Query("MATCH (d:Domain)-[]->(user:TestUser) WHERE id(d)=$domain_id RETURN user")
+	public List<TestUser> findTestUser(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (d:Domain),(user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
 	public void addTestUser(@Param("domain_id") long domain_id, @Param("test_user_id") long test_user_id);

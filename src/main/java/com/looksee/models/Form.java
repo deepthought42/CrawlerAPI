@@ -1,7 +1,6 @@
 package com.looksee.models;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.neo4j.ogm.annotation.Relationship;
@@ -9,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.models.audit.performance.BugMessage;
-import com.looksee.models.enums.FormStatus;
 import com.looksee.models.enums.FormType;
 
 /**
@@ -22,37 +20,32 @@ public class Form extends LookseeObject{
 	private Long memory_id;
 	private String name;
     
-	private double[] predictions;
-	private Date date_discovered;
-	private String status;
 	private String type;
 	
 	@Relationship(type = "HAS")
 	private List<BugMessage> bug_messages;
 	
 	@Relationship(type = "DEFINED_BY")
-	private Element form_tag;
+	private ElementState form_tag;
 	
 	@Relationship(type = "HAS")
-	private List<Element> form_fields;
+	private List<ElementState> form_fields;
 	
 	@Relationship(type = "HAS_SUBMIT")
-	private Element submit_field;
+	private ElementState submit_field;
 	
 	public Form(){	}
 	
-	public Form(Element form_tag, List<Element> form_fields, Element submit_field, 
-				String name, double[] predictions, FormType type, Date date_discovered, 
-				FormStatus status){
+	public Form(ElementState form_tag, 
+				List<ElementState> form_fields, 
+				ElementState submit_field, 
+				String name){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);
 		setType(determineFormType());
+		log.warn("FORM TYPE IDENTIFIED :: "+getType());
 		setName(name);
-		setType(type);
-		setPredictions(predictions);
-		setDateDiscovered(date_discovered);
-		setStatus(status);
 		setKey(generateKey());
 	}
 	
@@ -92,7 +85,44 @@ public class Form extends LookseeObject{
 			}
 		}
 		
-		return FormType.LEAD;
+
+		if(submit_field.getAllText().toLowerCase().contains("login") 
+				|| submit_field.getAllText().toLowerCase().contains("sign-in") 
+				|| submit_field.getAllText().toLowerCase().contains("sign in")) {
+			return FormType.LOGIN;
+		}
+		else if(submit_field.getAllText().toLowerCase().contains("register") 
+				|| submit_field.getAllText().toLowerCase().contains("sign-up") 
+				|| submit_field.getAllText().toLowerCase().contains("sign up")) {
+			return FormType.REGISTRATION;
+		}
+		
+		boolean contains_username = false;
+		boolean contains_password = false;
+		boolean contains_password_confirmation = false;
+		for(ElementState element : form_fields) {
+			Map<String, String> element_attributes = element.getAttributes();
+			for(String attr_val: element_attributes.values()){
+				if(attr_val.contains("username") || attr_val.contains("email")){
+					contains_username = true;
+				}
+				else if(attr_val.contains("password") && !(attr_val.contains("confirmation") || (attr_val.contains("confirm") && attr_val.contains("password")))){
+					contains_password = true;
+				}
+				else if(attr_val.contains("password") && (attr_val.contains("confirmation") || attr_val.contains("confirm"))){
+					contains_password_confirmation = true;
+				}
+			}
+		}
+		
+		if(contains_username && contains_password && !contains_password_confirmation) {
+			return FormType.LOGIN;
+		}
+		else if(contains_username && contains_password && contains_password_confirmation) {
+			return FormType.REGISTRATION;
+		}
+		
+		return FormType.UNKNOWN;
 	}
 	
 	/**
@@ -118,43 +148,35 @@ public class Form extends LookseeObject{
 		this.name = name;
 	}
 
-	public Date getDateDiscovered() {
-		return date_discovered;
-	}
-
-	public void setDateDiscovered(Date date_discovered) {
-		this.date_discovered = date_discovered;
-	}
-	
-	public List<Element> getFormFields() {
+	public List<ElementState> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(Element form_field) {
+	public boolean addFormField(ElementState form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<Element> form_field) {
+	public boolean addFormFields(List<ElementState> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<Element> form_fields) {
+	public void setFormFields(List<ElementState> form_fields) {
 		this.form_fields = form_fields;
 	}
 
-	public Element getSubmitField() {
+	public ElementState getSubmitField() {
 		return submit_field;
 	}
 
-	public void setSubmitField(Element submit_field) {
+	public void setSubmitField(ElementState submit_field) {
 		this.submit_field = submit_field;
 	}
 
-	public Element getFormTag() {
+	public ElementState getFormTag() {
 		return form_tag;
 	}
 
-	public void setFormTag(Element form_tag) {
+	public void setFormTag(ElementState form_tag) {
 		this.form_tag = form_tag;
 	}
 
@@ -164,22 +186,6 @@ public class Form extends LookseeObject{
 
 	public void setType(FormType type) {
 		this.type = type.toString();
-	}
-	
-	public FormStatus getStatus() {
-		return FormStatus.valueOf(status.toUpperCase());
-	}
-
-	public void setStatus(FormStatus status) {
-		this.status = status.toString();
-	}
-
-	public double[] getPrediction() {
-		return predictions;
-	}
-
-	public void setPredictions(double[] predictions) {
-		this.predictions = predictions;
 	}
 
 	public Long getMemoryId() {
@@ -192,7 +198,7 @@ public class Form extends LookseeObject{
 	
 	@Override
 	public Form clone(){
-		return new Form(form_tag, form_fields, submit_field, name, predictions, this.getType(), date_discovered, this.getStatus());
+		return new Form(form_tag, form_fields, submit_field, name);
 	}
 
 	public List<BugMessage> getBugMessages() {

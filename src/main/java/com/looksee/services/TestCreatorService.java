@@ -55,13 +55,24 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(List<String> path_keys, List<LookseeObject> path_objects, PageState page_state, String browser_name, Domain domain, String user_id)
-			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
+	public Test createLandingPageTest(List<String> path_keys, 
+									  List<LookseeObject> path_objects, 
+									  PageState page_state, 
+									  String browser_name, 
+									  Domain domain, 
+									  long account_id
+	 ) throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 	  	
 	  	log.warn("domain url :: "+domain.getUrl());
 	  	URL domain_url = new URL(domain.getUrl());
 	  	log.warn("total path object added to test :: "+path_objects.size());
-	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost(), user_id);
+	  	Test test = createTest(path_keys, 
+	  						   path_objects, 
+	  						   page_state, 
+	  						   1L, 
+	  						   browser_name, 
+	  						   domain_url.getHost(), 
+	  						   account_id);
 
 	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl(), false);
 		
@@ -94,7 +105,7 @@ public class TestCreatorService {
 			long crawl_time, 
 			String browser_name, 
 			String domain_host,
-			String user_id
+			long account_id
 	) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
@@ -104,11 +115,11 @@ public class TestCreatorService {
 		log.warn("Creating test........");
 		
 		log.warn("path objects ::  "+path_objects.size());
-		String last_page_state_url = PathUtils.getLastPageState(path_objects).getUrl();
+		String last_page_state_url = PathUtils.getLastPageStateOLD(path_objects).getUrl();
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_url).getHost()) || result_url.contains(new URL(last_page_state_url).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 
-		Test test_db = test_service.findByKey(test.getKey(), domain_host, user_id);
+		Test test_db = test_service.findByKey(test.getKey(), domain_host, account_id);
 		if(test_db == null){
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());

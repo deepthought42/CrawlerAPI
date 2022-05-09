@@ -1,12 +1,14 @@
 package com.looksee.models;
 
+import java.util.Objects;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
  * Defines an action in name only
  */
 @NodeEntity
-public class Action extends LookseeObject {
+public class ActionOLD extends LookseeObject {
 	
 	private String name;
 	private String value;
@@ -14,13 +16,13 @@ public class Action extends LookseeObject {
 	/**
 	 * Construct empty action object
 	 */
-	public Action(){}
+	public ActionOLD(){}
 	
 	/**
 	 * 
 	 * @param action_name
 	 */
-	public Action(String action_name) {
+	public ActionOLD(String action_name) {
 		this.name = action_name;
 		this.value = "";
 		this.setKey(generateKey());
@@ -30,7 +32,7 @@ public class Action extends LookseeObject {
 	 * 
 	 * @param action_name
 	 */
-	public Action(String action_name, String value) {
+	public ActionOLD(String action_name, String value) {
 		setName(action_name);
 		setValue(value);
 		this.setKey(generateKey());
@@ -60,7 +62,7 @@ public class Action extends LookseeObject {
 	 */
 	@Override
 	public int hashCode(){
-		return this.name.hashCode();
+		return Objects.hashCode(name);
 	}
 	
 	public String getValue() {
@@ -74,8 +76,8 @@ public class Action extends LookseeObject {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Action clone() {
-		Action action_clone = new Action(this.getName(), this.getValue());
+	public ActionOLD clone() {
+		ActionOLD action_clone = new ActionOLD(this.getName(), this.getValue());
 		return action_clone;
 	}
 

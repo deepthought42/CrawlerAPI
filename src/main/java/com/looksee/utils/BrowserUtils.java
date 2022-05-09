@@ -1,6 +1,7 @@
 package com.looksee.utils;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -39,13 +40,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.looksee.browsing.Browser;
+import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.ElementState;
 import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;
+import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
+import com.looksee.models.journeys.Redirect;
 import com.looksee.services.BrowserService;
 
 /**
@@ -88,6 +92,7 @@ public class BrowserUtils {
 		}
 		return domain;
 	}
+	
 	
 	/**
 	 * Reformats url so that it matches the Look-see requirements
@@ -156,7 +161,7 @@ public class BrowserUtils {
 	}
 	
 	public static boolean doesSpanMutlipleDomains(String start_url, String end_url, List<LookseeObject> path_objects) throws MalformedURLException {
-		return !(start_url.trim().contains(new URL(end_url).getHost()) || end_url.contains((new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost())));
+		return !(start_url.trim().contains(new URL(end_url).getHost()) || end_url.contains((new URL(PathUtils.getLastPageStateOLD(path_objects).getUrl()).getHost())));
 	}
 
 	/**
@@ -1035,5 +1040,120 @@ public class BrowserUtils {
 		}
 		
 		return img_elements;
+	}
+	
+	/**
+	 * Watches for an animation that occurs during page load
+	 * 
+	 * @param browser
+	 * @param host
+	 * @param user_id TODO
+	 * @return
+	 * @throws IOException
+	 * 
+	 * @pre browser != null
+	 * @pre host != null
+	 * @pre host != empty
+	 */
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, 
+														String host
+	) throws IOException {
+		assert browser != null;
+		assert host != null;
+		assert !host.isEmpty();
+		
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		boolean transition_detected = false;
+		long start_ms = System.currentTimeMillis();
+		long total_time = System.currentTimeMillis();
+		
+		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		String last_checksum = null;
+		String new_checksum = null;
+
+		do{
+			//get element screenshot
+			BufferedImage screenshot = browser.getViewportScreenshot();
+			
+			//calculate screenshot checksum
+			new_checksum = PageState.getFileChecksum(screenshot);
+		
+			transition_detected = !new_checksum.equals(last_checksum);
+
+			if( transition_detected ){
+				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					return null;
+				}
+				image_checksums.add(new_checksum);
+				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				last_checksum = new_checksum;
+				image_urls.add(GoogleCloudStorage.saveImage(screenshot, 
+															 host, 
+															 new_checksum, 
+															 BrowserType.create(browser.getBrowserName())));
+			}
+		}while((System.currentTimeMillis() - start_ms) < 1000 && (System.currentTimeMillis() - total_time) < 10000);
+		
+		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
+			return new PageLoadAnimation(image_urls, 
+										 image_checksums, 
+										 BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl(), true));
+		}
+
+		return null;
+	}
+	
+	public static Redirect getPageTransition(String initial_url, 
+											 Browser browser, 
+											 String host
+	 ) throws GridException, IOException{
+		List<String> transition_urls = new ArrayList<String>();
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		List<BufferedImage> images = new ArrayList<>();
+		boolean transition_detected = false;
+
+		long start_ms = System.currentTimeMillis();
+		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
+
+		String last_key = sanitizeUrl(initial_url, true);
+		
+		//transition_urls.add(last_key);
+		do{
+			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl(), true);
+
+			transition_detected = !new_key.equals(last_key);
+
+			if( transition_detected ){
+				try{
+		        	BufferedImage img = browser.getViewportScreenshot();
+					images.add(img);
+				}catch(Exception e){}
+				start_ms = System.currentTimeMillis();
+				transition_urls.add(new_key);
+				last_key = new_key;
+			}
+		}while((System.currentTimeMillis() - start_ms) < 3000);
+
+		for(BufferedImage img : images){
+			try{
+				String new_checksum = PageState.getFileChecksum(img);
+				image_checksums.add(new_checksum);
+				image_urls.add(GoogleCloudStorage.saveImage(img, 
+															host, 
+															new_checksum, 
+															BrowserType.create(browser.getBrowserName())));
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+
+		Redirect redirect = new Redirect(initial_url, transition_urls);
+		redirect.setImageChecksums(image_checksums);
+		redirect.setImageUrls(image_urls);
+
+		return redirect;
 	}
 }

@@ -22,6 +22,7 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.AuditRecordRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -217,6 +218,11 @@ public class AuditRecordService {
 		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_key);
 	}
 
+
+	public void addPageAuditToDomainAudit(long domain_audit_record_id, Long page_audit_record_id) {
+		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_id);
+	}
+	
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
 		assert url != null;
 		assert !url.isEmpty();
@@ -324,5 +330,9 @@ public class AuditRecordService {
 
 	public Optional<DesignSystem> getDesignSystem(long audit_record_id) {
 		return audit_record_repo.getDesignSystem(audit_record_id);
+	}
+	
+	public AuditRecord addJourney(long audit_record_id, long journey_id) {
+		return audit_record_repo.addJourney(audit_record_id, journey_id);
 	}
 }

@@ -1,9 +1,9 @@
 package com.looksee.dto;
 
-import com.looksee.models.Action;
+import com.looksee.models.ActionOLD;
 
 /**
- * Data Transfer Object for {@link Action} 
+ * Data Transfer Object for {@link ActionOLD} 
  */
 public class ActionDto {
 
@@ -11,7 +11,7 @@ public class ActionDto {
 	private String value;
 	private String name;
 	
-	public ActionDto(Action action){
+	public ActionDto(ActionOLD action){
 		setKey(action.getKey());
 		setValue(action.getValue());
 		setName(action.getName());

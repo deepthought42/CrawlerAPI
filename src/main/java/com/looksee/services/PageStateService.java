@@ -35,75 +35,6 @@ public class PageStateService {
 	
 	@Autowired
 	private PageStateRepository page_state_repo;
-	
-	@Autowired
-	private ElementStateService element_state_service;
-	
-	
-	/**
-	 * Save a {@link PageState} object and its associated objects
-	 * @param page_state
-	 * @return
-	 * @throws Exception 
-	 * 
-	 * @pre page_state != null
-	 */
-	public PageState saveUserAndDomain(String user_id, String domain_url, PageState page_state) throws Exception {
-		assert page_state != null;
-		
-		PageState page_state_record = null;
-		
-		int page_cnt = 0;
-		boolean page_err = false;
-		do{
-			page_err = false;
-			if(page_state_record != null){
-				page_state_record = page_state_repo.save(page_state_record);
-				
-				page_state_record.setElements(getElementStates(page_state_record.getKey()));
-			}
-			else {
-				log.warn("page state wasn't found in database. Saving new page state to neo4j");
-				page_state_record = findByKey( page_state.getKey() );
-
-				if(page_state_record != null){
-					page_state_record = page_state_repo.save(page_state_record);
-					page_state_record.setElements(getElementStates(page_state_record.getKey()));
-				}
-				else{
-					//iterate over page elements
-					List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
-					for(ElementState element : page_state.getElements()){
-						boolean err = false;
-						int cnt = 0;
-						do{
-							err = false;
-							try{
-								element_records.add(element_state_service.save(element));
-							}catch(Exception e){
-								log.warn("error saving element to new page state :  "+e.getMessage());
-								//e.printStackTrace();
-								err = true;
-							}
-							cnt++;
-						}while(err && cnt < 5);
-						
-						if(err){
-							element_records.add(element);
-						}
-					}
-					
-					page_state.setElements(element_records);
-					
-					page_state_record = page_state_repo.save(page_state);
-				}
-			}
-
-			page_cnt++;
-		}while(page_err && page_cnt < 5);
-		
-		return page_state_record;
-	}
 
 	/**
 	 * Save a {@link PageState} object and its associated objects
@@ -178,8 +109,8 @@ public class PageStateService {
 		return screenshots;
 	}
 	
-	public List<PageState> findPageStatesWithForm(String user_id, String url, String page_key) {
-		return page_state_repo.findPageStatesWithForm(user_id, url, page_key);
+	public List<PageState> findPageStatesWithForm(long account_id, String url, String page_key) {
+		return page_state_repo.findPageStatesWithForm(account_id, url, page_key);
 	}
 
 	public Collection<ElementState> getExpandableElements(List<ElementState> elements) {

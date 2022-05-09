@@ -227,7 +227,7 @@ public class AccountController {
     	}
     	*/
 		//remove account
-        account_service.deleteAccount(account.getUserId());
+        account_service.deleteAccount(account.getId());
     }
 }
 

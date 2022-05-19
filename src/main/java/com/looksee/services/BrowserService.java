@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.xml.xpath.XPathExpressionException;
@@ -66,11 +64,8 @@ import com.looksee.models.Template;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ElementClassification;
-import com.looksee.models.enums.FormStatus;
-import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.TemplateType;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.FormUtils;
 import com.looksee.utils.ImageUtils;
 
 import cz.vutbr.web.css.RuleSet;
@@ -92,16 +87,7 @@ public class BrowserService {
 	private ElementService element_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
 	private PageService page_service;
-	
-	@Autowired
-	private FormService form_service;
-
-	@Autowired
-	private DomainService domain_service;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
 
@@ -777,7 +763,9 @@ public class BrowserService {
 		assert page_state != null;
 		
 		List<ElementState> visited_elements = new ArrayList<>();
-		
+		List<ElementState> filtered_elements = new ArrayList<>();
+		Map<String, Boolean> overlapped_elements = new HashMap<>();
+
 		String body_src = extractBody(page_state.getSrc());
 		
 		Document html_doc = Jsoup.parse(body_src);
@@ -925,6 +913,47 @@ public class BrowserService {
 					element_states_map.put(xpath, element_state);
 					visited_elements.add(element_state);
 				}
+				
+				//filter all elements that have dimensions that are within another element and have a lower z-index
+				for(ElementState element1: visited_elements) {
+					if(filtered_elements.contains(element1)) {
+						continue;
+					}
+					boolean overlap_exists = false;
+					for(ElementState element2: visited_elements) {
+						if(element1.getKey().equals(element2.getKey()) || overlapped_elements.containsKey(element2.getKey())) {
+							continue;
+						}
+						
+						//boolean values for equality of element1 and element2 x and y value
+						boolean x_overlap = element1.getXLocation() >= element2.getXLocation() && (element1.getXLocation()+element1.getWidth()) <= (element2.getXLocation()+element2.getWidth());
+						boolean y_overlap = element1.getYLocation() >= element2.getYLocation() && (element1.getYLocation()+element1.getHeight()) <= (element2.getYLocation()+element2.getHeight());
+						
+						log.warn("element1 z-index :: "+element1.getRenderedCssValues().get("z-index"));
+						log.warn("element2 z-index :: "+element2.getRenderedCssValues().get("z-index"));
+
+						String element1_z_index = element1.getRenderedCssValues().get("z-index");
+						if(element1_z_index.contentEquals("auto")) {
+							element1_z_index = "0";
+						}
+						String element2_z_index = element2.getRenderedCssValues().get("z-index");
+						if(element2_z_index.contentEquals("auto")) {
+							element2_z_index = "0";
+						}
+						boolean z_index_overlap = Integer.parseInt(element1_z_index) < Integer.parseInt(element2_z_index);
+						if(x_overlap && y_overlap && z_index_overlap) {
+							overlap_exists = true;
+							break;
+						}
+					}
+					
+					if(!overlap_exists) {
+						filtered_elements.add(element1);
+					}
+					else {
+						overlapped_elements.put(element1.getKey(), Boolean.TRUE);
+					}
+				}
 			}
 			catch(NoSuchElementException e) {
 				//log.warn("No such element found :: "+xpath+"       ;;    on page : "+page_state.getUrl());
@@ -943,7 +972,7 @@ public class BrowserService {
 				//e.printStackTrace();
 			}
 		}
-		return visited_elements;
+		return filtered_elements;
 	}
 
 	/**

@@ -222,11 +222,13 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	 */
 	@Override
 	public boolean equals(Object o){
+		if(o == null) return false;
+		
 		if (this == o) return true;
         if (!(o instanceof ElementState)) return false;
         
         ElementState that = (ElementState)o;
-		return this.getId().equals(that.getId());
+		return this.getKey().equals(that.getKey());
 	}
 	
 	@Override

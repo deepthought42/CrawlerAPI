@@ -13,6 +13,37 @@ java -ea -jar target/Look-see-#.#.#.jar
 
 NOTE: The `-ea` flag tells the java compiler to run the program with assertions enabled
 
+### Neo4j application setup
+
+Note that this section will need to be replaced once we have an Anthos or Terraform script. 
+
+Step 1: setup firewall for neo4j
+
+	gcloud compute firewall-rules create allow-neo4j-bolt-http-https --allow tcp:7473,tcp:7474,tcp:7687 --source-ranges 0.0.0.0/0 --target-tags neo4j
+	
+Step 2: Get image name for Community version 1.4
+
+ 	gcloud compute images list --project launcher-public | grep --extended-regexp "neo4j-community-1-4-.*"
+ 	
+Step 3: create new instance
+
+gcloud config set project cosmic-envoy-280619
+gcloud compute instances create neo4j-stage --machine-type n1-standard-4 --image-project launcher-public --image neo4j-community-1-4-3-6-apoc --tags neo4j,http-server,https-server
+
+
+gcloud compute instances add-tags neo4j-stage --tags http-server,https-server
+
+Step 4 : SSH to server and check status
+
+gcloud compute ssh neo4j-stage
+sudo systemctl status neo4j
+
+Follow step 3 from this webpage to configure neo4j server - https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-neo4j-on-ubuntu-20-04
+
+Step 6: Delete neo4j instance
+
+gcloud compute instances delete neo4j-stage
+
 
 ### Docker
 

@@ -13,7 +13,7 @@ public class ElementIssueTwoWayMapping {
 	private Map<String, String> issues_element_map; // 1 to 1 correlation
 	private Map<String, Set<String>> element_issues; // 1 to many correlation
 	
-	private AuditScore audit_score;
+	private AuditScore scores;
 	private String page_src;
 	
 	public ElementIssueTwoWayMapping(
@@ -54,12 +54,12 @@ public class ElementIssueTwoWayMapping {
 
 
 	public AuditScore getScores() {
-		return audit_score;
+		return scores;
 	}
 
 
 	public void setScores(AuditScore audit_score) {
-		this.audit_score = audit_score;
+		this.scores = audit_score;
 	}
 
 

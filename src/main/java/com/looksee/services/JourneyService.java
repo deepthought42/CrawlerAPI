@@ -31,8 +31,6 @@ public class JourneyService {
 		journey_record.setKey(journey.generateKey());
 		journey_record = journey_repo.save(journey_record);
 		for(Step step : journey.getSteps()) {
-			log.warn("journey id :: "+journey_record.getId());
-			log.warn("step id :: "+step.getId());
 			journey_repo.addStep(journey_record.getId(), step.getId());
 		}
 		

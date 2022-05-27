@@ -223,8 +223,8 @@ public class DomainService {
 		return domain_repo.getCompetitors(domain_id);
 	}
 
-	public List<TestUser> findTestUser(long domain_id) {
-		return domain_repo.findTestUser(domain_id);
+	public List<TestUser> findTestUsers(long domain_id) {
+		return domain_repo.findTestUsers(domain_id);
 	}
 
 	public void addTestUser(long domain_id, long test_user_id) {

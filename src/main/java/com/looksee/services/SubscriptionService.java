@@ -230,19 +230,19 @@ public class SubscriptionService {
 	 * @throws StripeException
 	 */
 	public boolean hasExceededDomainPageAuditLimit(SubscriptionPlan plan, int page_audit_count) {				    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count > 5){
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count >= 5){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count > 50){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count >= 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count > 200){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count >= 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count > 50){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count >= 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count > 400){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count >= 400){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){

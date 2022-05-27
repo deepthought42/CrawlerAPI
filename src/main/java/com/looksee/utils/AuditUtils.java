@@ -59,6 +59,7 @@ public class AuditUtils {
 		
 		double aesthetic_score = 0;
 		int aesthetic_count = 0;
+		int max_aesthetic_points = 0;
 		
 		double interactivity_score = 0;
 		int interactivity_count = 0;
@@ -85,11 +86,22 @@ public class AuditUtils {
     	if(content_count > 0) {
     		content_score = ( content_score / (double)content_count ) * 100;
     	}
+    	else {
+    		content_score = -1;
+    	}
+    	
     	if(info_architecture_count > 0) {
     		info_architecture_score = ( info_architecture_score / (double)info_architecture_count ) * 100;
     	}
+    	else {
+    		info_architecture_score = -1;
+    	}
+    	
     	if(aesthetic_count > 0) {
     		aesthetic_score = ( aesthetic_score / (double)aesthetic_count ) * 100;
+    	}
+    	else {
+    		aesthetic_score = -1;
     	}
     	
     	double readability = extractLabelScore(audits, "readability");

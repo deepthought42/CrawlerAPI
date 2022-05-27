@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -56,8 +57,18 @@ public class LinksAudit implements IExecutablePageStateAudit {
 	@Autowired
 	private UXIssueMessageService issue_message_service;
 	
+	List<String> bad_link_text_list;
+	
 	public LinksAudit() {
 		//super(buildBestPractices(), getAdaDescription(), getAuditDescription(), AuditSubcategory.LINKS);
+		
+		bad_link_text_list = new ArrayList<>();
+		bad_link_text_list.add("click here");
+		bad_link_text_list.add("here");
+		bad_link_text_list.add("more");
+		bad_link_text_list.add("read more");
+		bad_link_text_list.add("learn more");
+		bad_link_text_list.add("info");
 	}
 
 	
@@ -413,43 +424,69 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			}
 			
 			//Does link contain a text label inside it
-			if(!link.getAllText().isEmpty()) {	 
-				String recommendation = "";
-				String description = "Link contains text and is setup correctly. Well done!";
-				String title = "Link is setup correctly and considered accessible";
-				ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
-																Priority.HIGH,
-																description, 
-																recommendation, 
-																null,
-																AuditCategory.INFORMATION_ARCHITECTURE,
-																labels,
-																ada_compliance,
-																title, 
-																4,
-																4);
+			if(!link.getAllText().isEmpty()) {
+				
+				//Does text contain any of the 
+				String link_text = link.getAllText();
+				
+				if(bad_link_text_list.contains(link_text.toLowerCase().trim())) {
+					String recommendation = "Replace link text with more informative text that provides proper context of what the user will find on the page that the link points to";
+					String description = "Links should contain informative text. "+link_text.trim()+" does not provide enough context to be considered accessible";
+					String title = "Link text is not considered accessible";
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.MEDIUM,
+																	description, 
+																	recommendation, 
+																	null,
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	labels,
+																	ada_compliance,
+																	title,
+																	3,
+																	4);
 
-				issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
-				issue_message_service.addElement(issue_message.getId(), link.getId());
-				issue_messages.add(issue_message);
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), link.getId());
+					issue_messages.add(issue_message);
+				}
+				else {
+					String recommendation = "";
+					String description = "Link contains text and is setup correctly. Well done!";
+					String title = "Link is setup correctly and considered accessible";
+					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
+																	Priority.NONE,
+																	description, 
+																	recommendation, 
+																	null,
+																	AuditCategory.INFORMATION_ARCHITECTURE,
+																	labels,
+																	ada_compliance,
+																	title, 
+																	4,
+																	4);
+	
+					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
+					issue_message_service.addElement(issue_message.getId(), link.getId());
+					issue_messages.add(issue_message);
+				}
 			}
-			 else {
-				 //NOTE :: evaluating links with images has proven to be an issue. Commenting out for now until this can be
-				 //made more robust. The issue is that often the link is not the same size as the image. 
-				 //We should also be able to identify when all links within a parent tag have the same destination,
-				 // and in these scenarios recommend making the parent tag a link instead of including multiple link tags
-				 // NOTE 2: This is an issue for blind people and others that rely on screen readers
-				 // NOTE 3: Links with image tags within then should have the alt-text extracted and reviewed.
+			else {
+				//NOTE :: evaluating links with images has proven to be an issue. Commenting out for now until this can be
+				//made more robust. The issue is that often the link is not the same size as the image. 
+				//We should also be able to identify when all links within a parent tag have the same destination,
+				// and in these scenarios recommend making the parent tag a link instead of including multiple link tags
+				// NOTE 2: This is an issue for blind people and others that rely on screen readers
+				// NOTE 3: Links with image tags within then should have the alt-text extracted and reviewed.
 				 
-				 boolean element_includes_text = false;
-
+				boolean element_includes_text = false;
+	
 				//send img src to google for text extraction
 				try {
 					//check if link contains image, if so then extract image source
 					if(link.getOuterHtml().contains("<img")) {
 						//link contains image
 					}
-
+	
 					URL url = new URL( link.getScreenshotUrl() );
 					BufferedImage img_src = ImageIO.read( url );
 					List<String> image_text_list = CloudVisionUtils.extractImageText(img_src);
@@ -472,7 +509,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					String recommendation = "For best usability make sure links include text. You can assign text to a link by entering text within the link tag or by using an image with text";
 					String description = "Link doesn't contain any text";
 					String title = "Link is missing text";
-
+					ada_compliance = "WCAG Criterion 2.4.4 requires that links have text that can be used to determine the purpose of a link";
+	
 					ElementStateIssueMessage issue_message = new ElementStateIssueMessage(
 																	Priority.HIGH,
 																	description, 
@@ -487,12 +525,13 @@ public class LinksAudit implements IExecutablePageStateAudit {
 					 //does element use image as links?
 					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
 					issue_message_service.addElement(issue_message.getId(), link.getId());
-					issue_messages.add(issue_message);				 }
+					issue_messages.add(issue_message);				 
+				 }
 				 else {
 					 String recommendation = "";
 					 String description = "Link contains text and is setup correctly. Well done!";
 					 String title = "Link is setup correctly and considered accessible";
-
+	
 					 ElementStateIssueMessage issue_message = new ElementStateIssueMessage(Priority.HIGH,
 																							description, 
 																							recommendation, 
@@ -503,7 +542,7 @@ public class LinksAudit implements IExecutablePageStateAudit {
 																							title, 
 																							4,
 																							4);
-
+	
 					issue_message = (ElementStateIssueMessage) issue_message_service.save(issue_message);
 					issue_message_service.addElement(issue_message.getId(), link.getId());
 					issue_messages.add(issue_message);

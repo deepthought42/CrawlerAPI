@@ -13,8 +13,10 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -153,19 +155,19 @@ public class DomainController {
 	public @ResponseBody Domain create(HttpServletRequest request, 
 									   @RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
-
+		 
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
 		log.warn("user id  :: " + id);
 		Account acct = account_service.findByUserId(id);
 
 		if (acct == null) {
-			log.warn("account not found");
 			throw new UnknownAccountException();
 		} else if (acct.getSubscriptionToken() == null) {
 			throw new MissingSubscriptionException();
 		}
 
+		
 		String lowercase_url = domain.getUrl().toLowerCase();
 		String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url);
 		domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
@@ -182,6 +184,7 @@ public class DomainController {
 				throw new ExistingAccountDomainException();
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			domain = null;
 		}
 
@@ -391,13 +394,19 @@ public class DomainController {
 		if (!domain_audit_record.isPresent()) {
 			throw new DomainAuditsNotFound();
 		}
+		
+		Map<String, Boolean> key_map = new HashMap<>();
+		
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 		for (PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
 			if (page_state == null) {
 				continue;
 			}
-
+			if(key_map.containsKey(page_state.getKey())) {
+				continue;
+			}
+			
 			double content_score = AuditUtils
 					.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
 			double info_architecture_score = AuditUtils
@@ -407,13 +416,24 @@ public class DomainController {
 			double accessibility_score = AuditUtils
 					.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
 
-			PageStatisticDto page = new PageStatisticDto(page_state.getId(), page_state.getUrl(),
-					page_state.getViewportScreenshotUrl(), content_score, page_audit.getContentAuditProgress(),
-					info_architecture_score, page_audit.getInfoArchitechtureAuditProgress(), accessibility_score, 0.0,
-					aesthetic_score, page_audit.getAestheticAuditProgress(), page_audit.getId(),
-					page_audit.getElementsReviewed(), page_audit.getElementsFound(), page_audit.isComplete(),
-					page_audit.getDataExtractionProgress());
+			PageStatisticDto page = new PageStatisticDto(page_state.getId(), 
+														 page_state.getUrl(),
+														 page_state.getViewportScreenshotUrl(), 
+														 content_score, 
+														 page_audit.getContentAuditProgress(),
+														 info_architecture_score, 
+														 page_audit.getInfoArchitechtureAuditProgress(), 
+														 accessibility_score, 
+														 0.0,
+														 aesthetic_score, 
+														 page_audit.getAestheticAuditProgress(), 
+														 page_audit.getId(),
+														 page_audit.getElementsReviewed(), 
+														 page_audit.getElementsFound(), 
+														 page_audit.isComplete(),
+														 page_audit.getDataExtractionProgress());
 
+			key_map.put(page_state.getKey(), Boolean.TRUE);
 			page_stats.add(page);
 		}
 
@@ -472,8 +492,7 @@ public class DomainController {
 
 					overall_score += (int) (AuditUtils.calculateScore(audits));
 					aesthetic_score += (int) (AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS));
-					info_architecture_score += (int) (AuditUtils.calculateScoreByCategory(audits,
-							AuditCategory.INFORMATION_ARCHITECTURE));
+					info_architecture_score += (int) (AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE));
 					content_score += (int) (AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT));
 				}
 
@@ -1066,8 +1085,7 @@ public class DomainController {
 		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
 		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
-			log.warn(
-					"Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
+			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
 			throw new SubscriptionExceededException("You have exceeded your subscription");
 		}
 
@@ -1092,9 +1110,15 @@ public class DomainController {
 		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system).props("auditManager"),
-				"auditManager" + UUID.randomUUID());
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, domain.getId(), account.getId(),
-				audit_record.getId(), false, sanitized_url, domain.getUrl());
+														"auditManager" + UUID.randomUUID());
+		
+		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, 
+																 domain.getId(), 
+																 account.getId(),
+																 audit_record.getId(), 
+																 false, 
+																 sanitized_url, 
+																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
 
 		return audit_record;

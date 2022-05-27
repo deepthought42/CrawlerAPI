@@ -929,8 +929,8 @@ public class BrowserService {
 						boolean x_overlap = element1.getXLocation() >= element2.getXLocation() && (element1.getXLocation()+element1.getWidth()) <= (element2.getXLocation()+element2.getWidth());
 						boolean y_overlap = element1.getYLocation() >= element2.getYLocation() && (element1.getYLocation()+element1.getHeight()) <= (element2.getYLocation()+element2.getHeight());
 						
-						log.warn("element1 z-index :: "+element1.getRenderedCssValues().get("z-index"));
-						log.warn("element2 z-index :: "+element2.getRenderedCssValues().get("z-index"));
+						//log.warn("element1 z-index :: "+element1.getRenderedCssValues().get("z-index"));
+						//log.warn("element2 z-index :: "+element2.getRenderedCssValues().get("z-index"));
 
 						String element1_z_index = element1.getRenderedCssValues().get("z-index");
 						if(element1_z_index.contentEquals("auto")) {

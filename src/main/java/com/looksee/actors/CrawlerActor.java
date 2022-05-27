@@ -36,6 +36,7 @@ import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.JourneyExaminationProgressMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
@@ -69,8 +70,13 @@ public class CrawlerActor extends AbstractActor{
 	
 	private ActorRef audit_manager;
 	
+	Map<String, Boolean> visited_urls = new HashMap<>();
+	
 	List<PageState> visited_pages = new ArrayList<>();
 	private Map<String, List<ElementState>> explored_elements = new HashMap<>();
+	
+	private int examined_journeys = 0;
+	private int generated_journeys = 0;
 	
 	//subscribe to cluster changes
 	@Override
@@ -151,7 +157,7 @@ public class CrawlerActor extends AbstractActor{
 																		msg.getDomainId(), 
 																		msg.getAccountId(),
 																		msg.getAuditRecordId());
-						
+						generated_journeys++;
 						ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 								.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 						journey_executor.tell(journey_msg, getSelf());
@@ -165,6 +171,7 @@ public class CrawlerActor extends AbstractActor{
 					
 					//generate new journeys with new steps and send to journey executor to be evaluated
 					for(Step step: new_steps) {
+						generated_journeys++;
 						List<Step> steps = new ArrayList<>();
 						steps.add(step);
 						JourneyMessage journey_msg = new JourneyMessage(steps, 
@@ -178,6 +185,17 @@ public class CrawlerActor extends AbstractActor{
 																.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 						journey_executor.tell(journey_msg, getSelf());
 					}
+					
+					//send generated and examined journey counts to audit manager
+					log.warn("# examined journeys :: "+examined_journeys);
+					log.warn("# genrated journeys :: "+generated_journeys);
+
+					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(msg.getAccountId(), 
+																										   msg.getAuditRecordId(), 
+																										   msg.getDomainId(),
+																										   examined_journeys,
+																										   generated_journeys);
+					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(BrowserCrawlActionMessage.class, message -> {
 					ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -186,17 +204,19 @@ public class CrawlerActor extends AbstractActor{
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
 					log.warn("crawler received confirmed journey message :: "+message.getSteps().size() + " steps");
+					examined_journeys++;
 					PageState final_page = PathUtils.getLastPageState(message.getSteps());
 					Domain domain = domain_service.findById(message.getDomainId()).get();
 					if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
-							|| visited_pages.contains(final_page)/*|| pageState is in visited list*/) {
+							|| visited_urls.containsKey(final_page.getKey())) {//|| visited_pages.contains(final_page)/*|| pageState is in visited list*/) {
 						log.warn("final page has already been visited --------------------------");
 						audit_manager.tell(message, getSelf());
 						return;
 					}
 
 					//Add page state to visited list
-					visited_pages.add(final_page);
+					//visited_pages.add(final_page);
+					visited_urls.put(final_page.getKey(), Boolean.TRUE);
 					
 					//retrieve all ElementStates from journey
 					List<ElementState> elements = final_page.getElements();
@@ -237,7 +257,7 @@ public class CrawlerActor extends AbstractActor{
 						else {
 							log.warn("FORM STEP EXISTS IN STEP LIST ALREADY");
 						}
-						
+						examined_journeys++;
 						JourneyMessage journey_msg = new JourneyMessage(steps_list, 
 																		PathStatus.EXPANDED, 
 																		BrowserType.CHROME, 
@@ -263,6 +283,7 @@ public class CrawlerActor extends AbstractActor{
 					
 					//generate new journeys with new steps and send to journey executor to be evaluated
 					for(Step step: new_steps) {
+						generated_journeys++;
 						List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 						cloned_steps.add(step);
 						JourneyMessage journey_msg = new JourneyMessage(cloned_steps, 
@@ -275,6 +296,16 @@ public class CrawlerActor extends AbstractActor{
 																.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 						journey_executor.tell(journey_msg, getSelf());
 					}
+					
+					//send generated and examined journey counts to audit manager
+					log.warn("# examined journeys :: "+examined_journeys);
+					log.warn("# generated journeys :: "+generated_journeys);
+					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
+																										   message.getAuditRecordId(), 
+																										   message.getDomainId(),
+																										   examined_journeys,
+																										   generated_journeys);
+					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(PageDataExtractionMessage.class, message -> {
 					log.warn("path expansion actor received PageDataExtraction Message");
@@ -302,6 +333,7 @@ public class CrawlerActor extends AbstractActor{
 					
 					//generate new journeys with new steps and send to journey executor to be evaluated
 					for(Step step: new_steps) {
+						generated_journeys++;
 						List<Step> steps = new ArrayList<>();
 						steps.add(step);
 						JourneyMessage journey_msg = new JourneyMessage(steps, 
@@ -315,6 +347,16 @@ public class CrawlerActor extends AbstractActor{
 																.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 						journey_executor.tell(journey_msg, getSelf());
 					}
+					
+					//send generated and examined journey counts to audit manager
+					log.warn("# examined journeys :: "+examined_journeys);
+					log.warn("# generated journeys :: "+generated_journeys);
+					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
+																										   message.getAuditRecordId(), 
+																										   message.getDomainId(),
+																										   examined_journeys,
+																										   generated_journeys);
+					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -340,19 +382,26 @@ public class CrawlerActor extends AbstractActor{
 			
 			if(FormType.LOGIN.equals(form.getType())){
 				//retrieve user credentials
-				TestUser user = domain_service.findTestUser(domain_id).get(0);
-				//get username field
-				ElementState username_element = getFormField(form.getFormFields(), "username");
-				//create step to enter username into username field
-				
-				//get password field
-				ElementState password_element = getFormField(form.getFormFields(), "password");
-
-				//create step to enter password into password field
-				//get submit button
-				ElementState submit_btn = form.getSubmitField();
-				//create step to click on submit button
-				steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user) );
+				List<TestUser> user_list = domain_service.findTestUsers(domain_id);
+				if(!user_list.isEmpty()) {
+					
+					
+					//get username field
+					ElementState username_element = getFormField(form.getFormFields(), "username");
+					//create step to enter username into username field
+					
+					//get password field
+					ElementState password_element = getFormField(form.getFormFields(), "password");
+	
+					//create step to enter password into password field
+					//get submit button
+					ElementState submit_btn = form.getSubmitField();
+					//create step to click on submit button
+					steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user_list.get(0)) );
+				}
+				else {
+					log.warn("THROW ERROR HERE WARNING USER OF LACK OF TEST USER CONFIGURED");
+				}
 			}
 			else if(FormType.REGISTRATION.equals(form.getType())) {
 				//generate username value

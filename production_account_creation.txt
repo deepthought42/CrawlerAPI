@@ -1,0 +1,101 @@
+CREATE (n:Account {email: 'bkindred@look-see.com', created_at: '2021-06-01T03:38:45.81222', api_token: '57cfe607-3476-43f7-9f3f-c191415c91ba', user_id:'auth0|60b5abc443ac51006919d417', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'brandon.kindred@gmail.com', created_at: '2021-06-07T21:43:45.77225', api_token: '58dc26cb-a2f5-4fb0-9044-9457dc1c09ce', user_id:'auth0|60be930e431b3400695c9762', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'pettwdv@outlook.com', created_at: '2021-06-30T21:16:28.17096', api_token: '1eb71a21-95e8-4f06-8f17-84d425de13f6', user_id:'auth0|60dcdf2b484365007100336d', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'rosie@digitalcluesgroup.com', created_at: '2021-06-18T19:37:37.38961', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'jason@uxisfine.com', created_at: '2021-07-09T17:35:59.218086', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'randy@digiwisesolutions.com', created_at: '2021-07-17T13:21:25.392279', api_token: '4468b807-29cf-4747-90a2-f21597df7e0c', user_id:'auth0|60f2d95422078400700387d6', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'christopher.lourie@ogilvy.com', created_at: '2021-07-20T21:45:31.416467', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'morganmccloud@gmail.com', created_at: '2021-08-06T22:19:55.158049', api_token: '1c04a7e6-e05f-4fb9-bb88-bceafeb8c400', user_id:'auth0|610db58a3953db006923887b', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'alexandriaowen@gmail.com', created_at: '2021-08-09T14:19:46.53322', api_token: '3e111169-3777-40a3-8985-02a7d7b8a1f9', user_id:'auth0|61113981b83b29006a50b7f9', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'intern@learnsimplenutritiom.com', created_at: '2021-08-11T13:19:44.180554', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'siphiwe@proplook.co.za', created_at: '2021-08-12T11:34:44.45956', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'mark@fromsonconsulting.com', created_at: '2021-08-19T19:20:08.533278', api_token: 'c5ef000e-7b6a-40fe-88b3-7586394386cf', user_id:'auth0|611eaee709848f00718068de', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'emailneedsemails@gmail.com', created_at: '2021-08-27T17:11:32.146995', api_token: '6ecea45b-c4ec-4647-bde0-f93a61170d16', user_id:'auth0|61291cc3fa76080076b151a1', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'sara.ledterman@wavoto.com', created_at: '2021-10-01T04:03:47.759053', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'igor@paralect.com', created_at: '2021-10-03T22:43:44.587895', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'tkufera@qrqs.eu', created_at: '2021-10-19T12:28:14.276083', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'chris@astronomic.com', created_at: '2021-11-03T08:50:45.844751', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'amber@equalizedigital.com', created_at: '2021-11-04T18:51:52.026744', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'nidhi.prasad.2023@anderson.ucla.edu', created_at: '2021-11-25T23:14:10.266088', api_token: '26f513bb-4bce-4964-b1e1-0b4edff2fe48', user_id:'auth0|61a018c0c0d2840070940432', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'josh@appjaxx.com', created_at: '2021-11-12T13:51:15.837396', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'abcd@hgjkhkhkl.com', created_at: '2021-11-14T19:27:32.18201', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'pp.nidhi@gmail.com', created_at: '2021-11-14T19:38:51.069452', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'seth@theonevalley.com', created_at: '2021-12-01T19:20:36.772846', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'info@stylelavie.com', created_at: '2021-12-12T20:33:47.642979', api_token: '9e01dac0-1954-4b27-9331-a436f29fbe45', user_id:'auth0|61b65ca90de0d7006a3b3e36', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'jad@someronsc.com', created_at: '2021-12-17T05:26:12.816545', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'syafii@sirclo.com', created_at: '2022-01-02T08:09:15.473858', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'richard.vokral@alu-sv.com', created_at: '2022-01-02T20:29:35.061264', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'dwong@dimagi.com', created_at: '2022-01-07T00:01:06.083409', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'nico@gradienthealth.ai', created_at: '2022-01-12T13:29:50.628878', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'nico@gradienthealth.io', created_at: '2022-01-12T15:45:22.99266', api_token: 'e9bfe030-e0b6-4ec7-b72e-d59ae144e6e3', user_id:'auth0|61def790a2ce1f00693f943e', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'jamie@digitalmediaacademy.org', created_at: '2022-01-16T16:38:50.081126', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'benmosse@mosse-security.com', created_at: '2022-01-27T08:28:00.324162', api_token: 'c407d0b1-753b-4320-a5de-20296923465d', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'abdullah@feedus.io', created_at: '2022-01-29T10:40:44.021484', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'blmartin18@gmail.com', created_at: '2022-02-01T22:17:13.894701', api_token: 'c0c21eb8-e5b1-4b0b-8912-e477b4b75fc2', user_id:'auth0|61f9b1669d95ef0068a79c7b', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'stefanie@siliconroad.vc', created_at: '2022-02-03T15:44:23.197241', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'moris.urari@gmail.com', created_at: '2022-02-03T16:09:47.22804', api_token: '557f48da-b7e8-4563-9d15-3d82d8e0a976', user_id:'auth0|61fdfd1271902e007026d1a4', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'justin.fowler@clearspeed.com', created_at: '2022-02-24T15:50:31.980575', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'lavarmccline@gmail.com', created_at: '2022-02-26T00:12:03.449598', api_token: 'd71f9749-7be4-4655-9181-2728046190d7', user_id:'auth0|62197051bf17ea0068dac79c', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'melissageissinger@gmail.com', created_at: '2022-02-28T21:44:36.420562', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'sultan@madeed.sa', created_at: '2022-03-03T08:54:07.251184', api_token: '38752c07-cb61-47ee-90c6-88c811630fb3', user_id:'auth0|6220822b04a5fe007081ed5f', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'david.cloutman@turion.io', created_at: '2022-03-03T23:35:16.059141', api_token: 'e16ba57f-3c2c-43d6-b32b-a4e1a299fa1f', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'alvaro@pivotmkt.com', created_at: '2022-03-08T22:16:09.271106', api_token: '736b1d16-c65c-452e-a329-6ed09668a7df', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'sweet_treat_007@hotmail.com', created_at: '2022-03-09T04:39:05.22753', api_token: '11a761f1-1380-44db-9dec-3efafa4c608e', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'melanie@melanielatrelle.com', created_at: '2022-03-17T18:22:46.459429', api_token: '58af696f-3032-4ad7-9108-cec4982f6a1d', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'miekiszmarcin@gmail.com', created_at: '2022-03-23T18:40:02.261304', api_token: 'd7958dd8-37c3-400e-97da-372007ed0dd7', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'royce@artformbsi.com', created_at: '2022-03-27T20:42:03.509173', api_token: '48f086e1-f741-4c02-8789-6a05a60b68d1', user_id:'auth0|6240cc1a66c9f1006a990628', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'jenny@daehair.com', created_at: '2022-04-04T22:52:16.682034', api_token: '7e583900-655a-49ec-b300-2f0cf51e1ad1', user_id:'auth0|624b769d6fbd250068920497', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'pkamp2@gmail.com', created_at: '2022-04-05T22:28:55.340697', api_token: '26da393c-9b19-4bcb-ba72-3e1a1a00669e', user_id:'auth0|624cc2a58b51c700685b0129', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'adrian@digispot.pl', created_at: '2022-04-15T22:24:18.094366', api_token: '4465f6cd-abde-44f9-8da1-04f5fb53b9b1', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'jshmiver@gmail.com', created_at: '2022-05-03T20:01:29.26288', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+
+CREATE (n:Account {email: 'macdaddymillan@gmail.com', created_at: '2022-05-17T18:22:28.104889', api_token: '', user_id:'', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})

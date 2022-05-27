@@ -48,16 +48,16 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{api_key:$api_key}) RETURN account")
 	public Account getAccountByApiKey(@Param("api_key") String api_key);
 
-	@Query("MATCH (t:Account{email:$email}),(a:Domain{key:$domain_key}) MERGE (t)-[r:BELONGS_TO]->(a) RETURN r")
+	@Query("MATCH (t:Account{email:$email}) WITH t MATCH (a:Domain{key:$domain_key}) MERGE (t)-[r:BELONGS_TO]->(a) RETURN r")
 	public void addDomain(@Param("domain_key") String key, @Param("email") String username);
 
 	@Query("MATCH (account:Account{email:$email})-[:HAS]->(domain:Domain{url:$url}) RETURN domain LIMIT 1")
 	public Domain findDomain(@Param("email") String email, @Param("url") String url);
 
-	@Query("MATCH (t:Account{username:$username}),(a:AuditRecord) WHERE id(a)=$audit_record_id MERGE (t)-[r:HAS]->(a) RETURN r")
+	@Query("MATCH (t:Account{username:$username}) WITH t MATCH (a:AuditRecord) WHERE id(a)=$audit_record_id MERGE (t)-[r:HAS]->(a) RETURN r")
 	public AuditRecord addAuditRecord(@Param("username") String username, @Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (t:Account),(a:AuditRecord) WHERE id(a)=$audit_record_id AND id(t)=$account_id MERGE (t)-[r:HAS]->(a) RETURN a")
+	@Query("MATCH (t:Account) WITH t MATCH (a:AuditRecord) WHERE id(a)=$audit_record_id AND id(t)=$account_id MERGE (t)-[r:HAS]->(a) RETURN a")
 	public AuditRecord addAuditRecord(@Param("account_id") long account_id, @Param("audit_record_id") long audit_record_id);
 
 	@Query("MATCH (account:Account)-[]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account")

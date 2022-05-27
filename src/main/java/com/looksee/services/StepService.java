@@ -48,6 +48,9 @@ public class StepService {
 			if(step_record != null) {
 				log.warn("********************************************************");
 				log.warn("found SIMPLE STEP with key :: "+step_record.getKey());
+				step_record.setElementState(simple_step_repo.getElementState(step.getKey()));
+				step_record.setStartPage(simple_step_repo.getStartPage(step.getKey()));
+				step_record.setEndPage(simple_step_repo.getEndPage(step.getKey()));
 				return step_record;
 			}
 			

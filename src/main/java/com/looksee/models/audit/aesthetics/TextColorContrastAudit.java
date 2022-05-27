@@ -282,7 +282,10 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 							String description = "Text has low contrast against the background";
 							String ada_compliance = "Text that is smaller than 18 point and larger than 14 point but not bold or just smaller than 14 point fonts should meet the minimum contrast ratio of 4.5:1.";
 							String recommendation = "Increase the contrast by either making the text darker or the background lighter";
-							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, background_color, font_size, !BrowserUtils.isTextBold(font_weight));
+							Set<Recommendation> recommendations = generateTextContrastRecommendations(font_color, 
+																									  background_color, 
+																									  font_size, 
+																									  !BrowserUtils.isTextBold(font_weight));
 							
 							ColorContrastIssueMessage low_text_observation = new ColorContrastIssueMessage(
 																						Priority.HIGH,

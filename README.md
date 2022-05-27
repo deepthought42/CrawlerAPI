@@ -28,7 +28,7 @@ Step 2: Get image name for Community version 1.4
 Step 3: create new instance
 
 gcloud config set project cosmic-envoy-280619
-gcloud compute instances create neo4j-stage --machine-type n1-standard-4 --image-project launcher-public --image neo4j-community-1-4-3-6-apoc --tags neo4j,http-server,https-server
+gcloud compute instances create neo4j-prod --machine-type e2-medium --image-project launcher-public --image neo4j-community-1-4-3-6-apoc --tags neo4j,http-server,https-server
 
 
 gcloud compute instances add-tags neo4j-stage --tags http-server,https-server

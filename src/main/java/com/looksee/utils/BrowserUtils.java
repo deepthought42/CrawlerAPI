@@ -178,7 +178,7 @@ public class BrowserUtils {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException 
 	 */
-	public static boolean isExternalLink(String domain_host, String url) throws MalformedURLException, URISyntaxException {
+	public static boolean isExternalLink(String domain_host, String url) {
 		assert !domain_host.isEmpty();
 		assert !url.isEmpty();
 		
@@ -191,7 +191,7 @@ public class BrowserUtils {
 		url_without_protocol = url_without_protocol.replace("https://", "");
 		boolean is_same_domain = false;
 		
-		boolean contains_domain = url.contains(domain_host);
+		boolean contains_domain = url_without_protocol.contains(domain_host);
 		boolean is_url_longer = url_without_protocol.length() > domain_host.length();
 		boolean url_contains_long_host = url.contains(domain_host+"/");
 		if( contains_domain && ((is_url_longer && url_contains_long_host) || !is_url_longer) ) {
@@ -878,8 +878,7 @@ public class BrowserUtils {
 	 * @pre sanitized_url != null
 	 * @pre !sanitized_url.isEmpty()
 	 */
-	public static boolean isValidUrl(String sanitized_url, String host) 
-			throws MalformedURLException, URISyntaxException 
+	public static boolean isValidUrl(String sanitized_url, String host)
 	{
 		assert sanitized_url != null;
 		assert !sanitized_url.isEmpty();

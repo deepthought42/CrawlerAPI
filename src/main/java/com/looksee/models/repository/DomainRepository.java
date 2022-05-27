@@ -91,7 +91,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[]->(p:PageState{url:$page_url}) MATCH (p)-[:HAS]->(pi:PerformanceInsight) WHERE id(account)=$account_id ORDER BY pi.executed_at DESC LIMIT 1")
 	public PerformanceInsight getMostRecentPerformanceInsight(@Param("account_id") long account_id, @Param("url") String url, @Param("page_url") String page_url);
 
-	@Query("MATCH (d:Domain),(p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id MERGE (d)-[:HAS]->(p) RETURN p")
+	@Query("MATCH (d:Domain) WITH d MATCH (p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id MERGE (d)-[:HAS]->(p) RETURN p")
 	public PageState addPage(@Param("domain_id") long domain_id, @Param("page_id") long page_id);
 
 	@Query("MATCH (d:Domain{url:$url})-[]->(audit:DomainAuditRecord) RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
@@ -103,7 +103,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[*]->(:PageState{key:$page_state_key}) RETURN d LIMIT 1")
 	public Domain findByPageState(@Param("page_state_key") String page_state_key);
 
-	@Query("MATCH (d:Domain),(audit:AuditRecord{key:$audit_record_key}) WHERE id(d) = $domain_id MERGE (d)<-[:HAS]-(audit) RETURN audit")
+	@Query("MATCH (d:Domain) WITH d MATCH (audit:AuditRecord{key:$audit_record_key}) WHERE id(d) = $domain_id MERGE (d)<-[:HAS]-(audit) RETURN audit")
 	public void addAuditRecord(@Param("domain_id") long domain_id, @Param("audit_record_key") String audit_record_key);
 
 	@Query("MATCH (d:Domain{key:$domain_key})-[]->(audit:AuditRecord) RETURN audit")
@@ -136,18 +136,18 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (domain:Domain)-[:USES]->(ds:DesignSystem) WHERE id(domain)=$domain_id RETURN ds LIMIT 1")
 	public Optional<DesignSystem> getDesignSystem(@Param("domain_id") long domain_id);
 
-	@Query("MATCH (d:Domain),(design:DesignSystem) WHERE id(d)=$domain_id AND id(design)=$design_system_id MERGE (d)-[:USES]->(design) RETURN design")
+	@Query("MATCH (d:Domain) WITH d MATCH (design:DesignSystem) WHERE id(d)=$domain_id AND id(design)=$design_system_id MERGE (d)-[:USES]->(design) RETURN design")
 	public DesignSystem addDesignSystem(@Param("domain_id") long domain_id, @Param("design_system_id") long design_system_id);
 
 	@Query("MATCH (domain:Domain)-[]->(c:Competitor) WHERE id(domain)=$domain_id RETURN c")
 	public List<Competitor> getCompetitors(@Param("domain_id") long domain_id);
 	
-	@Query("MATCH (d:Domain),(competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
+	@Query("MATCH (d:Domain) WITH d MATCH (competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
 	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
 
 	@Query("MATCH (d:Domain)-[]->(user:TestUser) WHERE id(d)=$domain_id RETURN user")
-	public List<TestUser> findTestUser(@Param("domain_id") long domain_id);
+	public List<TestUser> findTestUsers(@Param("domain_id") long domain_id);
 
-	@Query("MATCH (d:Domain),(user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
+	@Query("MATCH (d:Domain) WITH d MATCH (user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
 	public void addTestUser(@Param("domain_id") long domain_id, @Param("test_user_id") long test_user_id);
 }

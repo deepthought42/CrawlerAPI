@@ -52,7 +52,7 @@ public interface PageRepository extends Neo4jRepository<Page, Long> {
 	@Query("MATCH (p:Page{key:{page_key}})-[]->(page_state:PageState) WHERE id(page_state)=$page_state_id RETURN page_state LIMIT 1")
 	public Optional<PageState> findPageStateForPage(@Param("page_key") String page_key, @Param("page_state_id") long page_state_id);
 
-	@Query("MATCH (p:Page{key:{page_key}}),(ps:PageState) WHERE id(ps)=$page_state_id CREATE (p)-[h:HAS]->(ps) RETURN ps")
+	@Query("MATCH (p:Page{key:{page_key}}) WITH p MATCH (ps:PageState) WHERE id(ps)=$page_state_id CREATE (p)-[h:HAS]->(ps) RETURN ps")
 	public void addPageState(@Param("page_key") String page_key, @Param("page_state_id") long page_state_id);
 
 	@Query("MATCH (p:Page{url:{url}}) RETURN p LIMIT 1")

@@ -150,81 +150,12 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 					}
 
 					if(element.getXpath().contains(element_state.getXpath())) {
-						/*
-						int element_area = element.getWidth() * element.getHeight();
-						int parent_area = element_state.getWidth() * element_state.getHeight();
-							*/
-						//if(parent_area > (element_area * 3)) {
-							//parent = element_state;
-							//parent_bkg = ImageUtils.extractBackgroundColor(element_state);
-							/*
-							String bg_color_css = element_state.getRenderedCssValues().get("background-color");
-							String bg_image = element_state.getRenderedCssValues().get("background-image");
-							String bg_color = "255,255,255";
-							
-							if(!bg_color_css.contains("inherit") 
-								&& !bg_color_css.contains("rgba") 
-								&& (bg_image == null || bg_image.isEmpty() ) 
-							) {
-								bg_color = bg_color_css;
-							}
-							else if(bg_color_css.contains("rgba") 
-									&& !element_state.getScreenshotUrl().isEmpty()
-							) {
-								//extract opacity color
-								ColorData bkg_color = ImageUtils.extractBackgroundColor( 
-																			new URL(element_state.getScreenshotUrl()), 
-																			font_color);
-								bg_color = bkg_color.rgb();	
-							}
-							else if(!element_state.getScreenshotUrl().isEmpty()) {
-								ColorData bkg_color = ImageUtils.extractBackgroundColor( 
-																			new URL(element_state.getScreenshotUrl()), 
-																			font_color);
-								bg_color = bkg_color.rgb();
-							}
-							
-							element_state = element_state_service.findById(element_state.getId());
-							element_state.setBackgroundColor(bg_color);
-							element_state = element_state_service.save(element_state);
-							*/
+
 							parent_bkg = new ColorData(element_state.getBackgroundColor());
-						//}
 							break;
 					}
 				}
 
-				//choose elemtn just to the right of the elemnt in the page screenshot
-				//Color parent_background_color = getPixelColor(page_state.getFullPageScreenshotUrl(), x_position-10, y_position-10);				
-				//String parent_rgb = "rgb(" + parent_background_color.getRed()+ "," + parent_background_color.getGreen() + "," + parent_background_color.getBlue() + ")";
-
-				//ColorData parent_bkg = new ColorData(parent.getRenderedCssValues().get("background-color"));
-				//ColorData element_bkg = ImageUtils.extractBackgroundColor(element);
-				/*
-				String bg_color_css = element.getRenderedCssValues().get("background-color");
-				String bg_image = element.getRenderedCssValues().get("background-image");
-				String bg_color = "255,255,255";
-
-				if(!bg_color_css.contains("inherit") && !bg_color_css.contains("rgba") && (bg_image == null || bg_image.isEmpty() ) ) {
-					bg_color = bg_color_css;
-				}
-				else if(bg_color_css.contains("rgba") && !element.getScreenshotUrl().isEmpty()) {
-					//extract opacity color
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( 
-																new URL(element.getScreenshotUrl()),
-																font_color);
-					bg_color = bkg_color.rgb();	
-				}
-				else if(!element.getScreenshotUrl().isEmpty()) {
-					ColorData bkg_color = ImageUtils.extractBackgroundColor( 
-																new URL(element.getScreenshotUrl()),
-																font_color);
-					bg_color = bkg_color.rgb();
-				}
-				
-				element.setBackgroundColor(bg_color);
-				element = element_state_service.save(element);
-				*/
 				//getting border color
 				ColorData element_bkg = new ColorData(element.getBackgroundColor());
 				String border_color_rgb = element_bkg.rgb();

@@ -196,11 +196,9 @@ public class JourneyExecutor extends AbstractActor{
 	 */
 	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-		log.warn("step count :: "+steps.size());
+
 		for(Step step: steps) {
-			log.warn("executing step :: "+step.getKey());
 			if(step instanceof SimpleStep) {
-				log.warn("performing "+((SimpleStep)step).getAction() + "  on element with xpath :: "+((SimpleStep)step).getElementState().getXpath());
 				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
 				
 				action_factory.execAction(web_element, "", ((SimpleStep)step).getAction());

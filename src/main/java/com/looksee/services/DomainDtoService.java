@@ -92,6 +92,11 @@ public class DomainDtoService {
 		boolean is_audit_running = false;
 		double data_extraction_progress = 0.0;
 
+		content_progress += domain_audit.getContentAuditProgress();
+		aesthetic_progress += domain_audit.getAestheticAuditProgress();
+		info_architecture_progress += domain_audit.getInfoArchitechtureAuditProgress();
+		data_extraction_progress += domain_audit.getDataExtractionProgress();
+		/*
 		for (PageAuditRecord record : page_audit_records) {
 			content_progress += record.getContentAuditProgress();
 			aesthetic_progress += record.getAestheticAuditProgress();
@@ -106,13 +111,15 @@ public class DomainDtoService {
 			}
 		}
 
+		
 		if (page_audit_records.size() > 0) {
 			content_progress = content_progress / page_audit_records.size();
 			info_architecture_progress = (info_architecture_progress / page_audit_records.size());
 			aesthetic_progress = (aesthetic_progress / page_audit_records.size());
 			data_extraction_progress = (data_extraction_progress / page_audit_records.size());
 		}
-
+*/
+		
 		return new DomainDto(domain.getId(), 
 							  domain.getUrl(), 
 							  page_count, 

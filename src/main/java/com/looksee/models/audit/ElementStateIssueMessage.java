@@ -19,7 +19,6 @@ import com.looksee.models.enums.Priority;
 public class ElementStateIssueMessage extends UXIssueMessage {	
 	private static Logger log = LoggerFactory.getLogger(ElementStateIssueMessage.class);
 
-	
 	@Relationship(type = "FOR")
 	private ElementState element;
 

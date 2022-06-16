@@ -75,8 +75,10 @@ public class CrawlerActor extends AbstractActor{
 	List<PageState> visited_pages = new ArrayList<>();
 	private Map<String, List<ElementState>> explored_elements = new HashMap<>();
 	
+	//PROGRESS TRACKING VARIABLES
 	private int examined_journeys = 0;
 	private int generated_journeys = 0;
+	
 	
 	//subscribe to cluster changes
 	@Override
@@ -188,7 +190,7 @@ public class CrawlerActor extends AbstractActor{
 					
 					//send generated and examined journey counts to audit manager
 					log.warn("# examined journeys :: "+examined_journeys);
-					log.warn("# genrated journeys :: "+generated_journeys);
+					log.warn("# generated journeys :: "+generated_journeys);
 
 					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(msg.getAccountId(), 
 																										   msg.getAuditRecordId(), 

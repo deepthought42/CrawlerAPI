@@ -43,6 +43,7 @@ import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.ConfirmedJourneyMessage;
+import com.looksee.models.message.DiscardedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
@@ -141,6 +142,8 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			})
 			.match(PageDataExtractionMessage.class, message -> {
+				
+				//getSender().ask();
 				log.warn("path expansion actor received PageDataExtraction Message");
 				List<ElementState> elements = message.getPageState().getElements();
 
@@ -184,6 +187,9 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			})			
 			.match(ConfirmedJourneyMessage.class, message -> {
+				getContext().getParent().tell(message, getSelf());
+			})
+			.match(DiscardedJourneyMessage.class, message -> {
 				getContext().getParent().tell(message, getSelf());
 			})
 			.match(MemberUp.class, mUp -> {

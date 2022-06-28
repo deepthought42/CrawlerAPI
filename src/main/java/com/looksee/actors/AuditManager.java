@@ -59,6 +59,7 @@ import com.looksee.utils.BrowserUtils;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -117,7 +118,10 @@ public class AuditManager extends AbstractActor{
 	private List<PageState> analyzed_pages = new ArrayList<>();
 	private double aesthetic_audits_completed;
 	private double total_aesthetic_audits;
-	
+
+	//subscription tracking
+	boolean hasUserExceededSubscriptionAllowance;
+
 	
 	//PROGRESS TRACKING VARIABLES
 	double journey_mapping_progress = 0.0;
@@ -131,6 +135,7 @@ public class AuditManager extends AbstractActor{
 		this.total_pages = 0;
 		this.aesthetic_audits_completed= 0;
 		this.total_aesthetic_audits = 4;
+		this.hasUserExceededSubscriptionAllowance=false;
 	}
 
 	//re-subscribe when restart
@@ -219,6 +224,9 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
+					if(this.hasUserExceededSubscriptionAllowance) {
+						return;
+					}
 					log.warn("Page candidate found message recieved by AUDIT MANAGER");
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
@@ -230,7 +238,9 @@ public class AuditManager extends AbstractActor{
 							domain_audit_record.setTotalPages( this.page_states_experienced.keySet().size());
 							audit_record_service.save(domain_audit_record, message.getAccountId(), message.getDomainId());
 							
-							Account account = account_service.findById(message.getAccountId()).get();
+							if(this.account == null) {
+								this.account = account_service.findById(message.getAccountId()).get();
+							}
 					    	//int page_audit_cnt = audit_record_service.getPageAuditCount(message.getAuditRecordId());
 							
 					    	/*
@@ -327,6 +337,10 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
+					if(hasUserExceededSubscriptionAllowance) {
+						return;
+					}
+					
 					log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
 					//save journey steps
 					List<Step> saved_steps = new ArrayList<>();
@@ -417,8 +431,12 @@ public class AuditManager extends AbstractActor{
 							log.warn("+++++++++++++++++++++++++++++++++++++++");
 							log.warn("User has exceeded domain page audit limit");
 							log.warn("+++++++++++++++++++++++++++++++++++++++");
+							hasUserExceededSubscriptionAllowance = true;
+							getSender().tell(PoisonPill.class, getSelf());
+							break;
 						}
 					}
+					
 				})
 				.match(JourneyExaminationProgressMessage.class, message -> {
 					journey_mapping_progress = message.getExaminedJourneys()/(double)message.getGeneratedJourneys();

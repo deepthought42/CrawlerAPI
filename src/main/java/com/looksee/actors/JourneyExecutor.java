@@ -30,6 +30,7 @@ import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
+import com.looksee.models.message.DiscardedJourneyMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
@@ -134,6 +135,12 @@ public class JourneyExecutor extends AbstractActor{
 					//is end_page PageState different from second to last PageState
 					if(message.getPageState().equals(second_to_last_page)) {
 						log.warn("returning because message page state is equal to second to last page");
+						
+						//tell parent that we processed a journey that is being discarded
+						DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	BrowserType.CHROME, 
+																								message.getDomainId(), 
+																								message.getAccountId(),
+																								message.getAuditRecordId());
 						return;
 					}
 					

@@ -7,6 +7,7 @@ import com.looksee.dto.DomainDto;
 import com.looksee.dto.TestCreatedDto;
 import com.looksee.dto.TestDto;
 import com.looksee.dto.TestRecordDto;
+import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.Form;
@@ -49,6 +50,27 @@ public class MessageBroadcaster {
         String audit_json = mapper.writeValueAsString(audit);
 
 		pusher.trigger(host, "audit-update", audit_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	/**
+	 * send {@link AuditRecord} to the users pusher channel
+	 * @param account_id
+	 * @param audit
+	 */
+	public static void broadcastSubscriptionExceeded(Account account) throws JsonProcessingException {	
+        //Object to JSON in String        
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        int id_start_idx = account.getUserId().indexOf('|');
+		String user_id = account.getUserId().substring(id_start_idx+1);
+        
+		pusher.trigger(user_id, "subscription-exceeded", "");
 	}
 	
     /**
@@ -243,7 +265,7 @@ public class MessageBroadcaster {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
-		String audit_record_json = mapper.writeValueAsString(domain_dto);
-		pusher.trigger(user_id, "audit-record", audit_record_json);
+		String domain_dto_json = mapper.writeValueAsString(domain_dto);
+		pusher.trigger(user_id, "audit-record", domain_dto_json);
 	}
 }

@@ -20,27 +20,38 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.looksee.api.MessageBroadcaster;
+import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.enums.Action;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.FormType;
 import com.looksee.models.enums.PathStatus;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.journeys.LoginStep;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.DiscardedJourneyMessage;
 import com.looksee.models.message.JourneyExaminationProgressMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.DomainService;
+import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PageUtils;
 import com.looksee.utils.PathUtils;
@@ -68,6 +79,19 @@ public class CrawlerActor extends AbstractActor{
 	@Autowired
 	private DomainService domain_service;
 	
+	@Autowired
+	private SubscriptionService subscription_service;
+
+	@Autowired
+	private AccountService account_service;
+	
+	@Autowired
+	private AuditRecordService audit_record_service;
+	
+	@Autowired
+	private AuditService audit_service;
+	
+	private Account account;
 	private ActorRef audit_manager;
 	
 	Map<String, Boolean> visited_urls = new HashMap<>();
@@ -78,7 +102,7 @@ public class CrawlerActor extends AbstractActor{
 	//PROGRESS TRACKING VARIABLES
 	private int examined_journeys = 0;
 	private int generated_journeys = 0;
-	
+	private int page_count = 0;
 	
 	//subscribe to cluster changes
 	@Override
@@ -119,7 +143,32 @@ public class CrawlerActor extends AbstractActor{
 						
 					}
 				})
-				.match(PageDataExtractionMessage.class, msg -> {			
+				.match(PageDataExtractionMessage.class, msg -> {
+					log.warn("page data extraction message received...");
+					if(this.account == null) {
+						this.account = account_service.findById(msg.getAccountId()).get();
+					}
+					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+
+					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
+						log.warn("Account has exceeded domain page audit limit for subscription..."+page_count);
+						
+						//send message to audit manager that subscription was exceeded
+						//NOTE: Make sure audit manager broadcasts message to user indicating they have exceeded subscription
+						
+						AuditRecord record = audit_record_service.findById(msg.getAuditRecordId()).get();
+						record.setStatus(ExecutionStatus.EXCEEDED_SUBSCRIPTION);
+						audit_record_service.save(record, msg.getAccountId(), msg.getDomainId());
+						
+						Account account = account_service.findById(msg.getAccountId()).get();
+						
+						MessageBroadcaster.broadcastSubscriptionExceeded(account);
+						
+						return;
+					}
+					
+					page_count++;
+					
 					log.warn("path expansion actor received PageDataExtraction Message");
 					List<ElementState> elements = msg.getPageState().getElements();
 
@@ -204,7 +253,25 @@ public class CrawlerActor extends AbstractActor{
 														.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 					page_builder.tell(message, getSelf());
 				})
+				.match(DiscardedJourneyMessage.class, message -> {
+					examined_journeys++;
+					//send generated and examined journey counts to audit manager
+					log.warn("# examined journeys :: "+examined_journeys);
+					log.warn("# generated journeys :: "+generated_journeys);
+					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
+																										   message.getAuditRecordId(), 
+																										   message.getDomainId(),
+																										   examined_journeys,
+																										   generated_journeys);
+					audit_manager.tell(progress_msg, getSelf());
+				})
 				.match(ConfirmedJourneyMessage.class, message -> {
+					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+
+					if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
+						return;
+					}
+										
 					log.warn("crawler received confirmed journey message :: "+message.getSteps().size() + " steps");
 					examined_journeys++;
 					PageState final_page = PathUtils.getLastPageState(message.getSteps());
@@ -309,7 +376,16 @@ public class CrawlerActor extends AbstractActor{
 																										   generated_journeys);
 					audit_manager.tell(progress_msg, getSelf());
 				})
+				/* commenting out as potentially unused. Remove if still present after 6/30/2022
 				.match(PageDataExtractionMessage.class, message -> {
+					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+
+					if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
+						return;
+					}
+					
+					page_count++;
+					
 					log.warn("path expansion actor received PageDataExtraction Message");
 					List<ElementState> elements = message.getPageState().getElements();
 
@@ -359,7 +435,7 @@ public class CrawlerActor extends AbstractActor{
 																										   examined_journeys,
 																										   generated_journeys);
 					audit_manager.tell(progress_msg, getSelf());
-				})
+				})*/
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
 				})

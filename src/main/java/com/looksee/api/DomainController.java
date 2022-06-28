@@ -1070,7 +1070,7 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
-	public @ResponseBody AuditRecord startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
+	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
 			throws Exception {
 		Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
@@ -1081,9 +1081,12 @@ public class DomainController {
 		}
 
 		LocalDate today = LocalDate.now();
+		log.warn("Account id :: "+account.getId());
+		log.warn("This month integer value :: "+today.getMonthValue());
 		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
 		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
+		log.warn("domain audits performed this month :: "+domain_audit_cnt);
 		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
 			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
 			throw new SubscriptionExceededException("You have exceeded your subscription");
@@ -1105,6 +1108,23 @@ public class DomainController {
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
 
+		DomainDto domain_dto = new DomainDto( domain.getId(), 
+											  domain.getUrl(), 
+											  domain.getPages().size(), 
+											  0, 
+											  0, 
+											  0.0, 
+											  0, 
+											  0.0, 
+											  0, 
+											  0.0, 
+											  0, 
+											  0.0, 
+											  false, 
+											  0.0,
+											  "Domain successfully created",
+											  ExecutionStatus.IN_PROGRESS);
+		
 		log.warn("adding audit record to domain");
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
@@ -1121,7 +1141,7 @@ public class DomainController {
 																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
 
-		return audit_record;
+		return domain_dto;
 	}
 
 	/**

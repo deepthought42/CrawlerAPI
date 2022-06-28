@@ -509,6 +509,7 @@ public class PageStateBuilder extends AbstractActor{
 						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
+							
 							log.warn("sending PageDataExtraction to parent actor :: "+getContext().getParent().getClass());
 							PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(message.getDomainId(), 
 																										 message.getAccountId(), 

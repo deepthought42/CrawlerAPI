@@ -1,6 +1,7 @@
 package com.looksee.api;
 
 import java.security.Principal;
+import java.time.LocalDate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.JsonSyntaxException;
 import com.looksee.models.Account;
 import com.looksee.models.dto.Subscription;
+import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.pricing.StripeCheckoutSession;
 import com.looksee.services.AccountService;
 import com.looksee.services.StripeService;
@@ -43,6 +46,31 @@ public class SubscriptionController {
     
     @Autowired
     private SubscriptionService subscription_service;
+    
+    /**
+     * Cancels any existing subscription and sets account subscription to Free
+     * 
+     * @param request
+     * @param plan
+     * 
+     * @throws Exception
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public boolean getSubscriptionStatus(HttpServletRequest request) throws Exception {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+    	
+		if (account == null) {
+			throw new UnknownAccountException();
+		}
+		
+    	LocalDate today = LocalDate.now();
+		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
+		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+		
+    	return subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt);
+    }
     
     /**
      * Cancels any existing subscription and sets account subscription to Free

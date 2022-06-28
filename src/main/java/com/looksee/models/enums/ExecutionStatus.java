@@ -11,7 +11,8 @@ public enum ExecutionStatus {
 	RUNNING_AUDITS("running audits"), 
 	BUILDING_PAGE("building page"), 
 	EXTRACTING_ELEMENTS("extracting elements"), 
-	UNKNOWN("unknown");
+	UNKNOWN("unknown"), 
+	EXCEEDED_SUBSCRIPTION("exceeded subscription");
 	
 	private String shortName;
 

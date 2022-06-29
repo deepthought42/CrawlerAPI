@@ -268,7 +268,8 @@ public class CrawlerActor extends AbstractActor{
 				.match(ConfirmedJourneyMessage.class, message -> {
 					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-					if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
+					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
+						log.warn("account has exceeded subscription plan");
 						return;
 					}
 										
@@ -474,6 +475,10 @@ public class CrawlerActor extends AbstractActor{
 					//create step to enter password into password field
 					//get submit button
 					ElementState submit_btn = form.getSubmitField();
+					
+					log.warn("username element :: "+username_element.getKey());
+					log.warn("password element :: "+password_element.getKey());
+					log.warn("Submit button :: "+submit_btn.getKey());
 					//create step to click on submit button
 					steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user_list.get(0)) );
 				}

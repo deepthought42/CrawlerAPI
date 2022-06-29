@@ -111,7 +111,7 @@ public class SubscriptionController {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
-    	
+    	log.warn("subscription price :: "+subscription.getPriceId());
     	if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()) {
     		acct.setCustomerToken(stripe_service.createCustomer(null, acct.getEmail()).getId());
     		acct = account_service.save(acct);

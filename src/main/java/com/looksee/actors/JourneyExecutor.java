@@ -106,9 +106,10 @@ public class JourneyExecutor extends AbstractActor{
 						PageState initial_page = message.getSteps().get(0).getStartPage();
 						//navigate to url of first page state in first journey step
 						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
+						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), initial_page.isSecure());
+						log.warn("nagivating to url :: "+sanitized_url);
 						browser.navigateTo(sanitized_url);
-						
+						log.warn("(Journey Executor) executing "+message.getSteps().size()+" steps in journey....");
 						//execute all steps sequentially in the journey
 						executeAllStepsInJourney(message.getSteps(), browser);
 						//send build page message to PageStateBuilder
@@ -161,7 +162,8 @@ public class JourneyExecutor extends AbstractActor{
 						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
 						browser.navigateTo(sanitized_url);
-						
+						log.warn("(Journey Executor - PageDataExtractionError) executing "+this.steps.size()+" steps in journey....");
+
 						//execute all steps sequentially in the journey
 						executeAllStepsInJourney(this.steps, browser);
 						
@@ -203,7 +205,7 @@ public class JourneyExecutor extends AbstractActor{
 	 */
 	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-
+		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
 		for(Step step: steps) {
 			if(step instanceof SimpleStep) {
 				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));

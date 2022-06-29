@@ -311,8 +311,8 @@ public class PageStateBuilder extends AbstractActor{
 						final PageState page_state_record = this.page_state;
 						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 
-						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
-						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
+						//int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
+						//int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 						this.total_dispatches = 1L;
 						this.xpaths.addAll(xpaths);
 						

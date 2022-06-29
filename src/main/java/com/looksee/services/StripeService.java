@@ -45,7 +45,7 @@ public class StripeService {
 		        .addItem(
 		          SubscriptionUpdateParams.Item.builder()
 		            .setId(subscription.getItems().getData().get(0).getId())
-		            .setPrice(price_id)
+		            //.setPrice(price_id)
 		            .build())
 		        .build();
     	subscription.update(params);

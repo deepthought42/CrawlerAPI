@@ -287,10 +287,10 @@ public class PageStateBuilder extends AbstractActor{
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
 							//send message to audit manager letting it know that an error occurred
 							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-													 crawl_action.getAccountId(), 
-													 crawl_action.getAuditRecordId(), 
-													 crawl_action.getUrl().toString(), 
-													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
+																			 crawl_action.getAccountId(), 
+																			 crawl_action.getAuditRecordId(), 
+																			 crawl_action.getUrl().toString(), 
+																			 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
 
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;

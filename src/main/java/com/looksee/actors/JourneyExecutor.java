@@ -166,7 +166,7 @@ public class JourneyExecutor extends AbstractActor{
 
 						//execute all steps sequentially in the journey
 						executeAllStepsInJourney(this.steps, browser);
-						
+						log.warn("current browser url :: "+browser.getDriver().getCurrentUrl());
 						//send build page message to PageStateBuilder
 						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
 																												message.getAccountId(), 
@@ -205,9 +205,12 @@ public class JourneyExecutor extends AbstractActor{
 	 */
 	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
-		log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++");
 		for(Step step: steps) {
 			if(step instanceof SimpleStep) {
+				log.warn("step id :: "+step.getId());
+				log.warn("Step starting url :: "+step.getStartPage().getUrl());
+				log.warn("element xpath :: "+((SimpleStep)step).getElementState().getXpath());
+
 				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
 				
 				action_factory.execAction(web_element, "", ((SimpleStep)step).getAction());
@@ -220,6 +223,7 @@ public class JourneyExecutor extends AbstractActor{
 				WebElement password_element = browser.getDriver().findElement(By.xpath(login_step.getPasswordElement().getXpath()));
 				action_factory.execAction(password_element, login_step.getTestUser().getPassword(), Action.SEND_KEYS);
 				WebElement submit_element = browser.getDriver().findElement(By.xpath(login_step.getSubmitElement().getXpath()));
+				
 				action_factory.execAction(submit_element, "", Action.CLICK);
 			}
 			if(step.getEndPage() == null || step.getEndPage().getKey() != step.getStartPage().getKey()) {

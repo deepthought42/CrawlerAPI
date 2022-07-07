@@ -130,7 +130,7 @@ public class PathExpansionActor extends AbstractActor {
 					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 					cloned_steps.add(step);
 					log.warn("Cloned steps size :: "+cloned_steps.size());
-					JourneyMessage journey_msg = new JourneyMessage(cloned_steps, 
+					JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(cloned_steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
 																	message.getDomainId(), 
@@ -173,7 +173,7 @@ public class PathExpansionActor extends AbstractActor {
 				for(Step step: new_steps) {
 					List<Step> steps = new ArrayList<>();
 					steps.add(step);
-					JourneyMessage journey_msg = new JourneyMessage(steps, 
+					JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
 																	message.getDomainId(), 

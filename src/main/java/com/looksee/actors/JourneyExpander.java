@@ -200,7 +200,7 @@ public class JourneyExpander extends AbstractActor{
 								browser.close();
 							}
 						}
-						TimingUtils.pauseThread(15000L);
+						//TimingUtils.pauseThread(15000L);
 					}while(!executed_successfully && cnt < 50);
 					
 					

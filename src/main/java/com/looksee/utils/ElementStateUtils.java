@@ -1,7 +1,9 @@
 package com.looksee.utils;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,6 +12,7 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebElement;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.audit.ColorData;
 
 public class ElementStateUtils {
 	
@@ -122,5 +125,43 @@ public class ElementStateUtils {
 		return "ul".equalsIgnoreCase(tag_name) 
 				|| "ol".equalsIgnoreCase(tag_name)
 				|| "li".equalsIgnoreCase(tag_name);
+	}
+
+	public static Stream<ElementState> enrichBackgroundColor(List<ElementState> element_states) {
+		//ENRICHMENT : BACKGROUND COLORS
+		return element_states.parallelStream()
+										.filter(element -> element != null)
+										.map(element -> {
+				try {
+					ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));				
+					//extract opacity color
+					ColorData bkg_color = null;
+					if(element.getScreenshotUrl().trim().isEmpty()) {
+					bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
+					}
+					else {
+					//log.warn("extracting background color");
+					bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
+												   font_color);
+					
+					//log.warn("done extracting background color");
+					}
+					String bg_color = bkg_color.rgb();	
+					
+					//Identify background color by getting largest color used in picture
+					//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
+					ColorData background_color = new ColorData(bg_color);
+					element.setBackgroundColor(background_color.rgb());
+					element.setForegroundColor(font_color.rgb());
+					
+					double contrast = ColorData.computeContrast(background_color, font_color);
+					element.setTextContrast(contrast);
+					return element;
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			return element;
+		});
 	}
 }

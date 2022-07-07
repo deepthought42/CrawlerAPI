@@ -248,7 +248,9 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			String sanitized_href = "";
 			try {
 				String host = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl(), page_state.isSecure())).getHost();
+				log.warn("host url to be audited : "+host);
 				sanitized_href = BrowserUtils.formatUrl("http", host, href, page_state.isSecure());
+				log.warn("sanitized url :: "+sanitized_href);
 				if( BrowserUtils.isJavascript(href)
 					|| href.startsWith("itms-apps:")
 					|| href.startsWith("snap:")

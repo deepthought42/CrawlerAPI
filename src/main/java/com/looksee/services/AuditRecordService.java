@@ -22,6 +22,8 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.AuditRecordRepository;
 
@@ -64,7 +66,7 @@ public class AuditRecordService {
 
 		audit = audit_record_repo.save(audit);
 		
-		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {	
+		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {
 			try {
 				Account account = account_service.findById(account_id).get();
 				int id_start_idx = account.getUserId().indexOf('|');
@@ -335,5 +337,41 @@ public class AuditRecordService {
 	
 	public AuditRecord addJourney(long audit_record_id, long journey_id) {
 		return audit_record_repo.addJourney(audit_record_id, journey_id);
+	}
+
+	/**
+	 * Update the progress for the appropriate {@linkplain AuditCategory}
+	 * @param auditRecordId
+	 * @param category
+	 * @param account_id
+	 * @param domain_id
+	 * @param progress
+	 * @param message
+	 * @return
+	 */
+	public AuditRecord updateAuditProgress(long auditRecordId, 
+										   AuditCategory category, 
+										   long account_id, 
+										   long domain_id, 
+										   double progress, 
+										   String message) {
+		AuditRecord audit_record = findById(auditRecordId).get();
+		audit_record.setDataExtractionProgress(1.0);
+		audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
+
+		if(AuditCategory.CONTENT.equals(category)) {
+			audit_record.setContentAuditProgress( progress );
+			audit_record.setContentAuditMsg( message);
+		}
+		else if(AuditCategory.AESTHETICS.equals(category)) {
+			audit_record.setAestheticAuditProgress( progress);
+			audit_record.setAestheticMsg(message);
+		}
+		else if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
+			audit_record.setInfoArchitectureAuditProgress( progress );
+			audit_record.setInfoArchMsg(message);
+		}
+		
+		return save(audit_record, account_id, domain_id);
 	}
 }

@@ -38,6 +38,7 @@ import com.looksee.models.message.AuditProgressUpdate;
 import com.looksee.models.message.ConfirmedJourneyMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.ElementsSaved;
+import com.looksee.models.message.ExceededSubscriptionMessage;
 import com.looksee.models.message.JourneyCrawlActionMessage;
 import com.looksee.models.message.JourneyExaminationProgressMessage;
 import com.looksee.models.message.PageAuditRecordMessage;
@@ -224,9 +225,6 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(PageCandidateFound.class, message -> {
-					if(this.hasUserExceededSubscriptionAllowance) {
-						return;
-					}
 					log.warn("Page candidate found message recieved by AUDIT MANAGER");
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
@@ -337,9 +335,6 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					if(hasUserExceededSubscriptionAllowance) {
-						return;
-					}
 					
 					log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
 					//save journey steps
@@ -347,19 +342,20 @@ public class AuditManager extends AbstractActor{
 					for(Step step : message.getSteps()) {
 						saved_steps.add(step_service.save(step));
 					}
-					message.setSteps(saved_steps);
+					
 					//build create and save journey
-					Journey journey = new Journey(message.getSteps());
+					Journey journey = new Journey(saved_steps);
 					journey = journey_service.save(journey);
 					
 					//add journey to domain audit
 					audit_record_service.addJourney(this.domain_audit_id, journey.getId());
 					
 					//retrieve all unique page states for journey steps
-					List<PageState> page_states = getAllUniquePageStates(message.getSteps());
-					Domain domain = domain_service.findById(message.getDomainId()).get();
+					List<PageState> page_states = getAllUniquePageStates(saved_steps);
+					//Domain domain = domain_service.findById(message.getDomainId()).get();
 					//remove all unique pageStates that have already been analyzed
-					page_states = page_states.stream().filter(page -> !page_urls.containsKey(page.getUrl()) && !BrowserUtils.isExternalLink(domain.getUrl(), page.getUrl())).collect(Collectors.toList());
+					log.warn("Page states to be audited :: " + page_states);
+					page_states = page_states.stream().filter(page -> !page_urls.containsKey(page.getUrl()) ).collect(Collectors.toList());
 					
 					//create PageAuditRecord for each page that hasn't been analyzed. 
 					Account account = account_service.findById(message.getAccountId()).get();
@@ -379,10 +375,10 @@ public class AuditManager extends AbstractActor{
 																	   page_audit_record.getId());
 						*/
 						String url_without_protocol = page_state.getUrl();
+						page_urls.put(url_without_protocol, Boolean.TRUE);
 
 						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
 							//total_pages_audited++;
-							page_urls.put(url_without_protocol, Boolean.TRUE);
 
 							//Account is still within page limit. continue with mapping page 
 							PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
@@ -432,11 +428,12 @@ public class AuditManager extends AbstractActor{
 							log.warn("User has exceeded domain page audit limit");
 							log.warn("+++++++++++++++++++++++++++++++++++++++");
 							hasUserExceededSubscriptionAllowance = true;
-							getSender().tell(PoisonPill.class, getSelf());
-							break;
 						}
 					}
 					
+					if(hasUserExceededSubscriptionAllowance) {
+						getSender().tell(PoisonPill.class, getSelf());
+					}
 				})
 				.match(JourneyExaminationProgressMessage.class, message -> {
 					journey_mapping_progress = message.getExaminedJourneys()/(double)message.getGeneratedJourneys();
@@ -458,54 +455,16 @@ public class AuditManager extends AbstractActor{
 					
 				})
 				.match(AuditProgressUpdate.class, message -> {
+					log.debug("AUDIT PROGRESS UPDATE recieved by Audit Manager");
 					try {
-						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-						audit_record.setDataExtractionProgress(1.0);
-						audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
-
-						if(AuditCategory.CONTENT.equals(message.getCategory())) {
-							audit_record.setContentAuditProgress( message.getProgress() );
-							audit_record.setContentAuditMsg( message.getMessage());
-						}
-						else if(AuditCategory.AESTHETICS.equals(message.getCategory())) {
-							this.aesthetic_audits_completed++;
-							audit_record.setAestheticAuditProgress( message.getProgress());
-							audit_record.setAestheticMsg(message.getMessage());
-						}
-						else if(AuditCategory.INFORMATION_ARCHITECTURE.equals(message.getCategory())) {
-							audit_record.setInfoArchitectureAuditProgress( message.getProgress() );
-							audit_record.setInfoArchMsg(message.getMessage());
-						}
-						
-						audit_record =  audit_record_service.save(audit_record, 
-																  message.getAccountId(), 
-																  message.getDomainId());	
+						AuditRecord audit_record = audit_record_service.updateAuditProgress(message.getAuditRecordId(), 
+																							message.getCategory(), 
+																							message.getAccountId(), 
+																							message.getDomainId(), 
+																							message.getProgress(), 
+																							message.getMessage());	
 	
 						if(message.getAudit() != null) {
-							/*
-							for(UXIssueMessage issue: message.getAudit().getMessages()) {
-								Set<Recommendation> recommendations = new HashSet<>();
-								
-								issue.getRecommendations().remove(null);
-								for(Recommendation recommendation: issue.getRecommendations()) {
-									recommendations.add(recommendation_service.save(recommendation));
-								}
-								
-								recommendations = recommendations.parallelStream().filter(rec -> rec != null).collect(Collectors.toSet());
-								issue.setRecommendations(recommendations);
-								ElementState element = null;
-								if(issue instanceof ElementStateIssueMessage) {
-									element = ((ElementStateIssueMessage) issue).getElement();
-									element.print();
-									((ElementStateIssueMessage) issue).setElement(null);
-								}
-								issue = issue_message_service.save(issue);
-								if(element != null) {
-									issue_message_service.addElement(issue.getId(), element.getId());
-								}
-							}
-							Audit audit = audit_service.save(message.getAudit());
-							 */
 							audit_record_service.addAudit( audit_record.getId(), message.getAudit().getId() );							
 						}
 						
@@ -563,6 +522,10 @@ public class AuditManager extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
+				.match(ExceededSubscriptionMessage.class, message -> {
+					log.warn("subscription limits exceeded.");
+					//TODO STOP AUDIT
+				})
 				.match(AuditError.class, message -> {
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					audit_record.setStatus(ExecutionStatus.ERROR);
@@ -597,23 +560,30 @@ public class AuditManager extends AbstractActor{
 				.build();
 	}
 	
+	/**
+	 * Retrieves all {@link PageState PageStates} from {@link Step steps} provided and returns a unique list of PageStates
+	 * 
+	 * @param steps
+	 * 
+	 * @return List of PageState objects
+	 */
 	private List<PageState> getAllUniquePageStates(List<Step> steps) {
 		List<PageState> page_states = new ArrayList<>();
 		Map<String, Boolean> key_map = new HashMap<>();
 		
 		for(Step step : steps) {
-			if(!key_map.containsKey( step.getStartPage().getUrl() )){
-				key_map.put(step.getStartPage().getUrl(), Boolean.TRUE);				
-				page_states.add(((SimpleStep)step).getStartPage());
+			if(!key_map.containsKey( step.getStartPage().getKey() )){
+				key_map.put(step.getStartPage().getKey(), Boolean.TRUE);				
+				page_states.add(step.getStartPage());
 			}
 			
-			if(!key_map.containsKey( step.getEndPage().getUrl() )){
-				key_map.put(step.getEndPage().getUrl(), Boolean.TRUE);				
+			if(!key_map.containsKey( step.getEndPage().getKey() )){
+				key_map.put(step.getEndPage().getKey(), Boolean.TRUE);				
 				page_states.add(step.getEndPage());
 			}
 		}
 		
-		return page_states.stream().distinct().collect(Collectors.toList());
+		return page_states.stream().collect(Collectors.toList());
 	}
 
 	private void stopAudit() {		

@@ -46,7 +46,7 @@ public class Journey extends LookseeObject {
 	 */
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(ordered_ids, "|"));
+		return "journey"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(ordered_ids, "|"));
 	}
 
 	/**

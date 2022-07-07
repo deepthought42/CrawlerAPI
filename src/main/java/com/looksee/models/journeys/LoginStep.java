@@ -101,4 +101,10 @@ public class LoginStep extends Step {
 		}
 		return "loginstep"+key;
 	}
+	
+	
+	@Override
+	public String toString() {
+		return "key = "+getKey()+",\n start_page = "+getStartPage()+"\n username element ="+getUsernameElement()+"\n password element ="+getPasswordElement()+"\n end page = "+getEndPage();
+	}
 }

@@ -72,6 +72,12 @@ public class SimpleStep extends Step {
 		return "simplestep"+key+action+action_input;
 	}
 
+	
+	@Override
+	public String toString() {
+		return "key = "+getKey()+",\n start_page = "+getStartPage()+"\n element ="+getElementState()+"\n end page = "+getEndPage();
+	}
+	
 	public String getActionInput() {
 		return action_input;
 	}

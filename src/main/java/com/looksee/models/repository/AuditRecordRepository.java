@@ -113,7 +113,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState) WHERE id(page_audit)=$page_audit_id RETURN page_state LIMIT 1")
 	public PageState getPageStateForAuditRecord(@Param("page_audit_id") long page_audit_id);
 	
-	@Query("MATCH (domain_audit:DomainAuditRecord)-[]->(page_audit:PageAuditRecord) MATCH (page_audit)-[]->(page_state:PageState) WHERE id(domain_audit) = $domain_audit_id RETURN page_state")
+	@Query("MATCH (domain_audit:DomainAuditRecord)-[]->(page_state:PageState) WHERE id(domain_audit)=$domain_audit_id RETURN page_state")
 	public Set<PageState> getPageStatesForDomainAuditRecord(@Param("domain_audit_id") long domain_audit_id);
 	
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{key:$page_key}) MATCH (page_audit)-[]->(audit:Audit) RETURN audit")

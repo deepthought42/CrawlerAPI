@@ -3,7 +3,9 @@ package com.looksee.actors;
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -48,6 +50,7 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * 
@@ -70,7 +73,7 @@ public class JourneyExecutor extends AbstractActor{
 
 	private ActorRef crawl_actor;
 	private int page_audits_completed;
-	private List<Step> steps;
+	private List<Step> steps = new ArrayList<>();
 
 	//subscribe to cluster changes
 	@Override
@@ -100,28 +103,12 @@ public class JourneyExecutor extends AbstractActor{
 		return receiveBuilder()
 				.match(JourneyMessage.class, message-> {
 					this.crawl_actor = getContext().getParent();
+
 					try {
-						log.warn("JOURNEY MAPPING MANAGER received new URL for mapping");
-						this.steps = message.getSteps();
-						PageState initial_page = message.getSteps().get(0).getStartPage();
-						//navigate to url of first page state in first journey step
-						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), initial_page.isSecure());
-						log.warn("nagivating to url :: "+sanitized_url);
-						browser.navigateTo(sanitized_url);
-						log.warn("(Journey Executor) executing "+message.getSteps().size()+" steps in journey....");
-						//execute all steps sequentially in the journey
-						executeAllStepsInJourney(message.getSteps(), browser);
-						//send build page message to PageStateBuilder
-						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
-																												message.getAccountId(), 
-																												message.getAuditRecordId(), 
-																												new URL(browser.getDriver().getCurrentUrl()), 
-																												browser);
+						log.warn("JOURNEY EXECUTOR received new steps to explore = "+message.getSteps().size());
+						this.steps = new ArrayList<>(message.getSteps());
 						
-						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
-															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_builder.tell(browser_page_builder_message, getSelf());
+						iterateThroughJourneySteps(new ArrayList<>(message.getSteps()), message.getDomainId(), message.getAccountId(), message.getAuditRecordId());					
 
 					}
 					catch(ElementNotInteractableException e) {
@@ -129,12 +116,14 @@ public class JourneyExecutor extends AbstractActor{
 					}				
 				})
 				.match(PageDataExtractionMessage.class, message -> {
+					
 					log.warn("Journey executor received page data extraction message :: "+message.getPageState().getKey());
 					this.steps.get(this.steps.size()-1).setEndPage(message.getPageState());
 					this.steps.get(this.steps.size()-1).setKey(this.steps.get(this.steps.size()-1).generateKey());
 					PageState second_to_last_page = PathUtils.getSecondToLastPageState(this.steps);
+					PageState final_page = PathUtils.getLastPageState(this.steps);
 					//is end_page PageState different from second to last PageState
-					if(message.getPageState().equals(second_to_last_page)) {
+					if(final_page.equals(second_to_last_page)) {
 						log.warn("returning because message page state is equal to second to last page");
 						
 						//tell parent that we processed a journey that is being discarded
@@ -142,44 +131,41 @@ public class JourneyExecutor extends AbstractActor{
 																								message.getDomainId(), 
 																								message.getAccountId(),
 																								message.getAuditRecordId());
-						return;
+						crawl_actor.tell(journey_message, getSelf());
 					}
-					
-					ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(this.steps, 
-																						PathStatus.EXAMINED, 
-																						BrowserType.CHROME, 
-																						message.getDomainId(), 
-																						message.getAccountId(),
-																						message.getAuditRecordId());
-					
-					crawl_actor.tell(journey_message, getSelf());
+					else {
+						log.warn("pages aren't the same. Sending confirmed journey message to crawl actor : "+this.steps.size());
+						ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(new ArrayList<>(this.steps), 
+																							PathStatus.EXAMINED, 
+																							BrowserType.CHROME, 
+																							message.getDomainId(), 
+																							message.getAccountId(),
+																							message.getAuditRecordId());
+						
+						crawl_actor.tell(journey_message, getSelf());
+					}
 				})
 				.match(PageDataExtractionError.class, message -> {
-					try {
-						log.warn("JOURNEY MAPPING MANAGER received page data extraction error");
-						PageState initial_page = this.steps.get(0).getStartPage();
-						//navigate to url of first page state in first journey step
-						Browser browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-						String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), true);
-						browser.navigateTo(sanitized_url);
-						log.warn("(Journey Executor - PageDataExtractionError) executing "+this.steps.size()+" steps in journey....");
-
-						//execute all steps sequentially in the journey
-						executeAllStepsInJourney(this.steps, browser);
-						log.warn("current browser url :: "+browser.getDriver().getCurrentUrl());
-						//send build page message to PageStateBuilder
-						BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(message.getDomainId(), 
-																												message.getAccountId(), 
-																												message.getAuditRecordId(), 
-																												new URL(browser.getDriver().getCurrentUrl()), 
-																												browser);
+					if( message.getErrorMessage().contains("Received 404 status while building page state")) {
+						log.warn("returning because 404 status was encountered for page state");
 						
-						ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
-															.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-						page_builder.tell(browser_page_builder_message, getSelf());
+						//tell parent that we processed a journey that is being discarded
+						DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	BrowserType.CHROME, 
+																								message.getDomainId(), 
+																								message.getAccountId(),
+																								message.getAuditRecordId());
+						crawl_actor.tell(journey_message, getSelf());
 					}
-					catch(ElementNotInteractableException e) {
-						e.printStackTrace();
+					else {
+						try {
+							log.warn("(Journey Executor - PageDataExtractionError) executing "+this.steps+" steps in journey....");
+	
+							iterateThroughJourneySteps(this.steps, message.getDomainId(), message.getAccountId(), message.getAuditRecordId());
+						
+						}
+						catch(ElementNotInteractableException e) {
+							e.printStackTrace();
+						}
 					}
 				})
 				.match(MemberUp.class, mUp -> {
@@ -197,20 +183,60 @@ public class JourneyExecutor extends AbstractActor{
 				.build();
 	}
 	
+	private void iterateThroughJourneySteps( List<Step> steps, long domain_id, long account_id, long audit_record_id) throws MalformedURLException {
+		assert steps != null;
+		assert !steps.isEmpty();
+		
+		Browser browser = null;
+		try {
+			browser = performJourneyStepsInBrowser(steps);
+			//send build page message to PageStateBuilder
+			BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(domain_id, 
+																									account_id, 
+																									audit_record_id, 
+																									new URL(browser.getDriver().getCurrentUrl()), 
+																									browser);
+			
+			ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
+												.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
+			page_builder.tell(browser_page_builder_message, getSelf());
+		} catch (Exception e) {
+			if(browser != null) {
+				browser.close();
+			}
+			e.printStackTrace();
+			DiscardedJourneyMessage journey_msg = new DiscardedJourneyMessage(BrowserType.CHROME, domain_id, account_id, audit_record_id);
+			crawl_actor.tell(journey_msg, getSelf());
+		}
+	}
+
+	@Retry(name = "webdriver")
+	private Browser performJourneyStepsInBrowser(List<Step> steps) throws Exception {
+		
+		Browser browser = null;
+		PageState initial_page = steps.get(0).getStartPage();
+		String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), initial_page.isSecure());
+		log.warn("nagivating to url :: "+sanitized_url);
+
+		browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+		browser.navigateTo(sanitized_url);
+
+		//execute all steps sequentially in the journey
+		executeAllStepsInJourney(steps, browser);
+		
+		return browser;
+	}
+
 	/**
 	 * Executes all {@link Step steps} within a browser
 	 * 
 	 * @param steps
 	 * @param browser
 	 */
-	private void executeAllStepsInJourney(List<Step> steps, Browser browser) {
+	private void executeAllStepsInJourney(List<Step> steps, Browser browser) throws Exception{
 		ActionFactory action_factory = new ActionFactory(browser.getDriver());
 		for(Step step: steps) {
 			if(step instanceof SimpleStep) {
-				log.warn("step id :: "+step.getId());
-				log.warn("Step starting url :: "+step.getStartPage().getUrl());
-				log.warn("element xpath :: "+((SimpleStep)step).getElementState().getXpath());
-
 				WebElement web_element = browser.getDriver().findElement(By.xpath(((SimpleStep)step).getElementState().getXpath()));
 				
 				action_factory.execAction(web_element, "", ((SimpleStep)step).getAction());
@@ -225,10 +251,9 @@ public class JourneyExecutor extends AbstractActor{
 				WebElement submit_element = browser.getDriver().findElement(By.xpath(login_step.getSubmitElement().getXpath()));
 				
 				action_factory.execAction(submit_element, "", Action.CLICK);
+				log.warn("Executed LOGIN step...");
 			}
-			if(step.getEndPage() == null || step.getEndPage().getKey() != step.getStartPage().getKey()) {
-				TimingUtils.pauseThread(5000L);
-			}
+			browser.waitForPageToLoad();
 		}
 	}
 

@@ -3,6 +3,8 @@ package com.looksee.services;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import com.looksee.utils.AuditUtils;
 
 @Service
 public class DomainDtoService {
+	private static Logger log = LoggerFactory.getLogger(DomainDtoService.class.getName());
+
 	@Autowired
 	private DomainService domain_service;
 	
@@ -34,6 +38,7 @@ public class DomainDtoService {
 		int audited_pages = 0;
 		int page_count = 0;
 		if (!audit_record_opt.isPresent()) {
+			log.warn("returning default Domain DTO because audit record was not found");
 			return new DomainDto(domain.getId(), 
 								 domain.getUrl(), 
 								 0, 
@@ -64,6 +69,7 @@ public class DomainDtoService {
 		// overall score
 		Set<Audit> info_arch_audits = audit_record_service
 				.getAllInformationArchitectureAuditsForDomainRecord(domain_audit.getId());
+
 		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
 
 		// get all accessibility audits for most recent audit record and calculate
@@ -84,7 +90,8 @@ public class DomainDtoService {
 		// check if there is a current audit running
 		AuditRecord audit_record = audit_record_opt.get();
 		Set<PageAuditRecord> page_audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
-		page_count = page_audit_records.size();
+		page_count = audit_record_service.getPageStatesForDomainAuditRecord(audit_record.getId()).size();
+		//page_count = page_audit_records.size();
 
 		double content_progress = 0.0;
 		double aesthetic_progress = 0.0;
@@ -92,16 +99,17 @@ public class DomainDtoService {
 		boolean is_audit_running = false;
 		double data_extraction_progress = 0.0;
 
+		/*
 		content_progress += domain_audit.getContentAuditProgress();
 		aesthetic_progress += domain_audit.getAestheticAuditProgress();
 		info_architecture_progress += domain_audit.getInfoArchitechtureAuditProgress();
-		data_extraction_progress += domain_audit.getDataExtractionProgress();
-		/*
+		 */
+		data_extraction_progress = domain_audit.getDataExtractionProgress();
 		for (PageAuditRecord record : page_audit_records) {
 			content_progress += record.getContentAuditProgress();
 			aesthetic_progress += record.getAestheticAuditProgress();
 			info_architecture_progress += record.getInfoArchitechtureAuditProgress();
-			data_extraction_progress += record.getDataExtractionProgress();
+			//data_extraction_progress += record.getDataExtractionProgress();
 
 			if (record.isComplete()) {
 				audited_pages++;
@@ -113,12 +121,12 @@ public class DomainDtoService {
 
 		
 		if (page_audit_records.size() > 0) {
-			content_progress = content_progress / page_audit_records.size();
-			info_architecture_progress = (info_architecture_progress / page_audit_records.size());
-			aesthetic_progress = (aesthetic_progress / page_audit_records.size());
-			data_extraction_progress = (data_extraction_progress / page_audit_records.size());
+			content_progress = content_progress / page_count;
+			info_architecture_progress = (info_architecture_progress / page_count);
+			aesthetic_progress = (aesthetic_progress / page_count);
+			//data_extraction_progress = (data_extraction_progress / page_count);
 		}
-*/
+
 		
 		return new DomainDto(domain.getId(), 
 							  domain.getUrl(), 

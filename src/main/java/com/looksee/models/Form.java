@@ -86,14 +86,14 @@ public class Form extends LookseeObject{
 		}
 		
 
-		if(submit_field.getAllText().toLowerCase().contains("login") 
+		if(submit_field != null && (submit_field.getAllText().toLowerCase().contains("login") 
 				|| submit_field.getAllText().toLowerCase().contains("sign-in") 
-				|| submit_field.getAllText().toLowerCase().contains("sign in")) {
+				|| submit_field.getAllText().toLowerCase().contains("sign in"))) {
 			return FormType.LOGIN;
 		}
-		else if(submit_field.getAllText().toLowerCase().contains("register") 
+		else if(submit_field != null && (submit_field.getAllText().toLowerCase().contains("register") 
 				|| submit_field.getAllText().toLowerCase().contains("sign-up") 
-				|| submit_field.getAllText().toLowerCase().contains("sign up")) {
+				|| submit_field.getAllText().toLowerCase().contains("sign up"))) {
 			return FormType.REGISTRATION;
 		}
 		

@@ -38,6 +38,7 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ElementStateUtils;
 import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
@@ -87,6 +88,7 @@ public class PageStateBuilder extends AbstractActor{
 				MemberEvent.class, UnreachableMember.class);
 		this.xpaths = new ArrayList<>();
 		this.total_dispatches = 0L;
+		this.total_save_dispatches = 0L;
 	}
 
 	//re-subscribe when restart
@@ -192,6 +194,7 @@ public class PageStateBuilder extends AbstractActor{
 						//usually code 301 is returned which is a redirect, which is usually transferring to https
 						if(http_status == 404 || http_status == 408) {
 							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
+							
 							//send message to audit manager letting it know that an error occurred
 							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
 													 crawl_action.getAccountId(), 
@@ -213,8 +216,7 @@ public class PageStateBuilder extends AbstractActor{
 						PageState page_state = browser_service.buildPageState(crawl_action.getUrl());
 						if(page_state != null) {
 
-							this.page_state = page_state_service.save(page_state);
-							final PageState page_state_record = this.page_state;
+							final PageState page_state_record = page_state_service.save(page_state);
 							List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 	
 							int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
@@ -278,8 +280,10 @@ public class PageStateBuilder extends AbstractActor{
 					}
 				})
 				.match(BrowserCrawlActionMessage.class, crawl_action-> {
+					
 					log.warn("Page state recieved BrowserCrawlAction message");
-					try {						
+					try {
+						/*
 						int http_status = BrowserUtils.getHttpStatus(crawl_action.getUrl());
 						boolean requires_authentication = false;
 						//usually code 301 is returned which is a redirect, which is usually transferring to https
@@ -301,22 +305,21 @@ public class PageStateBuilder extends AbstractActor{
 						else if(http_status == 403) {
 							
 						}
-						
+						*/
 						//update audit record with progress
 						//this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						this.page_state = browser_service.performBuildPageProcess(crawl_action.getUrl(), 
+						PageState page_state = browser_service.performBuildPageProcess(crawl_action.getUrl(), 
 																				  crawl_action.getBrowser()); 
 
-						this.page_state = page_state_service.save(this.page_state);
-						final PageState page_state_record = this.page_state;
-						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
+						page_state = page_state_service.save(page_state);
+						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
 
 						//int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 						//int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 						this.total_dispatches = 1L;
 						this.xpaths.addAll(xpaths);
 						
-						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
+						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state.getId());
 						//crawl_action.getAuditRecord().setPageState(page_state_record);
 						
 						List<ElementState> element_states = browser_service.buildPageElementsWithoutNavigation( page_state, 
@@ -326,43 +329,8 @@ public class PageStateBuilder extends AbstractActor{
 																												crawl_action.getBrowser());
 
 
-						//ENRICHMENT : BACKGROUND COLORS
-						element_states = element_states.parallelStream()
-														.filter(element -> element != null)
-														.map(element -> {
-								try {
-									ColorData font_color = new ColorData(element.getRenderedCssValues().get("color"));				
-									//extract opacity color
-									ColorData bkg_color = null;
-									if(element.getScreenshotUrl().trim().isEmpty()) {
-									bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
-									}
-									else {
-									//log.warn("extracting background color");
-									bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
-																   font_color);
-									
-									//log.warn("done extracting background color");
-									}
-									String bg_color = bkg_color.rgb();	
-									
-									//Identify background color by getting largest color used in picture
-									//ColorData background_color_data = ImageUtils.extractBackgroundColor(new URL(element.getScreenshotUrl()));
-									ColorData background_color = new ColorData(bg_color);
-									element.setBackgroundColor(background_color.rgb());
-									element.setForegroundColor(font_color.rgb());
-									
-									double contrast = ColorData.computeContrast(background_color, font_color);
-									element.setTextContrast(contrast);
-									return element;
-								}
-								catch (Exception e) {
-									log.warn("element screenshot url  :: "+element.getScreenshotUrl());
-									e.printStackTrace();
-								}
-							return element;
-						})
-						.collect(Collectors.toList());
+						element_states = ElementStateUtils.enrichBackgroundColor(element_states).collect(Collectors.toList());
+						
 						
 						//tell page state builder of element states
 						ElementProgressMessage element_message = new ElementProgressMessage(crawl_action.getAccountId(), 
@@ -375,8 +343,9 @@ public class PageStateBuilder extends AbstractActor{
 																							page_state.getUrl(),
 																							crawl_action.getDomainId());
 						
-						getContext().getSelf().tell(element_message, getSelf());
-						
+						ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
+								.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
+						data_extraction_supervisor.tell(element_message, getSelf());						
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
 																								 crawl_action.getAccountId(), 
@@ -389,6 +358,8 @@ public class PageStateBuilder extends AbstractActor{
 						log.error("An exception occurred that bubbled up to the page state builder");
 						e.printStackTrace();
 					}
+					
+					crawl_action.getBrowser().close();
 				})
 				.match(ElementProgressMessage.class, message -> {
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -463,13 +434,16 @@ public class PageStateBuilder extends AbstractActor{
 					log.warn("Elements saved successfully :: batch "+this.total_save_dispatches + " of "+this.total_dispatches);
 					
 					page_state_service.addAllElements(message.getPageStateId(), message.getElements());
-					this.page_state.setElements(page_state_service.getElementStates(this.page_state.getId()));
+					
+					PageState page_state = page_state_service.findById(message.getPageStateId()).get(); 
+					page_state.setElements(page_state_service.getElementStates(message.getPageStateId()));
 					try {
 						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
 						//       system is done extracting element data and the page is ready for auditing
 						
 						
 						//PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						log.warn("Save dispatched = "+this.total_save_dispatches + ";    total dispatches = "+this.total_dispatches);
 						if(this.total_save_dispatches == this.total_dispatches) {
 							/*NOTE: THIS LOGIC SHOULD BE HANDLED IN THE AUDIT MANAGER. MOVE IT THERE ONCE IT'S CLEAR WHERE IT BELONGS */
 							/*
@@ -510,13 +484,13 @@ public class PageStateBuilder extends AbstractActor{
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
 							
-							log.warn("sending PageDataExtraction to parent actor :: "+getContext().getParent().getClass());
+							log.warn("sending PageDataExtraction to parent actor :: "+getContext().getParent().path());
 							PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(message.getDomainId(), 
 																										 message.getAccountId(), 
 																										 message.getAuditRecordId(), 
 																										 message.getPageUrl(), 
 																										 this.xpaths.size(),
-																										 this.page_state);
+																										 page_state);
 							
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							

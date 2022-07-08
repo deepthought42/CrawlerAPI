@@ -68,6 +68,19 @@ public class BrowserUtilsTests {
 	}
 	
 	@Test
+	public void verifyPageUrlWithPath() throws MalformedURLException{
+		String url = "http://zaelab.com/services";
+		String sanitized_url = BrowserUtils.getPageUrl(new URL(url));
+
+		assertTrue("zaelab.com/services".equals(sanitized_url));
+		
+		String url2 = "http://qa.turion.io/?#";
+		String sanitized_url2 = BrowserUtils.getPageUrl(url2);
+
+		assertTrue("qa.turion.io/?#".equals(sanitized_url2));
+	}
+	
+	@Test
 	public void httpStatusVerification() throws MalformedURLException {
 		URL url = new URL("http://spotify.come/us/account/your-services");
 		int status = BrowserUtils.getHttpStatus(url);

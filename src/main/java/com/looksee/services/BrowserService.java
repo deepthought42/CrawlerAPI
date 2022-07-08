@@ -416,7 +416,7 @@ public class BrowserService {
 				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url.toString());
 
-				page_state = performBuildPageProcess(url, browser);
+				page_state = performBuildPageProcess( browser);
 				complete = true;
 				cnt=Integer.MAX_VALUE;
 			}
@@ -465,10 +465,9 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public PageState performBuildPageProcess(URL url, Browser browser) 
+	public PageState performBuildPageProcess(Browser browser) 
 			throws GridException, ServiceUnavailableException, MalformedURLException, IOException 
 	{
-		assert url != null;
 		assert browser != null;
 		
 		if(browser.is503Error()) {
@@ -476,8 +475,8 @@ public class BrowserService {
 			throw new ServiceUnavailableException("503(Service Unavailable) Error encountered. Starting over..");
 		}
 		browser.removeDriftChat();
-		URL page_url_after_loading = new URL(browser.getDriver().getCurrentUrl());
-		return buildPageState(url, browser, page_url_after_loading);
+		
+		return buildPageState(browser);
 	}
 
 	/**
@@ -492,13 +491,24 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( URL url, Browser browser, URL url_after_loading ) throws GridException, IOException {
-		assert url != null;
+	public PageState buildPageState( Browser browser ) throws GridException, IOException {
 		assert browser != null;
 
-		String url_without_protocol = BrowserUtils.getPageUrl(url);
-		boolean is_secure = BrowserUtils.checkIfSecure(url);
-        int status_code = BrowserUtils.getHttpStatus(url);
+		URL current_url = new URL(browser.getDriver().getCurrentUrl());
+		log.warn("building page state for URL :: "+current_url);
+		if(current_url.toString().contains("dashboard")) {
+			log.warn("BUILDING DASHBOARD PAGE STATE...");
+		}
+		else if(current_url.toString().contains("dashboard")) {
+			log.warn("BUILDING    ?#   PAGE STATE..."+current_url);
+		}
+		
+		String url_without_protocol = BrowserUtils.getPageUrl(current_url.toString());
+		if(current_url.toString().contains("dashboard")) {
+			log.warn("url_without_protocol = "+url_without_protocol);
+		}
+		boolean is_secure = BrowserUtils.checkIfSecure(current_url);
+        int status_code = BrowserUtils.getHttpStatus(current_url);
 
         //remove 3rd party chat apps such as drift, and ...(NB: fill in as more identified)
         //browser.removeDriftChat();
@@ -510,12 +520,12 @@ public class BrowserService {
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
-		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, current_url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
 		
-		BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
+		//BufferedImage shutterbug_fullpage_screenshot = browser.getFullPageScreenshot();
 		
 		/*
 		if(full_page_screenshot.getHeight() < (shutterbug_fullpage_screenshot.getHeight() - viewport_screenshot.getHeight()) ) {
@@ -524,7 +534,7 @@ public class BrowserService {
 		*/
 		String full_page_screenshot_checksum = ImageUtils.getChecksum(full_page_screenshot);
 		String full_page_screenshot_url = GoogleCloudStorage.saveImage(full_page_screenshot, 
-																		url.getHost(), 
+																		current_url.getHost(), 
 																		full_page_screenshot_checksum, 
 																		BrowserType.create(browser.getBrowserName()));
 		full_page_screenshot.flush();
@@ -552,7 +562,7 @@ public class BrowserService {
 										is_secure,
 										status_code, 
 										composite_url,
-										url_after_loading.toString());
+										current_url.toString());
 
 		return page_state;
 	}

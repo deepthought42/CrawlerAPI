@@ -187,7 +187,7 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			})			
 			.match(ConfirmedJourneyMessage.class, message -> {
-				getContext().getParent().tell(message, getSelf());
+				getContext().getParent().tell(message.clone(), getSelf());
 			})
 			.match(DiscardedJourneyMessage.class, message -> {
 				getContext().getParent().tell(message, getSelf());

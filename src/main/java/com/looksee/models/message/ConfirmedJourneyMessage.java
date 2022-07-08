@@ -29,7 +29,11 @@ public class ConfirmedJourneyMessage extends Message {
 	}
 	
 	public ConfirmedJourneyMessage clone(){
-		return new ConfirmedJourneyMessage(new ArrayList<>(getSteps()), 
+		List<Step> steps = new ArrayList<>();
+		for(Step step: getSteps()) {
+			steps.add(step.clone());
+		}
+		return new ConfirmedJourneyMessage(steps, 
 											getStatus(), 
 											getBrowser(), 
 											getDomainId(), 

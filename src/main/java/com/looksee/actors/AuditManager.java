@@ -31,7 +31,6 @@ import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.journeys.Journey;
-import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.message.AuditError;
 import com.looksee.models.message.AuditProgressUpdate;
@@ -335,104 +334,112 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					
-					log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
-					//save journey steps
-					List<Step> saved_steps = new ArrayList<>();
-					for(Step step : message.getSteps()) {
-						saved_steps.add(step_service.save(step));
-					}
-					
-					//build create and save journey
-					Journey journey = new Journey(saved_steps);
-					journey = journey_service.save(journey);
-					
-					//add journey to domain audit
-					audit_record_service.addJourney(this.domain_audit_id, journey.getId());
-					
-					//retrieve all unique page states for journey steps
-					List<PageState> page_states = getAllUniquePageStates(saved_steps);
-					//Domain domain = domain_service.findById(message.getDomainId()).get();
-					//remove all unique pageStates that have already been analyzed
-					log.warn("Page states to be audited :: " + page_states);
-					page_states = page_states.stream().filter(page -> !page_urls.containsKey(page.getUrl()) ).collect(Collectors.toList());
-					
-					//create PageAuditRecord for each page that hasn't been analyzed. 
-					Account account = account_service.findById(message.getAccountId()).get();
-			    	SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
-					
-			    	//For each page audit record perform audits
-					for(PageState page_state : page_states) {
-						/*
-						log.warn("Auditing page state :: "+page_state.getKey());
-						PageAuditRecord page_audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
-																				new HashSet<>(), 
-																				null, 
-																				true);
-						page_audit_record = (PageAuditRecord)audit_record_service.save(page_audit_record);
-					   	log.warn("adding page audit " + page_audit_record.getId() + " to domain audit :: "+message.getAuditRecordId());
-						audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
-																	   page_audit_record.getId());
-						*/
-						String url_without_protocol = page_state.getUrl();
-						page_urls.put(url_without_protocol, Boolean.TRUE);
+					try {
+						log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
+						//save journey steps
+						List<Step> saved_steps = new ArrayList<>();
+						
+						for(Step step : message.getSteps()) {
+							saved_steps.add(step_service.save(step));
+						}
+						
+						//build create and save journey
+						Journey journey = new Journey(saved_steps);
+						journey = journey_service.save(journey);
+						
+						//add journey to domain audit
+						audit_record_service.addJourney(this.domain_audit_id, journey.getId());
+						
+						//retrieve all unique page states for journey steps
+						List<PageState> page_states = getAllUniquePageStates(saved_steps);
+						//Domain domain = domain_service.findById(message.getDomainId()).get();
+						//remove all unique pageStates that have already been analyzed
+						log.warn("Page states to be audited :: " + page_states);
+						
+						//create PageAuditRecord for each page that hasn't been analyzed. 
+						Account account = account_service.findById(message.getAccountId()).get();
+				    	SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+						
+				    	//For each page audit record perform audits
+						for(PageState page_state : page_states) {
+							/*
+							log.warn("Auditing page state :: "+page_state.getKey());
+							PageAuditRecord page_audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
+																					new HashSet<>(), 
+																					null, 
+																					true);
+							page_audit_record = (PageAuditRecord)audit_record_service.save(page_audit_record);
+						   	log.warn("adding page audit " + page_audit_record.getId() + " to domain audit :: "+message.getAuditRecordId());
+							audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
+																		   page_audit_record.getId());
+							*/
+							String url_without_protocol = page_state.getUrl();
+							log.warn("Checking if pageUrls size of " + page_urls.size() +" exceeds subscription limit");
+	
+							if(!page_urls.containsKey(url_without_protocol)) {
+								page_urls.put(url_without_protocol, Boolean.TRUE);
 
-						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
-							//total_pages_audited++;
-
-							//Account is still within page limit. continue with mapping page 
-							PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
-																				new HashSet<>(), 
-																				null, 
-																				true);
-							audit_record.setUrl(url_without_protocol);
-							audit_record.setDataExtractionProgress(1/50.0);
-							audit_record.setDataExtractionMsg("Creating page record for "+url_without_protocol);
-							audit_record.setAestheticMsg("Waiting for data extraction ...");
-							audit_record.setAestheticAuditProgress(0.0);
-						   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
-						   	audit_record.setContentAuditProgress(0.0);
-						   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
-						   	audit_record.setInfoArchitectureAuditProgress(0.0);
-						   	
-						   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, 
-						   														   	  message.getAccountId(), 
-						   														   	  message.getDomainId());
-						   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state.getId());
-						   	
-						   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
-						   												   audit_record.getKey());
-							
-							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
-																				audit_record.getId(), 
-																				message.getDomainId(), 
-																				message.getAccountId(), 
-																				audit_record.getId(),
-																				page_state);
+								if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
+									//total_pages_audited++;
 		
-							ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																   .props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-							log.warn("sending message to content auditor....");
-							content_auditor.tell(audit_record_msg, getSelf());							
-							
-							ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																			 .props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
-							info_architecture_auditor.tell(audit_record_msg, getSelf());
-							
-							ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																	 .props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
-							aesthetic_auditor.tell(audit_record_msg, getSelf());
+									//Account is still within page limit. continue with mapping page 
+									PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
+																						new HashSet<>(), 
+																						null, 
+																						true);
+									audit_record.setUrl(url_without_protocol);
+									audit_record.setDataExtractionProgress(1/50.0);
+									audit_record.setDataExtractionMsg("Creating page record for "+url_without_protocol);
+									audit_record.setAestheticMsg("Waiting for data extraction ...");
+									audit_record.setAestheticAuditProgress(0.0);
+								   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
+								   	audit_record.setContentAuditProgress(0.0);
+								   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
+								   	audit_record.setInfoArchitectureAuditProgress(0.0);
+								   	
+								   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, 
+								   														   	  message.getAccountId(), 
+								   														   	  message.getDomainId());
+								   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state.getId());
+								   	
+								   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
+								   												   audit_record.getKey());
+									
+									PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
+																						audit_record.getId(), 
+																						message.getDomainId(), 
+																						message.getAccountId(), 
+																						audit_record.getId(),
+																						page_state);
+				
+									ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+																		   .props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+									log.warn("sending message to content auditor....");
+									content_auditor.tell(audit_record_msg, getSelf());							
+									
+									ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+																					 .props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
+									info_architecture_auditor.tell(audit_record_msg, getSelf());
+									
+									ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+																			 .props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
+									aesthetic_auditor.tell(audit_record_msg, getSelf());
+								}
+								else {
+									log.warn("+++++++++++++++++++++++++++++++++++++++");
+									log.warn("User has exceeded domain page audit limit");
+									log.warn("+++++++++++++++++++++++++++++++++++++++");
+									hasUserExceededSubscriptionAllowance = true;
+								}
+							}
 						}
-						else {
-							log.warn("+++++++++++++++++++++++++++++++++++++++");
-							log.warn("User has exceeded domain page audit limit");
-							log.warn("+++++++++++++++++++++++++++++++++++++++");
-							hasUserExceededSubscriptionAllowance = true;
+						
+						if(hasUserExceededSubscriptionAllowance) {
+							getSender().tell(PoisonPill.class, getSelf());
 						}
-					}
-					
-					if(hasUserExceededSubscriptionAllowance) {
-						getSender().tell(PoisonPill.class, getSelf());
+					}catch(Exception e) {
+						log.warn("an exception occurred while AuditManager processing ConfirmedJourneyMessage");
+						e.printStackTrace();
 					}
 				})
 				.match(JourneyExaminationProgressMessage.class, message -> {

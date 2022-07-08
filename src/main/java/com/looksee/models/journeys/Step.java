@@ -45,4 +45,9 @@ public class Step extends LookseeObject {
 		}
 		return "step"+key;
 	}
+	
+	public Step clone() {
+		return new Step();
+	}
+	
 }

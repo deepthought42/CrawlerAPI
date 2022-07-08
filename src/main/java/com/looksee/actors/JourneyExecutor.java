@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ThreadUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.WebElement;
@@ -38,6 +40,7 @@ import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.JourneyUtils;
 import com.looksee.utils.PathUtils;
 import com.looksee.utils.TimingUtils;
 
@@ -105,11 +108,10 @@ public class JourneyExecutor extends AbstractActor{
 					this.crawl_actor = getContext().getParent();
 
 					try {
-						log.warn("JOURNEY EXECUTOR received new steps to explore = "+message.getSteps().size());
+						log.warn("JOURNEY EXECUTOR received new steps to explore = "+message.getSteps());
 						this.steps = new ArrayList<>(message.getSteps());
 						
 						iterateThroughJourneySteps(new ArrayList<>(message.getSteps()), message.getDomainId(), message.getAccountId(), message.getAuditRecordId());					
-
 					}
 					catch(ElementNotInteractableException e) {
 						e.printStackTrace();
@@ -117,15 +119,17 @@ public class JourneyExecutor extends AbstractActor{
 				})
 				.match(PageDataExtractionMessage.class, message -> {
 					
-					log.warn("Journey executor received page data extraction message :: "+message.getPageState().getKey());
+					log.warn("Journey executor received page data extraction message :: "+message.getPageState().getUrl());
 					this.steps.get(this.steps.size()-1).setEndPage(message.getPageState());
 					this.steps.get(this.steps.size()-1).setKey(this.steps.get(this.steps.size()-1).generateKey());
+					
+					log.warn("does steps list contain LOGIN? :: "+JourneyUtils.hasLoginStep(this.steps));
 					PageState second_to_last_page = PathUtils.getSecondToLastPageState(this.steps);
-					PageState final_page = PathUtils.getLastPageState(this.steps);
+					PageState final_page = message.getPageState();
 					//is end_page PageState different from second to last PageState
 					if(final_page.equals(second_to_last_page)) {
-						log.warn("returning because message page state is equal to second to last page");
-						
+						log.warn("returning because message page state is equal to second to last page for LOGIN step :: "+JourneyUtils.hasLoginStep(this.steps));
+						log.warn("steps :: "+this.steps);
 						//tell parent that we processed a journey that is being discarded
 						DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	BrowserType.CHROME, 
 																								message.getDomainId(), 
@@ -134,8 +138,12 @@ public class JourneyExecutor extends AbstractActor{
 						crawl_actor.tell(journey_message, getSelf());
 					}
 					else {
-						log.warn("pages aren't the same. Sending confirmed journey message to crawl actor : "+this.steps.size());
-						ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(new ArrayList<>(this.steps), 
+						log.warn("pages aren't the same. Sending confirmed journey message to crawl actor : "+this.steps);
+						List<Step> steps = new ArrayList<>();
+						for(Step step: this.steps) {
+							steps.add(step.clone());
+						}
+						ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(steps, 
 																							PathStatus.EXAMINED, 
 																							BrowserType.CHROME, 
 																							message.getDomainId(), 
@@ -146,6 +154,8 @@ public class JourneyExecutor extends AbstractActor{
 					}
 				})
 				.match(PageDataExtractionError.class, message -> {
+					log.warn("(Journey Executor - PageDataExtractionError) executing journey steps :: "+this.steps);
+
 					if( message.getErrorMessage().contains("Received 404 status while building page state")) {
 						log.warn("returning because 404 status was encountered for page state");
 						
@@ -158,10 +168,9 @@ public class JourneyExecutor extends AbstractActor{
 					}
 					else {
 						try {
-							log.warn("(Journey Executor - PageDataExtractionError) executing "+this.steps+" steps in journey....");
 	
-							iterateThroughJourneySteps(this.steps, message.getDomainId(), message.getAccountId(), message.getAuditRecordId());
-						
+							iterateThroughJourneySteps(new ArrayList<>(this.steps), message.getDomainId(), message.getAccountId(), message.getAuditRecordId());
+							log.warn("journey executor - PageDataExtractionError) completed execution of steps with Login :: " +JourneyUtils.hasLoginStep(this.steps));
 						}
 						catch(ElementNotInteractableException e) {
 							e.printStackTrace();
@@ -190,13 +199,13 @@ public class JourneyExecutor extends AbstractActor{
 		Browser browser = null;
 		try {
 			browser = performJourneyStepsInBrowser(steps);
+			
 			//send build page message to PageStateBuilder
 			BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(domain_id, 
 																									account_id, 
 																									audit_record_id, 
-																									new URL(browser.getDriver().getCurrentUrl()), 
 																									browser);
-			
+			log.warn("sending BrowserCrawlActionMessage to page builder for login steps :: "+JourneyUtils.hasLoginStep(steps));
 			ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 												.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 			page_builder.tell(browser_page_builder_message, getSelf());
@@ -211,7 +220,12 @@ public class JourneyExecutor extends AbstractActor{
 	}
 
 	@Retry(name = "webdriver")
-	private Browser performJourneyStepsInBrowser(List<Step> steps) throws Exception {
+	private Browser performJourneyStepsInBrowser(List<Step> steps) throws Exception  {
+		assert steps != null;
+		assert !steps.isEmpty();
+		
+		log.warn("Performing journey steps in Browser...");
+		log.warn("Steps contains LOGIN step?  =   "+JourneyUtils.hasLoginStep(steps));
 		
 		Browser browser = null;
 		PageState initial_page = steps.get(0).getStartPage();
@@ -220,10 +234,9 @@ public class JourneyExecutor extends AbstractActor{
 
 		browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo(sanitized_url);
-
 		//execute all steps sequentially in the journey
 		executeAllStepsInJourney(steps, browser);
-		
+		log.warn("Done executing steps for journey");
 		return browser;
 	}
 
@@ -248,12 +261,12 @@ public class JourneyExecutor extends AbstractActor{
 				
 				WebElement password_element = browser.getDriver().findElement(By.xpath(login_step.getPasswordElement().getXpath()));
 				action_factory.execAction(password_element, login_step.getTestUser().getPassword(), Action.SEND_KEYS);
+
 				WebElement submit_element = browser.getDriver().findElement(By.xpath(login_step.getSubmitElement().getXpath()));
-				
 				action_factory.execAction(submit_element, "", Action.CLICK);
-				log.warn("Executed LOGIN step...");
+				browser.waitForPageToLoad();
+				TimingUtils.pauseThread(5000);
 			}
-			browser.waitForPageToLoad();
 		}
 	}
 

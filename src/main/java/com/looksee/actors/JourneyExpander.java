@@ -33,7 +33,6 @@ import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.StepExecutor;
 import com.looksee.services.StepService;
-import com.looksee.utils.TimingUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -153,8 +152,8 @@ public class JourneyExpander extends AbstractActor{
 								new_element_state = element_state_service.save(new_element_state);
 								//if page url is not the same as journey result page url then load new page for this
 								//construct page and add page to list of page states
-								URL new_page_url = new URL(current_url);
-								PageState exploration_result_page = browser_service.buildPageState(new_page_url, browser, null);
+								
+								PageState exploration_result_page = browser_service.buildPageState(browser);
 								log.warn("Page state built in journey explorer");
 
 								log.warn("journey result page key :: "+journey_result_page.getKey());

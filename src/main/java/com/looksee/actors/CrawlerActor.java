@@ -179,7 +179,7 @@ public class CrawlerActor extends AbstractActor{
 																				Point location = new Point(element.getXLocation(), element.getYLocation());
 																				return BrowserService.hasWidthAndHeight(dimension) && !BrowserService.doesElementHaveNegativePosition(location);
 																		})
-																		.filter(element -> element.getXLocation() >= 0 && element.getYLocation() >= 0)
+																		.filter(element -> !BrowserService.isStructureTag(element.getName()))
 																		.filter(element -> isInteractiveElement(element))
 																		.filter(element -> !isElementExplored(msg.getPageState().getUrl(), element))
 																		.filter(element -> !isFormElement(element))
@@ -265,7 +265,7 @@ public class CrawlerActor extends AbstractActor{
 					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					audit_manager.tell(message, getSelf());
+					audit_manager.tell(message.clone(), getSelf());
 
 					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
@@ -304,9 +304,8 @@ public class CrawlerActor extends AbstractActor{
 																			Point location = new Point(element.getXLocation(), element.getYLocation());
 																			return BrowserService.hasWidthAndHeight(dimension) && !BrowserService.doesElementHaveNegativePosition(location);
 																	})
-																	.filter(element -> element.getXLocation() > 0 && element.getYLocation() > 0)
 																	.filter(element -> element.getName().contentEquals("a") && element.getAttribute("href") != null && !(BrowserUtils.isExternalLink(domain.getUrl(), element.getAttribute("href")) || element.getAttribute("href").startsWith("#")))
-																	.filter(element -> BrowserService.isStructureTag(element.getName()))
+																	.filter(element -> !BrowserService.isStructureTag(element.getName()))
 																	.filter(element -> isInteractiveElement(element))
 																	.filter(element -> !isElementExplored(final_page.getUrl(), element))
 																	.filter(element -> !isFormElement(element))
@@ -325,8 +324,7 @@ public class CrawlerActor extends AbstractActor{
 					//generate form journeys
 					List<Step> steps = generateFormSteps(message.getDomainId(), final_page, unexplored_forms);
 					for(Step step: steps) {
-						List<Step> steps_list = new ArrayList<>();
-						steps_list.addAll(message.getSteps());
+						List<Step> steps_list = JourneyUtils.trimPreLoginSteps(message.getSteps());
 						
 						if(steps_list.contains(step)) {
 							log.warn("FORM STEP EXISTS IN STEP LIST ALREADY");

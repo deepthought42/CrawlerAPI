@@ -691,10 +691,37 @@ public class BrowserUtils {
 
 	public static String getPageUrl(URL sanitized_url) {
 		String path = sanitized_url.getPath();
+		path = path.replace("index.html", "");
+		path = path.replace("index.htm", "");
     	if("/".contentEquals(path.strip())) {
     		path = "";
     	}
     	String page_url = sanitized_url.getHost() + path;
+    	
+    	return page_url.replace("www.", "");
+	}
+
+	public static String getPageUrl(String sanitized_url) {
+		//remove protocol
+		String url_without_protocol = sanitized_url.replace("https://", "");
+		url_without_protocol = url_without_protocol.replace("http://", "");
+		url_without_protocol = url_without_protocol.replace("://", "");
+		
+		int slash_idx = url_without_protocol.indexOf('/');
+		String host = "";
+		String path = "";
+		if(slash_idx >= 0) {
+			path = url_without_protocol.substring(slash_idx);
+			path = path.replace("index.html", "");
+			path = path.replace("index.htm", "");
+			
+			host = url_without_protocol.substring(0, slash_idx);
+		}
+		else {
+			host = url_without_protocol;
+		}
+		
+    	String page_url = host + path;
     	
     	return page_url.replace("www.", "");
 	}

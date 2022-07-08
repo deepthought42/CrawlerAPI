@@ -17,13 +17,11 @@ public class BrowserCrawlActionMessage extends Message {
 	public BrowserCrawlActionMessage( long domain_id, 
 									  long account_id, 
 									  long record_id, 
-									  URL url,
 									  Browser browser
 	){
 		super(domain_id, account_id, record_id);
 		
 		setAction(action);
-		setUrl(url);
 		setBrowser(browser);
 	}
 	
@@ -33,14 +31,6 @@ public class BrowserCrawlActionMessage extends Message {
 	
 	private void setAction(CrawlAction action) {
 		this.action = action;
-	}
-
-	public URL getUrl() {
-		return url;
-	}
-
-	public void setUrl(URL url) {
-		this.url = url;
 	}
 
 	public Browser getBrowser() {

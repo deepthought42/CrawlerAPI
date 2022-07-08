@@ -57,6 +57,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.assertthat.selenium_shutterbug.core.Capture;
@@ -1238,5 +1240,14 @@ public class Browser {
 
 	public WebElement findElement(String xpath) throws WebDriverException{
 		return getDriver().findElement(By.xpath(xpath));
+	}
+
+	public void waitForPageToLoadWithRedirects() {
+
+		DocumentSettleCondition<?> settleCondition = new DocumentSettleCondition(
+			ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body")));
+		
+		 WebDriverWait wait = new WebDriverWait(driver, 5);
+		 wait.until(settleCondition);
 	}
 }

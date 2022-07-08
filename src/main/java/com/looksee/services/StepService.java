@@ -55,7 +55,7 @@ public class StepService {
 			SimpleStep new_simple_step = new SimpleStep();
 			new_simple_step.setAction(simple_step.getAction());
 			new_simple_step.setActionInput(simple_step.getActionInput());
-			new_simple_step.setKey(step.generateKey());
+			new_simple_step.setKey(simple_step.generateKey());
 			new_simple_step = simple_step_repo.save(new_simple_step);
 			new_simple_step.setStartPage(simple_step_repo.addStartPage(new_simple_step.getId(), simple_step.getStartPage().getId()));
 			new_simple_step.setEndPage(simple_step_repo.addEndPage(new_simple_step.getId(), simple_step.getEndPage().getId()));

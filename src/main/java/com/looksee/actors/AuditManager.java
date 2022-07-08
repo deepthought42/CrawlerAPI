@@ -380,7 +380,7 @@ public class AuditManager extends AbstractActor{
 								page_urls.put(url_without_protocol, Boolean.TRUE);
 
 								if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
-									//total_pages_audited++;
+									total_pages_audited++;
 		
 									//Account is still within page limit. continue with mapping page 
 									PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
@@ -484,10 +484,10 @@ public class AuditManager extends AbstractActor{
 									//audit_record = audit_record_service.findById(audit_record.getId()).get();
 								}
 								Account account = account_service.findById(message.getAccountId()).get();
-								SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+								//SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-								if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
-								//if( audit_record_service.isDomainAuditComplete( audit_record, total_pages, total_pages_audited)) {
+								//if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
+								if( audit_record_service.isDomainAuditComplete( audit_record, page_urls.size())) {
 									
 									audit_record.setEndTime(LocalDateTime.now());
 									audit_record.setStatus(ExecutionStatus.COMPLETE);

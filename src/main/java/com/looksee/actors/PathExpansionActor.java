@@ -49,6 +49,7 @@ import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.StepService;
+import com.looksee.utils.ListUtils;
 import com.looksee.utils.PathUtils;
 
 /**
@@ -130,7 +131,7 @@ public class PathExpansionActor extends AbstractActor {
 					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 					cloned_steps.add(step);
 					log.warn("Cloned steps size :: "+cloned_steps.size());
-					JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(cloned_steps), 
+					JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(cloned_steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
 																	message.getDomainId(), 
@@ -173,7 +174,7 @@ public class PathExpansionActor extends AbstractActor {
 				for(Step step: new_steps) {
 					List<Step> steps = new ArrayList<>();
 					steps.add(step);
-					JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(steps), 
+					JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
 																	message.getDomainId(), 

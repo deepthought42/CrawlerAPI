@@ -1,11 +1,11 @@
 package com.looksee.models.message;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.Step;
+import com.looksee.utils.ListUtils;
 
 public class JourneyMessage extends Message {
 
@@ -26,7 +26,7 @@ public class JourneyMessage extends Message {
 	}
 	
 	public JourneyMessage clone(){
-		return new JourneyMessage(new ArrayList<>(getSteps()), 
+		return new JourneyMessage(ListUtils.clone(getSteps()), 
 								  getStatus(), 
 								  getBrowser(), 
 								  getDomainId(), 

@@ -658,23 +658,16 @@ public class BrowserService {
 		Map<String, ElementState> elements_mapped = new HashMap<>();
 		//boolean rendering_incomplete = true;
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
-		String page_url = sanitized_url.toString();
 		
 		//int cnt = 0;
 		//do {
 			//Browser browser = null;
 			
-			try {/*
-				browser = getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(page_url);
-				if(browser.is503Error()) {
-					throw new FiveZeroThreeException("503 Error encountered. Starting over..");
-				}
-				browser.removeDriftChat();
-				*/
+			try {
 				//get ElementState List by asking multiple bots to build xpaths in parallel
 				//for each xpath then extract element state
 				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
+				log.warn("built "+elements.size()+" elements for page state : "+page_state.getUrl());
 				//break;
 			}
 			catch (NullPointerException e) {
@@ -682,10 +675,10 @@ public class BrowserService {
 				//e.printStackTrace();
 			}
 			catch(FiveZeroThreeException e) {
-				log.warn("503 exception occurred while accessing "+page_url);
+				log.warn("503 exception occurred while accessing "+sanitized_url);
 			}
 			catch(WebDriverException | GridException e) {
-				log.warn("Webdriver exception occurred ... "+page_url);
+				log.warn("Webdriver exception occurred ... "+sanitized_url);
 				//e.printStackTrace();
 			}	
 			finally {

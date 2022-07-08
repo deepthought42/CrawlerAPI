@@ -54,6 +54,7 @@ import com.looksee.services.DomainService;
 import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.JourneyUtils;
+import com.looksee.utils.ListUtils;
 import com.looksee.utils.PageUtils;
 import com.looksee.utils.PathUtils;
 
@@ -200,7 +201,7 @@ public class CrawlerActor extends AbstractActor{
 						for(Step step: form_steps) {
 							List<Step> step_list = new ArrayList<>();
 							step_list.add(step);
-							JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(step_list), 
+							JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(step_list), 
 																			PathStatus.EXPANDED, 
 																			BrowserType.CHROME, 
 																			msg.getDomainId(), 
@@ -223,7 +224,7 @@ public class CrawlerActor extends AbstractActor{
 							generated_journeys++;
 							List<Step> steps = new ArrayList<>();
 							steps.add(step);
-							JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(steps), 
+							JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(steps), 
 																			PathStatus.EXPANDED, 
 																			BrowserType.CHROME, 
 																			msg.getDomainId(), 
@@ -265,18 +266,11 @@ public class CrawlerActor extends AbstractActor{
 					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					audit_manager.tell(message.clone(), getSelf());
 
 					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-					log.warn("crawler received confirmed journey message :: "+message.getSteps().size() + " steps");
+					log.warn("crawler received confirmed journey message steps :: "+message.getSteps());
 					examined_journeys++;
-					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
-							   message.getAuditRecordId(), 
-							   message.getDomainId(),
-							   examined_journeys,
-							   generated_journeys);
-					audit_manager.tell(progress_msg, getSelf());
 					
 					PageState final_page = PathUtils.getLastPageState(message.getSteps());
 					Domain domain = domain_service.findById(message.getDomainId()).get();
@@ -285,6 +279,8 @@ public class CrawlerActor extends AbstractActor{
 						return;
 					}
 
+					audit_manager.tell(message.clone(), getSelf());
+
 					//Add page state to visited list
 					visited_urls.put(final_page.getUrl(), Boolean.TRUE);
 					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_count)) {
@@ -292,25 +288,6 @@ public class CrawlerActor extends AbstractActor{
 						return;
 					}
 							
-					//retrieve all ElementStates from journey
-					List<ElementState> elements = final_page.getElements();
-					//Filter out non interactive elements
-					//Filter out elements that are in explored map for PageState with key
-					//Filter out form elements
-					List<ElementState> filtered_elements = elements.parallelStream()
-																	.filter(element -> element.isVisible())
-																	.filter(element -> {
-																			Dimension dimension = new Dimension(element.getWidth(), element.getHeight()); 
-																			Point location = new Point(element.getXLocation(), element.getYLocation());
-																			return BrowserService.hasWidthAndHeight(dimension) && !BrowserService.doesElementHaveNegativePosition(location);
-																	})
-																	.filter(element -> element.getName().contentEquals("a") && element.getAttribute("href") != null && !(BrowserUtils.isExternalLink(domain.getUrl(), element.getAttribute("href")) || element.getAttribute("href").startsWith("#")))
-																	.filter(element -> !BrowserService.isStructureTag(element.getName()))
-																	.filter(element -> isInteractiveElement(element))
-																	.filter(element -> !isElementExplored(final_page.getUrl(), element))
-																	.filter(element -> !isFormElement(element))
-																	.collect(Collectors.toList());
-					
 					Set<Form> forms = PageUtils.extractAllForms(final_page);
 					Set<Form> unexplored_forms = new HashSet<>();
 					
@@ -332,7 +309,7 @@ public class CrawlerActor extends AbstractActor{
 						else {
 							steps_list.add(step);
 							generated_journeys++;
-							JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(steps_list), 
+							JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(steps_list), 
 																			PathStatus.EXPANDED, 
 																			BrowserType.CHROME, 
 																			message.getDomainId(), 
@@ -345,25 +322,43 @@ public class CrawlerActor extends AbstractActor{
 						}
 					}
 					
+					
+					//retrieve all ElementStates from journey
+					List<ElementState> elements = final_page.getElements();
+					log.warn("filtering "+elements.size()+" elements for final page expansion");
+					//Filter out non interactive elements
+					//Filter out elements that are in explored map for PageState with key
+					//Filter out form elements
+					List<ElementState> filtered_elements = elements.parallelStream()
+																	.filter(element -> element.isVisible())
+																	.filter(element -> {
+																			Dimension dimension = new Dimension(element.getWidth(), element.getHeight()); 
+																			Point location = new Point(element.getXLocation(), element.getYLocation());
+																			return BrowserService.hasWidthAndHeight(dimension) && !BrowserService.doesElementHaveNegativePosition(location);
+																	})
+																	.filter(element -> element.getName().contentEquals("a") && element.getAttribute("href") != null && !(BrowserUtils.isExternalLink(domain.getUrl(), element.getAttribute("href")) || element.getAttribute("href").startsWith("#")))
+																	.filter(element -> !BrowserService.isStructureTag(element.getName()))
+																	.filter(element -> isInteractiveElement(element))
+																	.filter(element -> !isElementExplored(final_page.getUrl(), element))
+																	.filter(element -> !isFormElement(element))
+																	.collect(Collectors.toList());
+					
+					
 					//send form elements to form journey actor
 					//Add interactive elements to explored map for PageState key
 					addElementsToExploredMap(final_page, filtered_elements);
 					//Build Steps for all elements in list
+					log.warn("filtered elements count :: "+filtered_elements.size());
 					List<Step> new_steps = generateSteps(final_page, filtered_elements);
-					
-					if(new_steps.isEmpty()) {
-						return;
-					}
 					
 					//generate new journeys with new steps and send to journey executor to be evaluated
 					for(Step step: new_steps) {
 						generated_journeys++;
 						
 						List<Step> cloned_steps = JourneyUtils.trimPreLoginSteps(message.getSteps());
-						
-						
 						cloned_steps.add(step);
-						JourneyMessage journey_msg = new JourneyMessage(new ArrayList<>(cloned_steps), 
+						
+						JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(cloned_steps), 
 																		PathStatus.EXPANDED, 
 																		BrowserType.CHROME, 
 																		message.getDomainId(), 
@@ -377,7 +372,7 @@ public class CrawlerActor extends AbstractActor{
 					//send generated and examined journey counts to audit manager
 					log.warn("# examined journeys :: "+examined_journeys);
 					log.warn("# generated journeys :: "+generated_journeys);
-					progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
+					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
 																										   message.getAuditRecordId(), 
 																										   message.getDomainId(),
 																										   examined_journeys,

@@ -301,12 +301,11 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAudits(id);
 	}
 
-	public boolean isDomainAuditComplete(AuditRecord audit_record, int total_pages, int page_state_experience) {		
+	public boolean isDomainAuditComplete(AuditRecord audit_record, int total_pages) {		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
 		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
-		
-		if(page_audits.size() < page_state_experience) {
+		if(audit_record.getDataExtractionProgress() < 1.0) {
 			return false;
 		}
 		//check all page audit records. If all are complete then the domain is also complete

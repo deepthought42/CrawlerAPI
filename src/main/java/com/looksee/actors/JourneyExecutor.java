@@ -341,6 +341,7 @@ public class JourneyExecutor extends AbstractActor{
 				action_factory.execAction(submit_element, "", Action.CLICK);
 				browser.waitForPageToLoadWithRedirects();
 			}
+			TimingUtils.pauseThread(5000L);
 		}
 	}
 

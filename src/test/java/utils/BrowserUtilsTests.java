@@ -21,12 +21,12 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
+import com.looksee.models.enums.AuditCategory;
 import com.looksee.services.BrowserService;
 import com.looksee.utils.BrowserUtils;
 
 public class BrowserUtilsTests {
 
-	/*
 	@Test
 	public void verifySanitizeUrlWithoutSubdomainOrWww() throws MalformedURLException{
 		String url = "http://qanairy.com";
@@ -65,6 +65,19 @@ public class BrowserUtilsTests {
 		String sanitized_url = BrowserUtils.sanitizeUrl(url, false);
 
 		assertTrue("http://zaelab.com/services".equals(sanitized_url));
+	}
+	
+	@Test
+	public void verifyPageUrlWithPath() throws MalformedURLException{
+		String url = "http://zaelab.com/services";
+		String sanitized_url = BrowserUtils.getPageUrl(new URL(url));
+
+		assertTrue("zaelab.com/services".equals(sanitized_url));
+		
+		String url2 = "http://qa.turion.io/?#";
+		String sanitized_url2 = BrowserUtils.getPageUrl(url2);
+
+		assertTrue("qa.turion.io/?#".equals(sanitized_url2));
 	}
 	
 	@Test
@@ -142,6 +155,7 @@ public class BrowserUtilsTests {
 		assertTrue( BrowserUtils.isRelativeLink("apple.com", "/105/media/us/mac/2019/36178e80-30fd-441c-9a5b-349c6365bb36/ar/mac-pro/case-on.usdz"));
 		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "/products"));
 		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "#products"));
+		assertTrue( BrowserUtils.isRelativeLink("look-see.com", "signup.html"));
 
 	}
 	
@@ -159,6 +173,12 @@ public class BrowserUtilsTests {
 		assertTrue( BrowserUtils.isExternalLink("shootproof.com", "shootproof.community"));
 		assertTrue( BrowserUtils.isExternalLink("shootproof.com", "foreground.co/about"));
 
+	}
+	
+	@Test
+	public void containsHost() {
+		assertFalse(BrowserUtils.containsHost("index.html"));
+		assertTrue(BrowserUtils.containsHost("look-see.com"));
 	}
 	
 	@Test
@@ -208,7 +228,7 @@ public class BrowserUtilsTests {
 		String formatted_url4 = BrowserUtils.formatUrl("https", "look-see.com", url4, true);
 		assertTrue(formatted_url4.contentEquals("https://look-see.com#products"));
 	}
-	
+
 	@Test
 	public void doesUrlExistTest() throws Exception {
 		String url1 = "https://www.look-see.com";
@@ -257,6 +277,7 @@ public class BrowserUtilsTests {
 		assertFalse(BrowserUtils.isValidUrl(sanitized_url8, host));
 	}
 
+	/*
 	@Test
 	public void extractPageSrcTest() throws MalformedURLException {
 		URL sanitized_url1 = new URL("https://www.wikipedia.org/");
@@ -268,7 +289,8 @@ public class BrowserUtilsTests {
 		assertTrue(!page_src1.isEmpty());
 		assertTrue(page_src1 != page_src2);
 	}
-
+	*/
+	
 	@Test
 	public void isValidLinkTest(){
 		//The first link should be correct, all else should be malformed for testing
@@ -307,5 +329,4 @@ public class BrowserUtilsTests {
 		assertFalse(BrowserUtils.hasValidHttpStatus(wikipedia_bad_link));
 
 	}
-	*/
 }

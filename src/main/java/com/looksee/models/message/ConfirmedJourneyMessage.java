@@ -7,6 +7,7 @@ import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
+import com.looksee.utils.ListUtils;
 
 public class ConfirmedJourneyMessage extends Message {
 
@@ -17,7 +18,7 @@ public class ConfirmedJourneyMessage extends Message {
 	public ConfirmedJourneyMessage(List<Step> steps,
 					   PathStatus status, 
 					   BrowserType browser, 
-					   long domain_id, 
+					   long domain_id,
 					   long account_id,
 					   long audit_record_id){
 		setSteps(steps);
@@ -29,7 +30,7 @@ public class ConfirmedJourneyMessage extends Message {
 	}
 	
 	public ConfirmedJourneyMessage clone(){
-		return new ConfirmedJourneyMessage(new ArrayList<>(getSteps()), 
+		return new ConfirmedJourneyMessage(ListUtils.clone(getSteps()), 
 											getStatus(), 
 											getBrowser(), 
 											getDomainId(), 

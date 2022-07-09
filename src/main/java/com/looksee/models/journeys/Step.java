@@ -1,5 +1,7 @@
 package com.looksee.models.journeys;
 
+import java.util.ArrayList;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -16,6 +18,11 @@ public class Step extends LookseeObject {
 	private PageState end_page;
 
 	public Step() {}
+	
+	public Step(PageState start_page, PageState end_page) {
+		setStartPage(start_page);
+		setEndPage(end_page);
+	}
 	
 	public PageState getStartPage() {
 		return start_page;
@@ -44,5 +51,13 @@ public class Step extends LookseeObject {
 			key += end_page.getId();
 		}
 		return "step"+key;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Step clone() {
+		return new Step(getStartPage(), getEndPage());
 	}
 }

@@ -542,4 +542,9 @@ public class PageState extends LookseeObject {
 	public void setUrlAfterLoading(String url_after_loading) {
 		this.urlAfterLoading = url_after_loading;
 	}
+	
+	@Override
+	public String toString() {
+		return "(page => { key = "+getKey()+"; url = "+getUrl();
+	}
 }

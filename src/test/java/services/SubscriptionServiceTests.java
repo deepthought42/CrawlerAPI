@@ -164,67 +164,67 @@ public class SubscriptionServiceTests {
 	
 	@Test
 	public void hasExceededDomainPageAuditLimit()  {
-		boolean has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 4);
+		boolean has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 9);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 5);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.FREE, 10);
 		assertTrue(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 49);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 199);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 50);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PRO, 200);
 		assertTrue(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 199);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 999);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 200);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 1000);
 		assertTrue(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 49);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 199);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 50);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PRO, 200);
 		assertTrue(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 399);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 999);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 400);
+		has_exceeded = subscription_service.hasExceededDomainPageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 1000);
 		assertTrue(has_exceeded);
 	}
 	
 	@Test
 	public void hasExceededSinglePageAuditLimit()  {
-		boolean has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 5);
+		boolean has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 9);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 6);
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 10);
 		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 49);
+		assertFalse(has_exceeded);
 		
 		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 50);
-		assertFalse(has_exceeded);
-		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 51);
 		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 99);
+		assertFalse(has_exceeded);
 		
 		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 100);
-		assertFalse(has_exceeded);
-		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PREMIUM, 101);
 		assertTrue(has_exceeded);
+		
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PRO, 199);
+		assertFalse(has_exceeded);
 		
 		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PRO, 200);
-		assertFalse(has_exceeded);
-		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PRO, 201);
 		assertTrue(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 500);
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 499);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 501);
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.AGENCY_PREMIUM, 500);
 		assertTrue(has_exceeded);
 	}
 	

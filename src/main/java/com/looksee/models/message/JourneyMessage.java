@@ -1,11 +1,11 @@
 package com.looksee.models.message;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.PathStatus;
 import com.looksee.models.journeys.Step;
+import com.looksee.utils.ListUtils;
 
 public class JourneyMessage extends Message {
 
@@ -15,20 +15,18 @@ public class JourneyMessage extends Message {
 	
 	public JourneyMessage(List<Step> steps,
 					   PathStatus status, 
-					   BrowserType browser, 
+					   BrowserType browser_type, 
 					   long domain_id, 
 					   long account_id, 
 					   long audit_record_id){
+		super(domain_id, account_id, audit_record_id);
 		setSteps(steps);
 		setStatus(status);
-		setBrowser(browser);
-		setDomainId(domain_id);
-		setAccountId(account_id);
-		setAuditRecordId(audit_record_id);
+		setBrowser(browser_type);
 	}
 	
 	public JourneyMessage clone(){
-		return new JourneyMessage(new ArrayList<>(getSteps()), 
+		return new JourneyMessage(ListUtils.clone(getSteps()), 
 								  getStatus(), 
 								  getBrowser(), 
 								  getDomainId(), 

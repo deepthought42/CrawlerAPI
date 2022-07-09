@@ -36,7 +36,7 @@ public class AuditUtils {
 				   .sum();
 
 		if(filtered_audits.isEmpty()) {
-			return 0.0;
+			return -1.0;
 		}
 		double final_score = (scores_total / (double)filtered_audits.size())*100;
 		

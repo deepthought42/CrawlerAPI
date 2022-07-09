@@ -307,6 +307,7 @@ public class ImageUtils {
 		
 		// Get file input stream for reading the file content
 		byte[] data = baos.toByteArray();
+		baos.close();
 		try {
 			MessageDigest sha = MessageDigest.getInstance("SHA-256");
 			sha.update(data);

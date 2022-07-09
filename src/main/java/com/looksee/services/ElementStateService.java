@@ -1,8 +1,10 @@
 package com.looksee.services;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,8 +192,13 @@ public class ElementStateService {
 		return element_repo.findByPageStateAndXpath(page_state_key, xpath);
 	}
 
-	public Iterable<ElementState> saveAll(List<ElementState> element_states) {
-		return element_repo.saveAll(element_states);
+	public List<ElementState> saveAll(List<ElementState> element_states, long page_state_id) {
+		return element_states.parallelStream()
+									   //.filter(f -> !existing_keys.contains(f.getKey()))
+									   .map(element -> save(element))
+									   .collect(Collectors.toList());
+
+		//return element_repo.saveAll(element_states);
 	}
 
 	/**

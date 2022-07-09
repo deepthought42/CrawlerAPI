@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -197,7 +198,8 @@ public class BrowserUtils {
 		if( contains_domain && ((is_url_longer && url_contains_long_host) || !is_url_longer) ) {
 			is_same_domain = true;
 		}
-		return (!is_same_domain && !isRelativeLink(domain_host, url) ) || url.contains("////");
+		boolean is_relative = isRelativeLink(domain_host, url);
+		return (!is_same_domain && !is_relative ) || url.contains("////");
 	}
 	
 	/**
@@ -216,12 +218,38 @@ public class BrowserUtils {
 		if( link_url.indexOf('?') >= 0) {
 			link_without_params = link_url.substring(0, link_url.indexOf('?'));
 		}
-		return link_without_params.isEmpty() 
+		
+		//check if link is a path by ensuring that it neither contains the/a domain host or a protocol
+		
+		return link_without_params.isEmpty()
 				|| (link_without_params.charAt(0) == '/' && !link_without_params.startsWith("//") && !link_without_params.contains(domain_host)) 
 				|| (link_without_params.charAt(0) == '?' && !link_without_params.contains(domain_host))
-				|| (link_without_params.charAt(0) == '#' && !link_without_params.contains(domain_host));
+				|| (link_without_params.charAt(0) == '#' && !link_without_params.contains(domain_host))
+				|| (!link_without_params.contains(domain_host) && !containsHost(link_url));
 	}
 	
+
+	private static boolean containsProtocol(String link_url) {
+		return link_url.contains("://");
+	}
+
+
+	/**
+	 * Checks provided link URL to determine if it contains a domain host
+	 * 
+	 * @param link_url
+	 * 
+	 * @return true if it contains a valid host format, otherwise false
+	 */
+	public static boolean containsHost(String link_url) {
+
+		String host_pattern = "([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+\\.(com|app|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|website|space|ca|us|co))(:[0-9]+)*";
+		Pattern pattern = Pattern.compile(host_pattern);
+        Matcher matcher = pattern.matcher(link_url);
+
+		return matcher.find();
+	}
+
 
 	public static boolean isSubdomain(String domain_host, String new_host) throws URISyntaxException {
 		assert domain_host != null;
@@ -434,12 +462,10 @@ public class BrowserUtils {
 					return true;
 				}
 			} catch(UnknownHostException e) {
-				e.printStackTrace();
 				return false;
 			}
 			catch(SSLException e) {
 				log.warn("SSL Exception occurred while checking if URL exists");
-				e.printStackTrace();
 				return true;
 			}
 			catch(Exception e) {
@@ -665,10 +691,37 @@ public class BrowserUtils {
 
 	public static String getPageUrl(URL sanitized_url) {
 		String path = sanitized_url.getPath();
+		path = path.replace("index.html", "");
+		path = path.replace("index.htm", "");
     	if("/".contentEquals(path.strip())) {
     		path = "";
     	}
     	String page_url = sanitized_url.getHost() + path;
+    	
+    	return page_url.replace("www.", "");
+	}
+
+	public static String getPageUrl(String sanitized_url) {
+		//remove protocol
+		String url_without_protocol = sanitized_url.replace("https://", "");
+		url_without_protocol = url_without_protocol.replace("http://", "");
+		url_without_protocol = url_without_protocol.replace("://", "");
+		
+		int slash_idx = url_without_protocol.indexOf('/');
+		String host = "";
+		String path = "";
+		if(slash_idx >= 0) {
+			path = url_without_protocol.substring(slash_idx);
+			path = path.replace("index.html", "");
+			path = path.replace("index.htm", "");
+			
+			host = url_without_protocol.substring(0, slash_idx);
+		}
+		else {
+			host = url_without_protocol;
+		}
+		
+    	String page_url = host + path;
     	
     	return page_url.replace("www.", "");
 	}
@@ -709,8 +762,8 @@ public class BrowserUtils {
 		}
 	    catch(IOException e) {
 	    	status_code = 404;
-	    	e.printStackTrace();
 	    }
+		
 		return status_code;
 	}
 	
@@ -743,7 +796,7 @@ public class BrowserUtils {
         }
         catch(Exception e) {
         	log.warn("an error was encountered while checking for SSL!!!!  "+url);
-        	e.printStackTrace();
+        	//e.printStackTrace();
         }
         
         return is_secure;
@@ -852,7 +905,10 @@ public class BrowserUtils {
 		//URL sanitized_href = new URL(BrowserUtils.sanitizeUrl(href));
 		//href = BrowserUtils.getPageUrl(sanitized_href);
 		//check if external link
-		if(BrowserUtils.isRelativeLink(host, href)) {	
+		if(BrowserUtils.isRelativeLink(host, href)) {
+			if(!href.startsWith("/") && !href.startsWith("?") && !href.startsWith("#")) {
+				href = "/" + href;
+			}
 			href = protocol + "://" + host + href;
 		}
 		else if( isSchemeRelative(host, href)) {

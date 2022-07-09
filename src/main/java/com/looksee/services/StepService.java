@@ -40,27 +40,22 @@ public class StepService {
 	public Step save(Step step) {
 		assert step != null;
 		
-		log.warn("Step :: "+step);
-		log.warn("step key :: "+step.getKey());
 		if(step instanceof SimpleStep) {
 			SimpleStep step_record = simple_step_repo.findByKey(step.getKey());
 			
 			if(step_record != null) {
-				log.warn("********************************************************");
-				log.warn("found SIMPLE STEP with key :: "+step_record.getKey());
 				step_record.setElementState(simple_step_repo.getElementState(step.getKey()));
 				step_record.setStartPage(simple_step_repo.getStartPage(step.getKey()));
 				step_record.setEndPage(simple_step_repo.getEndPage(step.getKey()));
 				return step_record;
 			}
 			
-			
 			SimpleStep simple_step = (SimpleStep)step;
 			
 			SimpleStep new_simple_step = new SimpleStep();
 			new_simple_step.setAction(simple_step.getAction());
 			new_simple_step.setActionInput(simple_step.getActionInput());
-			new_simple_step.setKey(step.generateKey());
+			new_simple_step.setKey(simple_step.generateKey());
 			new_simple_step = simple_step_repo.save(new_simple_step);
 			new_simple_step.setStartPage(simple_step_repo.addStartPage(new_simple_step.getId(), simple_step.getStartPage().getId()));
 			new_simple_step.setEndPage(simple_step_repo.addEndPage(new_simple_step.getId(), simple_step.getEndPage().getId()));
@@ -68,7 +63,7 @@ public class StepService {
 			return new_simple_step;
 		}
 		else if(step instanceof LoginStep) {
-			log.warn("looking up loginstep with key :: "+step.getKey());
+			log.warn("looking up LOGIN step with key :: "+step.getKey());
 			LoginStep step_record = login_step_repo.findByKey(step.getKey());
 			if(step_record != null) {
 				log.warn("found login step with key :: "+step_record.getKey());

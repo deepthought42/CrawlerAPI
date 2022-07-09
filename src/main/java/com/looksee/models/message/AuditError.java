@@ -16,6 +16,7 @@ public class AuditError extends Message{
 		super(domainId, accountId, auditRecordId);
 		setErrorMessage(error_message);
 		setAuditCategory(category);
+		setProgress(progress);
 	}
 
 	public String getErrorMessage() {

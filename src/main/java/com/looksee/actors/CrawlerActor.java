@@ -276,6 +276,7 @@ public class CrawlerActor extends AbstractActor{
 					Domain domain = domain_service.findById(message.getDomainId()).get();
 					if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
 							|| visited_urls.containsKey(final_page.getUrl())) {//|| visited_pages.contains(final_page)/*|| pageState is in visited list*/) {
+						log.warn("Identified external or visited link "+final_page.getUrl());
 						return;
 					}
 
@@ -353,9 +354,16 @@ public class CrawlerActor extends AbstractActor{
 					
 					//generate new journeys with new steps and send to journey executor to be evaluated
 					for(Step step: new_steps) {
+						//if step start page matches another start page url in the step list then discard
+						if(JourneyUtils.hasStartPageAlreadyBeenExpanded(new_steps, step)) {
+							continue;
+						}
+						
 						generated_journeys++;
 						
 						List<Step> cloned_steps = JourneyUtils.trimPreLoginSteps(message.getSteps());
+						
+
 						cloned_steps.add(step);
 						
 						JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(cloned_steps), 

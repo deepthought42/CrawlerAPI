@@ -15,3 +15,5 @@ JavaBooks.xlsx
 *.gz
 
 src/main/resources/
+
+*.pdf

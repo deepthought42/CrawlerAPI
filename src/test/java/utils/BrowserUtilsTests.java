@@ -90,7 +90,7 @@ public class BrowserUtilsTests {
 		URL url1 = new URL("http://look-see.com");
 		int status1 = BrowserUtils.getHttpStatus(url1);
 		
-		assertTrue(status1 == 301);
+		assertTrue(status1 == 302);
 		
 		URL url2 = new URL("https://look-see.com");
 		int status2 = BrowserUtils.getHttpStatus(url2);

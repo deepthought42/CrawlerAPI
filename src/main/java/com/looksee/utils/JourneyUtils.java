@@ -57,4 +57,22 @@ public class JourneyUtils {
 		return steps.subList(login_step_index, steps.size());
 	}
 
+	/**
+	 * Checks the url of the start page for a {@link Step} agains a list of {@link Step} 
+	 * to ensure that the page url hasn't already been expanded
+	 * 
+	 * @param new_steps
+	 * @param step
+	 * @return true if page url exists in list, otherwise false
+	 */
+	public static boolean hasStartPageAlreadyBeenExpanded(List<Step> steps, Step step) {
+		for(Step list_step: steps) {
+			if(list_step.getStartPage().getUrl().equals(step.getStartPage().getUrl())) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 }

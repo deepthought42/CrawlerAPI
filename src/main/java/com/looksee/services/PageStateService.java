@@ -54,17 +54,7 @@ public class PageStateService {
 
 			return page_state_repo.save(page_state);
 		}
-		/*
-		else {
-			page_state_record.setHttpStatus(page_state.getHttpStatus());
-			page_state_record.setFullPageScreenshotUrlOnload(page_state.getFullPageScreenshotUrlOnload());
-			page_state_record.setFullPageScreenshotUrlComposite(page_state.getFullPageScreenshotUrlComposite());
-			page_state_record = page_state_repo.save(page_state_record);
-		}
-		
-		return page_state_record;
-		*/
-		
+
 		return page_state_record;
 	}
 	

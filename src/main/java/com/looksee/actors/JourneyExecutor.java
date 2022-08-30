@@ -258,17 +258,11 @@ public class JourneyExecutor extends AbstractActor{
 		URL current_url = new URL(browser.getDriver().getCurrentUrl());
 		String url_without_protocol = BrowserUtils.getPageUrl(current_url.toString());
 		log.warn("looking up page with url = "+url_without_protocol + " for audit record id = "+audit_record_id);
-		PageState page_record = audit_record_service.findPageWithUrl(audit_record_id, url_without_protocol);
-		PageState page_state = null;
-		if(page_record == null) {
-			page_state = browser_service.performBuildPageProcess(browser);
-			page_state = page_state_service.save(page_state);
-			audit_record_service.addPageToAuditRecord(audit_record_id, page_state.getId());
-		}
-		else {
-			page_state = page_record;
-		}
-
+	
+		PageState page_state = browser_service.performBuildPageProcess(browser);
+		page_state = page_state_service.save(page_state);
+		audit_record_service.addPageToAuditRecord(audit_record_id, page_state.getId());
+	
 		log.warn("retrieving element states....");
 		List<ElementState> saved_elements = page_state_service.getElementStates(page_state.getId());
 		log.warn("retrieved "+saved_elements.size() + " elements for page state : "+page_state.getId());

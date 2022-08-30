@@ -665,37 +665,7 @@ public class BrowserService {
 		//boolean rendering_incomplete = true;
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
 		
-		//int cnt = 0;
-		//do {
-			//Browser browser = null;
-			
-			//try {
-				//get ElementState List by asking multiple bots to build xpaths in parallel
-				//for each xpath then extract element state
-		log.warn("building "+elements.size()+" elements for page state : "+page_state.getUrl());
 		elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
-		log.warn("built "+elements.size()+" elements for page state : "+page_state.getUrl());
-				//break;
-			//}
-			/*catch (NullPointerException e) {
-				log.warn("NPE thrown during element state extraction");
-				//e.printStackTrace();
-			}
-			catch(FiveZeroThreeException e) {
-				log.warn("503 exception occurred while accessing "+sanitized_url);
-			}
-			catch(WebDriverException | GridException e) {
-				log.warn("Webdriver exception occurred ... "+sanitized_url);
-				//e.printStackTrace();
-			}	
-			finally {
-				if(browser != null) {
-					browser.close();
-				}
-			}
-			*/
-			//cnt++;
-		//}while(rendering_incomplete && cnt < 10000);
 
 		return elements;
 	}
@@ -2030,7 +2000,6 @@ public class BrowserService {
 			
 			for(Element child : children) {
 				if(isStructureTag(child.tagName())) {
-					log.warn("structure tag found : "+child.tagName());
 					continue;
 				}
 				String xpath = next_xpath + "/" + child.tagName();

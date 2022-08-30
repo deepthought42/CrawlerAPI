@@ -47,7 +47,6 @@ public class PageStateService {
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
 		
-		
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 		
 		if(page_state_record == null) {

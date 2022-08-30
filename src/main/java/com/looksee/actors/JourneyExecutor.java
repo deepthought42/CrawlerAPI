@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import com.looksee.browsing.ActionFactory;
 import com.looksee.browsing.Browser;
 import com.looksee.models.Account;
+import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
@@ -42,6 +43,7 @@ import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
+import com.looksee.services.DomainService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
@@ -81,6 +83,9 @@ public class JourneyExecutor extends AbstractActor{
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Autowired
 	private AuditRecordService audit_record_service;
@@ -124,7 +129,6 @@ public class JourneyExecutor extends AbstractActor{
 					this.crawl_actor = getContext().getParent();
 
 					try {
-						log.warn("JOURNEY EXECUTOR received new steps to explore = "+message.getSteps());
 						List<Step> steps = new ArrayList<>(message.getSteps());
 						this.steps = new ArrayList<>(message.getSteps());
 						PageState page_state = iterateThroughJourneySteps(steps, 
@@ -206,8 +210,18 @@ public class JourneyExecutor extends AbstractActor{
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(steps);
 		PageState final_page = PathUtils.getLastPageState(steps);
 		//is end_page PageState different from second to last PageState
-		if(final_page.equals(second_to_last_page)) {
-			log.warn("returning because message page state is equal to second to last page for LOGIN step :: "+JourneyUtils.hasLoginStep(steps));
+		if(final_page == null) {
+			log.warn("Final page in Step is null");
+			log.warn("Steps affected :: "+steps);
+			//tell parent that we processed a journey that is being discarded
+			DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	BrowserType.CHROME, 
+																					domain_id, 
+																					account_id,
+																					audit_record_id);
+			crawl_actor.tell(journey_message, getSelf());
+		}
+		else if(final_page.equals(second_to_last_page)) {
+			log.warn("Message page state is equal to second to last page for LOGIN step");
 			log.warn("steps :: "+this.steps);
 			//tell parent that we processed a journey that is being discarded
 			DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	BrowserType.CHROME, 
@@ -217,8 +231,6 @@ public class JourneyExecutor extends AbstractActor{
 			crawl_actor.tell(journey_message, getSelf());
 		}
 		else {
-			log.warn("pages aren't the same. Sending confirmed journey message to crawl actor : "+this.steps);
-
 			ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(ListUtils.clone(this.steps), 
 																				PathStatus.EXAMINED, 
 																				BrowserType.CHROME, 
@@ -230,18 +242,57 @@ public class JourneyExecutor extends AbstractActor{
 		}
 	}
 
+	/**
+	 * Constructs a {@link PageState page} including all {@link ElementState elements} on the page as a {@linkplain List}
+	 * 
+	 * @param audit_record_id
+	 * @param browser
+	 * @return
+	 * @throws Exception
+	 * 
+	 * @pre browser != null
+	 */
 	private PageState buildPage(long audit_record_id, Browser browser) throws Exception {
-		PageState page_state = browser_service.performBuildPageProcess(browser); 
-
-		page_state = page_state_service.save(page_state);
-		List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+		assert browser != null;
 		
-		log.warn("adding page to audit record");
-		audit_record_service.addPageToAuditRecord(audit_record_id, page_state.getId());
+		URL current_url = new URL(browser.getDriver().getCurrentUrl());
+		String url_without_protocol = BrowserUtils.getPageUrl(current_url.toString());
+		log.warn("looking up page with url = "+url_without_protocol + " for audit record id = "+audit_record_id);
+		PageState page_record = audit_record_service.findPageWithUrl(audit_record_id, url_without_protocol);
+		PageState page_state = null;
+		if(page_record == null) {
+			page_state = browser_service.performBuildPageProcess(browser);
+			page_state = page_state_service.save(page_state);
+			audit_record_service.addPageToAuditRecord(audit_record_id, page_state.getId());
+		}
+		else {
+			page_state = page_record;
+		}
+
+		log.warn("retrieving element states....");
+		List<ElementState> saved_elements = page_state_service.getElementStates(page_state.getId());
+		log.warn("retrieved "+saved_elements.size() + " elements for page state : "+page_state.getId());
+		//if(elements.isEmpty()) {
+		List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
+		List<String> unexplored_xpaths = new ArrayList<String>();
+		
+		for(String xpath: xpaths) {
+			boolean match_found = false;
+			for(ElementState element: saved_elements) {
+				if(element.getXpath().contentEquals(xpath)) {
+					match_found = true;
+					break;
+				}
+			}
+			if(!match_found) {
+				unexplored_xpaths.add(xpath);
+			}
+		}
+		
 		//crawl_action.getAuditRecord().setPageState(page_state_record);
 		log.warn("building page elements without navigation...");
 		List<ElementState> element_states = browser_service.buildPageElementsWithoutNavigation( page_state, 
-																								xpaths,
+																								unexplored_xpaths,
 																								audit_record_id,
 																								page_state.getFullPageHeight(),
 																								browser);
@@ -251,15 +302,17 @@ public class JourneyExecutor extends AbstractActor{
 		
 		//save elements
 		element_states = element_state_service.saveAll(element_states, page_state.getId());
-		page_state.setElements(element_states);
-		log.warn("element states added to page state :: "+element_states);
+		saved_elements.addAll(element_states);
+		page_state.setElements(saved_elements);
 		
 		List<Long> element_ids = element_states.parallelStream().map(element -> element.getId()).collect(Collectors.toList());
 		page_state_service.addAllElements(page_state.getId(), element_ids);
-		log.warn("element ids added to page state :: "+element_ids.size());
+		/*}
+		else {
+			page_state.setElements(elements);
+		}*/
+		
 		return page_state;
-		
-		
 	}
 	
 	/**
@@ -269,50 +322,94 @@ public class JourneyExecutor extends AbstractActor{
 	 * @param domain_id
 	 * @param account_id
 	 * @param audit_record_id
-	 * @return
+	 * @return {@link PageState} or null if final page is an external page
 	 * @throws Exception
+	 * 
+	 * @pre steps != null
+	 * @pre !steps.isEmpty()
 	 */
-	@Retry(name="webdriver")
-	private PageState iterateThroughJourneySteps( List<Step> steps, long domain_id, long account_id, long audit_record_id) throws Exception {
+	private PageState iterateThroughJourneySteps( List<Step> steps, 
+												  long domain_id, 
+												  long account_id, 
+												  long audit_record_id
+	) throws Exception {
 		assert steps != null;
 		assert !steps.isEmpty();
 		
-		Browser browser = null;
-		browser = performJourneyStepsInBrowser(steps);
-		//build page
-		return buildPage(audit_record_id, browser);
+		boolean complete = false;
+		int count = 0;
+		PageState page = null;
+		do {
+			Browser browser = null;
+			try {
+				browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
+				
+				performJourneyStepsInBrowser(steps, browser);
+				log.warn("retriving domain with id :: " + domain_id + "....");
+				Domain domain = domain_service.findById(domain_id).get();
+				//build page
+				//if page url already exists for domain audit record then load that page state instead of performing a build
+				//NOTE: This patch is meant to reduce duplication of page builds and will not catch A/B tests
+				log.warn("retrieving current page url ...");
+				String current_url = BrowserUtils.getPageUrl(browser.getDriver().getCurrentUrl());
+				if(BrowserUtils.isExternalLink(domain.getUrl(), current_url)) {
+					log.warn("current url is external : "+current_url);
+					return null;
+				}
+				//page = audit_record_service.findPageWithUrl(audit_record_id, current_url);
+				
+				log.warn("building page state for end of journey...");
+				page = buildPage(audit_record_id, browser);
+				log.warn("Page elements after page build : "+page.getElements().size() + " :: "+page.getId());
+				//}
+				/*else {
+					//load page elements
+					page.setElements(page_state_service.getElementStates(page.getKey()));
+					log.warn("Page state with URL "+current_url+" found for DomainAuditRecord.");
+				}*/
+				complete = true;
+			}
+			catch(Exception e) {
+				log.error("Error occurred while iterating through journey steps ");
+				e.printStackTrace();
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			finally {
+				if(browser != null) {
+					browser.close();
+				}
+			}
+			count++;
+		}while(!complete && count < 1000);
 		
-		//send build page message to PageStateBuilder
-		/*
-		BrowserCrawlActionMessage browser_page_builder_message = new BrowserCrawlActionMessage(domain_id, 
-																								account_id, 
-																								audit_record_id, 
-																								browser);
-		log.warn("sending BrowserCrawlActionMessage to page builder for login steps :: "+JourneyUtils.hasLoginStep(steps));
-		ActorRef page_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
-											.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
-		page_builder.tell(browser_page_builder_message, getSelf());
-		*/
+		return page;
 	}
 
-	private Browser performJourneyStepsInBrowser(List<Step> steps) throws Exception  {
+	/**
+	 * Creates {@link Browser} connection and performs journey steps
+	 * 
+	 * @param steps
+	 * @param browser TODO
+	 * 
+	 * @return
+	 * @throws Exception
+	 * 
+	 * @pre steps != null
+	 * @pre !steps.isEmpty()
+	 */
+	private void performJourneyStepsInBrowser(List<Step> steps, Browser browser) throws Exception  {
 		assert steps != null;
 		assert !steps.isEmpty();
-		
-		log.warn("Performing journey steps in Browser...");
-		log.warn("Steps contains LOGIN step?  =   "+JourneyUtils.hasLoginStep(steps));
-		
-		Browser browser = null;
+				
 		PageState initial_page = steps.get(0).getStartPage();
 		String sanitized_url = BrowserUtils.sanitizeUrl(initial_page.getUrl(), initial_page.isSecure());
-		log.warn("nagivating to url :: "+sanitized_url);
 
-		browser = browser_service.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo(sanitized_url);
 		//execute all steps sequentially in the journey
 		executeAllStepsInJourney(steps, browser);
 		log.warn("Done executing steps for journey");
-		return browser;
 	}
 
 	/**
@@ -339,9 +436,9 @@ public class JourneyExecutor extends AbstractActor{
 
 				WebElement submit_element = browser.getDriver().findElement(By.xpath(login_step.getSubmitElement().getXpath()));
 				action_factory.execAction(submit_element, "", Action.CLICK);
-				browser.waitForPageToLoadWithRedirects();
 			}
-			TimingUtils.pauseThread(5000L);
+			browser.waitForPageToLoad();
+			TimingUtils.pauseThread(2000L);
 		}
 	}
 

@@ -64,7 +64,7 @@ public class AuditRecordService {
 	public AuditRecord save(AuditRecord audit, Long account_id, Long domain_id) {
 		assert audit != null;
 
-		audit = audit_record_repo.save(audit);
+		AuditRecord audit_record = audit_record_repo.save(audit);
 		
 		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {
 			try {
@@ -79,7 +79,7 @@ public class AuditRecordService {
 			}
 		}
 		//broadcast audit record to users
-		return audit;
+		return audit_record;
 	}
 
 	public Optional<AuditRecord> findById(long id) {
@@ -301,7 +301,7 @@ public class AuditRecordService {
 		return audit_record_repo.getAllAudits(id);
 	}
 
-	public boolean isDomainAuditComplete(AuditRecord audit_record, int total_pages) {		
+	public boolean isDomainAuditComplete(AuditRecord audit_record) {		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
 		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
@@ -372,5 +372,15 @@ public class AuditRecordService {
 		}
 		
 		return save(audit_record, account_id, domain_id);
+	}
+
+	/**
+	 * Retrieves {@link PageState} with given URL for {@link DomainAuditRecord}  
+	 * @param audit_record_id
+	 * @param current_url
+	 * @return
+	 */
+	public PageState findPageWithUrl(long audit_record_id, String url) {
+		return audit_record_repo.findPageWithUrl(audit_record_id, url);
 	}
 }

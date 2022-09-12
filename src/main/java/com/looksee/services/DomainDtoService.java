@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.dto.DomainDto;
+import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
@@ -134,9 +135,9 @@ public class DomainDtoService {
 
 		
 		if (page_audit_records.size() > 0) {
-			content_progress = content_progress / page_count;
-			info_architecture_progress = (info_architecture_progress / page_count);
-			aesthetic_progress = (aesthetic_progress / page_count);
+			content_progress = content_progress / audited_pages;
+			info_architecture_progress = (info_architecture_progress / audited_pages);
+			aesthetic_progress = (aesthetic_progress / audited_pages);
 			//data_extraction_progress = (data_extraction_progress / page_count);
 		}
 		

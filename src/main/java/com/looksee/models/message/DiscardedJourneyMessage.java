@@ -4,15 +4,18 @@ import com.looksee.models.enums.BrowserType;
 
 public class DiscardedJourneyMessage {
 
+	private int id;
 	private BrowserType browserType;
 	private long domainId;
 	private long accountId;
 	private long auditRecordId;
    
-	public DiscardedJourneyMessage(BrowserType browserType, 
+	public DiscardedJourneyMessage(int id, 
+								   BrowserType browserType, 
 								   long domainId, 
 								   long accountId, 
 								   long auditRecordId) {
+		setId(id);
 		setBrowserType(browserType);
 		setDomainId(domainId);
 		setAccountId(accountId);
@@ -49,6 +52,14 @@ public class DiscardedJourneyMessage {
 
 	public void setAuditRecordId(long auditRecordId) {
 		this.auditRecordId = auditRecordId;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 }

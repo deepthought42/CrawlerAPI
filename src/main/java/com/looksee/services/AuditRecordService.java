@@ -24,7 +24,6 @@ import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.journeys.Journey;
 import com.looksee.models.repository.AuditRecordRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;

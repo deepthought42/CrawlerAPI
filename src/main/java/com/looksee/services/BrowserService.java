@@ -949,7 +949,7 @@ public class BrowserService {
 			}
 			catch(NullPointerException e) {
 				log.warn("There was an NPE error finding element with xpath .... "+xpath + "   ;;   ON page :: "+page_state.getUrl());
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				log.warn("IOException occurred while building elements");

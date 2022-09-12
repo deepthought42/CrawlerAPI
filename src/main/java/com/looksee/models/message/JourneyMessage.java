@@ -9,29 +9,31 @@ import com.looksee.utils.ListUtils;
 
 public class JourneyMessage extends Message {
 
+	private int id;
 	private List<Step> steps;
 	private PathStatus status;
 	private BrowserType browser;
 	
-	public JourneyMessage(List<Step> steps,
+	public JourneyMessage(int id,
+					   List<Step> steps, 
 					   PathStatus status, 
 					   BrowserType browser_type, 
 					   long domain_id, 
-					   long account_id, 
-					   long audit_record_id){
+					   long account_id, long audit_record_id){
 		super(domain_id, account_id, audit_record_id);
+		setId(id);
 		setSteps(steps);
 		setStatus(status);
 		setBrowser(browser_type);
 	}
 	
 	public JourneyMessage clone(){
-		return new JourneyMessage(ListUtils.clone(getSteps()), 
+		return new JourneyMessage(getId(), 
+								  ListUtils.clone(getSteps()), 
 								  getStatus(), 
 								  getBrowser(), 
-								  getDomainId(), 
-								  getAccountId(),
-								  getAuditRecordId());
+								  getDomainId(),
+								  getAccountId(), getAuditRecordId());
 	}
 
 	public PathStatus getStatus() {
@@ -56,5 +58,13 @@ public class JourneyMessage extends Message {
 
 	public void setSteps(List<Step> steps) {
 		this.steps = steps;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 }

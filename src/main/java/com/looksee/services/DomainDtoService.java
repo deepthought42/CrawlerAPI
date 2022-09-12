@@ -1,5 +1,7 @@
 package com.looksee.services;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -9,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.dto.DomainDto;
+import com.looksee.models.Account;
 import com.looksee.models.Domain;
+import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
@@ -31,12 +35,17 @@ public class DomainDtoService {
 	 * 
 	 * @param domain
 	 * @return
+	 * 
+	 * @pre domain != null
 	 */
 	public DomainDto build(Domain domain) {
+		assert domain != null;
+		
 		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain.getId());
 
 		int audited_pages = 0;
 		int page_count = 0;
+		
 		if (!audit_record_opt.isPresent()) {
 			log.warn("returning default Domain DTO because audit record was not found");
 			return new DomainDto(domain.getId(), 
@@ -88,9 +97,14 @@ public class DomainDtoService {
 		// add domain stat to set
 
 		// check if there is a current audit running
-		AuditRecord audit_record = audit_record_opt.get();
-		Set<PageAuditRecord> page_audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
-		page_count = audit_record_service.getPageStatesForDomainAuditRecord(audit_record.getId()).size();
+		Set<PageAuditRecord> page_audit_records = audit_record_service.getAllPageAudits(domain_audit.getId());
+		Set<PageState> page_states = audit_record_service.getPageStatesForDomainAuditRecord(domain_audit.getId());
+		Map<String, Boolean> page_urls = new HashMap<>();
+		
+		for(PageState page : page_states) {
+			page_urls.put(page.getUrl(), Boolean.TRUE);
+		}
+		page_count = page_urls.size();
 		//page_count = page_audit_records.size();
 
 		double content_progress = 0.0;
@@ -121,10 +135,18 @@ public class DomainDtoService {
 
 		
 		if (page_audit_records.size() > 0) {
-			content_progress = content_progress / page_count;
-			info_architecture_progress = (info_architecture_progress / page_count);
-			aesthetic_progress = (aesthetic_progress / page_count);
+			content_progress = content_progress / audited_pages;
+			info_architecture_progress = (info_architecture_progress / audited_pages);
+			aesthetic_progress = (aesthetic_progress / audited_pages);
 			//data_extraction_progress = (data_extraction_progress / page_count);
+		}
+		
+		ExecutionStatus status = null;
+		if(1.0 == content_progress && 1.0 == info_architecture_progress && 1.0 == aesthetic_progress && 1.0 == data_extraction_progress) {
+			status = ExecutionStatus.COMPLETE;
+		}
+		else {
+			status = ExecutionStatus.IN_PROGRESS;
 		}
 
 		
@@ -142,7 +164,7 @@ public class DomainDtoService {
 							  aesthetic_progress, 
 							  is_audit_running, 
 							  data_extraction_progress,
-							  audit_record.getStatusMessage(),
-							  audit_record.getStatus());
+							  domain_audit.getStatusMessage(),
+							  status);
 	}
 }

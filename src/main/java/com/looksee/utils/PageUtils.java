@@ -42,9 +42,8 @@ public class PageUtils {
 											}
 										})
 										.collect(Collectors.toList());
+		
 		for(ElementState form_element : forms){
-			
-			
 			List<ElementState> form_elements = page.getElements()
 													.parallelStream()
 													.filter(element -> element.getXpath().contains(form_element.getXpath()))
@@ -63,6 +62,7 @@ public class PageUtils {
 			
 			form_list.add(form);
 		}
+		
 		return form_list;
 	}
 }

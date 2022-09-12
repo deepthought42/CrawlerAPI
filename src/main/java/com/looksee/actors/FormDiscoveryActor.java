@@ -124,8 +124,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	//message.getDiscoveryActor().tell(form_message, getSelf());
 						  	}
 						  	forms_created = true;
-						  	return;
-						} catch(Exception e){
+				  		} catch(Exception e){
 					  		log.warning("Form discovery exception :: " + e.getMessage());
 					  		forms_created = false;
 					  		e.printStackTrace();

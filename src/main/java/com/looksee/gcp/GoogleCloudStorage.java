@@ -19,7 +19,6 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.looksee.models.enums.BrowserType;
 
@@ -40,7 +39,7 @@ public class GoogleCloudStorage {
 								   String domain, 
 								   String element_key, 
 								   BrowserType browser
-   ) throws StorageException, IOException {
+   ) throws IOException {
 		assert image != null;
 		assert domain != null;
 		assert !domain.isEmpty();
@@ -81,7 +80,10 @@ public class GoogleCloudStorage {
 		}
     }
 	
-	public static BufferedImage getImage(String domain, String element_key, BrowserType browser) throws IOException {
+	public static BufferedImage getImage(String domain, 
+										 String element_key, 
+										 BrowserType browser
+	) throws IOException {
 		assert domain != null;
 		assert !domain.isEmpty();
 		assert element_key != null;

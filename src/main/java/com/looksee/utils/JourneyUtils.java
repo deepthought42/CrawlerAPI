@@ -6,13 +6,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.actors.JourneyExecutor;
 import com.looksee.models.journeys.LoginStep;
-import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 
 public class JourneyUtils {
-	private static Logger log = LoggerFactory.getLogger(JourneyExecutor.class.getName());
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(JourneyUtils.class.getName());
 
 	/**
 	 * Checks if a list of {@link Step steps} has a {@linkplain LoginStep}
@@ -35,21 +34,13 @@ public class JourneyUtils {
 		
 		int login_step_index = -1;
 		
-		log.warn("********************************************");
-		log.warn("Trimming pre login steps :: "+steps.size());
 		for(int idx=0; idx < steps.size(); idx++) {
-			log.warn("Step is SimpleStep? = "+(steps.get(idx) instanceof SimpleStep));
-			log.warn("Step is LoginStep? = "+(steps.get(idx) instanceof LoginStep));
 			if(steps.get(idx) instanceof LoginStep) {
-				log.warn("LOGIN STEP DETECTED!!!");
 				login_step_index = idx;
 				break;
 			}
 		}
-		log.warn("********************************************");
-		log.warn("********************************************");
-
-		
+				
 		if(login_step_index < 0) {
 			return new ArrayList<>();
 		}

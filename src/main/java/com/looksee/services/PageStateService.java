@@ -47,7 +47,6 @@ public class PageStateService {
 	public PageState save(PageState page_state) throws Exception {
 		assert page_state != null;
 		
-		
 		PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 		
 		if(page_state_record == null) {
@@ -55,17 +54,7 @@ public class PageStateService {
 
 			return page_state_repo.save(page_state);
 		}
-		/*
-		else {
-			page_state_record.setHttpStatus(page_state.getHttpStatus());
-			page_state_record.setFullPageScreenshotUrlOnload(page_state.getFullPageScreenshotUrlOnload());
-			page_state_record.setFullPageScreenshotUrlComposite(page_state.getFullPageScreenshotUrlComposite());
-			page_state_record = page_state_repo.save(page_state_record);
-		}
-		
-		return page_state_record;
-		*/
-		
+
 		return page_state_record;
 	}
 	

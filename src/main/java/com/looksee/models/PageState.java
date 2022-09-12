@@ -346,7 +346,7 @@ public class PageState extends LookseeObject {
 			key += element.getKey();
 		}
 		*/
-		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() + this.getFullPageScreenshotUrlOnload()+BrowserService.generalizeSrc(BrowserService.extractBody(this.getSrc()) ));
+		return "pagestate" + org.apache.commons.codec.digest.DigestUtils.sha256Hex( this.getUrl() + BrowserService.generalizeSrc(BrowserService.extractBody(this.getSrc()) ));
 	}
 
 	public String getSrc() {

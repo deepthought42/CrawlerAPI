@@ -98,11 +98,8 @@ public class ElementStateExtractor extends AbstractActor{
 												bkg_color = new ColorData(element.getRenderedCssValues().get("background-color"));
 											}
 											else {
-												//log.warn("extracting background color");
 												bkg_color = ImageUtils.extractBackgroundColor( new URL(element.getScreenshotUrl()),
 																							   font_color);
-												
-												//log.warn("done extracting background color");
 											}
 											String bg_color = bkg_color.rgb();	
 											
@@ -114,16 +111,14 @@ public class ElementStateExtractor extends AbstractActor{
 											
 											double contrast = ColorData.computeContrast(background_color, font_color);
 											element.setTextContrast(contrast);
-											return element;
 										}
 										catch (Exception e) {
 											log.warn("element screenshot url  :: "+element.getScreenshotUrl());
 											e.printStackTrace();
 										}
 										return element;
-								})
-								.collect(Collectors.toList());
-						
+									})
+									.collect(Collectors.toList());
 						//Enrich data using NLP and computer vision to add labels to elements
 						/*
 						Set<Label> image_labels = new HashSet<>();

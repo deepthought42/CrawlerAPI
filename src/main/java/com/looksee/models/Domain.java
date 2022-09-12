@@ -70,7 +70,6 @@ public class Domain extends LookseeObject{
 		setLogoUrl(logo_url);
 		setUrl(host);
 		setEntrypointUrl(host+path);
-		setLogoUrl(logo_url);
 		setPages(new ArrayList<>());
 		setAuditRecords(new HashSet<>());
 		setDesignSystem(new DesignSystem());

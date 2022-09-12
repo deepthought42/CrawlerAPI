@@ -118,11 +118,7 @@ public class BrowserUtils {
 		//check if host is subdomain
 		String new_host = new_url.getHost();
 		new_host.replace("www.", "");
-		/*
-		if(!new_host.startsWith("www.")){
-			new_host = "www."+new_host;
-		}
-		*/
+
 		String new_key = new_host+new_url.getPath();
 		if(new_key.endsWith("/")){
 			new_key = new_key.substring(0, new_key.length()-1);
@@ -714,12 +710,29 @@ public class BrowserUtils {
 			path = url_without_protocol.substring(slash_idx);
 			path = path.replace("index.html", "");
 			path = path.replace("index.htm", "");
+			if(path.contains("#") && !path.endsWith("?#")) {
+				//strip out path parameters
+				int param_idx = path.indexOf('#');
+				path = path.substring(0, param_idx);
+			}
+			
+			if(path.contains("?") && !path.endsWith("?#")) {
+				//strip out path parameters
+				int param_idx = path.indexOf('?');
+				if(param_idx == 0) {
+					path = "";
+				}
+				else{
+					path = path.substring(0, param_idx);
+				}
+			}
 			
 			host = url_without_protocol.substring(0, slash_idx);
 		}
 		else {
 			host = url_without_protocol;
 		}
+		
 		
     	String page_url = host + path;
     	

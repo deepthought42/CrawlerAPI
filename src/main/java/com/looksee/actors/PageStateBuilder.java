@@ -5,7 +5,9 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -129,50 +131,57 @@ public class PageStateBuilder extends AbstractActor{
 													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
 
 							getContext().getParent().tell(extraction_tracker, getSelf());
-							return;
 						}
-						
-						//update audit record with progress
-						PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						
-						final PageState page_state_record = page_state_service.save(page_state);
-						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
-
-						int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
-						int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
-						this.total_dispatches = 0L;
-						this.xpaths.addAll(xpaths);
-						
-						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
-						//crawl_action.getAuditRecord().setPageState(page_state_record);
-						
-					   	int start_xpath_index = 0;
-					   	int last_xpath_index = 0;
-						List<List<String>> xpath_lists = new ArrayList<>();
-
-						while(start_xpath_index < (xpaths.size()-1)) {
-					   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
-					   		if(last_xpath_index >= xpaths.size()) {
-					   			last_xpath_index = xpaths.size()-1;
-					   		}
-					   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
-					   		xpath_lists.add(xpath_subset);
-						   
-					   		ElementExtractionMessage element_extraction_msg = 
-						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
-						   															 page_state_record, 
-						   															 crawl_action.getAuditRecordId(), 
-						   															 xpath_subset, 
-						   															 crawl_action.getDomainId());
-							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
-						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
-		
-							element_extractor.tell(element_extraction_msg, getSelf());					
-						
-							//log.warn("Element state list length   =   "+elements.size());
-							//page_state_record.addElements(elements);
-							start_xpath_index = last_xpath_index;
-					   	}
+						else {
+							//update audit record with progress
+							PageState page_state = browser_service.buildPageState(crawl_action.getUrl()); 
+							
+							log.warn("saving page state....");
+							final PageState page_state_record = page_state_service.save(page_state);
+							List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
+	
+							//int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
+							//int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
+							this.total_dispatches = 0L;
+							this.xpaths.addAll(xpaths);
+							
+							audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
+							//crawl_action.getAuditRecord().setPageState(page_state_record);
+							
+						   //	int start_xpath_index = 0;
+						   	//int last_xpath_index = 0;
+							//List<List<String>> xpath_lists = new ArrayList<>();
+							log.warn("XPATHS FOUND ::: "+xpaths.size());
+							
+							for(String xpath : xpaths) {
+								if(xpath.contains("/a")) {
+									log.warn("link xpath : "+xpath);
+								}
+							}
+							/*while(start_xpath_index < (xpaths.size()-1)) {
+						   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
+						   		if(last_xpath_index >= xpaths.size()) {
+						   			last_xpath_index = xpaths.size()-1;
+						   		}
+						   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
+						   		xpath_lists.add(xpath_subset);
+							   */
+						   		ElementExtractionMessage element_extraction_msg = 
+							   								new ElementExtractionMessage(crawl_action.getAccountId(), 
+							   															 page_state_record, 
+							   															 crawl_action.getAuditRecordId(), 
+							   															 xpaths, 
+							   															 crawl_action.getDomainId());
+								ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+							   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
+			
+								element_extractor.tell(element_extraction_msg, getSelf());					
+							
+								//log.warn("Element state list length   =   "+elements.size());
+								//page_state_record.addElements(elements);
+								//start_xpath_index = last_xpath_index;
+						   	//}
+						}
 						
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
@@ -219,53 +228,26 @@ public class PageStateBuilder extends AbstractActor{
 							final PageState page_state_record = page_state_service.save(page_state);
 							List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 	
-							int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
-							int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
 							this.total_dispatches = 0L;
 							this.xpaths.addAll(xpaths);
 							
-							audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state_record.getId());
-							//crawl_action.getAuditRecord().setPageState(page_state_record);
-							
-						   	int start_xpath_index = 0;
-						   	int last_xpath_index = 0;
-							List<List<String>> xpath_lists = new ArrayList<>();
+							audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), 
+																	  page_state_record.getId());
 	
-							while(start_xpath_index < (xpaths.size()-1)) {
-						   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
-						   		if(last_xpath_index >= xpaths.size()) {
-						   			last_xpath_index = xpaths.size()-1;
-						   		}
-						   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
-						   		xpath_lists.add(xpath_subset);
-							   
-						   		ElementExtractionMessage element_extraction_msg = 
-							   								new ElementExtractionMessage(crawl_action.getAccountId(), 
-							   															 page_state_record, 
-							   															 crawl_action.getAuditRecordId(), 
-							   															 xpath_subset, 
-							   															 crawl_action.getDomainId());
-								ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
-							   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
-			
-								element_extractor.tell(element_extraction_msg, getSelf());					
+					   		ElementExtractionMessage element_extraction_msg = 
+						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
+						   															 page_state_record, 
+						   															 crawl_action.getAuditRecordId(), 
+						   															 xpaths, 
+						   															 crawl_action.getDomainId());
 							
-								this.total_dispatches++;
-								//log.warn("Element state list length   =   "+elements.size());
-								//page_state_record.addElements(elements);
-								start_xpath_index = last_xpath_index;
-						   	}
+					   		ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
+		
+							element_extractor.tell(element_extraction_msg, getSelf());					
+						
+							this.total_dispatches++;
 						}
-						
-						/*
-						PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(crawl_action.getDomainId(), 
-																									 crawl_action.getAccountId(), 
-																									 crawl_action.getAuditRecordId(), 
-																									 page_state.getUrl(), 
-																									 xpath_lists.size());
-						
-						getContext().getParent().tell(extraction_tracker, getSelf());
-						*/
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
 																								 crawl_action.getAccountId(), 
@@ -278,91 +260,6 @@ public class PageStateBuilder extends AbstractActor{
 						log.error("An exception occurred that bubbled up to the page state builder");
 						e.printStackTrace();
 					}
-				})
-				.match(BrowserCrawlActionMessage.class, crawl_action-> {
-					
-					log.warn("Page state recieved BrowserCrawlAction message");
-					try {
-						/*
-						int http_status = BrowserUtils.getHttpStatus(crawl_action.getUrl());
-						boolean requires_authentication = false;
-						//usually code 301 is returned which is a redirect, which is usually transferring to https
-						if(http_status == 404 || http_status == 408) {
-							log.warn("Recieved 404 status for link :: "+crawl_action.getUrl());
-							//send message to audit manager letting it know that an error occurred
-							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-																			 crawl_action.getAccountId(), 
-																			 crawl_action.getAuditRecordId(), 
-																			 crawl_action.getUrl().toString(), 
-																			 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
-
-							getContext().getParent().tell(extraction_tracker, getSelf());
-							return;
-						}
-						else if(http_status == 401) {
-							requires_authentication = true;
-						}
-						else if(http_status == 403) {
-							
-						}
-						*/
-						
-						
-						//update audit record with progress
-						//this.page_state = browser_service.buildPageState(crawl_action.getUrl()); 
-						PageState page_state = browser_service.performBuildPageProcess(crawl_action.getBrowser()); 
-
-						page_state = page_state_service.save(page_state);
-						List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state.getSrc());
-
-						//int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
-						//int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
-						this.total_dispatches = 1L;
-						this.xpaths.addAll(xpaths);
-						
-						log.warn("adding page to audit record");
-						audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), page_state.getId());
-						//crawl_action.getAuditRecord().setPageState(page_state_record);
-						log.warn("building page elements without navigation...");
-						List<ElementState> element_states = browser_service.buildPageElementsWithoutNavigation( page_state, 
-																												xpaths,
-																												crawl_action.getAuditRecordId(),
-																												page_state.getFullPageHeight(),
-																												crawl_action.getBrowser());
-
-						log.warn("enriching elements....");
-						element_states = ElementStateUtils.enrichBackgroundColor(element_states).collect(Collectors.toList());
-						
-						log.warn("Sending elements to be saved by data extraction actor");
-						//tell page state builder of element states
-						ElementProgressMessage element_message = new ElementProgressMessage(crawl_action.getAccountId(), 
-																							crawl_action.getAuditRecordId(),
-																							page_state.getId(), 
-																							xpaths,
-																							element_states,
-																							xpaths.size(),
-																							this.total_dispatches, 
-																							page_state.getUrl(),
-																							crawl_action.getDomainId());
-						
-						ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
-								.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
-						data_extraction_supervisor.tell(element_message, getSelf());						
-					}catch(Exception e) {
-						String current_url = crawl_action.getBrowser().getDriver().getCurrentUrl();
-						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-																								 crawl_action.getAccountId(), 
-																								 crawl_action.getAuditRecordId(), 
-																								 current_url, 
-																								 "An exception occurred while building page state "+current_url+".\n"+e.getMessage());
-
-						getContext().getParent().tell(extraction_tracker, getSelf());
-
-						log.error("An exception occurred that bubbled up to the page state builder");
-						e.printStackTrace();
-					}
-					
-					crawl_action.getBrowser().close();
 				})
 				.match(ElementProgressMessage.class, message -> {
 					ActorRef data_extraction_supervisor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -446,7 +343,6 @@ public class PageStateBuilder extends AbstractActor{
 						
 						
 						//PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
-						log.warn("Save dispatched = "+this.total_save_dispatches + ";    total dispatches = "+this.total_dispatches);
 						if(this.total_save_dispatches == this.total_dispatches) {
 							/*NOTE: THIS LOGIC SHOULD BE HANDLED IN THE AUDIT MANAGER. MOVE IT THERE ONCE IT'S CLEAR WHERE IT BELONGS */
 							/*
@@ -487,12 +383,11 @@ public class PageStateBuilder extends AbstractActor{
 						   	performance_insight_actor.tell(page_state, getSelf());
 						   	*/
 							
-							log.warn("sending PageDataExtraction to parent actor :: "+getContext().getParent().path());
 							PageDataExtractionMessage extraction_tracker = new PageDataExtractionMessage(message.getDomainId(), 
 																										 message.getAccountId(), 
 																										 message.getAuditRecordId(), 
 																										 message.getPageUrl(), 
-																										 this.xpaths.size(),
+																										 page_state.getElements().size(),
 																										 page_state);
 							
 							getContext().getParent().tell(extraction_tracker, getSelf());

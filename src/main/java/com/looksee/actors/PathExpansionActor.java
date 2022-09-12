@@ -2,7 +2,6 @@ package com.looksee.actors;
 
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,11 +28,8 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
-import com.looksee.helpers.ActionHelper;
-import com.looksee.models.ActionOLD;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
-import com.looksee.models.ExploratoryPath;
 import com.looksee.models.PageState;
 import com.looksee.models.Test;
 import com.looksee.models.enums.Action;
@@ -48,7 +44,6 @@ import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
-import com.looksee.services.StepService;
 import com.looksee.utils.ListUtils;
 import com.looksee.utils.PathUtils;
 
@@ -67,9 +62,6 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private StepService step_service;
 	
 	private Map<String, List<ElementState>> explored_elements = new HashMap<>();
 	
@@ -131,12 +123,12 @@ public class PathExpansionActor extends AbstractActor {
 					List<Step> cloned_steps = new ArrayList<>(message.getSteps());
 					cloned_steps.add(step);
 					log.warn("Cloned steps size :: "+cloned_steps.size());
-					JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(cloned_steps), 
+					JourneyMessage journey_msg = new JourneyMessage(message.getId(), 
+																	ListUtils.clone(cloned_steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
-																	message.getDomainId(), 
-																	message.getAccountId(),
-																	message.getAuditRecordId());
+																	message.getDomainId(),
+																	message.getAccountId(), message.getAuditRecordId());
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());
 					journey_executor.tell(journey_msg, getSelf());
@@ -174,12 +166,12 @@ public class PathExpansionActor extends AbstractActor {
 				for(Step step: new_steps) {
 					List<Step> steps = new ArrayList<>();
 					steps.add(step);
-					JourneyMessage journey_msg = new JourneyMessage(ListUtils.clone(steps), 
+					JourneyMessage journey_msg = new JourneyMessage(-1, 
+																	ListUtils.clone(steps), 
 																	PathStatus.EXPANDED, 
 																	BrowserType.CHROME, 
-																	message.getDomainId(), 
-																	message.getAccountId(),
-																	message.getAuditRecordId());
+																	message.getDomainId(),
+																	message.getAccountId(), message.getAuditRecordId());
 					
 					ActorRef journey_executor = getContext().actorOf(SpringExtProvider.get(actor_system)
 															.props("journeyExecutor"), "journeyExecutor"+UUID.randomUUID());

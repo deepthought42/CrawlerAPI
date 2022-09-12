@@ -43,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.google.cloud.storage.StorageException;
 import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.gcp.CloudVisionUtils;
@@ -460,13 +461,14 @@ public class BrowserService {
 	 * @pre browser != null
 	 * 
 	 * @return {@link PageState}
+	 * @throws WebDriverException 
+	 * @throws  
 	 * 
 	 * @throws MalformedURLException
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public PageState performBuildPageProcess(Browser browser) 
-			throws GridException, ServiceUnavailableException, MalformedURLException, IOException 
+	public PageState performBuildPageProcess(Browser browser) throws WebDriverException, IOException 
 	{
 		assert browser != null;
 		
@@ -484,6 +486,7 @@ public class BrowserService {
 	 * @param url_after_loading TODO
 	 * @param title TODO
 	 * @return page {@linkplain PageState}
+	 * @throws StorageException 
 	 * @throws GridException 
 	 * @throws IOException 
 	 * @throws XPathExpressionException 
@@ -491,7 +494,7 @@ public class BrowserService {
 	 * 
 	 * @pre browser != null
 	 */
-	public PageState buildPageState( Browser browser ) throws GridException, IOException {
+	public PageState buildPageState( Browser browser ) throws WebDriverException, IOException {
 		assert browser != null;
 
 		URL current_url = new URL(browser.getDriver().getCurrentUrl());
@@ -520,7 +523,10 @@ public class BrowserService {
 		//List<ElementState> elements = extractElementStates(source, url, browser);
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = ImageUtils.getChecksum(viewport_screenshot);
-		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, current_url.getHost(), screenshot_checksum, BrowserType.create(browser.getBrowserName()));
+		String viewport_screenshot_url = GoogleCloudStorage.saveImage(viewport_screenshot, 
+																	  current_url.getHost(), 
+																	  screenshot_checksum, 
+																	  BrowserType.create(browser.getBrowserName()));
 		viewport_screenshot.flush();
 		
 		BufferedImage full_page_screenshot = browser.getFullPageScreenshotStitched();		
@@ -659,35 +665,7 @@ public class BrowserService {
 		//boolean rendering_incomplete = true;
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl( page_state.getUrl() ));
 		
-		//int cnt = 0;
-		//do {
-			//Browser browser = null;
-			
-			try {
-				//get ElementState List by asking multiple bots to build xpaths in parallel
-				//for each xpath then extract element state
-				elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
-				log.warn("built "+elements.size()+" elements for page state : "+page_state.getUrl());
-				//break;
-			}
-			catch (NullPointerException e) {
-				log.warn("NPE thrown during element state extraction");
-				//e.printStackTrace();
-			}
-			catch(FiveZeroThreeException e) {
-				log.warn("503 exception occurred while accessing "+sanitized_url);
-			}
-			catch(WebDriverException | GridException e) {
-				log.warn("Webdriver exception occurred ... "+sanitized_url);
-				//e.printStackTrace();
-			}	
-			finally {
-				if(browser != null) {
-					browser.close();
-				}
-			}
-			//cnt++;
-		//}while(rendering_incomplete && cnt < 10000);
+		elements = getDomElementStates(page_state, xpaths, browser, elements_mapped, audit_id, sanitized_url, page_height);
 
 		return elements;
 	}
@@ -749,6 +727,11 @@ public class BrowserService {
 	 * @return
 	 * @throws IOException
 	 * @throws XPathExpressionException 
+	 * 
+	 * @pre xpaths != null
+	 * @pre browser != null
+	 * @pre element_states_map != null
+	 * @pre page_state != null
 	 */
 	private List<ElementState> getDomElementStates(
 			PageState page_state, 
@@ -758,9 +741,8 @@ public class BrowserService {
 			long audit_record_id, 
 			URL url, 
 			int page_height
-	) throws NullPointerException {
+	) {
 		assert xpaths != null;
-		assert !xpaths.isEmpty();
 		assert browser != null;
 		assert element_states_map != null;
 		assert page_state != null;
@@ -812,7 +794,6 @@ public class BrowserService {
 						String screenshot_checksum = ImageUtils.getChecksum(element_screenshot);
 						
 						element_screenshot_url = GoogleCloudStorage.saveImage(element_screenshot, host, screenshot_checksum, BrowserType.create(browser.getBrowserName()));
-						element_screenshot.flush();
 					}
 					catch( Exception e) {
 						//do nothing
@@ -968,7 +949,7 @@ public class BrowserService {
 			}
 			catch(NullPointerException e) {
 				log.warn("There was an NPE error finding element with xpath .... "+xpath + "   ;;   ON page :: "+page_state.getUrl());
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				log.warn("IOException occurred while building elements");

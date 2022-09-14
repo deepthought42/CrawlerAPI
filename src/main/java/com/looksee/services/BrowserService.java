@@ -498,18 +498,16 @@ public class BrowserService {
 		assert browser != null;
 
 		URL current_url = new URL(browser.getDriver().getCurrentUrl());
+		String url_without_protocol = BrowserUtils.getPageUrl(current_url.toString());
 		log.warn("building page state for URL :: "+current_url);
 		if(current_url.toString().contains("dashboard")) {
 			log.warn("BUILDING DASHBOARD PAGE STATE...");
-		}
-		else if(current_url.toString().contains("dashboard")) {
-			log.warn("BUILDING    ?#   PAGE STATE..."+current_url);
-		}
-		
-		String url_without_protocol = BrowserUtils.getPageUrl(current_url.toString());
-		if(current_url.toString().contains("dashboard")) {
 			log.warn("url_without_protocol = "+url_without_protocol);
 		}
+		else if(current_url.toString().contains("?#")) {
+			log.warn("BUILDING    ?#   PAGE STATE..."+current_url);
+		}
+
 		boolean is_secure = BrowserUtils.checkIfSecure(current_url);
         int status_code = BrowserUtils.getHttpStatus(current_url);
 

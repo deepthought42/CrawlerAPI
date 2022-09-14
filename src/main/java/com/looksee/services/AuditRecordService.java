@@ -65,7 +65,12 @@ public class AuditRecordService {
 
 		AuditRecord audit_record = audit_record_repo.save(audit);
 		
-		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {
+		if(audit instanceof DomainAuditRecord 
+				&& account_id != null 
+				&& account_id >= 0 
+				&& domain_id != null 
+				&& domain_id >= 0) 
+		{
 			try {
 				Account account = account_service.findById(account_id).get();
 				int id_start_idx = account.getUserId().indexOf('|');
@@ -303,6 +308,7 @@ public class AuditRecordService {
 	public boolean isDomainAuditComplete(AuditRecord audit_record) {		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
+
 		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
 		if(audit_record.getDataExtractionProgress() < 1.0) {
 			return false;

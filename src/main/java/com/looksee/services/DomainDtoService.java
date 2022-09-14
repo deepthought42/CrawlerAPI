@@ -135,9 +135,9 @@ public class DomainDtoService {
 
 		
 		if (page_audit_records.size() > 0) {
-			content_progress = content_progress / audited_pages;
-			info_architecture_progress = (info_architecture_progress / audited_pages);
-			aesthetic_progress = (aesthetic_progress / audited_pages);
+			content_progress = content_progress / page_count;
+			info_architecture_progress = (info_architecture_progress / page_count);
+			aesthetic_progress = (aesthetic_progress / page_count);
 			//data_extraction_progress = (data_extraction_progress / page_count);
 		}
 		

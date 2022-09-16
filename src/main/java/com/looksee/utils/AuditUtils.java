@@ -30,18 +30,15 @@ public class AuditUtils {
 		List<Audit> filtered_audits = audits.parallelStream()
 										    .filter((s) -> (s.getTotalPossiblePoints() > 0))
 										    .collect(Collectors.toList());
-		log.warn("audits with total points > 0 == "+filtered_audits.size());
 		
 		double scores_total = filtered_audits.parallelStream()
 										   .mapToDouble(x -> x.getPoints() / (double)x.getTotalPossiblePoints())
 										   .sum();
 
-		log.warn("score sum = "+scores_total);
 		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
 		double final_score = (scores_total / (double)filtered_audits.size())*100;
-		log.warn("score = "+scores_total + " / "+filtered_audits.size() + " = "+final_score);
 		return final_score;
 	}
 	

@@ -142,45 +142,21 @@ public class PageStateBuilder extends AbstractActor{
 	
 							//int XPATH_PARTITIONS = 3; // this is meant to replace XPATH_CHUNK_SIZE
 							//int XPATH_CHUNK_SIZE = (int)Math.ceil( xpaths.size() / (double)XPATH_PARTITIONS );
-							this.total_dispatches = 0L;
+							this.total_dispatches = 1L;
 							this.xpaths.addAll(xpaths);
 							
 							audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecord().getId(), page_state_record.getId());
-							//crawl_action.getAuditRecord().setPageState(page_state_record);
-							
-						   //	int start_xpath_index = 0;
-						   	//int last_xpath_index = 0;
-							//List<List<String>> xpath_lists = new ArrayList<>();
-							log.warn("XPATHS FOUND ::: "+xpaths.size());
-							
-							for(String xpath : xpaths) {
-								if(xpath.contains("/a")) {
-									log.warn("link xpath : "+xpath);
-								}
-							}
-							/*while(start_xpath_index < (xpaths.size()-1)) {
-						   		last_xpath_index = (start_xpath_index + XPATH_CHUNK_SIZE);
-						   		if(last_xpath_index >= xpaths.size()) {
-						   			last_xpath_index = xpaths.size()-1;
-						   		}
-						   		List<String> xpath_subset = xpaths.subList(start_xpath_index, last_xpath_index);
-						   		xpath_lists.add(xpath_subset);
-							   */
-						   		ElementExtractionMessage element_extraction_msg = 
-							   								new ElementExtractionMessage(crawl_action.getAccountId(), 
-							   															 page_state_record, 
-							   															 crawl_action.getAuditRecordId(), 
-							   															 xpaths, 
-							   															 crawl_action.getDomainId());
-								ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
-							   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
-			
-								element_extractor.tell(element_extraction_msg, getSelf());					
-							
-								//log.warn("Element state list length   =   "+elements.size());
-								//page_state_record.addElements(elements);
-								//start_xpath_index = last_xpath_index;
-						   	//}
+
+					   		ElementExtractionMessage element_extraction_msg = 
+						   								new ElementExtractionMessage(crawl_action.getAccountId(), 
+						   															 page_state_record, 
+						   															 crawl_action.getAuditRecordId(), 
+						   															 xpaths, 
+						   															 crawl_action.getDomainId());
+							ActorRef element_extractor = getContext().actorOf(SpringExtProvider.get(actor_system)
+						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
+		
+							element_extractor.tell(element_extraction_msg, getSelf());					
 						}
 						
 					}catch(Exception e) {
@@ -228,7 +204,7 @@ public class PageStateBuilder extends AbstractActor{
 							final PageState page_state_record = page_state_service.save(page_state);
 							List<String> xpaths = browser_service.extractAllUniqueElementXpaths(page_state_record.getSrc());
 	
-							this.total_dispatches = 0L;
+							this.total_dispatches = 1L;
 							this.xpaths.addAll(xpaths);
 							
 							audit_record_service.addPageToAuditRecord(crawl_action.getAuditRecordId(), 
@@ -245,8 +221,6 @@ public class PageStateBuilder extends AbstractActor{
 						   			.props("elementStateExtractor"), "elementStateExtractor"+UUID.randomUUID());
 		
 							element_extractor.tell(element_extraction_msg, getSelf());					
-						
-							this.total_dispatches++;
 						}
 					}catch(Exception e) {
 						PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 

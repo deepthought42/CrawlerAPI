@@ -200,13 +200,11 @@ public class AuditRecordController {
 											    		HttpServletRequest request,
 											    		@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
-    	log.warn("page audit record id :: "+ audit_record_id);
     	//Get most recent audits
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
     	
     	//retrieve element set
     	Collection<? extends UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
-    	log.warn("issues retrieved :: "+issues.size());
     	
     	//retrieve issue set
     	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);

@@ -303,37 +303,46 @@ public class AuditManager extends AbstractActor{
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
 				.match(PageDataExtractionMessage.class, message -> {
-					if(this.account == null) {
-						this.account = account_service.findById(message.getAccountId()).get();
-					}
-					if(this.domain == null) {
-						domain = domain_service.findById(message.getDomainId()).get();
-					}
 					
-					log.warn("AM received page data extraction message; id = "+message.getPageState().getId());					
-					PageState page_state = message.getPageState();
-					if(!page_urls.containsKey(page_state.getUrl())
-							&& !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) 
-					{
-						log.warn("Starting audit process for "+page_state.getUrl());
-				    	SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
-
-						if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
-							is_auditing_complete = false;
-							initiatePageAudits(page_state, message);
+					if(message.getDomainId() == -1 && message.getAccountId() == -1) {
+						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+						markDomainAuditComplete(audit_record, domain, account, message);
+					}
+					else {
+					
+						if(this.account == null) {
+							log.warn("retrieving account with id = "+message.getAccountId());
+							this.account = account_service.findById(message.getAccountId()).get();
 						}
-						else {
-							is_data_extraction_complete = true;
-							log.warn("+++++++++++++++++++++++++++++++++++++++");
-							log.warn("User has exceeded domain page audit limit");
-							log.warn("+++++++++++++++++++++++++++++++++++++++");
-							getSender().tell(PoisonPill.getInstance(), getSelf());
-							AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-							if(is_auditing_complete) {
-								markDomainAuditComplete(audit_record, domain, account, message);
+						if(this.domain == null) {
+							domain = domain_service.findById(message.getDomainId()).get();
+						}
+						
+						log.warn("AM received page data extraction message; id = "+message.getPageState().getId());					
+						PageState page_state = message.getPageState();
+						if(!page_urls.containsKey(page_state.getUrl())
+								&& !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) 
+						{
+							log.warn("Starting audit process for "+page_state.getUrl());
+					    	SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
+	
+							if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
+								is_auditing_complete = false;
+								initiatePageAudits(page_state, message);
 							}
+							else {
+								is_data_extraction_complete = true;
+								log.warn("+++++++++++++++++++++++++++++++++++++++");
+								log.warn("User has exceeded domain page audit limit");
+								log.warn("+++++++++++++++++++++++++++++++++++++++");
+								getSender().tell(PoisonPill.getInstance(), getSelf());
+								AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+								if(is_auditing_complete) {
+									markDomainAuditComplete(audit_record, domain, account, message);
+								}
+							}
+							page_urls.put(page_state.getUrl(), Boolean.TRUE);
 						}
-						page_urls.put(page_state.getUrl(), Boolean.TRUE);
 					}
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
@@ -391,6 +400,7 @@ public class AuditManager extends AbstractActor{
 									DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
 									if(is_auditing_complete) {
 										markDomainAuditComplete(domain_audit, domain, account, message);
+										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 									}
 									break;
 								}
@@ -425,6 +435,7 @@ public class AuditManager extends AbstractActor{
 						is_data_extraction_complete = true;
 						if(is_auditing_complete) {
 							markDomainAuditComplete(audit_record, domain, account, message);
+							mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						}
 						getSender().tell(PoisonPill.class, getSelf());
 						audit_record.setDataExtractionProgress(1.0);
@@ -472,6 +483,9 @@ public class AuditManager extends AbstractActor{
 									}
 									if(is_data_extraction_complete) {
 										markDomainAuditComplete(audit_record, domain, account, message);
+										log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
+										log.warn("Domain id :: "+message.getDomainId());
+										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 									}
 								}
 							}
@@ -555,15 +569,6 @@ public class AuditManager extends AbstractActor{
 		audit_record =  audit_record_service.save(audit_record, 
 												  message.getAccountId(), 
 												  message.getDomainId());	
-		log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
-		log.warn("Domain id :: "+message.getDomainId());
-		
-		
-		
-		log.warn("Domain email(part 2) :: "+domain.getId());
-		log.warn("Account (part 2) :: "+account.getId());
-
-		mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 	}
 
 	private void initiatePageAudits(PageState page_state, Message message) {

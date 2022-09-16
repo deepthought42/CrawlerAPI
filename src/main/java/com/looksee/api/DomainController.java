@@ -460,9 +460,9 @@ public class DomainController {
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
 			
-			Set<PageAuditRecord> audit_records = audit_record.getAudits();
+			Set<PageAuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
 			// get Page Count
-			long page_count = audit_record.getTotalPages();
+			long page_count = audit_record_service.getPageStatesForDomainAuditRecord(audit_record.getId()).size();//audit_record.getTotalPages();
 			long pages_audited = 0;
 
 			double score = 0.0;
@@ -488,7 +488,7 @@ public class DomainController {
 				double content_score = 0;
 				
 				for (PageAuditRecord page_audit : page_audits) {
-					Set<Audit> audits = page_audit.getAudits();
+					Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());// page_audit.getAudits();
 
 					overall_score += (int) (AuditUtils.calculateScore(audits));
 					aesthetic_score += (int) (AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS));
@@ -565,7 +565,7 @@ public class DomainController {
 				low_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.LOW.toString());
 
-				audits.addAll(page_audit.getAudits());
+				audits.addAll(audit_record_service.getAllAuditsAndIssues(page_audit.getId()));
 				// Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
 
 				if (page_audit.getInfoArchitechtureAuditProgress() >= 1.0) {

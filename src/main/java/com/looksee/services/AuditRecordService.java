@@ -116,7 +116,7 @@ public class AuditRecordService {
 	}
 	
 	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
-		return audit_record_repo.getAllAuditsAndIssues(audit_id);
+		return audit_record_repo.getAllAuditsForPageAuditRecord(audit_id);
 	}
 	
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(long id) {

@@ -135,14 +135,15 @@ public class AuditorController {
 		}
 		
 		PageCrawlActionMessage start_single_page_audit = new PageCrawlActionMessage(CrawlAction.START, 
-														 -1L, 
-														 account_id,
-														 audit_record,
-														 sanitized_url);
+																					 -1L, 
+																					 account_id,
+																					 audit_record,
+																					 sanitized_url);
 		
-		log.warn("Initiating audit via page state guilder actor");
+		
+		log.warn("Initiating audit via page state builder actor");
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
-	   			.props("auditManager"), "auditManager"+UUID.randomUUID());
+	   												.props("singlePageAuditManager"), "singlePageAuditManager"+UUID.randomUUID());
 		audit_manager.tell(start_single_page_audit, ActorRef.noSender());
 		
    		return audit_record;

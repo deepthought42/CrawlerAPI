@@ -157,7 +157,8 @@ public class AuditRecordController {
     													 page_state.getFullPageWidth(), 
     													 page_state.getFullPageHeight(),
     													 page_state.getSrc(), 
-    													 page_state.getKey(), page_state.getId());
+    													 page_state.getKey(), 
+    													 page_state.getId());
     			pages.add(simple_page);
     			return pages;
     		}
@@ -176,7 +177,8 @@ public class AuditRecordController {
 	    													 page_state.getFullPageWidth(),
 	    													 page_state.getFullPageHeight(),
 	    													 page_state.getSrc(), 
-	    													 page_state.getKey(), page_state.getId());
+	    													 page_state.getKey(), 
+	    													 page_state.getId());
 	    			pages.add(simple_page);
     			}
     			

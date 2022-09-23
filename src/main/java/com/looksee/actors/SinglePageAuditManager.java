@@ -133,6 +133,7 @@ public class SinglePageAuditManager extends AbstractActor{
 						stopAudit(message);
 					}
 				})
+				/*
 				.match(PageCandidateFound.class, message -> {
 					log.warn("Page candidate found message recieved by AUDIT MANAGER");
 					try {
@@ -143,7 +144,7 @@ public class SinglePageAuditManager extends AbstractActor{
 							domain_audit_record.setTotalPages( this.page_urls.keySet().size());
 							audit_record_service.save(domain_audit_record, message.getAccountId(), message.getDomainId());
 							
-							if(this.account == null) {
+							if(this.account == null && message.getAccountId() != -1) {
 								this.account = account_service.findById(message.getAccountId()).get();
 							}
 
@@ -189,34 +190,10 @@ public class SinglePageAuditManager extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
+				*/
 				.match(PageDataExtractionError.class, message -> {
 					log.warn("Error occurred while extracting page state for url "+message.getUrl()+";    error = "+message.getErrorMessage());
 				})
-				/*
-				.match(ElementsSaved.class, message -> {
-					PageState page_state = page_state_service.findById(message.getPageStateId()).get();
-
-					PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
-																	message.getAuditRecordId(), 
-																	message.getDomainId(), 
-																	message.getAccountId(), 
-																	message.getAuditRecordId(),
-																	page_state);
-					
-					ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-		   											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-					log.warn("sending message to content auditor....");
-					content_auditor.tell(audit_record_msg, getSelf());							
-
-					ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-					   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
-					info_architecture_auditor.tell(audit_record_msg, getSelf());
-
-					ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-								.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
-					aesthetic_auditor.tell(audit_record_msg, getSelf());
-				})
-				*/
 				.match(PageDataExtractionMessage.class, message -> {
 					initiatePageAudits(message.getPageState(), message);
 				})
@@ -242,11 +219,11 @@ public class SinglePageAuditManager extends AbstractActor{
 							audit_record = audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
 						
 							PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());								
-							if(this.account == null) {
+							if(this.account == null && message.getAccountId() != -1) {
 								this.account = account_service.findById(message.getAccountId()).get();
+								log.warn("sending email to account :: "+account.getEmail());
+								mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
 							}
-							log.warn("sending email to account :: "+account.getEmail());
-							mail_service.sendPageAuditCompleteEmail(account.getEmail(), page.getUrl(), audit_record.getId());
 						}
 					} catch(Exception e) {
 						log.warn("failed to retrieve audit record with id : "+message.getAuditRecordId());
@@ -255,7 +232,7 @@ public class SinglePageAuditManager extends AbstractActor{
 				})
 				.match(ExceededSubscriptionMessage.class, message -> {
 					log.warn("subscription limits exceeded.");
-					//TODO STOP AUDIT
+					stopAudit(message);
 				})
 				.match(AuditError.class, message -> {
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
@@ -297,7 +274,7 @@ public class SinglePageAuditManager extends AbstractActor{
 	 * @param domain2
 	 * @param account2
 	 */
-	private void markDomainAuditComplete(AuditRecord audit_record, Domain domain, Account account, Message message) {
+	private void markDomainAuditComplete(AuditRecord audit_record, Message message) {
 		log.warn("audit IS COMPLETE!");
 		audit_record.setContentAuditProgress(1.0);
 		audit_record.setAestheticAuditProgress(1.0);
@@ -357,7 +334,7 @@ public class SinglePageAuditManager extends AbstractActor{
 		aesthetic_auditor.tell(audit_record_msg, getSelf());
 	}
 	
-	private void stopAudit(PageCrawlActionMessage message) {
+	private void stopAudit(Message message) {
 		//stop all discovery processes
 		if(web_crawler_actor != null){
 			//actor_system.stop(web_crawler_actor);

@@ -93,7 +93,6 @@ public class AestheticAuditor extends AbstractActor{
 		return receiveBuilder()
 				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
-						log.warn("Aesthetic Auditor received Page Audit Record");
 						//retrieve compliance level
 						DesignSystem design_system = null;
 
@@ -117,7 +116,6 @@ public class AestheticAuditor extends AbstractActor{
 					   
 					   	//Audit color_palette_audit = color_palette_auditor.execute(page);
 						//audits.add(color_palette_audit);
-						log.warn("Sending initial audit progress update to parent");
 					   	AuditProgressUpdate audit_update = new AuditProgressUpdate(
 																	page_audit_record_msg.getAccountId(),
 																	audit_record.getId(),
@@ -139,7 +137,6 @@ public class AestheticAuditor extends AbstractActor{
 						 */
 						
 						try {
-							log.warn("Executing text contrast audit");
 						   	Audit text_contrast_audit = text_contrast_auditor.execute(page, audit_record, design_system);
 						   	if(text_contrast_audit != null) {
 								AuditProgressUpdate audit_update2 = new AuditProgressUpdate(
@@ -151,7 +148,6 @@ public class AestheticAuditor extends AbstractActor{
 																			AuditLevel.PAGE, 
 																			text_contrast_audit, 
 																			page_audit_record_msg.getDomainId());
-								log.warn("Telling audit manager that text contrast audit is complete");
 								getSender().tell(audit_update2, getSelf());
 						   	}
 						}
@@ -168,7 +164,6 @@ public class AestheticAuditor extends AbstractActor{
 						
 						
 						try {
-							log.warn("executing non text contrast audit");
 							Audit non_text_contrast_audit = non_text_contrast_auditor.execute(page, audit_record, design_system);
 							if( non_text_contrast_audit != null ) {
 							
@@ -182,7 +177,6 @@ public class AestheticAuditor extends AbstractActor{
 																			non_text_contrast_audit, 
 																			page_audit_record_msg.getDomainId());
 	
-								log.warn("non-text audit complete! - sending update to sender");
 								getSender().tell(audit_update3, getSelf());
 							}
 						}

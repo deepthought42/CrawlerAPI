@@ -369,7 +369,6 @@ public class AuditRecordService {
 			audit_record.setContentAuditMsg( message);
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {
-			log.warn("updating aesthetics with progress = " + progress);
 			audit_record.setAestheticAuditProgress( progress);
 			audit_record.setAestheticMsg(message);
 		}

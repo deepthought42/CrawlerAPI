@@ -110,7 +110,6 @@ public class SinglePageAuditManager extends AbstractActor{
 				.match(PageCrawlActionMessage.class, message-> {
 					//HANDLE SINGLE PAGE AUDIT ACTION
 					if(message.getAction().equals(CrawlAction.START)){
-						log.warn("starting single page audit for  :: "+message.getUrl() + " : "+message.getAuditRecordId());						
 						
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 					   			.props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
@@ -122,13 +121,17 @@ public class SinglePageAuditManager extends AbstractActor{
 				})
 				.match(PageDataExtractionError.class, message -> {
 					log.warn("Error occurred while extracting page state for url "+message.getUrl()+";    error = "+message.getErrorMessage());
+					/**
+					 * NOTE: THIS STILL NEEDS TO BE DONE
+					 * 
+					 * USER SHOULD BE INFORMED OF PAGE DATA EXTRACTION ERROR AND PAGE AUDIT RECORD SHOULD BE UPDATED ACCORDINGLY
+					 */
 				})
 				.match(PageDataExtractionMessage.class, message -> {
 					initiatePageAudits(message.getPageState(), message);
 				})
 				.match(AuditProgressUpdate.class, message -> {
 					try {
-						log.warn(message.getAuditRecordId() + " -- updating audit progress; Category = "+message.getCategory() + " , progress = "+message.getProgress());
 						AuditRecord audit_record = audit_record_service.updateAuditProgress(message.getAuditRecordId(), 
 																							message.getCategory(), 
 																							message.getAccountId(), 
@@ -141,7 +144,6 @@ public class SinglePageAuditManager extends AbstractActor{
 						}
 						
 						if(AuditUtils.isPageAuditComplete(audit_record)) {
-							log.warn("page audit is complete! = "+message.getAuditRecordId());
 							audit_record = markDomainAuditComplete(audit_record, message);
 							
 							PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());								
@@ -157,6 +159,11 @@ public class SinglePageAuditManager extends AbstractActor{
 					}
 				})
 				.match(ExceededSubscriptionMessage.class, message -> {
+					/**
+					 * NOTE: THIS STILL NEEDS TO BE DONE
+					 * 
+					 * RESULT SHOULD BE TO UPDATE AUDIT RECORD IF IT EXISTS AND TO INFORM USER OF SUBSCTIPTION EXCEPTION
+					 */
 					log.warn("subscription limits exceeded.");
 					stopAudit(message);
 				})
@@ -201,7 +208,6 @@ public class SinglePageAuditManager extends AbstractActor{
 	 * @param account2
 	 */
 	private AuditRecord markDomainAuditComplete(AuditRecord audit_record, Message message) {
-		log.warn("audit IS COMPLETE!");
 		audit_record.setContentAuditProgress(1.0);
 		audit_record.setAestheticAuditProgress(1.0);
 		audit_record.setDataExtractionProgress(1.0);
@@ -214,9 +220,6 @@ public class SinglePageAuditManager extends AbstractActor{
 	}
 
 	private void initiatePageAudits(PageState page_state, Message message) {
-		log.warn("initiating page audits");
-		//Account is still within page limit. continue with mapping page 
-		
 		AuditRecord page_audit = audit_record_service.findById(message.getAuditRecordId()).get();
 		page_audit.setUrl(page_state.getUrl());
 		page_audit.setDataExtractionProgress(1.0);
@@ -245,7 +248,6 @@ public class SinglePageAuditManager extends AbstractActor{
 		
 		ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-		log.warn("sending message to content auditor....");
 		content_auditor.tell(audit_record_msg, getSelf());							
 
 		ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)

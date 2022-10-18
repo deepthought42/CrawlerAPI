@@ -48,7 +48,6 @@ import com.looksee.models.message.DiscardedJourneyMessage;
 import com.looksee.models.message.JourneyExaminationProgressMessage;
 import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.message.Message;
-import com.looksee.models.message.PageCandidateFound;
 import com.looksee.models.message.PageDataExtractionError;
 import com.looksee.models.message.PageDataExtractionMessage;
 import com.looksee.services.AccountService;
@@ -140,10 +139,9 @@ public class CrawlerActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CrawlActionMessage.class, message -> {
-					audit_manager = getContext().getParent();
+					audit_manager = getContext().getSender();
 					if(CrawlAction.START.equals(message.getAction())) {
 						log.warn("STARTING crawl actor. Sending message to page state builder");
-						
 						
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
 								  .props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
@@ -277,111 +275,115 @@ public class CrawlerActor extends AbstractActor{
 					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(ConfirmedJourneyMessage.class, message -> {
-					log.warn("received confirmed journey :: "+message.getId());						
-					reviewed_journeys.put(message.getId(), "CONFIRMED");
-
-					log.warn("crawler received confirmed journey message steps :: "+message.getSteps());
-					if(this.account == null) {
-						this.account = account_service.findById(message.getAccountId()).get();
-					}
-					SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
-					
-					PageState final_page = PathUtils.getLastPageState(message.getSteps());
-
-					//load in element states
-					//final_page.setElements(page_state_service.getElementStates(final_page.getId()));
-					
-					if(this.domain == null) {
-						domain = domain_service.findById(message.getDomainId()).get();
-					}
-					
-					audit_manager.tell(message.clone(), getSelf());
-					
-					if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
-							|| visited_urls.containsKey(final_page.getUrl())) 
-					{
-						log.warn("Identified external or visited link "+final_page.getUrl());
-					}
-					else {
-						//audit_record_service.addPageToAuditRecord(message.getAuditRecordId(), final_page.getId());
-						List<ElementState> element_states = savePageAndElements(final_page);
-						final_page.setElements(element_states);
-						audit_record_service.addPageToAuditRecord(message.getAuditRecordId(), final_page.getId());
-
-
-						//Add page state to visited list
-						if(subscription_service.hasExceededDomainPageAuditLimit(plan, visited_urls.size())) {
-							log.warn("account has exceeded subscription plan");
+					try { 
+						log.warn("received confirmed journey :: "+message.getId());						
+						reviewed_journeys.put(message.getId(), "CONFIRMED");
+	
+						log.warn("crawler received confirmed journey message steps :: "+message.getSteps());
+						if(this.account == null) {
+							this.account = account_service.findById(message.getAccountId()).get();
+						}
+						SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
+						
+						PageState final_page = PathUtils.getLastPageState(message.getSteps());
+	
+						//load in element states
+						//final_page.setElements(page_state_service.getElementStates(final_page.getId()));
+						
+						if(this.domain == null) {
+							domain = domain_service.findById(message.getDomainId()).get();
+						}
+						
+						audit_manager.tell(message.clone(), getSelf());
+						
+						if( BrowserUtils.isExternalLink(domain.getUrl(), final_page.getUrl()) 
+								|| visited_urls.containsKey(final_page.getUrl())) 
+						{
+							log.warn("Identified external or visited link "+final_page.getUrl());
 						}
 						else {
-							visited_urls.put(final_page.getUrl(), Boolean.TRUE);
-							Set<Form> forms = PageUtils.extractAllForms(final_page);
-							Set<Form> unexplored_forms = new HashSet<>();
-							
-							for(Form form: forms) {
-								if(!isElementExplored(final_page.getUrl(), form.getFormTag())) {
-									unexplored_forms.add(form);
-								}
-								addElementsToExploredMap(final_page, form.getFormTag());
+							//audit_record_service.addPageToAuditRecord(message.getAuditRecordId(), final_page.getId());
+							List<ElementState> element_states = savePageAndElements(final_page);
+							final_page.setElements(element_states);
+							audit_record_service.addPageToAuditRecord(message.getAuditRecordId(), final_page.getId());
+	
+	
+							//Add page state to visited list
+							if(subscription_service.hasExceededDomainPageAuditLimit(plan, visited_urls.size())) {
+								log.warn("account has exceeded subscription plan");
 							}
-							
-							//generate form journeys
-							List<Step> steps = generateFormSteps(message.getDomainId(), final_page, unexplored_forms);
-							for(Step step: steps) {
-								List<Step> steps_list = JourneyUtils.trimPreLoginSteps(message.getSteps());
+							else {
+								visited_urls.put(final_page.getUrl(), Boolean.TRUE);
+								Set<Form> forms = PageUtils.extractAllForms(final_page);
+								Set<Form> unexplored_forms = new HashSet<>();
 								
-								//if step start page matches another start page url in the step list then discard
-								if(steps_list.contains(step) || JourneyUtils.hasStartPageAlreadyBeenExpanded(steps_list, step)) {
-									log.warn("FORM STEP EXISTS IN STEP LIST ALREADY");
+								for(Form form: forms) {
+									if(!isElementExplored(final_page.getUrl(), form.getFormTag())) {
+										unexplored_forms.add(form);
+									}
+									addElementsToExploredMap(final_page, form.getFormTag());
 								}
-								else {
-									steps_list.add(step);
+								
+								//generate form journeys
+								List<Step> steps = generateFormSteps(message.getDomainId(), final_page, unexplored_forms);
+								for(Step step: steps) {
+									List<Step> steps_list = JourneyUtils.trimPreLoginSteps(message.getSteps());
+									
+									//if step start page matches another start page url in the step list then discard
+									if(steps_list.contains(step) || JourneyUtils.hasStartPageAlreadyBeenExpanded(steps_list, step)) {
+										log.warn("FORM STEP EXISTS IN STEP LIST ALREADY");
+									}
+									else {
+										steps_list.add(step);
+										generated_journeys++;
+										reviewed_journeys.put(generated_journeys, null);
+										sendJourneyMessages(generated_journeys, 
+															steps_list, 
+															PathStatus.EXPANDED, 
+															BrowserType.CHROME, 
+															message,
+															"journeyExecutor");
+									}
+								}
+	
+								//generate journey steps for interactive non link elements
+								List<List<Step>> new_steps = generateJourneys(final_page);
+								
+								for(List<Step> step_list : new_steps) {
 									generated_journeys++;
 									reviewed_journeys.put(generated_journeys, null);
 									sendJourneyMessages(generated_journeys, 
-														steps_list, 
+														step_list, 
 														PathStatus.EXPANDED, 
 														BrowserType.CHROME, 
 														message,
 														"journeyExecutor");
 								}
-							}
-
-							//generate journey steps for interactive non link elements
-							List<List<Step>> new_steps = generateJourneys(final_page);
-							
-							for(List<Step> step_list : new_steps) {
-								generated_journeys++;
-								reviewed_journeys.put(generated_journeys, null);
-								sendJourneyMessages(generated_journeys, 
-													step_list, 
-													PathStatus.EXPANDED, 
-													BrowserType.CHROME, 
-													message,
-													"journeyExecutor");
-							}
-							
-							//EXTRACT LINKS AND SEND NON EXTERNAL AND NON VISITED LINKS AND LINKS THAT AREN'T YET ON THE FRONTIER TO BE BUILT
-							List<URL> links = extractLinks(final_page, domain.getUrl());
-							//send links to page state builder
-							sendLinksToPageStateBuilder(links, visited_urls, message);
-							
-						}						
+								
+								//EXTRACT LINKS AND SEND NON EXTERNAL AND NON VISITED LINKS AND LINKS THAT AREN'T YET ON THE FRONTIER TO BE BUILT
+								List<URL> links = extractLinks(final_page, domain.getUrl());
+								//send links to page state builder
+								sendLinksToPageStateBuilder(links, visited_urls, message);
+								
+							}						
+						}
+						
+						//send generated and examined journey counts to audit manager
+						int examined_journeys = getExaminedJourneyCount(reviewed_journeys)+getExaminedPages(visited_urls);
+						int total_journeys = reviewed_journeys.size() + visited_urls.size();
+						
+						log.warn("# examined journeys (CJ) :: "+getExaminedJourneyCount(reviewed_journeys)+ " : " +getExaminedPages(visited_urls) + " : " +examined_journeys);
+						log.warn("# generated journeys (CJ) :: "+ reviewed_journeys.size() + " : " + visited_urls.size() + " : "+total_journeys);
+						
+						JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
+																											message.getAuditRecordId(), 
+																											message.getDomainId(),
+																											examined_journeys,
+																											total_journeys);
+						audit_manager.tell(progress_msg, getSelf());
+					}catch(Exception e) {
+						e.printStackTrace();
 					}
-					
-					//send generated and examined journey counts to audit manager
-					int examined_journeys = getExaminedJourneyCount(reviewed_journeys)+getExaminedPages(visited_urls);
-					int total_journeys = reviewed_journeys.size() + visited_urls.size();
-					
-					log.warn("# examined journeys (CJ) :: "+getExaminedJourneyCount(reviewed_journeys)+ " : " +getExaminedPages(visited_urls) + " : " +examined_journeys);
-					log.warn("# generated journeys (CJ) :: "+ reviewed_journeys.size() + " : " + visited_urls.size() + " : "+total_journeys);
-					
-					JourneyExaminationProgressMessage progress_msg = new JourneyExaminationProgressMessage(message.getAccountId(), 
-																										message.getAuditRecordId(), 
-																										message.getDomainId(),
-																										examined_journeys,
-																										total_journeys);
-					audit_manager.tell(progress_msg, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -596,21 +598,22 @@ public class CrawlerActor extends AbstractActor{
 				List<TestUser> user_list = domain_service.findTestUsers(domain_id);
 				if(!user_list.isEmpty()) {
 					
-					
+					List<String> username_input_types = new ArrayList<>();
+					username_input_types.add("username");
+					username_input_types.add("email");
 					//get username field
-					ElementState username_element = getFormField(form.getFormFields(), "username");
-					//create step to enter username into username field
-					
+					ElementState username_element = getFormField(form.getFormFields(), username_input_types);
+				
 					//get password field
 					ElementState password_element = getFormField(form.getFormFields(), "password");
-	
-					//create step to enter password into password field
+
 					//get submit button
 					ElementState submit_btn = form.getSubmitField();
 					
-					log.warn("username element :: "+username_element.getKey());
-					log.warn("password element :: "+password_element.getKey());
-					log.warn("Submit button :: "+submit_btn.getKey());
+					log.warn("LOGIN FORM FOUND. URL = "+pageState.getUrl());
+					log.warn("username element :: "+username_element);
+					log.warn("password element :: "+password_element);
+					log.warn("Submit button :: "+submit_btn);
 					//create step to click on submit button
 					steps.add( new LoginStep(pageState, null, username_element, password_element, submit_btn, user_list.get(0)) );
 				}
@@ -644,6 +647,28 @@ public class CrawlerActor extends AbstractActor{
 			for(String attr_value : element.getAttributes().values()) {
 				if(attr_value.toLowerCase().contains(form_string)) {
 					return element;
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Checks form fields for any input elements that have an attribute value that matches 
+	 * 	any value in the form string list. This method converts all attribute values to lowercase and assumes
+	 *  that all values in the list of form input values are lowercase
+	 * 
+	 * @param formFields
+	 * @param form_string_arr
+	 * @return
+	 */
+	private ElementState getFormField(List<ElementState> formFields, List<String> input_types) {
+		for(ElementState element: formFields) {
+			for(String attr_value : element.getAttributes().values()) {
+				for(String input_type : input_types) {
+					if(attr_value.toLowerCase().contains(input_type)) {
+						return element;
+					}
 				}
 			}
 		}

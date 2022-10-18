@@ -27,7 +27,6 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.services.AuditService;
-import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.BrowserUtils;
@@ -47,9 +46,6 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired 
-	private ElementStateService element_state_service;
 
 	@Autowired
 	private UXIssueMessageService issue_message_service;
@@ -67,15 +63,20 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 	 * Level AA is the requirement used withiin common laws and standards
 	 * Level AAA This is for companies looking to provide an exceptional experience with color contrast
 	 * 
+	 * Compliance level is determined by the {@link DesignSystem} if it isn't null, otherwise defaults to AAA level
 	 */
 	@Override
 	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null;
 		
-		WCAGComplianceLevel wcag_compliance = design_system.getWcagComplianceLevel();
+		WCAGComplianceLevel wcag_compliance = WCAGComplianceLevel.AAA;
 		
-		if(wcag_compliance.equals(WCAGComplianceLevel.A)) {
-			return null;
+		if(design_system != null) {
+			wcag_compliance = design_system.getWcagComplianceLevel();
+			
+			if(wcag_compliance.equals(WCAGComplianceLevel.A)) {
+				return null;
+			}
 		}
 		
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getId());

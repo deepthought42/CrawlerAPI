@@ -275,7 +275,7 @@ public class AuditRecordController {
 			double menu_analysis_score = 0.0;
 			double performance_score = 0.0;
 
-			double aesthetic_score = 0.0;
+			//double aesthetic_score = 0.0;
 			double text_color_contrast_score = 0.0;
 			double non_text_color_contrast_score = 1.0;
 			
@@ -306,7 +306,7 @@ public class AuditRecordController {
 			performance_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
 			double link_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
 
-			aesthetic_score = AuditUtils.calculateScore(audits);
+			//aesthetic_score = AuditUtils.calculateScore(audits);
 			text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
 			non_text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 			typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
@@ -330,12 +330,15 @@ public class AuditRecordController {
 			}
 			audit_count += audits.size();
 
+			log.debug("audit record id = "+audit_record.getId());
 			if (audit_record.getInfoArchitechtureAuditProgress() >= 1.0) {
 				info_arch_audits_complete++;
 			}
 			if (audit_record.getContentAuditProgress() >= 1.0) {
 				content_audits_complete++;
 			}
+			
+			log.debug("aesthetic audit progress = "+audit_record.getAestheticAuditProgress());
 			if (audit_record.getAestheticAuditProgress() >= 1.0) {
 				aesthetic_audits_complete++;
 			}
@@ -347,6 +350,10 @@ public class AuditRecordController {
 			Set<Label> image_labels = audit_record_service.getLabelsForImageElements(audit_record.getId()) ;
 			
 			//build stats object
+			log.debug("aesthetic audits complete = "+aesthetic_audits_complete);
+			log.debug("page count = " + page_count);
+			log.debug("---------------------------------------------");
+			
 			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														audit_record.getStartTime(),
 														audit_record.getEndTime(),
@@ -402,7 +409,9 @@ public class AuditRecordController {
 														null,
 														0,
 														image_labels,
-														image_copyright_issue_count);
+														image_copyright_issue_count, 
+														audit_record.getStatus());
+														
 			
 			return audit_stats;
     	}

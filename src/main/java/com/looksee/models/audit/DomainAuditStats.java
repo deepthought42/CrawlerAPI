@@ -9,6 +9,7 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.AuditSubcategoryStat;
 import com.looksee.models.Label;
+import com.looksee.models.enums.ExecutionStatus;
 
 public class DomainAuditStats extends AuditStats{	
 	
@@ -89,8 +90,10 @@ public class DomainAuditStats extends AuditStats{
 			List<SimpleScore> accessibility_score_history, 
 			int total_issues, 
 			Set<Label> image_labels,
-			int image_copyright_issue_count
+			int image_copyright_issue_count, 
+			ExecutionStatus execution_status
 	) {
+		setStatus(execution_status);
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setAuditRecordId(audit_record_id);

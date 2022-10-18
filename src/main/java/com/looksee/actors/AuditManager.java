@@ -449,8 +449,9 @@ public class AuditManager extends AbstractActor{
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(AuditProgressUpdate.class, message -> {
-					log.debug("AUDIT PROGRESS UPDATE recieved by Audit Manager");
+					log.warn("AUDIT PROGRESS UPDATE recieved by Audit Manager");
 					try {
+						log.warn("updating audit progress; Category = "+message.getCategory() + " , progress = "+message.getProgress());
 						AuditRecord audit_record = audit_record_service.updateAuditProgress(message.getAuditRecordId(), 
 																							message.getCategory(), 
 																							message.getAccountId(), 

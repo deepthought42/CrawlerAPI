@@ -3,14 +3,10 @@ package com.looksee.actors;
 import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.ColorData;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditProgressUpdate;
-import com.looksee.models.message.BrowserCrawlActionMessage;
 import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.ElementExtractionError;
 import com.looksee.models.message.ElementExtractionMessage;
@@ -40,8 +33,6 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.BrowserService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
-import com.looksee.utils.ElementStateUtils;
-import com.looksee.utils.ImageUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -65,10 +56,7 @@ public class PageStateBuilder extends AbstractActor{
 	private long total_dispatch_responses = 0;
 	private long total_save_dispatches = 0;
 
-	
 	private List<String> xpaths;
-	private PageState page_state;
-	//private Map<String, Integer> total_dispatches;
 	
 	@Autowired
 	private BrowserService browser_service;

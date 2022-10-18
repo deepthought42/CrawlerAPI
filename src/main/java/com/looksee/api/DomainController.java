@@ -693,7 +693,7 @@ public class DomainController {
 					accessibility_score_history, 
 					total_issues, 
 					image_labels, 
-					image_copyright_issue_count);
+					image_copyright_issue_count, null);
 
 			return audit_stats;
 		} else {

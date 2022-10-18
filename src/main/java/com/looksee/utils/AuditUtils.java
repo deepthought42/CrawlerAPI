@@ -58,7 +58,6 @@ public class AuditUtils {
 		
 		double aesthetic_score = 0;
 		int aesthetic_count = 0;
-		int max_aesthetic_points = 0;
 		
 		double interactivity_score = 0;
 		int interactivity_count = 0;
@@ -156,11 +155,11 @@ public class AuditUtils {
     	return score / (double)count;
 	}
 
-	public static boolean isPageAuditComplete(AuditRecord page_audit_record) {
-		return page_audit_record.getAestheticAuditProgress() >= 1 
-			&& page_audit_record.getContentAuditProgress() >= 1
-			&& page_audit_record.getInfoArchitechtureAuditProgress() >= 1
-			&& page_audit_record.getDataExtractionProgress() >= 1;
+	public static boolean isPageAuditComplete(AuditRecord audit_record) {
+		return audit_record.getAestheticAuditProgress() >= 1 
+			&& audit_record.getContentAuditProgress() >= 1
+			&& audit_record.getInfoArchitechtureAuditProgress() >= 1
+			&& audit_record.getDataExtractionProgress() >= 1;
 	}
 
 	public static String getExperienceRating(PageAuditRecord audit_record) {

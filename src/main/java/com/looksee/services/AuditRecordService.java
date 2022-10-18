@@ -226,8 +226,8 @@ public class AuditRecordService {
 	}
 
 
-	public void addPageAuditToDomainAudit(long domain_audit_record_id, Long page_audit_record_id) {
-		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_id);
+	public void addPageAuditToDomainAudit(long domain_audit_id, long page_audit_id) {
+		audit_record_repo.addPageAuditRecord(domain_audit_id, page_audit_id);
 	}
 	
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
@@ -358,7 +358,8 @@ public class AuditRecordService {
 										   long account_id, 
 										   long domain_id, 
 										   double progress, 
-										   String message) {
+										   String message) 
+	{
 		AuditRecord audit_record = findById(auditRecordId).get();
 		audit_record.setDataExtractionProgress(1.0);
 		audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
@@ -368,6 +369,7 @@ public class AuditRecordService {
 			audit_record.setContentAuditMsg( message);
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {
+			log.warn("updating aesthetics with progress = " + progress);
 			audit_record.setAestheticAuditProgress( progress);
 			audit_record.setAestheticMsg(message);
 		}

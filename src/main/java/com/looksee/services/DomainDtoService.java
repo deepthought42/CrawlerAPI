@@ -47,7 +47,6 @@ public class DomainDtoService {
 		int page_count = 0;
 		
 		if (!audit_record_opt.isPresent()) {
-			log.warn("returning default Domain DTO because audit record was not found");
 			return new DomainDto(domain.getId(), 
 								 domain.getUrl(), 
 								 0, 
@@ -72,14 +71,12 @@ public class DomainDtoService {
 		// get all content audits for most recent audit record and calculate overall
 		// score
 		Set<Audit> content_audits = audit_record_service.getAllContentAuditsForDomainRecord(domain_audit.getId());
-		log.warn("content audits found = "+content_audits.size());
 		double content_score = AuditUtils.calculateScore(content_audits);
 
 		// get all info architecture audits for most recent audit record and calculate
 		// overall score
 		Set<Audit> info_arch_audits = audit_record_service
 				.getAllInformationArchitectureAuditsForDomainRecord(domain_audit.getId());
-		log.warn("info architecture audits found = "+info_arch_audits.size());
 
 		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
 
@@ -87,7 +84,6 @@ public class DomainDtoService {
 		// overall score
 		Set<Audit> accessibility_audits = audit_record_service
 				.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
-		log.warn("accessibility audits found = "+info_arch_audits.size());
 
 		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
 
@@ -95,7 +91,6 @@ public class DomainDtoService {
 		// score
 		Set<Audit> aesthetics_audits = audit_record_service
 				.getAllAestheticAuditsForDomainRecord(domain_audit.getId());
-		log.warn("aesthetic audits found = "+info_arch_audits.size());
 
 		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
 
@@ -107,13 +102,10 @@ public class DomainDtoService {
 		Set<PageState> page_states = audit_record_service.getPageStatesForDomainAuditRecord(domain_audit.getId());
 		Map<String, Boolean> page_urls = new HashMap<>();
 		
-		log.warn("page states found for domain audit :: "+page_states);
 		for(PageState page : page_states) {
 			page_urls.put(page.getUrl(), Boolean.TRUE);
 		}
 		page_count = page_urls.size();
-		log.warn("page count = "+page_count);
-		//page_count = page_audit_records.size();
 
 		double content_progress = 0.0;
 		double aesthetic_progress = 0.0;

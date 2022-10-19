@@ -203,16 +203,16 @@ public class SubscriptionService {
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM)){ //UNLIMITED
-    		return true;
+    		return false;
     	}
     	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 5000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) ){ //UNLIMITED
-    		return true;
+    		return false;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
-    		return true;
+    		return false;
     	}
     	
     	return false;
@@ -246,7 +246,7 @@ public class SubscriptionService {
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
-    		return true;
+    		return false;
     	}
     	
     	return false;

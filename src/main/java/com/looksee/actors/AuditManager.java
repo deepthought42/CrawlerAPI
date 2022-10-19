@@ -194,7 +194,6 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(JourneyCrawlActionMessage.class, message-> {
 					if(message.getAction().equals(CrawlAction.START)){
-						log.warn("starting domain audit");
 						this.is_domain_audit = true;
 						this.domain_audit_id = message.getAuditRecordId();
 						//send message to webCrawlerActor to get pages
@@ -238,7 +237,6 @@ public class AuditManager extends AbstractActor{
 
 							if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
 								//Account is still within page limit. continue with mapping page 
-								log.warn("building page audit record...");
 								PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
 																					new HashSet<>(), 
 																					null, 
@@ -291,7 +289,6 @@ public class AuditManager extends AbstractActor{
 					
 					ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 		   											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-					log.warn("sending message to content auditor....");
 					content_auditor.tell(audit_record_msg, getSelf());							
 
 					ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -311,14 +308,12 @@ public class AuditManager extends AbstractActor{
 					else {
 					
 						if(this.account == null) {
-							log.warn("retrieving account with id = "+message.getAccountId());
 							this.account = account_service.findById(message.getAccountId()).get();
 						}
 						if(this.domain == null) {
 							domain = domain_service.findById(message.getDomainId()).get();
 						}
 						
-						log.warn("AM received page data extraction message; id = "+message.getPageState().getId());					
 						PageState page_state = message.getPageState();
 						if(!page_urls.containsKey(page_state.getUrl())
 								&& !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) 
@@ -363,7 +358,6 @@ public class AuditManager extends AbstractActor{
 						//retrieve all unique page states for journey steps
 						List<PageState> page_states = getAllUniquePageStates(saved_steps);
 						//remove all unique pageStates that have already been analyzed
-						log.warn("Page states to be audited :: " + page_states);
 						
 						//create PageAuditRecord for each page that hasn't been analyzed.
 						if(this.account == null) {
@@ -385,7 +379,6 @@ public class AuditManager extends AbstractActor{
 
 								if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
 									page_urls.put(url_without_protocol, Boolean.TRUE);
-									log.warn("Subscription valid (pages audited : "+total_pages_audited);
 									total_pages_audited++;
 									is_auditing_complete = false;
 									initiatePageAudits(page_state, message);
@@ -416,17 +409,13 @@ public class AuditManager extends AbstractActor{
 					}
 				})
 				.match(JourneyExaminationProgressMessage.class, message -> {
-					log.warn("AM examined journeys = "+message.getExaminedJourneys());
-					log.warn("AM generated journeys = "+message.getGeneratedJourneys());
-					
 					double journey_mapping_progress = message.getExaminedJourneys()/(double)message.getGeneratedJourneys();
-					log.warn("Setting journey mapping progress = "+journey_mapping_progress);
+
 					if(this.account == null) {
 						this.account = account_service.findById(message.getAccountId()).get();
 					}
 					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-					log.warn("current journey mapping progress :: "+journey_mapping_progress);
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					
 					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size()) 
@@ -449,9 +438,7 @@ public class AuditManager extends AbstractActor{
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(AuditProgressUpdate.class, message -> {
-					log.warn("AUDIT PROGRESS UPDATE recieved by Audit Manager");
 					try {
-						log.warn("updating audit progress; Category = "+message.getCategory() + " , progress = "+message.getProgress());
 						AuditRecord audit_record = audit_record_service.updateAuditProgress(message.getAuditRecordId(), 
 																							message.getCategory(), 
 																							message.getAccountId(), 
@@ -497,7 +484,6 @@ public class AuditManager extends AbstractActor{
 						else if(audit_record instanceof PageAuditRecord){
 							boolean is_page_audit_complete = AuditUtils.isPageAuditComplete(audit_record);						
 							if(is_page_audit_complete) {
-								log.warn("page audit is complete!");
 								audit_record.setEndTime(LocalDateTime.now());
 								audit_record.setStatus(ExecutionStatus.COMPLETE);
 								audit_record = audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
@@ -560,7 +546,6 @@ public class AuditManager extends AbstractActor{
 	 * @param account2
 	 */
 	private void markDomainAuditComplete(AuditRecord audit_record, Domain domain, Account account, Message message) {
-		log.warn("audit IS COMPLETE!");
 		audit_record.setContentAuditProgress(1.0);
 		audit_record.setAestheticAuditProgress(1.0);
 		audit_record.setDataExtractionProgress(1.0);
@@ -573,7 +558,6 @@ public class AuditManager extends AbstractActor{
 	}
 
 	private void initiatePageAudits(PageState page_state, Message message) {
-		log.warn("initiating page audits");
 		//Account is still within page limit. continue with mapping page 
 		PageAuditRecord page_audit = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
 															new HashSet<>(), 
@@ -607,7 +591,7 @@ public class AuditManager extends AbstractActor{
 		
 		ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-		log.warn("sending message to content auditor....");
+
 		content_auditor.tell(audit_record_msg, getSelf());							
 
 		ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)

@@ -1066,7 +1066,8 @@ public class DomainController {
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
 	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
-			throws Exception {
+			throws Exception 
+	{
 		Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
 		Account account = account_service.findByUserId(user_id);
@@ -1097,7 +1098,7 @@ public class DomainController {
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
-
+		
 		DomainDto domain_dto = new DomainDto( domain.getId(), 
 											  domain.getUrl(), 
 											  domain.getPages().size(), 
@@ -1110,9 +1111,9 @@ public class DomainController {
 											  0.0, 
 											  0, 
 											  0.0, 
-											  false, 
-											  0.0,
-											  "Domain successfully created",
+											  true, 
+											  0.01,
+											  "Audit started",
 											  ExecutionStatus.IN_PROGRESS);
 		
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());

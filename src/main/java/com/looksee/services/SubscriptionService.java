@@ -196,19 +196,19 @@ public class SubscriptionService {
 	 * @throws StripeException
 	 */
 	public boolean hasExceededSinglePageAuditLimit(SubscriptionPlan plan, int page_audit_cnt) {    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 10){
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_cnt >= 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 50){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_cnt >= 1000){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_cnt >= 100){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM)){ //UNLIMITED
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 200){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_cnt >= 5000){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_cnt >= 500){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) ){ //UNLIMITED
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -230,19 +230,19 @@ public class SubscriptionService {
 	 * @throws StripeException
 	 */
 	public boolean hasExceededDomainPageAuditLimit(SubscriptionPlan plan, int page_audit_count) {				    	
-    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count >= 10){
+    	if(plan.equals(SubscriptionPlan.FREE) && page_audit_count >= 20){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && page_audit_count >= 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count >= 1000){
+    	else if(plan.equals(SubscriptionPlan.COMPANY_PREMIUM) && page_audit_count >= 500){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count >= 200){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PRO) && page_audit_count >= 500){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count >= 1000){
+    	else if(plan.equals(SubscriptionPlan.AGENCY_PREMIUM) && page_audit_count >= 2000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.UNLIMITED)){
@@ -260,7 +260,7 @@ public class SubscriptionService {
 	 * @return
 	 */
 	public boolean hasExceededDomainAuditLimit(SubscriptionPlan plan, int domain_audit_cnt) {
-		if(plan.equals(SubscriptionPlan.FREE) && domain_audit_cnt >= 4){
+		if(plan.equals(SubscriptionPlan.FREE) && domain_audit_cnt >= 5){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.COMPANY_PRO) && domain_audit_cnt >= 20){

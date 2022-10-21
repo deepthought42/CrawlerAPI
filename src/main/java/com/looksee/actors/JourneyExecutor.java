@@ -107,6 +107,7 @@ public class JourneyExecutor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(JourneyMessage.class, message-> {
+					log.warn("Received journey :: "+message.getId());
 					List<Step> steps = new ArrayList<>(message.getSteps());
 					try {
 						PageState page_state = iterateThroughJourneySteps(steps, 
@@ -123,7 +124,6 @@ public class JourneyExecutor extends AbstractActor{
 					}
 					log.warn("done processing journey :: "+message.getId());
 					processIfStepsShouldBeExpanded(message.getId(), steps, message.getDomainId(), message.getAccountId(), message.getAuditRecordId());
-					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());
@@ -148,28 +148,43 @@ public class JourneyExecutor extends AbstractActor{
 	 * @param account_id
 	 * @param audit_record_id
 	 */
-	private void processIfStepsShouldBeExpanded(int journey_id, List<Step> steps, long domain_id, long account_id, long audit_record_id) {
-		PageState second_to_last_page = PathUtils.getSecondToLastPageState(steps);
-		PageState final_page = PathUtils.getLastPageState(steps);
-		//is end_page PageState different from second to last PageState
-		if(final_page == null || final_page.equals(second_to_last_page)) {
-			//tell parent that we processed a journey that is being discarded
-			DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	journey_id, 
+	private void processIfStepsShouldBeExpanded(int journey_id, 
+												List<Step> steps, 
+												long domain_id, 
+												long account_id, 
+												long audit_record_id) 
+	{
+		try {
+			PageState second_to_last_page = PathUtils.getSecondToLastPageState(steps);
+			PageState final_page = PathUtils.getLastPageState(steps);
+			//is end_page PageState different from second to last PageState
+			if(final_page == null || final_page.equals(second_to_last_page)) {
+				//tell parent that we processed a journey that is being discarded
+				DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	journey_id, 
+																						BrowserType.CHROME, 
+																						domain_id,
+																						account_id, 
+																						audit_record_id);
+				getSender().tell(journey_message, getSelf());
+			}
+			else {
+				ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(journey_id, 
+																					ListUtils.clone(steps), 
+																					PathStatus.EXAMINED, 
 																					BrowserType.CHROME, 
 																					domain_id,
 																					account_id, 
 																					audit_record_id);
-			getSender().tell(journey_message, getSelf());
-		}
-		else {
-			ConfirmedJourneyMessage journey_message = new ConfirmedJourneyMessage(journey_id, 
-																				ListUtils.clone(steps), 
-																				PathStatus.EXAMINED, 
-																				BrowserType.CHROME, 
-																				domain_id,
-																				account_id, 
-																				audit_record_id);
-			
+				
+				getSender().tell(journey_message, getSelf());
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			DiscardedJourneyMessage journey_message = new DiscardedJourneyMessage(	journey_id, 
+					BrowserType.CHROME, 
+					domain_id,
+					account_id, 
+					audit_record_id);
 			getSender().tell(journey_message, getSelf());
 		}
 	}

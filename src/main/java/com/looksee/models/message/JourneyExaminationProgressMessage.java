@@ -1,10 +1,7 @@
 package com.looksee.models.message;
 
-public class JourneyExaminationProgressMessage {
+public class JourneyExaminationProgressMessage extends Message{
 
-	private long accountId;
-	private long auditRecordId;
-	private long domainId;
 	private int examinedJourneys;
 	private int generatedJourneys;
 	
@@ -19,30 +16,6 @@ public class JourneyExaminationProgressMessage {
 		setDomainId(domainId);
 		setExaminedJourneys(examined_journeys);
 		setGeneratedJourneys(generated_journeys);
-	}
-
-	public long getAccountId() {
-		return accountId;
-	}
-
-	public void setAccountId(long accountId) {
-		this.accountId = accountId;
-	}
-
-	public long getAuditRecordId() {
-		return auditRecordId;
-	}
-
-	public void setAuditRecordId(long auditRecordId) {
-		this.auditRecordId = auditRecordId;
-	}
-
-	public long getDomainId() {
-		return domainId;
-	}
-
-	public void setDomainId(long domainId) {
-		this.domainId = domainId;
 	}
 
 	public int getExaminedJourneys() {

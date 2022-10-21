@@ -145,7 +145,6 @@ public class DomainService {
 	}
 	
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(long id) {
-		
 		return domain_repo.getMostRecentAuditRecord(id);
 	}
 

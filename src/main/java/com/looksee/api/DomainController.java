@@ -158,7 +158,6 @@ public class DomainController {
 		 
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
-		log.warn("user id  :: " + id);
 		Account acct = account_service.findByUserId(id);
 
 		if (acct == null) {
@@ -262,7 +261,6 @@ public class DomainController {
 	@RequestMapping(method = RequestMethod.GET, path = "{domain_id}/settings")
 	public @ResponseBody DomainSettingsDto getDesignSystem(@PathVariable("domain_id") long domain_id,
 			HttpServletRequest request) {
-		log.warn("retrieving design system");
 		DesignSystem design_system = null;
 		Optional<DesignSystem> design_system_opt = domain_service.getDesignSystem(domain_id);
 		if (!design_system_opt.isPresent()) {
@@ -293,8 +291,6 @@ public class DomainController {
 	public @ResponseBody DesignSystem updateWcagLevel(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, @RequestBody(required = true) DesignSystem settings)
 			throws MalformedURLException {
-		log.warn("domain record id :: " + domain_id);
-		log.warn("WCAG level :: " + settings.getWcagComplianceLevel());
 		// Get domain
 		return domain_service.updateWcagSettings(domain_id, settings.getWcagComplianceLevel().toString());
 	}
@@ -310,8 +306,6 @@ public class DomainController {
 	public @ResponseBody DesignSystem updateExpertise(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, @RequestBody(required = true) DesignSystem settings)
 			throws MalformedURLException {
-		log.warn("domain record id :: " + domain_id);
-		log.warn("proficiency level :: " + settings.getAudienceProficiency());
 		// Get domain
 		return domain_service.updateExpertiseSettings(domain_id, settings.getAudienceProficiency().toString());
 	}
@@ -460,9 +454,9 @@ public class DomainController {
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
 			
-			Set<PageAuditRecord> audit_records = audit_record.getAudits();
+			Set<PageAuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
 			// get Page Count
-			long page_count = audit_record.getTotalPages();
+			long page_count = audit_record_service.getPageStatesForDomainAuditRecord(audit_record.getId()).size();//audit_record.getTotalPages();
 			long pages_audited = 0;
 
 			double score = 0.0;
@@ -488,7 +482,7 @@ public class DomainController {
 				double content_score = 0;
 				
 				for (PageAuditRecord page_audit : page_audits) {
-					Set<Audit> audits = page_audit.getAudits();
+					Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());// page_audit.getAudits();
 
 					overall_score += (int) (AuditUtils.calculateScore(audits));
 					aesthetic_score += (int) (AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS));
@@ -565,7 +559,7 @@ public class DomainController {
 				low_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.LOW.toString());
 
-				audits.addAll(page_audit.getAudits());
+				audits.addAll(audit_record_service.getAllAuditsAndIssues(page_audit.getId()));
 				// Set<Audit> audits = audit_record_service.getAllAudits(page_audit.getId());
 
 				if (page_audit.getInfoArchitechtureAuditProgress() >= 1.0) {
@@ -693,7 +687,8 @@ public class DomainController {
 					accessibility_score_history, 
 					total_issues, 
 					image_labels, 
-					image_copyright_issue_count);
+					image_copyright_issue_count, 
+					ExecutionStatus.IN_PROGRESS);
 
 			return audit_stats;
 		} else {
@@ -1071,7 +1066,8 @@ public class DomainController {
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
 	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
-			throws Exception {
+			throws Exception 
+	{
 		Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
 		Account account = account_service.findByUserId(user_id);
@@ -1081,18 +1077,14 @@ public class DomainController {
 		}
 
 		LocalDate today = LocalDate.now();
-		log.warn("Account id :: "+account.getId());
-		log.warn("This month integer value :: "+today.getMonthValue());
 		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
 		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-		log.warn("domain audits performed this month :: "+domain_audit_cnt);
 		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
 			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
 			throw new SubscriptionExceededException("You have exceeded your subscription");
 		}
 
-		log.warn("looking for domain by id :: " + domain_id);
 		Optional<Domain> domain_opt = domain_service.findById(domain_id);
 		if (!domain_opt.isPresent()) {
 			throw new DomainNotFoundException();
@@ -1103,11 +1095,10 @@ public class DomainController {
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
 
 		// create new audit record
-		log.warn("creating Domain audit record");
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
-
+		
 		DomainDto domain_dto = new DomainDto( domain.getId(), 
 											  domain.getUrl(), 
 											  domain.getPages().size(), 
@@ -1120,12 +1111,11 @@ public class DomainController {
 											  0.0, 
 											  0, 
 											  0.0, 
-											  false, 
-											  0.0,
-											  "Domain successfully created",
+											  true, 
+											  0.01,
+											  "Audit started",
 											  ExecutionStatus.IN_PROGRESS);
 		
-		log.warn("adding audit record to domain");
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 

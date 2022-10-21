@@ -13,23 +13,6 @@ public class PageCrawlActionMessage extends Message{
 	private CrawlAction action;
 	private PageAuditRecord audit_record;
 	private URL url;
-	
-	public PageCrawlActionMessage(CrawlAction action, 
-								  long account_id, 
-								  PageAuditRecord record, 
-								  URL url,
-								  long domain_id
-	){
-		assert record != null;
-		assert url != null;
-
-		setDomainId(domain_id);
-		setAccountId(account_id);
-		setAuditRecordId(record.getId());
-		setAction(action);
-		setUrl(url);
-		setAuditRecord(record);
-	}
 		
 	public PageCrawlActionMessage(CrawlAction action, 
 							  long domain_id, 

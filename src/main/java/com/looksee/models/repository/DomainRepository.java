@@ -73,8 +73,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (d:Domain)-[:HAS_TEST_USER]->(t:TestUser) WHERE id(d)=$domain_id RETURN t")
 	public Set<TestUser> getTestUsers(@Param("domain_id") long domain_id);
 
-	@Query("MATCH (:Account{acct_username:$acct_username})-[:HAS_DOMAIN]->(d:Domain{key:$domain_key}) MATCH (d)-[r:HAS_TEST_USER]->(t:TestUser{username:$username}) DELETE r,t")
-	public Set<TestUser> deleteTestUser(@Param("acct_username") String acct_username, @Param("domain_key") String domain_key, @Param("username") String username);
+	@Query("MATCH (d:Domain)-[r:HAS_TEST_USER]->(t:TestUser{username:$username}) WHERE id(d)=$domain_id AND id(t)=$user_id DELETE r,t return count(t)")
+	public int deleteTestUser(@Param("domain_id") long domain_id, @Param("user_id") long user_id);
 
 	@Query("MATCH (account:Account)-[:HAS_DOMAIN]->(d:Domain{url:$url}) MATCH (d)-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Redirect) WHERE id(account)=$account_id RETURN a")
 	public Set<Redirect> getRedirects(@Param("account_id") long account_id, @Param("url") String host);

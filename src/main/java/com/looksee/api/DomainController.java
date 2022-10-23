@@ -808,6 +808,22 @@ public class DomainController {
 		throw new DomainNotFoundException();
 	}
 
+	@RequestMapping(path = "/{domain_id}/users/{user_id}", method = RequestMethod.DELETE)
+	public @ResponseBody TestUser deleteUser(HttpServletRequest request,
+			@PathVariable(value = "domain_id", required = true) long domain_id,
+			@PathVariable(value = "user_id", required = true) long user_id)
+			throws UnknownAccountException, MalformedURLException {
+		Principal principal = request.getUserPrincipal();
+		String id = principal.getName().replace("auth0|", "");
+		Account account = account_service.findByUserId(id);
+
+		if (account == null) {
+			throw new UnknownAccountException();
+		}
+
+		return domain_service.deleteTestUser(domain_id, user_id) != null;
+	}
+	
 	/**
 	 * Get Excel file for domain with the given id
 	 * 

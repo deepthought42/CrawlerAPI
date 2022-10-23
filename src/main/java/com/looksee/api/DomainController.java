@@ -809,7 +809,7 @@ public class DomainController {
 	}
 
 	@RequestMapping(path = "/{domain_id}/users/{user_id}", method = RequestMethod.DELETE)
-	public @ResponseBody TestUser deleteUser(HttpServletRequest request,
+	public @ResponseBody boolean deleteUser(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@PathVariable(value = "user_id", required = true) long user_id)
 			throws UnknownAccountException, MalformedURLException {
@@ -821,7 +821,7 @@ public class DomainController {
 			throw new UnknownAccountException();
 		}
 
-		return domain_service.deleteTestUser(domain_id, user_id) != null;
+		return domain_service.deleteTestUser(domain_id, user_id);
 	}
 	
 	/**

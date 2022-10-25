@@ -1029,10 +1029,10 @@ public class DomainController {
 	 * @throws UnknownUserException
 	 */
 	// @PreAuthorize("hasAuthority('create:test_user')")
-	@RequestMapping(path = "test_users/{user_id}", method = RequestMethod.DELETE)
+	@RequestMapping(path = "/{domain_id}/test_users/{user_id}", method = RequestMethod.DELETE)
 	public @ResponseBody void delete(HttpServletRequest request,
-			@RequestParam(value = "domain_key", required = true) String domain_key,
-			@RequestParam(value = "username", required = true) String username) throws UnknownAccountException {
+			@PathVariable(value = "domain_id") long domain_id,
+			@PathVariable(value = "user_id") long user_id) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName().replace("auth0|", "");
 		Account account = account_service.findByUserId(id);
@@ -1041,7 +1041,7 @@ public class DomainController {
 			throw new UnknownAccountException();
 		}
 
-		domain_service.deleteTestUser(account.getEmail(), domain_key, username);
+		domain_service.deleteTestUser(domain_id, user_id);
 	}
 
 	/**

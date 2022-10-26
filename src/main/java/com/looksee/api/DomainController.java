@@ -374,13 +374,16 @@ public class DomainController {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
 		Account acct = account_service.findByUserId(id);
-
+		
+		log.warn("retrieving pages for domain");
+		
 		if (acct == null) {
 			throw new UnknownAccountException();
 		} else if (acct.getSubscriptionToken() == null) {
 			throw new MissingSubscriptionException();
 		}
 
+		log.warn("loading domain audit record");
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
 		Optional<DomainAuditRecord> domain_audit_record = audit_record_service
@@ -390,7 +393,8 @@ public class DomainController {
 		}
 		
 		Map<String, Boolean> key_map = new HashMap<>();
-		
+		log.warn("retrieving all pages for audit record");
+		try {
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 		for (PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
@@ -430,7 +434,9 @@ public class DomainController {
 			key_map.put(page_state.getKey(), Boolean.TRUE);
 			page_stats.add(page);
 		}
-
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 		return page_stats;
 	}
 

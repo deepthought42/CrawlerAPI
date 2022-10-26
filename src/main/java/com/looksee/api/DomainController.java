@@ -386,15 +386,15 @@ public class DomainController {
 		log.warn("loading domain audit record");
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
-		Optional<DomainAuditRecord> domain_audit_record = audit_record_service
-				.findMostRecentDomainAuditRecord(domain_id);
+		try {
+		Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
+		log.warn("is domain audit record present "+domain_audit_record.isPresent());
 		if (!domain_audit_record.isPresent()) {
-			throw new DomainAuditsNotFound();
+			throw new DomainAuditNotFound();
 		}
+		log.warn("retrieving all pages for audit record");
 		
 		Map<String, Boolean> key_map = new HashMap<>();
-		log.warn("retrieving all pages for audit record");
-		try {
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 		for (PageAuditRecord page_audit : page_audits) {
 			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
@@ -857,7 +857,7 @@ public class DomainController {
 
 		Optional<DomainAuditRecord> domain_audit = domain_service.getMostRecentAuditRecord(domain_opt.get().getId());
 		if (!domain_audit.isPresent()) {
-			throw new DomainAuditsNotFound();
+			throw new DomainAuditNotFound();
 		}
 
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
@@ -932,7 +932,7 @@ public class DomainController {
 		Domain domain = domain_opt.get();
 		Optional<DomainAuditRecord> domain_audit_opt = domain_service.getMostRecentAuditRecord(domain.getId());
 		if (!domain_audit_opt.isPresent()) {
-			throw new DomainAuditsNotFound();
+			throw new DomainAuditNotFound();
 		}
 
 		DomainAuditRecord domain_audit = domain_audit_opt.get();
@@ -1281,14 +1281,14 @@ class FormNotFoundException extends RuntimeException {
 }
 
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-class DomainAuditsNotFound extends RuntimeException {
+class DomainAuditNotFound extends RuntimeException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7815442042430032220L;
 
-	public DomainAuditsNotFound() {
+	public DomainAuditNotFound() {
 		super("No audits were found for this domain");
 	}
 }

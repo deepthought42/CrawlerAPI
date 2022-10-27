@@ -105,7 +105,9 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<PageAuditRecord> getAudits(HttpServletRequest request) throws MalformedURLException, UnknownAccountException {
+    public @ResponseBody Set<PageAuditRecord> getAudits(HttpServletRequest request) 
+    		throws MalformedURLException, UnknownAccountException 
+    {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
@@ -129,8 +131,8 @@ public class AuditController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
     public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
-									@PathVariable("id") long id
-	) {
+									@PathVariable("id") long id)
+    {
     	Set<Audit> audit_set = new HashSet<Audit>();
     	
     	Audit audit = audit_service.findById(id).get();
@@ -154,7 +156,7 @@ public class AuditController {
 										@PathVariable("key") String key,
 							    		@RequestBody UXIssueMessage issue_message
 	) throws UnknownAccountException {
-    	/*
+    	
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -162,7 +164,7 @@ public class AuditController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	*/
+    	
 
     	//find audit by key
     	//find audit by key and add recommendation

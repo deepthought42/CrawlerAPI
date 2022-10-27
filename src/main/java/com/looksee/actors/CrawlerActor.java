@@ -483,7 +483,6 @@ public class CrawlerActor extends AbstractActor{
 														.filter(element -> isLinkElement(element))
 														.collect(Collectors.toList());
 		
-		log.warn(filtered_elements.size() + " links found");
 		List<URL> hrefs = new ArrayList<>();
 		
 		for(ElementState link: filtered_elements) {

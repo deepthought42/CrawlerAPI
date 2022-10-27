@@ -412,15 +412,15 @@ public class CrawlerActor extends AbstractActor{
 
 	private void sendJourneyMessages(int journey_id, 
 									 List<Step> step_list, 
-									 PathStatus expanded,
-									 BrowserType chrome, 
+									 PathStatus path_status,
+									 BrowserType browser, 
 									 Message msg, 
 									 String actorName) 
 	{	
 		JourneyMessage journey_msg = new JourneyMessage(journey_id, 
 														ListUtils.clone(step_list), 
-														PathStatus.EXPANDED, 
-														BrowserType.CHROME, 
+														path_status, 
+														browser, 
 														msg.getDomainId(),
 														msg.getAccountId(), 
 														msg.getAuditRecordId());

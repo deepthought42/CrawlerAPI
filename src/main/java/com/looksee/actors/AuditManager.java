@@ -545,14 +545,14 @@ public class AuditManager extends AbstractActor{
 	 * @param domain2
 	 * @param account2
 	 */
-	private void markDomainAuditComplete(AuditRecord audit_record, Domain domain, Account account, Message message) {
+	private AuditRecord markDomainAuditComplete(AuditRecord audit_record, Domain domain, Account account, Message message) {
 		audit_record.setContentAuditProgress(1.0);
 		audit_record.setAestheticAuditProgress(1.0);
 		audit_record.setDataExtractionProgress(1.0);
 		audit_record.setInfoArchitectureAuditProgress(1.0);
 		audit_record.setEndTime(LocalDateTime.now());
 		audit_record.setStatus(ExecutionStatus.COMPLETE);
-		audit_record =  audit_record_service.save(audit_record, 
+		return audit_record_service.save(audit_record, 
 												  message.getAccountId(), 
 												  message.getDomainId());	
 	}

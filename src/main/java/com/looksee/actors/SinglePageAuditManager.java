@@ -4,9 +4,6 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -17,7 +14,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.looksee.models.Account;
-import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
@@ -72,9 +68,6 @@ public class SinglePageAuditManager extends AbstractActor{
 	
 	@Autowired
 	private SendGridMailService mail_service;
-
-	private Map<String, Boolean> page_urls = new HashMap<>();
-	private Domain domain = null;
 
 	//subscription tracking
 	

@@ -303,7 +303,7 @@ public class AuditManager extends AbstractActor{
 					
 					if(message.getDomainId() == -1 && message.getAccountId() == -1) {
 						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-						markDomainAuditComplete(audit_record, domain, account, message);
+						markDomainAuditComplete(audit_record, message);
 					}
 					else {
 					
@@ -333,7 +333,7 @@ public class AuditManager extends AbstractActor{
 								getSender().tell(PoisonPill.getInstance(), getSelf());
 								AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 								if(is_auditing_complete) {
-									markDomainAuditComplete(audit_record, domain, account, message);
+									markDomainAuditComplete(audit_record, message);
 								}
 							}
 							page_urls.put(page_state.getUrl(), Boolean.TRUE);
@@ -392,7 +392,7 @@ public class AuditManager extends AbstractActor{
 									getSender().tell(PoisonPill.getInstance(), getSelf());
 									DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
 									if(is_auditing_complete) {
-										markDomainAuditComplete(domain_audit, domain, account, message);
+										markDomainAuditComplete(domain_audit, message);
 										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 									}
 									break;
@@ -423,7 +423,7 @@ public class AuditManager extends AbstractActor{
 					{
 						is_data_extraction_complete = true;
 						if(is_auditing_complete) {
-							markDomainAuditComplete(audit_record, domain, account, message);
+							markDomainAuditComplete(audit_record, message);
 							mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
 						}
 						getSender().tell(PoisonPill.class, getSelf());
@@ -470,7 +470,7 @@ public class AuditManager extends AbstractActor{
 										domain = domain_service.findById(message.getDomainId()).get();
 									}
 									if(is_data_extraction_complete) {
-										markDomainAuditComplete(audit_record, domain, account, message);
+										markDomainAuditComplete(audit_record, message);
 										log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
 										log.warn("Domain id :: "+message.getDomainId());
 										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
@@ -545,7 +545,9 @@ public class AuditManager extends AbstractActor{
 	 * @param domain2
 	 * @param account2
 	 */
-	private AuditRecord markDomainAuditComplete(AuditRecord audit_record, Domain domain, Account account, Message message) {
+	private AuditRecord markDomainAuditComplete(AuditRecord audit_record, 
+												Message message) 
+	{
 		audit_record.setContentAuditProgress(1.0);
 		audit_record.setAestheticAuditProgress(1.0);
 		audit_record.setDataExtractionProgress(1.0);
@@ -553,10 +555,16 @@ public class AuditManager extends AbstractActor{
 		audit_record.setEndTime(LocalDateTime.now());
 		audit_record.setStatus(ExecutionStatus.COMPLETE);
 		return audit_record_service.save(audit_record, 
-												  message.getAccountId(), 
-												  message.getDomainId());	
+										  message.getAccountId(), 
+										  message.getDomainId());	
 	}
 
+	/**
+	 * Initiates Visual Design, Content, and Information Architecture audits
+	 * 
+	 * @param page_state
+	 * @param message
+	 */
 	private void initiatePageAudits(PageState page_state, Message message) {
 		//Account is still within page limit. continue with mapping page 
 		PageAuditRecord page_audit = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 

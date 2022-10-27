@@ -166,7 +166,9 @@ public class DomainController {
 			throw new MissingSubscriptionException();
 		}
 
-		
+		if(domain.getUrl() == null) {
+			return null;
+		}
 		String lowercase_url = domain.getUrl().toLowerCase();
 		String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url);
 		domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));

@@ -65,7 +65,12 @@ public class AuditRecordService {
 
 		AuditRecord audit_record = audit_record_repo.save(audit);
 		
-		if(account_id != null && account_id >= 0 && domain_id != null && domain_id >= 0) {
+		if(audit instanceof DomainAuditRecord 
+				&& account_id != null 
+				&& account_id >= 0 
+				&& domain_id != null 
+				&& domain_id >= 0) 
+		{
 			try {
 				Account account = account_service.findById(account_id).get();
 				int id_start_idx = account.getUserId().indexOf('|');
@@ -111,7 +116,7 @@ public class AuditRecordService {
 	}
 	
 	public Set<Audit> getAllAuditsAndIssues(long audit_id) {		
-		return audit_record_repo.getAllAuditsAndIssues(audit_id);
+		return audit_record_repo.getAllAuditsForPageAuditRecord(audit_id);
 	}
 	
 	public Optional<DomainAuditRecord> findMostRecentDomainAuditRecord(long id) {
@@ -221,8 +226,8 @@ public class AuditRecordService {
 	}
 
 
-	public void addPageAuditToDomainAudit(long domain_audit_record_id, Long page_audit_record_id) {
-		audit_record_repo.addPageAuditRecord(domain_audit_record_id, page_audit_record_id);
+	public void addPageAuditToDomainAudit(long domain_audit_id, long page_audit_id) {
+		audit_record_repo.addPageAuditRecord(domain_audit_id, page_audit_id);
 	}
 	
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(String url) {
@@ -303,6 +308,7 @@ public class AuditRecordService {
 	public boolean isDomainAuditComplete(AuditRecord audit_record) {		
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
+
 		Set<PageAuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
 		if(audit_record.getDataExtractionProgress() < 1.0) {
 			return false;
@@ -352,7 +358,8 @@ public class AuditRecordService {
 										   long account_id, 
 										   long domain_id, 
 										   double progress, 
-										   String message) {
+										   String message) 
+	{
 		AuditRecord audit_record = findById(auditRecordId).get();
 		audit_record.setDataExtractionProgress(1.0);
 		audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);

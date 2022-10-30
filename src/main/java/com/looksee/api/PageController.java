@@ -47,8 +47,7 @@ public class PageController {
     @RequestMapping(method = RequestMethod.GET)
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url
-	)  {
-    	/*
+	) throws UnknownAccountException  {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -56,7 +55,7 @@ public class PageController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	*/
+    	
     	PageState page = page_service.findByUrl(url);
     	
         log.info("finding page :: "+page.getKey());

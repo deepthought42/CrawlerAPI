@@ -5,8 +5,6 @@ import static com.looksee.config.SpringExtension.SpringExtProvider;
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -39,7 +37,6 @@ import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.CrawlAction;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
-import com.looksee.models.message.CrawlActionMessage;
 import com.looksee.models.message.PageCrawlActionMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -135,14 +132,15 @@ public class AuditorController {
 		}
 		
 		PageCrawlActionMessage start_single_page_audit = new PageCrawlActionMessage(CrawlAction.START, 
-														 -1L, 
-														 account_id,
-														 audit_record,
-														 sanitized_url);
+																					 -1L, 
+																					 account_id,
+																					 audit_record,
+																					 sanitized_url);
 		
-		log.warn("Initiating audit via page state guilder actor");
+		
+		log.warn("Initiating single page audit = "+audit_record.getId());
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
-	   			.props("auditManager"), "auditManager"+UUID.randomUUID());
+	   												.props("singlePageAuditManager"), "singlePageAuditManager"+UUID.randomUUID());
 		audit_manager.tell(start_single_page_audit, ActorRef.noSender());
 		
    		return audit_record;

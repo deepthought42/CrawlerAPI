@@ -166,7 +166,6 @@ public class AuditService {
 				
 				ElementState element = ux_issue_service.getElement(issue_msg.getId());
 				if(element == null) {
-					log.warn("element issue map:: element is null for issue msg ... "+issue_msg.getId());
 					continue;
 				}
 				

@@ -34,7 +34,6 @@ import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.Priority;
 import com.looksee.models.enums.WCAGComplianceLevel;
 import com.looksee.services.AuditService;
-import com.looksee.services.ElementStateService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.ColorUtils;
@@ -52,9 +51,6 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private ElementStateService element_state_service;
-	
-	@Autowired
 	private AuditService audit_service;
 	
 	@Autowired
@@ -65,6 +61,14 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	 * 
 	 * Identifies colors used on page, the color scheme type used, and the ultimately the score for how the colors used conform to scheme
 	 *  
+	 *  WCAG Success Criteria Source - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
+	 * 
+	 * There is no level A compliance
+	 * Level AA is the requirement used withiin common laws and standards
+	 * Level AAA This is for companies looking to provide an exceptional experience with color contrast
+	 * 
+	 * Compliance level is determined by the {@link DesignSystem} if it isn't null, otherwise defaults to AAA level
+	 * 
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */
@@ -72,10 +76,16 @@ public class NonTextColorContrastAudit implements IExecutablePageStateAudit {
 	public Audit execute(PageState page_state, AuditRecord audit_record, DesignSystem design_system) {
 		assert page_state != null; 
 		
-		WCAGComplianceLevel wcag_compliance_level = design_system.getWcagComplianceLevel();
-		if(wcag_compliance_level.equals(WCAGComplianceLevel.A)) {
-			return null;
+		WCAGComplianceLevel wcag_compliance = WCAGComplianceLevel.AAA;
+		
+		if(design_system != null) {
+			wcag_compliance = design_system.getWcagComplianceLevel();
+			
+			if(wcag_compliance.equals(WCAGComplianceLevel.A)) {
+				return null;
+			}
 		}
+		
 		//get all button elements
 		List<ElementState> elements = page_state_service.getElementStates(page_state.getId());
 		List<ElementState> non_text_elements = getAllButtons(elements);

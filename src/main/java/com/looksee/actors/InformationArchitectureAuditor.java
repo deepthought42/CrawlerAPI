@@ -88,7 +88,7 @@ public class InformationArchitectureAuditor extends AbstractActor{
 				.match(PageAuditRecordMessage.class, page_audit_record_msg -> {
 					try {
 						AuditRecord audit_record = audit_record_service.findById(page_audit_record_msg.getPageAuditId()).get();
-						PageState page = audit_record_service.getPageStateForAuditRecord(audit_record.getId());
+						PageState page = page_audit_record_msg.getPageState(); //audit_record_service.getPageStateForAuditRecord(audit_record.getId());
 						//generate audit report
 						
 						AuditProgressUpdate audit_update = new AuditProgressUpdate(

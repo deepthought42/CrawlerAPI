@@ -73,8 +73,8 @@ public class DomainService {
 		return domain_repo.findById(domain_id);
 	}
 
-	public void deleteTestUser(String acct_username, String domain_key, String username) {
-		domain_repo.deleteTestUser(acct_username, domain_key, username);
+	public boolean deleteTestUser(long domain_id, long user_id) {
+		return domain_repo.deleteTestUser(domain_id, user_id) > 0;
 	}
 
 	public Set<Form> getForms(long account_id, String url) {
@@ -145,7 +145,6 @@ public class DomainService {
 	}
 	
 	public Optional<DomainAuditRecord> getMostRecentAuditRecord(long id) {
-		
 		return domain_repo.getMostRecentAuditRecord(id);
 	}
 

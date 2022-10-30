@@ -66,7 +66,7 @@ public class AuditProgressUpdate extends Message{
 		return audit;
 	}
 
-	public void setAudit(Audit audits) {
-		this.audit = audits;
+	public void setAudit(Audit audit) {
+		this.audit = audit;
 	}
 }

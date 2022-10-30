@@ -47,7 +47,6 @@ public class DomainDtoService {
 		int page_count = 0;
 		
 		if (!audit_record_opt.isPresent()) {
-			log.warn("returning default Domain DTO because audit record was not found");
 			return new DomainDto(domain.getId(), 
 								 domain.getUrl(), 
 								 0, 
@@ -85,12 +84,14 @@ public class DomainDtoService {
 		// overall score
 		Set<Audit> accessibility_audits = audit_record_service
 				.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
+
 		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
 
 		// get all Aesthetic audits for most recent audit record and calculate overall
 		// score
 		Set<Audit> aesthetics_audits = audit_record_service
 				.getAllAestheticAuditsForDomainRecord(domain_audit.getId());
+
 		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
 
 		// build domain stats
@@ -105,7 +106,6 @@ public class DomainDtoService {
 			page_urls.put(page.getUrl(), Boolean.TRUE);
 		}
 		page_count = page_urls.size();
-		//page_count = page_audit_records.size();
 
 		double content_progress = 0.0;
 		double aesthetic_progress = 0.0;
@@ -135,9 +135,9 @@ public class DomainDtoService {
 
 		
 		if (page_audit_records.size() > 0) {
-			content_progress = content_progress / audited_pages;
-			info_architecture_progress = (info_architecture_progress / audited_pages);
-			aesthetic_progress = (aesthetic_progress / audited_pages);
+			content_progress = content_progress / page_count;
+			info_architecture_progress = info_architecture_progress / page_count;
+			aesthetic_progress = aesthetic_progress / page_count;
 			//data_extraction_progress = (data_extraction_progress / page_count);
 		}
 		

@@ -38,6 +38,7 @@ import com.looksee.models.message.ElementsSaved;
 import com.looksee.models.message.ExceededSubscriptionMessage;
 import com.looksee.models.message.JourneyCrawlActionMessage;
 import com.looksee.models.message.JourneyExaminationProgressMessage;
+import com.looksee.models.message.Message;
 import com.looksee.models.message.PageAuditRecordMessage;
 import com.looksee.models.message.PageCandidateFound;
 import com.looksee.models.message.PageCrawlActionMessage;
@@ -107,12 +108,13 @@ public class AuditManager extends AbstractActor{
 	private SubscriptionService subscription_service;
 	
 	private boolean is_domain_audit = false;
+	private boolean is_data_extraction_complete = false;
+	private boolean is_auditing_complete = false;
 	private long domain_audit_id = 0L;
 	private int total_pages = 0;
 	private int total_pages_audited = 0;
 	private Map<String, Boolean> page_urls = new HashMap<>();
-	private Map<String, Boolean> page_keys = new HashMap<>();
-	private Map<String, Boolean> page_states_experienced;
+	private Domain domain = null;
 
 	//subscription tracking
 	
@@ -124,7 +126,6 @@ public class AuditManager extends AbstractActor{
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		this.page_states_experienced = new HashMap<>();
 		this.total_pages = 0;
 	}
 
@@ -155,10 +156,10 @@ public class AuditManager extends AbstractActor{
 						PageAuditRecord page_audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
 						
 						PageCrawlActionMessage crawl_action_msg = new PageCrawlActionMessage(CrawlAction.START, 
+																							 message.getDomainId(),
 																							 message.getAccountId(), 
 																							 page_audit_record, 
-																							 message.getUrl(), 
-																							 message.getDomainId());
+																							 message.getUrl()); 
 						
 						
 						ActorRef page_state_builder = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -193,7 +194,6 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(JourneyCrawlActionMessage.class, message-> {
 					if(message.getAction().equals(CrawlAction.START)){
-						log.warn("starting domain audit");
 						this.is_domain_audit = true;
 						this.domain_audit_id = message.getAuditRecordId();
 						//send message to webCrawlerActor to get pages
@@ -212,12 +212,11 @@ public class AuditManager extends AbstractActor{
 					log.warn("Page candidate found message recieved by AUDIT MANAGER");
 					try {
 						String url_without_protocol = BrowserUtils.getPageUrl(message.getUrl());
-						if(!this.page_states_experienced.containsKey(url_without_protocol)) {
-							this.page_states_experienced.put(url_without_protocol, Boolean.TRUE);
+						if(!this.page_urls.containsKey(url_without_protocol)) {
 	
 							this.total_pages++;
 							DomainAuditRecord domain_audit_record = (DomainAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();						
-							domain_audit_record.setTotalPages( this.page_states_experienced.keySet().size());
+							domain_audit_record.setTotalPages( this.page_urls.keySet().size());
 							audit_record_service.save(domain_audit_record, message.getAccountId(), message.getDomainId());
 							
 							if(this.account == null) {
@@ -237,9 +236,7 @@ public class AuditManager extends AbstractActor{
 					    	SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
 							if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
-								page_urls.put(url_without_protocol, Boolean.TRUE);
 								//Account is still within page limit. continue with mapping page 
-								log.warn("building page audit record...");
 								PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
 																					new HashSet<>(), 
 																					null, 
@@ -271,29 +268,14 @@ public class AuditManager extends AbstractActor{
 							   											  .props("pageStateBuilder"), "pageStateBuilder"+UUID.randomUUID());
 								page_state_builder.tell(crawl_action_msg, getSelf());
 							}
+							page_urls.put(url_without_protocol, Boolean.TRUE);
 						}
 					}catch(Exception e) {
 						e.printStackTrace();
 					}
 				})
-				.match(PageDataExtractionMessage.class, message -> {
-					log.warn("audit manager received page data extracton message");
-					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-					audit_record.setDataExtractionMsg("Extracting elements");
-					audit_record.setDataExtractionProgress(0.1);
-					audit_record.setStatus(ExecutionStatus.EXTRACTING_ELEMENTS);
-					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
-				})
 				.match(PageDataExtractionError.class, message -> {
 					log.warn("Error occurred while extracting page state for url "+message.getUrl()+";    error = "+message.getErrorMessage());
-					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
-					audit_record.setContentAuditProgress(1.0);
-					audit_record.setInfoArchitectureAuditProgress(1.0);
-					audit_record.setAestheticAuditProgress(1.0);
-					audit_record.setDataExtractionProgress(1.0);
-					audit_record.setStatus(ExecutionStatus.ERROR);
-					audit_record.setStatusMessage(message.getErrorMessage());
-					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(ElementsSaved.class, message -> {
 					PageState page_state = page_state_service.findById(message.getPageStateId()).get();
@@ -307,7 +289,6 @@ public class AuditManager extends AbstractActor{
 					
 					ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
 		   											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-					log.warn("sending message to content auditor....");
 					content_auditor.tell(audit_record_msg, getSelf());							
 
 					ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
@@ -318,14 +299,52 @@ public class AuditManager extends AbstractActor{
 								.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
 					aesthetic_auditor.tell(audit_record_msg, getSelf());
 				})
+				.match(PageDataExtractionMessage.class, message -> {
+					
+					if(message.getDomainId() == -1 && message.getAccountId() == -1) {
+						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+						markDomainAuditComplete(audit_record, message);
+					}
+					else {
+					
+						if(this.account == null) {
+							this.account = account_service.findById(message.getAccountId()).get();
+						}
+						if(this.domain == null) {
+							domain = domain_service.findById(message.getDomainId()).get();
+						}
+						
+						PageState page_state = message.getPageState();
+						if(!page_urls.containsKey(page_state.getUrl())
+								&& !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) 
+						{
+							log.warn("Starting audit process for "+page_state.getUrl());
+					    	SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
+	
+							if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
+								is_auditing_complete = false;
+								initiatePageAudits(page_state, message);
+							}
+							else {
+								is_data_extraction_complete = true;
+								log.warn("+++++++++++++++++++++++++++++++++++++++");
+								log.warn("User has exceeded domain page audit limit");
+								log.warn("+++++++++++++++++++++++++++++++++++++++");
+								getSender().tell(PoisonPill.getInstance(), getSelf());
+								AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
+								if(is_auditing_complete) {
+									markDomainAuditComplete(audit_record, message);
+								}
+							}
+							page_urls.put(page_state.getUrl(), Boolean.TRUE);
+						}
+					}
+				})
 				.match(ConfirmedJourneyMessage.class, message -> {
 					try {
-						log.warn("Handling confirmed journey message with steps :: "+message.getSteps());
 						//save journey steps
 						List<Step> saved_steps = new ArrayList<>();
-						
 						for(Step step : message.getSteps()) {
-							log.warn("saving step :: "+step);
 							saved_steps.add(step_service.save(step));
 						}
 						
@@ -338,90 +357,44 @@ public class AuditManager extends AbstractActor{
 						
 						//retrieve all unique page states for journey steps
 						List<PageState> page_states = getAllUniquePageStates(saved_steps);
-						//Domain domain = domain_service.findById(message.getDomainId()).get();
 						//remove all unique pageStates that have already been analyzed
-						log.warn("Page states to be audited :: " + page_states);
 						
 						//create PageAuditRecord for each page that hasn't been analyzed.
 						if(this.account == null) {
 							this.account = account_service.findById(message.getAccountId()).get();
 						}
-				    	SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
+						if(this.domain == null) {
+							domain = domain_service.findById(message.getDomainId()).get();
+						}
 						
-				    	Domain domain = domain_service.findById(message.getDomainId()).get();
-				    	boolean hasUserExceededSubscriptionAllowance = false;
-
 				    	//For each page audit record perform audits
 						for(PageState page_state : page_states) {
 							String url_without_protocol = page_state.getUrl();
 	
-							if(!page_keys.containsKey(url_without_protocol) && !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) {
+							if(!page_urls.containsKey(page_state.getUrl())
+									&& !BrowserUtils.isExternalLink(domain.getUrl(), page_state.getUrl())) 
+							{
 								log.warn("Starting audit process for "+url_without_protocol);
+						    	SubscriptionPlan plan = SubscriptionPlan.create(this.account.getSubscriptionType());
 
-								if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_keys.size())) {
-									page_keys.put(url_without_protocol, Boolean.TRUE);
-									log.warn("Subscription valid (pages audited : "+total_pages_audited);
+								if(!subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
+									page_urls.put(url_without_protocol, Boolean.TRUE);
 									total_pages_audited++;
-		
-									//Account is still within page limit. continue with mapping page 
-									PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
-																						new HashSet<>(), 
-																						null, 
-																						true);
-									
-									audit_record.setUrl(url_without_protocol);
-									audit_record.setDataExtractionProgress(1/50.0);
-									audit_record.setDataExtractionMsg("Creating page record for "+url_without_protocol);
-									audit_record.setAestheticMsg("Waiting for data extraction ...");
-									audit_record.setAestheticAuditProgress(0.0);
-								   	audit_record.setContentAuditMsg("Waiting for data extraction ...");
-								   	audit_record.setContentAuditProgress(0.0);
-								   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
-								   	audit_record.setInfoArchitectureAuditProgress(0.0);
-								   	
-								   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, 
-								   														   	  message.getAccountId(), 
-								   														   	  message.getDomainId());
-								   	
-								   	audit_record_service.addPageToAuditRecord(audit_record.getId(), page_state.getId());
-								   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
-								   												   audit_record.getKey());
-									
-									PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
-																						audit_record.getId(), 
-																						message.getDomainId(), 
-																						message.getAccountId(), 
-																						audit_record.getId(),
-																						page_state);
-				
-									ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																		   .props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
-									log.warn("sending message to content auditor....");
-									content_auditor.tell(audit_record_msg, getSelf());							
-									
-									ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																					 .props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
-									info_architecture_auditor.tell(audit_record_msg, getSelf());
-									
-									ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
-																			 .props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
-									aesthetic_auditor.tell(audit_record_msg, getSelf());
+									is_auditing_complete = false;
+									initiatePageAudits(page_state, message);
 								}
 								else {
+									page_urls.put(url_without_protocol, Boolean.TRUE);
 									log.warn("+++++++++++++++++++++++++++++++++++++++");
 									log.warn("User has exceeded domain page audit limit");
 									log.warn("+++++++++++++++++++++++++++++++++++++++");
-									hasUserExceededSubscriptionAllowance = true;
+									is_data_extraction_complete = true;
 									getSender().tell(PoisonPill.getInstance(), getSelf());
-
 									DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
-									domain_audit.setStatus(ExecutionStatus.COMPLETE);
-									domain_audit.setContentAuditProgress(1.0);
-									domain_audit.setAestheticAuditProgress(1.0);
-									domain_audit.setDataExtractionProgress(1.0);
-									domain_audit.setInfoArchitectureAuditProgress(1.0);
-									
-									audit_record_service.save(domain_audit, message.getAccountId(), message.getDomainId());
+									if(is_auditing_complete) {
+										markDomainAuditComplete(domain_audit, message);
+										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
+									}
 									break;
 								}
 							}
@@ -437,20 +410,27 @@ public class AuditManager extends AbstractActor{
 				})
 				.match(JourneyExaminationProgressMessage.class, message -> {
 					double journey_mapping_progress = message.getExaminedJourneys()/(double)message.getGeneratedJourneys();
-					log.warn("Setting journey mapping progress = "+journey_mapping_progress);
+
 					if(this.account == null) {
 						this.account = account_service.findById(message.getAccountId()).get();
 					}
 					SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
-					log.warn("current journey mapping progress :: "+journey_mapping_progress);
 					AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 					
-					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_keys.size()) || message.getExaminedJourneys()==message.getGeneratedJourneys()) {
+					if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size()) 
+							|| message.getExaminedJourneys()==message.getGeneratedJourneys()) 
+					{
+						is_data_extraction_complete = true;
+						if(is_auditing_complete) {
+							markDomainAuditComplete(audit_record, message);
+							mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
+						}
 						getSender().tell(PoisonPill.class, getSelf());
 						audit_record.setDataExtractionProgress(1.0);
 					}
 					else {
+						is_data_extraction_complete = false;
 						//set progress for audit record journey mapping
 						audit_record.setDataExtractionProgress(journey_mapping_progress);
 					}
@@ -458,7 +438,6 @@ public class AuditManager extends AbstractActor{
 					audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 				})
 				.match(AuditProgressUpdate.class, message -> {
-					log.debug("AUDIT PROGRESS UPDATE recieved by Audit Manager");
 					try {
 						AuditRecord audit_record = audit_record_service.updateAuditProgress(message.getAuditRecordId(), 
 																							message.getCategory(), 
@@ -486,19 +465,16 @@ public class AuditManager extends AbstractActor{
 
 								//if(subscription_service.hasExceededDomainPageAuditLimit(plan, page_urls.size())) {
 								if( audit_record_service.isDomainAuditComplete( audit_record)) {
-									log.warn("audit IS COMPLETE!");
-									audit_record.setEndTime(LocalDateTime.now());
-									audit_record.setStatus(ExecutionStatus.COMPLETE);
-									audit_record =  audit_record_service.save(audit_record, 
-																			  message.getAccountId(), 
-																			  message.getDomainId());	
-									log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
-									log.warn("Domain id :: "+message.getDomainId());
-									Domain domain = domain_service.findById(message.getDomainId()).get(); //findById(message.getDomainId()).get();  //findByAuditRecord(audit_record.getId());
-									log.warn("Domain email(part 2) :: "+domain.getId());
-									log.warn("Account (part 2) :: "+this.account.getId());
-
-									mail_service.sendDomainAuditCompleteEmail(this.account.getEmail(), domain.getUrl(), domain.getId());
+									is_auditing_complete = true;
+									if(this.domain == null) {
+										domain = domain_service.findById(message.getDomainId()).get();
+									}
+									if(is_data_extraction_complete) {
+										markDomainAuditComplete(audit_record, message);
+										log.warn("Domain audit is complete(part 2) :: "+audit_record.getId());
+										log.warn("Domain id :: "+message.getDomainId());
+										mail_service.sendDomainAuditCompleteEmail(account.getEmail(), domain.getUrl(), domain.getId());
+									}
 								}
 							}
 							catch(Exception e) {
@@ -508,7 +484,6 @@ public class AuditManager extends AbstractActor{
 						else if(audit_record instanceof PageAuditRecord){
 							boolean is_page_audit_complete = AuditUtils.isPageAuditComplete(audit_record);						
 							if(is_page_audit_complete) {
-								log.warn("page audit is complete!");
 								audit_record.setEndTime(LocalDateTime.now());
 								audit_record.setStatus(ExecutionStatus.COMPLETE);
 								audit_record = audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());	
@@ -564,6 +539,78 @@ public class AuditManager extends AbstractActor{
 				.build();
 	}
 	
+	/**
+	 * Marks domain {@link AuditRecord} as complete and sends email to user
+	 * @param audit_record
+	 * @param domain2
+	 * @param account2
+	 */
+	private AuditRecord markDomainAuditComplete(AuditRecord audit_record, 
+												Message message) 
+	{
+		audit_record.setContentAuditProgress(1.0);
+		audit_record.setAestheticAuditProgress(1.0);
+		audit_record.setDataExtractionProgress(1.0);
+		audit_record.setInfoArchitectureAuditProgress(1.0);
+		audit_record.setEndTime(LocalDateTime.now());
+		audit_record.setStatus(ExecutionStatus.COMPLETE);
+		return audit_record_service.save(audit_record, 
+										  message.getAccountId(), 
+										  message.getDomainId());	
+	}
+
+	/**
+	 * Initiates Visual Design, Content, and Information Architecture audits
+	 * 
+	 * @param page_state
+	 * @param message
+	 */
+	private void initiatePageAudits(PageState page_state, Message message) {
+		//Account is still within page limit. continue with mapping page 
+		PageAuditRecord page_audit = new PageAuditRecord(ExecutionStatus.BUILDING_PAGE, 
+															new HashSet<>(), 
+															null, 
+															true);
+		
+		page_audit.setUrl(page_state.getUrl());
+		page_audit.setDataExtractionProgress(1/50.0);
+		page_audit.setDataExtractionMsg("Creating page record for "+page_state.getUrl());
+		page_audit.setAestheticMsg("Waiting for data extraction ...");
+		page_audit.setAestheticAuditProgress(0.0);
+		page_audit.setContentAuditMsg("Waiting for data extraction ...");
+	   	page_audit.setContentAuditProgress(0.0);
+	   	page_audit.setInfoArchMsg("Waiting for data extraction ...");
+	   	page_audit.setInfoArchitectureAuditProgress(0.0);
+	   	
+	   	page_audit = (PageAuditRecord)audit_record_service.save(page_audit, 
+	   														   	  message.getAccountId(), 
+	   														   	  message.getDomainId());
+	   	
+	   	audit_record_service.addPageToAuditRecord(page_audit.getId(), page_state.getId());
+	   	audit_record_service.addPageAuditToDomainAudit(message.getAuditRecordId(), 
+	   													page_audit.getKey());
+	   	
+		PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
+														page_audit.getId(), 
+														message.getDomainId(), 
+														message.getAccountId(), 
+														message.getAuditRecordId(),
+														page_state);
+		
+		ActorRef content_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+											.props("contentAuditor"), "contentAuditor"+UUID.randomUUID());
+
+		content_auditor.tell(audit_record_msg, getSelf());							
+
+		ActorRef info_architecture_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+		   			.props("informationArchitectureAuditor"), "informationArchitectureAuditor"+UUID.randomUUID());
+		info_architecture_auditor.tell(audit_record_msg, getSelf());
+
+		ActorRef aesthetic_auditor = getContext().actorOf(SpringExtProvider.get(actor_system)
+					.props("aestheticAuditor"), "aestheticAuditor"+UUID.randomUUID());		
+		aesthetic_auditor.tell(audit_record_msg, getSelf());
+	}
+
 	/**
 	 * Retrieves all {@link PageState PageStates} from {@link Step steps} provided and returns a unique list of PageStates
 	 * 

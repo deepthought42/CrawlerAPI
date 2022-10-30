@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -725,6 +724,10 @@ public class BrowserUtils {
 				else{
 					path = path.substring(0, param_idx);
 				}
+			}
+			
+			if(path.endsWith("/")) {
+				path = path.substring(0, path.length()-1);
 			}
 			
 			host = url_without_protocol.substring(0, slash_idx);

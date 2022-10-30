@@ -8,12 +8,14 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.Relationship;
 
 import com.looksee.models.AuditSubcategoryStat;
+import com.looksee.models.enums.ExecutionStatus;
 
 public class AuditStats {
 	
 	private LocalDateTime start_time; //time that the 
 	private LocalDateTime end_time;
 	private long audit_record_id;
+	private String status;
 	
 	//12 month historical scores
 	private List<SimpleScore> overall_score_history;
@@ -614,5 +616,13 @@ public class AuditStats {
 
 	public void setImageCopyrightIssueCount(int image_copyright_issue_count) {
 		this.image_copyright_issue_count = image_copyright_issue_count;
+	}
+
+	public ExecutionStatus getStatus() {
+		return ExecutionStatus.create(status);
+	}
+
+	public void setStatus(ExecutionStatus status) {
+		this.status = status.toString();
 	}
 }

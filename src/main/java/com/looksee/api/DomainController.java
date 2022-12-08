@@ -376,66 +376,62 @@ public class DomainController {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
 		Account acct = account_service.findByUserId(id);
-		
-		log.warn("retrieving pages for domain");
-		
+				
 		if (acct == null) {
 			throw new UnknownAccountException();
 		} else if (acct.getSubscriptionToken() == null) {
 			throw new MissingSubscriptionException();
 		}
 
-		log.warn("loading domain audit record");
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
 		try {
-		Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
-		log.warn("is domain audit record present "+domain_audit_record.isPresent());
-		if (!domain_audit_record.isPresent()) {
-			throw new DomainAuditNotFound();
-		}
-		log.warn("retrieving all pages for audit record");
-		
-		Map<String, Boolean> key_map = new HashMap<>();
-		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
-		for (PageAuditRecord page_audit : page_audits) {
-			PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
-			if (page_state == null) {
-				continue;
-			}
-			if(key_map.containsKey(page_state.getKey())) {
-				continue;
+			Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
+	
+			if (!domain_audit_record.isPresent()) {
+				throw new DomainAuditNotFound();
 			}
 			
-			double content_score = AuditUtils
-					.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
-			double info_architecture_score = AuditUtils
-					.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
-			double aesthetic_score = AuditUtils
-					.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
-			double accessibility_score = AuditUtils
-					.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
-
-			PageStatisticDto page = new PageStatisticDto(page_state.getId(), 
-														 page_state.getUrl(),
-														 page_state.getViewportScreenshotUrl(), 
-														 content_score, 
-														 page_audit.getContentAuditProgress(),
-														 info_architecture_score, 
-														 page_audit.getInfoArchitechtureAuditProgress(), 
-														 accessibility_score, 
-														 0.0,
-														 aesthetic_score, 
-														 page_audit.getAestheticAuditProgress(), 
-														 page_audit.getId(),
-														 page_audit.getElementsReviewed(), 
-														 page_audit.getElementsFound(), 
-														 page_audit.isComplete(),
-														 page_audit.getDataExtractionProgress());
-
-			key_map.put(page_state.getKey(), Boolean.TRUE);
-			page_stats.add(page);
-		}
+			Map<String, Boolean> key_map = new HashMap<>();
+			Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
+			for (PageAuditRecord page_audit : page_audits) {
+				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+				if (page_state == null) {
+					continue;
+				}
+				if(key_map.containsKey(page_state.getKey())) {
+					continue;
+				}
+				
+				double content_score = AuditUtils
+						.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
+				double info_architecture_score = AuditUtils
+						.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+				double aesthetic_score = AuditUtils
+						.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+				double accessibility_score = AuditUtils
+						.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
+	
+				PageStatisticDto page = new PageStatisticDto(page_state.getId(), 
+															 page_state.getUrl(),
+															 page_state.getViewportScreenshotUrl(), 
+															 content_score, 
+															 page_audit.getContentAuditProgress(),
+															 info_architecture_score, 
+															 page_audit.getInfoArchitechtureAuditProgress(), 
+															 accessibility_score, 
+															 0.0,
+															 aesthetic_score, 
+															 page_audit.getAestheticAuditProgress(), 
+															 page_audit.getId(),
+															 page_audit.getElementsReviewed(), 
+															 page_audit.getElementsFound(), 
+															 page_audit.isComplete(),
+															 page_audit.getDataExtractionProgress());
+	
+				key_map.put(page_state.getKey(), Boolean.TRUE);
+				page_stats.add(page);
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}

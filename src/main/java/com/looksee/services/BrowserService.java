@@ -434,6 +434,7 @@ public class BrowserService {
 			}
 			catch(WebDriverException | GridException e) {								
 				log.warn("Selenium Exception occurred while building page state :: "+url);
+				e.printStackTrace();
 			}
 			catch(Exception e) {
 				log.warn("Exception occurred while building page state");

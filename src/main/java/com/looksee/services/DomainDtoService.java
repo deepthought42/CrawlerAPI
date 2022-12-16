@@ -141,13 +141,15 @@ public class DomainDtoService {
 			//data_extraction_progress = (data_extraction_progress / page_count);
 		}
 		
-		ExecutionStatus status = null;
+		ExecutionStatus status = domain_audit.getStatus();
+		/*
 		if(1.0 == content_progress && 1.0 == info_architecture_progress && 1.0 == aesthetic_progress && 1.0 == data_extraction_progress) {
 			status = ExecutionStatus.COMPLETE;
 		}
 		else {
 			status = ExecutionStatus.IN_PROGRESS;
 		}
+		*/
 
 		
 		return new DomainDto(domain.getId(), 

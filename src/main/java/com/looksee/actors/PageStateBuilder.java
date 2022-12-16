@@ -170,10 +170,10 @@ public class PageStateBuilder extends AbstractActor{
 							
 							//send message to audit manager letting it know that an error occurred
 							PageDataExtractionError extraction_tracker = new PageDataExtractionError(crawl_action.getDomainId(), 
-													 crawl_action.getAccountId(), 
-													 crawl_action.getAuditRecordId(), 
-													 crawl_action.getUrl().toString(), 
-													 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
+																									 crawl_action.getAccountId(), 
+																									 crawl_action.getAuditRecordId(), 
+																									 crawl_action.getUrl().toString(), 
+																									 "Received "+http_status+" status while building page state "+crawl_action.getUrl());
 
 							getContext().getParent().tell(extraction_tracker, getSelf());
 							return;
@@ -228,6 +228,7 @@ public class PageStateBuilder extends AbstractActor{
 							.props("dataExtractionSupervisor"), "dataExtractionSupervisor"+UUID.randomUUID());
 					data_extraction_supervisor.tell(message, getSelf());
 				})
+				/*
 				.match(ElementExtractionError.class, message -> {
 					log.warn("error extracting elements");
 					long response_count = this.total_dispatch_responses++;
@@ -237,7 +238,7 @@ public class PageStateBuilder extends AbstractActor{
 						//TODO : add ability to track progress of elements mapped within the xpaths and to tell when the 
 						//       system is done extracting element data and the page is ready for auditing
 						
-						PageAuditRecord audit_record = (PageAuditRecord)audit_record_service.findById(message.getAuditRecordId()).get();
+						AuditRecord audit_record = audit_record_service.findById(message.getAuditRecordId()).get();
 						if(response_count == this.total_dispatches) {
 							audit_record.setStatus(ExecutionStatus.RUNNING_AUDITS);
 							audit_record.setDataExtractionMsg("Done!");
@@ -253,12 +254,7 @@ public class PageStateBuilder extends AbstractActor{
 							audit_record.setElementsReviewed(this.total_dispatch_responses );
 							audit_record = (PageAuditRecord) audit_record_service.save(audit_record, message.getAccountId(), message.getDomainId());
 						
-							/*
-						   	log.warn("requesting performance audit from performance auditor....");
-						   	ActorRef performance_insight_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						   			.props("performanceAuditor"), "performanceAuditor"+UUID.randomUUID());
-						   	performance_insight_actor.tell(page_state, getSelf());
-						   	*/
+						
 							PageState page_state = page_state_service.findById(message.getPageId()).get();
 
 							PageAuditRecordMessage audit_record_msg = new PageAuditRecordMessage(
@@ -291,6 +287,7 @@ public class PageStateBuilder extends AbstractActor{
 						e.printStackTrace();
 					}
 				})
+				*/
 				.match(ElementsSaved.class, message -> {
 					this.total_save_dispatches++;
 					log.warn("Elements saved successfully :: batch "+this.total_save_dispatches + " of "+this.total_dispatches);
@@ -385,7 +382,14 @@ public class PageStateBuilder extends AbstractActor{
 					getContext().parent().forward(message, getContext());
 				})
 				.match(ElementExtractionError.class, message -> {
-					getContext().parent().forward(message, getContext());
+					PageDataExtractionError extraction_tracker = new PageDataExtractionError(message.getDomainId(), 
+							 message.getAccountId(), 
+							 message.getAuditRecordId(), 
+							 message.getPageUrl(), 
+							 "An error occurred while extracting elements from "+message.getPageUrl());
+
+					getContext().getParent().tell(extraction_tracker, getSelf());
+					//getContext().parent().forward(message, getContext());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

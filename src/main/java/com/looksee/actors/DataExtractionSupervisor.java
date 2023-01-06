@@ -110,9 +110,7 @@ public class DataExtractionSupervisor extends AbstractActor{
 				.build();
 	}
 	
-	private List<Long> saveNewElements(long page_state_id, List<ElementState> element_states) {
-		List<Long> element_ids = new ArrayList<>();
-		
+	private List<Long> saveNewElements(long page_state_id, List<ElementState> element_states) {		
 		/*
 		List<String> element_keys = new ArrayList<>();
 

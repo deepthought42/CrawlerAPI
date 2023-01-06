@@ -19,7 +19,6 @@ public class PageAuditRecord extends AuditRecord {
 	@Relationship(type = "FOR")
 	private PageState page_state;
 	
-	private String status;
 	private long elements_found;
 	private long elements_reviewed;
 	

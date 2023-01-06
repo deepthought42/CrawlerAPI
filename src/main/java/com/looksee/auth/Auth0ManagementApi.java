@@ -21,7 +21,7 @@ public class Auth0ManagementApi {
 
 	private static String client_id = "aSlsPI5ENJXKSYHyxaG6oxo46peRT25N";
 	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
-	private static String domain = "look-see.us.auth0.com";
+	private static String domain = "auth.look-see.com";
 	private static String audience_url = "https://" + domain + "api/v2/";
 	private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
 	

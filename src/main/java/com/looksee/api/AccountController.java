@@ -134,7 +134,7 @@ public class AccountController {
         return acct.getOnboardedSteps();
     }
 
-    @PreAuthorize("hasAuthority('read:accounts')")
+    //@PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
@@ -160,12 +160,16 @@ public class AccountController {
      */
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping( method = RequestMethod.GET)
-    public Account get(HttpServletRequest request) throws UnknownAccountException {
+    public Account get(HttpServletRequest request)
+    		throws UnknownAccountException 
+	{
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName(); //.replace("auth0|", "");
+    	log.warn("user id :: "+id);
     	Account acct = account_service.findByUserId(id);
-
+    	log.warn("account :: "+acct);
         if(acct == null){
+        	log.warn("Unknown account exception thrown");
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){

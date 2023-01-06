@@ -58,7 +58,7 @@ public class SubscriptionController {
     @RequestMapping(method = RequestMethod.GET)
     public boolean getSubscriptionStatus(HttpServletRequest request) throws Exception {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName(); //.replace("auth0|", "");
     	Account account = account_service.findByUserId(id);
     	
 		if (account == null) {
@@ -109,7 +109,7 @@ public class SubscriptionController {
 					 		@RequestBody Subscription subscription
 	) throws Exception {
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
+    	String id = principal.getName();//.replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
     	log.warn("subscription price :: "+subscription.getPriceId());
     	if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()) {

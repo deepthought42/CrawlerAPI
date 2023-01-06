@@ -19,10 +19,10 @@ import io.github.resilience4j.retry.annotation.Retry;
 @Retry(name = "neoforj")
 public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{email:$email}) RETURN account LIMIT 1")
-	Account findByEmail(@Param("email") String username);
+	public Account findByEmail(@Param("email") String username);
 
 	@Query("MATCH (account:Account{user_id:$user_id}) RETURN account")
-	Account findByUserId(@Param("user_id") String user_id);
+	public Account findByUserId(@Param("user_id") String user_id);
 	
 	/** 
 	 * NOTE:: relic from old days. Remove at first chance

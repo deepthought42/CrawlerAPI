@@ -197,10 +197,10 @@ public class SubscriptionServiceTests {
 	
 	@Test
 	public void hasExceededSinglePageAuditLimit()  {
-		boolean has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 99);
+		boolean has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 9);
 		assertFalse(has_exceeded);
 		
-		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 100);
+		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.FREE, 10);
 		assertTrue(has_exceeded);
 		
 		has_exceeded = subscription_service.hasExceededSinglePageAuditLimit(SubscriptionPlan.COMPANY_PRO, 999);

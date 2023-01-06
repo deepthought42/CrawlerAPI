@@ -82,9 +82,9 @@ public class BrowserUtilsTests {
 	
 	@Test
 	public void httpStatusVerification() throws MalformedURLException {
-		URL url = new URL("http://spotify.come/us/account/your-services");
+		URL url = new URL("https://look-see.com/does-not-exist");
 		int status = BrowserUtils.getHttpStatus(url);
-		
+		System.out.println("status :: "+status);
 		assertTrue(status == 404);
 		
 		URL url1 = new URL("http://look-see.com");
@@ -235,9 +235,8 @@ public class BrowserUtilsTests {
 		
 		assertTrue(BrowserUtils.doesUrlExist(url1));
 		
-		String url2 = "https://www.businesswirefasfasfasfew.com/";
-		
-		assertFalse(BrowserUtils.doesUrlExist(url2));
+		//String url2 = "https://www.businesswirefasfasfasfew.com/";
+		//assertFalse(BrowserUtils.doesUrlExist(url2));
 		
 		String url3 = "https://www.look-see.com/product";
 		

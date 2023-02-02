@@ -1,3 +1,4 @@
+#FROM openjdk:8-jdk-alpine
 FROM adoptopenjdk/openjdk14
 
 COPY target/Look-see-0.1.20.jar look-see.jar
@@ -6,4 +7,4 @@ COPY api_key.p12 /etc/certs/api_key.p12
 COPY gmail_credentials.json /etc/creds/gmail_credentials.json
 EXPOSE 443
 EXPOSE 80
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom", "-Xms12G", "-jar", "look-see.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom", "-Xms12G", "-ea","-jar", "look-see.jar"]

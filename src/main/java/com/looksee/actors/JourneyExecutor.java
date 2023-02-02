@@ -123,7 +123,11 @@ public class JourneyExecutor extends AbstractActor{
 						//e.printStackTrace();
 					}
 					log.warn("done processing journey :: "+message.getId());
-					processIfStepsShouldBeExpanded(message.getId(), steps, message.getDomainId(), message.getAccountId(), message.getAuditRecordId());
+					processIfStepsShouldBeExpanded(message.getId(), 
+													steps, 
+													message.getDomainId(), 
+													message.getAccountId(), 
+													message.getAuditRecordId());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.debug("Member is Up: {}", mUp.member());

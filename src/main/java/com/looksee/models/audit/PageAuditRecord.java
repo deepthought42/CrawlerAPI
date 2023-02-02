@@ -73,14 +73,6 @@ public class PageAuditRecord extends AuditRecord {
 		this.audits.addAll( audits );
 	}
 
-	public ExecutionStatus getStatus() {
-		return ExecutionStatus.create(status);
-	}
-
-	public void setStatus(ExecutionStatus status) {
-		this.status = status.getShortName();
-	}
-
 	public PageState getPageState() {
 		return page_state;
 	}

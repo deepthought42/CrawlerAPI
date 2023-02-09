@@ -5,16 +5,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import com.looksee.models.enums.ExecutionStatus;
 
 /**
  * Record detailing a "Discovery" ran by an account.
  */
-@NodeEntity
+@Node
 public class DiscoveryRecord implements Persistable {
 
 	@GeneratedValue

@@ -11,25 +11,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.dto.DomainDto;
-import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.repository.AuditRecordRepository;
+import com.looksee.models.repository.DomainRepository;
 import com.looksee.utils.AuditUtils;
 
 @Service
 public class DomainDtoService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DomainDtoService.class.getName());
 
 	@Autowired
-	private DomainService domain_service;
+	private DomainRepository domain_repo;
 	
 	@Autowired
-	private AuditRecordService audit_record_service;
+	private AuditRecordRepository audit_record_repo;
 	
 	/**
 	 * 
@@ -41,7 +42,7 @@ public class DomainDtoService {
 	public DomainDto build(Domain domain) {
 		assert domain != null;
 		
-		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain.getId());
+		Optional<DomainAuditRecord> audit_record_opt = domain_repo.getMostRecentAuditRecord(domain.getId());
 
 		int audited_pages = 0;
 		int page_count = 0;
@@ -70,27 +71,27 @@ public class DomainDtoService {
 
 		// get all content audits for most recent audit record and calculate overall
 		// score
-		Set<Audit> content_audits = audit_record_service.getAllContentAuditsForDomainRecord(domain_audit.getId());
+		Set<Audit> content_audits = audit_record_repo.getAllContentAuditsForDomainRecord(domain_audit.getId());
 		double content_score = AuditUtils.calculateScore(content_audits);
 
 		// get all info architecture audits for most recent audit record and calculate
 		// overall score
-		Set<Audit> info_arch_audits = audit_record_service
+		Set<Audit> info_arch_audits = audit_record_repo
 				.getAllInformationArchitectureAuditsForDomainRecord(domain_audit.getId());
 
 		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
 
 		// get all accessibility audits for most recent audit record and calculate
 		// overall score
-		Set<Audit> accessibility_audits = audit_record_service
+		Set<Audit> accessibility_audits = audit_record_repo
 				.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
 
 		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
 
 		// get all Aesthetic audits for most recent audit record and calculate overall
 		// score
-		Set<Audit> aesthetics_audits = audit_record_service
-				.getAllAestheticAuditsForDomainRecord(domain_audit.getId());
+		Set<Audit> aesthetics_audits = audit_record_repo
+				.getAllAestheticsAuditsForDomainRecord(domain_audit.getId());
 
 		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
 
@@ -98,8 +99,8 @@ public class DomainDtoService {
 		// add domain stat to set
 
 		// check if there is a current audit running
-		Set<PageAuditRecord> page_audit_records = audit_record_service.getAllPageAudits(domain_audit.getId());
-		Set<PageState> page_states = audit_record_service.getPageStatesForDomainAuditRecord(domain_audit.getId());
+		Set<PageAuditRecord> page_audit_records = audit_record_repo.getAllPageAudits(domain_audit.getId());
+		Set<PageState> page_states = audit_record_repo.getPageStatesForDomainAuditRecord(domain_audit.getId());
 		Map<String, Boolean> page_urls = new HashMap<>();
 		
 		for(PageState page : page_states) {

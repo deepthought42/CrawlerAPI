@@ -1,18 +1,12 @@
 package com.looksee.config;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.util.Properties;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-
-import akka.actor.ActorSystem;
 
 /**
  * 
@@ -20,21 +14,7 @@ import akka.actor.ActorSystem;
 @Configuration
 @ComponentScan({"com.looksee.models"})
 public class ConfigService {
-     
-	@Autowired
-    private ApplicationContext applicationContext;
-	
-	/**
-	 * Actor system singleton for this application.
-	 */
-	@Bean
-	public ActorSystem actorSystem() {
-	  ActorSystem system = ActorSystem.create("LookseeActorSystem1");
-	  // initialize the application context in the Akka Spring Extension
-	  SpringExtProvider.get(system).initialize(applicationContext);
-	  return system;
-	}
-	
+
 	@Bean
 	public JavaMailSender getJavaMailSender() {
 	    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();

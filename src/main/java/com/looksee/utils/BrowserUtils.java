@@ -39,8 +39,8 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.looksee.browsing.Browser;
 import com.looksee.gcp.GoogleCloudStorage;
+import com.looksee.models.Browser;
 import com.looksee.models.ElementState;
 import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;

@@ -1,63 +1,51 @@
 package com.looksee.models.journeys;
 
-import java.util.ArrayList;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.PageState;
+import com.looksee.models.enums.StepType;
 
-@NodeEntity
-public class Step extends LookseeObject {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = SimpleStep.class, name = "SIMPLE"),
+    @JsonSubTypes.Type(value = LoginStep.class, name = "LOGIN"),
+    @JsonSubTypes.Type(value = LandingStep.class, name = "LANDING")  
+})
+public abstract class Step extends LookseeObject{
 	
+	abstract StepType getStepType();
+
+
 	@Relationship(type = "STARTS_WITH")
-	private PageState start_page;
+	private PageState startPage;
 	
 	@Relationship(type = "ENDS_WITH")
-	private PageState end_page;
-
-	public Step() {}
-	
-	public Step(PageState start_page, PageState end_page) {
-		setStartPage(start_page);
-		setEndPage(end_page);
-	}
+	private PageState endPage;
 	
 	public PageState getStartPage() {
-		return start_page;
+		return startPage;
 	}
-	
+
 	public void setStartPage(PageState page_state) {
-		this.start_page = page_state;
+		this.startPage = page_state;
 	}
-	
-	
+
 	public PageState getEndPage() {
-		return this.end_page;
+		return endPage;
 	}
-	
+
 	public void setEndPage(PageState page_state) {
-		this.end_page = page_state;
-	}
-	
-	@Override
-	public String generateKey() {
-		String key = "";
-		if(start_page != null) {
-			key += start_page.getId();
-		}
-		if(end_page != null) {
-			key += end_page.getId();
-		}
-		return "step"+key;
+		this.endPage = page_state;
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Perform deep clone of object
 	 */
-	@Override
-	public Step clone() {
-		return new Step(getStartPage(), getEndPage());
-	}
+	public abstract Step clone();
 }

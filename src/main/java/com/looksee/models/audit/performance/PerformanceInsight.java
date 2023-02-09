@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.Persistable;
 import com.looksee.models.enums.CaptchaResult;
@@ -17,7 +17,7 @@ import com.looksee.models.enums.FormFactor;
  * Stores page speed analytics data that is returned as part of requests to Google Page Insights
  * 
  */
-@NodeEntity
+@Node
 public class PerformanceInsight implements Persistable {
 
 	@GeneratedValue

@@ -2,11 +2,10 @@ package com.looksee.models;
 
 import java.time.LocalDateTime;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.Index;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -18,22 +17,22 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
  * @author brand
  *
  */
-@NodeEntity
+@Node
 public abstract class LookseeObject {
 	
-	@Index(unique=true)
+	//@Index(unique=true)
 	@GeneratedValue
     @Id
 	private Long id;
 
-	@Index(unique=false)
+	//@Index(unique=false)
 	@Property
 	private String key;
 	
 	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
 	@JsonSerialize(using = LocalDateTimeSerializer.class)
 	@Property
-	private LocalDateTime created_at;
+	private LocalDateTime createdAt;
 	
 	public LookseeObject() {
 		setCreatedAt(LocalDateTime.now());
@@ -66,11 +65,11 @@ public abstract class LookseeObject {
 	}
 
 	public LocalDateTime getCreatedAt() {
-		return created_at;
+		return createdAt;
 	}
 
 	public void setCreatedAt(LocalDateTime created_at) {
-		this.created_at = created_at;
+		this.createdAt = created_at;
 	}
 	
 	public Long getId() {

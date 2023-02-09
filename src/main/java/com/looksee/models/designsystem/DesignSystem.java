@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.AudienceProficiency;
@@ -14,7 +14,7 @@ import com.looksee.models.enums.WCAGComplianceLevel;
  * Defines a design system for use in defining and evaluating standards based on 
  * the settings withing the design system
  */
-@NodeEntity
+@Node
 public class DesignSystem extends LookseeObject{
 
 	private String wcag_compliance_level;

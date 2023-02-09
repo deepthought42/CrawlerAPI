@@ -3,9 +3,9 @@ package com.looksee.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import com.looksee.models.Element;
 import com.looksee.models.rules.Rule;
@@ -15,7 +15,7 @@ import com.looksee.models.rules.Rule;
  * Also contains list of rules which can be enforced on the object
  * 
  */
-@NodeEntity
+@Node
 public class FormField {
 	
 	@GeneratedValue

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.audit.AuditRecord;
 
@@ -15,7 +15,7 @@ import com.looksee.models.audit.AuditRecord;
 /**
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
-@NodeEntity
+@Node
 public class Account extends LookseeObject{
 
 	private String user_id;

@@ -5,19 +5,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.looksee.models.LookseeObject;
+
 
 /**
  * Represents the series of steps taken for an end to end journey
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Node
 public class Journey extends LookseeObject {
 
 	@Relationship(type = "HAS")
 	private List<Step> steps;
 	
-	private List<Long> ordered_ids;
+	private List<Long> orderedIds;
 	
 	public Journey() {
 		setSteps(new ArrayList<>());
@@ -46,7 +51,7 @@ public class Journey extends LookseeObject {
 	 */
 	@Override
 	public String generateKey() {
-		return "journey"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(ordered_ids, "|"));
+		return "journey"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(StringUtils.join(orderedIds, "|"));
 	}
 
 	/**
@@ -70,10 +75,10 @@ public class Journey extends LookseeObject {
 	}
 	
 	public List<Long> getOrderedIds() {
-		return ordered_ids;
+		return orderedIds;
 	}
 	
 	public void setOrderedIds(List<Long> ordered_ids) {
-		this.ordered_ids = ordered_ids;
+		this.orderedIds = ordered_ids;
 	}
 }

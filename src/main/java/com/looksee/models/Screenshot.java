@@ -1,21 +1,14 @@
 package com.looksee.models;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 /**
  * 
  */
-@NodeEntity
-public class Screenshot implements Persistable {
+@Node
+public class Screenshot extends LookseeObject {
 	
-	@GeneratedValue
-    @Id
-	private Long id;
-	
-	private String key;
-	private String browser_name;
+	private String browserName;
 	private String url;
 	private String checksum;
 	private int width;
@@ -40,28 +33,16 @@ public class Screenshot implements Persistable {
 		this.url = url;
 	}
 
-	public String getKey() {
-		return this.key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	public String getBrowser() {
-		return browser_name;
+		return browserName;
 	}
 
 	public void setBrowser(String browser_name) {
-		this.browser_name = browser_name;
+		this.browserName = browser_name;
 	}
 	
 	public String generateKey() {
 		return "screenshot" + this.checksum;
-	}
-
-	public Long getId() {
-		return id;
 	}
 
 	public String getChecksum() {

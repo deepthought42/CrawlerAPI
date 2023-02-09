@@ -16,11 +16,11 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.looksee.browsing.Browser;
 import com.looksee.services.BrowserService;
 
 /**
@@ -39,7 +39,7 @@ public class Page extends LookseeObject {
 	private List<Element> elements;
 	
 	@Relationship(type = "HAS")
-	private List<PageState> page_states;
+	private List<PageState> pageStates;
 
 
 	public Page() {
@@ -261,15 +261,15 @@ public class Page extends LookseeObject {
 	}
 
 	public void setPageStates(List<PageState> page_states) {
-		this.page_states = page_states;
+		this.pageStates = page_states;
 	}
 
 	public List<PageState> getPageStates(){
-		return this.page_states;
+		return this.pageStates;
 	}
 	
 	public boolean addPageState(PageState page_state_record) {
-		return this.page_states.add(page_state_record);
+		return this.pageStates.add(page_state_record);
 	}
 	
 	public void setTitle(String title) {

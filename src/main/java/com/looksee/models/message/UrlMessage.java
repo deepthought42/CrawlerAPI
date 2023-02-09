@@ -1,29 +1,30 @@
 package com.looksee.models.message;
 
-import java.net.URL;
-
 import com.looksee.models.enums.BrowserType;
 
 
 public class UrlMessage extends Message{
-	private URL url;
+	private String url;
 	private BrowserType browser;
 	
-	public UrlMessage(URL url, 
+	public UrlMessage(String url, 
 					  BrowserType browser, 
 					  long domain_id, 
-					  long account_id){
+					  long account_id, 
+					  long audit_record_id)
+	{
 		setUrl(url);
 		setBrowser(browser);
 		setDomainId(domain_id);
 		setAccountId(account_id);
+		setAuditRecordId(audit_record_id);
 	}
 
-	public URL getUrl() {
+	public String getUrl() {
 		return url;
 	}
 
-	public void setUrl(URL url) {
+	public void setUrl(String url) {
 		this.url = url;
 	}
 

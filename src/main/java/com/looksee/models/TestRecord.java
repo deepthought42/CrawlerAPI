@@ -3,12 +3,12 @@ package com.looksee.models;
 import java.util.Date;
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.enums.TestStatus;
 
@@ -20,7 +20,7 @@ import com.looksee.models.enums.TestStatus;
  * was after the test was executed.
  *
  */
-@NodeEntity
+@Node
 public class TestRecord implements Persistable {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestRecord.class);
@@ -36,7 +36,7 @@ public class TestRecord implements Persistable {
 	private long run_time_length;
 	private List<String> path_keys;
 
-	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
+	@Relationship(type = "HAS_RESULT", direction = Relationship.Direction.OUTGOING)
 	private PageState result;
 	
 	//Empty constructor for spring

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.AuditCategory;

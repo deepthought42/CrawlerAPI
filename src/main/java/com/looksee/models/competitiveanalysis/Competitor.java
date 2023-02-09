@@ -1,7 +1,7 @@
 package com.looksee.models.competitiveanalysis;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.competitiveanalysis.brand.Brand;
@@ -10,7 +10,7 @@ import com.looksee.models.competitiveanalysis.brand.Brand;
 /**
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
-@NodeEntity
+@Node
 public class Competitor extends LookseeObject{
 
 	private String company_name;

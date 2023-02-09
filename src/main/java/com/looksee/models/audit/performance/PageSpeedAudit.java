@@ -2,7 +2,7 @@ package com.looksee.models.audit.performance;
 
 import java.util.List;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.InsightType;

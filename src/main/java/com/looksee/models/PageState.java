@@ -17,29 +17,33 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Hex;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.services.BrowserService;
+
 
 /**
  * A reference to a web page
  *
  */
-@NodeEntity
+@Node
 public class PageState extends LookseeObject {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
+	@JsonIgnore
 	private String src;
 	private String url;
 	private String urlAfterLoading;
 
 	private boolean loginRequired;
-	private boolean isSecure;
+	private boolean secured;
 
 	private String viewportScreenshotUrl;
 	private String fullPageScreenshotUrlOnload;
@@ -55,14 +59,14 @@ public class PageState extends LookseeObject {
 	private String pageName;
 
 	private String title;
-	private Set<String> script_urls;
-	private Set<String> stylesheet_urls;
-	private Set<String> metadata;	
-	private Set<String> favicon_url;
+	private Set<String> scriptUrls;
+	private Set<String> stylesheetUrls;
+	private Set<String> metadata;
+	private Set<String> faviconUrl;
 	private Set<String> keywords;
 	private int httpStatus;
 	
-	@Relationship(type = "HAS", direction = Relationship.INCOMING)
+	@Relationship(type = "HAS", direction = Direction.OUTGOING)
 	private List<ElementState> elements;
 
 
@@ -87,7 +91,7 @@ public class PageState extends LookseeObject {
 	 * @param scroll_y_offset
 	 * @param viewport_width
 	 * @param viewport_height
-	 * @param browser
+	 * @param browser_type
 	 * @param full_page_screenshot_url_onload
 	 * @param full_page_width TODO
 	 * @param full_page_height TODO
@@ -107,7 +111,7 @@ public class PageState extends LookseeObject {
 			long scroll_y_offset,
 			int viewport_width, 
 			int viewport_height, 
-			BrowserType browser, 
+			BrowserType browser_type, 
 			String full_page_screenshot_url_onload,
 			int full_page_width, 
 			int full_page_height, 
@@ -121,7 +125,7 @@ public class PageState extends LookseeObject {
 		assert screenshot_url != null;
 		assert elements != null;
 		assert src != null;
-		assert browser != null;
+		assert browser_type != null;
 		assert full_page_screenshot_url_onload != null;
 		assert url != null;
 		assert !url.isEmpty();
@@ -129,7 +133,7 @@ public class PageState extends LookseeObject {
 		setViewportScreenshotUrl(screenshot_url);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
-		setBrowser(browser);
+		setBrowser(browser_type);
 		setElements(elements);
 		setLandable(isLandable);
 		setSrc(src);
@@ -143,9 +147,8 @@ public class PageState extends LookseeObject {
 		setUrl(url);
 		setUrlAfterLoading(url_after_page_load);
 		setTitle(title);
-		setIsSecure(is_secure);
+		setSecured(is_secure);
 		setHttpStatus(http_status_code);
-		
 		setPageName( generatePageName(getUrl()) );
 		setMetadata( BrowserService.extractMetadata(src) );
 		setStylesheetUrls( BrowserService.extractStylesheets(src));
@@ -251,7 +254,7 @@ public class PageState extends LookseeObject {
 							 getFullPageHeight(), 
 							 getUrl(),
 							 getTitle(),
-							 isSecure(),
+							 isSecured(),
 							 getHttpStatus(),
 							 getFullPageScreenshotUrlComposite(),
 							 getUrlAfterLoading());
@@ -389,7 +392,6 @@ public class PageState extends LookseeObject {
 		this.browser = browser.toString();
 	}
 
-
 	public int getViewportWidth() {
 		return viewportWidth;
 	}
@@ -472,19 +474,19 @@ public class PageState extends LookseeObject {
 	}
 
 	public Set<String> getScriptUrls() {
-		return script_urls;
+		return scriptUrls;
 	}
 
 	public void setScriptUrls(Set<String> script_urls) {
-		this.script_urls = script_urls;
+		this.scriptUrls = script_urls;
 	}
 
 	public Set<String> getStylesheetUrls() {
-		return stylesheet_urls;
+		return stylesheetUrls;
 	}
 
 	public void setStylesheetUrls(Set<String> stylesheet_urls) {
-		this.stylesheet_urls = stylesheet_urls;
+		this.stylesheetUrls = stylesheet_urls;
 	}
 
 	public Set<String> getMetadata() {
@@ -496,19 +498,19 @@ public class PageState extends LookseeObject {
 	}
 
 	public Set<String> getFaviconUrl() {
-		return favicon_url;
+		return faviconUrl;
 	}
 
 	public void setFaviconUrl(Set<String> favicon_url) {
-		this.favicon_url = favicon_url;
+		this.faviconUrl = favicon_url;
 	}
 
-	public boolean isSecure() {
-		return isSecure;
+	public boolean isSecured() {
+		return secured;
 	}
 
-	public void setIsSecure(boolean is_secure) {
-		this.isSecure = is_secure;
+	public void setSecured(boolean is_secure) {
+		this.secured = is_secure;
 	}
 
 	public Set<String> getKeywords() {

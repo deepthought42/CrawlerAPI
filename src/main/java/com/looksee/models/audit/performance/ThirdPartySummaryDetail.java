@@ -3,7 +3,7 @@ package com.looksee.models.audit.performance;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.ogm.annotation.Properties;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
 
 /**
  * 
@@ -14,7 +14,7 @@ public class ThirdPartySummaryDetail extends AuditDetail {
 	private Double blocking_time;
 	private Double main_thread_time;
 	
-	@Properties
+	@CompositeProperty
 	private Map<String, String> entity = new HashMap<>();
 	
 	public ThirdPartySummaryDetail() {}

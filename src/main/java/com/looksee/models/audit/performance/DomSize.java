@@ -3,7 +3,8 @@ package com.looksee.models.audit.performance;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.ogm.annotation.Properties;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
+
 
 /**
  * Defines detail item for "dom-size"(Document Object Model size) object in the Google PageSpeed API 
@@ -13,7 +14,7 @@ public class DomSize extends AuditDetail {
 	private String statistic;
 	private String value;
 	
-	@Properties
+	@CompositeProperty
 	private Map<String, String> element_definition = new HashMap<>();
 	
 	public DomSize() {}

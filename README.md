@@ -68,4 +68,10 @@ docker push gcr.io/cosmic-envoy-280619/look-see-api:v#.#.#
 
 Run the following command in Linux to create a keystore called api_key with a privateKeyEntry
 
+* Using CRT
+
 openssl pkcs12 -export -inkey private.key -in certificate.crt -out api_key.p12
+
+* Using PEM instead
+
+openssl pkcs12 -export -inkey look-see.com.key -in look-see.com-2022-chain.pem -out api_key.p12

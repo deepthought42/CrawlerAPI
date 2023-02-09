@@ -2,8 +2,8 @@ package com.looksee.models.repository;
 
 import java.util.Set;
 
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -65,9 +65,6 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (account:Account)-[]->(audit_record:PageAuditRecord) WHERE id(account)=$account_id RETURN audit_record ORDER BY audit_record.created_at DESC LIMIT 5")
 	public Set<PageAuditRecord> findMostRecentAuditsByAccount(long account_id);
-
-	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) WHERE id(account)=$account_id RETURN domain")
-	Set<Domain> getDomainsForAccount(@Param("account_id") long account_id);
 
 	@Query("MATCH (account:Account)-[]->(page_audit:PageAuditRecord) WHERE id(account)=$account_id AND datetime(page_audit.created_at).month=$month RETURN COUNT(page_audit)")
 	int getPageAuditCountByMonth(@Param("account_id") long account_id, @Param("month") int month);

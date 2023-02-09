@@ -12,7 +12,7 @@ import com.looksee.models.enums.Priority;
  */
 public class SentenceIssueMessage extends ElementStateIssueMessage {	
 	
-	private int word_count;
+	private int wordCount;
 	
 	public SentenceIssueMessage() {}
 	
@@ -44,11 +44,11 @@ public class SentenceIssueMessage extends ElementStateIssueMessage {
 	}
 
 	public int getWordCount() {
-		return word_count;
+		return wordCount;
 	}
 
 	public void setWordCount(int word_count) {
-		this.word_count = word_count;
+		this.wordCount = word_count;
 	}
 
 }

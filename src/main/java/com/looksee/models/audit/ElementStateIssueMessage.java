@@ -3,9 +3,10 @@ package com.looksee.models.audit;
 
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
@@ -13,9 +14,11 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
+
 /**
  * A observation of potential error for a given {@link Element element} 
  */
+@Node
 public class ElementStateIssueMessage extends UXIssueMessage {	
 	private static Logger log = LoggerFactory.getLogger(ElementStateIssueMessage.class);
 

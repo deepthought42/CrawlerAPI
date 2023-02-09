@@ -35,8 +35,6 @@ import com.looksee.services.AccountService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.RuleService;
 
-import io.swagger.annotations.ApiOperation;
-
 
 /**
  *	API for interacting with {@link User} data
@@ -64,7 +62,7 @@ public class ElementController {
      * @return {@link Element element}
      * @throws UnknownAccountException 
      */
-    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements/$element_key/rules", method = RequestMethod.POST)
     public ElementState addRule(
@@ -171,7 +169,7 @@ public class ElementController {
      * @return {@link Element element}
      * @throws UnknownAccountException 
      */
-    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
     public ElementState removeRule(
@@ -202,7 +200,7 @@ public class ElementController {
      * @return {@link Element element}
      * @throws UnknownAccountException 
      */
-    @ApiOperation(value = "updates given Element", response = Iterable.class)
+    //@ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     public ElementState update(
@@ -235,7 +233,7 @@ public class ElementController {
      * @return {@link Element element}
      * @throws UnknownAccountException 
      */
-    @ApiOperation(value = "updates form element", response = Iterable.class)
+    //@ApiOperation(value = "updates form element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/forms/$form_key/elements", method = RequestMethod.PUT)
     public ElementState updateFormElement(

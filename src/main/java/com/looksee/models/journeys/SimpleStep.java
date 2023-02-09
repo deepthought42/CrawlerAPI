@@ -1,24 +1,37 @@
 package com.looksee.models.journeys;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
+import com.looksee.models.enums.StepType;
 
 /**
  * A Step is the increment of work that start with a {@link PageState} contians an {@link ElementState} 
  * 	 that has an {@link Action} performed on it and results in an end {@link PageState}
  */
-@NodeEntity
-public class SimpleStep extends Step {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("SIMPLE")
+@Node
+public class SimpleStep extends Step  {
+	@SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(SimpleStep.class);
 	
-	@Relationship(type = "HAS", direction = Relationship.OUTGOING)
+	
+	@Relationship(type = "HAS", direction = Direction.OUTGOING)
 	private ElementState element;
 	
 	private String action;
-	private String action_input;
+	private String actionInput;
 	
 	public SimpleStep() {
 		super();
@@ -26,11 +39,13 @@ public class SimpleStep extends Step {
 		setAction(Action.UNKNOWN);
 	}
 	
-	public SimpleStep(PageState start_page,
-				ElementState element,
-				Action action,
-				String action_input, 
-				PageState end_page) {
+    @JsonCreator
+	public SimpleStep(@JsonProperty("startPage") PageState start_page,
+						@JsonProperty("elementState") ElementState element,
+						@JsonProperty("action") Action action,
+						@JsonProperty("actionInput") String action_input, 
+						@JsonProperty("endPage") PageState end_page) 
+	{
 		setStartPage(start_page);
 		setElementState(element);
 		setAction(action);
@@ -39,9 +54,12 @@ public class SimpleStep extends Step {
 		setKey(generateKey());
 	}
 	
-	@Override
-	public SimpleStep clone() {
-		return new SimpleStep(getStartPage(), getElementState(), getAction(), getActionInput(), getEndPage());
+	public Step clone() {
+		return new SimpleStep(getStartPage(), 
+							  getElementState(), 
+							  getAction(), 
+							  getActionInput(), 
+							  getEndPage());
 	}
 	
 	public ElementState getElementState() {
@@ -59,7 +77,7 @@ public class SimpleStep extends Step {
 	public void setAction(Action action) {
 		this.action = action.getShortName();
 	}
-
+	
 	@Override
 	public String generateKey() {
 		String key = "";
@@ -72,7 +90,8 @@ public class SimpleStep extends Step {
 		if(getEndPage() != null) {
 			key += getEndPage().getId();
 		}
-		return "simplestep"+key+action+action_input;
+
+		return "simplestep"+key+action+actionInput;
 	}
 
 	
@@ -82,10 +101,15 @@ public class SimpleStep extends Step {
 	}
 	
 	public String getActionInput() {
-		return action_input;
+		return actionInput;
 	}
 
 	public void setActionInput(String action_input) {
-		this.action_input = action_input;
+		this.actionInput = action_input;
+	}
+
+	@Override
+	public StepType getStepType() {
+		return StepType.SIMPLE;
 	}
 }

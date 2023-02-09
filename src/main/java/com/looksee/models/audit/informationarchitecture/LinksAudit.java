@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -248,8 +247,8 @@ public class LinksAudit implements IExecutablePageStateAudit {
 			// Check if element link a valid url
 			String sanitized_href = "";
 			try {
-				String host = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl(), page_state.isSecure())).getHost();
-				sanitized_href = BrowserUtils.formatUrl("http", host, href, page_state.isSecure());
+				String host = new URL(BrowserUtils.sanitizeUrl(page_state.getUrl(), page_state.isSecured())).getHost();
+				sanitized_href = BrowserUtils.formatUrl("http", host, href, page_state.isSecured());
 				if( BrowserUtils.isJavascript(href)
 					|| href.startsWith("itms-apps:")
 					|| href.startsWith("snap:")

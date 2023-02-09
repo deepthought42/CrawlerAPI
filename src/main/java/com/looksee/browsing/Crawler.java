@@ -3,7 +3,6 @@ package com.looksee.browsing;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,8 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.looksee.api.exception.PagesAreNotMatchingException;
-import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.ActionOLD;
-import com.looksee.models.Domain;
+import com.looksee.models.Browser;
 import com.looksee.models.ElementState;
 import com.looksee.models.ExploratoryPath;
 import com.looksee.models.LookseeObject;
@@ -36,13 +34,8 @@ import com.looksee.models.PageLoadAnimation;
 import com.looksee.models.PageState;
 import com.looksee.models.enums.Action;
 import com.looksee.models.enums.AlertChoice;
-import com.looksee.models.enums.BrowserEnvironment;
-import com.looksee.models.enums.BrowserType;
 import com.looksee.models.journeys.Redirect;
-import com.looksee.models.message.JourneyMessage;
 import com.looksee.models.repository.ActionRepository;
-import com.looksee.services.BrowserService;
-import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.PathUtils;
 import com.looksee.utils.TimingUtils;
 
@@ -53,9 +46,6 @@ import com.looksee.utils.TimingUtils;
 @Component
 public class Crawler {
 	private static Logger log = LoggerFactory.getLogger(Crawler.class);
-
-	@Autowired
-	private BrowserService browser_service;
 
 	@Autowired
 	private ActionRepository action_repo;

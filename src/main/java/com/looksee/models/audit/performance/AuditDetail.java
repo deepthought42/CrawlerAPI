@@ -2,14 +2,15 @@ package com.looksee.models.audit.performance;
 
 import java.util.Date;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+
 
 /**
  * 
  */
-@NodeEntity
+@Node
 public abstract class AuditDetail {
 
 	@GeneratedValue

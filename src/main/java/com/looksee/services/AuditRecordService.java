@@ -25,6 +25,7 @@ import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.repository.AuditRecordRepository;
+import com.looksee.models.repository.DomainRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -42,7 +43,7 @@ public class AuditRecordService {
 	private AccountService account_service;
 	
 	@Autowired
-	private DomainService domain_service;
+	private DomainRepository domain_repo;
 	
 	@Autowired
 	private AuditRecordRepository audit_record_repo;
@@ -75,7 +76,7 @@ public class AuditRecordService {
 				Account account = account_service.findById(account_id).get();
 				int id_start_idx = account.getUserId().indexOf('|');
 				String user_id = account.getUserId().substring(id_start_idx+1);
-				Domain domain = domain_service.findById(domain_id).get();
+				Domain domain = domain_repo.findById(domain_id).get();
 				DomainDto domain_dto = domain_dto_service.build(domain);
 				MessageBroadcaster.sendAuditRecord(user_id, domain_dto);
 			} catch (Exception e) {

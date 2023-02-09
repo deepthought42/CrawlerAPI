@@ -1,12 +1,9 @@
 package com.looksee.api;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.net.URL;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,9 +34,6 @@ import com.looksee.services.DomainService;
 import com.looksee.structs.Message;
 import com.looksee.utils.BrowserUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-
 /**
  *	API for interacting with {@link User} data
  */
@@ -48,9 +42,6 @@ import akka.actor.ActorSystem;
 public class IdeTestExportController {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-    private ActorSystem actor_system;
 
 	@Autowired
 	private AccountRepository account_repo;
@@ -132,11 +123,12 @@ public class IdeTestExportController {
 
 		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options, domain);
 
+		/*
 		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());
 
 		testCreationActor.tell(message, null);
-
+*/
     	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

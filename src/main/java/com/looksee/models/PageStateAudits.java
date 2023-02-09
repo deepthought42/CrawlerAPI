@@ -4,12 +4,14 @@ import java.util.Set;
 
 import com.looksee.models.audit.Audit;
 
+
 public class PageStateAudits {
 	
 	private SimplePage page;
 	private Set<Audit> audits;
 	
-	public PageStateAudits(SimplePage page, Set<Audit> audits) {
+	public PageStateAudits(SimplePage page, 
+						   Set<Audit> audits) {
 		setPage(page);
 		setAudits(audits);
 	}

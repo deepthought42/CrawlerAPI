@@ -2,14 +2,14 @@ package com.looksee.models;
 
 import java.util.List;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 
 /**
  * Defines a name and color used to group {@link Test}s
  */
-@NodeEntity
+@Node
 public class Group implements Persistable{
 	
 	@GeneratedValue

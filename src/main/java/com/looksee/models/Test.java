@@ -12,23 +12,23 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.looksee.models.enums.TestStatus;
 
 import org.joda.time.DateTime;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Properties;
-import org.neo4j.ogm.annotation.Relationship;
 
 /**
  * Defines the path of a test, the result and the expected values to determine if a test was 
  * successful or not
  *
  */
-@NodeEntity
+@Node
 public class Test implements Persistable {
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Test.class);
@@ -48,7 +48,7 @@ public class Test implements Persistable {
 	private long run_time_length;
 	private List<String> path_keys;
 
-	@Properties
+	@CompositeProperty
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
 	@Relationship(type = "HAS_TEST_RECORD")

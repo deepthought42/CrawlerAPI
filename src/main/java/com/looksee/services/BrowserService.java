@@ -44,12 +44,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.google.cloud.storage.StorageException;
-import com.looksee.browsing.Browser;
 import com.looksee.browsing.form.ElementRuleExtractor;
 import com.looksee.gcp.CloudVisionUtils;
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.gcp.ImageSafeSearchAnnotation;
 import com.looksee.helpers.BrowserConnectionHelper;
+import com.looksee.models.Browser;
 import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.Form;
@@ -1745,7 +1745,7 @@ public class BrowserService {
 		Map<String, Template> element_templates = new HashMap<>();
 		List<com.looksee.models.Element> parents_only_element_list = new ArrayList<>();
 		for(com.looksee.models.Element element : element_list) {
-			if(!element.isLeaf()) {
+			if(!ElementClassification.LEAF.equals(element.getClassification())) {
 				parents_only_element_list.add(element);
 			}
 		}

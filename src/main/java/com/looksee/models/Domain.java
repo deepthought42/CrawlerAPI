@@ -5,39 +5,33 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
-import com.looksee.models.audit.DomainAuditRecord;
-import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
+
+
 
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
  * belong to this domain
  */
+@Node
 public class Domain extends LookseeObject{
 	
 	private String url;
-	private String logo_url;
-	private String entrypoint_url;
+	private String logoUrl;
+	private String entrypointUrl;
 	private List<String> sitemap;
 	
 	@Relationship(type = "HAS")
 	private List<PageState> pages;
-
-	@Relationship(type = "HAS_TEST_USER")
-	private Set<TestUser> test_users;
 	
-	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
-	private Account account;
-	
-	@Relationship(type = "HAS", direction = Relationship.INCOMING)
+	@Relationship(type = "HAS", direction = Direction.INCOMING)
 	private Set<DomainAuditRecord> audit_records;
-	
-	@Relationship(type="COMPETES_WTIH")
-	private Set<Competitor> competitors;
-	
+
 	@Relationship(type="USES")
 	private DesignSystem design_system;
 	
@@ -48,7 +42,6 @@ public class Domain extends LookseeObject{
 	 * @param organization
 	 */
 	public Domain(){
-		setTestUsers( new HashSet<>() );
 		setPages( new ArrayList<>() );
 		setAuditRecords(new HashSet<>());
 		setSitemap(new ArrayList<>());
@@ -92,43 +85,19 @@ public class Domain extends LookseeObject{
 	}
 
 	public String getLogoUrl() {
-		return logo_url;
+		return logoUrl;
 	}
 
 	public void setLogoUrl(String logo_url) {
-		this.logo_url = logo_url;
+		this.logoUrl = logo_url;
 	}
 
-	public Set<TestUser> getTestUsers() {
-		return test_users;
-	}
-	
-	public void removeTestUser(TestUser test_user) {
-		this.test_users.remove(test_user);
-	}
-	
-	public boolean addTestUser(TestUser test_user) {
-		return this.test_users.add(test_user);
-	}
-
-	public void setTestUsers(Set<TestUser> test_users) {
-		this.test_users = new HashSet<TestUser>(test_users);
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public String generateKey() {
 		return "domain"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl());
-	}
-	
-	public Account getAccount() {
-		return account;
-	}
-
-	public void setAccount(Account account) {
-		this.account = account;
 	}
 
 	public boolean addPage(PageState page) {
@@ -175,19 +144,11 @@ public class Domain extends LookseeObject{
 	}
 
 	public String getEntrypointUrl() {
-		return entrypoint_url;
+		return entrypointUrl;
 	}
 
 	public void setEntrypointUrl(String entrypoint_url) {
-		this.entrypoint_url = entrypoint_url;
-	}
-
-	public Set<Competitor> getCompetitors() {
-		return competitors;
-	}
-
-	public void setCompetitors(Set<Competitor> competitors) {
-		this.competitors = competitors;
+		this.entrypointUrl = entrypoint_url;
 	}
 
 	public DesignSystem getDesignSystem() {

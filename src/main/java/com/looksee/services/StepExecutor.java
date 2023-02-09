@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.browsing.ActionFactory;
-import com.looksee.browsing.Browser;
+import com.looksee.models.Browser;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 

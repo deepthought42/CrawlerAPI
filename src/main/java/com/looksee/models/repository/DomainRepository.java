@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -150,4 +150,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (d:Domain) WITH d MATCH (user:TestUser) WHERE id(d)=$domain_id AND id(user)=$test_user_id MERGE (d)-[:HAS_TEST_USER]->(user) RETURN user")
 	public void addTestUser(@Param("domain_id") long domain_id, @Param("test_user_id") long test_user_id);
+
+	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) WHERE id(account)=$account_id RETURN domain")
+	Set<Domain> getDomainsForAccount(@Param("account_id") long account_id);
 }

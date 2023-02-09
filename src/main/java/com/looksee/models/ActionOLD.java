@@ -2,12 +2,12 @@ package com.looksee.models;
 
 import java.util.Objects;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 /**
  * Defines an action in name only
  */
-@NodeEntity
+@Node
 public class ActionOLD extends LookseeObject {
 	
 	private String name;

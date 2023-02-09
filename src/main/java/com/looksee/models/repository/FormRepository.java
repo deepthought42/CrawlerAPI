@@ -2,11 +2,10 @@ package com.looksee.models.repository;
 
 import java.util.List;
 
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;

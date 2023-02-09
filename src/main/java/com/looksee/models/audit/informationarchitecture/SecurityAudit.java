@@ -65,7 +65,7 @@ public class SecurityAudit implements IExecutablePageStateAudit {
 		labels.add("information_architecture");
 		labels.add("security");
 		
-		boolean is_secure = page_state.isSecure();
+		boolean is_secure = page_state.isSecured();
 		if(!is_secure) {
 			String title = "Page isn't secure";
 			String description = page_state.getUrl() + " doesn't use https";

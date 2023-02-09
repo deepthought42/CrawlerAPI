@@ -15,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.looksee.api.exception.PagesAreNotMatchingException;
-import com.looksee.browsing.Browser;
 import com.looksee.helpers.BrowserConnectionHelper;
 import com.looksee.models.ActionOLD;
 import com.looksee.models.Animation;
+import com.looksee.models.Browser;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;

@@ -1,10 +1,7 @@
 package com.looksee.api;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.security.Principal;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -27,8 +24,6 @@ import com.looksee.services.AccountService;
 import com.looksee.services.CompetitorService;
 import com.looksee.services.SubscriptionService;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -39,8 +34,6 @@ public class CompetitorController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	@Autowired
-	private ActorSystem actor_system;
 	
 	@Autowired
 	private AccountService account_service;
@@ -75,10 +68,7 @@ public class CompetitorController {
     	if(competitor_opt.isPresent()) {
     		Competitor competitor = competitor_opt.get();
     		
-    		ActorRef competitive_analyzer = actor_system.actorOf(SpringExtProvider.get(actor_system).props("competitiveAnalysisActor"),
-    				"competitiveAnalysisActor" + UUID.randomUUID());
     		CompetitorMessage competitor_message = new CompetitorMessage(competitor.getId(), account.getId(), competitor);
-    		competitive_analyzer.tell(competitor_message, null);
     	}
     }
 }

@@ -2,7 +2,7 @@ package com.looksee.models.message;
 
 import java.net.URL;
 
-import com.looksee.browsing.Browser;
+import com.looksee.models.Browser;
 import com.looksee.models.enums.CrawlAction;
 
 /**

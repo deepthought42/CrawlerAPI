@@ -4,17 +4,19 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
-
 /**
  * A observation of potential error for a given color palette 
  */
+@Node
 public class ColorContrastIssueMessage extends ElementStateIssueMessage{
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ColorContrastIssueMessage.class);
 
 	private double contrast;

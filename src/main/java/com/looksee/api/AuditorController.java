@@ -1,12 +1,8 @@
 package com.looksee.api;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,28 +21,26 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.api.exception.PaymentDueException;
 import com.looksee.browsing.Crawler;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.enums.CrawlAction;
-import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.SubscriptionPlan;
-import com.looksee.models.message.PageCrawlActionMessage;
+import com.looksee.models.message.UrlMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.SubscriptionService;
 import com.looksee.utils.BrowserUtils;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -63,9 +57,6 @@ public class AuditorController {
 	private PageStateService page_service;
     
     @Autowired
-    private ActorSystem actor_system;
-    
-    @Autowired
     protected AuditRecordService audit_record_service;
     
     @Autowired
@@ -76,6 +67,9 @@ public class AuditorController {
     
 	@Autowired
 	private SubscriptionService subscription_service;
+	
+	@Autowired
+	private PubSubUrlMessagePublisherImpl url_topic;
 	
 	/**
      * 
@@ -110,6 +104,7 @@ public class AuditorController {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
 	   	//create new audit record
+    	/*
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
 	   														new HashSet<>(), 
 	   														null, 
@@ -124,13 +119,14 @@ public class AuditorController {
 	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 	   	audit_record.setInfoArchitectureAuditProgress(0.0);
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
-	   	
 	   	long account_id = -1;
 		if(account != null) {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 			account_id = account.getId();			
 		}
+    	 */
 		
+		/*
 		PageCrawlActionMessage start_single_page_audit = new PageCrawlActionMessage(CrawlAction.START, 
 																					 -1L, 
 																					 account_id,
@@ -138,12 +134,23 @@ public class AuditorController {
 																					 sanitized_url);
 		
 		
-		log.warn("Initiating single page audit = "+audit_record.getId());
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	   												.props("singlePageAuditManager"), "singlePageAuditManager"+UUID.randomUUID());
 		audit_manager.tell(start_single_page_audit, ActorRef.noSender());
+		*/
+	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
+
+		log.warn("Initiating single page audit = "+sanitized_url);
+		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(), 
+											BrowserType.CHROME, 
+											-1, 
+											account.getId(),
+											-1);
 		
-   		return audit_record;
+		String url_msg_str = mapper.writeValueAsString(url_msg);
+		url_topic.publish(url_msg_str);
+
+   		return null;
 	}
 	
 	

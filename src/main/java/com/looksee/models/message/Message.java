@@ -8,7 +8,7 @@ public abstract class Message {
 	private long account_id;
 	private long audit_record_id;
 	
-	Message(){
+	public Message(){
 		setAccountId(-1);
 	}
 	
@@ -18,7 +18,7 @@ public abstract class Message {
 	 * @param audit_record_id TODO
 	 * @param domain eg. example.com
 	 */
-	Message(long domain_id, long account_id, long audit_record_id){
+	public Message(long domain_id, long account_id, long audit_record_id){
 		setDomainId(domain_id);
 		setAccountId(account_id);
 		setAuditRecordId(audit_record_id);

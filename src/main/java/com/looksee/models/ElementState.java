@@ -7,11 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Properties;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import com.looksee.models.enums.ElementClassification;
 
@@ -21,40 +20,41 @@ import com.looksee.models.enums.ElementClassification;
  *  may be a Parent and/or child of another ElementState. This heirarchy is not
  *  maintained by ElementState though. 
  */
-@NodeEntity
+@Node
 public class ElementState extends LookseeObject implements Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
 	private String name;
-	private String owned_text;
-	private String all_text;
-	private String css_selector;
-	private String outer_html;
+	private String ownedText;
+	private String allText;
+	private String cssSelector;
+	private String outerHtml;
 	private String xpath;
 	private String classification;
-	private String screenshot_url;
-	private String background_color;
-	private String foreground_color;
-	private int x_location;
-	private int y_location;
+	private String screenshotUrl;
+	private String backgroundColor;
+	private String foregroundColor;
+	private int xLocation;
+	private int yLocation;
 	private int width;
 	private int height;
-	private double text_contrast;
-	private double non_text_contrast;
-	private boolean image_flagged;
+	private double textContrast;
+	private double nonTextContrast;
+	private boolean imageFlagged;
 	
 	private boolean visible;
 	
-	@Properties
-	private Map<String, String> rendered_css_values = new HashMap<>();
+	@CompositeProperty
+	private Map<String, String> renderedCssValues = new HashMap<>();
 	
-	@Properties
+	@CompositeProperty
 	private Map<String, String> attributes = new HashMap<>();
 	
-	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
-	private List<ElementState> child_elements = new ArrayList<>();
-
+	/*
+	@Relationship(type = "HAS_CHILD", direction = Direction.OUTGOING)
+	private List<ElementState> childElements = new ArrayList<>();
+*/
 	public ElementState(){
 		super();
 	}
@@ -149,19 +149,19 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	}
 	
 	public String getOwnedText() {
-		return owned_text;
+		return ownedText;
 	}
 	
 	public void setOwnedText(String text) {
-		this.owned_text = text;
+		this.ownedText = text;
 	}
 	
 	public String getAllText() {
-		return all_text;
+		return allText;
 	}
 	
 	public void setAllText(String text) {
-		this.all_text = text;
+		this.allText = text;
 	}
 
 	public void setAttributes(Map<String, String> attribute_persist_list) {
@@ -189,11 +189,11 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	}
 	
 	public String getScreenshotUrl() {
-		return this.screenshot_url;
+		return this.screenshotUrl;
 	}
 
 	public void setScreenshotUrl(String screenshot_url) {
-		this.screenshot_url = screenshot_url;
+		this.screenshotUrl = screenshot_url;
 	}
 
 	/**
@@ -233,7 +233,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(outer_html, xpath);
+		return Objects.hash(outerHtml, xpath);
 	}
 
 	public void print() {
@@ -255,7 +255,7 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		log.warn("element x_loc :: "+getXLocation());
 		log.warn("element y_loc :: "+getYLocation());
 		log.warn("element attr :: "+getAttributes());
-		log.warn("element children :: "+getChildElements());
+		//log.warn("element children :: "+getChildElements());
 		log.warn("element classification :: "+getClassification());
 		log.warn("element created_at :: "+getCreatedAt());
 
@@ -283,19 +283,19 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	}
 
 	public int getXLocation() {
-		return x_location;
+		return xLocation;
 	}
 
 	public void setXLocation(int x_location) {
-		this.x_location = x_location;
+		this.xLocation = x_location;
 	}
 
 	public int getYLocation() {
-		return y_location;
+		return yLocation;
 	}
 
 	public void setYLocation(int y_location) {
-		this.y_location = y_location;
+		this.yLocation = y_location;
 	}
 
 	public int getWidth() {
@@ -320,23 +320,19 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	}
 
 	public String getCssSelector() {
-		return css_selector;
+		return cssSelector;
 	}
 
 	public void setCssSelector(String css_selector) {
-		this.css_selector = css_selector;
+		this.cssSelector = css_selector;
 	}
 
 	public void setOuterHtml(String outer_html) {
-		this.outer_html = outer_html;
+		this.outerHtml = outer_html;
 	}
 
 	public String getOuterHtml() {
-		return outer_html;
-	}
-
-	public boolean isLeaf() {
-		return getClassification().equals(ElementClassification.LEAF);
+		return outerHtml;
 	}
 
 	public ElementClassification getClassification() {
@@ -347,24 +343,25 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 		this.classification = classification.toString();
 	}
 	
+	/*
 	public List<ElementState> getChildElements() {
-		return child_elements;
+		return childElements;
 	}
 
 	public void setChildElements(List<ElementState> child_elements) {
-		this.child_elements = child_elements;
+		this.childElements = child_elements;
 	}
 	
 	public void addChildElement(ElementState child_element) {
-		this.child_elements.add(child_element);
+		this.childElements.add(child_element);
 	}
-
+*/
 	public Map<String, String> getRenderedCssValues() {
-		return rendered_css_values;
+		return renderedCssValues;
 	}
 
 	public void setRenderedCssValues(Map<String, String> rendered_css_values) {
-		this.rendered_css_values.putAll(rendered_css_values);
+		this.renderedCssValues.putAll(rendered_css_values);
 	}
 
 	public boolean isVisible() {
@@ -384,42 +381,42 @@ public class ElementState extends LookseeObject implements Comparable<ElementSta
 	}
 
 	public double getTextContrast() {
-		return text_contrast;
+		return textContrast;
 	}
 
 	public void setTextContrast(double text_contrast) {
-		this.text_contrast = text_contrast;
+		this.textContrast = text_contrast;
 	}
 
 	public double getNonTextContrast() {
-		return non_text_contrast;
+		return nonTextContrast;
 	}
 
 	public void setNonTextContrast(double non_text_contrast) {
-		this.non_text_contrast = non_text_contrast;
+		this.nonTextContrast = non_text_contrast;
 	}
 
 	public String getBackgroundColor() {
-		return background_color;
+		return backgroundColor;
 	}
 
 	public void setBackgroundColor(String background_color) {
-		this.background_color = background_color;
+		this.backgroundColor = background_color;
 	}
 	
 	public String getForegroundColor() {
-		return foreground_color;
+		return foregroundColor;
 	}
 
 	public void setForegroundColor(String foreground_color) {
-		this.foreground_color = foreground_color;
+		this.foregroundColor = foreground_color;
 	}
 
 	public boolean isImageFlagged() {
-		return image_flagged;
+		return imageFlagged;
 	}
 
 	public void setImageFlagged(boolean image_flagged) {
-		this.image_flagged = image_flagged;
+		this.imageFlagged = image_flagged;
 	}
 }

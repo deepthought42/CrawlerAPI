@@ -3,7 +3,7 @@ package com.looksee.models.audit;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditLevel;

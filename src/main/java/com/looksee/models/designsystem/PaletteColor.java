@@ -3,8 +3,6 @@ package com.looksee.models.designsystem;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.ogm.annotation.Properties;
-
 /**
  * Contains data for individual palette primary colors and the shades, tints, and tones associated with them
  *

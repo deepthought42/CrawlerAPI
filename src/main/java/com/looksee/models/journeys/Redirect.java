@@ -4,18 +4,24 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.looksee.models.enums.StepType;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("REDIRECT")
 public class Redirect extends Step {
-	private String start_url;
+	private String startUrl;
 	private List<String> urls;
-	private List<String> image_checksums;
-	private List<String> image_urls;
+	private List<String> imageChecksums;
+	private List<String> imageUrls;
 	
 	public Redirect() throws MalformedURLException{
 		setUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
-	public Redirect(String start_url, List<String> urls) throws MalformedURLException{
+	public Redirect(String start_url, List<String> urls) {
 		assert urls != null;
 		assert !urls.isEmpty();
 		assert start_url != null;
@@ -39,7 +45,7 @@ public class Redirect extends Step {
 		return urls;
 	}
 
-	public void setUrls(List<String> urls) throws MalformedURLException {
+	public void setUrls(List<String> urls) {
 		List<String> clean_urls = new ArrayList<>();
 		for(String url : urls){
 			clean_urls.add(url);
@@ -49,15 +55,15 @@ public class Redirect extends Step {
 
 
 	public List<String> getImageChecksums() {
-		return image_checksums;
+		return imageChecksums;
 	}
 
 	public void setImageChecksums(List<String> image_checksums) {
-		this.image_checksums = image_checksums;
+		this.imageChecksums = image_checksums;
 	}
 
 	public List<String> getImageUrls() {
-		return image_urls;
+		return imageUrls;
 	}
 
 	public void setImageUrls(List<String> image_urls) {
@@ -71,11 +77,11 @@ public class Redirect extends Step {
 			}
 		}
 		
-		this.image_urls = deduped_list;
+		this.imageUrls = deduped_list;
 	}
 
 	public String getStartUrl() {
-		return start_url;
+		return startUrl;
 	}
 
 	public void setStartUrl(String start_url) {
@@ -84,7 +90,17 @@ public class Redirect extends Step {
 		if(params_idx > -1){
 			new_url = start_url.substring(0, params_idx);
 		}
-		this.start_url = new_url;
+		this.startUrl = new_url;
+	}
+
+	@Override
+	public Step clone() {
+		return new Redirect(getStartUrl(), getUrls());
+	}
+
+	@Override
+	StepType getStepType() {
+		return StepType.REDIRECT;
 	}
 
 }

@@ -1,11 +1,11 @@
 package com.looksee.models;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 /**
  * Defines user information that can be used during testing and discovery
  */
-@NodeEntity
+@Node
 public class TestUser extends LookseeObject{
 
 	private String username;

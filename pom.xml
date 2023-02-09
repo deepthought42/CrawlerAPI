@@ -13,57 +13,93 @@
    		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	    <selenium-version>3.141.59</selenium-version>
 	    <java.version>1.8</java.version>
-	    <springboot.version>2.3.9.RELEASE</springboot.version>
-	    <spring.security.version>5.3.9.RELEASE</spring.security.version>
-        <akka.version>2.5.32</akka.version>
+	    <springboot.version>2.6.13</springboot.version>
+	    <spring.security.version>5.4.0</spring.security.version>
         <jackson.version>2.12.2</jackson.version>
 	</properties>
 
     <build>
-      <plugins>
-  	 	<plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>1.8</source>
-                <target>1.8</target>
-            </configuration>
-        </plugin>
-        <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-surefire-plugin</artifactId>
-  			<version>3.0.0-M5</version>
-	        <dependencies>
-		      <dependency>
-		        <groupId>org.apache.maven.surefire</groupId>
-		        <artifactId>surefire-junit47</artifactId>
-    			<version>3.0.0-M5</version>
-		      </dependency>
-		    </dependencies>
-	    </plugin>
-	    <plugin>
-	       <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-maven-plugin</artifactId>
-          <version>${springboot.version}</version>
-          <configuration>
-              <fork>true</fork>
-              <mainClass>com.looksee.api.EntryPoint</mainClass>
-          </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>repackage</goal>
-                </goals>
-              </execution>
-          </executions>
-	    </plugin>
-	    <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-        </plugin>
-	</plugins>
-  </build>
+      	<plugins>
+	  	 	<plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-compiler-plugin</artifactId>
+	            <configuration>
+	                <source>1.8</source>
+	                <target>1.8</target>
+	            </configuration>
+	        </plugin>
+	        <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-surefire-plugin</artifactId>
+	  			<version>3.0.0-M5</version>
+		        <dependencies>
+			      <dependency>
+			        <groupId>org.apache.maven.surefire</groupId>
+			        <artifactId>surefire-junit47</artifactId>
+	    			<version>3.0.0-M5</version>
+			      </dependency>
+			    </dependencies>
+		    </plugin>
+		    <plugin>
+		       <groupId>org.springframework.boot</groupId>
+	          <artifactId>spring-boot-maven-plugin</artifactId>
+	          <version>${springboot.version}</version>
+	          <configuration>
+	              <fork>true</fork>
+	              <mainClass>com.looksee.api.EntryPoint</mainClass>
+	          </configuration>
+	          <executions>
+	              <execution>
+	                <goals>
+	                  <goal>repackage</goal>
+	                </goals>
+	              </execution>
+	          </executions>
+		    </plugin>
+		    <plugin>
+	            <groupId>org.springframework.boot</groupId>
+	            <artifactId>spring-boot-maven-plugin</artifactId>
+	        </plugin>
+	        <plugin>
+		        <groupId>com.google.cloud.tools</groupId>
+		        <artifactId>jib-maven-plugin</artifactId>
+		        <version>3.2.1</version>
+		        <configuration>
+		          <to>
+		            <image>gcr.io/PROJECT_ID/pubsub</image>
+		          </to>
+		        </configuration>
+			</plugin>
+		</plugins>
+	</build>
 
+	<dependencyManagement>
+	    <dependencies>
+	      <dependency>
+	        <!-- Import dependency management from Spring Boot -->
+	        <groupId>org.springframework.boot</groupId>
+	        <artifactId>spring-boot-dependencies</artifactId>
+	        <version>${springboot.version}</version>
+	        <type>pom</type>
+	        <scope>import</scope>
+	      </dependency>
+	      <dependency>
+	        <groupId>org.springframework.cloud</groupId>
+	        <artifactId>spring-cloud-dependencies</artifactId>
+	        <version>2021.0.0</version>
+	        <type>pom</type>
+	        <scope>import</scope>
+	      </dependency>
+	      <dependency>
+	           <groupId>com.google.cloud</groupId>
+	           <artifactId>spring-cloud-gcp-dependencies</artifactId>
+	           <version>3.0.0</version>
+	           <type>pom</type>
+	           <scope>import</scope>
+	       </dependency>
+	    </dependencies>
+	</dependencyManagement>
+	  <!--
 	<dependencyManagement>
 	  <dependencies>
 	    <dependency>
@@ -75,7 +111,7 @@
 	    </dependency>
 	  </dependencies>
 	</dependencyManagement>
-	
+	-->
   <dependencies>
 
   
@@ -124,7 +160,6 @@
 		<dependency>
 	    	<groupId>org.seleniumhq.selenium</groupId>
 	        <artifactId>selenium-java</artifactId>
-	        <version>${selenium-version}</version>
 	        <exclusions>
 			    <exclusion>
 			        <groupId>javax.servlet</groupId>
@@ -137,7 +172,6 @@
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-data-neo4j</artifactId>
-		    <version>${springboot.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-ogm-bolt-driver -->
@@ -160,7 +194,7 @@
 		    <artifactId>imgscalr-lib</artifactId>
 		    <version>4.2</version>
 		</dependency>
-
+<!--
 		<dependency>
 	     	<groupId>org.springframework.cloud</groupId>
 	      	<artifactId>spring-cloud-gcp-dependencies</artifactId>
@@ -168,7 +202,7 @@
 	     	<type>pom</type>
 	     	<scope>import</scope>
 	    </dependency>
-
+-->
 		<!-- https://mvnrepository.com/artifact/ru.yandex.qatools.ashot/ashot -->
 		<dependency>
 		    <groupId>ru.yandex.qatools.ashot</groupId>
@@ -182,18 +216,6 @@
 			<version>20160212</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-actor_2.13</artifactId>
-			<version>${akka.version}</version>
-		</dependency>
-
-		<dependency>
-		  <groupId>com.typesafe.akka</groupId>
-		  <artifactId>akka-cluster_2.13</artifactId>
-		  <version>${akka.version}</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 		    <groupId>junit</groupId>
@@ -205,57 +227,53 @@
 		<dependency>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-actuator</artifactId>
-		  <version>${springboot.version}</version>
 		</dependency>
 
 		<!-- http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-web</artifactId>
-		    <version>${springboot.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>${springboot.version}</version>
 		</dependency>
-
-		<!-- SECURITY PACKAGES -->
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-core</artifactId>
-		    <version>${spring.security.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-security</artifactId>
-			<version>${springboot.version}</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.springframework.security.oauth.boot/spring-security-oauth2-autoconfigure -->
+		<dependency>
+		    <groupId>org.springframework.security.oauth.boot</groupId>
+		    <artifactId>spring-security-oauth2-autoconfigure</artifactId>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-resource-server -->
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-oauth2-resource-server</artifactId>
-		    <version>${spring.security.version}</version>
 		</dependency>
 
 	    <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose -->
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-oauth2-jose</artifactId>
-		    <version>${spring.security.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-config</artifactId>
-		    <version>${spring.security.version}</version>
 		</dependency>
 
 		
@@ -263,7 +281,7 @@
 		<dependency>
 		    <groupId>com.auth0</groupId>
 		    <artifactId>auth0</artifactId>
-		    <version>1.30.0</version>
+		    <version>1.44.2</version>
 		</dependency>
 
 		<!-- END SECURITY PACKAGES -->
@@ -271,7 +289,6 @@
 	 	<dependency>
              <groupId>org.springframework.boot</groupId>
              <artifactId>spring-boot-starter-tomcat</artifactId>
-   			 <version>${springboot.version}</version>
          </dependency>
             
        	<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3 -->
@@ -346,45 +363,39 @@
 		<dependency>
 		    <groupId>org.apache.httpcomponents</groupId>
 		    <artifactId>httpclient</artifactId>
-		    <version>4.5.4</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-annotations</artifactId>
-		    <version>2.12.2</version>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-core</artifactId>
-		    <version>2.12.2</version>
 		</dependency>
 				
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-databind</artifactId>
-		    <version>2.12.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310 -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.datatype</groupId>
 		    <artifactId>jackson-datatype-jsr310</artifactId>
-		    <version>2.12.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jdk8 -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.datatype</groupId>
 		    <artifactId>jackson-datatype-jdk8</artifactId>
-		    <version>2.12.2</version>
 		</dependency>
 
-
+<!--
 		<dependency>
 		    <groupId>io.springfox</groupId>
 		    <artifactId>springfox-swagger2</artifactId>
@@ -396,18 +407,16 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.9.2</version>
 		</dependency>
-
+-->
 		<dependency>
 		    <groupId>javax.servlet</groupId>
 		    <artifactId>javax.servlet-api</artifactId>
-		    <version>4.0.0</version>
 		    <scope>provided</scope>
 		</dependency>
 
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-mail</artifactId>
-		    <version>${springboot.version}</version>
 		    <exclusions>
 		      <exclusion>  <!-- declare the exclusion here -->
 		        <groupId>org.freemarker</groupId>
@@ -419,21 +428,12 @@
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-test</artifactId>
-		    <version>${springboot.version}</version>
 		    <exclusions>
 				<exclusion>
 					<groupId>org.junit.vintage</groupId>
 					<artifactId>junit-vintage-engine</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		
-		<!-- https://mvnrepository.com/artifact/org.openpnp/opencv -->
-		<dependency>
-		    <groupId>org.openpnp</groupId>
-		    <artifactId>opencv</artifactId>
-		    <version>3.2.0-0</version>
 		</dependency>
 				
 		<!-- https://mvnrepository.com/artifact/com.assertthat/selenium-shutterbug -->
@@ -467,7 +467,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
         </dependency>
         
         <dependency>
@@ -475,14 +474,6 @@
             <artifactId>java-semver</artifactId>
             <version>0.9.0</version>
         </dependency>
-        
-        <!-- https://mvnrepository.com/artifact/com.browserup/browserup-proxy-core -->
-		<dependency>
-		    <groupId>com.browserup</groupId>
-		    <artifactId>browserup-proxy-core</artifactId>
-		    <version>2.0.1</version>
-		    <scope>runtime</scope>
-		</dependency>
 
 		<!--  GOOGLE CLOUD -->
 		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-pagespeedonline -->
@@ -515,7 +506,6 @@
 		<dependency>
 		    <groupId>com.sendgrid</groupId>
 		    <artifactId>sendgrid-java</artifactId>
-		    <version>4.7.2</version>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
@@ -542,15 +532,19 @@
 		    <artifactId>jtidy</artifactId>
 		    <version>r938</version>
 		</dependency>
-		
+		 
+		<!-- https://mvnrepository.com/artifact/com.google.cloud/spring-cloud-gcp-starter-storage -->
 		<dependency>
-		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-gcp-starter-vision</artifactId>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>spring-cloud-gcp-starter-vision</artifactId>
 		</dependency>
+
+
 				
+		<!-- https://mvnrepository.com/artifact/com.google.cloud/spring-cloud-gcp-starter-storage -->
 		<dependency>
-		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-gcp-starter-storage</artifactId>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>spring-cloud-gcp-starter-storage</artifactId>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.openimaj/image-processing -->
@@ -565,14 +559,12 @@
 		<dependency>
 		    <groupId>io.netty</groupId>
 		    <artifactId>netty-tcnative</artifactId>
-		    <version>2.0.34.Final</version>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-language -->
 		<dependency>
 		    <groupId>com.google.cloud</groupId>
 		    <artifactId>google-cloud-language</artifactId>
-		    <version>1.101.5</version>
 		</dependency>
 		
 		<!-- JIRA integration -->		
@@ -601,33 +593,16 @@
 		    <artifactId>whelk-flesch-kincaid</artifactId>
 		    <version>0.1.6</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
-		<dependency>
-		    <groupId>edu.stanford.nlp</groupId>
-		    <artifactId>stanford-corenlp</artifactId>
-		    <version>4.2.2</version>
-		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-pos-tagger -->
-		<dependency>
-		    <groupId>edu.stanford.nlp</groupId>
-		    <artifactId>stanford-corenlp</artifactId>
-			<version>4.2.2</version>
-		    <classifier>models</classifier>
-		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-spring-boot2 -->
 		<dependency>
 		    <groupId>io.github.resilience4j</groupId>
 		    <artifactId>resilience4j-spring-boot2</artifactId>
-		    <version>1.7.1</version>
 		</dependency>
 
 		<dependency>
 		  <groupId>org.yaml</groupId>
 		  <artifactId>snakeyaml</artifactId>
-		  <version>1.29</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.mortennobel/java-image-scaling -->
@@ -641,7 +616,6 @@
 		<dependency>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-aop</artifactId>
-		  <version>${springboot.version}</version>
 		</dependency>
 		
 		<dependency>
@@ -662,6 +636,12 @@
 		    <scope>runtime</scope>
 		</dependency>
 
+	   
+	    <dependency>
+	      	<groupId>com.google.cloud</groupId>
+	      	<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
+	    </dependency>
+	    
 	</dependencies>
 	
 	<repositories>

@@ -10,13 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.stereotype.Component;
 
-import com.looksee.browsing.Browser;
+import com.looksee.models.Browser;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;

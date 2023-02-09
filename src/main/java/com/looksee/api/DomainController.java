@@ -1,7 +1,5 @@
 package com.looksee.api;
 
-import static com.looksee.config.SpringExtension.SpringExtProvider;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -20,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,10 +43,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.api.exception.SubscriptionExceededException;
 import com.looksee.dto.DomainDto;
 import com.looksee.dto.PageStatisticDto;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.generators.report.GeneratePDFReport;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
@@ -76,13 +76,13 @@ import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
-import com.looksee.models.enums.CrawlAction;
+import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.enums.WCAGComplianceLevel;
-import com.looksee.models.message.CrawlActionMessage;
+import com.looksee.models.message.UrlMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -98,9 +98,6 @@ import com.looksee.utils.AuditUtils;
 import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 
 /**
  * API endpoints for interacting with {@link Domain} data
@@ -126,9 +123,6 @@ public class DomainController {
 	private UXIssueMessageService ux_issue_service;
 
 	@Autowired
-	private ActorSystem actor_system;
-
-	@Autowired
 	private DomainDtoService domain_dto_service;
 
 	@Autowired
@@ -142,6 +136,9 @@ public class DomainController {
 
 	@Autowired
 	private SubscriptionService subscription_service;
+	
+	@Autowired
+	private PubSubUrlMessagePublisherImpl url_topic;
 	
 	/**
 	 * Create a new {@link Domain domain}
@@ -328,7 +325,7 @@ public class DomainController {
 		 * MissingSubscriptionException(); }
 		 */
 
-		Set<Domain> domains = account_service.getDomainsForAccount(acct.getId());
+		Set<Domain> domains = domain_service.getDomainsForAccount(acct.getId());
 		Set<DomainDto> domain_info_set = new HashSet<>();
 		for (Domain domain : domains) {
 			domain_info_set.add(domain_dto_service.build(domain));
@@ -1137,8 +1134,8 @@ public class DomainController {
 											  ExecutionStatus.IN_PROGRESS);
 		
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
-		//account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 
+		/*
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system).props("auditManager"),
 														"auditManager" + UUID.randomUUID());
 		
@@ -1150,7 +1147,15 @@ public class DomainController {
 																 sanitized_url, 
 																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
-
+		*/
+	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
+		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(),
+											BrowserType.CHROME, 
+											domain_id, 
+											account.getId(),
+											audit_record.getId());
+		String url_msg_str = mapper.writeValueAsString(url_msg);
+		url_topic.publish(url_msg_str);
 		return domain_dto;
 	}
 

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.looksee.config.SpringExtension.SpringExt;
 import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
@@ -24,11 +23,13 @@ import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.designsystem.DesignSystem;
-import com.looksee.models.journeys.Journey;
+import com.looksee.models.repository.AuditRecordRepository;
 import com.looksee.models.repository.DomainRepository;
 
-import akka.actor.AbstractExtensionId;
-
+/**
+ * 
+ * 
+ */
 @Service
 public class DomainService {
 	@SuppressWarnings("unused")
@@ -38,7 +39,7 @@ public class DomainService {
 	private DomainRepository domain_repo;
 	
 	@Autowired
-	private AuditRecordService audit_record_service;
+	private AuditRecordRepository audit_record_repo;
 	
 
 	public Set<Domain> getDomains() {
@@ -113,6 +114,10 @@ public class DomainService {
 		return domain_repo.getAnimations(account_id, url);
 	}
 
+	public Set<Domain> getDomainsForAccount(long account_id) {		
+		return domain_repo.getDomainsForAccount(account_id);
+	}
+	
 	/**
 	 * Creates a relationship between existing {@link PageVersion} and {@link Domain} records
 	 * 
@@ -187,7 +192,7 @@ public class DomainService {
 		assert page_url != null;
 		assert !page_url.isEmpty();
 		
-		return audit_record_service.findMostRecentPageAuditRecord(page_url);
+		return audit_record_repo.getMostRecentPageAuditRecord(page_url);
 	}
 
 	public DesignSystem updateExpertiseSettings(long domain_id, String expertise) {

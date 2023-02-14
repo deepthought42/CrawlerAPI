@@ -12,7 +12,7 @@ public class JourneyExaminationProgressMessage extends Message{
 											 int generated_journeys
 	) {
 		setAccountId(accountId);
-		setAuditRecordId(auditRecordId);
+		setDomainAuditRecordId(auditRecordId);
 		setDomainId(domainId);
 		setExaminedJourneys(examined_journeys);
 		setGeneratedJourneys(generated_journeys);

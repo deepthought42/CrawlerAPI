@@ -18,7 +18,6 @@ import com.looksee.models.rules.Rule;
 import io.github.resilience4j.retry.annotation.Retry;
 
 @Service
-@Retry(name = "neoforj")
 public class ElementService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementService.class);

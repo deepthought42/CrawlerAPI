@@ -59,4 +59,8 @@ public interface ElementRepository extends Neo4jRepository<Element, Long> {
 
 	@Query("MATCH (parent:Element{key:$parent_key}) WITH parent MATCH (child:Element{key:$child_key}) MERGE (parent)-[:HAS_CHILD]->(child) RETURN parent")
 	public void addChildElement(@Param("parent_key") String parent_key, @Param("child_key") String child_key);
+
+	@Query("MATCH (:Account{username:$username})-[:HAS_DOMAIN]-(d:Domain{url:$url}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
+	public Set<Element> getElementStates(@Param("url") String url, @Param("username") String username);
+	
 }

@@ -11,13 +11,12 @@ import com.looksee.models.ElementState;
 import com.looksee.models.audit.ColorContrastIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.repository.ColorContrastIssueMessageRepository;
+import com.looksee.models.repository.ElementStateRepository;
 import com.looksee.models.repository.UXIssueMessageRepository;
 
-import io.github.resilience4j.retry.annotation.Retry;
-
 @Service
-@Retry(name="neoforj")
 public class UXIssueMessageService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(UXIssueMessageService.class);
 
 	@Autowired
@@ -25,6 +24,9 @@ public class UXIssueMessageService {
 	
 	@Autowired
 	private ColorContrastIssueMessageRepository contrast_issue_message_repo;
+	
+	@Autowired
+	private ElementStateRepository element_state_repo;
 	
 	public UXIssueMessage save(UXIssueMessage ux_issue) {
 		return issue_message_repo.save(ux_issue);
@@ -97,7 +99,7 @@ public class UXIssueMessageService {
 	}
 
 	public ElementState getElement(long id) {
-		return issue_message_repo.getElement(id);
+		return element_state_repo.getElement(id);
 	}
 
 	public Iterable<UXIssueMessage> saveAll(List<UXIssueMessage> issue_messages) {
@@ -106,7 +108,7 @@ public class UXIssueMessageService {
 	}
 
 	public ElementState getGoodExample(long issue_id) {
-		return issue_message_repo.getGoodExample(issue_id);
+		return element_state_repo.getGoodExample(issue_id);
 	}
 
 	public void addElement(long issue_id, long element_id) {

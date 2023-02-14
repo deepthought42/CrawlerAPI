@@ -27,7 +27,7 @@ public class ConfirmedJourneyMessage extends Message {
 		setBrowser(browser);
 		setDomainId(domain_id);
 		setAccountId(account_id);
-		setAuditRecordId(audit_record_id);
+		setDomainAuditRecordId(audit_record_id);
 	}
 	
 	public ConfirmedJourneyMessage clone(){
@@ -36,7 +36,8 @@ public class ConfirmedJourneyMessage extends Message {
 											getStatus(), 
 											getBrowser(), 
 											getDomainId(), 
-											getAccountId(), getAuditRecordId());
+											getAccountId(), 
+											getDomainAuditRecordId());
 	}
 
 	public PathStatus getStatus() {

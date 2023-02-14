@@ -15,12 +15,10 @@ import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 import com.looksee.models.repository.ElementStateRepository;
+import com.looksee.models.repository.RuleRepository;
 import com.looksee.models.rules.Rule;
 
-import io.github.resilience4j.retry.annotation.Retry;
-
 @Service
-@Retry(name="neoforj")
 public class ElementStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
@@ -30,6 +28,9 @@ public class ElementStateService {
 
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private RuleRepository rule_repo;
 	
 	/**
 	 * 
@@ -95,15 +96,15 @@ public class ElementStateService {
 	}
 
 	public Set<Rule> getRules(String user_id, String element_key) {
-		return element_repo.getRules(user_id, element_key);
+		return rule_repo.getRules(user_id, element_key);
 	}
 
 	public Set<Rule> addRuleToFormElement(String username, String element_key, Rule rule) {
 		//Check that rule doesn't already exist
-		Rule rule_record = element_repo.getElementRule(username, element_key, rule.getKey());
+		Rule rule_record = rule_repo.getElementRule(username, element_key, rule.getKey());
 		if(rule_record == null) {
-			rule_record = element_repo.addRuleToFormElement(username, element_key, rule.getKey());
-			return element_repo.getRules(username, element_key);
+			rule_record = rule_repo.addRuleToFormElement(username, element_key, rule.getKey());
+			return rule_repo.getRules(username, element_key);
 		}
 		else {
 			throw new ExistingRuleException(rule.getType().toString());

@@ -326,11 +326,12 @@ public class AuditUtils {
 	 * @param subcategory TODO
 	 * @return
 	 */
-	public static int getCountPagesWithSubcategoryIssues(Set<PageAuditRecord> page_audits,
+	public static int getCountPagesWithSubcategoryIssues(Set<AuditRecord> page_audits,
 														 AuditSubcategory subcategory) {
 		int count_failing_pages = 0;
-		for(PageAuditRecord page_audit : page_audits) {
-			for(Audit audit: page_audit.getAudits()) {
+		for(AuditRecord page_audit : page_audits) {
+			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+			for(Audit audit: page_audit_record.getAudits()) {
 				if(subcategory.equals( audit.getSubcategory() ) 
 						&& audit.getPoints() < audit.getTotalPossiblePoints()) {
 					count_failing_pages++;
@@ -348,11 +349,13 @@ public class AuditUtils {
 	 * @param page_audits
 	 * @return
 	 */
-	public static int getCountPagesWithIssuesByAuditName(Set<PageAuditRecord> page_audits, AuditName audit_name) {
+	public static int getCountPagesWithIssuesByAuditName(Set<AuditRecord> page_audits, AuditName audit_name) {
 		int count_failing_pages = 0;
 		
-		for(PageAuditRecord page_audit : page_audits) {
-			for(Audit audit: page_audit.getAudits()) {
+		for(AuditRecord page_audit : page_audits) {
+			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+
+			for(Audit audit: page_audit_record.getAudits()) {
 				if(audit_name.equals( audit.getName() ) 
 						&& audit.getPoints() < audit.getTotalPossiblePoints()) {
 					count_failing_pages++;
@@ -370,12 +373,14 @@ public class AuditUtils {
 	 * @param page_audits
 	 * @return
 	 */
-	public static int getCountOfPagesWithWcagComplianceIssues(Set<PageAuditRecord> page_audits) {
+	public static int getCountOfPagesWithWcagComplianceIssues(Set<AuditRecord> page_audits) {
 		int pages_with_issues = 0;
 		
-		for(PageAuditRecord audit_record : page_audits) {
+		for(AuditRecord audit_record : page_audits) {
+			PageAuditRecord page_audit_record = (PageAuditRecord)audit_record;
+
 			boolean has_issue = false;
-			for(Audit audit: audit_record.getAudits()) {
+			for(Audit audit: page_audit_record.getAudits()) {
 				for(UXIssueMessage issue : audit.getMessages()) {
 					if(issue.getLabels().contains("wcag") && issue.getPoints() < issue.getMaxPoints()) {
 						pages_with_issues++;

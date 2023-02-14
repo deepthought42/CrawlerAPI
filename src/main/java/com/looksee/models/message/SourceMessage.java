@@ -15,7 +15,7 @@ public class SourceMessage extends Message {
 		
 		super(crawl_action.getDomainId(),
 			  crawl_action.getAccountId(),
-			  crawl_action.getAuditRecordId());
+			  crawl_action.getDomainAuditRecordId());
 		
 		setUrl(sanitized_url);
 		setPageSrc(page_src);

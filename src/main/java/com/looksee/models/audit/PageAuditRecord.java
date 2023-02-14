@@ -3,6 +3,7 @@ package com.looksee.models.audit;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.PageState;
@@ -12,6 +13,7 @@ import com.looksee.models.enums.ExecutionStatus;
 /**
  * Record detailing an set of {@link Audit audits}.
  */
+@Node
 public class PageAuditRecord extends AuditRecord {
 	@Relationship(type = "HAS")
 	private Set<Audit> audits;

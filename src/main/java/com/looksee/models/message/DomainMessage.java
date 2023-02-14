@@ -15,7 +15,7 @@ public class DomainMessage extends Message {
 		
 		super(crawl_action.getDomainId(),
 			  crawl_action.getAccountId(),
-			  crawl_action.getAuditRecordId());
+			  crawl_action.getDomainAuditRecordId());
 		
 		setDomain(domain);
 		setRawUrl(raw_url);

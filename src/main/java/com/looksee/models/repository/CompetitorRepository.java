@@ -1,5 +1,7 @@
 package com.looksee.models.repository;
 
+import java.util.List;
+
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +18,11 @@ public interface CompetitorRepository extends Neo4jRepository<Competitor, Long> 
 
 	@Query("MATCH (c:Competitor)-[r:USES]->(brand:Brand) WHERE id(c)=$competitor_id RETURN brand ORDER BY brand.created_at DESC LIMIT 1")
 	public Brand getMostRecentBrand(@Param("competitor_id") long competitor_id);
+	
+	@Query("MATCH (domain:Domain)-[]->(c:Competitor) WHERE id(domain)=$domain_id RETURN c")
+	public List<Competitor> getCompetitors(@Param("domain_id") long domain_id);
+
+	@Query("MATCH (d:Domain) WITH d MATCH (competitor:Competitor) WHERE id(d)=$domain_id AND id(competitor)=$competitor_id MERGE (d)-[:COMPETES_WITH]->(competitor) RETURN competitor")
+	public Competitor addCompetitor(@Param("domain_id") long domain_id, @Param("competitor_id") long competitor_id);
+
 }

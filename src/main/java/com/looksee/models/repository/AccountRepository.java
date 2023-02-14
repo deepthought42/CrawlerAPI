@@ -1,5 +1,6 @@
 package com.looksee.models.repository;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -74,4 +75,9 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	
 	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) MATCH (domain)<-[:HAS]-(audit_record:DomainAuditRecord) WHERE id(account)=$account_id AND datetime(audit_record.created_at).month=$month RETURN COUNT(audit_record)")
 	public int geDomainAuditRecordCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
+	
+	@Query("MATCH (account:Account)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account LIMIT 1")
+	public Optional<Account> getAccount(@Param("audit_record_id") long audit_record_id);
+
+	
 }

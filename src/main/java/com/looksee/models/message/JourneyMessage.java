@@ -33,7 +33,8 @@ public class JourneyMessage extends Message {
 								  getStatus(), 
 								  getBrowser(), 
 								  getDomainId(),
-								  getAccountId(), getAuditRecordId());
+								  getAccountId(), 
+								  getDomainAuditRecordId());
 	}
 
 	public PathStatus getStatus() {

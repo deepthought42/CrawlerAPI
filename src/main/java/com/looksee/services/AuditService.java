@@ -38,7 +38,6 @@ import io.github.resilience4j.retry.annotation.Retry;
  *
  */
 @Service
-@Retry(name = "neoforj")
 public class AuditService {
 	private static Logger log = LoggerFactory.getLogger(AuditService.class);
 

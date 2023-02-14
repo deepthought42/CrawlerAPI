@@ -32,6 +32,8 @@ import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.TestStatus;
 import com.looksee.models.journeys.Redirect;
+import com.looksee.models.repository.GroupRepository;
+import com.looksee.models.repository.PageStateRepository;
 import com.looksee.models.repository.TestRepository;
 import com.looksee.utils.PathUtils;
 
@@ -64,7 +66,12 @@ public class TestService {
 	@Autowired
 	private PageLoadAnimationService page_load_animation_service;
 
-
+	@Autowired
+	private GroupRepository group_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
+	
 	/**
 	 * Runs an {@code Test}
 	 *
@@ -217,11 +224,11 @@ public class TestService {
    }
 
    public Set<Group> getGroups(String key) {
-     return test_repo.getGroups(key);
+     return group_repo.getGroups(key);
    }
    
    public PageState getResult(String key, String url, String user_id) {
-	   return test_repo.getResult(key, url, user_id);
+	   return page_state_repo.getResult(key, url, user_id);
    }
 
    /**

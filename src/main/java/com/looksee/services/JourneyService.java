@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.looksee.models.journeys.Journey;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.JourneyRepository;
+import com.looksee.models.repository.StepRepository;
 
 @Service
 public class JourneyService {
@@ -16,6 +17,9 @@ public class JourneyService {
 
 	@Autowired
 	private JourneyRepository journey_repo;
+	
+	@Autowired
+	private StepRepository step_repo;
 	
 	public Journey save(Journey journey) {
 		Journey journey_record = journey_repo.findByKey(journey.getKey());
@@ -28,7 +32,7 @@ public class JourneyService {
 		journey_record.setKey(journey.generateKey());
 		journey_record = journey_repo.save(journey_record);
 		for(Step step : journey.getSteps()) {
-			journey_repo.addStep(journey_record.getId(), step.getId());
+			step_repo.addStep(journey_record.getId(), step.getId());
 		}
 		
 		journey_record.setSteps(journey.getSteps());

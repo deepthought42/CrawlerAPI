@@ -1,7 +1,5 @@
 package com.looksee.services;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -10,13 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.Domain;
-import com.looksee.models.Element;
-import com.looksee.models.ElementState;
 import com.looksee.models.Form;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.performance.BugMessage;
 import com.looksee.models.repository.BugMessageRepository;
+import com.looksee.models.repository.ElementStateRepository;
 import com.looksee.models.repository.FormRepository;
+import com.looksee.models.repository.PageStateRepository;
 
 @Service
 public class FormService {
@@ -26,16 +24,19 @@ public class FormService {
 	private FormRepository form_repo;
 	
 	@Autowired
-	private ElementStateService element_service;
-	
-	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private BugMessageRepository bug_message_repo;
 	
+	@Autowired
+	private ElementStateRepository element_state_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
+	
 	public PageState getPageState(String user_id, String url, Form form) {
-		return form_repo.getPageState(user_id, url, form.getKey());
+		return page_state_repo.getPageState(user_id, url, form.getKey());
 	}
 	
 	public Form findByKey(long account_id, String url, String key){
@@ -71,14 +72,14 @@ public class FormService {
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
 		    	
-				form.setFormFields(form_repo.getElementStates(user_id, domain.getUrl(), form.getKey()));
+				form.setFormFields(element_state_repo.getElementStates(user_id, domain.getUrl(), form.getKey()));
 				/*
 				for(ElementState element : form.getFormFields()){
 					element.setRules(element_service.getRules(user_id, element.getKey()));
 				}
 				*/
-				form.setFormTag(form_repo.getFormElement(user_id, domain.getUrl(), form.getKey()));
-				form.setSubmitField(form_repo.getSubmitElement(user_id, domain.getUrl(), form.getKey()));
+				form.setFormTag(element_state_repo.getFormElement(user_id, domain.getUrl(), form.getKey()));
+				form.setSubmitField(element_state_repo.getSubmitElement(user_id, domain.getUrl(), form.getKey()));
 				return form;
 	    	}
 	    	else {

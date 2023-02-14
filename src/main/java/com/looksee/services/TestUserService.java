@@ -15,7 +15,6 @@ import io.github.resilience4j.retry.annotation.Retry;
  * Enables interacting with database for {@link SimpleStep Steps}
  */
 @Service
-@Retry(name = "neoforj")
 public class TestUserService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestUserService.class);

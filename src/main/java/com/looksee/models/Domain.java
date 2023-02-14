@@ -9,6 +9,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
+import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.designsystem.DesignSystem;
 
 

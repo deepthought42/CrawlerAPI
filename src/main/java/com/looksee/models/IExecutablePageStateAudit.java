@@ -1,6 +1,7 @@
 package com.looksee.models;
 
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.designsystem.DesignSystem;
 
 public interface IExecutablePageStateAudit {

@@ -3,6 +3,7 @@ package com.looksee.api;
 import java.net.URL;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,9 +31,11 @@ import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.message.UrlMessage;
 import com.looksee.services.AccountService;
@@ -104,7 +107,7 @@ public class AuditorController {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
 	   	//create new audit record
-    	/*
+    	
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
 	   														new HashSet<>(), 
 	   														null, 
@@ -124,7 +127,7 @@ public class AuditorController {
 	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
 			account_id = account.getId();			
 		}
-    	 */
+    	
 		
 		/*
 		PageCrawlActionMessage start_single_page_audit = new PageCrawlActionMessage(CrawlAction.START, 
@@ -142,9 +145,10 @@ public class AuditorController {
 
 		log.warn("Initiating single page audit = "+sanitized_url);
 		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(), 
-											BrowserType.CHROME, 
+											BrowserType.CHROME,
+											audit_record.getId(),
 											-1, 
-											account.getId(),
+											account_id,
 											-1);
 		
 		String url_msg_str = mapper.writeValueAsString(url_msg);

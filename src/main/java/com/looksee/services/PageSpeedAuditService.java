@@ -1,12 +1,7 @@
 package com.looksee.services;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.looksee.models.audit.performance.AuditDetail;
 import com.looksee.models.audit.performance.PageSpeedAudit;
 import com.looksee.models.repository.AuditDetailRepository;
 import com.looksee.models.repository.PageSpeedAuditRepository;
@@ -16,9 +11,6 @@ public class PageSpeedAuditService {
 
 	@Autowired
 	private PageSpeedAuditRepository audit_repo;
-	
-	@Autowired
-	private AuditDetailRepository audit_detail_repo;
 	
 	/**
 	 * Objects are expected to be immutable as of 3/14/19. When this method is ran, if the 

@@ -383,16 +383,17 @@ public class DomainController {
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
 		try {
-			Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
+			Optional<AuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
 	
 			if (!domain_audit_record.isPresent()) {
 				throw new DomainAuditNotFound();
 			}
 			
 			Map<String, Boolean> key_map = new HashMap<>();
-			Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
-			for (PageAuditRecord page_audit : page_audits) {
-				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+			Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
+			for (AuditRecord page_audit : page_audits) {
+				PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit_record.getId());
 				if (page_state == null) {
 					continue;
 				}
@@ -401,30 +402,30 @@ public class DomainController {
 				}
 				
 				double content_score = AuditUtils
-						.calculateScore(audit_record_service.getAllContentAudits(page_audit.getId()));
+						.calculateScore(audit_record_service.getAllContentAudits(page_audit_record.getId()));
 				double info_architecture_score = AuditUtils
-						.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit.getId()));
+						.calculateScore(audit_record_service.getAllInformationArchitectureAudits(page_audit_record.getId()));
 				double aesthetic_score = AuditUtils
-						.calculateScore(audit_record_service.getAllAestheticAudits(page_audit.getId()));
+						.calculateScore(audit_record_service.getAllAestheticAudits(page_audit_record.getId()));
 				double accessibility_score = AuditUtils
-						.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit.getId()));
+						.calculateScore(audit_record_service.getAllAccessibilityAudits(page_audit_record.getId()));
 	
 				PageStatisticDto page = new PageStatisticDto(page_state.getId(), 
 															 page_state.getUrl(),
 															 page_state.getViewportScreenshotUrl(), 
 															 content_score, 
-															 page_audit.getContentAuditProgress(),
+															 page_audit_record.getContentAuditProgress(),
 															 info_architecture_score, 
-															 page_audit.getInfoArchitechtureAuditProgress(), 
+															 page_audit_record.getInfoArchitechtureAuditProgress(), 
 															 accessibility_score, 
 															 0.0,
 															 aesthetic_score, 
-															 page_audit.getAestheticAuditProgress(), 
-															 page_audit.getId(),
-															 page_audit.getElementsReviewed(), 
-															 page_audit.getElementsFound(), 
-															 page_audit.isComplete(),
-															 page_audit.getDataExtractionProgress());
+															 page_audit_record.getAestheticAuditProgress(), 
+															 page_audit_record.getId(),
+															 page_audit_record.getElementsReviewed(), 
+															 page_audit_record.getElementsFound(), 
+															 page_audit_record.isComplete(),
+															 page_audit_record.getDataExtractionProgress());
 	
 				key_map.put(page_state.getKey(), Boolean.TRUE);
 				page_stats.add(page);
@@ -446,16 +447,16 @@ public class DomainController {
 												 @PathVariable("domain_id") long domain_id)
 			throws UnknownAccountException {
 		// get most recent audit record for the domain
-		Optional<DomainAuditRecord> audit_record_opt = domain_service.getMostRecentAuditRecord(domain_id);
+		Optional<AuditRecord> audit_record_opt = audit_record_service.getMostRecentAuditRecordForDomain(domain_id);
 
 		if (audit_record_opt.isPresent()) {
-			DomainAuditRecord audit_record = audit_record_opt.get();
+			DomainAuditRecord audit_record = (DomainAuditRecord)audit_record_opt.get();
 			long content_audits_complete = 0;
 			long info_arch_audits_complete = 0;
 			long aesthetic_audits_complete = 0;
 			long element_extractions_complete = 0;
 			
-			Set<PageAuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
+			Set<AuditRecord> audit_records = audit_record_service.getAllPageAudits(audit_record.getId());
 			// get Page Count
 			long page_count = audit_record_service.getPageStatesForDomainAuditRecord(audit_record.getId()).size();//audit_record.getTotalPages();
 			long pages_audited = 0;
@@ -545,13 +546,14 @@ public class DomainController {
 			Set<Label> image_labels = new HashSet<>();
 
 			Set<Audit> audits = new HashSet<>();
-			for (PageAuditRecord page_audit : audit_records) {
-				if (page_audit.isComplete()) {
+			for (AuditRecord page_audit : audit_records) {
+				PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+				if (page_audit_record.isComplete()) {
 					pages_audited++;
 				}
 
-				elements_reviewed += page_audit.getElementsReviewed();
-				elements_found += page_audit.getElementsFound();
+				elements_reviewed += page_audit_record.getElementsReviewed();
+				elements_found += page_audit_record.getElementsFound();
 
 				high_issue_count += audit_record_service.getIssueCountBySeverity(page_audit.getId(),
 						Priority.HIGH.toString());
@@ -850,16 +852,17 @@ public class DomainController {
 			throw new DomainNotFoundException();
 		}
 
-		Optional<DomainAuditRecord> domain_audit = domain_service.getMostRecentAuditRecord(domain_opt.get().getId());
+		Optional<AuditRecord> domain_audit = audit_record_service.getMostRecentAuditRecordForDomain(domain_opt.get().getId());
 		if (!domain_audit.isPresent()) {
 			throw new DomainAuditNotFound();
 		}
 
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
-		for (PageAuditRecord page_audit : page_audits) {
-			Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId());
-			PageState page = audit_record_service.getPageStateForAuditRecord(page_audit.getId());
+		Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
+		for (AuditRecord page_audit : page_audits) {
+			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+			Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getId());
+			PageState page = audit_record_service.getPageStateForAuditRecord(page_audit_record.getId());
 			for (Audit audit : audits) {
 				Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
 
@@ -925,15 +928,15 @@ public class DomainController {
 		}
 		
 		Domain domain = domain_opt.get();
-		Optional<DomainAuditRecord> domain_audit_opt = domain_service.getMostRecentAuditRecord(domain.getId());
+		Optional<AuditRecord> domain_audit_opt = audit_record_service.getMostRecentAuditRecordForDomain(domain.getId());
 		if (!domain_audit_opt.isPresent()) {
 			throw new DomainAuditNotFound();
 		}
 
-		DomainAuditRecord domain_audit = domain_audit_opt.get();
+		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
+		Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 		
 		
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
@@ -941,9 +944,10 @@ public class DomainController {
 		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl());
 		
 		Set<Audit> audits = new HashSet<Audit>();
-		for(PageAuditRecord page_audit : page_audits) {
-			Set<Audit> page_audit_list = audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId());
-			page_audit.addAudits( page_audit_list );
+		for(AuditRecord page_audit : page_audits) {
+			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
+			Set<Audit> page_audit_list = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getId());
+			page_audit_record.addAudits( page_audit_list );
 			audits.addAll( page_audit_list );
 		}
 		
@@ -1092,29 +1096,40 @@ public class DomainController {
 		if (account == null) {
 			throw new UnknownAccountException();
 		}
-
+		
 		LocalDate today = LocalDate.now();
+		log.warn("retrieving domain audit count...");
 		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
+		log.warn("total domain audits found = "+domain_audit_cnt);
 		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 
+		log.warn("checking if user has exceeded subscription limit for domain audits...");
 		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
 			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
 			throw new SubscriptionExceededException("You have exceeded your subscription");
 		}
 
+		log.warn("Retreiving domain by id = "+domain_id);
 		Optional<Domain> domain_opt = domain_service.findById(domain_id);
 		if (!domain_opt.isPresent()) {
 			throw new DomainNotFoundException();
 		}
 
 		Domain domain = domain_opt.get();
+		log.warn("domain retreived = "+domain);
 		String lowercase_url = domain.getUrl().toLowerCase();
+		log.warn("lowercase domain url = "+lowercase_url);
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
-
+		log.warn("sanitized url = "+sanitized_url);
+		
 		// create new audit record
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
+		log.warn("audit record saved to neo4j = " + audit_record);
+		
+		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
+		log.warn("added domain audit to domain.");
 		
 		DomainDto domain_dto = new DomainDto( domain.getId(), 
 											  domain.getUrl(), 
@@ -1133,7 +1148,6 @@ public class DomainController {
 											  "Audit started",
 											  ExecutionStatus.IN_PROGRESS);
 		
-		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 
 		/*
 		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system).props("auditManager"),
@@ -1148,9 +1162,11 @@ public class DomainController {
 																 domain.getUrl());
 		audit_manager.tell(crawl_action, null);
 		*/
+		log.warn("publishing url message to url topic...");
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(),
-											BrowserType.CHROME, 
+											BrowserType.CHROME,
+											-1,
 											domain_id, 
 											account.getId(),
 											audit_record.getId());
@@ -1179,7 +1195,8 @@ public class DomainController {
 		}
 
 		log.info("finding all page insights :: " + host);
-		return domain_service.getMostRecentAuditRecord(host).get();
+		
+		return (DomainAuditRecord)audit_record_service.getMostRecentAuditRecordForDomain(host).get();
 	}
 
 	/**

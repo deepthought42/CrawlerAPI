@@ -14,23 +14,27 @@ import com.looksee.dto.DomainDto;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.repository.AuditRecordRepository;
-import com.looksee.models.repository.DomainRepository;
+import com.looksee.models.repository.AuditRepository;
+import com.looksee.models.repository.PageStateRepository;
 import com.looksee.utils.AuditUtils;
 
 @Service
 public class DomainDtoService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DomainDtoService.class.getName());
-
-	@Autowired
-	private DomainRepository domain_repo;
 	
 	@Autowired
 	private AuditRecordRepository audit_record_repo;
+	
+	@Autowired
+	private AuditRepository audit_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
 	
 	/**
 	 * 
@@ -42,7 +46,7 @@ public class DomainDtoService {
 	public DomainDto build(Domain domain) {
 		assert domain != null;
 		
-		Optional<DomainAuditRecord> audit_record_opt = domain_repo.getMostRecentAuditRecord(domain.getId());
+		Optional<AuditRecord> audit_record_opt = audit_record_repo.getMostRecentAuditRecordForDomain(domain.getId());
 
 		int audited_pages = 0;
 		int page_count = 0;
@@ -67,30 +71,29 @@ public class DomainDtoService {
 		}
 		
 		// get most recent audit record for this domain
-		DomainAuditRecord domain_audit = audit_record_opt.get();
+		DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_opt.get();
 
 		// get all content audits for most recent audit record and calculate overall
 		// score
-		Set<Audit> content_audits = audit_record_repo.getAllContentAuditsForDomainRecord(domain_audit.getId());
+		Set<Audit> content_audits = audit_repo.getAllContentAuditsForDomainRecord(domain_audit.getId());
 		double content_score = AuditUtils.calculateScore(content_audits);
 
 		// get all info architecture audits for most recent audit record and calculate
 		// overall score
-		Set<Audit> info_arch_audits = audit_record_repo
+		Set<Audit> info_arch_audits = audit_repo
 				.getAllInformationArchitectureAuditsForDomainRecord(domain_audit.getId());
 
 		double info_arch_score = AuditUtils.calculateScore(info_arch_audits);
 
 		// get all accessibility audits for most recent audit record and calculate
 		// overall score
-		Set<Audit> accessibility_audits = audit_record_repo
-				.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
+		Set<Audit> accessibility_audits = audit_repo.getAllAccessibilityAuditsForDomainRecord(domain_audit.getId());
 
 		double accessibility_score = AuditUtils.calculateScore(accessibility_audits);
 
 		// get all Aesthetic audits for most recent audit record and calculate overall
 		// score
-		Set<Audit> aesthetics_audits = audit_record_repo
+		Set<Audit> aesthetics_audits = audit_repo
 				.getAllAestheticsAuditsForDomainRecord(domain_audit.getId());
 
 		double aesthetics_score = AuditUtils.calculateScore(aesthetics_audits);
@@ -99,8 +102,8 @@ public class DomainDtoService {
 		// add domain stat to set
 
 		// check if there is a current audit running
-		Set<PageAuditRecord> page_audit_records = audit_record_repo.getAllPageAudits(domain_audit.getId());
-		Set<PageState> page_states = audit_record_repo.getPageStatesForDomainAuditRecord(domain_audit.getId());
+		Set<AuditRecord> page_audit_records = audit_record_repo.getAllPageAudits(domain_audit.getId());
+		Set<PageState> page_states = page_state_repo.getPageStatesForDomainAuditRecord(domain_audit.getId());
 		Map<String, Boolean> page_urls = new HashMap<>();
 		
 		for(PageState page : page_states) {
@@ -120,7 +123,7 @@ public class DomainDtoService {
 		info_architecture_progress += domain_audit.getInfoArchitechtureAuditProgress();
 		 */
 		data_extraction_progress = domain_audit.getDataExtractionProgress();
-		for (PageAuditRecord record : page_audit_records) {
+		for (AuditRecord record : page_audit_records) {
 			content_progress += record.getContentAuditProgress();
 			aesthetic_progress += record.getAestheticAuditProgress();
 			info_architecture_progress += record.getInfoArchitechtureAuditProgress();

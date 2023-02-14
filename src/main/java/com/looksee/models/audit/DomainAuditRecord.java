@@ -5,27 +5,22 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import com.looksee.models.Domain;
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.journeys.Journey;
+
 
 /**
  * Record detailing an set of {@link Audit audits}.
  */
+@Node
 public class DomainAuditRecord extends AuditRecord {
-	private int total_pages;
+	private int totalPages;
 	
 	@Relationship(type = "HAS")
-	private Set<PageAuditRecord> page_audit_records;
-	
-	@Relationship(type = "BELONGS_TO")
-	private Domain domain;
-	
-	@Relationship(type = "HAS_PATH")
-	private Journey journey;
+	private Set<PageAuditRecord> pageAuditRecords;
 	
 	public DomainAuditRecord() {
 		super();
@@ -61,34 +56,26 @@ public class DomainAuditRecord extends AuditRecord {
 	}
 
 	public Set<PageAuditRecord> getAudits() {
-		return page_audit_records;
+		return pageAuditRecords;
 	}
 
 	public void setAudits(Set<PageAuditRecord> audits) {
-		this.page_audit_records = audits;
+		this.pageAuditRecords = audits;
 	}
 
 	public void addAudit(PageAuditRecord audit) {
-		this.page_audit_records.add( audit );
+		this.pageAuditRecords.add( audit );
 	}
 	
 	public void addAudits(Set<PageAuditRecord> audits) {
-		this.page_audit_records.addAll( audits );
-	}
-
-	public Domain getDomain() {
-		return domain;
-	}
-
-	public void setDomain(Domain domain) {
-		this.domain = domain;
+		this.pageAuditRecords.addAll( audits );
 	}
 
 	public int getTotalPages() {
-		return total_pages;
+		return totalPages;
 	}
 
 	public void setTotalPages(int total_pages) {
-		this.total_pages = total_pages;
+		this.totalPages = total_pages;
 	}
 }

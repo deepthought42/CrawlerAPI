@@ -9,6 +9,6 @@ import io.github.resilience4j.retry.annotation.Retry;
 
 @Repository
 @Retry(name = "neoforj")
-public interface RecommendationRepository  extends Neo4jRepository<Recommendation, Long> {
+public interface RecommendationRepository extends Neo4jRepository<Recommendation, Long> {
 
 }

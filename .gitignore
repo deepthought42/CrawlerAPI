@@ -19,3 +19,5 @@ src/main/resources/
 *.pdf
 /.apt_generated/
 /.apt_generated_tests/
+
+api_key.p12.old

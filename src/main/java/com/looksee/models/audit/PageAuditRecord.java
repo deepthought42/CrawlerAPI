@@ -8,6 +8,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.PageState;
 import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.ExecutionStatus;
 
 /**
@@ -34,6 +35,7 @@ public class PageAuditRecord extends AuditRecord {
 	 * @param audits TODO
 	 * @param page_state TODO
 	 * @param is_part_of_domain_audit TODO
+	 * @param audit_list TODO
 	 * @param audit_stats {@link AuditStats} object with statics for audit progress
 	 * @pre audits != null
 	 * @pre page_state != null
@@ -43,7 +45,8 @@ public class PageAuditRecord extends AuditRecord {
 			ExecutionStatus status, 
 			Set<Audit> audits, 
 			PageState page_state, 
-			boolean is_part_of_domain_audit
+			boolean is_part_of_domain_audit, 
+			Set<AuditName> audit_list
 	) {
 		assert audits != null;
 		assert status != null;
@@ -52,6 +55,7 @@ public class PageAuditRecord extends AuditRecord {
 		setPageState(page_state);
 		setStatus(status);
 		setLevel( AuditLevel.PAGE);
+		setAuditLabels(audit_list);
 		setKey(generateKey());
 	}
 

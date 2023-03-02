@@ -87,6 +87,7 @@ public class ElementStateService {
 		element_repo.removeRule(user_id, element_key, rule_key);
 	}
 	
+	@Deprecated
 	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(Element element){
 		return false;
 	}

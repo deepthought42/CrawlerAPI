@@ -6,15 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.looksee.models.ElementState;
+import com.looksee.models.journeys.LandingStep;
 import com.looksee.models.journeys.LoginStep;
 import com.looksee.models.journeys.SimpleStep;
 import com.looksee.models.journeys.Step;
 import com.looksee.models.repository.ElementStateRepository;
+import com.looksee.models.repository.LandingStepRepository;
 import com.looksee.models.repository.LoginStepRepository;
 import com.looksee.models.repository.PageStateRepository;
 import com.looksee.models.repository.SimpleStepRepository;
 import com.looksee.models.repository.StepRepository;
 import com.looksee.models.repository.TestUserRepository;
+
 
 /**
  * Enables interacting with database for {@link SimpleStep Steps}
@@ -41,6 +44,9 @@ public class StepService {
 	
 	@Autowired
 	private TestUserRepository test_user_repo;
+	
+	@Autowired
+	private LandingStepRepository landing_step_repo;
 	
 	public Step findByKey(String step_key) {
 		return step_repo.findByKey(step_key);
@@ -117,11 +123,46 @@ public class StepService {
 			
 			return new_login_step;
 		}
-		
-		return null;
+		else if(step instanceof LandingStep) {
+			LandingStep landing_step_record = landing_step_repo.findByKey(step.getKey());
+			
+			if(landing_step_record != null) {
+				landing_step_record.setStartPage(step.getStartPage());
+				
+				return landing_step_record;
+			}
+			else {
+				LandingStep landing_step = (LandingStep)step;
+				
+				Step saved_step = landing_step_repo.save(landing_step);
+				page_state_repo.addStartPage(saved_step.getId(), saved_step.getStartPage().getId());
+				saved_step.setStartPage(saved_step.getStartPage());
+				
+				return saved_step;
+			}
+		}
+		else {
+			Step step_record = step_repo.findByKey(step.getKey());
+			
+			if(step_record != null) {
+				step_record.setStartPage(step.getStartPage());
+				step_record.setEndPage(step.getEndPage());
+				
+				return step_record;
+			}
+			else {
+				Step saved_step = step_repo.save(step);
+				page_state_repo.addStartPage(saved_step.getId(), saved_step.getStartPage().getId());
+				page_state_repo.addEndPage(saved_step.getId(), saved_step.getEndPage().getId());
+				saved_step.setStartPage(saved_step.getStartPage());
+				saved_step.setEndPage(saved_step.getEndPage());
+				return saved_step;
+			}			
+		}
 	}
 
 	public ElementState getElementState(String step_key) {
 		return element_state_repo.getElementStateForStep(step_key);
 	}
 }
+

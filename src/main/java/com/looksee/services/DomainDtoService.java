@@ -77,7 +77,7 @@ public class DomainDtoService {
 		// score
 		Set<Audit> content_audits = audit_repo.getAllContentAuditsForDomainRecord(domain_audit.getId());
 		double content_score = AuditUtils.calculateScore(content_audits);
-
+		
 		// get all info architecture audits for most recent audit record and calculate
 		// overall score
 		Set<Audit> info_arch_audits = audit_repo

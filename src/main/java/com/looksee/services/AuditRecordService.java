@@ -264,7 +264,7 @@ public class AuditRecordService {
 		assert page_audit_key != null;
 		assert !page_audit_key.isEmpty();
 		
-		return audit_record_repo.getPageStateForAuditRecord(page_audit_key);
+		return page_state_repo.getPageStateForAuditRecord(page_audit_key);
 	}
 
 	public Set<Audit> getAllContentAuditsForDomainRecord(long id) {
@@ -300,7 +300,9 @@ public class AuditRecordService {
 	}
 
 	public PageState getPageStateForAuditRecord(long page_audit_id) {
-		return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
+		//return audit_record_repo.getPageStateForAuditRecord(page_audit_id);
+		return page_state_repo.getPageStateForAuditRecord(page_audit_id);
+
 	}
 
 	public Set<UXIssueMessage> getIssues(long audit_record_id) {
@@ -423,5 +425,9 @@ public class AuditRecordService {
 	
 	public Optional<AuditRecord> getMostRecentAuditRecordForDomain(long id) {
 		return audit_record_repo.getMostRecentAuditRecordForDomain(id);
+	}
+	
+	public Set<Audit> getAllAuditsForDomainAudit(long domain_audit_record_id) {
+		return audit_repo.getAllAuditsForDomainAudit(domain_audit_record_id);
 	}
 }

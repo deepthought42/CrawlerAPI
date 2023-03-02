@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.looksee.models.Domain;
+import com.looksee.models.Element;
 import com.looksee.models.ElementState;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -121,4 +122,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	@Query("MATCH (uim:UXIssueMessage)-[:EXAMPLE]->(e:ElementState) WHERE id(uim)=$id RETURN e")
 	public ElementState getGoodExample(@Param("id") long issue_id);
 
+	@Query("MATCH (:Account{username:$username})-[:HAS_DOMAIN]-(d:Domain{url:$url}) MATCH (d)-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN b")
+	public Set<Element> getElementStates(@Param("url") String url, @Param("username") String username);
+	
 }

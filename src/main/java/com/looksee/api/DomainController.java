@@ -1123,7 +1123,26 @@ public class DomainController {
 		log.warn("sanitized url = "+sanitized_url);
 		
 		// create new audit record
-		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS);
+		Set<AuditName> audit_list = new HashSet<>();
+		//VISUAL DESIGN AUDIT
+		audit_list.add(AuditName.TEXT_BACKGROUND_CONTRAST);
+		audit_list.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+		
+		//INFO ARCHITECTURE AUDITS
+		audit_list.add(AuditName.LINKS);
+		audit_list.add(AuditName.TITLES);
+		audit_list.add(AuditName.ENCRYPTED);
+		audit_list.add(AuditName.METADATA);
+		
+		//CONTENT AUDIT
+		audit_list.add(AuditName.ALT_TEXT);
+		audit_list.add(AuditName.READING_COMPLEXITY);
+		audit_list.add(AuditName.PARAGRAPHING);
+		audit_list.add(AuditName.IMAGE_COPYRIGHT);
+		audit_list.add(AuditName.IMAGE_POLICY);
+
+		
+		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS, audit_list);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
 		log.warn("audit record saved to neo4j = " + audit_record);
@@ -1170,6 +1189,7 @@ public class DomainController {
 											domain_id, 
 											account.getId(),
 											audit_record.getId());
+		
 		String url_msg_str = mapper.writeValueAsString(url_msg);
 		url_topic.publish(url_msg_str);
 		return domain_dto;

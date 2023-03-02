@@ -111,7 +111,8 @@ public class AuditorController {
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
 	   														new HashSet<>(), 
 	   														null, 
-	   														false);
+	   														false, 
+	   														new HashSet<>());
 		audit_record.setUrl(sanitized_url.toString());
 	   	audit_record.setDataExtractionMsg("loading page");
 	   	audit_record.setDataExtractionProgress(1.0/50.0);

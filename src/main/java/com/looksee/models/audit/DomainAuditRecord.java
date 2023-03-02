@@ -2,6 +2,8 @@ package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -9,22 +11,27 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.ExecutionStatus;
-
+import com.looksee.models.enums.JourneyStatus;
 
 /**
  * Record detailing an set of {@link Audit audits}.
  */
 @Node
 public class DomainAuditRecord extends AuditRecord {
-	private int totalPages;
 	
 	@Relationship(type = "HAS")
 	private Set<PageAuditRecord> pageAuditRecords;
 	
+	
+	private int total_pages;
+	private Map<String, JourneyStatus> journey_status_map;
+	
+
 	public DomainAuditRecord() {
 		super();
-		setAudits(new HashSet<>());
+		setAudits(new HashSet<>()); 
 	}
 	
 	/**
@@ -35,7 +42,8 @@ public class DomainAuditRecord extends AuditRecord {
 	 * 
 	 * @pre audit_stats != null;
 	 */
-	public DomainAuditRecord(ExecutionStatus status) {
+	public DomainAuditRecord(ExecutionStatus status, 
+							Set<AuditName> audit_list) {
 		super();
 		assert status != null;
 		
@@ -47,7 +55,7 @@ public class DomainAuditRecord extends AuditRecord {
 		setContentAuditProgress(0.0);
 		setInfoArchitectureAuditProgress(0.0);
 		setDataExtractionProgress(0.0);
-		setTotalPages(0);
+		setAuditLabels(audit_list);
 		setKey(generateKey());
 	}
 
@@ -72,10 +80,19 @@ public class DomainAuditRecord extends AuditRecord {
 	}
 
 	public int getTotalPages() {
-		return totalPages;
+		return total_pages;
 	}
 
 	public void setTotalPages(int total_pages) {
-		this.totalPages = total_pages;
+		this.total_pages = total_pages;
 	}
+
+	public Map<String, JourneyStatus> getJourneyStatusMap() {
+		return journey_status_map;
+	}
+
+	public void setJourneyStatusMap(Map<String, JourneyStatus> journey_status_map) {
+		this.journey_status_map = journey_status_map;
+	}
+
 }

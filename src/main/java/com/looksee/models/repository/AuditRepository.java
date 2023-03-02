@@ -43,22 +43,22 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{key:$page_key}) MATCH (page_audit)-[]->(audit:Audit) RETURN audit")
 	public Set<Audit> getMostRecentAuditsForPage(@Param("page_key") String key);
 
-	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Content'}) WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'CONTENT'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllContentAuditsForDomainRecord(@Param("id") long id);
 
-	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Information Architecture'})  WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'INFORMATION_ARCHITECTURE'})  WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllInformationArchitectureAuditsForDomainRecord(@Param("id") long id);
 
-	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar) = $id RETURN audit")
+	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'AESTHETICS'}) WHERE id(ar) = $id RETURN audit")
 	public Set<Audit> getAllAestheticsAuditsForDomainRecord(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Content'}) WHERE id(ar)=$audit_record_id RETURN audit")
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'CONTENT'}) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllContentAudits(@Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Information Architecture'})  WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'INFORMATION_ARCHITECTURE'})  WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllInformationArchitectureAudits(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'Aesthetics'}) WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'AESTHETICS'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllAestheticsAudits(@Param("id") long id);
 
 	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
@@ -76,7 +76,7 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Color Palette'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageColorPaletteAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Text Background Contrast'}) WHERE audit.level='page' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'TEXT_BACKGROUND_CONTRAST'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageTextColorContrastAudits(@Param("audit_record_key") String audit_record_key);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Non Text Background Contrast'}) WHERE audit.level='page' RETURN audit")
@@ -88,16 +88,16 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Typefaces'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageTypefaceAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{category:'Information Architecture'}) WHERE audit.level='domain' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{category:'INFORMATION_ARCHITECTURE'}) WHERE audit.level='domain' RETURN audit")
 	public Set<Audit> getAllInformationArchitectureAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Links'}) WHERE audit.level='page' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{name:'LINKS'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageLinkAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Titles'}) WHERE audit.level='page' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{name:'TITLES'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageTitleAndHeaderAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Alt Text'}) WHERE audit.level='page' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{name:'ALT_TEXT'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageAltTextAudits(@Param("audit_record_key") String audit_record_key);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Margin'}) WHERE audit.level='page' RETURN audit")
@@ -106,7 +106,7 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Padding'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPagePaddingAudits(@Param("audit_record_key") String audit_record_key);
 
-	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{subcategory:'Paragraphing'}) WHERE audit.level='page' RETURN audit")
+	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{NAME:'PARAGRAPHING'}) WHERE audit.level='page' RETURN audit")
 	public Set<Audit> getAllPageParagraphingAudits(@Param("audit_record_key") String audit_record_key);
 	
 	@Query("MATCH (:AuditRecord{key:$audit_record_key})-[:HAS]->(a:Audit{key:$audit_key}) RETURN a")
@@ -117,7 +117,10 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 
 	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllAudits(@Param("audit_record_id") long audit_record_id);
-	
+		
+	@Query("MATCH (ar:AuditRecord)-[*2]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
+	public Set<Audit> getAllAuditsForDomainAudit(@Param("audit_record_id") long domain_audit_record_id);
+
 	@Query("MATCH (ps:PageState{key:$page_state_key})<-[]-(a:Audit) RETURN a")
 	public List<Audit> getAudits(@Param("page_state_key") String page_state_key);
 

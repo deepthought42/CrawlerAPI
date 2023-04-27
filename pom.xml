@@ -56,10 +56,6 @@
 	              </execution>
 	          </executions>
 		    </plugin>
-		    <plugin>
-	            <groupId>org.springframework.boot</groupId>
-	            <artifactId>spring-boot-maven-plugin</artifactId>
-	        </plugin>
 	        <plugin>
 		        <groupId>com.google.cloud.tools</groupId>
 		        <artifactId>jib-maven-plugin</artifactId>
@@ -636,10 +632,12 @@
 		    <scope>runtime</scope>
 		</dependency>
 
-	   
+	     <!-- [END pubsub_spring_integration] -->
+	    <!-- [START pubsub_spring_cloud_stream_binder] -->
 	    <dependency>
 	      	<groupId>com.google.cloud</groupId>
 	      	<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
+			<version>3.2.1</version>
 	    </dependency>
 	    
 	</dependencies>

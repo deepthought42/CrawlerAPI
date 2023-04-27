@@ -1,12 +1,13 @@
 package com.looksee.models.audit;
 
 public class AuditScore {
+	private double overallScore;
 	private double content_score;
 	private double readability;
-	private double spelling_grammar;
-	private double image_quality;
+	private double imagery;
 	private double alt_text;
-
+	private double written_content;
+	
 	private double information_architecture_score;
 	private double links;
 	private double metadata;
@@ -17,17 +18,17 @@ public class AuditScore {
 	private double color_contrast;
 	private double whitespace;
 	
-	private double interactivity_score;
 	private double accessibility_score;
 	
 	private double text_contrast;
 	private double non_text_contrast;
 	
+	public AuditScore() {}
+	
 	public AuditScore(double content_score,
 					  double readability,
-					  double spelling_grammar,
 					  double image_quality,
-					  double alt_text, 
+					  double alt_text,
 					  double information_architecture_score, 
 					  double links, 
 					  double metadata, 
@@ -36,15 +37,16 @@ public class AuditScore {
 					  double aesthetic_score, 
 					  double color_contrast, 
 					  double whitespace, 
-					  double interactivity_score, 
 					  double accessibility_score, 
 					  double text_contrast, 
-					  double non_text_contrast) {
+					  double non_text_contrast, 
+					  double overallScore, 
+					  double written_content_score) {
 		setContentScore(content_score);
 		setReadability(readability);
-		setSpellingGrammar(spelling_grammar);
-		setImageQuality(image_quality);
+		setImagery(image_quality);
 		setAltText(alt_text);
+		setWrittenContent(written_content_score);
 		
 		setInformationArchitectureScore(information_architecture_score);
 		setLinks(links);
@@ -56,11 +58,12 @@ public class AuditScore {
 		setColorContrast(color_contrast);
 		setWhitespace(whitespace);
 		
-		setInteractivityScore(interactivity_score);
 		setAccessibilityScore(accessibility_score);
 		
 		setTextContrastScore(text_contrast);
 		setNonTextContrastScore(non_text_contrast);
+		setOverallScore(overallScore);
+		
 	}
 	
 	
@@ -88,14 +91,6 @@ public class AuditScore {
 		this.aesthetics_score = aesthetics_score;
 	}
 
-	public double getInteractivityScore() {
-		return interactivity_score;
-	}
-
-	public void setInteractivityScore(double interactivity_score) {
-		this.interactivity_score = interactivity_score;
-	}
-
 	public double getAccessibilityScore() {
 		return accessibility_score;
 	}
@@ -114,23 +109,13 @@ public class AuditScore {
 		this.readability = readability;
 	}
 
-
-	public double getSpellingGrammar() {
-		return spelling_grammar;
+	public double getImagery() {
+		return imagery;
 	}
 
 
-	public void setSpellingGrammar(double spelling_grammar) {
-		this.spelling_grammar = spelling_grammar;
-	}
-
-	public double getImageQuality() {
-		return image_quality;
-	}
-
-
-	public void setImageQuality(double image_quality) {
-		this.image_quality = image_quality;
+	public void setImagery(double image_quality) {
+		this.imagery = image_quality;
 	}
 
 
@@ -221,5 +206,21 @@ public class AuditScore {
 
 	public void setNonTextContrastScore(double non_text_contrast) {
 		this.non_text_contrast = non_text_contrast;
+	}
+
+	public double getOverallScore() {
+		return overallScore;
+	}
+
+	public void setOverallScore(double overallScore) {
+		this.overallScore = overallScore;
+	}
+
+	public double getWrittenContent() {
+		return written_content;
+	}
+
+	public void setWrittenContent(double written_content) {
+		this.written_content = written_content;
 	}
 }

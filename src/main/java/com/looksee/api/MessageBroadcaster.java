@@ -206,6 +206,7 @@ public class MessageBroadcaster {
 	}
 
 	public static void sendDomainAdded(String user_id, Domain domain) throws JsonProcessingException {
+		/*
 		DomainDto domain_dto = new DomainDto( domain.getId(), 
 											  domain.getUrl(), 
 											  domain.getPages().size(), 
@@ -222,6 +223,9 @@ public class MessageBroadcaster {
 											  0.0,
 											  "Domain successfully created",
 											  ExecutionStatus.COMPLETE);
+		*/
+		DomainDto domain_dto = new DomainDto( domain.getId(), domain.getUrl(), 0.01);
+
 		
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());

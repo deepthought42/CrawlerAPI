@@ -1,5 +1,6 @@
 package com.looksee.models.dto;
 
+import com.looksee.models.audit.AuditScore;
 import com.looksee.models.enums.AuditLevel;
 
 /**
@@ -8,19 +9,45 @@ import com.looksee.models.enums.AuditLevel;
  */
 public class AuditUpdateDto {
 	
-	private int auditRecordId;
+	private long auditRecordId;
 	private AuditLevel auditType;
 	private double dataExtractionProgress;
 	private double aestheticAuditProgress; 
 	private double contentAuditProgress; 
-	private double infoArchitechtureAuditProgress;
+	private double infoArchitectureAuditProgress;
 	private double overallProgress;
+	private int completePages;
+	private int totalPages;
+	private AuditScore auditScore;
 
-	public int getAuditRecordId() {
+	public AuditUpdateDto(long audit_record_id, 
+						  AuditLevel audit_type, 
+						  double data_extraction_progress,
+						  double aesthetic_audit_progress, 
+						  double content_audit_progress, 
+						  double info_architecture_audit_progress,
+						  double overall_progress, 
+						  int complete_pages, 
+						  int total_pages, 
+						  AuditScore score) 
+	{
+		setAuditRecordId(audit_record_id);
+		setAuditType(audit_type);
+		setDataExtractionProgress(data_extraction_progress);
+		setAestheticAuditProgress(aesthetic_audit_progress);
+		setContentAuditProgress(content_audit_progress);
+		setInfoArchitectureAuditProgress(info_architecture_audit_progress);
+		setOverallProgress(overall_progress);
+		setCompletePages(complete_pages);
+		setTotalPages(total_pages);
+		setAuditScore(score);
+	}
+
+	public long getAuditRecordId() {
 		return auditRecordId;
 	}
 
-	public void setAuditRecordId(int auditRecordId) {
+	public void setAuditRecordId(long auditRecordId) {
 		this.auditRecordId = auditRecordId;
 	}
 
@@ -56,12 +83,12 @@ public class AuditUpdateDto {
 		this.contentAuditProgress = contentAuditProgress;
 	}
 
-	public double getInfoArchitechtureAuditProgress() {
-		return infoArchitechtureAuditProgress;
+	public double getInfoArchitectureAuditProgress() {
+		return infoArchitectureAuditProgress;
 	}
 
-	public void setInfoArchitechtureAuditProgress(double infoArchitechtureAuditProgress) {
-		this.infoArchitechtureAuditProgress = infoArchitechtureAuditProgress;
+	public void setInfoArchitectureAuditProgress(double infoArchitectureAuditProgress) {
+		this.infoArchitectureAuditProgress = infoArchitectureAuditProgress;
 	}
 
 	public double getOverallProgress() {
@@ -72,23 +99,28 @@ public class AuditUpdateDto {
 		this.overallProgress = overallProgress;
 	}
 
-	public AuditUpdateDto(int audit_record_id, 
-						  AuditLevel audit_type, 
-						  double data_extraction_progress,
-						  double aesthetic_audit_progress, 
-						  double content_audit_progress, 
-						  double info_architechture_audit_progress,
-						  double overall_progress, 
-						  int complete_pages, 
-						  int total_pages) 
-	{
-		setAuditRecordId(audit_record_id);
-		setAuditType(audit_type);
-		setDataExtractionProgress(data_extraction_progress);
-		setAestheticAuditProgress(data_extraction_progress);
-		setContentAuditProgress(content_audit_progress);
-		setInfoArchitechtureAuditProgress(info_architechture_audit_progress);
-		setOverallProgress(overall_progress);
+	public int getCompletePages() {
+		return completePages;
 	}
 
+	public void setCompletePages(int completePages) {
+		this.completePages = completePages;
+	}
+
+	public int getTotalPages() {
+		return totalPages;
+	}
+
+	public void setTotalPages(int totalPages) {
+		this.totalPages = totalPages;
+	}
+
+	public AuditScore getAuditScore() {
+		return auditScore;
+	}
+
+	public void setAuditScore(AuditScore auditScore) {
+		this.auditScore = auditScore;
+	}
+	
 }

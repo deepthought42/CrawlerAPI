@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import com.looksee.models.ElementState;
 import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.UXIssueMessage;
 
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
@@ -20,12 +19,6 @@ import com.looksee.models.audit.UXIssueMessage;
 public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	public Audit findByKey(@Param("key") String key);
 
-	@Query("MATCH (audit:Audit)-[:HAS]-(issue:UXIssueMessage) WHERE id(audit)=$audit_id OPTIONAL MATCH y=(issue)-->(element) RETURN issue, element")
-	public Set<UXIssueMessage> findIssueMessages(@Param("audit_id") long audit_id);
-
-	@Query("MATCH (audit:Audit{key:$key}) WITH audit MATCH (msg:UXIssueMessage{key:$msg_key}) MERGE audit_issue=(audit)-[:HAS]->(msg) RETURN msg")
-	public UXIssueMessage addIssueMessage(@Param("key") String key, 
-									  @Param("msg_key") String issue_msg_key);
 
 	@Query("MATCH (audit:Audit) WITH audit MATCH (msg:UXIssueMessage) WHERE id(audit)=$audit_id AND id(msg) IN $issue_ids MERGE audit_issue=(audit)-[:HAS]->(msg) RETURN msg")
 	public void addAllIssues(@Param("audit_id") long audit_id, @Param("issue_ids") List<Long> issue_ids);
@@ -52,13 +45,13 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (ar:DomainAuditRecord)-[]->(par:PageAuditRecord) MATCH (par)-[]->(audit:Audit{category:'AESTHETICS'}) WHERE id(ar) = $id RETURN audit")
 	public Set<Audit> getAllAestheticsAuditsForDomainRecord(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'CONTENT'}) WHERE id(ar)=$audit_record_id RETURN audit")
+	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(audit:Audit{category:'CONTENT'}) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllContentAudits(@Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'INFORMATION_ARCHITECTURE'})  WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(audit:Audit{category:'INFORMATION_ARCHITECTURE'})  WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllInformationArchitectureAudits(@Param("id") long id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit{category:'AESTHETICS'}) WHERE id(ar)=$id RETURN audit")
+	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(audit:Audit{category:'AESTHETICS'}) WHERE id(ar)=$id RETURN audit")
 	public Set<Audit> getAllAestheticsAudits(@Param("id") long id);
 
 	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
@@ -115,7 +108,7 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(a:Audit) WHERE id(ar)=$audit_record_id AND id(a)=$audit_id RETURN a")
 	public Optional<Audit> getAuditForAuditRecord(@Param("audit_record_id") long audit_record_id, @Param("audit_id") long audit_id);
 
-	@Query("MATCH (ar:AuditRecord)-[]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
+	@Query("MATCH (ar:PageAuditRecord)-[:HAS]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")
 	public Set<Audit> getAllAudits(@Param("audit_record_id") long audit_record_id);
 		
 	@Query("MATCH (ar:AuditRecord)-[*2]->(audit:Audit) WHERE id(ar)=$audit_record_id RETURN audit")

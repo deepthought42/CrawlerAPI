@@ -42,8 +42,8 @@ public class AuditUtils {
 		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
-		double final_score = (scores_total / (double)filtered_audits.size())*100;
-		return final_score;
+		
+		return (scores_total / (double)filtered_audits.size())*100;
 	}
 	
 	/**
@@ -119,10 +119,11 @@ public class AuditUtils {
     	double non_text_contrast = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
     	double whitespace = extractLabelScore(audits, "whitespace");
     	double accessibility = extractLabelScore(audits, "accessibility");
-    	
+    	double overallScore = calculateScore(audits);
+		double written_content = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
+
     	return new AuditScore(content_score,
     							readability,
-    							spelling_grammar,
     							image_quality,
     							alt_text,
     							info_architecture_score,
@@ -131,12 +132,13 @@ public class AuditUtils {
     							seo,
     							security,
     							aesthetic_score,
-    							color_contrast, 
+    							color_contrast,
     							whitespace, 
-    							interactivity_score, 
-    							accessibility,
-    							text_contrast,
-    							non_text_contrast);
+    							accessibility, 
+    							text_contrast, 
+    							non_text_contrast,
+    							overallScore,
+    							written_content);
     	
 	}
 
@@ -223,11 +225,10 @@ public class AuditUtils {
 			return -1.0;
 		}
 		
-		double category_score = (scores_total / (double)filtered_audits.size())*100;
-		
-		return category_score;
+		return (scores_total / (double)filtered_audits.size())*100;
 	}
 
+	
 	public static double calculateScoreByCategory(Set<Audit> audits, AuditCategory category) {
 		assert audits != null;
 		assert category != null;
@@ -465,7 +466,6 @@ public class AuditUtils {
 				
 		Map<AuditName, Integer> audit_count_map = new HashMap<>();
 		Set<AuditName> category_audit_labels = getAuditLabels(category, audit_labels);
-		
 		List<Audit> filtered_audits = audit_list.stream()
 												.filter(audit -> category.equals(audit.getCategory()))
 												.filter(audit -> category_audit_labels.contains(audit.getName()))
@@ -481,12 +481,15 @@ public class AuditUtils {
 			}
 		}
 		
+		log.warn("audit count map = " +audit_count_map);
 		double total_count = 0;
 		for(int count : audit_count_map.values()) {
-			total_count += count;
+			total_count += (double)count;
 		}
 		
+		log.warn("total audit count = "+total_count);
 		total_count = total_count / (double)category_audit_labels.size();
+		log.warn("new total ="+total_count);
 		return total_count / (double)page_count;
 		
 	}

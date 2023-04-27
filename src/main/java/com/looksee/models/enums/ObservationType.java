@@ -8,12 +8,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum ObservationType {	
 	ELEMENT("Element"), 
 	TYPOGRAPHY("Typography"), 
-	COLOR_PALETTE("Color Palette"), 
-	PROPERTY_MAP("Property Map"),
-	STYLE_MISSING("Style Missing"),
+	COLOR_PALETTE("Color_Palette"), 
+	PROPERTY_MAP("Property_Map"),
+	STYLE_MISSING("Style_Missing"),
 	PAGE_STATE("Page"),
 	TYPEFACE("Typeface"),
-	COLOR_CONTRAST("Color Contrast"),
+	COLOR_CONTRAST("Color_Contrast"),
 	SECURITY("Security"),
 	SEO("SEO"),
 	UNKNOWN("Unknown");
@@ -30,8 +30,9 @@ public enum ObservationType {
     }
 
     @JsonCreator
-    public static ObservationType create (String value) {
-        if(value == null) {
+    public static ObservationType create(String value) {
+    	System.out.println("creating ObservationType = "+value);
+        if(value == null || value.equalsIgnoreCase("null")) {
             return UNKNOWN;
         }
         for(ObservationType v : values()) {

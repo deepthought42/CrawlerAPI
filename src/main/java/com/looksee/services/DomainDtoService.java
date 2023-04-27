@@ -52,6 +52,7 @@ public class DomainDtoService {
 		int page_count = 0;
 		
 		if (!audit_record_opt.isPresent()) {
+			/*
 			return new DomainDto(domain.getId(), 
 								 domain.getUrl(), 
 								 0, 
@@ -68,6 +69,8 @@ public class DomainDtoService {
 								 1.0, 
 								 "",
 								 ExecutionStatus.COMPLETE);
+			 */
+			return new DomainDto(domain.getId(), domain.getUrl(), 0.0);
 		}
 		
 		// get most recent audit record for this domain
@@ -155,7 +158,7 @@ public class DomainDtoService {
 		}
 		*/
 
-		
+		/*
 		return new DomainDto(domain.getId(), 
 							  domain.getUrl(), 
 							  page_count, 
@@ -172,5 +175,8 @@ public class DomainDtoService {
 							  data_extraction_progress,
 							  domain_audit.getStatusMessage(),
 							  status);
+		*/
+		
+		return new DomainDto(domain.getId(), domain.getUrl(), data_extraction_progress);
 	}
 }

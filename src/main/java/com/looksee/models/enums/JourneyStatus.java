@@ -7,11 +7,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * expanded - path has already been expanded and is ready for exploration
  */
 public enum JourneyStatus {
-	READY("READY"), 
-	EXPANDED("EXPANDED"),
+	CANDIDATE("CANDIDATE"), 
 	DISCARDED("DISCARDED"),
-	EXAMINED("EXAMINED"),
-	CANDIDATE("CANDIDATE");
+	VERIFIED("VERIFIED");
 	
 	private String shortName;
 
@@ -41,3 +39,4 @@ public enum JourneyStatus {
         return shortName;
     }
 }
+

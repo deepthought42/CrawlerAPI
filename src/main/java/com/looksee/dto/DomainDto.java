@@ -1,6 +1,5 @@
 package com.looksee.dto;
 
-import com.looksee.models.enums.ExecutionStatus;
 
 /**
  * Data transfer object for {@link Domain} object that is designed to comply with
@@ -9,6 +8,9 @@ import com.looksee.models.enums.ExecutionStatus;
 public class DomainDto {
 	private long id;
 	private String url;
+	private double progress;
+
+	/*
 	private int page_count;
 	private int pages_audited;
 	private double content_score;
@@ -22,10 +24,37 @@ public class DomainDto {
 	private double data_extraction_progress;
 	private boolean is_audit_running;
 	private String message;
-	private String status;
+	 */
 	
 	public DomainDto(){}
 
+	public DomainDto(
+			long id,
+			String url, 
+			double progress
+	){
+		setId(id);
+		setUrl(url);
+		setProgress(progress);
+		/*
+		setStatus(status);		
+		setPageCount(page_count);
+		setContentScore(content_score);
+		setContentProgress(content_progress);
+		setInfoArchitectureScore(info_architecture_score);
+		setInfoArchitectureProgress(info_architecture_progress);
+		setAccessibilityScore(accessibility_score);
+		setAccessibilityProgress(accessibility_progress);
+		setAestheticsScore(aesthetics_score);
+		setAestheticsProgress(aesthetics_progress);
+		setIsAuditRunning(is_audit_running);
+		setPagesAudited(audited_page_count);
+		setDataExtractionProgress(data_extraction_progress);
+		setMessage(message);
+		*/
+	}
+	
+	/*
 	public DomainDto(
 			long id,
 			String url,
@@ -46,6 +75,7 @@ public class DomainDto {
 	){
 		setId(id);
 		setUrl(url);
+		
 		setPageCount(page_count);
 		setContentScore(content_score);
 		setContentProgress(content_progress);
@@ -61,6 +91,7 @@ public class DomainDto {
 		setMessage(message);
 		setStatus(status);
 	}
+	 */
 
 	public long getId() {
 		return id;
@@ -78,6 +109,15 @@ public class DomainDto {
 		this.url = url;
 	}
 
+	public double getProgress() {
+		return progress;
+	}
+
+	public void setProgress(double progress) {
+		this.progress = progress;
+	}
+
+	/*
 	public double getContentScore() {
 		return content_score;
 	}
@@ -188,5 +228,6 @@ public class DomainDto {
 
 	public void setStatus(ExecutionStatus status) {
 		this.status = status.getShortName();
-	}	
+	}
+	 */
 }

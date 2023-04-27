@@ -28,10 +28,11 @@ import com.looksee.models.audit.ElementStateIssueMessage;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.JourneyStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.repository.AuditRepository;
-
-import io.github.resilience4j.retry.annotation.Retry;
+import com.looksee.models.repository.JourneyRepository;
+import com.looksee.models.repository.UXIssueMessageRepository;
 
 /**
  * Contains business logic for interacting with and managing audits
@@ -45,11 +46,17 @@ public class AuditService {
 	private AuditRepository audit_repo;
 	
 	@Autowired
+	private UXIssueMessageRepository ux_issue_repo;
+	
+	@Autowired
 	private UXIssueMessageService ux_issue_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
 
+	@Autowired
+	private JourneyRepository journey_repo;
+	
 	public Audit save(Audit audit) {
 		assert audit != null;
 		
@@ -94,12 +101,14 @@ public class AuditService {
 	}
 
 	public Set<UXIssueMessage> getIssues(long audit_id) {
-		Set<UXIssueMessage> raw_issue_set = audit_repo.findIssueMessages(audit_id);
-		
+		Set<UXIssueMessage> raw_issue_set = ux_issue_repo.findIssueMessages(audit_id);
+		return raw_issue_set;
+		/*
 		return raw_issue_set.parallelStream()
 							.filter(issue -> issue.getPoints() != issue.getMaxPoints())
 							.distinct()
 							.collect(Collectors.toSet());
+							*/
 	}
 	
 	/**
@@ -229,7 +238,7 @@ public class AuditService {
 		assert issue_key != null;
 		assert !issue_key.isEmpty();
 		
-		return audit_repo.addIssueMessage(key, issue_key);
+		return ux_issue_repo.addIssueMessage(key, issue_key);
 	}
 
 	/**
@@ -355,5 +364,21 @@ public class AuditService {
 	public void addAllIssues(long audit_id, Set<UXIssueMessage> issue_messages) {
 		List<Long> issue_ids = issue_messages.stream().map(x -> x.getId()).collect(Collectors.toList());
 		addAllIssues(audit_id, issue_ids);
+	}
+
+	public double calculateDataExtractionProgress(long audit_id) {
+//		int verified_journeys = journey_repo.findAllJourneysForDomainAudit(audit_id, JourneyStatus.VERIFIED.toString());
+		int verified_journeys = journey_repo.findAllNonStatusJourneysForDomainAudit(audit_id, JourneyStatus.CANDIDATE.toString());
+		log.warn("verified journeys = "+verified_journeys);
+
+		int candidates = journey_repo.findAllJourneysForDomainAudit(audit_id, JourneyStatus.CANDIDATE.toString());
+		log.warn("candidates :: " + candidates);
+		
+		if( (candidates+verified_journeys) == 0) {
+			return 0.01;
+		}
+		else {
+			return verified_journeys / (double)(verified_journeys+candidates);
+		}
 	}
 }

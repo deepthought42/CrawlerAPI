@@ -54,6 +54,7 @@ public class AuditUtils {
 	 * @return
 	 */
 	public static AuditScore extractAuditScore(Set<Audit> audits) {
+		/*
 		double content_score = 0;
 		int content_count = 0;
 		
@@ -62,9 +63,6 @@ public class AuditUtils {
 		
 		double aesthetic_score = 0;
 		int aesthetic_count = 0;
-		
-		double interactivity_score = 0;
-		int interactivity_count = 0;
 		
     	for(Audit audit: audits) {
     		if(audit.getTotalPossiblePoints() == 0) {
@@ -105,46 +103,56 @@ public class AuditUtils {
     	else {
     		aesthetic_score = -1;
     	}
-    	
-    	double readability = extractLabelScore(audits, "readability");
+    	*/
+		
+    	double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+		double readability_score = AuditUtils.calculateScoreByName(audits, AuditName.READING_COMPLEXITY);
+		double image_quality_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
+		double alt_text_score = AuditUtils.calculateScoreByName(audits, AuditName.ALT_TEXT);
+		double information_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		double links_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
+		double metadata = AuditUtils.calculateScoreByName(audits, AuditName.METADATA);
+		double seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
+		double security = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SECURITY);
+		double aesthetic_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+		double whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
+		double text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+		double non_text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+	
+		double overallScore = AuditUtils.calculateScore(audits);
+		double color_contrast_score = (text_contrast_score+non_text_contrast_score)/2;
+
+		
     	double spelling_grammar = extractLabelScore(audits, "spelling");
-    	double image_quality = extractLabelScore(audits, "images");
-    	double alt_text = extractLabelScore(audits, "alt_text");
-    	double links = extractLabelScore(audits, "links");
-    	double metadata = extractLabelScore(audits, "metadata");
-    	double seo = extractLabelScore(audits, "seo");
-    	double security = extractLabelScore(audits, "security");
-    	double color_contrast = extractLabelScore(audits, "color contrast");
-    	double text_contrast = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
-    	double non_text_contrast = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-    	double whitespace = extractLabelScore(audits, "whitespace");
+    	
     	double accessibility = extractLabelScore(audits, "accessibility");
-    	double overallScore = calculateScore(audits);
 		double written_content = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 
     	return new AuditScore(content_score,
-    							readability,
-    							image_quality,
-    							alt_text,
-    							info_architecture_score,
-    							links,
+				    			readability_score,
+				    			image_quality_score,
+    							alt_text_score,
+    							information_architecture_score,
+    							links_score,
     							metadata,
-    							seo,
+    							seo_score,
     							security,
     							aesthetic_score,
-    							color_contrast,
-    							whitespace, 
+    							color_contrast_score,
+    							whitespace_score, 
     							accessibility, 
-    							text_contrast, 
-    							non_text_contrast,
+    							text_contrast_score, 
+    							non_text_contrast_score,
     							overallScore,
     							written_content);
     	
 	}
 
+	
 	private static double extractLabelScore(Set<Audit> audits, String label) {
 		double score = 0.0;
 		int count = 0;
+		
     	for(Audit audit: audits) {
     		for(UXIssueMessage msg: audit.getMessages()) {
     			if(msg.getLabels().contains(label)) {

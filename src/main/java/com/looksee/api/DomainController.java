@@ -1189,45 +1189,7 @@ public class DomainController {
 			audit_type = AuditLevel.PAGE;
 		}				
 		
-		/* CALCULATE SCORES */
-		double content_score = AuditUtils.calculateScoreByCategory(audit_list, AuditCategory.CONTENT);
-		double readability_score = AuditUtils.calculateScoreByName(audit_list, AuditName.READING_COMPLEXITY);
-		double image_quality_score = AuditUtils.calculateSubcategoryScore(audit_list, AuditSubcategory.IMAGERY);
-		double alt_text_score = AuditUtils.calculateScoreByName(audit_list, AuditName.ALT_TEXT);
-		double information_architecture_score = AuditUtils.calculateScoreByCategory(audit_list, AuditCategory.INFORMATION_ARCHITECTURE);
-		double links_score = AuditUtils.calculateScoreByName(audit_list, AuditName.LINKS);
-		double metadata_score = AuditUtils.calculateScoreByName(audit_list, AuditName.METADATA);
-		double seo_score = AuditUtils.calculateSubcategoryScore(audit_list, AuditSubcategory.SEO);
-		double security = AuditUtils.calculateSubcategoryScore(audit_list, AuditSubcategory.SECURITY);
-		double aesthetic_score = AuditUtils.calculateScoreByCategory(audit_list, AuditCategory.AESTHETICS);
-		double whitespace_score = AuditUtils.calculateSubcategoryScore(audit_list, AuditSubcategory.WHITESPACE);
-		double accessibility_score = AuditUtils.calculateScoreByCategory(audit_list, AuditCategory.ACCESSIBILITY);
-		double text_contrast_score = AuditUtils.calculateScoreByName(audit_list, AuditName.TEXT_BACKGROUND_CONTRAST);
-		double non_text_contrast_score = AuditUtils.calculateScoreByName(audit_list, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-		double overallScore = AuditUtils.calculateScore(audit_list);
-		
-		double written_content = AuditUtils.calculateSubcategoryScore(audit_list, AuditSubcategory.WRITTEN_CONTENT);
-		double color_contrast_score = (text_contrast_score+non_text_contrast_score)/2;
-		
-		
-		
-		AuditScore score = new AuditScore(content_score,
-										  readability_score, 
-										  image_quality_score, 
-										  alt_text_score, 
-										  information_architecture_score, 
-										  links_score, 
-										  metadata_score, 
-										  seo_score, 
-										  security, 
-										  aesthetic_score, 
-										  color_contrast_score, 
-										  whitespace_score, 
-										  accessibility_score, 
-										  text_contrast_score, 
-										  non_text_contrast_score, 
-										  overallScore,
-										  written_content);
+		AuditScore score = AuditUtils.extractAuditScore(audit_list);
 		
 		return new AuditUpdateDto( audit_record_id,
 								   audit_type,

@@ -467,6 +467,14 @@ public class AuditUtils {
 	 * @param audit_labels
 	 * @return
 	 */
+	/**
+	 * Calculates the {@link Audit} progress based on audits completed and the total pages
+	 * @param category
+	 * @param page_count
+	 * @param audit_list
+	 * @param audit_labels
+	 * @return
+	 */
 	public static double calculateProgress(AuditCategory category, 
 									 int page_count, 
 									 Set<Audit> audit_list, 
@@ -474,11 +482,11 @@ public class AuditUtils {
 				
 		Map<AuditName, Integer> audit_count_map = new HashMap<>();
 		Set<AuditName> category_audit_labels = getAuditLabels(category, audit_labels);
+		log.warn("Audit labels = "+audit_labels);
 		List<Audit> filtered_audits = audit_list.stream()
 												.filter(audit -> category.equals(audit.getCategory()))
-												.filter(audit -> category_audit_labels.contains(audit.getName()))
+												.filter(audit -> category_audit_labels.contains(audit.getName()))										
 												.collect(Collectors.toList());
-		
 		
 		for(Audit audit : filtered_audits) {
 			if(audit_count_map.containsKey(audit.getName())) {
@@ -488,19 +496,16 @@ public class AuditUtils {
 				audit_count_map.put(audit.getName(), 1);
 			}
 		}
-		
-		log.warn("audit count map = " +audit_count_map);
-		double total_count = 0;
-		for(int count : audit_count_map.values()) {
-			total_count += (double)count;
-		}
-		
-		log.warn("total audit count = "+total_count);
+
+		log.warn("audit counts = "+audit_count_map);
+		double total_count = audit_count_map.values().stream().mapToDouble(i -> i).sum();
+		log.warn("total count value = "+total_count);
+		log.warn("category audit label size = "+category_audit_labels.size());
 		total_count = total_count / (double)category_audit_labels.size();
-		log.warn("new total ="+total_count);
+		log.warn("total count value after dividing by audit labels size = "+total_count);
 		return total_count / (double)page_count;
-		
 	}
+	
 
 	/**
 	 * Retrieves the intersection between the full set of Audit Labels for a category compared with the desired set of audit labels.

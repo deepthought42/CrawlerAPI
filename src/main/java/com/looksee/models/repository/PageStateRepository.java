@@ -76,6 +76,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	@Query("MATCH (d:Domain)-[]->(p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id RETURN p")
 	public Optional<PageState> getPage(@Param("domain_id") long domain_id, @Param("page_id") long page_id);
 
+	@Deprecated
 	@Query("MATCH (d:Domain) WITH d MATCH (p:PageState) WHERE id(d)=$domain_id AND id(p)=$page_id MERGE (d)-[:HAS]->(p) RETURN p")
 	public PageState addPage(@Param("domain_id") long domain_id, @Param("page_id") long page_id);
 	

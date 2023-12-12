@@ -3,10 +3,8 @@ package com.looksee.models.message;
 public class ExceededSubscriptionMessage extends Message{
 
 	
-	public ExceededSubscriptionMessage(long accountId, long domainId, long auditRecordId) {
+	public ExceededSubscriptionMessage(long accountId) {
 		setAccountId(accountId);
-		setDomainId(domainId);
-		setDomainAuditRecordId(auditRecordId);
 	}
 	
 }

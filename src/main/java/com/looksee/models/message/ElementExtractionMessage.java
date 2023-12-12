@@ -4,17 +4,15 @@ import java.util.List;
 
 import com.looksee.models.PageState;
 
+
 public class ElementExtractionMessage extends Message{
 	private PageState page_state;
 	private List<String> xpaths;
 	
 	public ElementExtractionMessage( long account_id,
 									 PageState page,
-									 long audit_record_id, 
-									 List<String> xpaths, 
-									 long domain_id
-	) {
-		super(domain_id, account_id, audit_record_id);
+									 List<String> xpaths) {
+		super(account_id);
 		setPageState(page);
 		setXpaths(xpaths);
 	}

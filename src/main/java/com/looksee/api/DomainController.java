@@ -59,7 +59,6 @@ import com.looksee.models.TestUser;
 import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
@@ -78,10 +77,11 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.JourneyStatus;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.models.enums.WCAGComplianceLevel;
-import com.looksee.models.message.UrlMessage;
+import com.looksee.models.message.DomainAuditUrlMessage;
 import com.looksee.models.repository.TestUserRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
@@ -158,9 +158,12 @@ public class DomainController {
 		
 		Set<DomainDto> domain_info_set = new HashSet<>();
 		for (Domain domain : domains) {
-			DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findMostRecentDomainAuditRecord(domain.getId()).get();
-
-			double data_extraction_progress = audit_service.calculateDataExtractionProgress(domain_audit.getId());
+			Optional<AuditRecord> audit_opt = audit_record_service.findMostRecentDomainAuditRecord(domain.getId());
+			double data_extraction_progress = 0.0;
+			if(audit_opt.isPresent()) {
+				DomainAuditRecord domain_audit = (DomainAuditRecord)audit_opt.get();
+				data_extraction_progress = audit_service.calculateDataExtractionProgress(domain_audit.getId());
+			}
 			
 			DomainDto domainDTO = new DomainDto(domain.getId(), domain.getUrl(), data_extraction_progress);
 			domain_info_set.add(domainDTO);
@@ -202,10 +205,12 @@ public class DomainController {
 		try {
 			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
 			if (domain_record == null) {
+				log.warn("domain record not found. Creating new domain");
 				// set default settings
 				DesignSystem domain_settings = new DesignSystem();
 				domain.setDesignSystem(design_system_service.save(domain_settings));
 				domain = domain_service.save(domain);
+				log.warn("adding domain = "+domain.getId() + "  to account = "+acct.getId());
 				account_service.addDomainToAccount(acct, domain);
 			} else {
 				throw new ExistingAccountDomainException();
@@ -496,7 +501,7 @@ public class DomainController {
 		if (audit_record_opt.isPresent()) {
 			DomainAuditRecord audit_record = (DomainAuditRecord)audit_record_opt.get();
 			
-			AuditUpdateDto audit_update = buildAuditUpdateDto(audit_record.getId());
+			AuditUpdateDto audit_update = buildDomainAuditRecordDTO(audit_record.getId());
 			return audit_update;
 		} else {
 			throw new DomainAuditNotFound();
@@ -990,12 +995,10 @@ public class DomainController {
 		*/
 		log.warn("publishing url message to url topic...");
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
-		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(),
-											BrowserType.CHROME,
-											-1,
-											domain_id, 
-											account.getId(),
-											audit_record.getId());
+		DomainAuditUrlMessage url_msg = new DomainAuditUrlMessage(account.getId(),
+																	audit_record.getId(),
+																	sanitized_url.toString(), 
+																	BrowserType.CHROME);
 		
 		String url_msg_str = mapper.writeValueAsString(url_msg);
 		url_topic.publish(url_msg_str);
@@ -1100,107 +1103,80 @@ public class DomainController {
 	}
 
 	/**
+	 * Build audit {@link AuditRecordDTO progress update} for a {@link DomainAuditRecord domain audit}
 	 * 
-	 * @param domainAuditRecordId
+	 * @param audit_msg
+	 * 
 	 * @return
 	 */
-	private AuditUpdateDto buildAuditUpdateDto(long domainAuditRecordId) {
-		log.warn("retrieving audit record with id :: " + domainAuditRecordId);
-		
-		DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(domainAuditRecordId).get();
-	    Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domainAuditRecordId);
+	private AuditUpdateDto buildDomainAuditRecordDTO(long audit_record_id) {
+		DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(audit_record_id).get();
+	    Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 	    log.warn("total page audits found = "+page_audits.size());
-	    if(page_audits.isEmpty() && domain_audit != null) {
-	    	return new AuditUpdateDto( domainAuditRecordId,
-						    			AuditLevel.DOMAIN,
-						    			0.0,
-						    			0.0,
-						    			0.0,
-						    			0.0,
-						    			0.0,
-						    			0, 
-						    			1, 
-						    			new AuditScore());
-	    }
-	    
-	    int total_pages = audit_record_service.getPageStatesForDomainAuditRecord(domainAuditRecordId).size();
-	    int page_audit_count = page_audits.size();
-	    log.warn("total pages found " + total_pages);
-	    log.warn("page audit count " + page_audit_count);
+	    int total_pages = page_audits.size();
 	    Set<AuditName> audit_labels = domain_audit.getAuditLabels();
-	    Set<Audit> audit_list = audit_record_service.getAllAuditsForDomainAudit(domain_audit.getId());
-	    log.warn("audit labels = "+audit_labels);
-	    log.warn("audit count "+audit_list.size());
-	    
+	   
+	    Set<Audit> audits = new HashSet<Audit>();
+	    for(AuditRecord page_audit: page_audits) {
+	    	audits.addAll(audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId()));
+	    }
+	  
 	    //calculate percentage of audits that are currently complete for each category
-		double aesthetic_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, 
-																 total_pages, 
-																 audit_list, 
-																 audit_labels);
-		double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, 
-																total_pages, 
-																audit_list, 
-																audit_labels);
-		double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, 
-																			total_pages, 
-																			audit_list, 
-																			audit_labels);
+		double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, total_pages, audits, audit_labels);
+		double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, total_pages, audits, audit_labels);
+		double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, total_pages, audits, audit_labels);
 		
-
-		double data_extraction_progress = audit_service.calculateDataExtractionProgress(domain_audit.getId());
-		//double data_extraction_progress = domain_audit.getDataExtractionProgress();
-		log.warn("data extraction progress = " + data_extraction_progress);
-		log.warn("aesthetic progress = "+aesthetic_progress);
+		double data_extraction_progress = getDomainDataExtractionProgress(domain_audit);
 		
-		double audit_progress = aesthetic_progress
-				+ content_progress
-				+ info_architecture_progress
-				+ data_extraction_progress;
-		//retrieve all journeys for domain audit
-		double overall_progress = audit_progress / 4.0;
-		
-		log.warn("Overall Progress = "+overall_progress);
-		log.warn("Total audits that are still in progress = "+page_audits.size());
-		
-		int complete_pages = (int)Math.floor( overall_progress * total_pages);
-		
-		log.warn("complete pages = " + complete_pages);
-		//build auditUpdate DTO . 
-		/*
-		 * This message consists of the following:
-		 * 
-		 *     - Audit Record ID - integer
-		 *     - Audit record type - [Page, Domain]
-		 *     - Data Extraction audit progress - decimal 0-1 inclusive
-		 *     - Aesthetic Audit progress - decimal 0-1 inclusive
-		 *     - Content Audit progress - decimal 0-1 inclusive
-		 *     - Information Architecture audit progress - decimal 0-1 inclusive
-		 *     - overall progress - decimal 0-1 inclusive
-		 */
-		
-		//set values needed for auditUpdateDto
-		int audit_record_id = 0;
-		AuditLevel audit_type = AuditLevel.UNKNOWN;
-		
-		if(domainAuditRecordId >= 0) {
-			audit_type = AuditLevel.DOMAIN;
+		double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+		double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+		double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
+			
+		ExecutionStatus execution_status = ExecutionStatus.UNKNOWN;
+		if(visual_design_progress < 1 || content_progress < 1 || visual_design_progress < 1 || data_extraction_progress < 1) {
+			execution_status = ExecutionStatus.IN_PROGRESS;
 		}
 		else {
-			audit_type = AuditLevel.PAGE;
-		}				
+			execution_status = ExecutionStatus.COMPLETE;
+		}
 		
-		AuditScore score = AuditUtils.extractAuditScore(audit_list);
-		
+		String message = "";
+				
 		return new AuditUpdateDto( audit_record_id,
-								   audit_type,
-								   data_extraction_progress,
-								   aesthetic_progress,
-								   content_progress,
-								   info_architecture_progress,
-								   overall_progress,
-								   complete_pages, 
-								   total_pages,
-								   score);
+									AuditLevel.DOMAIN,
+									content_score,
+									content_progress,
+									info_architecture_score,
+									info_architecture_progress,
+									a11y_score,
+									visual_design_score,
+									visual_design_progress,
+									data_extraction_progress,
+									message, 
+									execution_status);
+	}
+	
+	/**
+	 * Retrieves journeys from the domain audit and calculates a value between 0 and 1 that indicates the progress
+	 * based on the number of journey's that are still in the CANDIDATE status vs the journeys that don't have the CANDIDATE STATUS
+	 * 
+	 * @param domain_audit
+	 * 
+	 * @return
+	 */
+	private double getDomainDataExtractionProgress(DomainAuditRecord domain_audit) {
+		assert domain_audit != null;
+		
+		int candidate_count = audit_record_service.getNumberOfJourneysWithStatus(domain_audit.getId(), JourneyStatus.CANDIDATE);
+		int total_journeys = audit_record_service.getNumberOfJourneys(domain_audit.getId());
+		
+		if(total_journeys <= 1) {
+			return 0.01;
+		}
+		
+		return (double)(total_journeys - candidate_count) / (double)total_journeys;
+
 	}
 }
 

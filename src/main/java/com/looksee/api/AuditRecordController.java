@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
-import com.looksee.models.Label;
 import com.looksee.models.PageState;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
@@ -31,19 +30,23 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.AuditStats;
-import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.dto.AuditUpdateDto;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.Priority;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
@@ -79,6 +82,9 @@ public class AuditRecordController {
     
     @Autowired
     protected Crawler crawler;
+    
+    @Autowired
+    protected PageStateService page_state_service;
     
     @Autowired
     protected SendGridMailService sendgrid_service;
@@ -246,15 +252,9 @@ public class AuditRecordController {
     	
     	if(audit_record_opt.isPresent()) {
     		PageAuditRecord audit_record = (PageAuditRecord)audit_record_opt.get();
-			long content_audits_complete = 0;
-			long info_arch_audits_complete = 0;
-			long aesthetic_audits_complete = 0;
-			long element_extractions_complete = 0;
 
-			//Set<PageAuditRecord> audit_records = audit_record_service.getPageAuditRecords(audit_record.getId());
 			// get Page Count
 			long page_count = 1;
-			long pages_audited = 0;
 
 			double score = 0.0;
 			int audit_count = 0;
@@ -264,13 +264,11 @@ public class AuditRecordController {
 
 			int image_copyright_issue_count = 0;
 
-			double content_score = 0.0;
 			double written_content_score = 0.0;
 			double imagery_score = 0.0;
 			double videos_score = 0.0;
 			double audio_score = 0.0;
 
-			double info_arch_score = 0.0;
 			double seo_score = 0.0;
 			double menu_analysis_score = 0.0;
 			double performance_score = 0.0;
@@ -283,18 +281,7 @@ public class AuditRecordController {
 			double whitespace_score = 0.0;
 			double branding_score = 0.0;
 
-			long elements_reviewed = 0;
-			long elements_found = 0;
-
-			//for (PageAuditRecord page_audit : audit_records) {
-			if (audit_record.isComplete()) {
-				pages_audited++;
-			}
-
-			elements_reviewed += audit_record.getElementsReviewed();
-			elements_found += audit_record.getElementsFound();
-
-			Set<Audit> audits = audit_record_service.getAllAuditsAndIssues(audit_record.getId());
+			Set<Audit> audits = audit_record_service.getAllAudits(audit_record.getId());
 			written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 			imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
 			videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
@@ -330,87 +317,92 @@ public class AuditRecordController {
 			}
 			audit_count += audits.size();
 
-			log.debug("audit record id = "+audit_record.getId());
-			if (audit_record.getInfoArchitechtureAuditProgress() >= 1.0) {
-				info_arch_audits_complete++;
-			}
-			if (audit_record.getContentAuditProgress() >= 1.0) {
-				content_audits_complete++;
-			}
-			
+			log.debug("audit record id = "+audit_record.getId());			
 			log.debug("aesthetic audit progress = "+audit_record.getAestheticAuditProgress());
-			if (audit_record.getAestheticAuditProgress() >= 1.0) {
-				aesthetic_audits_complete++;
-			}
-			if (audit_record.getDataExtractionProgress() >= 1.0) {
-				element_extractions_complete++;
-			}
 			double overall_score = ( score / audit_count ) * 100 ;
 			
-			Set<Label> image_labels = audit_record_service.getLabelsForImageElements(audit_record.getId()) ;
+			//Set<Label> image_labels = audit_record_service.getLabelsForImageElements(audit_record.getId()) ;
 			
 			//build stats object
-			log.debug("aesthetic audits complete = "+aesthetic_audits_complete);
 			log.debug("page count = " + page_count);
 			log.debug("---------------------------------------------");
+			Set<AuditName> audit_labels = new HashSet<AuditName>();
+			audit_labels.add(AuditName.TEXT_BACKGROUND_CONTRAST);
+			audit_labels.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 			
-			AuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
-														audit_record.getStartTime(),
-														audit_record.getEndTime(),
-														pages_audited, 
-														page_count,
-														content_audits_complete,
-														content_audits_complete / (double)page_count,
-														0,
-														0,
-														0,
-														0,
-														written_content_score,
-														imagery_score,
-														videos_score,
-														audio_score,
-														audit_record.getContentAuditMsg(),
-														info_arch_audits_complete,
-														info_arch_audits_complete / (double)page_count,
-														0,
-														0,
-														0,
-														0,
-														seo_score,
-														menu_analysis_score,
-														performance_score,
-														link_score,
-														audit_record.getInfoArchMsg(),
-														aesthetic_audits_complete,
-														aesthetic_audits_complete / (double)page_count,
-														0,
-														0,
-														0,
-														0,
-														0,
-														text_color_contrast_score,
-														non_text_color_contrast_score,
-														typography_score,
-														whitespace_score,
-														branding_score,
-														audit_record.getAestheticMsg(),
-														overall_score,
-														high_issue_count,
-														mid_issue_count,
-														low_issue_count, 
-														elements_reviewed,
-														elements_found,
-														audit_record.getDataExtractionMsg(),
-														audit_record.getDataExtractionProgress(), 
-														null, 
-														null, 
-														null, 
-														null, 
-														null,
-														0,
-														image_labels,
-														image_copyright_issue_count, 
-														audit_record.getStatus());
+			audit_labels.add(AuditName.IMAGE_COPYRIGHT);
+			audit_labels.add(AuditName.IMAGE_POLICY);
+			audit_labels.add(AuditName.ALT_TEXT);
+			audit_labels.add(AuditName.READING_COMPLEXITY);
+			audit_labels.add(AuditName.PARAGRAPHING);
+			
+			audit_labels.add(AuditName.TITLES);
+			audit_labels.add(AuditName.LINKS);
+			audit_labels.add(AuditName.METADATA);
+			audit_labels.add(AuditName.ENCRYPTED);
+			
+			int total_issues = 0;
+			ExecutionStatus execution_status = null;
+			
+			double data_extraction_progress = getPageDataExtractionProgress(audit_record.getId());
+
+			
+			double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, 
+																		 1, 
+																		 audits, 
+																		 audit_labels);
+			
+			double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, 
+																	1, 
+																	audits, 
+																	audit_labels);
+
+			double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, 
+																			1, 
+																			audits, 
+																			audit_labels);
+															
+			double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+			double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+			double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+			double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
+
+			
+			if(content_progress >= 1 && info_architecture_progress >= 1 && visual_design_progress >= 1) {
+				execution_status = ExecutionStatus.COMPLETE;
+			}
+			else {
+				execution_status = ExecutionStatus.IN_PROGRESS;
+			}
+			
+			AuditStats audit_stats = new AuditStats(audit_record.getId(),
+													audit_record.getStartTime(),
+													audit_record.getEndTime(),
+													content_progress,
+													content_score,
+													audit_record.getContentAuditMsg(),
+													written_content_score,
+													imagery_score,
+													videos_score,
+													audio_score,
+													info_architecture_progress,
+													info_architecture_score,
+													audit_record.getInfoArchMsg(),
+													seo_score,
+													menu_analysis_score,
+													performance_score,
+													visual_design_progress,
+													visual_design_score,
+													audit_record.getAestheticMsg(),
+													text_color_contrast_score,
+													non_text_color_contrast_score,
+													typography_score,
+													whitespace_score,
+													branding_score,
+													data_extraction_progress,
+													audit_record.getDataExtractionMsg(),
+													execution_status,
+													link_score);
 														
 			
 			return audit_stats;
@@ -419,6 +411,125 @@ public class AuditRecordController {
     		throw new AuditRecordNotFoundException();
     	}
     }
+    
+    /**
+	 * Creates an {@linkplain PageAuditDto} using page audit ID and the provided page_url
+	 * 
+	 * @param pageAuditId
+	 * 
+	 * @return
+	 */
+	private AuditUpdateDto buildPageAuditUpdatedDto(long page_audit_id) {
+		//get all audits
+		Set<Audit> audits = audit_record_service.getAllAudits(page_audit_id);
+		Set<AuditName> audit_labels = new HashSet<AuditName>();
+		audit_labels.add(AuditName.TEXT_BACKGROUND_CONTRAST);
+		audit_labels.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+		audit_labels.add(AuditName.TITLES);
+		audit_labels.add(AuditName.IMAGE_COPYRIGHT);
+		audit_labels.add(AuditName.IMAGE_POLICY);
+		audit_labels.add(AuditName.LINKS);
+		audit_labels.add(AuditName.ALT_TEXT);
+		audit_labels.add(AuditName.METADATA);
+		audit_labels.add(AuditName.READING_COMPLEXITY);
+		audit_labels.add(AuditName.PARAGRAPHING);
+		audit_labels.add(AuditName.ENCRYPTED);
+		//count audits for each category
+		//calculate content score
+		//calculate aesthetics score
+		//calculate information architecture score
+		double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, 
+																 1, 
+																 audits, 
+																 AuditUtils.getAuditLabels(AuditCategory.AESTHETICS, audit_labels));
+		double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, 
+																1, 
+																audits, 
+																audit_labels);
+		double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, 
+																		1, 
+																		audits, 
+																		audit_labels);
+
+		double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+		double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+		double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
+
+		double data_extraction_progress = getPageDataExtractionProgress(page_audit_id);
+		String message = "";
+		if(data_extraction_progress < 0.5) {
+			message = "Setting up browser";
+		}
+		else if(data_extraction_progress < 0.6) {
+			message = "Analyzing elements";
+		}
+		
+		ExecutionStatus execution_status = ExecutionStatus.UNKNOWN;
+		if(visual_design_progress < 1 || content_progress < 1 || visual_design_progress < 1) {
+			execution_status = ExecutionStatus.IN_PROGRESS;
+		}
+		else {
+			execution_status = ExecutionStatus.COMPLETE;
+		}
+		
+		return new AuditUpdateDto( page_audit_id,
+									AuditLevel.PAGE,
+									content_score,
+									content_progress,
+									info_architecture_score,
+									info_architecture_progress,
+									a11y_score,
+									visual_design_score,
+									visual_design_progress,
+									data_extraction_progress,
+									message, 
+									execution_status);
+	}
+	
+	/**
+	 * Retrieves journeys from the domain audit and calculates a value between 0 and 1 that indicates the progress
+	 * based on the number of journey's that are still in the CANDIDATE status vs the journeys that don't have the CANDIDATE STATUS
+	 * 
+	 * NOTE : Progress is based on a magic number(10000). Be aware that all progress will be based on an assumed maximum element 
+	 *        count of 1000
+	 * 
+	 * @param audit_record_id
+	 * 
+	 * @return progress percentage as a value between 0 and 1
+	 */
+	private double getPageDataExtractionProgress(long audit_record_id) {		
+		double milestone_count = 1.0;
+		
+		PageState page = audit_record_service.findPage(audit_record_id);
+		
+		int audit_count = audit_record_service.getAllAudits(audit_record_id).size();
+		//if the audit_record has audits return 1
+		if(audit_count > 0) {
+			return 1.0;
+		}
+		
+		//if audit_record has page associated with it add 1 point
+		if(page != null) {
+			milestone_count += 1;
+		}
+		else {
+			return 0.0;
+		}
+		
+		int element_count = page_state_service.getElementStateCount(page.getId());
+		
+		//if the associated page has elements add 1000/element_count
+		int max_elements = 1000;
+		if(element_count > 0) {
+			if(element_count > max_elements) {
+				max_elements = element_count;
+			}
+			milestone_count += max_elements / (double)element_count;
+		}
+		
+		return milestone_count / 3.0;
+	}
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

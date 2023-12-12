@@ -535,7 +535,12 @@
 		    <artifactId>spring-cloud-gcp-starter-vision</artifactId>
 		</dependency>
 
-
+		<!-- https://mvnrepository.com/artifact/com.google.cloud/spring-cloud-gcp-starter-secretmanager -->
+		<dependency>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>spring-cloud-gcp-starter-secretmanager</artifactId>
+		    <version>4.3.0</version>
+		</dependency>
 				
 		<!-- https://mvnrepository.com/artifact/com.google.cloud/spring-cloud-gcp-starter-storage -->
 		<dependency>

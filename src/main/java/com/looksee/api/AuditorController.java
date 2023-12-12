@@ -37,7 +37,7 @@ import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.enums.SubscriptionPlan;
-import com.looksee.models.message.UrlMessage;
+import com.looksee.models.message.PageAuditUrlMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
@@ -89,8 +89,10 @@ public class AuditorController {
 		Principal principal = request.getUserPrincipal();
 		Account account = null;
     	
+		log.warn("Principal value = " + principal);
 		//is user logged in and have they exceeded the page audit limit??
 		if(principal != null ) {
+			log.warn("principal isn't null. Name = "+principal.getName());
 			account = account_service.findByUserId(principal.getName());
 			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 			LocalDate today = LocalDate.now();
@@ -145,17 +147,15 @@ public class AuditorController {
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 
 		log.warn("Initiating single page audit = "+sanitized_url);
-		UrlMessage url_msg = new UrlMessage(sanitized_url.toString(), 
-											BrowserType.CHROME,
-											audit_record.getId(),
-											-1, 
+		PageAuditUrlMessage url_msg = new PageAuditUrlMessage( 
 											account_id,
-											-1);
+											audit_record.getId(),
+											sanitized_url.toString(), BrowserType.CHROME);
 		
 		String url_msg_str = mapper.writeValueAsString(url_msg);
 		url_topic.publish(url_msg_str);
 
-   		return null;
+   		return audit_record;
 	}
 	
 	

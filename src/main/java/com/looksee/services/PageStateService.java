@@ -188,4 +188,8 @@ public class PageStateService {
 	public void addAllElements(long page_state_id, List<Long> element_ids) {
 		page_state_repo.addAllElements(page_state_id, element_ids);
 	}
+
+	public int getElementStateCount(long page_id) {
+		return element_state_repo.getElementStateCount(page_id);
+	}
 }

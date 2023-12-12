@@ -24,18 +24,7 @@ public class AccountService {
 	private AccountRepository account_repo;
 	
 	public void addDomainToAccount(Account acct, Domain domain){
-		boolean domain_exists_for_acct = false;
-		for(Domain acct_domain : acct.getDomains()){
-			if(acct_domain.equals(domain)){
-				domain_exists_for_acct = true;
-			}
-		}
-		
-		if(!domain_exists_for_acct){
-			account_repo.addDomain(domain.getKey(), acct.getEmail());
-			acct.addDomain(domain);
-			account_repo.save(acct);
-		}
+		account_repo.addDomain(domain.getId(), acct.getId());
 	}
 
 	public Account findByEmail(String email) {
@@ -89,8 +78,7 @@ public class AccountService {
 		return account_repo.addAuditRecord(username, audit_record_id);
 	}
 	
-	public AuditRecord addAuditRecord(long id, long audit_record_id) {
-		
+	public Account addAuditRecord(long id, long audit_record_id) {
 		return account_repo.addAuditRecord(id, audit_record_id);
 	}
 

@@ -79,9 +79,7 @@ public class DomainAuditStats extends AuditStats{
 			long high_impact_issues,
 			long mid_impact_issues, 
 			long low_impact_issues,
-			long elements_examined,
-			long elements_found, 
-			String data_extraction_msg, 
+			String data_extraction_msg,
 			double data_extraction_progress, 
 			List<SimpleScore> overall_score_history, 
 			List<SimpleScore> content_score_history, 
@@ -89,7 +87,7 @@ public class DomainAuditStats extends AuditStats{
 			List<SimpleScore> aesthetic_score_history, 
 			List<SimpleScore> accessibility_score_history, 
 			int total_issues, 
-			Set<Label> image_labels,
+			Set<Label> image_labels, 
 			int image_copyright_issue_count, 
 			ExecutionStatus execution_status
 	) {
@@ -97,8 +95,6 @@ public class DomainAuditStats extends AuditStats{
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setAuditRecordId(audit_record_id);
-		setSubcategoryStats(new HashSet<>());
-		setContentPagesAudited(content_pages_audited);
 		setContentAuditProgress(content_audit_progress);
 		
 		setWrittenContentIssueCount(written_content_issue_count);
@@ -111,8 +107,7 @@ public class DomainAuditStats extends AuditStats{
 		setAudioScore(audio_score);
 
 		setContentMsg(content_msg);
-		setInfoArchPagesAudited(info_arch_pages_audited);
-		setInfoArchAuditProgress(info_arch_audit_progress);
+		setInfoArchitectureAuditProgress(info_arch_audit_progress);
 		setSeoIssueCount(seo_issue_count);
 		setMenuIssueCount(menu_issue_count);
 		setLinkIssueCount(link_issue_count);
@@ -121,9 +116,8 @@ public class DomainAuditStats extends AuditStats{
 		setMenuAnalysisScore(menu_analysis_score);
 		setLinkScore(link_score);
 		setPerformanceScore(performance_score);
-		setInfoArchMsg(info_arch_msg);
+		setInfoArchitectureMsg(info_arch_msg);
 		
-		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
 		setTextContrastIssueCount(text_contrast_issue_count);
 		setNonTextContrastIssueCount(non_text_issue_count);
@@ -150,12 +144,6 @@ public class DomainAuditStats extends AuditStats{
 		setTotalPagesAudited(page_count);
 		setPagesFound(page_count);
 		setPagesExamined(pages_examined);
-		
-		setOverallScoreHistory(overall_score_history);
-		setContentScoreHistory(content_score_history);
-		setInfoArchitectureScoreHistory(info_architecture_score_history);
-		setAestheticScoreHistory(aesthetic_score_history);
-		setAccessibilityScoreHistory(accessibility_score_history);
 		
 		setImageLabels(image_labels);
 		setImageCopyrightIssueCount(image_copyright_issue_count);

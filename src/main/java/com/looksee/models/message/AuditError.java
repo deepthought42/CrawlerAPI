@@ -7,13 +7,14 @@ public class AuditError extends Message{
 	private AuditCategory audit_category;
 	private double progress;
 	
-	public AuditError(long domainId, 
-					  long accountId, 
+	public AuditError(long accountId, 
 					  long auditRecordId, 
 					  String error_message,
 					  AuditCategory category, 
-					  double progress) {
-		super(domainId, accountId, auditRecordId);
+					  double progress, 
+					  long domainId
+	) {
+		super(accountId);
 		setErrorMessage(error_message);
 		setAuditCategory(category);
 		setProgress(progress);

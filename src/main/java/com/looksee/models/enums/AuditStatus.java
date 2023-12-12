@@ -3,19 +3,16 @@ package com.looksee.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * ready - ready for expansion
- * expanded - path has already been expanded and is ready for exploration
+ * Defines all {@link AuditStatus status} of {@link Audit audits} that exist in the system
  */
-public enum JourneyStatus {
-	CANDIDATE("CANDIDATE"),
-	REVIEWING("REVIEWING"),
-	DISCARDED("DISCARDED"),
-	VERIFIED("VERIFIED"),
-	ERROR("ERROR");
+public enum AuditStatus {
+	STARTED("STARTED"),
+	STOPPED("STOPPED"),
+	COMPLETE("COMPLETE");
 	
 	private String shortName;
 
-	JourneyStatus (String shortName) {
+    AuditStatus (String shortName) {
         this.shortName = shortName;
     }
 
@@ -25,11 +22,8 @@ public enum JourneyStatus {
     }
 
     @JsonCreator
-    public static JourneyStatus create (String value) {
-        if(value == null) {
-            throw new IllegalArgumentException();
-        }
-        for(JourneyStatus v : values()) {
+    public static AuditStatus create (String value) {
+        for(AuditStatus v : values()) {
             if(value.equalsIgnoreCase(v.getShortName())) {
                 return v;
             }
@@ -41,4 +35,3 @@ public enum JourneyStatus {
         return shortName;
     }
 }
-

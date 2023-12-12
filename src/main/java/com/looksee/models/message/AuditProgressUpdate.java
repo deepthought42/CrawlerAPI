@@ -1,18 +1,19 @@
 package com.looksee.models.message;
 
-import com.looksee.models.audit.Audit;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditLevel;
 
 /**
  * Intended to contain information about progress an audit
  */
-public class AuditProgressUpdate extends Message{
-	private Audit audit;
+public class AuditProgressUpdate extends Message {
+	private long pageAuditId;
 	private AuditCategory category;
 	private AuditLevel level;
 	private double progress;
 	private String message;
+	
+	public AuditProgressUpdate() {	}
 	
 	public AuditProgressUpdate(
 			long account_id,
@@ -21,15 +22,15 @@ public class AuditProgressUpdate extends Message{
 			String message, 
 			AuditCategory category,
 			AuditLevel level, 
-			Audit audit, 
-			long domain_id 
+			long domain_id, 
+			long page_audit_id
 	) {
-		super(domain_id, account_id, audit_record_id);
+		super(account_id);
 		setProgress(progress);
 		setMessage(message);
 		setCategory(category);
 		setLevel(level);
-		setAudit(audit);
+		setPageAuditId(page_audit_id);
 	}
 	
 	/* GETTERS / SETTERS */
@@ -62,11 +63,11 @@ public class AuditProgressUpdate extends Message{
 		this.level = level;
 	}
 
-	public Audit getAudit() {
-		return audit;
+	public long getPageAuditId() {
+		return pageAuditId;
 	}
 
-	public void setAudit(Audit audit) {
-		this.audit = audit;
+	public void setPageAuditId(long page_audit_id) {
+		this.pageAuditId = page_audit_id;
 	}
 }

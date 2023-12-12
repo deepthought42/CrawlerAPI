@@ -4,28 +4,35 @@ import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.JourneyStatus;
 import com.looksee.models.journeys.Journey;
 
-public class JourneyMessage extends DomainAuditMessage {
+/**
+ * 
+ */
+public class VerifiedJourneyMessage extends DomainAuditMessage {
 
 	private Journey journey;
 	private JourneyStatus status;
 	private BrowserType browser;
 	
-	public JourneyMessage( Journey journey, 
-						   JourneyStatus status, 
-						   BrowserType browser_type, 
-						   long account_id, 
-						   long audit_record_id){
+	public VerifiedJourneyMessage() {}
+	
+	public VerifiedJourneyMessage( Journey journey, 
+								   JourneyStatus status, 
+								   BrowserType browser,
+								   long account_id,
+								   long audit_record_id)
+	{
+		super(account_id, audit_record_id);
 		setJourney(journey);
 		setStatus(status);
-		setBrowser(browser_type);
+		setBrowser(browser);
 	}
 	
-	public JourneyMessage clone(){
-		return new JourneyMessage(journey.clone(),
-								  getStatus(), 
-								  getBrowser(), 
-								  getAccountId(),
-								  getDomainAuditRecordId());
+	public VerifiedJourneyMessage clone(){
+		return new VerifiedJourneyMessage(	journey.clone(), 
+											getStatus(), 
+											getBrowser(), 
+											getAccountId(), 
+											getDomainAuditRecordId());
 	}
 
 	public JourneyStatus getStatus() {
@@ -44,11 +51,12 @@ public class JourneyMessage extends DomainAuditMessage {
 		this.browser = browser;
 	}
 
+	public Journey getJourney() {
+		return journey;
+	}
+
 	public void setJourney(Journey journey) {
 		this.journey = journey;
 	}
-	
-	public Journey getJourney() {
-		return this.journey;
-	}
 }
+

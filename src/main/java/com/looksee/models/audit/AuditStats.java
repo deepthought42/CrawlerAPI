@@ -1,14 +1,6 @@
 package com.looksee.models.audit;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Relationship;
-
-import com.looksee.models.AuditSubcategoryStat;
 import com.looksee.models.enums.ExecutionStatus;
 
 public class AuditStats {
@@ -18,20 +10,10 @@ public class AuditStats {
 	private long audit_record_id;
 	private String status;
 	
-	//12 month historical scores
-	private List<SimpleScore> overall_score_history;
-	private List<SimpleScore> content_score_history;
-	private List<SimpleScore> info_architecture_score_history;
-	private List<SimpleScore> aesthetic_score_history;
-	private List<SimpleScore> accessibility_score_history;
-	
 	//crawl progress trackers
-	private long elements_examined;
-	private long elements_found;
 	private double data_extraction_progress;
 	private String data_extraction_message;
 	
-	private long content_pages_audited;
 	private double content_score;
 	private double content_audit_progress;
 	private String content_msg;
@@ -48,10 +30,9 @@ public class AuditStats {
 	private double videos_score;
 	private double audio_score;
 	
-	private long info_arch_pages_audited;
-	private double info_arch_score;
-	private double info_arch_audit_progress;
-	private String info_arch_msg;
+	private double info_architecture_score;
+	private double info_architecture_audit_progress;
+	private String info_architecture_msg;
 	
 	//info architecture audit sub-categories
 	private int seo_issue_count;
@@ -64,7 +45,6 @@ public class AuditStats {
 	private double performance_score;
 	private double link_score;
 	
-	private long aesthetic_pages_audited;
 	private double aesthetic_score;
 	private double aesthetic_audit_progress;
 	private String aesthetic_msg;
@@ -84,9 +64,6 @@ public class AuditStats {
 		
 	private int total_issues;
 	private double overall_score;
-
-	@Relationship(type = "HAS")
-	private Set<AuditSubcategoryStat> subcategory_stats;
 	
 	public AuditStats() {}
 	
@@ -99,58 +76,35 @@ public class AuditStats {
 			long audit_record_id,
 			LocalDateTime start_time, 
 			LocalDateTime end_time,
-			long content_pages_audited,
 			double content_audit_progress,
 			double content_score,
 			String content_msg,
-			int written_content_issue_count,
-			int imagery_issue_count,
-			int video_issue_count,
-			int audit_issue_count,
 			double written_content_score,
 			double imagery_score,
 			double videos_score,
-			double audio_score, 
-			long info_arch_pages_audited, 
-			double info_arch_audit_progress, 
-			double info_arch_score, 
+			double audio_score,
+			double info_arch_audit_progress,
+			double info_arch_score,
 			String info_arch_msg,
-			int seo_issue_count,
-			int menu_issue_count,
-			int performance_issue_count,
 			double seo_score,
-			double menu_analysis_score,
+			double menu_analysis_score, 
 			double performance_score, 
-			long aesthetic_pages_audited, 
 			double aesthetic_audit_progress, 
 			double aesthetic_score, 
 			String aesthetic_msg,
-			int text_contrast_issue_count,
-			int non_text_issue_count,
-			int typography_issue_count,
-			int whitespace_issue_count,
-			int branding_issue_count,
-			double color_score, 
-			double typography_score, 
-			double whitespace_score, 
+			double text_contrast_score,
+			double non_text_contrast_score,
+			double typography_score,
+			double whitespace_score,
 			double branding_score,
-			int total_issues,
-			long elements_examined, 
-			long elements_found, 
-			double data_extraction_progress,
-			String data_extraction_msg,
-			List<SimpleScore> overall_score_history, 
-			List<SimpleScore> content_score_history, 
-			List<SimpleScore> info_architecture_score_history, 
-			List<SimpleScore> aesthetic_score_history, 
-			List<SimpleScore> accessibility_score_history, 
-			int image_copyright_issue_count
+			double data_extraction_progress, 
+			String data_extraction_msg, 
+			ExecutionStatus status, 
+			double link_score
 	) {
 		setStartTime(start_time);
 		setEndTime(end_time);
 		setAuditRecordId(audit_record_id);
-		setSubcategoryStats(new HashSet<>());
-		setContentPagesAudited(content_pages_audited);
 		setContentAuditProgress(content_audit_progress);
 		setContentScore(content_score);
 		setContentMsg(content_msg);
@@ -158,9 +112,8 @@ public class AuditStats {
 		setImageryScore(imagery_score);
 		setVideosScore(videos_score);
 		setAudioScore(audio_score);
-		setInfoArchPagesAudited(info_arch_pages_audited);
-		setInfoArchAuditProgress(info_arch_audit_progress);
-		setInfoArchMsg(info_arch_msg);
+		setInfoArchitectureAuditProgress(info_arch_audit_progress);
+		setInfoArchitectureMsg(info_arch_msg);
 		setSeoScore(seo_score);
 		setMenuAnalysisScore(menu_analysis_score);
 		setPerformanceScore(performance_score);
@@ -169,20 +122,13 @@ public class AuditStats {
 		setTypographyScore(typography_score);
 		setWhitespaceScore(whitespace_score);
 		setBrandingScore(branding_score);
-		setAestheticPagesAudited(aesthetic_pages_audited);
 		setAestheticAuditProgress(aesthetic_audit_progress);
 		setAestheticMsg(aesthetic_msg);
-		setElementsExamined(elements_examined);
-		setElementsFound(elements_found);
 		setDataExtractionProgress(data_extraction_progress);
 		setDataExtractionMessage(data_extraction_msg);
 		setTotalIssues(total_issues);
-		
-		setOverallScoreHistory(overall_score_history);
-		setContentScoreHistory(content_score_history);
-		setInfoArchitectureScoreHistory(info_architecture_score_history);
-		setAestheticScoreHistory(aesthetic_score_history);
-		setAccessibilityScoreHistory(accessibility_score_history);
+		setLinkScore(link_score);
+		setStatus(status);
 	}
 
 
@@ -210,38 +156,6 @@ public class AuditStats {
 		this.end_time = end_time;
 	}
 
-	public Set<AuditSubcategoryStat> getSubcategoryStats() {
-		return subcategory_stats;
-	}
-
-	public void setSubcategoryStats(Set<AuditSubcategoryStat> subcategory_stats) {
-		this.subcategory_stats = subcategory_stats;
-	}
-
-	public long getContentPagesAudited() {
-		return content_pages_audited;
-	}
-
-	public void setContentPagesAudited(long content_pages_audited) {
-		this.content_pages_audited = content_pages_audited;
-	}
-
-	public long getInfoArchPagesAudited() {
-		return info_arch_pages_audited;
-	}
-
-	public void setInfoArchPagesAudited(long info_arch_pages_audited) {
-		this.info_arch_pages_audited = info_arch_pages_audited;
-	}
-
-	public long getAestheticPagesAudited() {
-		return aesthetic_pages_audited;
-	}
-
-	public void setAestheticPagesAudited(long aesthetic_pages_audited) {
-		this.aesthetic_pages_audited = aesthetic_pages_audited;
-	}
-
 	public long getAuditRecordId() {
 		return audit_record_id;
 	}
@@ -258,12 +172,12 @@ public class AuditStats {
 		this.content_audit_progress = content_audit_progress;
 	}
 
-	public double getInfoArchAuditProgress() {
-		return info_arch_audit_progress;
+	public double getInfoArchitectureAuditProgress() {
+		return info_architecture_audit_progress;
 	}
 
-	public void setInfoArchAuditProgress(double info_arch_audit_progress) {
-		this.info_arch_audit_progress = info_arch_audit_progress;
+	public void setInfoArchitectureAuditProgress(double info_architecture_audit_progress) {
+		this.info_architecture_audit_progress = info_architecture_audit_progress;
 	}
 
 	public double getAestheticAuditProgress() {
@@ -282,12 +196,12 @@ public class AuditStats {
 		this.content_msg = content_msg;
 	}
 
-	public String getInfoArchMsg() {
-		return info_arch_msg;
+	public String getInfoArchitectureMsg() {
+		return info_architecture_msg;
 	}
 
-	public void setInfoArchMsg(String info_arch_msg) {
-		this.info_arch_msg = info_arch_msg;
+	public void setInfoArchitectureMsg(String info_arch_msg) {
+		this.info_architecture_msg = info_arch_msg;
 	}
 
 	public String getAestheticMsg() {
@@ -306,12 +220,12 @@ public class AuditStats {
 		this.aesthetic_score = aesthetic_pages_score;
 	}
 
-	public double getInfoArchScore() {
-		return info_arch_score;
+	public double getInfoArchitectureScore() {
+		return info_architecture_score;
 	}
 
-	public void setInfoArchScore(double info_arch_pages_score) {
-		this.info_arch_score = info_arch_pages_score;
+	public void setInfoArchitectureScore(double info_arch_pages_score) {
+		this.info_architecture_score = info_arch_pages_score;
 	}
 
 	public double getContentScore() {
@@ -402,22 +316,6 @@ public class AuditStats {
 		this.branding_score = branding_score;
 	}
 
-	public long getElementsExamined() {
-		return elements_examined;
-	}
-
-	public void setElementsExamined(long elements_examined) {
-		this.elements_examined = elements_examined;
-	}
-
-	public long getElementsFound() {
-		return elements_found;
-	}
-
-	public void setElementsFound(long elements_found) {
-		this.elements_found = elements_found;
-	}
-
 	public double getDataExtractionProgress() {
 		return data_extraction_progress;
 	}
@@ -432,47 +330,6 @@ public class AuditStats {
 
 	public void setDataExtractionMessage(String data_extraction_message) {
 		this.data_extraction_message = data_extraction_message;
-	}
-	
-
-	public List<SimpleScore> getOverallScoreHistory() {
-		return overall_score_history;
-	}
-
-	public void setOverallScoreHistory(List<SimpleScore> overall_scores) {
-		this.overall_score_history = overall_scores;
-	}
-
-	public List<SimpleScore> getContentScoreHistory() {
-		return content_score_history;
-	}
-
-	public void setContentScoreHistory(List<SimpleScore> content_scores_history) {
-		this.content_score_history = content_scores_history;
-	}
-
-	public List<SimpleScore> getInfoArchitectureScoreHistory() {
-		return info_architecture_score_history;
-	}
-
-	public void setInfoArchitectureScoreHistory(List<SimpleScore> info_architecture_score_history) {
-		this.info_architecture_score_history = info_architecture_score_history;
-	}
-
-	public List<SimpleScore> getAestheticScoreHistory() {
-		return aesthetic_score_history;
-	}
-
-	public void setAestheticScoreHistory(List<SimpleScore> aesthetic_score_history) {
-		this.aesthetic_score_history = aesthetic_score_history;
-	}
-
-	public List<SimpleScore> getAccessibilityScoreHistory() {
-		return accessibility_score_history;
-	}
-
-	public void setAccessibilityScoreHistory(List<SimpleScore> accessibility_score_history) {
-		this.accessibility_score_history = accessibility_score_history;
 	}
 
 	public int getWrittenContentIssueCount() {

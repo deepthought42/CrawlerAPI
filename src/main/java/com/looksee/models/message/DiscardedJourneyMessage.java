@@ -1,21 +1,24 @@
 package com.looksee.models.message;
 
 import com.looksee.models.enums.BrowserType;
+import com.looksee.models.journeys.Journey;
 
-public class DiscardedJourneyMessage {
+public class DiscardedJourneyMessage extends DomainAuditMessage {
 
-	private int id;
+	private Journey journey;
 	private BrowserType browserType;
 	private long domainId;
 	private long accountId;
 	private long auditRecordId;
    
-	public DiscardedJourneyMessage(int id, 
+	public DiscardedJourneyMessage() {}
+	
+	public DiscardedJourneyMessage(Journey journey, 
 								   BrowserType browserType, 
 								   long domainId, 
 								   long accountId, 
 								   long auditRecordId) {
-		setId(id);
+		setJourney(journey);
 		setBrowserType(browserType);
 		setDomainId(domainId);
 		setAccountId(accountId);
@@ -54,12 +57,12 @@ public class DiscardedJourneyMessage {
 		this.auditRecordId = auditRecordId;
 	}
 
-	public int getId() {
-		return id;
+	public Journey getJourney() {
+		return journey;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public void setJourney(Journey journey) {
+		this.journey = journey;
 	}
 
 }

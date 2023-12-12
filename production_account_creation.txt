@@ -1,4 +1,4 @@
-CREATE (n:Account {email: 'bkindred@look-see.com', created_at: '2021-06-01T03:38:45.81222', api_token: '57cfe607-3476-43f7-9f3f-c191415c91ba', user_id:'auth0|60b5abc443ac51006919d417', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
+CREATE (n:Account {email: 'bkindred@look-see.com', created_at: '2021-06-01T03:38:45.81222', api_token: '57cfe607-3476-43f7-9f3f-c191415c91ba', user_id:'auth0|63a616dfc9becc092e740f16', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
 
 CREATE (n:Account {email: 'brandon.kindred@gmail.com', created_at: '2021-06-07T21:43:45.77225', api_token: '58dc26cb-a2f5-4fb0-9044-9457dc1c09ce', user_id:'auth0|60be930e431b3400695c9762', customer_token: 'stripe customer id goes here', subscription_type: 'FREE', onboarded_steps:[], subscription_token: '', name: ""})
 

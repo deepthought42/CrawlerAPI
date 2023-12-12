@@ -1,42 +1,28 @@
 package com.looksee.models.message;
 
-import com.looksee.models.Domain;
-import com.looksee.models.enums.AuditStage;
-
 /**
- * Message containing details of which sort of audit to run for the domain
- * 
+ * Intended to contain information regarding the progress of journey 
+ *   mapping for a domain audit.
  */
-public class DomainAuditMessage extends Message{
-	private Domain domain;
-	private AuditStage stage;
+public class DomainAuditMessage extends Message {
+	private long domainAuditRecordId;
 	
-	public DomainAuditMessage(long account_id, 
-							  Domain domain, 
-							  AuditStage stage
-	){
-		assert domain != null;
-		assert stage != null;
-		
-		setAccountId(account_id);
-		setDomain(domain);
-		setStage(stage);
-	}
+	public DomainAuditMessage() {	}
 	
-	
-	public Domain getDomain() {
-		return domain;
-	}
-	
-	private void setDomain(Domain domain) {
-		this.domain = domain;
+	public DomainAuditMessage(
+			long account_id,
+			long domain_audit_record_id
+	) {
+		super(account_id);
+		setDomainAuditRecordId(domain_audit_record_id);
 	}
 
-	public AuditStage getStage() {
-		return stage;
+	/* GETTERS / SETTERS */
+	public long getDomainAuditRecordId() {
+		return domainAuditRecordId;
 	}
 
-	public void setStage(AuditStage stage) {
-		this.stage = stage;
+	public void setDomainAuditRecordId(long audit_record_id) {
+		this.domainAuditRecordId = audit_record_id;
 	}
 }

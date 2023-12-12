@@ -2,125 +2,158 @@ package com.looksee.models.dto;
 
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.ExecutionStatus;
 
 /**
- * Data transfer object that contains the progress of each audit category
- *
+ * Data transfer object for {@link Domain} object that is designed to comply with
+ * the data format for browser extensions
  */
 public class AuditUpdateDto {
+	private long id;
+	private AuditLevel level;
+	private double content_score;
+	private double content_progress;
+	private double info_architecture_score;
+	private double info_architecture_progress;
+	private double accessibility_score;
+	private double accessibility_progress;
+	private double aesthetics_score;
+	private double aesthetics_progress;
+	private double data_extraction_progress;
+	private String message;
+	private String status;
 	
-	private long auditRecordId;
-	private AuditLevel auditType;
-	private double dataExtractionProgress;
-	private double aestheticAuditProgress; 
-	private double contentAuditProgress; 
-	private double infoArchitectureAuditProgress;
-	private double overallProgress;
-	private int completePages;
-	private int totalPages;
-	private AuditScore auditScore;
+	public AuditUpdateDto(){}
 
-	public AuditUpdateDto(long audit_record_id, 
-						  AuditLevel audit_type, 
-						  double data_extraction_progress,
-						  double aesthetic_audit_progress, 
-						  double content_audit_progress, 
-						  double info_architecture_audit_progress,
-						  double overall_progress, 
-						  int complete_pages, 
-						  int total_pages, 
-						  AuditScore score) 
-	{
-		setAuditRecordId(audit_record_id);
-		setAuditType(audit_type);
+	public AuditUpdateDto(
+			long id,
+			AuditLevel level,
+			double content_score,
+			double content_progress,
+			double info_architecture_score,
+			double info_architecture_progress,
+			double accessibility_score,
+			double aesthetics_score,
+			double aesthetics_progress,
+			double data_extraction_progress, 
+			String message,
+			ExecutionStatus status
+	){
+		setId(id);
+		setLevel(level);
+		setContentScore(content_score);
+		setContentProgress(content_progress);
+		setInfoArchitectureScore(info_architecture_score);
+		setInfoArchitectureProgress(info_architecture_progress);
+		setAccessibilityScore(accessibility_score);
+		setAestheticsScore(aesthetics_score);
+		setAestheticsProgress(aesthetics_progress);
 		setDataExtractionProgress(data_extraction_progress);
-		setAestheticAuditProgress(aesthetic_audit_progress);
-		setContentAuditProgress(content_audit_progress);
-		setInfoArchitectureAuditProgress(info_architecture_audit_progress);
-		setOverallProgress(overall_progress);
-		setCompletePages(complete_pages);
-		setTotalPages(total_pages);
-		setAuditScore(score);
+		setMessage(message);
+		setStatus(status);
 	}
 
-	public long getAuditRecordId() {
-		return auditRecordId;
+	public long getId() {
+		return id;
 	}
 
-	public void setAuditRecordId(long auditRecordId) {
-		this.auditRecordId = auditRecordId;
+	public void setId(long id) {
+		this.id = id;
 	}
 
-	public AuditLevel getAuditType() {
-		return auditType;
+	public double getContentScore() {
+		return content_score;
 	}
 
-	public void setAuditType(AuditLevel auditType) {
-		this.auditType = auditType;
+	public void setContentScore(double content_score) {
+		this.content_score = content_score;
+	}
+
+	public double getInfoArchitectureScore() {
+		return info_architecture_score;
+	}
+
+	public void setInfoArchitectureScore(double info_architecture_score) {
+		this.info_architecture_score = info_architecture_score;
+	}
+
+	public double getAccessibilityScore() {
+		return accessibility_score;
+	}
+
+	public void setAccessibilityScore(double accessibility_score) {
+		this.accessibility_score = accessibility_score;
+	}
+
+	public double getAestheticsScore() {
+		return aesthetics_score;
+	}
+
+	public void setAestheticsScore(double aesthetics_score) {
+		this.aesthetics_score = aesthetics_score;
+	}
+
+	public double getContentProgress() {
+		return content_progress;
+	}
+
+	public void setContentProgress(double content_progress) {
+		this.content_progress = content_progress;
+	}
+
+	public double getInfoArchitectureProgress() {
+		return info_architecture_progress;
+	}
+
+	public void setInfoArchitectureProgress(double info_architecture_progress) {
+		this.info_architecture_progress = info_architecture_progress;
+	}
+
+	public double getAccessibilityProgress() {
+		return accessibility_progress;
+	}
+
+	public void setAccessibilityProgress(double accessibility_progress) {
+		this.accessibility_progress = accessibility_progress;
+	}
+
+	public double getAestheticsProgress() {
+		return aesthetics_progress;
+	}
+
+	public void setAestheticsProgress(double aesthetics_progress) {
+		this.aesthetics_progress = aesthetics_progress;
 	}
 
 	public double getDataExtractionProgress() {
-		return dataExtractionProgress;
+		return data_extraction_progress;
 	}
 
-	public void setDataExtractionProgress(double dataExtractionProgress) {
-		this.dataExtractionProgress = dataExtractionProgress;
+	public void setDataExtractionProgress(double data_extraction_progress) {
+		this.data_extraction_progress = data_extraction_progress;
 	}
 
-	public double getAestheticAuditProgress() {
-		return aestheticAuditProgress;
+	public String getMessage() {
+		return message;
 	}
 
-	public void setAestheticAuditProgress(double aestheticAuditProgress) {
-		this.aestheticAuditProgress = aestheticAuditProgress;
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
-	public double getContentAuditProgress() {
-		return contentAuditProgress;
+	public ExecutionStatus getStatus() {
+		return ExecutionStatus.create(status);
 	}
 
-	public void setContentAuditProgress(double contentAuditProgress) {
-		this.contentAuditProgress = contentAuditProgress;
+	public void setStatus(ExecutionStatus status) {
+		this.status = status.getShortName();
 	}
 
-	public double getInfoArchitectureAuditProgress() {
-		return infoArchitectureAuditProgress;
+	public AuditLevel getLevel() {
+		return level;
 	}
 
-	public void setInfoArchitectureAuditProgress(double infoArchitectureAuditProgress) {
-		this.infoArchitectureAuditProgress = infoArchitectureAuditProgress;
-	}
-
-	public double getOverallProgress() {
-		return overallProgress;
-	}
-
-	public void setOverallProgress(double overallProgress) {
-		this.overallProgress = overallProgress;
-	}
-
-	public int getCompletePages() {
-		return completePages;
-	}
-
-	public void setCompletePages(int completePages) {
-		this.completePages = completePages;
-	}
-
-	public int getTotalPages() {
-		return totalPages;
-	}
-
-	public void setTotalPages(int totalPages) {
-		this.totalPages = totalPages;
-	}
-
-	public AuditScore getAuditScore() {
-		return auditScore;
-	}
-
-	public void setAuditScore(AuditScore auditScore) {
-		this.auditScore = auditScore;
-	}
-	
+	public void setLevel(AuditLevel level) {
+		this.level = level;
+	}	
 }

@@ -9,6 +9,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
@@ -18,6 +19,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * Repository interface for Spring Data Neo4j to handle interactions with {@link Audit} objects
+ * 
+ * @Version 10-3-2023
  */
 @Repository
 @Retry(name = "neoforj")
@@ -45,7 +48,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{url:$url}) RETURN page_audit ORDER BY page_audit.created_at DESC LIMIT 1")
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(@Param("url") String url);
 
-	@Query("MATCH (ar:AuditRecord) WITH ar MATCH (page:PageState) WHERE id(ar)=$audit_record_id AND id(page)=$page_state_id MERGE (ar)-[h:HAS]->(page) RETURN ar")
+	@Query("MATCH (ar:AuditRecord) WITH ar MATCH (page:PageState) WHERE id(ar)=$audit_record_id AND id(page)=$page_state_id MERGE (ar)-[h:FOR]->(page) RETURN ar")
 	public void addPageToAuditRecord(@Param("audit_record_id") long audit_record_id, @Param("page_state_id") long page_state_id);
 
 	@Query("MATCH (audit_record:PageAuditRecord)-[]-(audit:Audit) MATCH (audit)-[:HAS]-(issue:UXIssueMessage{priority:$severity}) WHERE id(audit_record)=$audit_record_id RETURN count(issue) as count")
@@ -57,6 +60,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (doman_audit:DomainAuditRecord)-[:HAS]->(page_audit:PageAuditRecord) WHERE id(page_audit)=$audit_record_id RETURN doman_audit LIMIT 1")
 	public Optional<DomainAuditRecord> getDomainForPageAuditRecord(@Param("audit_record_id") long audit_record_id);
 
+	@Deprecated
 	@Query("MATCH (ar:DomainAuditRecord) WITH ar MATCH (journey:Journey) WHERE id(ar)=$audit_record_id AND id(journey)=$journey_id MERGE (ar)-[:HAS_PATH]->(journey) RETURN ar")
 	public AuditRecord addJourney(@Param("audit_record_id") long audit_record_id, @Param("journey_id")  long journey_id);
 
@@ -77,5 +81,14 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 
 	@Query("MATCH (a:PageAuditRecord)-[:FOR]->(ps:PageState) WHERE id(ps)=$id RETURN a ORDER BY a.created_at DESC LIMIT 1")
 	public PageAuditRecord getAuditRecord(@Param("id") long id);
+
+	@Query("MATCH (domain_audit:DomainAuditRecord)-[:CONTAINS]->(map:DomainMap) WHERE id(domain_audit)=$audit_record_id MATCH(map)-[:CONTAINS]->(journey:Journey{status:$status}) RETURN COUNT(journey)")
+	public int getNumberOfJourneysWithStatus(@Param("audit_record_id") long audit_record_id, @Param("status") String status);
+	
+	@Query("MATCH (domain_audit:DomainAuditRecord)-[:CONTAINS]->(map:DomainMap) WHERE id(domain_audit)=$audit_record_id MATCH(map)-[:CONTAINS]->(journey:Journey) RETURN COUNT(journey)")
+	public int getNumberOfJourneys(@Param("audit_record_id") long audit_record_id);
+	
+	@Query("MATCH (page_audit:PageAuditRecord)-[:FOR]->(page_state:PageState) WHERE id(page_audit)=$id RETURN page_state LIMIT 1")
+	public PageState getPageStateForAuditRecord(@Param("id") long audit_record_id);
 
 }

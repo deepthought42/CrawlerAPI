@@ -7,13 +7,11 @@ CREATE INDEX FOR (var:PageState) ON var.key
 CREATE INDEX FOR (var:Audit) ON var.key
 CREATE INDEX FOR (var:AuditRecord) ON var.key
 CREATE INDEX FOR (var:Step) ON var.key
+CREATE INDEX FOR (var:Step) ON var.candidateKey
 
-
-CREATE INDEX FOR object_key IF NOT EXISTS (var:LookseeObject) ON var.key
-CREATE INDEX FOR journey_candidate  IF NOT EXISTS (var:Journey) ON var.candidateKey
 CREATE INDEX FOR (var:Journey) ON var.key
-CREATE INDEX FOR journey_status IF NOT EXISTS (var:Journey) ON var.status
-CREATE INDEX FOR element_screenshot IF NOT EXISTS (var:ElementState) ON var.screenshotUrl
+CREATE INDEX FOR (var:Journey) ON var.candidateKey
+
 
 CREATE INDEX FOR (var:Audit) ON var.category
 CREATE INDEX FOR (var:Audit) ON var.subcategory

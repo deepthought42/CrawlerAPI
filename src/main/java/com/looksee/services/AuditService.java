@@ -280,12 +280,13 @@ public class AuditService {
 		Map<String, SimpleElement> element_map = new HashMap<>();
 		
 		for(UXIssueMessage ux_issue: issue_set) {
-			if(ux_issue.getType().equals(ObservationType.COLOR_CONTRAST) || 
-					ux_issue.getType().equals(ObservationType.ELEMENT) ) {
+			if(ObservationType.COLOR_CONTRAST.equals(ux_issue.getType()) || 
+					ObservationType.ELEMENT.equals(ux_issue.getType()) ) {
 
 				ElementState element = ux_issue_service.getElement(ux_issue.getId());
 				if(element == null) {
-					return element_map.values();
+					log.warn(" element is null : "+element);					
+					continue;
 				}
 				if(element instanceof ImageElementState) {
 					ImageElementState img_element = (ImageElementState)element;

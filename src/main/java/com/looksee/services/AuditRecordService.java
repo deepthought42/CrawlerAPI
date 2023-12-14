@@ -405,7 +405,6 @@ public class AuditRecordService {
 	 * @return
 	 */
 	public PageState getPageStateForAuditRecord(long audit_record_id) {
-
-		return audit_record_repo.getPageStateForAuditRecord(audit_record_id);
+		return page_state_repo.getPageStateForAuditRecord(audit_record_id);
 	}
 }

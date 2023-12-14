@@ -117,7 +117,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	public ElementState getElementState(@Param("step_key") String step_key);
 
 	@Query("MATCH (uim:UXIssueMessage)-[:FOR]->(e:ElementState) WHERE id(uim)=$id RETURN e")
-	public ElementState getElement(@Param("id") long id);
+	public ElementState getElement(@Param("id") long ux_issue_message);
 
 	@Query("MATCH (uim:UXIssueMessage)-[:EXAMPLE]->(e:ElementState) WHERE id(uim)=$id RETURN e")
 	public ElementState getGoodExample(@Param("id") long issue_id);

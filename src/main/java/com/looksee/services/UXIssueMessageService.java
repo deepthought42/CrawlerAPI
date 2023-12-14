@@ -98,8 +98,8 @@ public class UXIssueMessageService {
     	return save(observation);	
 	}
 
-	public ElementState getElement(long id) {
-		return element_state_repo.getElement(id);
+	public ElementState getElement(long ux_issue_message) {
+		return element_state_repo.getElement(ux_issue_message);
 	}
 
 	public Iterable<UXIssueMessage> saveAll(List<UXIssueMessage> issue_messages) {

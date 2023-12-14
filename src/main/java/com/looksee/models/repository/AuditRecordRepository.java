@@ -87,8 +87,4 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	
 	@Query("MATCH (domain_audit:DomainAuditRecord)-[:CONTAINS]->(map:DomainMap) WHERE id(domain_audit)=$audit_record_id MATCH(map)-[:CONTAINS]->(journey:Journey) RETURN COUNT(journey)")
 	public int getNumberOfJourneys(@Param("audit_record_id") long audit_record_id);
-	
-	@Query("MATCH (page_audit:PageAuditRecord)-[:FOR]->(page_state:PageState) WHERE id(page_audit)=$id RETURN page_state LIMIT 1")
-	public PageState getPageStateForAuditRecord(@Param("id") long audit_record_id);
-
 }

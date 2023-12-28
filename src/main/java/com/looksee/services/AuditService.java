@@ -255,10 +255,6 @@ public class AuditService {
 			for(UXIssueMessage ux_issue: issue_set) {
 				if(ObservationType.ELEMENT.equals(ux_issue.getType())) {
 					ElementStateIssueMessage element_issue = (ElementStateIssueMessage)ux_issue;
-					/*
-					ElementState good_example = ux_issue_service.getGoodExample(ux_issue.getId());
-					element_issue.setGoodExample(good_example);
-					*/
 					issues.put(ux_issue.getKey(), element_issue);
 				}
 				else {
@@ -266,6 +262,8 @@ public class AuditService {
 				}
 			}
 		}
+		
+		
 		return issues.values();
 	}
 	

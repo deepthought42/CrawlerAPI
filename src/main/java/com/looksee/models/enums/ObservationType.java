@@ -31,7 +31,6 @@ public enum ObservationType {
 
     @JsonCreator
     public static ObservationType create(String value) {
-    	System.out.println("creating ObservationType = "+value);
         if(value == null || value.equalsIgnoreCase("null")) {
             return UNKNOWN;
         }

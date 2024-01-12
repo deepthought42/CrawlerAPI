@@ -59,9 +59,10 @@ public class SubscriptionController {
     public boolean getSubscriptionStatus(HttpServletRequest request) throws Exception {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName(); //.replace("auth0|", "");
+    	log.warn("(status check) Looking up account for user with id ="+id);
     	Account account = account_service.findByUserId(id);
-    	
 		if (account == null) {
+			log.warn("(status check) Could not find account for user with id = "+id);
 			throw new UnknownAccountException();
 		}
 		
@@ -85,6 +86,8 @@ public class SubscriptionController {
 					 		@RequestBody Subscription subscription) throws Exception {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
+    	log.warn("(status check) Looking up account for user with id ="+id);
+
     	Account acct = account_service.findByUserId(id);
     	if(acct.getSubscriptionToken() != null && !acct.getSubscriptionToken().isEmpty()) {
     		stripe_service.cancelSubscription(acct.getSubscriptionToken());

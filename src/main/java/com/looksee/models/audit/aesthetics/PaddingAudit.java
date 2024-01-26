@@ -205,7 +205,7 @@ public class PaddingAudit implements IExecutablePageStateAudit {
 				}
 			}
 			
-			gcd_list.remove(new Double(1));
+			gcd_list.remove(1.0);
 			//reduce gcd again.
 			gcd_map.put(unit, gcd_list);
 		}			

@@ -1126,12 +1126,18 @@ public class DomainController {
 		double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, total_pages, audits, audit_labels);
 		double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, total_pages, audits, audit_labels);
 		double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, total_pages, audits, audit_labels);
-		
 		double data_extraction_progress = getDomainDataExtractionProgress(domain_audit);
 		
+		
+		//Calculate scores
 		double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+		
 		double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		
 		double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+		double text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+		double element_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+		
 		double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
 			
 		ExecutionStatus execution_status = ExecutionStatus.UNKNOWN;
@@ -1148,12 +1154,18 @@ public class DomainController {
 									AuditLevel.DOMAIN,
 									content_score,
 									content_progress,
+									0.0,
+									0.0,
 									info_architecture_score,
 									info_architecture_progress,
-									a11y_score,
-									visual_design_score,
-									visual_design_progress,
-									data_extraction_progress,
+									0.0,
+									0.0,
+									a11y_score, 
+									visual_design_score, 
+									visual_design_progress, 
+									text_contrast_score, 
+									element_contrast_score, 
+									data_extraction_progress, 
 									message, 
 									execution_status);
 	}

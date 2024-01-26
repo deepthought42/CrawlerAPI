@@ -57,7 +57,7 @@ public interface AuditRepository extends Neo4jRepository<Audit, Long> {
 	@Query("MATCH (par:PageAuditRecord)-[]->(audit:Audit{is_accessibility:true}) WHERE id(par)=$page_audit_id RETURN audit")
 	public Set<Audit> getAllAccessibilityAudits(@Param("page_audit_id") long page_audit_id);
 
-	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) OPTIONAL MATCH auditsAndMessages=(audit)-->(:UXIssueMessage) WHERE id(page_audit)=$page_audit_id RETURN auditsAndMessages")
+	@Query("MATCH (page_audit:PageAuditRecord)-[]->(audit:Audit) WHERE id(page_audit)=$page_audit_id RETURN audit")
 	public Set<Audit> getAllAuditsForPageAuditRecord(@Param("page_audit_id") long page_audit_id);
 
 	@Query("MATCH (ar:AuditRecord{key:$audit_record_key})-[]->(audit:Audit{category:'Color Management'}) WHERE audit.level='domain' RETURN audit")

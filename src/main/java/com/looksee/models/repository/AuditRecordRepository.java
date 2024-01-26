@@ -67,7 +67,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH(d:Domain{url: $url}) WITH d MATCH (audit:DomainAuditRecord)-[:HAS]->(d) WITH audit RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
 	public Optional<AuditRecord> getMostRecentAuditRecordForDomain(@Param("url") String url);
 	
-	@Query("MATCH(d:Domain) WITH d MATCH (audit:DomainAuditRecord)-[:HAS]->(d) WITH audit WHERE id(d)=$id RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
+	@Query("MATCH(d:Domain)-[:HAS]->(audit:DomainAuditRecord) WHERE id(d)=$id RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
 	public Optional<AuditRecord> getMostRecentAuditRecordForDomain(@Param("id") long id);
 
 	@Query("MATCH (d:Domain{key:$domain_key})-[]->(audit:AuditRecord) RETURN audit")

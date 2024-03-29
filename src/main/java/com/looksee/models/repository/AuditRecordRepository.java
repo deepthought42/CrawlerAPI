@@ -9,7 +9,6 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.DomainAuditRecord;
@@ -87,4 +86,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	
 	@Query("MATCH (domain_audit:DomainAuditRecord)-[:CONTAINS]->(map:DomainMap) WHERE id(domain_audit)=$audit_record_id MATCH(map)-[:CONTAINS]->(journey:Journey) RETURN COUNT(journey)")
 	public int getNumberOfJourneys(@Param("audit_record_id") long audit_record_id);
+
+	@Query("MATCH (acct:Account)-[*2]->(audit_record:AuditRecord) WHERE id(acct)=$account_id RETURN audit_record")
+    public List<AuditRecord> findByAccountId(@Param("account_id") long account_id);
 }

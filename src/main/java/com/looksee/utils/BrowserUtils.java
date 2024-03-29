@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.looksee.gcp.GoogleCloudStorage;
 import com.looksee.models.Browser;
+import com.looksee.models.Domain;
 import com.looksee.models.ElementState;
 import com.looksee.models.ImageElementState;
 import com.looksee.models.LookseeObject;
@@ -688,7 +689,7 @@ public class BrowserUtils {
 		String path = sanitized_url.getPath();
 		path = path.replace("index.html", "");
 		path = path.replace("index.htm", "");
-    	if("/".contentEquals(path.strip())) {
+    	if("/".contentEquals(path.trim())) {
     		path = "";
     	}
     	String page_url = sanitized_url.getHost() + path;

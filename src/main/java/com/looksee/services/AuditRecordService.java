@@ -403,4 +403,8 @@ public class AuditRecordService {
 	public PageState getPageStateForAuditRecord(long audit_record_id) {
 		return page_state_repo.getPageStateForAuditRecord(audit_record_id);
 	}
+
+    public List<AuditRecord> findByAccountId(long acct_id) {
+		return audit_record_repo.findByAccountId(acct_id);
+    }
 }

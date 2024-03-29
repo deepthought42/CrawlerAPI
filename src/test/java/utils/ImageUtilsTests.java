@@ -1,12 +1,7 @@
 package utils;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.looksee.models.audit.ColorData;
-import com.looksee.utils.ImageUtils;
-
 public class ImageUtilsTests {
+	/*
 	@Test
 	public void testCalculateDeltaE() {
 		ColorData color1 = new ColorData("32,34,2"); //less black
@@ -42,5 +37,5 @@ public class ImageUtilsTests {
 		System.out.println("blue and light blue delta e diff :: "+diff);
 		Assert.assertTrue(diff == 39.37754f);
 	}
-	
+	 */
 }

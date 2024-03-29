@@ -1,8 +1,10 @@
 package com.looksee.api;
 
 import java.net.MalformedURLException;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,8 +25,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
 import com.looksee.models.Account;
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.SimpleElement;
 import com.looksee.models.SimplePage;
@@ -34,10 +40,8 @@ import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
-import com.looksee.models.dto.AuditUpdateDto;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ExecutionStatus;
@@ -50,9 +54,6 @@ import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 
 /**
  *	API for interacting with {@link User} data
@@ -89,18 +90,42 @@ public class AuditRecordController {
     @Autowired
     protected SendGridMailService sendgrid_service;
 	
+
 	/**
      * Creates a new {@link Observation observation} 
      * 
-     * @return {@link PerformanceInsight insight}
+     * @return returns a List of {@link AuditRecord audits}
+	 * 
      * @throws UnknownAccountException 
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public @ResponseBody List<AuditRecord> getAuditRecords(
+						    		HttpServletRequest request
+	) throws UnknownAccountException {
+		Principal principal = request.getUserPrincipal();
+    	String user_id = principal.getName();
+		Account acct = account_service.findByUserId(user_id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+		return audit_record_service.findByAccountId(acct.getId());
+    }
+	
+	/**
+     * Requests a an audit report by creating a user account and adding the audit record to the account.
+	 * 
      */
     @RequestMapping(method = RequestMethod.POST, value="/{audit_record_id}/report")
     public @ResponseBody void requestReport(
 							    		HttpServletRequest request,
 										@PathVariable("audit_record_id") long audit_record_id,
 							    		@RequestBody Account acct
-	) throws UnknownAccountException {
+	) {
     	log.warn("requesting report and saving account....");
     	//create an account
     	Account acct_record = account_service.findByEmail(acct.getEmail());
@@ -138,14 +163,14 @@ public class AuditRecordController {
     /**
      * Creates a new {@link Observation observation} 
      * 
-     * @return {@link PerformanceInsight insight}
+     * @return returns set of {@link SimplePage pages}
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/pages")
     public @ResponseBody Set<SimplePage> getPages(
 						    		HttpServletRequest request,
 									@PathVariable("audit_record_id") long audit_record_id
-	) throws UnknownAccountException {
+	) {
     	//get audit record
     	Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
     	
@@ -197,7 +222,7 @@ public class AuditRecordController {
     }
     
     /**
-     * 
+     * Retrieves a dataset consisting of {@link ElementState elements} and {@link UXIssueMessage issues}
      * 
      * @param id
      * @return {@link Audit audit} with given ID

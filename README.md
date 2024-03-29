@@ -7,11 +7,12 @@
 
 ### Command Line Interface(CLI)
 
-maven clean install
+	```bash
+	maven clean install
+	java -ea -jar target/Look-see-#.#.#.jar
+	```
 
-java -ea -jar target/Look-see-#.#.#.jar
-
-NOTE: The `-ea` flag tells the java compiler to run the program with assertions enabled
+	NOTE: The `-ea` flag tells the java compiler to run the program with assertions enabled
 
 ### Neo4j application setup
 
@@ -19,48 +20,55 @@ Note that this section will need to be replaced once we have an Anthos or Terraf
 
 Step 1: setup firewall for neo4j
 
+	```bash
 	gcloud compute firewall-rules create allow-neo4j-bolt-http-https --allow tcp:7473,tcp:7474,tcp:7687 --source-ranges 0.0.0.0/0 --target-tags neo4j
-	
+	```
+
 Step 2: Get image name for Community version 1.4
 
+	```bash
 	gcloud compute images list --project launcher-public | grep --extended-regexp "neo4j-community-1-4-.*"
- 	
+	```
+
 Step 3: create new instance
 
+	```bash
 	gcloud config set project cosmic-envoy-280619
 	gcloud compute instances create neo4j-prod --machine-type e2-medium --image-project launcher-public --image neo4j-community-1-4-3-6-apoc --tags neo4j,http-server,https-server
-
-
 	gcloud compute instances add-tags neo4j-stage --tags http-server,https-server
+	```
 
 Step 4 : SSH to server and check status
 
+	```bash
 	gcloud compute ssh neo4j-stage
 	sudo systemctl status neo4j
+	```
 
 Follow step 3 from this webpage to configure neo4j server - https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-neo4j-on-ubuntu-20-04
 
 Step 6: Delete neo4j instance
 
+	```bash
 	gcloud compute instances delete neo4j-stage
-
+	```
 
 ### Docker
 
+	```bash
 	maven clean install
-
 	docker build --tag look-see .
-
 	docker run -p 80:80 -p 8080:8080 -p 9080:9080 -p 443:443 --name look-see look-see
+	```
 
 
-### Deploy docker container to gcr
+### Deploy Docker container to GCP Artifact Registry
 
-	docker build --no-cache -t gcr.io/cosmic-envoy-280619/look-see-api:v#.#.# .
-
-	docker push gcr.io/cosmic-envoy-280619/look-see-api:v#.#.#
-
-
+	```bash
+	gcloud auth print-access-token | sudo docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+	sudo docker build --no-cache -t us-central1-docker.pkg.dev/cosmic-envoy-280619/api/#.#.# .
+	sudo docker push us-central1-docker.pkg.dev/cosmic-envoy-280619/api/#.#.#
+	```
 
 # Security
 
@@ -84,8 +92,12 @@ Run the following command in Linux to create a keystore called api_key with a pr
 
 * Using CRT
 
+	```bash
 	openssl pkcs12 -export -inkey private.key -in certificate.crt -out api_key.p12
+	```
 
 * Using PEM instead
 
+	```bash
 	openssl pkcs12 -export -inkey look-see.com.key -in look-see.com-2022-chain.pem -out api_key.p12
+	```

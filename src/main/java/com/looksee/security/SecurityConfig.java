@@ -1,23 +1,28 @@
 package com.looksee.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.*;
-
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter  {
+public class SecurityConfig {
 	
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .mvcMatchers("/actuator/info").permitAll()
+                .mvcMatchers( "/actuator/health").permitAll()
+                .mvcMatchers( "/auditor/start-individual").permitAll()
+                .mvcMatchers("/audits").authenticated()
+                .and().cors()
+                .and().oauth2ResourceServer().jwt();
+        return http.build();
+    }
+    /*
 	@Value(value = "${auth0.domain}")
 	private String domain;
     
@@ -31,12 +36,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
     public UserDetailsService userDetailsServiceBean() throws Exception {
         return super.userDetailsServiceBean();
     }
-    /**
-     *  Our API Configuration - for Profile CRUD operations
-     *
-     *  Here we choose not to bother using the `auth0.securedRoute` property configuration
-     *  and instead ensure any unlisted endpoint in our config is secured by default
-     */
+    
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
     	http.csrf().disable().authorizeRequests()
@@ -59,30 +59,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
 	        .and().oauth2ResourceServer()
 	        .jwt()
             .decoder(jwtDecoder());
-    	
-    	//http.oauth2ResourceServer().jwt();
-    	/** old code
-    	 * 
-    	 JwtWebSecurityConfigurer
-    	 .forRS256(audience, issuer)
-    	 //.forHS256(audience, issuer, secret.getBytes())
-         .configure(http).cors().and().csrf().disable().authorizeRequests()
-         .antMatchers(HttpMethod.GET, "/actuator/info").permitAll()
-         .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-         .antMatchers(HttpMethod.POST, "/accounts").permitAll()
-         .antMatchers(HttpMethod.GET, "/audits/all").permitAll()
-         .antMatchers(HttpMethod.POST, "/audits/start").permitAll()
-         .antMatchers(HttpMethod.PUT, "/audits/stop").permitAll()
-         //.anyRequest().permitAll();
-         .anyRequest().authenticated();
-         
-         */
     }
     
     JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = (NimbusJwtDecoder)
-                JwtDecoders.fromOidcIssuerLocation(issuer);
-
+        JwtDecoders.fromOidcIssuerLocation(issuer);
+        
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
@@ -92,11 +74,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
         return jwtDecoder;
     }
     
+    */
     @Bean
 	CorsConfigurationSource corsConfigurationSource() {
-    	final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     	source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
-
+        
     	return source;
     }
 }

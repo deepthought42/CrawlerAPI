@@ -227,7 +227,7 @@ public class FontAudit implements IExecutablePageStateAudit {
 		for(ElementState element : page_state.getElements()) {
 			String font_size_str = element.getRenderedCssValues().get("font-size");
 			font_size_str = font_size_str.replace("px", "");
-			double font_size = Double.parseDouble(font_size_str.strip());
+			double font_size = Double.parseDouble(font_size_str.trim());
 			boolean owns_text = !element.getOwnedText().isEmpty();
 			
 			if(owns_text && font_size < 12) {

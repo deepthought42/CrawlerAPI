@@ -89,11 +89,11 @@ public class AuditorController {
 		Principal principal = request.getUserPrincipal();
 		Account account = null;
     	
-		log.warn("Principal value = " + principal);
 		//is user logged in and have they exceeded the page audit limit??
 		if(principal != null ) {
 			log.warn("principal isn't null. Name = "+principal.getName());
 			account = account_service.findByUserId(principal.getName());
+			log.warn("account id = "+account.getId());
 			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
 			LocalDate today = LocalDate.now();
 			
@@ -109,7 +109,7 @@ public class AuditorController {
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
     	
 	   	//create new audit record
-    	
+    	log.warn("creating new page audit record...");
 	   	PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
 	   														new HashSet<>(), 
 	   														null, 
@@ -125,10 +125,9 @@ public class AuditorController {
 	   	audit_record.setInfoArchMsg("Waiting for data extraction ...");
 	   	audit_record.setInfoArchitectureAuditProgress(0.0);
 	   	audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
-	   	long account_id = -1;
 		if(account != null) {
-	    	account_service.addAuditRecord(account.getEmail(), audit_record.getId());
-			account_id = account.getId();			
+			log.warn("adding audit record to account");
+	    	account_service.addAuditRecord(account.getId(), audit_record.getId());
 		}
     	
 		
@@ -148,7 +147,7 @@ public class AuditorController {
 
 		log.warn("Initiating single page audit = "+sanitized_url);
 		PageAuditUrlMessage url_msg = new PageAuditUrlMessage( 
-											account_id,
+											account.getId(),
 											audit_record.getId(),
 											sanitized_url.toString(), BrowserType.CHROME);
 		

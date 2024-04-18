@@ -12,6 +12,9 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.ObservationType;
 import com.looksee.models.enums.Priority;
 
+/**
+ * 
+ */
 @Node
 public class UXIssueMessage extends LookseeObject {
 	private static Logger log = LoggerFactory.getLogger(UXIssueMessage.class);

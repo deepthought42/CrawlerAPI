@@ -1,5 +1,6 @@
 package com.looksee.models.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -8,11 +9,11 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.google.cloud.GcpLaunchStage.Deprecated;
 import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -55,26 +56,30 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{email:$email})-[:HAS]->(domain:Domain{url:$url}) RETURN domain LIMIT 1")
 	public Domain findDomain(@Param("email") String email, @Param("url") String url);
 
-	@Query("MATCH (t:Account{username:$username}) WITH t MATCH (a:AuditRecord) WHERE id(a)=$audit_record_id MERGE (t)-[r:HAS]->(a) RETURN a")
-	public AuditRecord addAuditRecord(@Param("username") String username, @Param("audit_record_id") long audit_record_id);
-
 	@Query("MATCH (t:Account) WHERE id(t)=$account_id MATCH (a:AuditRecord) WHERE id(a)=$audit_record_id MERGE (t)-[:HAS]->(a) RETURN t")
 	public Account addAuditRecord(@Param("account_id") long account_id, @Param("audit_record_id") long audit_record_id);
 
 	@Query("MATCH (account:Account)-[]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account")
 	public Set<Account> findAllForAuditRecord(@Param("audit_record_id") long id);
 
-	@Query("MATCH (account:Account)-[]->(audit_record:PageAuditRecord) WHERE id(account)=$account_id RETURN audit_record ORDER BY audit_record.created_at DESC LIMIT 5")
-	public Set<PageAuditRecord> findMostRecentAuditsByAccount(long account_id);
+	/**
+	 * Retrieves up to a given limit of the most recent audits for a specified account
+	 * 
+	 * @param account_id 
+	 * @param limit number of records to return
+	 * @return
+	 */
+	@Query("MATCH (account:Account)-[]->(audit_record:AuditRecord) WHERE id(account)=$account_id RETURN audit_record ORDER BY audit_record.createdAt DESC LIMIT $limit")
+	public List<AuditRecord> findMostRecentAuditsByAccount(@Param("account_id") long account_id, @Param("limit") int limit);
 
 	@Query("MATCH (account:Account)-[]->(page_audit:PageAuditRecord) WHERE id(account)=$account_id AND datetime(page_audit.created_at).month=$month RETURN COUNT(page_audit)")
-	int getPageAuditCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
+	public int getPageAuditCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
 
 	@Query("MATCH (account:Account{customer_id:$customer_id}) RETURN account")
 	public Account findByCustomerId(@Param("customer_id") String customer_id);
 	
 	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) MATCH (domain)-[:HAS]->(audit_record:DomainAuditRecord) WHERE id(account)=$account_id AND datetime(audit_record.created_at).month=$month RETURN COUNT(audit_record)")
-	public int geDomainAuditRecordCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
+	public int getDomainAuditRecordCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
 	
 	@Query("MATCH (account:Account)-[*]->(audit_record:AuditRecord) WHERE id(audit_record)=$audit_record_id RETURN account LIMIT 1")
 	public Optional<Account> getAccount(@Param("audit_record_id") long audit_record_id);

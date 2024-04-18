@@ -1,5 +1,6 @@
 package com.looksee.services;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,7 +11,6 @@ import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.repository.AccountRepository;
 
 /**
@@ -70,13 +70,6 @@ public class AccountService {
 		
 		return account_repo.findDomain(email, url);
 	}
-
-	public AuditRecord addAuditRecord(String username, long audit_record_id) {
-		assert username != null;
-		assert !username.isEmpty();
-		
-		return account_repo.addAuditRecord(username, audit_record_id);
-	}
 	
 	public Account addAuditRecord(long id, long audit_record_id) {
 		return account_repo.addAuditRecord(id, audit_record_id);
@@ -86,8 +79,8 @@ public class AccountService {
 		return account_repo.findAllForAuditRecord(id);
 	}
 
-	public Set<PageAuditRecord> findMostRecentPageAudits(long account_id) {
-		return account_repo.findMostRecentAuditsByAccount(account_id);
+	public List<AuditRecord> findMostRecentPageAudits(long account_id, int limit) {
+		return account_repo.findMostRecentAuditsByAccount(account_id, limit);
 	}
 
 	public int getPageAuditCountByMonth(long account_id, int month) {
@@ -99,6 +92,6 @@ public class AccountService {
 	}
 	
 	public int getDomainAuditCountByMonth(long account_id, int month) {
-		return account_repo.geDomainAuditRecordCountByMonth(account_id, month);
+		return account_repo.getDomainAuditRecordCountByMonth(account_id, month);
 	}
 }

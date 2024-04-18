@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
 import com.looksee.models.enums.AuditLevel;
 import com.looksee.models.enums.AuditName;
@@ -18,12 +19,13 @@ import com.looksee.models.enums.ExecutionStatus;
 @Node
 public class DomainAuditRecord extends AuditRecord {
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS", direction = Direction.OUTGOING)
 	private Set<PageAuditRecord> pageAuditRecords;	
 
 	public DomainAuditRecord() {
 		super();
-		setAudits(new HashSet<>()); 
+		setPageAuditRecords(new HashSet<>());
+		setAuditLabels(new HashSet<>());
 	}
 	
 	/**
@@ -39,7 +41,7 @@ public class DomainAuditRecord extends AuditRecord {
 		super();
 		assert status != null;
 		
-		setAudits(new HashSet<>());
+		setPageAuditRecords(new HashSet<>());
 		setStatus(status);
 		setLevel( AuditLevel.DOMAIN);
 		setStartTime(LocalDateTime.now());
@@ -55,19 +57,19 @@ public class DomainAuditRecord extends AuditRecord {
 		return "domainauditrecord:"+UUID.randomUUID().toString()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(System.currentTimeMillis() + "");
 	}
 
-	public Set<PageAuditRecord> getAudits() {
+	public Set<PageAuditRecord> getPageAuditRecords() {
 		return pageAuditRecords;
 	}
 
-	public void setAudits(Set<PageAuditRecord> audits) {
+	public void setPageAuditRecords(Set<PageAuditRecord> audits) {
 		this.pageAuditRecords = audits;
 	}
 
-	public void addAudit(PageAuditRecord audit) {
+	public void addPageAuditRecord(PageAuditRecord audit) {
 		this.pageAuditRecords.add( audit );
 	}
 	
-	public void addAudits(Set<PageAuditRecord> audits) {
+	public void addPageAuditRecords(Set<PageAuditRecord> audits) {
 		this.pageAuditRecords.addAll( audits );
 	}
 }

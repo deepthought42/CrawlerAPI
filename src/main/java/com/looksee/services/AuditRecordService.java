@@ -30,11 +30,14 @@ import com.looksee.models.repository.LabelRepository;
 import com.looksee.models.repository.PageStateRepository;
 import com.looksee.models.repository.UXIssueMessageRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 /**
  * Contains business logic for interacting with and managing audits
  *
  */
 @Service
+@Retry(name = "neoforj")
 public class AuditRecordService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AuditRecordService.class);
@@ -405,6 +408,9 @@ public class AuditRecordService {
 	}
 
     public List<AuditRecord> findByAccountId(long acct_id) {
-		return audit_record_repo.findByAccountId(acct_id);
+		List<AuditRecord> audit_records = audit_record_repo.findDomainAuditRecordByAccountId(acct_id);
+		audit_records.addAll(audit_record_repo.findPageAuditRecordByAccountId(acct_id));
+
+		return audit_records;
     }
 }

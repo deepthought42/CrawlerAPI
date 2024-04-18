@@ -21,3 +21,7 @@ src/main/resources/
 /.apt_generated_tests/
 
 api_key.p12.old
+
+.metadata/
+
+.settings/

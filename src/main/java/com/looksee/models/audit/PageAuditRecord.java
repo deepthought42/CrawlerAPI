@@ -55,7 +55,7 @@ public class PageAuditRecord extends AuditRecord {
 		setPageState(page_state);
 		setStatus(status);
 		setLevel( AuditLevel.PAGE);
-		setAuditLabels(audit_list);
+		//setAuditLabels(audit_list);
 		setKey(generateKey());
 	}
 

@@ -38,12 +38,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
+import com.looksee.dto.AuditDto;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.UXIssueReportDto;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.PageAuditRecord;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
@@ -105,25 +105,54 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody Set<PageAuditRecord> getAudits(HttpServletRequest request) 
+    public @ResponseBody List<AuditDto> getAudits(HttpServletRequest request) 
     		throws MalformedURLException, UnknownAccountException 
     {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName();
     	Account acct = account_service.findByUserId(id);
-    	
-    	if(acct == null){
+		
+		if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}    	
     	
-    	return account_service.findMostRecentPageAudits(acct.getId()); 
+    	List<AuditRecord> audits_records = audit_record_service.findByAccountId(acct.getId());
+		return buildAudits(audits_records);
     }
 
-    
     /**
+	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
+	 * 
+	 * @param audits_records
+	 * @return
+	 */
+    private List<AuditDto> buildAudits(List<AuditRecord> audits_records) {
+		List<AuditDto> audits = new ArrayList<>();
+		for(AuditRecord audit: audits_records){
+			audits.add(new AuditDto(audit.getId(), audit.getStatus(), 
+									audit.getLevel(), 
+									audit.getStartTime(), 
+									audit.getAestheticAuditProgress(), 
+									audit.getAestheticMsg(), 
+									audit.getContentAuditMsg(), 
+									audit.getContentAuditProgress(), 
+									audit.getInfoArchMsg(), 
+									audit.getInfoArchitechtureAuditProgress(), 
+									audit.getDataExtractionMsg(), 
+									audit.getDataExtractionProgress(), 
+									audit.getCreatedAt(),
+									audit.getEndTime(), 
+									audit.getUrl()));
+		}
+
+		return audits;
+	}
+
+
+	/**
      * Retrieves {@link Audit audit} with given ID
      * 
      * @param id

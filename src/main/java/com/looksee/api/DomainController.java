@@ -401,7 +401,9 @@ public class DomainController {
 				throw new DomainAuditNotFound();
 			}
 			
-			Set<AuditName> audit_labels = domain_audit_record.get().getAuditLabels();
+			//Set<AuditName> audit_labels = domain_audit_record.get().getAuditLabels();
+			Set<AuditName> audit_labels = new HashSet<>();
+
 		    Set<Audit> audit_list = audit_record_service.getAllAuditsForDomainAudit(domain_audit_record.get().getId());
 
 			Map<String, Boolean> key_map = new HashMap<>();
@@ -430,7 +432,7 @@ public class DomainController {
 	
 				//CALCULATE PROGRESS
 				
-			    log.warn("audit labels = "+audit_labels);
+			    //log.warn("audit labels = "+audit_labels);
 			    log.warn("audit count "+audit_list.size());
 			    
 			    //calculate percentage of audits that are currently complete for each category
@@ -1115,8 +1117,8 @@ public class DomainController {
 	    Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 	    log.warn("total page audits found = "+page_audits.size());
 	    int total_pages = page_audits.size();
-	    Set<AuditName> audit_labels = domain_audit.getAuditLabels();
-	   
+	    //Set<AuditName> audit_labels = domain_audit.getAuditLabels();
+	   	Set<AuditName> audit_labels = new HashSet<>();
 	    Set<Audit> audits = new HashSet<Audit>();
 	    for(AuditRecord page_audit: page_audits) {
 	    	audits.addAll(audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId()));

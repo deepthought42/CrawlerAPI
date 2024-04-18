@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
 import com.looksee.models.LookseeObject;
 import com.looksee.models.enums.AuditCategory;
@@ -15,8 +17,8 @@ import com.looksee.models.enums.AuditSubcategory;
 /**
  * Defines the globally required fields for all audits
  */
+@Node
 public class Audit extends LookseeObject {
-
 	private String category;
 	private String subcategory;
 	private String name; // name of the audit
@@ -28,7 +30,7 @@ public class Audit extends LookseeObject {
 	private String description;
 	private String whyItMatters;
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS", direction = Direction.OUTGOING)
 	private Set<UXIssueMessage> messages;
 	
 	private Set<String> labels;

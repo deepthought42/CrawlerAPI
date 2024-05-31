@@ -1,5 +1,7 @@
 package com.looksee.services;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.looksee.dto.AuditRecordDto;
 import com.looksee.models.Account;
 import com.looksee.models.Label;
 import com.looksee.models.PageState;
@@ -29,6 +32,7 @@ import com.looksee.models.repository.DesignSystemRepository;
 import com.looksee.models.repository.LabelRepository;
 import com.looksee.models.repository.PageStateRepository;
 import com.looksee.models.repository.UXIssueMessageRepository;
+import com.looksee.utils.AuditUtils;
 
 import io.github.resilience4j.retry.annotation.Retry;
 
@@ -203,11 +207,11 @@ public class AuditRecordService {
 		return audit_repo.getAllPageParagraphingAudits(audit_record_key);
 	}
 
-	public Set<AuditRecord> getAllPageAudits(long audit_record_id) {		
+	public List<AuditRecord> getAllPageAudits(long audit_record_id) {
 		return audit_record_repo.getAllPageAudits(audit_record_id);
 	}
 	
-	public Set<Audit> getAllAuditsForPageAuditRecord(long page_audit_id) {		
+	public Set<Audit> getAllAuditsForPageAuditRecord(long page_audit_id) {
 		return audit_repo.getAllAuditsForPageAuditRecord( page_audit_id);
 	}
 
@@ -269,7 +273,7 @@ public class AuditRecordService {
 	}
 
 	public void addPageToAuditRecord(long audit_record_id, long page_state_id) {
-		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );		
+		audit_record_repo.addPageToAuditRecord( audit_record_id, page_state_id );
 	}
 
 	public long getIssueCountBySeverity(long id, String severity) {
@@ -284,11 +288,11 @@ public class AuditRecordService {
 		return audit_repo.getAllAudits(audit_record_id);
 	}
 
-	public boolean isDomainAuditComplete(AuditRecord audit_record) {		
+	public boolean isDomainAuditComplete(AuditRecord audit_record) {
 		//audit_record should now have a domain audit record
 		//get all page audit records for domain audit
 
-		Set<AuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
+		List<AuditRecord> page_audits = audit_record_repo.getAllPageAudits(audit_record.getId());
 		if(audit_record.getDataExtractionProgress() < 1.0) {
 			return false;
 		}
@@ -345,15 +349,12 @@ public class AuditRecordService {
 
 		if(AuditCategory.CONTENT.equals(category)) {
 			audit_record.setContentAuditProgress( progress );
-			audit_record.setContentAuditMsg( message);
 		}
 		else if(AuditCategory.AESTHETICS.equals(category)) {
 			audit_record.setAestheticAuditProgress( progress);
-			audit_record.setAestheticMsg(message);
 		}
 		else if(AuditCategory.INFORMATION_ARCHITECTURE.equals(category)) {
 			audit_record.setInfoArchitectureAuditProgress( progress );
-			audit_record.setInfoArchMsg(message);
 		}
 		
 		return save(audit_record, account_id, domain_id);
@@ -386,8 +387,8 @@ public class AuditRecordService {
 		return audit_repo.getAllAuditsForDomainAudit(domain_audit_record_id);
 	}
 
-	public int getNumberOfJourneysWithStatus(long domain_audit_id, JourneyStatus candidate) {
-		return audit_record_repo.getNumberOfJourneysWithStatus(domain_audit_id, candidate.toString());
+	public int getNumberOfJourneysWithStatus(long domain_audit_id, JourneyStatus status) {
+		return audit_record_repo.getNumberOfJourneysWithStatus(domain_audit_id, status.toString());
 	}
 
 	public int getNumberOfJourneys(long domain_audit_id) {
@@ -407,10 +408,63 @@ public class AuditRecordService {
 		return page_state_repo.getPageStateForAuditRecord(audit_record_id);
 	}
 
+	/**
+	 * 
+	 * @param acct_id
+	 * @return
+	 */
     public List<AuditRecord> findByAccountId(long acct_id) {
-		List<AuditRecord> audit_records = audit_record_repo.findDomainAuditRecordByAccountId(acct_id);
-		audit_records.addAll(audit_record_repo.findPageAuditRecordByAccountId(acct_id));
-
-		return audit_records;
+		return audit_record_repo.findAuditRecordByAccountId(acct_id);
     }
+
+	/**
+	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
+	 * 
+	 * @param audits_records
+	 * @return
+	 */
+    public List<AuditRecordDto> buildAudits(List<AuditRecord> audits_records) {
+		List<AuditRecordDto> auditDtoList = new ArrayList<>();
+		for(AuditRecord audit_record: audits_records){
+			auditDtoList.add(buildAudit(audit_record));
+		}
+
+		return auditDtoList;
+	}
+
+	/**
+	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
+	 * 
+	 * @param audits_records
+	 * @return
+	 */
+    public AuditRecordDto buildAudit(AuditRecord audit_record) {
+		Set<Audit> audits = new HashSet<>();
+		if(audit_record instanceof DomainAuditRecord){
+			audits = getAllAuditsForDomainAudit(audit_record.getId());
+		}
+		else if(audit_record instanceof PageAuditRecord){
+			audits = getAllAudits(audit_record.getId());
+		}
+
+		double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+		double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+		double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+
+		log.warn("audits found = "+audits.size());
+		log.warn("content score = "+content_score);
+
+		AuditRecordDto audit_dto = new AuditRecordDto(audit_record.getId(),
+													audit_record.getStatus(),
+													audit_record.getType(),
+													audit_record.getStartTime(),
+													visual_design_score,
+													content_score,
+													info_architecture_score,
+													audit_record.getCreatedAt(),
+													audit_record.getEndTime(),
+													audit_record.getUrl());
+
+		return audit_dto;
+	}
 }

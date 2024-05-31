@@ -1,5 +1,6 @@
 package com.looksee.services;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +41,12 @@ import com.looksee.models.repository.TestUserRepository;
 public class DomainService {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+	@Autowired
+	private AccountService account_service;
+
+	@Autowired
+	private DesignSystemService design_system_service;
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -246,4 +253,32 @@ public class DomainService {
 	public void addTestUser(long domain_id, long test_user_id) {
 		domain_repo.addTestUser(domain_id, test_user_id);	
 	}
+
+	/**
+	 * Creates a new {@link Domain} in the database and attaches it to the account
+	 * as well as adding a default {@link DesignSystem design system
+	 * 
+	 * @param url
+	 * @param account_id
+	 * @return
+	 */
+    public Domain createDomain(URL url, long account_id) {
+        String formatted_url = url.toString().replace("http://", "").replace("www.", "");
+		Domain domain = domain_repo.findByAccountId(account_id, formatted_url);
+		
+		if(domain == null){
+			domain = new Domain(url.getProtocol(), url.getHost(), url.getPath(), null);
+			domain = save(domain);
+			account_service.addDomainToAccount(domain.getId(), account_id);
+			
+			DesignSystem domain_settings = new DesignSystem();
+			domain_settings = design_system_service.save(domain_settings);
+			domain.setDesignSystem(domain_settings);
+			log.warn("adding domain = "+domain.getId() + "  to account = "+account_id);
+			addDesignSystem(domain.getId(), domain_settings.getId());
+		}
+		log.warn("domain record not found. Creating new domain");
+
+		return domain;
+    }
 }

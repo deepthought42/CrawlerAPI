@@ -50,7 +50,6 @@ import com.looksee.models.PageState;
 import com.looksee.models.audit.ColorData;
 import com.looksee.models.enums.BrowserEnvironment;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.journeys.Redirect;
 import com.looksee.services.BrowserService;
 
 /**
@@ -1174,58 +1173,5 @@ public class BrowserUtils {
 		}
 
 		return null;
-	}
-	
-	public static Redirect getPageTransition(String initial_url, 
-											 Browser browser, 
-											 String host
-	 ) throws GridException, IOException{
-		List<String> transition_urls = new ArrayList<String>();
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		List<BufferedImage> images = new ArrayList<>();
-		boolean transition_detected = false;
-
-		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
-
-		String last_key = sanitizeUrl(initial_url, true);
-		
-		//transition_urls.add(last_key);
-		do{
-			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl(), true);
-
-			transition_detected = !new_key.equals(last_key);
-
-			if( transition_detected ){
-				try{
-		        	BufferedImage img = browser.getViewportScreenshot();
-					images.add(img);
-				}catch(Exception e){}
-				start_ms = System.currentTimeMillis();
-				transition_urls.add(new_key);
-				last_key = new_key;
-			}
-		}while((System.currentTimeMillis() - start_ms) < 3000);
-
-		for(BufferedImage img : images){
-			try{
-				String new_checksum = PageState.getFileChecksum(img);
-				image_checksums.add(new_checksum);
-				image_urls.add(GoogleCloudStorage.saveImage(img, 
-															host, 
-															new_checksum, 
-															BrowserType.create(browser.getBrowserName())));
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-
-		Redirect redirect = new Redirect(initial_url, transition_urls);
-		redirect.setImageChecksums(image_checksums);
-		redirect.setImageUrls(image_urls);
-
-		return redirect;
 	}
 }

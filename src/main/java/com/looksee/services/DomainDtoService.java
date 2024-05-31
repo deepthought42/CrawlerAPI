@@ -1,6 +1,7 @@
 package com.looksee.services;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -105,7 +106,7 @@ public class DomainDtoService {
 		// add domain stat to set
 
 		// check if there is a current audit running
-		Set<AuditRecord> page_audit_records = audit_record_repo.getAllPageAudits(domain_audit.getId());
+		List<AuditRecord> page_audit_records = audit_record_repo.getAllPageAudits(domain_audit.getId());
 		Set<PageState> page_states = page_state_repo.getPageStatesForDomainAuditRecord(domain_audit.getId());
 		Map<String, Boolean> page_urls = new HashMap<>();
 		

@@ -83,4 +83,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) WHERE id(account)=$account_id RETURN domain")
 	Set<Domain> getDomainsForAccount(@Param("account_id") long account_id);
+
+	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) WHERE id(account)=$account_id AND domain.url=$url RETURN domain LIMIT 1")
+    public Domain findByAccountId(@Param("account_id") long account_id, @Param("url") String url);
 }

@@ -1,5 +1,7 @@
 package com.looksee.utils;
 
+import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -242,8 +244,8 @@ public class AuditUtils {
 		assert category != null;
 			
 		List<Audit> filtered_audits = audits.parallelStream()
-							  .filter((s) -> (s.getTotalPossiblePoints() > 0 && s.getCategory().equals(category)))
-						      .collect(Collectors.toList());
+								.filter((s) -> (s.getTotalPossiblePoints() > 0 && s.getCategory().equals(category)))
+								.collect(Collectors.toList());
 		
 		
 		double scores_total = filtered_audits.parallelStream()
@@ -268,24 +270,31 @@ public class AuditUtils {
 	public static double calculateScoreByName(Set<Audit> audits, AuditName name) {
 		assert audits != null;
 		assert name != null;
-		
-		//int audit_cnt = 0;
 	
+		log.warn("total audits = "+audits.size());
+		log.warn("audit name == "+name);
+		log.warn("=======================================");
+		for(Audit audit : audits){
+			log.warn("audit = "+audit);
+			log.warn("audit name = "+audit.getName());
+			log.warn("total possible points = "+audit.getTotalPossiblePoints());
+		}
+
 		List<Audit> filtered_audits = audits.parallelStream()
-				  .filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
-			      .collect(Collectors.toList());
-		
+					.filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
+					.collect(Collectors.toList());
+		log.warn("filtered audits for "+name+" = "+filtered_audits.size());
+
 		double scores_total = filtered_audits.parallelStream()
-				   .mapToDouble(x -> { return x.getPoints() / (double)x.getTotalPossiblePoints(); })
-				   .sum();
+					.mapToDouble(x -> { return x.getPoints() / (double)x.getTotalPossiblePoints(); })
+					.sum();
+		log.warn("scores total for "+name+" = "+scores_total);
 
 		if(filtered_audits.isEmpty()) {
 			return -1.0;
 		}
 		
-		double category_score = (scores_total / (double)filtered_audits.size())*100;
-		
-		return category_score;
+		return(scores_total / (double)filtered_audits.size())*100;
 	}
 
 	/**
@@ -339,7 +348,7 @@ public class AuditUtils {
 	 * @param subcategory TODO
 	 * @return
 	 */
-	public static int getCountPagesWithSubcategoryIssues(Set<AuditRecord> page_audits,
+	public static int getCountPagesWithSubcategoryIssues(List<AuditRecord> page_audits,
 														 AuditSubcategory subcategory) {
 		int count_failing_pages = 0;
 		for(AuditRecord page_audit : page_audits) {
@@ -362,7 +371,7 @@ public class AuditUtils {
 	 * @param page_audits
 	 * @return
 	 */
-	public static int getCountPagesWithIssuesByAuditName(Set<AuditRecord> page_audits, AuditName audit_name) {
+	public static int getCountPagesWithIssuesByAuditName(List<AuditRecord> page_audits, AuditName audit_name) {
 		int count_failing_pages = 0;
 		
 		for(AuditRecord page_audit : page_audits) {
@@ -386,7 +395,7 @@ public class AuditUtils {
 	 * @param page_audits
 	 * @return
 	 */
-	public static int getCountOfPagesWithWcagComplianceIssues(Set<AuditRecord> page_audits) {
+	public static int getCountOfPagesWithWcagComplianceIssues(List<AuditRecord> page_audits) {
 		int pages_with_issues = 0;
 		
 		for(AuditRecord audit_record : page_audits) {
@@ -485,7 +494,7 @@ public class AuditUtils {
 		log.warn("Audit labels = "+audit_labels);
 		List<Audit> filtered_audits = audit_list.stream()
 												.filter(audit -> category.equals(audit.getCategory()))
-												.filter(audit -> category_audit_labels.contains(audit.getName()))										
+												.filter(audit -> category_audit_labels.contains(audit.getName()))
 												.collect(Collectors.toList());
 		
 		for(Audit audit : filtered_audits) {
@@ -548,5 +557,38 @@ public class AuditUtils {
 		}
 		
 		return audit_labels;
+	}
+
+	/**
+	 * Calculates the overall score of based on audits that are based on WCAG standards
+	 * The list of audits that are based on WCAG are those with the subcategories 
+	 * TEXT_CONTRAST, NON-TEXT CONTRAST, LINKS, ALT_TEXT, PARAGRAPHING, READING_COMPLEXITY, TITLES
+	 * 
+	 * @param audits List of {@link Audit audits}
+	 * @return overall score
+	 */
+	public static double calculateAccessibilityScore(Set<Audit> audits) {
+		assert(audits != null);
+		
+		List<String> audit_names = new ArrayList<>();
+		audit_names.add(AuditName.TEXT_BACKGROUND_CONTRAST.toString());
+		audit_names.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST.toString());
+		audit_names.add(AuditName.LINKS.toString());
+		audit_names.add(AuditName.ALT_TEXT.toString());
+		audit_names.add(AuditName.PARAGRAPHING.toString());
+		audit_names.add(AuditName.READING_COMPLEXITY.toString());
+		audit_names.add(AuditName.TITLES.toString());
+
+		//filter audits based on subcategory
+		List<Audit> list1 = audits.parallelStream()
+										.filter(audit -> audit_names.contains(audit.getName().toString()))
+										.filter(audit -> audit.getTotalPossiblePoints() != 0)
+										.collect(Collectors.toList());
+
+		DoubleSummaryStatistics score_stats = list1.parallelStream()
+													.mapToDouble(audit -> audit.getPoints()/(double)audit.getTotalPossiblePoints())
+													.summaryStatistics();
+
+		return score_stats.getAverage();
 	}
 }

@@ -1,5 +1,6 @@
 package com.looksee.services;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -7,10 +8,12 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.dto.exceptions.UnknownAccountException;
 import com.looksee.models.repository.AccountRepository;
 
 /**
@@ -23,8 +26,13 @@ public class AccountService {
 	@Autowired
 	private AccountRepository account_repo;
 	
+	@Deprecated
 	public void addDomainToAccount(Account acct, Domain domain){
 		account_repo.addDomain(domain.getId(), acct.getId());
+	}
+
+	public void addDomainToAccount(long account_id, long domain_id){
+		account_repo.addDomain(domain_id, account_id);
 	}
 
 	public Account findByEmail(String email) {
@@ -94,4 +102,26 @@ public class AccountService {
 	public int getDomainAuditCountByMonth(long account_id, int month) {
 		return account_repo.getDomainAuditRecordCountByMonth(account_id, month);
 	}
+
+	/**
+	 * Checks that there is an account associated with the given Principal and 
+	 *  that the account has a subscription assigned
+	 * 
+	 * @param userPrincipal user {@link Principal}
+	 * @throws UnknownAccountException
+	 * @throws MissingSubscriptionException
+	 */
+    public Account retrieveAndValidateAccount(Principal userPrincipal) throws UnknownAccountException, MissingSubscriptionException {
+		String acct_id = userPrincipal.getName();
+		Account acct = findByUserId(acct_id);
+		
+		if(acct == null){
+			throw new UnknownAccountException();
+		}
+		else if(acct.getSubscriptionToken() == null){
+			throw new MissingSubscriptionException();
+		}
+
+		return acct;
+    }
 }

@@ -1,208 +1,106 @@
 package com.looksee.models.audit;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.data.neo4j.core.schema.Relationship;
-
-import com.looksee.models.AuditSubcategoryStat;
-import com.looksee.models.Label;
 import com.looksee.models.enums.ExecutionStatus;
 
-public class DomainAuditStats extends AuditStats{	
+import lombok.Getter;
+import lombok.Setter;
+
+public class DomainAuditStats extends AuditStats{
+	@Getter
+	@Setter
+	private long id;
 	
-	private long total_pages_audited;
-	private long high_impact_issue_count;
-	private long mid_impact_issue_count;
-	private long low_impact_issue_count;
+	@Getter
+	@Setter
+	private int journeysExplored;
+
+	@Getter
+	@Setter
+	private int journeysTotal;
+
+	@Getter
+	@Setter
+	private int pageCount;
 	
-	//crawler tracking
-	private long pages_examined;
-	private long pages_found;
+	@Setter
+	@Getter
+	private double accessibilityScore;
+
+	@Setter
+	@Getter
+	private double contentScore;
+
+	@Getter
+	@Setter
+	private double writtenContentScore;
+
+	@Getter
+	@Setter
+	private double imageryScore;
 	
-	@Relationship(type = "HAS")
-	private Set<AuditSubcategoryStat> subcategory_stats;
+	@Getter
+	@Setter
+	private double infoArchitectureScore;
+
+	@Getter
+	@Setter
+	private double seoScore;
+
+	@Getter
+	@Setter
+	private double linkScore;
 	
-	private Set<Label> image_labels;
+	@Getter
+	@Setter
+	private double aestheticScore;
+
+	@Getter
+	@Setter
+	private double textContrastScore;
+
+	@Getter
+	@Setter
+	private double nonTextContrastScore;
+
+	@Getter
+	@Setter
+	private ExecutionStatus status;
 	
 	public DomainAuditStats() {}
 	
 	public DomainAuditStats(long audit_record_id) {
-		setStartTime(LocalDateTime.now());
-		setAuditRecordId(audit_record_id);
+		setId(audit_record_id);
 	}
 	
 	public DomainAuditStats(
 			long audit_record_id,
-			LocalDateTime start_time,
-			LocalDateTime end_time,
-			long pages_examined,
-			long page_count,
-			long content_pages_audited,
-			double content_audit_progress,
-			int written_content_issue_count,
-			int imagery_issue_count,
-			int video_issue_count,
-			int audio_issue_count,
+			int journeys_explored,
+			int journeys_total,
+			double accessibility_score,
+			double content_score,
 			double written_content_score,
 			double imagery_score,
-			double videos_score,
-			double audio_score,
-			String content_msg,
-			long info_arch_pages_audited,
-			double info_arch_audit_progress,
-			int seo_issue_count,
-			int menu_issue_count,
-			int performance_issue_count,
-			int link_issue_count,
+			double info_arch_score,
 			double seo_score,
-			double menu_analysis_score,
-			double performance_score,
-			double link_score,
-			String info_arch_msg, 
-			long aesthetic_pages_audited, 
-			double aesthetic_audit_progress,
-			int text_contrast_issue_count,
-			int non_text_issue_count,
-			int typography_issue_count,
-			int whitespace_issue_count,
-			int branding_issue_count,
+			double aesthetic_score,
 			double text_contrast_score,
 			double non_text_contrast_score,
-			double typography_score, 
-			double whitespace_score,
-			double branding_score,
-			String aesthetic_msg,
-			double overall_score, 
-			long high_impact_issues,
-			long mid_impact_issues, 
-			long low_impact_issues,
-			String data_extraction_msg,
-			double data_extraction_progress, 
-			List<SimpleScore> overall_score_history, 
-			List<SimpleScore> content_score_history, 
-			List<SimpleScore> info_architecture_score_history, 
-			List<SimpleScore> aesthetic_score_history, 
-			List<SimpleScore> accessibility_score_history, 
-			int total_issues, 
-			Set<Label> image_labels, 
-			int image_copyright_issue_count, 
-			ExecutionStatus execution_status
+			ExecutionStatus status,
+			double link_score
 	) {
-		setStatus(execution_status);
-		setStartTime(start_time);
-		setEndTime(end_time);
-		setAuditRecordId(audit_record_id);
-		setContentAuditProgress(content_audit_progress);
-		
-		setWrittenContentIssueCount(written_content_issue_count);
-		setImageryIssueCount(imagery_issue_count);
-		setVideoIssueCount(video_issue_count);
-		setAuditIssueCount(audio_issue_count);
+		setId(audit_record_id);
+		setJourneysExplored(journeys_explored);
+		setJourneysTotal(journeys_total);
+		setAccessibilityScore(accessibility_score);
+		setContentScore(content_score);
 		setWrittenContentScore(written_content_score);
 		setImageryScore(imagery_score);
-		setVideosScore(videos_score);
-		setAudioScore(audio_score);
-
-		setContentMsg(content_msg);
-		setInfoArchitectureAuditProgress(info_arch_audit_progress);
-		setSeoIssueCount(seo_issue_count);
-		setMenuIssueCount(menu_issue_count);
-		setLinkIssueCount(link_issue_count);
-		setPerformanceIssueCount(performance_issue_count);
+		setInfoArchitectureScore(info_arch_score);
 		setSeoScore(seo_score);
-		setMenuAnalysisScore(menu_analysis_score);
-		setLinkScore(link_score);
-		setPerformanceScore(performance_score);
-		setInfoArchitectureMsg(info_arch_msg);
-		
-		setAestheticAuditProgress(aesthetic_audit_progress);
-		setTextContrastIssueCount(text_contrast_issue_count);
-		setNonTextContrastIssueCount(non_text_issue_count);
-		setTypographyIssueCount(typography_issue_count);
-		setWhitespaceIssueCount(whitespace_issue_count);
-		setBrandingIssueCount(branding_issue_count);
-		
+		setAestheticScore(aesthetic_score);
 		setTextContrastScore(text_contrast_score);
 		setNonTextContrastScore(non_text_contrast_score);
-		setTypographyScore(typography_score);
-		setWhitespaceScore(whitespace_score);
-		setBrandingScore(branding_score);
-		setAestheticMsg(aesthetic_msg);
-		
-		setTotalIssues(total_issues);
-		setOverallScore(overall_score);
-		setHighImpactIssueCount(high_impact_issues);
-		setMidImpactIssueCount(mid_impact_issues);
-		setLowImpactIssueCount(low_impact_issues);
-		
-		setDataExtractionProgress(data_extraction_progress);
-		setDataExtractionMessage(data_extraction_msg);
-		
-		setTotalPagesAudited(page_count);
-		setPagesFound(page_count);
-		setPagesExamined(pages_examined);
-		
-		setImageLabels(image_labels);
-		setImageCopyrightIssueCount(image_copyright_issue_count);
-	}
-
-
-	public long getTotalPagesAudited() {
-		return total_pages_audited;
-	}
-
-	public void setTotalPagesAudited(long total_pages_audited) {
-		this.total_pages_audited = total_pages_audited;
-	}
-
-	public long getHighImpactIssueCount() {
-		return high_impact_issue_count;
-	}
-
-	public void setHighImpactIssueCount(long high_impact_issue_cnt) {
-		this.high_impact_issue_count = high_impact_issue_cnt;
-	}
-
-	public long getMidImpactIssueCount() {
-		return mid_impact_issue_count;
-	}
-
-	public void setMidImpactIssueCount(long mid_impact_issue_count) {
-		this.mid_impact_issue_count = mid_impact_issue_count;
-	}
-
-	public long getLowImpactIssueCount() {
-		return low_impact_issue_count;
-	}
-
-	public void setLowImpactIssueCount(long low_impact_issue_count) {
-		this.low_impact_issue_count = low_impact_issue_count;
-	}
-
-	public long getPagesExamined() {
-		return pages_examined;
-	}
-
-	public void setPagesExamined(long pages_examined) {
-		this.pages_examined = pages_examined;
-	}
-
-	public long getPagesFound() {
-		return pages_found;
-	}
-
-	public void setPagesFound(long pages_found) {
-		this.pages_found = pages_found;
-	}
-
-	public Set<Label> getImageLabels() {
-		return image_labels;
-	}
-
-	public void setImageLabels(Set<Label> img_labels) {
-		this.image_labels = img_labels;
+		setLinkScore(link_score);
+		setStatus(status);
 	}
 }

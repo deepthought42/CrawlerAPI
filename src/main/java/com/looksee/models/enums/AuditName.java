@@ -1,6 +1,7 @@
 package com.looksee.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.looksee.models.audit.Audit;
 
 /**
  * Defines all types of {@link Audit audits} that exist in the system
@@ -20,10 +21,10 @@ public enum AuditName {
 	ALT_TEXT("ALT_TEXT"),
 	PARAGRAPHING("PARAGRAPHING"),
 	METADATA("METADATA"),
-	UNKNOWN("UNKNOWN"), 
-	IMAGE_COPYRIGHT("IMAGE_COPYRIGHT"), 
-	IMAGE_POLICY("IMAGE_POLICY"), 
-	READING_COMPLEXITY("READING_COMPLEXITY"), 
+	UNKNOWN("UNKNOWN"),
+	IMAGE_COPYRIGHT("IMAGE_COPYRIGHT"),
+	IMAGE_POLICY("IMAGE_POLICY"),
+	READING_COMPLEXITY("READING_COMPLEXITY"),
 	ENCRYPTED("ENCRYPTED"); //SECURITY
 	
 	private String shortName;

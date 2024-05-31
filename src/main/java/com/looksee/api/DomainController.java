@@ -168,7 +168,7 @@ public class DomainController {
 			
 			DomainDto domainDTO = new DomainDto(domain.getId(), domain.getUrl(), data_extraction_progress);
 			domain_info_set.add(domainDTO);
-		}		
+		}
 
 		return domain_info_set;
 	}
@@ -176,7 +176,6 @@ public class DomainController {
 	/**
 	 * Create a new {@link Domain domain}
 	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
@@ -185,7 +184,7 @@ public class DomainController {
 	public @ResponseBody Domain create(HttpServletRequest request, 
 									   @RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
-		 
+
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
 		Account acct = account_service.findByUserId(id);
@@ -200,39 +199,21 @@ public class DomainController {
 			return null;
 		}
 		String lowercase_url = domain.getUrl().toLowerCase();
-		String formatted_url = BrowserUtils.sanitizeUserUrl(lowercase_url);
-		domain.setUrl(formatted_url.replace("http://", "").replace("www.", ""));
-
-		try {
-			Domain domain_record = account_service.findDomain(acct.getEmail(), domain.getUrl());
-			if (domain_record == null) {
-				log.warn("domain record not found. Creating new domain");
-				// set default settings
-				DesignSystem domain_settings = new DesignSystem();
-				domain.setDesignSystem(design_system_service.save(domain_settings));
-				domain = domain_service.save(domain);
-				log.warn("adding domain = "+domain.getId() + "  to account = "+acct.getId());
-				account_service.addDomainToAccount(acct, domain);
-			} else {
-				throw new ExistingAccountDomainException();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			domain = null;
-		}
-
+		URL formatted_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
+		
+		Domain domain_record = domain_service.createDomain(formatted_url, acct.getId());
 		try {
 			MessageBroadcaster.sendDomainAdded(acct.getUserId(), domain);
 		} catch (JsonProcessingException e) {
 			log.error("Error occurred while sending domain message to user");
 		}
-		return domain;
+
+		return domain_record;
 	}
 
 	/**
 	 * Create a new {@link Domain domain}
 	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
@@ -264,7 +245,6 @@ public class DomainController {
 	/**
 	 * Create a new {@link Domain domain}
 	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
@@ -407,7 +387,7 @@ public class DomainController {
 		    Set<Audit> audit_list = audit_record_service.getAllAuditsForDomainAudit(domain_audit_record.get().getId());
 
 			Map<String, Boolean> key_map = new HashMap<>();
-			Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
+			List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 			for (AuditRecord page_audit : page_audits) {
 				PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
 				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit_record.getId());
@@ -579,7 +559,6 @@ public class DomainController {
 	 * @param role
 	 * 
 	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
@@ -648,8 +627,6 @@ public class DomainController {
 	 * @param password
 	 * @param role
 	 * 
-	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws IOException
 	 * @throws FileNotFoundException
@@ -670,7 +647,7 @@ public class DomainController {
 		}
 
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
+		List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
 		for (AuditRecord page_audit : page_audits) {
 			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
 			Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getId());
@@ -723,7 +700,6 @@ public class DomainController {
 	 * @param role
 	 * 
 	 * 
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws IOException
 	 * @throws FileNotFoundException
@@ -748,7 +724,7 @@ public class DomainController {
 		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
+		List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 		
 		
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
@@ -843,7 +819,6 @@ public class DomainController {
 	 * @param request
 	 * @param user_id
 	 * @throws UnknownAccountException
-	 * @throws UnknownUserException
 	 */
 	// @PreAuthorize("hasAuthority('create:test_user')")
 	@RequestMapping(path = "/{domain_id}/test_users/{user_id}", method = RequestMethod.DELETE)
@@ -866,7 +841,6 @@ public class DomainController {
 	 * @param request
 	 * @param domain_id
 	 * @return
-	 * @throws UnknownUserException
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
@@ -935,25 +909,7 @@ public class DomainController {
 		log.warn("sanitized url = "+sanitized_url);
 		
 		// create new audit record
-		Set<AuditName> audit_list = new HashSet<>();
-		//VISUAL DESIGN AUDIT
-		audit_list.add(AuditName.TEXT_BACKGROUND_CONTRAST);
-		audit_list.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-		
-		//INFO ARCHITECTURE AUDITS
-		audit_list.add(AuditName.LINKS);
-		audit_list.add(AuditName.TITLES);
-		audit_list.add(AuditName.ENCRYPTED);
-		audit_list.add(AuditName.METADATA);
-		
-		//CONTENT AUDIT
-		audit_list.add(AuditName.ALT_TEXT);
-		audit_list.add(AuditName.READING_COMPLEXITY);
-		audit_list.add(AuditName.PARAGRAPHING);
-		audit_list.add(AuditName.IMAGE_COPYRIGHT);
-		audit_list.add(AuditName.IMAGE_POLICY);
-
-		
+		Set<AuditName> audit_list = getAuditList();
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS, audit_list);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
@@ -1006,6 +962,28 @@ public class DomainController {
 		String url_msg_str = mapper.writeValueAsString(url_msg);
 		url_topic.publish(url_msg_str);
 		return domain_dto;
+	}
+
+	private Set<AuditName> getAuditList() {
+		Set<AuditName> audit_list = new HashSet<>();
+		//VISUAL DESIGN AUDIT
+		audit_list.add(AuditName.TEXT_BACKGROUND_CONTRAST);
+		audit_list.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+		
+		//INFO ARCHITECTURE AUDITS
+		audit_list.add(AuditName.LINKS);
+		audit_list.add(AuditName.TITLES);
+		audit_list.add(AuditName.ENCRYPTED);
+		audit_list.add(AuditName.METADATA);
+		
+		//CONTENT AUDIT
+		audit_list.add(AuditName.ALT_TEXT);
+		audit_list.add(AuditName.READING_COMPLEXITY);
+		audit_list.add(AuditName.PARAGRAPHING);
+		audit_list.add(AuditName.IMAGE_COPYRIGHT);
+		audit_list.add(AuditName.IMAGE_POLICY);
+
+		return audit_list;
 	}
 
 	/**
@@ -1114,16 +1092,16 @@ public class DomainController {
 	 */
 	private AuditUpdateDto buildDomainAuditRecordDTO(long audit_record_id) {
 		DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(audit_record_id).get();
-	    Set<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
+	    List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 	    log.warn("total page audits found = "+page_audits.size());
 	    int total_pages = page_audits.size();
 	    //Set<AuditName> audit_labels = domain_audit.getAuditLabels();
-	   	Set<AuditName> audit_labels = new HashSet<>();
+		Set<AuditName> audit_labels = new HashSet<>();
 	    Set<Audit> audits = new HashSet<Audit>();
 	    for(AuditRecord page_audit: page_audits) {
 	    	audits.addAll(audit_record_service.getAllAuditsForPageAuditRecord(page_audit.getId()));
 	    }
-	  
+
 	    //calculate percentage of audits that are currently complete for each category
 		double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, total_pages, audits, audit_labels);
 		double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, total_pages, audits, audit_labels);
@@ -1140,7 +1118,7 @@ public class DomainController {
 		double text_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
 		double element_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 		
-		double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
+		double a11y_score = AuditUtils.calculateAccessibilityScore(audits);
 			
 		ExecutionStatus execution_status = ExecutionStatus.UNKNOWN;
 		if(visual_design_progress < 1 || content_progress < 1 || visual_design_progress < 1 || data_extraction_progress < 1) {

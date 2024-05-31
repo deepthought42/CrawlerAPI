@@ -1,14 +1,15 @@
 package com.looksee.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.looksee.models.audit.Audit;
 
 /**
  * Defines all levels of {@link Audit audits} that exist in the system
  */
 public enum AuditLevel {
-	PAGE("page"),
-	DOMAIN("domain"),
-	UNKNOWN("unknown");
+	PAGE("PAGE"),
+	DOMAIN("DOMAIN"),
+	UNKNOWN("UNKNOWN");
 	
 	private String shortName;
 
@@ -22,13 +23,13 @@ public enum AuditLevel {
     }
 
     @JsonCreator
-    public static AuditLevel create (String value) {
+    public static AuditLevel create(String value) {
         if(value == null) {
             return UNKNOWN;
         }
         
         for(AuditLevel v : values()) {
-            if(value.equals(v.getShortName())) {
+            if(value.toUpperCase().equals(v.getShortName())) {
                 return v;
             }
         }

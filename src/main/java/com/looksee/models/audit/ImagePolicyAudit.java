@@ -45,7 +45,6 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 	public ImagePolicyAudit() {
 	}
 
-	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -65,7 +64,6 @@ public class ImagePolicyAudit implements IExecutablePageStateAudit {
 		
 		String why_it_matters = "";
 		String description = "";
-
 		Score image_policy_score = calculateImagePolicyViolationScore(element_list, design_system);
 		
 		Audit audit = new Audit(AuditCategory.CONTENT,

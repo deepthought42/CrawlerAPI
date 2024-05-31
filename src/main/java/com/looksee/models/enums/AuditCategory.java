@@ -1,6 +1,7 @@
 package com.looksee.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.looksee.models.audit.Audit;
 
 /**
  * Defines all types of {@link Audit audits} that exist in the system
@@ -8,9 +9,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum AuditCategory {
 	CONTENT("CONTENT"), 
 	INFORMATION_ARCHITECTURE("INFORMATION_ARCHITECTURE"), 
-	AESTHETICS("AESTHETICS"),
-	ACCESSIBILITY("ACCESSIBILITY");
-	
+	AESTHETICS("AESTHETICS");
+    
 	private String shortName;
 
     AuditCategory (String shortName) {

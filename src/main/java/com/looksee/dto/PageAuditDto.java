@@ -13,7 +13,7 @@ import com.looksee.models.enums.ExecutionStatus;
 /**
  * Client facing audit record.
  */
-public class AuditDto {
+public class PageAuditDto {
     private long id;
     private String url;
 	private String status;
@@ -29,36 +29,34 @@ public class AuditDto {
 	private LocalDateTime endTime;
 
 	private double contentAuditProgress;
-	private String contentAuditMsg;
+	private double contentAuditScore;
 	
 	private double infoArchitectureAuditProgress;
-	private String infoArchMsg;
+	private double infoArchScore;
 	
 	private double aestheticAuditProgress;
-	private String aestheticMsg;
+	private double aestheticScore;
 	
 	private double dataExtractionProgress;
-	private String dataExtractionMsg;
 
 	private String targetUserAge;
 	private String targetUserEducation;
 
 ;
     
-    public AuditDto() {
+    public PageAuditDto() {
 		setStartTime(LocalDateTime.now());
 		setStatus(ExecutionStatus.UNKNOWN);
 		setUrl("");
 		setStatusMessage("");
 		setLevel(AuditLevel.UNKNOWN);
 		setContentAuditProgress(0.0);
-		setContentAuditMsg("");
+		setContentAuditScore(0.0);
 		setInfoArchitectureAuditProgress(0.0);
-		setInfoArchMsg("");
+		setInfoArchScore(0.0);
 		setAestheticAuditProgress(0.0);
-		setAestheticMsg("");
+		setAestheticScore(0.0);
 		setDataExtractionProgress(0.0);
-		setDataExtractionMsg("");
 	}
 	
 	/**
@@ -66,20 +64,19 @@ public class AuditDto {
 	 * @param level TODO
 	 * 
 	 */
-	public AuditDto(long id, 
-					   ExecutionStatus status, 
-					   AuditLevel level, 
+	public PageAuditDto(long id,
+					   ExecutionStatus status,
+					   AuditLevel level,
 					   LocalDateTime startTime,
-					   double aestheticAuditProgress, 
-					   String aestheticMsg, 
-					   String contentAuditMsg, 
+					   double aestheticAuditProgress,
+					   double aestheticScore,
+					   double contentAuditScore,
 					   double contentAuditProgress,
-					   String infoArchMsg, 
-					   double infoArchAuditProgress, 
-					   String dataExtractionMsg, 
+					   double infoArchScore,
+					   double infoArchAuditProgress,
 					   double dataExtractionProgress,
-					   LocalDateTime created_at, 
-					   LocalDateTime endTime, 
+					   LocalDateTime created_at,
+					   LocalDateTime endTime,
 					   String url
 	) {
 		setId(id);
@@ -87,12 +84,11 @@ public class AuditDto {
 		setLevel(level);
 		setStartTime(endTime);
 		setAestheticAuditProgress(dataExtractionProgress);
-		setAestheticMsg(aestheticMsg);
-		setContentAuditMsg(contentAuditMsg);
+		setAestheticScore(aestheticScore);
+		setContentAuditScore(contentAuditScore);
 		setContentAuditProgress(contentAuditProgress);
-		setInfoArchMsg(infoArchMsg);
+		setInfoArchScore(infoArchScore);
 		setInfoArchitectureAuditProgress(infoArchAuditProgress);
-		setDataExtractionMsg(dataExtractionMsg);
 		setDataExtractionProgress(dataExtractionProgress);
 		setStartTime(created_at);
 		setEndTime(endTime);
@@ -166,28 +162,28 @@ public class AuditDto {
 		this.aestheticAuditProgress = aesthetic_audit_progress;
 	}
 
-	public String getContentAuditMsg() {
-		return contentAuditMsg;
+	public double getContentAuditScore() {
+		return contentAuditScore;
 	}
 
-	public void setContentAuditMsg(String content_audit_msg) {
-		this.contentAuditMsg = content_audit_msg;
+	public void setContentAuditScore(double content_audit_score) {
+		this.contentAuditScore = content_audit_score;
 	}
 	
-	public String getInfoArchMsg() {
-		return infoArchMsg;
+	public double getInfoArchScore() {
+		return infoArchScore;
 	}
 
-	public void setInfoArchMsg(String info_arch_msg) {
-		this.infoArchMsg = info_arch_msg;
+	public void setInfoArchScore(double info_arch_score) {
+		this.infoArchScore = info_arch_score;
 	}
 
-	public String getAestheticMsg() {
-		return aestheticMsg;
+	public double getAestheticScore() {
+		return aestheticScore;
 	}
 
-	public void setAestheticMsg(String aesthetic_msg) {
-		this.aestheticMsg = aesthetic_msg;
+	public void setAestheticScore(double aesthetic_score) {
+		this.aestheticScore = aesthetic_score;
 	}
 
 	public double getDataExtractionProgress() {
@@ -196,14 +192,6 @@ public class AuditDto {
 
 	public void setDataExtractionProgress(double data_extraction_progress) {
 		this.dataExtractionProgress = data_extraction_progress;
-	}
-
-	public String getDataExtractionMsg() {
-		return dataExtractionMsg;
-	}
-
-	public void setDataExtractionMsg(String data_extraction_msg) {
-		this.dataExtractionMsg = data_extraction_msg;
 	}
 
 	public String getTargetUserAge() {

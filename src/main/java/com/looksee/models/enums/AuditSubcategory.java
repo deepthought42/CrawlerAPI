@@ -1,6 +1,7 @@
 package com.looksee.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.looksee.models.audit.Audit;
 
 /**
  * Defines all types of {@link Audit audits} that exist in the system

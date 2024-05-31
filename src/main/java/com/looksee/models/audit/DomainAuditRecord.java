@@ -43,7 +43,7 @@ public class DomainAuditRecord extends AuditRecord {
 		
 		setPageAuditRecords(new HashSet<>());
 		setStatus(status);
-		setLevel( AuditLevel.DOMAIN);
+		setType( AuditLevel.DOMAIN);
 		setStartTime(LocalDateTime.now());
 		setAestheticAuditProgress(0.0);
 		setContentAuditProgress(0.0);

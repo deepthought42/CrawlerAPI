@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
+import com.looksee.models.enums.JourneyStatus;
 import com.looksee.models.enums.StepType;
 
 /**
@@ -18,7 +19,6 @@ import com.looksee.models.enums.StepType;
 @JsonTypeName("LOGIN")
 @Node
 public class LoginStep extends Step{
-
 	@Relationship(type = "USES")
 	private TestUser testUser;
 	
@@ -38,14 +38,20 @@ public class LoginStep extends Step{
 					 ElementState username_element,
 					 ElementState password_element,
 					 ElementState submit_btn,
-					 TestUser user) {
+					 TestUser user, 
+					 JourneyStatus status) 
+	{
 		setStartPage(start_page);
 		setEndPage(end_page);
 		setUsernameElement(username_element);
 		setPasswordElement(password_element);
 		setSubmitElement(submit_btn);
 		setTestUser(user);
+		setStatus(status);
 		setKey(generateKey());
+		if(JourneyStatus.CANDIDATE.equals(status)) {
+			setCandidateKey(generateCandidateKey());
+		}
 	}
 	
 	
@@ -106,6 +112,10 @@ public class LoginStep extends Step{
 		return "loginstep"+key;
 	}
 	
+	@Override
+	public String generateCandidateKey() {
+		return generateKey();
+	}
 	
 	@Override
 	public String toString() {
@@ -114,13 +124,11 @@ public class LoginStep extends Step{
 	
 	@Override
 	public LoginStep clone() {
-		return new LoginStep(getStartPage(), getEndPage(), getUsernameElement(), getPasswordElement(), getSubmitElement(), getTestUser());
+		return new LoginStep(getStartPage(), getEndPage(), getUsernameElement(), getPasswordElement(), getSubmitElement(), getTestUser(), getStatus());
 	}
 
 	@Override
 	StepType getStepType() {
 		return StepType.LOGIN;
 	}
-
-	
 }

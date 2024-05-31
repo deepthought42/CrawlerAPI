@@ -8,7 +8,6 @@ import com.looksee.models.enums.BrowserType;
  */
 public class PageAuditUrlMessage extends PageAuditMessage {
 	
-	private long pageAuditId;
 	private String url;
 	private BrowserType browser;
 	
@@ -23,15 +22,7 @@ public class PageAuditUrlMessage extends PageAuditMessage {
 		setUrl(url);
 		setBrowser(browser);
 	}
-
-	public long getPageAuditId() {
-		return pageAuditId;
-	}
-
-	public void setPageAuditId(long page_audit_record_id) {
-		this.pageAuditId = page_audit_record_id;
-	}
-
+	
 	public String getUrl() {
 		return url;
 	}

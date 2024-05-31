@@ -134,7 +134,7 @@ public class TextColorContrastAudit implements IExecutablePageStateAudit {
 					String font_weight = element.getRenderedCssValues().get("font-weight");
 					String font_size_str = og_font_size_str.replace("px", "");
 					
-					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.strip()));
+					double font_size = BrowserUtils.convertPxToPt(Double.parseDouble(font_size_str.trim()));
 					//if font size is greater than 18 point(24px) or if greater than 14 point(18.5px) and bold then check if contrast > 3 ("A Compliance")
 					//NOTE: The following measures of font size are in pixels not font points
 					if(font_size >= 18 || (font_size >= 14 && BrowserUtils.isTextBold(font_weight))) {

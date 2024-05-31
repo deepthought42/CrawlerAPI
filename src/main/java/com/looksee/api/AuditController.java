@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +37,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
-import com.looksee.dto.AuditDto;
+import com.looksee.dto.AuditRecordDto;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.UXIssueReportDto;
@@ -105,73 +104,41 @@ public class AuditController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<AuditDto> getAudits(HttpServletRequest request) 
-    		throws MalformedURLException, UnknownAccountException 
+    public @ResponseBody List<AuditRecordDto> getAudits(HttpServletRequest request)
+		throws MalformedURLException, UnknownAccountException
     {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName();
-    	Account acct = account_service.findByUserId(id);
+		Principal principal = request.getUserPrincipal();
+		String id = principal.getName();
+		Account acct = account_service.findByUserId(id);
 		
 		if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}    	
-    	
-    	List<AuditRecord> audits_records = audit_record_service.findByAccountId(acct.getId());
-		return buildAudits(audits_records);
-    }
-
-    /**
-	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
-	 * 
-	 * @param audits_records
-	 * @return
-	 */
-    private List<AuditDto> buildAudits(List<AuditRecord> audits_records) {
-		List<AuditDto> audits = new ArrayList<>();
-		for(AuditRecord audit: audits_records){
-			audits.add(new AuditDto(audit.getId(), audit.getStatus(), 
-									audit.getLevel(), 
-									audit.getStartTime(), 
-									audit.getAestheticAuditProgress(), 
-									audit.getAestheticMsg(), 
-									audit.getContentAuditMsg(), 
-									audit.getContentAuditProgress(), 
-									audit.getInfoArchMsg(), 
-									audit.getInfoArchitechtureAuditProgress(), 
-									audit.getDataExtractionMsg(), 
-									audit.getDataExtractionProgress(), 
-									audit.getCreatedAt(),
-									audit.getEndTime(), 
-									audit.getUrl()));
+			throw new UnknownAccountException();
+		}
+		else if(acct.getSubscriptionToken() == null){
+			throw new MissingSubscriptionException();
 		}
 
-		return audits;
-	}
-
+		List<AuditRecord> audits_records = audit_record_service.findByAccountId(acct.getId());
+		return audit_record_service.buildAudits(audits_records);
+    }
 
 	/**
      * Retrieves {@link Audit audit} with given ID
      * 
      * @param id
      * @return {@link Audit audit} with given ID
+	 * 
+	 * @throws UnknownAccountException 
+	 * @throws MissingSubscriptionException 
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
-    public @ResponseBody Set<Audit> getAudit(HttpServletRequest request,
-									@PathVariable("id") long id)
+    public @ResponseBody List<AuditRecordDto> getAudit(HttpServletRequest request,
+									@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
     {
-    	Set<Audit> audit_set = new HashSet<Audit>();
-    	
-    	Audit audit = audit_service.findById(id).get();
-    	audit.setMessages( audit_service.getIssues(audit.getId()) );
-        
-    	audit_set.add(audit);
-    	
-        return audit_set;
+		account_service.retrieveAndValidateAccount(request.getUserPrincipal());
+		List<AuditRecord> audits_records = audit_record_service.getAllPageAudits(id);
+		return audit_record_service.buildAudits(audits_records);
     }
-    
 
 	/**
      * Creates a new {@link Observation observation} 
@@ -181,11 +148,10 @@ public class AuditController {
      */
     @RequestMapping(method = RequestMethod.POST, value="/$key/issues")
     public @ResponseBody UXIssueMessage addIssue(
-							    		HttpServletRequest request,
+										HttpServletRequest request,
 										@PathVariable("key") String key,
-							    		@RequestBody UXIssueMessage issue_message
+										@RequestBody UXIssueMessage issue_message
 	) throws UnknownAccountException {
-    	
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -297,6 +263,8 @@ public class AuditController {
             		.body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
         }
     }
+
+	
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

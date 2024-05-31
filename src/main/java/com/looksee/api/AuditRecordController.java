@@ -2,6 +2,7 @@ package com.looksee.api;
 
 import java.net.MalformedURLException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.browsing.Crawler;
+import com.looksee.dto.AuditRecordDto;
 import com.looksee.models.Account;
 import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
@@ -36,8 +38,11 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
 import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.PageAuditStats;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
@@ -45,11 +50,12 @@ import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.ExecutionStatus;
-import com.looksee.models.enums.Priority;
+import com.looksee.models.enums.JourneyStatus;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
+import com.looksee.services.JourneyService;
 import com.looksee.services.PageStateService;
 import com.looksee.services.SendGridMailService;
 import com.looksee.services.UXIssueMessageService;
@@ -89,6 +95,9 @@ public class AuditRecordController {
     
     @Autowired
     protected SendGridMailService sendgrid_service;
+
+	@Autowired
+	protected JourneyService journey_service;
 	
 
 	/**
@@ -99,21 +108,23 @@ public class AuditRecordController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<AuditRecord> getAuditRecords(
-						    		HttpServletRequest request
+    public @ResponseBody List<AuditRecordDto> getAuditRecords(
+												HttpServletRequest request
 	) throws UnknownAccountException {
+
 		Principal principal = request.getUserPrincipal();
-    	String user_id = principal.getName();
-		Account acct = account_service.findByUserId(user_id);
+		String id = principal.getName();
+		Account acct = account_service.findByUserId(id);
+		
+		if(acct == null){
+			throw new UnknownAccountException();
+		}
+		else if(acct.getSubscriptionToken() == null){
+			throw new MissingSubscriptionException();
+		}
 
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-
-		return audit_record_service.findByAccountId(acct.getId());
+		List<AuditRecord> audits_records = audit_record_service.findByAccountId(acct.getId());
+		return buildAudits(audits_records);
     }
 	
 	/**
@@ -122,11 +133,11 @@ public class AuditRecordController {
      */
     @RequestMapping(method = RequestMethod.POST, value="/{audit_record_id}/report")
     public @ResponseBody void requestReport(
-							    		HttpServletRequest request,
+										HttpServletRequest request,
 										@PathVariable("audit_record_id") long audit_record_id,
-							    		@RequestBody Account acct
+										@RequestBody Account acct
 	) {
-    	log.warn("requesting report and saving account....");
+		log.warn("requesting report and saving account....");
     	//create an account
     	Account acct_record = account_service.findByEmail(acct.getEmail());
     	if(acct_record == null) {
@@ -230,35 +241,34 @@ public class AuditRecordController {
      */
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
     public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
-											    		HttpServletRequest request,
-											    		@PathVariable("audit_record_id") long audit_record_id
+														HttpServletRequest request,
+														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
     	//Get most recent audits
-		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);    		
-    	
+		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_record_id);
+
     	//retrieve element set
-    	Collection<? extends UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
-    	
+		Collection<? extends UXIssueMessage> issues = audit_service.retrieveUXIssues(audits);
+
     	//retrieve issue set
-    	Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
+		Collection<SimpleElement> elements = audit_service.retrieveElementSet(issues);
 
     	//Map audits to page states
-    	Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
-    	
-    	//generate IssueElementMap
-    	Map<String, String> issue_element_map = audit_service.generateIssueElementMap(audits);
-    	
+		Map<String, Set<String>> element_issue_map = audit_service.generateElementIssuesMap(audits);
 
-    	AuditScore score = AuditUtils.extractAuditScore(audits);
-    	String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
-    	
+    	//generate IssueElementMap
+		Map<String, String> issue_element_map = audit_service.generateIssueElementMap(audits);
+
+		AuditScore score = AuditUtils.extractAuditScore(audits);
+		String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
+
     	//package both elements into an object definition
-    	return new ElementIssueTwoWayMapping(issues, 
-    										 elements, 
-    										 issue_element_map, 
-    										 element_issue_map, 
-    										 score, 
-    										 page_src);
+		return new ElementIssueTwoWayMapping(issues,
+												elements,
+												issue_element_map,
+												element_issue_map,
+												score,
+												page_src);
     }
     
     /**
@@ -269,25 +279,18 @@ public class AuditRecordController {
      */
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/stats")
     public @ResponseBody AuditStats getAuditStat(
-						    		HttpServletRequest request,
+									HttpServletRequest request,
 									@PathVariable("audit_record_id") long audit_record_id
 	) throws UnknownAccountException {
     	//get audit record
-    	Optional<AuditRecord> audit_record_opt = audit_record_service.findById(audit_record_id);
-    	
-    	if(audit_record_opt.isPresent()) {
-    		PageAuditRecord audit_record = (PageAuditRecord)audit_record_opt.get();
+		Optional<AuditRecord> audit_record_opt = audit_record_service.findById(audit_record_id);
 
-			// get Page Count
+		if(audit_record_opt.isPresent()) {
+			AuditRecord audit_record = audit_record_opt.get();
+
 			long page_count = 1;
-
 			double score = 0.0;
 			int audit_count = 0;
-			long high_issue_count = 0;
-			long mid_issue_count = 0;
-			long low_issue_count = 0;
-
-			int image_copyright_issue_count = 0;
 
 			double written_content_score = 0.0;
 			double imagery_score = 0.0;
@@ -306,12 +309,18 @@ public class AuditRecordController {
 			double whitespace_score = 0.0;
 			double branding_score = 0.0;
 
-			Set<Audit> audits = audit_record_service.getAllAudits(audit_record.getId());
+			Set<Audit> audits = new HashSet<>();
+			if(audit_record instanceof DomainAuditRecord){
+				audits = audit_record_service.getAllAuditsForDomainAudit(audit_record.getId());
+			}
+			else if(audit_record instanceof PageAuditRecord){
+				audits = audit_record_service.getAllAudits(audit_record.getId());
+			}
+			
 			written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 			imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
 			videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
 			audio_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
-			image_copyright_issue_count = audit_service.countIssuesByAuditName(audits, AuditName.IMAGE_COPYRIGHT);
 
 			seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
 			menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
@@ -319,18 +328,14 @@ public class AuditRecordController {
 			double link_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
 
 			//aesthetic_score = AuditUtils.calculateScore(audits);
+			log.warn("audits = "+audits);
 			text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
+			log.warn("text color contrast score = "+text_color_contrast_score);
+
 			non_text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
 			typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
 			whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
 			branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
-
-			high_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
-					Priority.HIGH.toString());
-			mid_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
-					Priority.MEDIUM.toString());
-			low_issue_count = audit_record_service.getIssueCountBySeverity(audit_record.getId(),
-					Priority.LOW.toString());
 
 			for (Audit audit : audits) {
 				// get issues
@@ -342,12 +347,10 @@ public class AuditRecordController {
 			}
 			audit_count += audits.size();
 
-			log.debug("audit record id = "+audit_record.getId());			
+			log.debug("audit record id = "+audit_record.getId());
 			log.debug("aesthetic audit progress = "+audit_record.getAestheticAuditProgress());
 			double overall_score = ( score / audit_count ) * 100 ;
-			
-			//Set<Label> image_labels = audit_record_service.getLabelsForImageElements(audit_record.getId()) ;
-			
+
 			//build stats object
 			log.debug("page count = " + page_count);
 			log.debug("---------------------------------------------");
@@ -366,33 +369,29 @@ public class AuditRecordController {
 			audit_labels.add(AuditName.METADATA);
 			audit_labels.add(AuditName.ENCRYPTED);
 			
-			int total_issues = 0;
-			ExecutionStatus execution_status = null;
+			ExecutionStatus execution_status = ExecutionStatus.UNKNOWN;
 			
-			double data_extraction_progress = getPageDataExtractionProgress(audit_record.getId());
-
+			double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS,
+																	1,
+																			audits,
+																			audit_labels);
 			
-			double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS, 
-																		 1, 
-																		 audits, 
-																		 audit_labels);
-			
-			double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT, 
-																	1, 
-																	audits, 
+			double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT,
+																	1,
+																	audits,
 																	audit_labels);
 
-			double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE, 
-																			1, 
-																			audits, 
+			double info_architecture_progress = AuditUtils.calculateProgress(AuditCategory.INFORMATION_ARCHITECTURE,
+																			1,
+																			audits,
 																			audit_labels);
 															
 			double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
 			double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
 			double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
-			double a11y_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.ACCESSIBILITY);
-
+			double a11y_score = AuditUtils.calculateAccessibilityScore(audits);
 			
+			log.warn("Accessibility score = "+a11y_score);
 			if(content_progress >= 1 && info_architecture_progress >= 1 && visual_design_progress >= 1) {
 				execution_status = ExecutionStatus.COMPLETE;
 			}
@@ -400,41 +399,58 @@ public class AuditRecordController {
 				execution_status = ExecutionStatus.IN_PROGRESS;
 			}
 			
-			AuditStats audit_stats = new AuditStats(audit_record.getId(),
-													audit_record.getStartTime(),
-													audit_record.getEndTime(),
-													content_progress,
-													content_score,
-													audit_record.getContentAuditMsg(),
-													written_content_score,
-													imagery_score,
-													videos_score,
-													audio_score,
-													info_architecture_progress,
-													info_architecture_score,
-													audit_record.getInfoArchMsg(),
-													seo_score,
-													menu_analysis_score,
-													performance_score,
-													visual_design_progress,
-													visual_design_score,
-													audit_record.getAestheticMsg(),
-													text_color_contrast_score,
-													non_text_color_contrast_score,
-													typography_score,
-													whitespace_score,
-													branding_score,
-													data_extraction_progress,
-													audit_record.getDataExtractionMsg(),
-													execution_status,
-													link_score);
-														
+			// get Page Count
+			if(audit_record instanceof DomainAuditRecord){
+				page_count = audit_record_service.getPageAuditCount(audit_record.getId());
+				int journeysExplored = audit_record_service.getNumberOfJourneysWithStatus(audit_record.getId(), JourneyStatus.VERIFIED);
+				int journeysTotal = audit_record_service.getNumberOfJourneys(audit_record.getId());
+				DomainAuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
+														journeysExplored,
+														journeysTotal,
+														a11y_score,
+														content_score,
+														written_content_score,
+														imagery_score,
+														info_architecture_score,
+														seo_score,
+														visual_design_score,
+														text_color_contrast_score,
+														non_text_color_contrast_score,
+														execution_status,
+														link_score);
+					return audit_stats;
+			}
+			else if(audit_record instanceof PageAuditRecord){
+				page_count = 1;
+				PageAuditStats audit_stats = new PageAuditStats(audit_record.getId(),
+														audit_record.getStartTime(),
+														audit_record.getEndTime(),
+														overall_score,
+														content_score,
+														written_content_score,
+														imagery_score,
+														videos_score,
+														audio_score,
+														info_architecture_score,
+														seo_score,
+														menu_analysis_score,
+														performance_score,
+														visual_design_score,
+														text_color_contrast_score,
+														non_text_color_contrast_score,
+														typography_score,
+														whitespace_score,
+														branding_score,
+														execution_status,
+														link_score);
+					return audit_stats;
+			}
 			
-			return audit_stats;
-    	}
-    	else {
-    		throw new AuditRecordNotFoundException();
-    	}
+			return null;
+		}
+		else {
+			throw new AuditRecordNotFoundException();
+		}
     }
     
     
@@ -449,7 +465,7 @@ public class AuditRecordController {
 	 * 
 	 * @return progress percentage as a value between 0 and 1
 	 */
-	private double getPageDataExtractionProgress(long audit_record_id) {		
+	private double getPageDataExtractionProgress(long audit_record_id) {
 		double milestone_count = 1.0;
 		
 		PageState page = audit_record_service.findPage(audit_record_id);
@@ -480,6 +496,44 @@ public class AuditRecordController {
 		}
 		
 		return milestone_count / 3.0;
+	}
+
+
+	/**
+	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
+	 * 
+	 * @param audits_records
+	 * @return
+	 */
+	private List<AuditRecordDto> buildAudits(List<AuditRecord> audits_records) {
+		List<AuditRecordDto> auditDtoList = new ArrayList<>();
+		for(AuditRecord audit_record: audits_records){
+
+			Set<Audit> audits = new HashSet<>();
+			if(audit_record instanceof DomainAuditRecord){
+				audits = audit_record_service.getAllAuditsForDomainAudit(audit_record.getId());
+			}
+			else if(audit_record instanceof PageAuditRecord){
+				audits = audit_record_service.getAllAudits(audit_record.getId());
+			}
+
+			double content_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.CONTENT);
+			double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
+			double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
+
+			auditDtoList.add(new AuditRecordDto(audit_record.getId(),
+									audit_record.getStatus(),
+									audit_record.getType(),
+									audit_record.getStartTime(),
+									visual_design_score,
+									content_score,
+									info_architecture_score,
+									audit_record.getCreatedAt(),
+									audit_record.getEndTime(),
+									audit_record.getUrl()));
+		}
+
+		return auditDtoList;
 	}
 }
 

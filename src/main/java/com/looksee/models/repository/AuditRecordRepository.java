@@ -42,7 +42,7 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	public Optional<AuditRecord> findMostRecentDomainAuditRecord(@Param("domain_id") long domain_id);
 
 	@Query("MATCH (domain_audit:DomainAuditRecord)-[:HAS]->(audit:PageAuditRecord) WHERE id(domain_audit)=$domain_audit_id RETURN audit")
-	public Set<AuditRecord> getAllPageAudits(@Param("domain_audit_id") long domain_audit_id);
+	public List<AuditRecord> getAllPageAudits(@Param("domain_audit_id") long domain_audit_id);
 
 	@Query("MATCH (page_audit:PageAuditRecord)-[]->(page_state:PageState{url:$url}) RETURN page_audit ORDER BY page_audit.created_at DESC LIMIT 1")
 	public Optional<PageAuditRecord> getMostRecentPageAuditRecord(@Param("url") String url);
@@ -69,9 +69,11 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH(d:Domain)-[:HAS]->(audit:DomainAuditRecord) WHERE id(d)=$id RETURN audit ORDER BY audit.created_at DESC LIMIT 1")
 	public Optional<AuditRecord> getMostRecentAuditRecordForDomain(@Param("id") long id);
 
+	@Deprecated
 	@Query("MATCH (d:Domain{key:$domain_key})-[]->(audit:AuditRecord) RETURN audit")
 	public Set<AuditRecord> getAuditRecords(@Param("domain_key") String domain_key);
 
+	@Deprecated
 	@Query("MATCH (d:Domain{key:$domain_key})<-[]-(audit:AuditRecord{key:$audit_record_key}) RETURN audit")
 	public AuditRecord getAuditRecords(@Param("domain_key") String domain_key, @Param("audit_record_key") String audit_record_key);
 	
@@ -87,9 +89,6 @@ public interface AuditRecordRepository extends Neo4jRepository<AuditRecord, Long
 	@Query("MATCH (domain_audit:DomainAuditRecord)-[:CONTAINS]->(map:DomainMap) WHERE id(domain_audit)=$audit_record_id MATCH(map)-[:CONTAINS]->(journey:Journey) RETURN COUNT(journey)")
 	public int getNumberOfJourneys(@Param("audit_record_id") long audit_record_id);
 
-	@Query("MATCH (acct:Account)-[:HAS*2]->(audit_record:AuditRecord) WHERE id(acct)=$account_id RETURN audit_record")
-    public List<AuditRecord> findDomainAuditRecordByAccountId(@Param("account_id") long account_id);
-
 	@Query("MATCH (acct:Account)-[:HAS]->(audit_record:AuditRecord) WHERE id(acct)=$account_id RETURN audit_record")
-    public List<AuditRecord> findPageAuditRecordByAccountId(@Param("account_id") long account_id);
+    public List<AuditRecord> findAuditRecordByAccountId(@Param("account_id") long account_id);
 }

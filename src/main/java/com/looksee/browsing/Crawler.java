@@ -17,11 +17,10 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.slf4j.Logger;
 
 import com.looksee.api.exception.PagesAreNotMatchingException;
 import com.looksee.models.ActionOLD;
@@ -380,147 +379,6 @@ public class Crawler {
     {
         ((JavascriptExecutor)driver).executeScript("scroll(0,"+ distance +");");
     }
-
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 */
-	/*
-	public PageState performPathExploratoryCrawl(String user_id, Domain domain, String browser_name, ExploratoryPath path, String host) {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		do{
-			try{
-				browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-				String url = PathUtils.getFirstUrl(path.getSteps());
-				log.warn("expected path url : "+url);
-				browser.navigateTo(url);
-				browser.moveMouseToNonInteractive(new Point(300,300));
-
-				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
-
-				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
-				//get last page state
-				PageState last_page_state = PathUtils.getLastPageStateOLD(path.getPathObjects());
-						
-				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));
-				
-				PageState last_page = PathUtils.getLastPageStateOLD(path.getPathObjects());
-				//result_page.setLoginRequired(last_page.isLoginRequired());
-			}
-			catch(NullPointerException e){
-				log.warn("Null Pointer Exception happened during exploratory crawl ::  "+e.getMessage());
-			}
-			catch (GridException e) {
-				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
-			} catch(Exception e) {
-				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
-				//e.printStackTrace();
-			}
-			finally{
-				if(browser != null){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 1000);
-		
-		log.warn("done crawling exploratory path");
-		return result_page;
-	}
-	*/
-
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 * @throws Exception 
-	 */
-	@Deprecated
-	/*
-	public PageState performPathExploratoryCrawl(long account_id, Domain domain, String browser_name, JourneyMessage path) throws Exception {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		JourneyMessage new_path = path.clone();
-		boolean no_such_element_exception = false;
-		
-		do{
-			
-			try{
-				if(!no_such_element_exception){
-					no_such_element_exception = false;
-					browser = BrowserConnectionHelper.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-					PageState expected_page = PathUtils.getFirstPage(path.getSteps());
-					//browser.navigateTo(expected_page.getUrl());
-					browser.moveMouseToNonInteractive(new Point(300,300));
-					
-					ExploratoryPath exploratory_path = new ExploratoryPath(path.getSteps(), path.getPathObjects());
-					
-					crawlPathExplorer(new_path.getSteps(), new_path.getPathObjects(), browser, domain.getUrl(), exploratory_path);
-				}
-				String browser_url = browser.getDriver().getCurrentUrl();
-				browser_url = BrowserUtils.sanitizeUrl(browser_url, false);
-				//get last page state
-				PageState last_page_state = PathUtils.getLastPageStateOLD(new_path.getPathObjects());
-								
-				//verify that screenshot does not match previous page
-				result_page = browser_service.buildPageState(new URL(domain.getUrl()), browser, new URL(browser_url));
-				//result_page.setLoginRequired(last_page_state.isLoginRequired());
-				return result_page;
-			}
-			catch(NullPointerException e){
-				//e.printStackTrace();
-				log.error("NPE occurred while exploratory crawl  ::   "+e.getMessage());
-			} 
-			catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-			} 
-			catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
-			} 
-			catch(Exception e) {
-				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
-				e.printStackTrace();
-			}
-			finally{
-				if(browser != null && !no_such_element_exception){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 100);
-		return result_page;
-	}
-	*/
 	
 	/**
 	 * 

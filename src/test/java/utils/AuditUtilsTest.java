@@ -94,21 +94,21 @@ public class AuditUtilsTest {
 		audits.add(new Audit(AuditCategory.AESTHETICS, AuditSubcategory.NON_TEXT_CONTRAST, AuditName.TEXT_BACKGROUND_CONTRAST, 10, new HashSet<>(), AuditLevel.DOMAIN, 20, "", "", "", true));
 
 		score = AuditUtils.calculateAccessibilityScore(audits);
-		assert score == 0.5;
+		assert score == 50.0;
 
 		audits.add(new Audit(AuditCategory.AESTHETICS, AuditSubcategory.LINKS, AuditName.LINKS, 1, new HashSet<>(), AuditLevel.DOMAIN, 20, "", "", "", true));
 
 		score = AuditUtils.calculateAccessibilityScore(audits);
-		assert score == 0.3875;
+		assert score == 38.75;
 
 		audits.add(new Audit(AuditCategory.AESTHETICS, AuditSubcategory.LINKS, AuditName.ALT_TEXT, 1, new HashSet<>(), AuditLevel.DOMAIN, 20, "", "", "", true));
 
 		score = AuditUtils.calculateAccessibilityScore(audits);
-		assert score == 0.32;
+		assert score == 32.0;
 
 		audits.add(new Audit(AuditCategory.AESTHETICS, AuditSubcategory.LINKS, AuditName.IMAGE_POLICY, 1, new HashSet<>(), AuditLevel.DOMAIN, 1, "", "", "", true));
 
 		score = AuditUtils.calculateAccessibilityScore(audits);
-		assert score == 0.32;
+		assert score == 32.0;
 	}
 }

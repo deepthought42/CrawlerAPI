@@ -32,6 +32,7 @@ import com.looksee.analytics.SegmentAnalyticsHelper;
 import com.looksee.api.exception.MissingSubscriptionException;
 import com.looksee.models.Account;
 import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
 import com.looksee.services.StripeService;
@@ -93,9 +94,8 @@ public class AccountController {
     	
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
     	
-    	acct.setSubscriptionType("FREE");
+    	acct.setSubscriptionType(SubscriptionPlan.FREE);
     	acct.setApiToken(UUID.randomUUID().toString());
-    	acct.setSubscriptionType("FREE");
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_service.save(acct);

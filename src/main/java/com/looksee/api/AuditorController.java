@@ -103,7 +103,7 @@ public class AuditorController {
 	) throws Exception {
 		Principal principal = request.getUserPrincipal();
 		Account account = account_service.findByUserId(principal.getName());
-		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+		SubscriptionPlan plan =account.getSubscriptionType();
 		LocalDate today = LocalDate.now();
 		
 		int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), today.getMonthValue());
@@ -249,8 +249,8 @@ public class AuditorController {
         SimplePage simple_page = new SimplePage(
         								page.getUrl(),
         								page.getViewportScreenshotUrl(),
-        								page.getFullPageScreenshotUrlOnload(),
-        								page.getFullPageScreenshotUrlComposite(),
+        								page.getFullPageScreenshotUrl(),
+        								page.getFullPageScreenshotUrl(),
         								page.getFullPageWidth(),
         								page.getFullPageHeight(),
         								page.getSrc(),

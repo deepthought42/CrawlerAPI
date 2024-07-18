@@ -23,7 +23,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{email:$email}) RETURN account LIMIT 1")
 	public Account findByEmail(@Param("email") String username);
 
-	@Query("MATCH (account:Account{user_id:$user_id}) RETURN account")
+	@Query("MATCH (account:Account{userId:$user_id}) RETURN account")
 	public Account findByUserId(@Param("user_id") String user_id);
 	
 	/** 
@@ -47,7 +47,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account) WHERE id(account)=$account_id DETACH DELETE account")
 	public void deleteAccount(@Param("account_id") long account_id);
 
-	@Query("MATCH (account:Account{api_key:$api_key}) RETURN account")
+	@Query("MATCH (account:Account{apiKey:$api_key}) RETURN account")
 	public Account getAccountByApiKey(@Param("api_key") String api_key);
 
 	@Query("MATCH (t:Account) WHERE id(t)=$acct_id MATCH (a:Domain) WHERE id(a)=$domain_id MERGE (t)-[:HAS]->(a) RETURN t")
@@ -75,7 +75,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account)-[]->(page_audit:PageAuditRecord) WHERE id(account)=$account_id AND datetime(page_audit.created_at).month=$month RETURN COUNT(page_audit)")
 	public int getPageAuditCountByMonth(@Param("account_id") long account_id, @Param("month") int month);
 
-	@Query("MATCH (account:Account{customer_id:$customer_id}) RETURN account")
+	@Query("MATCH (account:Account{customerId:$customer_id}) RETURN account")
 	public Account findByCustomerId(@Param("customer_id") String customer_id);
 	
 	@Query("MATCH (account:Account)-[:HAS]->(domain:Domain) MATCH (domain)-[:HAS]->(audit_record:DomainAuditRecord) WHERE id(account)=$account_id AND datetime(audit_record.created_at).month=$month RETURN COUNT(audit_record)")

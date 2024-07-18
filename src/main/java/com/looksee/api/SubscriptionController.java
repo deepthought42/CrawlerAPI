@@ -68,7 +68,7 @@ public class SubscriptionController {
 		
     	LocalDate today = LocalDate.now();
 		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
-		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+		SubscriptionPlan plan = account.getSubscriptionType();
 		
     	return subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt);
     }
@@ -93,7 +93,7 @@ public class SubscriptionController {
     		stripe_service.cancelSubscription(acct.getSubscriptionToken());
     	}
     	acct.setSubscriptionToken("");
-    	acct.setSubscriptionType("Free");
+    	acct.setSubscriptionType(SubscriptionPlan.FREE);
     	account_service.save(acct);
     }
     

@@ -263,7 +263,7 @@ public class DomainController {
 			throw new MissingSubscriptionException();
 		}
 
-		acct.setLastDomain(domain.getUrl());
+		//acct.setLastDomain(domain.getUrl());
 		account_service.save(acct);
 	}
 
@@ -887,7 +887,7 @@ public class DomainController {
 		log.warn("retrieving domain audit count...");
 		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
 		log.warn("total domain audits found = "+domain_audit_cnt);
-		SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
+		SubscriptionPlan plan = account.getSubscriptionType();
 
 		log.warn("checking if user has exceeded subscription limit for domain audits...");
 		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {

@@ -41,8 +41,6 @@ public class PageAuditDto {
 
 	private String targetUserAge;
 	private String targetUserEducation;
-
-;
     
     public PageAuditDto() {
 		setStartTime(LocalDateTime.now());

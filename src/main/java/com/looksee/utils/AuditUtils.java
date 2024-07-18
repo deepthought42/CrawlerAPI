@@ -586,7 +586,7 @@ public class AuditUtils {
 										.collect(Collectors.toList());
 
 		DoubleSummaryStatistics score_stats = list1.parallelStream()
-													.mapToDouble(audit -> audit.getPoints()/(double)audit.getTotalPossiblePoints())
+													.mapToDouble(audit -> (audit.getPoints()/(double)audit.getTotalPossiblePoints())*100)
 													.summaryStatistics();
 
 		return score_stats.getAverage();

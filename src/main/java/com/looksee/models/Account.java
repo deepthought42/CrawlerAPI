@@ -10,6 +10,10 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.enums.SubscriptionPlan;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
@@ -18,21 +22,50 @@ import com.looksee.models.audit.AuditRecord;
 @Node
 public class Account extends LookseeObject{
 
-	private String user_id;
+	@Getter
+	@Setter
+	private String userId;
+
+	@Getter
+	@Setter
 	private String email;
-	private String customer_token;
-	private String subscription_token;
-	private String subscription_type;
-	private String last_domain_url;
-	private List<String> onboarded_steps;
-	private String api_token;
+
+	@Getter
+	@Setter
+	private String customerToken;
+
+	@Getter
+	@Setter
+	private String subscriptionToken;
+
+	@Getter
+	@Setter
+	private SubscriptionPlan subscriptionType;
+
+	@Getter
+	@Setter
+	private String lastDomainUrl;
+	
+	@Getter
+	@Setter
+	private String apiToken;
+	
+	@Getter
+	@Setter
 	private String name;
 	
+	@Getter
+	private List<String> onboardedSteps;
+	
+	@Getter
+	@Setter
 	@Relationship(type = "HAS")
 	private Set<Domain> domains = new HashSet<>();
 
+	@Getter
+	@Setter
 	@Relationship(type = "HAS")
-	private Set<AuditRecord> audits = new HashSet<>();
+	private Set<AuditRecord> auditRecords = new HashSet<>();
 
 	public Account(){
 		super();
@@ -61,63 +94,19 @@ public class Account extends LookseeObject{
 		setName("");
 	}
 
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getCustomerToken() {
-		return customer_token;
-	}
-
-	public void setCustomerToken(String customer_token) {
-		this.customer_token = customer_token;
-	}
-
-	public String getSubscriptionToken() {
-		return subscription_token;
-	}
-
-	public void setSubscriptionToken(String subscription_token) {
-		this.subscription_token = subscription_token;
-	}
-
-	public void setLastDomain(String domain_url) {
-		this.last_domain_url = domain_url;
-	}
-
-	public String getLastDomain(){
-		return this.last_domain_url;
-	}
-
-	public List<String> getOnboardedSteps() {
-		return onboarded_steps;
-	}
-
 	public void setOnboardedSteps(List<String> onboarded_steps) {
 		if(onboarded_steps == null){
-			this.onboarded_steps = new ArrayList<String>();
+			this.onboardedSteps = new ArrayList<String>();
 		}
 		else{
-			this.onboarded_steps = onboarded_steps;
+			this.onboardedSteps = onboarded_steps;
 		}
 	}
 
 	public void addOnboardingStep(String step_name) {
-		if(!this.onboarded_steps.contains(step_name)){
-			this.onboarded_steps.add(step_name);
+		if(!this.onboardedSteps.contains(step_name)){
+			this.onboardedSteps.add(step_name);
 		}
-	}
-
-	public Set<Domain> getDomains(){
-		return this.domains;
-	}
-
-	public void setDomains(Set<Domain> domains){
-		this.domains = domains;
 	}
 
 	public void addDomain(Domain domain) {
@@ -138,48 +127,8 @@ public class Account extends LookseeObject{
 		}
 	}
 
-	public Set<AuditRecord> getAuditRecords() {
-		return audits;
-	}
-
-	public void setAuditRecords(Set<AuditRecord> audits) {
-		this.audits = audits;
-	}
-
 	public void addAuditRecord(AuditRecord record) {
-		this.audits.add(record);
-	}
-
-	public String getSubscriptionType() {
-		return subscription_type;
-	}
-
-	public void setSubscriptionType(String subscription_type) {
-		this.subscription_type = subscription_type;
-	}
-
-	public String getApiToken() {
-		return api_token;
-	}
-
-	public void setApiToken(String api_token) {
-		this.api_token = api_token;
-	}
-
-	public String getUserId() {
-		return user_id;
-  	}
-
-  	public void setUserId(String user_id) {
-  		this.user_id = user_id;
-	}
-
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
+		this.auditRecords.add(record);
 	}
 
 	@Override

@@ -1,10 +1,6 @@
 package com.looksee.api;
 
 import java.security.Principal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,10 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.looksee.models.Account;
 import com.looksee.security.SecurityConfig;
 import com.looksee.services.AccountService;
-import com.looksee.services.StripeService;
 import com.nimbusds.jwt.JWT;
-
-import io.jsonwebtoken.Jwts;
 
 /**
  *	API for interacting with {@link User} data

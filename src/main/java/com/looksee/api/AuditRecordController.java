@@ -99,7 +99,6 @@ public class AuditRecordController {
 	@Autowired
 	protected JourneyService journey_service;
 	
-
 	/**
      * Creates a new {@link Observation observation} 
      * 
@@ -194,8 +193,8 @@ public class AuditRecordController {
     			
     			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
     													 page_state.getViewportScreenshotUrl(), 
-    													 page_state.getFullPageScreenshotUrlOnload(), 
-    													 page_state.getFullPageScreenshotUrlComposite(),
+    													 page_state.getFullPageScreenshotUrl(), 
+    													 page_state.getFullPageScreenshotUrl(),
     													 page_state.getFullPageWidth(), 
     													 page_state.getFullPageHeight(),
     													 page_state.getSrc(), 
@@ -214,8 +213,8 @@ public class AuditRecordController {
     			for(PageState page_state: page_states) {
 	    			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
 	    													 page_state.getViewportScreenshotUrl(), 
-	    													 page_state.getFullPageScreenshotUrlOnload(), 
-	    													 page_state.getFullPageScreenshotUrlComposite(),
+	    													 page_state.getFullPageScreenshotUrl(), 
+	    													 page_state.getFullPageScreenshotUrl(),
 	    													 page_state.getFullPageWidth(),
 	    													 page_state.getFullPageHeight(),
 	    													 page_state.getSrc(), 
@@ -319,24 +318,30 @@ public class AuditRecordController {
 			
 			written_content_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WRITTEN_CONTENT);
 			imagery_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.IMAGERY);
-			videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
-			audio_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
+			//videos_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.VIDEOS);
+			//audio_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.AUDIO);
 
 			seo_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.SEO);
-			menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
-			performance_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
+			//menu_analysis_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.MENU_ANALYSIS);
+			//performance_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.PERFORMANCE);
 			double link_score = AuditUtils.calculateScoreByName(audits, AuditName.LINKS);
 
 			//aesthetic_score = AuditUtils.calculateScore(audits);
 			log.warn("audits = "+audits);
 			text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.TEXT_BACKGROUND_CONTRAST);
 			log.warn("text color contrast score = "+text_color_contrast_score);
-
 			non_text_color_contrast_score = AuditUtils.calculateScoreByName(audits, AuditName.NON_TEXT_BACKGROUND_CONTRAST);
-			typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
-			whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
-			branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
+			//typography_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.TYPOGRAPHY);
+			//whitespace_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.WHITESPACE);
+			//branding_score = AuditUtils.calculateSubcategoryScore(audits, AuditSubcategory.BRANDING);
 
+			audits.parallelStream().mapToDouble(audit -> {
+				if (audit.getTotalPossiblePoints() == 0) {
+					return 1;
+				} else {
+					return (audit.getPoints() / (double) audit.getTotalPossiblePoints());
+				}}).sum();
+/*
 			for (Audit audit : audits) {
 				// get issues
 				if (audit.getTotalPossiblePoints() == 0) {
@@ -345,6 +350,7 @@ public class AuditRecordController {
 					score += (audit.getPoints() / (double) audit.getTotalPossiblePoints());
 				}
 			}
+			*/
 			audit_count += audits.size();
 
 			log.debug("audit record id = "+audit_record.getId());
@@ -373,8 +379,8 @@ public class AuditRecordController {
 			
 			double visual_design_progress = AuditUtils.calculateProgress(AuditCategory.AESTHETICS,
 																	1,
-																			audits,
-																			audit_labels);
+																	audits,
+																	audit_labels);
 			
 			double content_progress = AuditUtils.calculateProgress(AuditCategory.CONTENT,
 																	1,

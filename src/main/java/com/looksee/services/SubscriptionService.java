@@ -10,6 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties.Discovery;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
@@ -83,9 +84,9 @@ public class SubscriptionService {
 		else {
 			customer = stripe_client.getCustomer(acct.getCustomerToken());
 		}
-		acct.setSubscriptionType(plan_str);
+		acct.setSubscriptionType(plan);
 
-		if("FREE".equals(plan_str)){
+		if(SubscriptionPlan.FREE.equals(plan)){
 			//check if account has a subscription, if so then unsubscribe and remove subscription token
 			if(acct.getSubscriptionToken() != null && 
 					!acct.getSubscriptionToken().isEmpty()){
@@ -96,7 +97,7 @@ public class SubscriptionService {
 				log.warn("User already has free plan");
 			}
 		}
-		else if("COMPANY_BASIC".equals(plan_str)){
+		else if(SubscriptionPlan.COMPANY_PREMIUM.equals(plan)){
 			//STAGING
 			//plan_tier = Plan.retrieve("plan_GKyHict9ublpsa");
 			//PRODUCTION
@@ -125,18 +126,18 @@ public class SubscriptionService {
 	    	}
 	    	
 	    	acct.setSubscriptionToken(subscription.getId());
-    		acct.setSubscriptionType(plan_str);
+    		acct.setSubscriptionType(plan);
 		}
-		else if("COMPANY_PRO".equals(plan_str)){
+		else if(SubscriptionPlan.COMPANY_PRO.equals(plan)){
 
 		}
-		else if("AGENCY_BASIC".equals(plan_str)){
+		else if(SubscriptionPlan.AGENCY_PREMIUM.equals(plan)){
 
 		}
-		else if("AGENCY_PRO".equals(plan_str)){
+		else if(SubscriptionPlan.AGENCY_PRO.equals(plan)){
 		
 		}
-		else if("UNLIMITED".equals(plan_str)){
+		else if(SubscriptionPlan.UNLIMITED.equals(plan)){
 			
 		}
 		
@@ -153,7 +154,7 @@ public class SubscriptionService {
 	 * 
 	 * @throws Exception
 	 */
-	public void changeSubscription(Account acct, String subscription_id) throws Exception{		
+	public void changeSubscription(Account acct, String subscription_id) throws Exception{
 		assert acct != null;
 		
 		//retrive stripe customer info
@@ -176,12 +177,12 @@ public class SubscriptionService {
 		Product product = stripe_client.getProduct(product_id);
 
     	if(acct.getSubscriptionToken() != null && !acct.getSubscriptionToken().isEmpty()){
-    		//stripe_client.update_subscription(item.getPrice().getId(), subscription);		
+    		//stripe_client.update_subscription(item.getPrice().getId(), subscription);
     		//cancel existing subscription
     		stripe_client.cancelSubscription(acct.getSubscriptionToken());
     	}
 
-    	acct.setSubscriptionType(product.getName());
+    	acct.setSubscriptionType(SubscriptionPlan.create(product.getName()));
     	acct.setSubscriptionToken(subscription_id);
     	account_service.save(acct);
 	}

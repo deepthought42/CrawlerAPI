@@ -408,7 +408,7 @@ public class AuditRecordController {
 			// get Page Count
 			if(audit_record instanceof DomainAuditRecord){
 				page_count = audit_record_service.getPageAuditCount(audit_record.getId());
-				int journeysExplored = audit_record_service.getNumberOfJourneysWithStatus(audit_record.getId(), JourneyStatus.VERIFIED);
+				int journeysExplored = audit_record_service.getNumberOfJourneysWithoutStatus(audit_record.getId(), JourneyStatus.CANDIDATE);
 				int journeysTotal = audit_record_service.getNumberOfJourneys(audit_record.getId());
 				DomainAuditStats audit_stats = new DomainAuditStats(audit_record.getId(),
 														journeysExplored,

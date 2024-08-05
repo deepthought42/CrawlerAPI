@@ -391,6 +391,10 @@ public class AuditRecordService {
 		return audit_record_repo.getNumberOfJourneysWithStatus(domain_audit_id, status.toString());
 	}
 
+	public int getNumberOfJourneysWithoutStatus(long domain_audit_id, JourneyStatus status) {
+		return audit_record_repo.getNumberOfJourneysWithoutStatus(domain_audit_id, status.toString());
+	}
+
 	public int getNumberOfJourneys(long domain_audit_id) {
 		return audit_record_repo.getNumberOfJourneys(domain_audit_id);
 	}

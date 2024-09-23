@@ -632,7 +632,7 @@ public class DomainController {
 	 * @throws FileNotFoundException
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
-	@RequestMapping(path = "/{domain_id}/excel", method = RequestMethod.GET)
+	@RequestMapping(path = "/{domain_id}/report/excel", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, FileNotFoundException, IOException {

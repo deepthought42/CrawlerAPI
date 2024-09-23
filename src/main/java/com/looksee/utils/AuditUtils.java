@@ -270,15 +270,6 @@ public class AuditUtils {
 	public static double calculateScoreByName(Set<Audit> audits, AuditName name) {
 		assert audits != null;
 		assert name != null;
-	
-		log.warn("total audits = "+audits.size());
-		log.warn("audit name == "+name);
-		log.warn("=======================================");
-		for(Audit audit : audits){
-			log.warn("audit = "+audit);
-			log.warn("audit name = "+audit.getName());
-			log.warn("total possible points = "+audit.getTotalPossiblePoints());
-		}
 
 		List<Audit> filtered_audits = audits.parallelStream()
 					.filter((s) -> (s.getTotalPossiblePoints() > 0 && name.equals(s.getName())))
@@ -349,7 +340,7 @@ public class AuditUtils {
 	 * @return
 	 */
 	public static int getCountPagesWithSubcategoryIssues(List<AuditRecord> page_audits,
-														 AuditSubcategory subcategory) {
+														AuditSubcategory subcategory) {
 		int count_failing_pages = 0;
 		for(AuditRecord page_audit : page_audits) {
 			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;

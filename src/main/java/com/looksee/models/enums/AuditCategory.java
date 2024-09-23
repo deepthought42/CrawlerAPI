@@ -7,10 +7,11 @@ import com.looksee.models.audit.Audit;
  * Defines all types of {@link Audit audits} that exist in the system
  */
 public enum AuditCategory {
-	CONTENT("CONTENT"), 
-	INFORMATION_ARCHITECTURE("INFORMATION_ARCHITECTURE"), 
-	AESTHETICS("AESTHETICS");
-    
+	CONTENT("CONTENT"),
+	INFORMATION_ARCHITECTURE("INFORMATION_ARCHITECTURE"),
+	AESTHETICS("AESTHETICS"),
+    ACCESSIBILITY("ACCESSIBILITY");
+
 	private String shortName;
 
     AuditCategory (String shortName) {

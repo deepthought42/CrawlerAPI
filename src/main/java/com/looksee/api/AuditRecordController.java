@@ -261,14 +261,23 @@ public class AuditRecordController {
 		AuditScore score = AuditUtils.extractAuditScore(audits);
 		String page_src = audit_record_service.getPageStateForAuditRecord(audit_record_id).getSrc();
 
-    	//package both elements into an object definition
-		return new ElementIssueTwoWayMapping(issues,
-												elements,
-												issue_element_map,
-												element_issue_map,
-												score,
-												page_src);
-    }
+		try{
+			//package both elements into an object definition
+			ElementIssueTwoWayMapping mapping = new ElementIssueTwoWayMapping(issues,
+													elements,
+													issue_element_map,
+													element_issue_map,
+													score,
+													page_src);
+
+			return mapping;
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
+		return null;
+	}
     
     /**
      * Creates a new {@link Observation observation} 

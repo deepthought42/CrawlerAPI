@@ -455,8 +455,8 @@ public class AuditRecordService {
 		double info_architecture_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.INFORMATION_ARCHITECTURE);
 		double visual_design_score = AuditUtils.calculateScoreByCategory(audits, AuditCategory.AESTHETICS);
 
-		log.warn("audits found = "+audits.size());
-		log.warn("content score = "+content_score);
+		//log.warn("audits found = "+audits.size());
+		//log.warn("content score = "+content_score);
 
 		AuditRecordDto audit_dto = new AuditRecordDto(audit_record.getId(),
 													audit_record.getStatus(),

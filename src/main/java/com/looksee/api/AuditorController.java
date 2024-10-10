@@ -102,6 +102,7 @@ public class AuditorController {
 			@RequestBody(required=true) AuditRecord audit_start
 	) throws Exception {
 		Principal principal = request.getUserPrincipal();
+		log.warn("looking up acount with principal = "+principal.getName());
 		Account account = account_service.findByUserId(principal.getName());
 		SubscriptionPlan plan =account.getSubscriptionType();
 		LocalDate today = LocalDate.now();
@@ -168,7 +169,6 @@ public class AuditorController {
 
 			log.warn("retrieving domain audit count...");
 			int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
-			log.warn("total domain audits found = "+domain_audit_cnt);
 
 			log.warn("checking if user has exceeded subscription limit for domain audits...");
 			if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {

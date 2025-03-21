@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.0...v1.0.1) (2025-03-21)
+
+
+### Bug Fixes
+
+* fixed dockerfile ([d0bb374](https://github.com/deepthought42/WebTestVisualizer/commit/d0bb3741ed400a27459a0a08aca75422534657cc))
+
 # 1.0.0 (2025-03-21)
 
 

@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.1...v1.0.2) (2025-03-21)
+
+
+### Bug Fixes
+
+* dynamic version for jar file in Dockerfile ([8c86df0](https://github.com/deepthought42/WebTestVisualizer/commit/8c86df0608cd20da9f1cb21ca07662e74e8515cb))
+
 ## [1.0.1](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.0...v1.0.1) (2025-03-21)
 
 

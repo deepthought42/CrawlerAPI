@@ -8,7 +8,8 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -29,7 +30,7 @@ import com.looksee.models.enums.BrowserType;
 public class UploadObjectSingleOperation {
 	private static Logger log = LoggerFactory.getLogger(UploadObjectSingleOperation.class);
 
-	private static String bucketName     = "qanairy";
+	private static String bucketName = "qanairy";
 	
 	public static String saveImageToS3(BufferedImage image, String domain, String element_key, BrowserType browser) {
 		String host_key = org.apache.commons.codec.digest.DigestUtils.sha256Hex(domain);

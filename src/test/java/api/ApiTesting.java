@@ -1,12 +1,12 @@
 package api;
 
-import org.junit.BeforeClass;
+import static com.jayway.restassured.RestAssured.*;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.jayway.restassured.response.Response;
-import static com.jayway.restassured.RestAssured.*;
 
 public class ApiTesting
 {

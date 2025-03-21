@@ -5,8 +5,6 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 **Format:**
 
-<type>(optional scope): <description>
-
 ## Examples:
 
 feat: add user login feature

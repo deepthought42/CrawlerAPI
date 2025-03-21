@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.auth0.client.mgmt.ManagementAPI;
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -23,17 +23,7 @@ public class Auth0ManagementApi {
 	private static String client_secret = "cz0DkblgOaI_LMIxXayoAja6ebcBKVnaE3eYzuBjj-0aBuOuJUjDE8mNpUdAPz51";
 	private static String domain = "auth.look-see.com";
 	private static String audience_url = "https://" + domain + "api/v2/";
-	private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
-	
-	//STAGING
-	/*
-	private static String client_id = "eAlhwgR8u68lHeX4M5R0VNqPycg7LEEo";
-	private static String client_secret = "vCo_aM0QgeQY6Ymwj2KsdeCLPahjyVVHQZYnmTfsgP8ScCLprV7n2GIHiuRKucNp";
-	private static String base_url = "https://staging-qanairy.auth0.com/";
-	private static String audience_url = base_url + "api/v2/";
-	private static String api_token = "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw";
-*/
-	
+	private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";	
 	private ManagementAPI mgmt_api;
 
 	public Auth0ManagementApi(String access_token){

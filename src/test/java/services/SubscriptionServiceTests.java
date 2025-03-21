@@ -10,8 +10,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.looksee.models.enums.SubscriptionPlan;
-import com.looksee.services.SubscriptionService;
+import com.crawlerApi.models.enums.SubscriptionPlan;
+import com.crawlerApi.services.SubscriptionService;
 
 @SpringBootTest
 public class SubscriptionServiceTests {

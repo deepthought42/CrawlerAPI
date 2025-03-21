@@ -9,7 +9,7 @@
 
 	```bash
 	maven clean install
-	java -ea -jar target/Look-see-#.#.#.jar
+	java -ea -jar target/crawlerApi-#.#.#.jar
 	```
 
 	NOTE: The `-ea` flag tells the java compiler to run the program with assertions enabled
@@ -57,8 +57,8 @@ Step 6: Delete neo4j instance
 
 	```bash
 	maven clean install
-	docker build --tag look-see .
-	docker run -p 80:80 -p 8080:8080 -p 9080:9080 -p 443:443 --name look-see look-see
+	docker build --tag crawlerApi .
+	docker run -p 80:80 -p 8080:8080 -p 9080:9080 -p 443:443 --name crawlerApi crawlerApi
 	```
 
 
@@ -76,13 +76,13 @@ Step 6: Delete neo4j instance
 
 When a new certificate is issued by GoDaddy it doesn't have the right key and we don't get the private key from them for whatever reason. Therefore it's necessary to re-key the certificate. 
 
-	1. Retrieve the look-see.com CSR from keys folder
+	1. Retrieve the crawlerApi.com CSR from keys folder
 	2. Paste CSR into field for re-keying SSL certification on GoDaddy
 	3. Select add change and download files
 
 After ensuring that all certificates are generated with the proper CSR you need to combine the CRT files provided by GoDaddy. On the command line, navigate to the folder where the downloaded certificates are located and run the following
 
-	cat c4f2f133293785ad.crt gd_bundle-g2-g1.crt > look-see.com-chain.crt
+	cat c4f2f133293785ad.crt gd_bundle-g2-g1.crt > crawlerApi.com-chain.crt
 	
 
 ## Generating a new PKCS12 certificate for SSL
@@ -99,5 +99,5 @@ Run the following command in Linux to create a keystore called api_key with a pr
 * Using PEM instead
 
 	```bash
-	openssl pkcs12 -export -inkey look-see.com.key -in look-see.com-2022-chain.pem -out api_key.p12
+	openssl pkcs12 -export -inkey crawlerApi.com.key -in crawlerApi.com-2022-chain.pem -out api_key.p12
 	```

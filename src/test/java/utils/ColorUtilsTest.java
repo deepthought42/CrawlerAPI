@@ -2,9 +2,9 @@ package utils;
 
 import org.junit.Test;
 
-import com.looksee.models.audit.ColorData;
-import com.looksee.models.audit.recommend.ColorContrastRecommendation;
-import com.looksee.utils.ColorUtils;
+import com.crawlerApi.models.audit.ColorData;
+import com.crawlerApi.models.audit.recommend.ColorContrastRecommendation;
+import com.crawlerApi.utils.ColorUtils;
 
 /**
  * 

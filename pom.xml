@@ -2,12 +2,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
- 	<groupId>com.Looksee</groupId>
+ 	<groupId>com.CrawlerApi</groupId>
 	<version>0.1.20</version>
-	<artifactId>Look-see</artifactId>
+	<artifactId>CrawlerApi</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Look-see API</name>
+	<name>Crawler API</name>
 
 	<properties>
 		<selenium-version>3.141.59</selenium-version>
@@ -48,7 +48,7 @@
 	          <version>${springboot.version}</version>
 	          <configuration>
 	              <fork>true</fork>
-	              <mainClass>com.looksee.api.EntryPoint</mainClass>
+	              <mainClass>com.crawlerApi.api.EntryPoint</mainClass>
 	          </configuration>
 	          <executions>
 	              <execution>

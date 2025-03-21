@@ -19,8 +19,8 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-import com.looksee.services.BrowserService;
-import com.looksee.utils.BrowserUtils;
+import com.crawlerApi.services.BrowserService;
+import com.crawlerApi.utils.BrowserUtils;
 
 public class BrowserUtilsTests {
 

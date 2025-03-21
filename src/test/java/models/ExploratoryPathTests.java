@@ -12,8 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.looksee.models.ExploratoryPath;
-import com.looksee.models.PageState;
+import com.crawlerApi.models.ExploratoryPath;
+import com.crawlerApi.models.PageState;
 
 @SpringBootTest
 public class ExploratoryPathTests {

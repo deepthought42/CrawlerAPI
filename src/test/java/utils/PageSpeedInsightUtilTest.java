@@ -13,9 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.api.services.pagespeedonline.v5.model.LighthouseAuditResultV5;
 import com.google.api.services.pagespeedonline.v5.model.PagespeedApiPagespeedResponseV5;
-import com.looksee.gcp.PageSpeedInsightUtils;
-import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.utils.BrowserUtils;
+import com.crawlerApi.gcp.PageSpeedInsightUtils;
+import com.crawlerApi.models.audit.UXIssueMessage;
+import com.crawlerApi.utils.BrowserUtils;
 
 public class PageSpeedInsightUtilTest {
 	private static Logger log = LoggerFactory.getLogger(PageSpeedInsightUtilTest.class.getName());

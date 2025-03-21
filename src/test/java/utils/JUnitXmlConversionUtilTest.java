@@ -10,10 +10,10 @@ import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.looksee.models.Test;
-import com.looksee.models.TestRecord;
-import com.looksee.models.enums.TestStatus;
-import com.looksee.utils.JUnitXmlConversionUtil;
+import com.crawlerApi.models.Test;
+import com.crawlerApi.models.TestRecord;
+import com.crawlerApi.models.enums.TestStatus;
+import com.crawlerApi.utils.JUnitXmlConversionUtil;
 
 /**
  * Unit tests for {@link JUnitXmlConversionUtil}

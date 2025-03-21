@@ -7,12 +7,12 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.looksee.models.audit.Audit;
-import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.AuditLevel;
-import com.looksee.models.enums.AuditName;
-import com.looksee.models.enums.AuditSubcategory;
-import com.looksee.utils.AuditUtils;
+import com.crawlerApi.models.audit.Audit;
+import com.crawlerApi.models.enums.AuditCategory;
+import com.crawlerApi.models.enums.AuditLevel;
+import com.crawlerApi.models.enums.AuditName;
+import com.crawlerApi.models.enums.AuditSubcategory;
+import com.crawlerApi.utils.AuditUtils;
 
 /**
  * 

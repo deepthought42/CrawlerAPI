@@ -6,11 +6,11 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.looksee.models.ActionOLD;
-import com.looksee.models.Element;
-import com.looksee.models.LookseeObject;
-import com.looksee.models.PageState;
-import com.looksee.models.Test;
+import com.crawlerApi.models.ActionOLD;
+import com.crawlerApi.models.Element;
+import com.crawlerApi.models.LookseeObject;
+import com.crawlerApi.models.PageState;
+import com.crawlerApi.models.Test;
 
 public class TestTests {
 	

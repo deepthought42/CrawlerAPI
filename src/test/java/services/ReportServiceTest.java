@@ -12,12 +12,12 @@ import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
 
-import com.looksee.models.UXIssueReportDto;
-import com.looksee.models.audit.recommend.Recommendation;
-import com.looksee.models.enums.AuditCategory;
-import com.looksee.models.enums.ObservationType;
-import com.looksee.models.enums.Priority;
-import com.looksee.services.ReportService;
+import com.crawlerApi.models.UXIssueReportDto;
+import com.crawlerApi.models.audit.recommend.Recommendation;
+import com.crawlerApi.models.enums.AuditCategory;
+import com.crawlerApi.models.enums.ObservationType;
+import com.crawlerApi.models.enums.Priority;
+import com.crawlerApi.services.ReportService;
 
 public class ReportServiceTest {
 	

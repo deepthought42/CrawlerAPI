@@ -7,9 +7,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.looksee.generators.report.GeneratePDFReport;
-import com.looksee.models.enums.AuditSubcategory;
-import com.looksee.models.enums.WCAGComplianceLevel;
+import com.crawlerApi.generators.report.GeneratePDFReport;
+import com.crawlerApi.models.enums.AuditSubcategory;
+import com.crawlerApi.models.enums.WCAGComplianceLevel;
 
 public class PDFGeneratorTest {
 

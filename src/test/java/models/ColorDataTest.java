@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.looksee.models.audit.ColorData;
+import com.crawlerApi.models.audit.ColorData;
 
 public class ColorDataTest {
 

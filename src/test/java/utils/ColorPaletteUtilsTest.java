@@ -9,9 +9,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.looksee.models.audit.ColorData;
-import com.looksee.models.audit.ColorPaletteUtils;
-import com.looksee.models.designsystem.PaletteColor;
+import com.crawlerApi.models.audit.ColorData;
+import com.crawlerApi.models.audit.ColorPaletteUtils;
+import com.crawlerApi.models.designsystem.PaletteColor;
 
 
 public class ColorPaletteUtilsTest {

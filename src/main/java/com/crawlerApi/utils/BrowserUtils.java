@@ -95,7 +95,7 @@ public class BrowserUtils {
 	
 	
 	/**
-	 * Reformats url so that it matches the Look-see requirements
+	 * Reformats url so that it matches the CrawlerApi requirements
 	 * 
 	 * @param url 
 	 * 

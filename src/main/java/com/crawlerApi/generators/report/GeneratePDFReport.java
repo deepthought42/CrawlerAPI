@@ -187,7 +187,7 @@ public class GeneratePDFReport {
 		
 		content_stream.beginText();
 		int copyrightSymbolCodePoint = 169;
-		StringBuilder sb = new StringBuilder( "Look-see " ) ;
+		StringBuilder sb = new StringBuilder( "CrawlerApi " ) ;
 		sb.appendCodePoint( copyrightSymbolCodePoint ) ;
 		sb.append(" 2022");
 		String output = sb.toString() ;
@@ -285,13 +285,13 @@ public class GeneratePDFReport {
 		
 		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.newLineAtOffset(0, -70);
-		content_stream.showText("Look-see!");
+		content_stream.showText("CrawlerApi!");
 		content_stream.endText();
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 420);
-		content_stream.showText("The Look-see platform has analyzed the experience on your website and");
+		content_stream.showText("The CrawlerApi platform has analyzed the experience on your website and");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("generated a report for "+domain_host+". We audited a total of "+pages_audited+" pages from");
 		content_stream.newLineAtOffset(0, -20);
@@ -336,11 +336,11 @@ public class GeneratePDFReport {
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.beginText();
 		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 650);
-		content_stream.showText("Look-see Scoring");
+		content_stream.showText("CrawlerApi Scoring");
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("Our comprehensive Look-see scoring criteria encompasses");
+		content_stream.showText("Our comprehensive CrawlerApi scoring criteria encompasses");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("extensive research, best practices, and ADA (Americans with");
 		content_stream.newLineAtOffset(0, -20);
@@ -411,7 +411,7 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("your improvement areas.");
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("Let’s have a look at our Look-see meter to see how you");
+		content_stream.showText("Let’s have a look at our CrawlerApi meter to see how you");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("scored.");
 		
@@ -584,7 +584,7 @@ public class GeneratePDFReport {
 
 		content_stream.beginText();
 		content_stream.newLineAtOffset(70, 450);
-		content_stream.showText("You are a few steps away from reaching Look-see’s top tier!");
+		content_stream.showText("You are a few steps away from reaching CrawlerApi’s top tier!");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText(domain_host + " meets certain best practice standards and provides a good");
 		content_stream.newLineAtOffset(0, -20);
@@ -651,7 +651,7 @@ public class GeneratePDFReport {
 		
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -30);
-		content_stream.showText("You scored "+overall_score+" on the Look-see Meter!");
+		content_stream.showText("You scored "+overall_score+" on the CrawlerApi Meter!");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText(domain_host + " is almost at a delightful user experience.");
 		

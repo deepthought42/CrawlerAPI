@@ -11,6 +11,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.crawlerApi.models.audit.UXIssueMessage;
+import com.crawlerApi.models.audit.recommend.Recommendation;
+import com.crawlerApi.models.enums.AuditCategory;
+import com.crawlerApi.models.enums.ObservationType;
+import com.crawlerApi.models.enums.Priority;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -19,12 +24,6 @@ import com.google.api.client.util.ArrayMap;
 import com.google.api.services.pagespeedonline.v5.PagespeedInsights;
 import com.google.api.services.pagespeedonline.v5.model.LighthouseAuditResultV5;
 import com.google.api.services.pagespeedonline.v5.model.PagespeedApiPagespeedResponseV5;
-import com.crawlerApi.models.audit.UXIssueMessage;
-import com.crawlerApi.models.audit.recommend.Recommendation;
-import com.crawlerApi.models.enums.AuditCategory;
-import com.crawlerApi.models.enums.InsightType;
-import com.crawlerApi.models.enums.ObservationType;
-import com.crawlerApi.models.enums.Priority;
 
 
 public class PageSpeedInsightUtils {
@@ -51,7 +50,7 @@ public class PageSpeedInsightUtils {
 	    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
 
 	    HttpRequestInitializer httpRequestInitializer = null; //this can be null here!
-	    PagespeedInsights p = new PagespeedInsights.Builder(transport, jsonFactory, httpRequestInitializer).setApplicationName("Look-see").build();
+	    PagespeedInsights p = new PagespeedInsights.Builder(transport, jsonFactory, httpRequestInitializer).setApplicationName("CrawlerApi").build();
 	    
 	    PagespeedInsights.Pagespeedapi.Runpagespeed runpagespeed  = p.pagespeedapi().runpagespeed().setUrl(url).setKey(API_KEY);
 	    List<String> category = new ArrayList<>();

@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t deepthought42/crawler-app:${{ env.VERSION }} .
+          docker build --build-arg VERSION=${{ env.VERSION }} -t deepthought42/crawler-app:${{ env.VERSION }} .
           docker tag deepthought42/crawler-app:${{ env.VERSION }} deepthought42/crawler-app:latest
 
       - name: Login to DockerHub

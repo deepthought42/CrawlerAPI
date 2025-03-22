@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.2...v1.0.3) (2025-03-22)
+
+
+### Bug Fixes
+
+* changed order of steps in build process ([7d92f8a](https://github.com/deepthought42/WebTestVisualizer/commit/7d92f8ace0f549b65ade5e7faf002698889266f5))
+
 ## [1.0.2](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.1...v1.0.2) (2025-03-21)
 
 

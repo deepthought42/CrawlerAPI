@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.3...v1.0.4) (2025-03-22)
+
+
+### Bug Fixes
+
+* removed target folder from dockerfile copy ([1beecb4](https://github.com/deepthought42/WebTestVisualizer/commit/1beecb437cb80a59e43ba6810835b76378f41706))
+
 ## [1.0.3](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.2...v1.0.3) (2025-03-22)
 
 

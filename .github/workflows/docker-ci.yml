@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Build, Push, Release
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
     branches:
       - master
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,53 +16,54 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          path: ~/.m2
-          key: maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: maven-
+          node-version: '20'
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Extract version from pom.xml
-        id: project_version
+      - name: Determine and bump version with Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Extract new version from pom.xml
+        id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CrawlerApi-${{ env.VERSION }}.jar
-          path: target/*.jar
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' # Only release from main branch
-
-    steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: CrawlerApi-${{ env.VERSION }}.jar
+      - name: Build with Maven
+        run: mvn clean install
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
-          body: |
-            🎉 New release of the app!
-            Version: v${{ env.VERSION }}
-          draft: false
-          prerelease: false
+          body_path: CHANGELOG.md
           files: CrawlerApi-${{ env.VERSION }}.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build Docker image
+        run: |
+          docker build --build-arg VERSION=${{ env.VERSION }} -t deepthought42/crawler-app:${{ env.VERSION }} .
+          docker tag deepthought42/crawler-app:${{ env.VERSION }} deepthought42/crawler-app:latest
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image
+        run: |
+          docker push deepthought42/crawler-app:${{ env.VERSION }}
+          docker push deepthought42/crawler-app:latest

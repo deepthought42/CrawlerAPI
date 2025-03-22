@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk14
 
-COPY target/CrawlerApi-${VERSION}.jar app.jar
+COPY CrawlerApi-${VERSION}.jar app.jar
 #COPY GCP-MyFirstProject-1c31159db52c.json GCP-MyFirstProject-1c31159db52c.json
 #COPY gmail_credentials.json /etc/creds/gmail_credentials.json
 EXPOSE 443

@@ -40,7 +40,7 @@ jobs:
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ env.VERSION }}.jar
+          name: CrawlerApi-${{ env.VERSION }}.jar
           path: target/*.jar
 
   release:
@@ -52,7 +52,7 @@ jobs:
       - name: Download JAR artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-${{ env.VERSION }}.jar
+          name: CrawlerApi-${{ env.VERSION }}.jar
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -66,4 +66,4 @@ jobs:
             Version: v${{ env.VERSION }}
           draft: false
           prerelease: false
-          files: app-${{ env.VERSION }}.jar
+          files: CrawlerApi-${{ env.VERSION }}.jar

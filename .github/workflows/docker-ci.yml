@@ -46,7 +46,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' # Only release from main branch
+    if: github.ref == 'refs/heads/master' # Only release from main branch
 
     steps:
       - name: Download JAR artifact

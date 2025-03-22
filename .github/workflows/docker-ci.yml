@@ -1,12 +1,9 @@
-name: Build, Push, Release
+name: CI/CD Pipeline 🚀
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger too!
 
 jobs:
   build:
@@ -16,53 +13,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
         with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
+          path: ~/.m2
+          key: maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: maven-
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn -B package --file pom.xml
 
-      - name: Determine and bump version with Semantic Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
-
-      - name: Extract new version from pom.xml
-        id: get_version
+      - name: Extract version from pom.xml
+        id: project_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ env.VERSION }}.jar
+          path: target/*.jar
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Only release from main branch
+
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-${{ env.VERSION }}.jar
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
-          body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Docker image
-        run: |
-          docker build --build-arg VERSION=${{ env.VERSION }} -t deepthought42/crawler-app:${{ env.VERSION }} .
-          docker tag deepthought42/crawler-app:${{ env.VERSION }} deepthought42/crawler-app:latest
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
-        run: |
-          docker push deepthought42/crawler-app:${{ env.VERSION }}
-          docker push deepthought42/crawler-app:latest
+          body: |
+            🎉 New release of the app!
+            Version: v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: app-${{ env.VERSION }}.jar

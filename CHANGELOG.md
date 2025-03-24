@@ -1,3 +1,11 @@
+## [1.0.5](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.4...v1.0.5) (2025-03-24)
+
+
+### Bug Fixes
+
+* fixed docker image name ([0f9fb3b](https://github.com/deepthought42/WebTestVisualizer/commit/0f9fb3bc028da58df287a99b1173658bb0dd1dff))
+* set workdir to app for build in docker ([c922354](https://github.com/deepthought42/WebTestVisualizer/commit/c92235410ff3ff1da5833a940d4a33c313100c7c))
+
 ## [1.0.4](https://github.com/deepthought42/WebTestVisualizer/compare/v1.0.3...v1.0.4) (2025-03-22)
 
 

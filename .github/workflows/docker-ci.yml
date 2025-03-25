@@ -47,6 +47,11 @@ jobs:
           docker build -t deepthought42/crawler-api:${{ env.VERSION }} .
           docker tag deepthought42/crawler-api:${{ env.VERSION }} deepthought42/crawler-api:latest
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:

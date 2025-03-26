@@ -37,12 +37,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+      - name: Test with Maven
+        run: mvn test
+
       - name: Extract new version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
-
-      - name: Test with Maven
-        run: mvn test
 
   build-and-release:
     needs: test
@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Build Docker image
         run: |
           docker build -t deepthought42/crawler-api:${{ env.VERSION }} .
@@ -70,12 +70,31 @@ jobs:
           docker push deepthought42/crawler-api:${{ env.VERSION }}
           docker push deepthought42/crawler-api:latest
       
+  github-release:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.test.outputs.VERSION }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+      
+      - name: Test with Maven
+        run: mvn clean install
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
           body_path: CHANGELOG.md
-          files: CrawlerApi-${{ env.VERSION }}.jar
+          files: PageBuilder-${{ env.VERSION }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

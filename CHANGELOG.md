@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/deepthought42/CrawlerApi/compare/v1.0.5...v1.0.6) (2025-03-26)
+
+
+### Bug Fixes
+
+* release step relies on build step ([7212de4](https://github.com/deepthought42/CrawlerApi/commit/7212de458211a6ab6c2cfe6b1f3840c61c4a85cc))
+
 ## [1.0.5](https://github.com/deepthought42/CrawlerApi/compare/v1.0.4...v1.0.5) (2025-03-24)
 
 

@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/deepthought42/CrawlerApi/compare/v1.0.8...v1.0.9) (2025-03-26)
+
+
+### Bug Fixes
+
+* made version available across jobs ([05e693e](https://github.com/deepthought42/CrawlerApi/commit/05e693e83700a37c1f3791f5aa546756dea55697))
+
 ## [1.0.8](https://github.com/deepthought42/CrawlerApi/compare/v1.0.7...v1.0.8) (2025-03-26)
 
 

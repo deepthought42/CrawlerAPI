@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/deepthought42/CrawlerApi/compare/v1.0.6...v1.0.7) (2025-03-26)
+
+
+### Bug Fixes
+
+* moved docker image build to build and release step. renamed build to test ([169a1d3](https://github.com/deepthought42/CrawlerApi/commit/169a1d3d06394b99d31394cd701a57e4fae4efde))
+
 ## [1.0.6](https://github.com/deepthought42/CrawlerApi/compare/v1.0.5...v1.0.6) (2025-03-26)
 
 

@@ -51,6 +51,9 @@ jobs:
       VERSION: ${{ needs.test.outputs.VERSION }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       - name: Build Docker image
         run: |
           docker build -t deepthought42/crawler-api:${{ env.VERSION }} .

@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/deepthought42/CrawlerApi/compare/v1.1.0...v1.1.1) (2025-03-26)
+
+
+### Bug Fixes
+
+* bump version steps separated from test steps ([e52caa0](https://github.com/deepthought42/CrawlerApi/commit/e52caa0ff3f96f2ac84fab6850298edef5ee870f))
+
 # [1.1.0](https://github.com/deepthought42/CrawlerApi/compare/v1.0.9...v1.1.0) (2025-03-26)
 
 

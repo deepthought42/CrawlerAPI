@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/deepthought42/CrawlerApi/compare/v1.0.7...v1.0.8) (2025-03-26)
+
+
+### Bug Fixes
+
+* package name to lowercase ([7ca76c8](https://github.com/deepthought42/CrawlerApi/commit/7ca76c835042b8f190f3cc8f56995d61c0401109))
+
 ## [1.0.7](https://github.com/deepthought42/CrawlerApi/compare/v1.0.6...v1.0.7) (2025-03-26)
 
 

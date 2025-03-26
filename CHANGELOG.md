@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/deepthought42/CrawlerApi/compare/v1.1.1...v1.1.2) (2025-03-26)
+
+
+### Bug Fixes
+
+* mvn install skips tests ([06eed96](https://github.com/deepthought42/CrawlerApi/commit/06eed967f5f0dc76321c179fc243454720b99cc5))
+
 ## [1.1.1](https://github.com/deepthought42/CrawlerApi/compare/v1.1.0...v1.1.1) (2025-03-26)
 
 

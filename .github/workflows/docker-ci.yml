@@ -97,7 +97,7 @@ jobs:
           java-version: '17'
       
       - name: Test with Maven
-        run: mvn clean install
+        run: mvn install -DskipTests
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

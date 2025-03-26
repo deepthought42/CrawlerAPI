@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/deepthought42/CrawlerApi/compare/v1.0.9...v1.1.0) (2025-03-26)
+
+
+### Features
+
+* added step for github release. moved mvn test to beginning of test step ([1aa7d66](https://github.com/deepthought42/CrawlerApi/commit/1aa7d66d5276c84918d1bf0b915a4f3e32884597))
+
 ## [1.0.9](https://github.com/deepthought42/CrawlerApi/compare/v1.0.8...v1.0.9) (2025-03-26)
 
 

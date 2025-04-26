@@ -211,12 +211,12 @@ public class BrowserUtilsTests {
 
 	@Test
 	public void doesUrlExistTest() throws Exception {
-		String url1 = "https://www.look-see.com";
+		String url1 = "https://www.google.com";
 		
 		assertTrue(BrowserUtils.doesUrlExist(url1));
 		
-		//String url2 = "https://www.businesswirefasfasfasfew.com/";
-		//assertFalse(BrowserUtils.doesUrlExist(url2));
+		String url2 = "https://www.businesswirefasfasfasfew.com/";
+		assertFalse(BrowserUtils.doesUrlExist(url2));
 		
 		String url3 = "https://www.look-see.com/product";
 		

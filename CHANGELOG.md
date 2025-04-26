@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/deepthought42/CrawlerApi/compare/v1.1.3...v1.1.4) (2025-04-26)
+
+
+### Bug Fixes
+
+* fixed gitignore for resource folder ([0a35661](https://github.com/deepthought42/CrawlerApi/commit/0a35661f9b42097878f0f441a77a3b2741958194))
+
 ## [1.1.3](https://github.com/deepthought42/CrawlerApi/compare/v1.1.2...v1.1.3) (2025-04-26)
 
 

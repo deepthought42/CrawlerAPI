@@ -8,14 +8,16 @@ LOG_FILE_IS_UNDEFINED
 *.properties.prod
 *.properties.stage
 *.properties.dev
+*.dev.yml
+*.stage.yml
+*.prod.yml
+auth0.properties
 .settings/org.eclipse.jdt.core.prefs
 .classpath
 
 JavaBooks.xlsx
 
 *.gz
-
-src/main/resources/
 
 *.pdf
 /.apt_generated/

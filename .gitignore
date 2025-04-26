@@ -5,7 +5,9 @@
 LOG_FILE_IS_UNDEFINED
 LOG_FILE_IS_UNDEFINED
 *.p12
-*.properties
+*.properties.prod
+*.properties.stage
+*.properties.dev
 .settings/org.eclipse.jdt.core.prefs
 .classpath
 

@@ -1,3 +1,11 @@
+## [1.1.3](https://github.com/deepthought42/CrawlerApi/compare/v1.1.2...v1.1.3) (2025-04-26)
+
+
+### Bug Fixes
+
+* remove secrets from application.properties and allow it to be tracked ([1eb8497](https://github.com/deepthought42/CrawlerApi/commit/1eb8497d635c0dfc6e3804883d633a511fd3b76c))
+* removed assets that no longer exist ([be96465](https://github.com/deepthought42/CrawlerApi/commit/be9646544847ef6e76a4f67e8c47c1d222582eae))
+
 ## [1.1.2](https://github.com/deepthought42/CrawlerApi/compare/v1.1.1...v1.1.2) (2025-03-26)
 
 

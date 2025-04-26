@@ -1,3 +1,10 @@
+## [1.1.7](https://github.com/deepthought42/CrawlerApi/compare/v1.1.6...v1.1.7) (2025-04-26)
+
+
+### Bug Fixes
+
+* added auth0 properties ([d6b66c6](https://github.com/deepthought42/CrawlerApi/commit/d6b66c6f1a3cbd428aac37f96d348ad16e6c03ba))
+
 ## [1.1.6](https://github.com/deepthought42/CrawlerApi/compare/v1.1.5...v1.1.6) (2025-04-26)
 
 

@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/deepthought42/CrawlerApi/compare/v1.1.4...v1.1.5) (2025-04-26)
+
+
+### Bug Fixes
+
+* pubsub topic config cleanup ([0bfe631](https://github.com/deepthought42/CrawlerApi/commit/0bfe6318c643efd14a92db3f9cbd8cb3e5caf5b4))
+
 ## [1.1.4](https://github.com/deepthought42/CrawlerApi/compare/v1.1.3...v1.1.4) (2025-04-26)
 
 

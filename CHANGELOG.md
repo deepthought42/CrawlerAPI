@@ -1,3 +1,11 @@
+## [1.1.6](https://github.com/deepthought42/CrawlerApi/compare/v1.1.5...v1.1.6) (2025-04-26)
+
+
+### Bug Fixes
+
+* added resource folder to pom file ([189f1ce](https://github.com/deepthought42/CrawlerApi/commit/189f1ce69fbff8d7e0643ce6a1e0a0568c4da2a9))
+* url check update ([5443820](https://github.com/deepthought42/CrawlerApi/commit/5443820fda75f84aebb7a95033121afaff6e6fdf))
+
 ## [1.1.5](https://github.com/deepthought42/CrawlerApi/compare/v1.1.4...v1.1.5) (2025-04-26)
 
 

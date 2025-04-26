@@ -49,13 +49,13 @@ public class GeneratePDFReport {
 		 setDocument(new PDDocument());
 		 setDocumentName(domain_url+"-"+LocalDate.now()+".pdf");
 		 setBaseFont(PDType0Font.load(document, 
-				 new URL("https://storage.googleapis.com/look-see-inc-assets/fonts/cera-pro/CeraProBlack.ttf").openStream()));
+				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProBlack.ttf")));
 		 setLightFont(PDType0Font.load(document, 
-				 new URL("https://storage.googleapis.com/look-see-inc-assets/fonts/cera-pro/CeraProLight.ttf").openStream()));
+				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProLight.ttf")));
 		 setMediumFont(PDType0Font.load(document, 
-				 new URL("https://storage.googleapis.com/look-see-inc-assets/fonts/cera-pro/CeraProMedium.ttf").openStream()));
+				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProMedium.ttf")));
 		 setBoldFont(PDType0Font.load(document, 
-				 new URL("https://storage.googleapis.com/look-see-inc-assets/fonts/cera-pro/CeraProBold.ttf").openStream()));
+				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProBold.ttf")));
 	}
 	
 	/**
@@ -136,7 +136,7 @@ public class GeneratePDFReport {
 		
 		this.generateWrittenContentCoverPage(written_content_score, domain_host);
 		this.generateWrittenContentEaseOfUnderstandingPage(ease_of_understanding_score, 
-														   domain_host, 
+														   domain_host,
 														   avg_difficulty_string, 
 														   avg_grade_level, 
 														   non_ada_compliant_pages);
@@ -168,11 +168,11 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL cover_background =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/cover-background-1.png");
-		addImageToPage(document, 0, -30, 1.36f, cover_background, content_stream);
+		//URL cover_background =new URL(COVERPAGE_BACKGROUND_1_PNG_URL);
+		//addImageToPage(document, 0, -30, 1.36f, cover_background, content_stream);
 
-		URL watermark_logo =new URL("https://storage.googleapis.com/look-see-inc-assets/Wordmark_White.png");
-		addImageToPage(document, 240, 550, 0.08f, watermark_logo, content_stream);
+		//URL watermark_logo =new URL(WHITELABELED_LOGO_URL);
+		//addImageToPage(document, 240, 550, 0.08f, watermark_logo, content_stream);
 		
 		//company name/report title
 		content_stream.setFont(getMediumFont(), HEADER_1);
@@ -207,8 +207,8 @@ public class GeneratePDFReport {
 		PDPage page = new PDPage();
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/report-background-4.png");
-		addImageToPage(document, 0, 0, 0.32f, background_url, content_stream);
+		//URL background_url =new URL(COVERPAGE_BACKGROUND_4_PNG_URL);
+		//addImageToPage(document, 0, 0, 0.32f, background_url, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_2);
 		content_stream.beginText();
@@ -270,8 +270,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(WELCOME_PAGE_BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -366,12 +366,12 @@ public class GeneratePDFReport {
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("Your experience “needs work”.");
+		content_stream.showText("Your experience 'needs work'.");
 		content_stream.endText();
 		
 		//mid score
-		URL almost_there_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 370, 0.3f, almost_there_emoji_url, content_stream);
+		//URL almost_there_emoji_url =new URL(ALMOST_THERE_EMOJI_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 370, 0.3f, almost_there_emoji_url, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(249, 191, 7));
@@ -382,12 +382,12 @@ public class GeneratePDFReport {
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("Your experience is “almost there”.");
+		content_stream.showText("Your experience is 'almost there'.");
 		content_stream.endText();
 		
 		//high score
-		URL delightful_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 290, 0.3f, delightful_emoji_url, content_stream);
+		//URL delightful_emoji_url =new URL(DELIGHTFUL_EMOJI_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 290, 0.3f, delightful_emoji_url, content_stream);
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(35, 216, 164));
 		content_stream.beginText();
@@ -397,7 +397,7 @@ public class GeneratePDFReport {
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.setFont(getMediumFont(), TEXT_SIZE);
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("Your experience is “delightful”.");
+		content_stream.showText("Your experience is 'delightful'.");
 		content_stream.endText();
 		
 		
@@ -411,7 +411,7 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("your improvement areas.");
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("Let’s have a look at our CrawlerApi meter to see how you");
+		content_stream.showText("Let's have a look at our CrawlerApi meter to see how you");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("scored.");
 		
@@ -433,16 +433,16 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(AUDIT_CATEGORY_DESCRIPTION_BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 80, 450, 640);
 		content_stream.fill();
 
 		//color management
-		URL color_management_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/color-management-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 650, 0.6f, color_management_icon, content_stream);
+		//URL color_management_icon = new URL(COLOR_MANAGEMENT_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 650, 0.6f, color_management_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -458,8 +458,8 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		//branding
-		URL branding_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/visuals-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 550, 0.6f, branding_icon, content_stream);
+		//URL branding_icon = new URL(BRANDING_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 550, 0.6f, branding_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -475,8 +475,8 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		//visuals
-		URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 450, 0.6f, visuals_icon, content_stream);
+		//URL visuals_icon = new URL(VISUALS_LANDSCAPE_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 450, 0.6f, visuals_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -493,8 +493,8 @@ public class GeneratePDFReport {
 		
 		
 		//written content
-		URL written_content_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/written-content-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 350, 0.6f, written_content_icon, content_stream);
+		//URL written_content_icon = new URL(WRITTEN_CONTENT_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 350, 0.6f, written_content_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -510,8 +510,8 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		//typography
-		URL typography_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/typography-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 250, 0.6f, typography_icon, content_stream);
+		//URL typography_icon = new URL(TYPOGRAPHY_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 250, 0.6f, typography_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -525,8 +525,8 @@ public class GeneratePDFReport {
 		content_stream.endText();
 		
 		//Information architecture
-		URL info_architecture_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/info-architecture-icon.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 150, 0.6f, info_architecture_icon, content_stream);
+		//URL info_architecture_icon = new URL(INFO_ARCHITECTURE_ICON_URL);
+		//addImageToPage(document, LEFT_MARGIN_LG, 150, 0.6f, info_architecture_icon, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_4);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -562,8 +562,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 50, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 50, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(0, 0, 550, 800);
@@ -584,7 +584,7 @@ public class GeneratePDFReport {
 
 		content_stream.beginText();
 		content_stream.newLineAtOffset(70, 450);
-		content_stream.showText("You are a few steps away from reaching CrawlerApi’s top tier!");
+		content_stream.showText("You are a few steps away from reaching CrawlerApi's top tier!");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText(domain_host + " meets certain best practice standards and provides a good");
 		content_stream.newLineAtOffset(0, -20);
@@ -636,8 +636,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 50, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 50, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(0, 0, 550, 800);
@@ -729,8 +729,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/color_management_cover_1.png");
-		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
+		//URL background_url =new URL(COLOR_MANAGEMENT_COVER_1_PNG_URL);
+		//addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
 		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
@@ -779,8 +779,8 @@ public class GeneratePDFReport {
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
 	
-		URL background_url2 =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/color_management_cover_1.png");
-		addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
+		//URL background_url2 =new URL(COLOR_MANAGEMENT_COVER_2_PNG_URL);
+		//addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
 		content_stream2.close();
 	}
 	
@@ -804,8 +804,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -880,8 +880,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -918,8 +918,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -977,7 +977,7 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("primary color should have 60% usage, secondary color 30% and an accent");
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("color 10% on your website. Thats why it’s also recommended to use a");
+		content_stream.showText("color 10% on your website. Thats why it's also recommended to use a");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("triadic color palette – up to 3 colors. Anything less at times, gives you less");
 		content_stream.newLineAtOffset(0, -20);
@@ -1014,8 +1014,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATTERN_PNG_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1091,8 +1091,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1184,8 +1184,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1253,8 +1253,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1295,7 +1295,7 @@ public class GeneratePDFReport {
 		content_stream.setFont(getLightFont(), TEXT_SIZE);
 		content_stream.setNonStrokingColor(Color.BLACK);
 		content_stream.newLineAtOffset(0, -40);
-		content_stream.showText("Change the CTA color buttons to high contrast colors, to captivate the user’s");
+		content_stream.showText("Change the CTA color buttons to high contrast colors, to captivate the user's");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("interest.");
 		
@@ -1336,8 +1336,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/written_content_cover_background.png");
-		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
+		//URL background_url =new URL(WRITTEN_CONTENT_COVER_BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
 		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
@@ -1386,8 +1386,8 @@ public class GeneratePDFReport {
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
 	
-		URL background_url2 =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/written_content_cover_background.png");
-		addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
+		//URL background_url2 =new URL(WRITTEN_CONTENT_COVER_BACKGROUND_PNG_URL);
+		//addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
 		content_stream2.close();
 	}
 	
@@ -1413,8 +1413,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1488,8 +1488,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1561,8 +1561,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1630,8 +1630,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1690,10 +1690,10 @@ public class GeneratePDFReport {
 	 * @throws IOException
 	 */
 	public void generateWrittenContentSEOPage(int score, 
-							 			 			  String domain_host,
-							 			 			  int number_of_pages_with_issues,
-							 			 			  int total_pages,
-							 			 			  int average_words_per_sentence
+												String domain_host,
+												int number_of_pages_with_issues,
+												int total_pages,
+												int average_words_per_sentence
 	) throws IOException {
 		assert domain_host != null;
 		assert !domain_host.isEmpty();
@@ -1703,8 +1703,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1715,7 +1715,6 @@ public class GeneratePDFReport {
 		content_stream.beginText();
 		content_stream.newLineAtOffset(LEFT_MARGIN_LG, 750);
 		content_stream.showText("WRITTEN CONTENT");
-		
 		
 		content_stream.setFont(getBoldFont(), HEADER_1);
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -1803,8 +1802,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PATH_PATTERN_LIGHT_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -1832,7 +1831,7 @@ public class GeneratePDFReport {
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("if they are attracted by a title and description that is clear, concise, and");
 		content_stream.newLineAtOffset(0, -20);
-		content_stream.showText("not overwhelming. An SEO-friendly URL improves your website’s search");
+		content_stream.showText("not overwhelming. An SEO-friendly URL improves your website's search");
 		content_stream.newLineAtOffset(0, -20);
 		content_stream.showText("ability.");
 		
@@ -1886,8 +1885,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/visuals-background-1.png");
-		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
+		//URL background_url =new URL(COVERPAGE_BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
 		content_stream.setFont(getBaseFont(), 56);
 		content_stream.setNonStrokingColor(Color.WHITE);
@@ -1928,8 +1927,8 @@ public class GeneratePDFReport {
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
 	
-		URL background_url2 =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/visuals-background-1.png");
-		addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
+		//URL background_url2 =new URL(VISUALS_BACKGROUND_1_PNG_URL);
+		//addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
 		content_stream2.close();
 	}
 	
@@ -1956,8 +1955,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -2020,13 +2019,13 @@ public class GeneratePDFReport {
 			content_stream.newLineAtOffset(0, -40);
 			content_stream.showText("Your website does not meet the level "+company_compliance+" ADA compliance requirement for");
 			content_stream.newLineAtOffset(0, -20);
-			content_stream.showText("‘Alt’ text for images present on the website.");
+			content_stream.showText("'Alt' text for images present on the website.");
 		}
 		else {
 			content_stream.newLineAtOffset(0, -40);
 			content_stream.showText("Your website meets the level "+company_compliance+" ADA compliance requirement for");
 			content_stream.newLineAtOffset(0, -20);
-			content_stream.showText("‘Alt’ text for images present on the website.");
+			content_stream.showText("'Alt' text for images present on the website.");
 		}
 		
 		content_stream.endText();
@@ -2046,8 +2045,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL(BACKGROUND_PNG_URL);
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 0, 550, 800);
@@ -2135,8 +2134,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/visuals-background-1.png");
-		addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
+		//URL background_url =new URL(VISUALS_BACKGROUND_1_PNG_URL);
+		//addImageToPage(document, 0, -150, 1.3f, background_url, content_stream);
 		
 		content_stream.setFont(getBaseFont(), HEADER_XL);
 		content_stream.setNonStrokingColor(Color.WHITE);
@@ -2189,8 +2188,8 @@ public class GeneratePDFReport {
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
 	
-		URL background_url2 =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/visuals-background-1.png");
-		addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
+		//URL background_url2 =new URL(VISUALS_BACKGROUND_1_PNG_URL);
+		//addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
 		content_stream2.close();
 	}
 	
@@ -2235,8 +2234,8 @@ public class GeneratePDFReport {
 		addPage(page2);
 		PDPageContentStream content_stream2 = new PDPageContentStream(document, page2);
 	
-		URL background_url2 =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/appendix-background-1.png");
-		addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
+		//URL background_url2 =new URL(APPENDIX_BACKGROUND_1_PNG_URL);
+		//addImageToPage(document, -550, 0, 1.0f, background_url2, content_stream2);
 		content_stream2.close();
 	}
 	
@@ -2574,8 +2573,8 @@ public class GeneratePDFReport {
 
 		
 		if(AuditSubcategory.COLOR_MANAGEMENT.equals(category)) {
-			URL color_management_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/color-management-icon.png");
-			addImageToPage(document, x, y, 0.4f, color_management_icon, content_stream);
+			//URL color_management_icon = new URL(COLOR_MANAGEMENT_ICON_PNG_URL);
+			//addImageToPage(document, x, y, 0.4f, color_management_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2585,8 +2584,8 @@ public class GeneratePDFReport {
 			content_stream.endText();
 		}
 		else if(AuditSubcategory.TYPOGRAPHY.equals(category)) {
-			URL typography_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/typography-icon.png");
-			addImageToPage(document, x, y, 0.4f, typography_icon, content_stream);
+			//URL typography_icon = new URL(TYPOGRAPHY_ICON_PNG_URL);
+			//addImageToPage(document, x, y, 0.4f, typography_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2596,8 +2595,8 @@ public class GeneratePDFReport {
 			content_stream.endText();
 		}
 		else if(AuditSubcategory.IMAGERY.equals(category)) {
-			URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
-			addImageToPage(document, x, y, 0.4f, visuals_icon, content_stream);
+			//URL visuals_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/landscape-icon.png");
+			//addImageToPage(document, x, y, 0.4f, visuals_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2607,8 +2606,8 @@ public class GeneratePDFReport {
 			content_stream.endText();
 		}
 		else if(AuditSubcategory.WRITTEN_CONTENT.equals(category)) {
-			URL written_content_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/written-content-icon.png");
-			addImageToPage(document, x, y, 0.4f, written_content_icon, content_stream);
+			//URL written_content_icon = new URL(WRITTEN_CONTENT_ICON_PNG_URL);
+			//addImageToPage(document, x, y, 0.4f, written_content_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2618,8 +2617,8 @@ public class GeneratePDFReport {
 			content_stream.endText();
 		}
 		else if(AuditSubcategory.BRANDING.equals(category)) {
-			URL branding_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/visuals-icon.png");
-			addImageToPage(document, x, y, 0.4f, branding_icon, content_stream);
+			//URL branding_icon = new URL(BRANDING_ICON_PNG_URL);
+			//addImageToPage(document, x, y, 0.4f, branding_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2629,8 +2628,8 @@ public class GeneratePDFReport {
 			content_stream.endText();
 		}
 		else if(AuditSubcategory.INFORMATION_ARCHITECTURE.equals(category)) {
-			URL info_architecture_icon = new URL("https://storage.googleapis.com/look-see-inc-assets/icons/info-architecture-icon.png");
-			addImageToPage(document, x, y, 0.4f, info_architecture_icon, content_stream);
+			//URL info_architecture_icon = new URL(INFORMATION_ARCHITECTURE_ICON_PNG_URL);
+			//addImageToPage(document, x, y, 0.4f, info_architecture_icon, content_stream);
 			
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
@@ -2663,8 +2662,8 @@ public class GeneratePDFReport {
 									   int height
     ) throws IOException {
 		//create overall score box with rounded edges, drop shadow and progress style bar
-		URL score_overview_card = new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/gray-rectangle-rounded.png");
-		addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
+		//URL score_overview_card = new URL(SCORE_OVERVIEW_CARD_PNG_URL);
+		//addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
 		
 		content_stream.setFont(getMediumFont(), HEADER_1);
 		content_stream.setNonStrokingColor(getScoreColor(score));
@@ -2795,8 +2794,8 @@ public class GeneratePDFReport {
 									int height
 	) throws IOException {
 		//create overall score box with rounded edges, drop shadow and progress style bar
-		URL score_overview_card = new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/white-rounded-rectangle.png");
-		addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
+		//URL score_overview_card = new URL(SCORE_OVERVIEW_CARD_PNG_URL);
+		//addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
 		
 		URL emoji = getScoreEmojiImage(score);
 		addImageToPage(document, x+40, y+LEFT_MARGIN_LG, 0.4f, emoji, content_stream);
@@ -2840,8 +2839,8 @@ public class GeneratePDFReport {
 		content_stream.addRect(x, y, (int)(width*(score/100.0)), height);
 		content_stream.fill();
 		
-		URL up_caret =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/Arrow_Up-128px.png");
-		addImageToPage(document, x+(int)(width*(score/100.0))-15, y-30, 0.25f, up_caret, content_stream);
+		//URL up_caret =new URL(UP_CARET_PNG_URL);
+		//addImageToPage(document, x+(int)(width*(score/100.0))-15, y-30, 0.25f, up_caret, content_stream);
 		
 		content_stream.setFont(getBaseFont(), HEADER_2);
 		content_stream.beginText();
@@ -2897,13 +2896,19 @@ public class GeneratePDFReport {
 
 	private URL getScoreEmojiImage(int overall_score) throws MalformedURLException {
 		if(overall_score >= 80.0) {
-			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
+			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
+			//return new URL(HAPPY_FACE_PNG_URL);
+			return new URL("");
 		}
 		else if(overall_score >= 60.0 && overall_score < 80.0) {
-			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
+			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
+			//return new URL(AVERAGE_FACE_PNG_URL);
+			return new URL("");
 		}
 		else {
-			return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
+			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
+			//return new URL(SAD_FACE_PNG_URL);
+			return new URL("");
 		}
 	}
 

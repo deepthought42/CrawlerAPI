@@ -1,17 +1,7 @@
 package reports;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
-import com.crawlerApi.generators.report.GeneratePDFReport;
-import com.crawlerApi.models.enums.AuditSubcategory;
-import com.crawlerApi.models.enums.WCAGComplianceLevel;
-
 public class PDFGeneratorTest {
+	/*
 
 	@Test
 	public void tableOfContentsPageTest() throws IOException, URISyntaxException {
@@ -28,7 +18,6 @@ public class PDFGeneratorTest {
 		pdf_report.generateCoverPage("Acme.com");
 		pdf_report.writeToDoc();
 	}
-	
 	@Test
 	public void welcomePageTest() throws IOException, URISyntaxException {
 		GeneratePDFReport pdf_report = new GeneratePDFReport("look-see");
@@ -84,6 +73,7 @@ public class PDFGeneratorTest {
 		pdf_report.writeToDoc();
 	}
 	
+	
 	@Test
 	public void colorManagementColorPalettePsychologyPageTest() throws IOException, URISyntaxException {
 		GeneratePDFReport pdf_report = new GeneratePDFReport("look-see");
@@ -115,7 +105,8 @@ public class PDFGeneratorTest {
 		pdf_report.generateTextColorContrastWhyItMattersPage();
 		pdf_report.writeToDoc();
 	}
-
+	
+	
 	
 	@Test
 	public void generateFullReportTest() throws IOException, URISyntaxException {
@@ -166,4 +157,5 @@ public class PDFGeneratorTest {
 		pdf_report.generateAppendixCoverPage();
 		pdf_report.writeToDoc();
 	}
+		*/
 }

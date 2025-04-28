@@ -22,8 +22,6 @@ import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
 import com.crawlerApi.models.message.CompetitorMessage;
 import com.crawlerApi.services.AccountService;
 import com.crawlerApi.services.CompetitorService;
-import com.crawlerApi.services.SubscriptionService;
-
 
 /**
  *	API for interacting with {@link User} data
@@ -41,9 +39,6 @@ public class CompetitorController {
 	@Autowired
 	private CompetitorService competitor_service;
 	
-	@Autowired
-	private SubscriptionService subscription_service;
-	
 	/**
      * Retrieves list of {@link PerformanceInsight insights} with a given key
      * 
@@ -58,11 +53,6 @@ public class CompetitorController {
     	Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
 		Account account = account_service.findByUserId(user_id);
-		
-		//if user doesn't have the necessary subscription, then show upgradeSubscriptionException()
-		if(!subscription_service.canAccessCompetitiveAnalysis(account)) {
-			throw new InsufficientSubscriptionException();
-		}
 		
     	Optional<Competitor> competitor_opt = competitor_service.findById(competitor_id);
     	if(competitor_opt.isPresent()) {

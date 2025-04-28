@@ -35,10 +35,8 @@ import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
 import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.security.SecurityConfig;
 import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.StripeService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
 
 /**
  *	API for interacting with {@link User} data
@@ -53,13 +51,6 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
-    
-    private StripeService stripeClient;
-
-    @Autowired
-    AccountController(StripeService stripeClient) {
-        this.stripeClient = stripeClient;
-    }
 
     /**
      * Create new account
@@ -90,10 +81,8 @@ public class AccountController {
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+account.getEmail());
-    	Customer customer = this.stripeClient.createCustomer(null, account.getEmail());
-    	
+		
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
-    	
     	acct.setSubscriptionType(SubscriptionPlan.FREE);
     	acct.setApiToken(UUID.randomUUID().toString());
         //final String username = usernameService.getUsername();

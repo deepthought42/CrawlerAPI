@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,7 +43,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.api.exception.SubscriptionExceededException;
 import com.crawlerApi.dto.DomainDto;
 import com.crawlerApi.dto.PageStatisticDto;
 import com.crawlerApi.gcp.PubSubUrlMessagePublisherImpl;
@@ -77,7 +75,6 @@ import com.crawlerApi.models.enums.BrowserType;
 import com.crawlerApi.models.enums.ExecutionStatus;
 import com.crawlerApi.models.enums.JourneyStatus;
 import com.crawlerApi.models.enums.ObservationType;
-import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.models.enums.WCAGComplianceLevel;
 import com.crawlerApi.models.message.DomainAuditUrlMessage;
 import com.crawlerApi.models.repository.TestUserRepository;
@@ -88,7 +85,6 @@ import com.crawlerApi.services.CompetitorService;
 import com.crawlerApi.services.DesignSystemService;
 import com.crawlerApi.services.DomainService;
 import com.crawlerApi.services.ReportService;
-import com.crawlerApi.services.SubscriptionService;
 import com.crawlerApi.services.UXIssueMessageService;
 import com.crawlerApi.utils.AuditUtils;
 import com.crawlerApi.utils.BrowserUtils;
@@ -129,9 +125,6 @@ public class DomainController {
 
 	@Autowired
 	private DesignSystemService design_system_service;
-
-	@Autowired
-	private SubscriptionService subscription_service;
 	
 	@Autowired
 	private PubSubUrlMessagePublisherImpl url_topic;
@@ -873,7 +866,7 @@ public class DomainController {
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
 	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
-			throws Exception 
+			throws Exception
 	{
 		Principal principal = request.getUserPrincipal();
 		String user_id = principal.getName();
@@ -883,59 +876,22 @@ public class DomainController {
 			throw new UnknownAccountException();
 		}
 		
-		LocalDate today = LocalDate.now();
-		log.warn("retrieving domain audit count...");
-		int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
-		log.warn("total domain audits found = "+domain_audit_cnt);
-		SubscriptionPlan plan = account.getSubscriptionType();
-
-		log.warn("checking if user has exceeded subscription limit for domain audits...");
-		if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
-			log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
-			throw new SubscriptionExceededException("You have exceeded your subscription");
-		}
-
-		log.warn("Retreiving domain by id = "+domain_id);
 		Optional<Domain> domain_opt = domain_service.findById(domain_id);
 		if (!domain_opt.isPresent()) {
 			throw new DomainNotFoundException();
 		}
 
 		Domain domain = domain_opt.get();
-		log.warn("domain retreived = "+domain);
 		String lowercase_url = domain.getUrl().toLowerCase();
-		log.warn("lowercase domain url = "+lowercase_url);
 		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
-		log.warn("sanitized url = "+sanitized_url);
 		
 		// create new audit record
 		Set<AuditName> audit_list = getAuditList();
 		AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.IN_PROGRESS, audit_list);
 		audit_record.setUrl(domain.getUrl());
 		audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
-		log.warn("audit record saved to neo4j = " + audit_record);
 		
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
-		log.warn("added domain audit to domain.");
-		
-		/*
-		DomainDto domain_dto = new DomainDto( domain.getId(), 
-											  domain.getUrl(), 
-											  domain.getPages().size(), 
-											  0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  true, 
-											  0.01,
-											  "Audit started",
-											  ExecutionStatus.IN_PROGRESS);
-		*/
 		DomainDto domain_dto = new DomainDto( domain.getId(), domain.getUrl(), 0.0);
 
 

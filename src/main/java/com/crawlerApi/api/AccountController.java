@@ -153,7 +153,7 @@ public class AccountController {
     		throws UnknownAccountException 
 	{
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName(); //.replace("auth0|", "");
+    	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
 
 		if(acct == null){
@@ -203,21 +203,7 @@ public class AccountController {
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account account = account_service.findByUserId(id);
-		//remove Auth0 account
-    	//HttpResponse<String> response = Auth0ManagementApi.deleteUser(account.getUserId());
-    	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
-    	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
-    	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
-
-/*
-    	//remove stripe subscription
-    	if(account.getSubscriptionToken() != null && !account.getSubscriptionToken().isEmpty()){
-    		this.stripeClient.cancelSubscription(account.getSubscriptionToken());
-    	}
-    	if(account.getCustomerToken() != null && !account.getCustomerToken().isEmpty()){
-    		this.stripeClient.deleteCustomer(account.getCustomerToken());
-    	}
-    	*/
+		
 		//remove account
         account_service.deleteAccount(account.getId());
     }

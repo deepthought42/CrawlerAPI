@@ -36,7 +36,6 @@ import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.security.SecurityConfig;
 import com.crawlerApi.services.AccountService;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.stripe.exception.StripeException;
 
 /**
  *	API for interacting with {@link User} data
@@ -195,11 +194,10 @@ public class AccountController {
 	 *
 	 * @param request
 	 * @throws UnirestException
-	 * @throws StripeException
 	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest request) throws UnirestException, StripeException{
+    public void delete(HttpServletRequest request) throws UnirestException{
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account account = account_service.findByUserId(id);

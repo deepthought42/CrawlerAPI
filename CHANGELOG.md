@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/deepthought42/CrawlerApi/compare/v1.1.7...v1.1.8) (2025-04-28)
+
+
+### Bug Fixes
+
+* removed oauth jwt resource ([15800da](https://github.com/deepthought42/CrawlerApi/commit/15800da8205b4d2448dfe0267cae7897df690af9))
+
 ## [1.1.7](https://github.com/deepthought42/CrawlerApi/compare/v1.1.6...v1.1.7) (2025-04-26)
 
 

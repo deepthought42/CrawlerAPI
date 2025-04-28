@@ -20,8 +20,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 @SpringBootApplication(exclude={Neo4jDataAutoConfiguration.class, SecurityAutoConfiguration.class })
 @ComponentScan(basePackages = {"com.crawlerApi*"})
 @PropertySources({
-	@PropertySource("classpath:application.properties"),
-	@PropertySource("classpath:auth0.properties")
+	@PropertySource("classpath:application.properties")
 })
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 //@ConfigurationProperties("spring.cloud.gcp.vision")

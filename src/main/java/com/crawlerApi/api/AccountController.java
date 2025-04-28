@@ -165,10 +165,9 @@ public class AccountController {
 	{
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName(); //.replace("auth0|", "");
-    	log.warn("user id :: "+id);
     	Account acct = account_service.findByUserId(id);
-    	log.warn("account :: "+acct);
-        if(acct == null){
+
+		if(acct == null){
         	log.warn("Unknown account exception thrown");
     		throw new UnknownAccountException();
     	}

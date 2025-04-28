@@ -250,13 +250,6 @@
 		    <artifactId>spring-security-config</artifactId>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/com.auth0/auth0 -->
-		<dependency>
-		    <groupId>com.auth0</groupId>
-		    <artifactId>auth0</artifactId>
-		    <version>1.44.2</version>
-		</dependency>
-
 		<!-- END SECURITY PACKAGES -->
 		
 	 	<dependency>

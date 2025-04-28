@@ -67,10 +67,3 @@ resilience4j.retry:
             baseConfig: gcp
         default:
             baseConfig: default
-
-okta:
-    oauth2:
-        # Replace with the domain of your Auth0 tenant.
-        issuer: https://look-see-dev.us.auth0.com/
-        # Replace with the API Identifier for your Auth0 API.
-        audience: https://api-stage.look-see.com

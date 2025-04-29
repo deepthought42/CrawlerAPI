@@ -23,10 +23,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.crawlerApi.api.exception.PaymentDueException;
-import com.crawlerApi.api.exception.SubscriptionExceededException;
 import com.crawlerApi.browsing.Crawler;
 import com.crawlerApi.dto.AuditRecordDto;
 import com.crawlerApi.gcp.PubSubUrlMessagePublisherImpl;
@@ -50,8 +46,9 @@ import com.crawlerApi.services.AuditRecordService;
 import com.crawlerApi.services.AuditService;
 import com.crawlerApi.services.DomainService;
 import com.crawlerApi.services.PageStateService;
-import com.crawlerApi.services.SubscriptionService;
 import com.crawlerApi.utils.BrowserUtils;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  *	API for interacting with {@link User} data
@@ -75,9 +72,6 @@ public class AuditorController {
     
     @Autowired
     protected AuditService audit_service;
-    
-	@Autowired
-	private SubscriptionService subscription_service;
 	
 	@Autowired 
 	private DomainService domain_service;
@@ -109,25 +103,6 @@ public class AuditorController {
 		
 		int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), today.getMonthValue());
 
-		if( subscription_service.hasExceededSinglePageAuditLimit(plan, page_audit_cnt) ) {
-			throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to perform more audits");
-		}
-		//is user logged in and have they exceeded the page audit limit??
-		/*
-		if(principal != null ) {
-			log.warn("principal isn't null. Name = "+principal.getName());
-			account = account_service.findByUserId(principal.getName());
-			log.warn("account id = "+account.getId());
-			SubscriptionPlan plan = SubscriptionPlan.create(account.getSubscriptionType());
-			LocalDate today = LocalDate.now();
-			
-			int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), today.getMonthValue());
-
-			if( subscription_service.hasExceededSinglePageAuditLimit(plan, page_audit_cnt) ) {
-	    		throw new PaymentDueException("Your plan has 0 page audits left. Please upgrade to perform more audits");
-			}
-		}
-		 */
     	String lowercase_url = audit_start.getUrl().toLowerCase();
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
 		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
@@ -137,10 +112,10 @@ public class AuditorController {
 	   	//create new audit record
 		if(AuditLevel.PAGE.equals(audit_start.getType())){
 			log.warn("creating new page audit record...");
-			PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS, 
-																new HashSet<>(), 
-																null, 
-																false, 
+			PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS,
+																new HashSet<>(),
+																null,
+																false,
 																new HashSet<>());
 			audit_record.setUrl(sanitized_url.toString());
 			audit_record.setDataExtractionProgress(1.0/50.0);
@@ -166,20 +141,7 @@ public class AuditorController {
 			return audit_record_service.buildAudit(audit_record);
 		}
 		else if(AuditLevel.DOMAIN.equals(audit_start.getType())){
-
-			log.warn("retrieving domain audit count...");
-			int domain_audit_cnt = account_service.getDomainAuditCountByMonth(account.getId(), today.getMonthValue());
-
-			log.warn("checking if user has exceeded subscription limit for domain audits...");
-			if (subscription_service.hasExceededDomainAuditLimit(plan, domain_audit_cnt)) {
-				log.warn("Stopping webcrawler actor because user has exceeded limit of number of pages they can perform per audit");
-				throw new SubscriptionExceededException("You have exceeded your subscription");
-			}
-
 			Domain domain = domain_service.createDomain(sanitized_url, account.getId());
-			log.warn("domain retreived = "+domain);
-			log.warn("lowercase domain url = "+lowercase_url);
-			log.warn("sanitized url = "+sanitized_url);
 			
 			// create new audit record
 			Set<AuditName> audit_list = getAuditList();

@@ -35,10 +35,7 @@ import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
 import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.security.SecurityConfig;
 import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.StripeService;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
 
 /**
  *	API for interacting with {@link User} data
@@ -53,13 +50,6 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
-    
-    private StripeService stripeClient;
-
-    @Autowired
-    AccountController(StripeService stripeClient) {
-        this.stripeClient = stripeClient;
-    }
 
     /**
      * Create new account
@@ -90,10 +80,8 @@ public class AccountController {
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+account.getEmail());
-    	Customer customer = this.stripeClient.createCustomer(null, account.getEmail());
-    	
+		
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
-    	
     	acct.setSubscriptionType(SubscriptionPlan.FREE);
     	acct.setApiToken(UUID.randomUUID().toString());
         //final String username = usernameService.getUsername();
@@ -164,7 +152,7 @@ public class AccountController {
     		throws UnknownAccountException 
 	{
     	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName(); //.replace("auth0|", "");
+    	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
 
 		if(acct == null){
@@ -206,29 +194,14 @@ public class AccountController {
 	 *
 	 * @param request
 	 * @throws UnirestException
-	 * @throws StripeException
 	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest request) throws UnirestException, StripeException{
+    public void delete(HttpServletRequest request) throws UnirestException{
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account account = account_service.findByUserId(id);
-		//remove Auth0 account
-    	//HttpResponse<String> response = Auth0ManagementApi.deleteUser(account.getUserId());
-    	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
-    	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
-    	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
-
-/*
-    	//remove stripe subscription
-    	if(account.getSubscriptionToken() != null && !account.getSubscriptionToken().isEmpty()){
-    		this.stripeClient.cancelSubscription(account.getSubscriptionToken());
-    	}
-    	if(account.getCustomerToken() != null && !account.getCustomerToken().isEmpty()){
-    		this.stripeClient.deleteCustomer(account.getCustomerToken());
-    	}
-    	*/
+		
 		//remove account
         account_service.deleteAccount(account.getId());
     }

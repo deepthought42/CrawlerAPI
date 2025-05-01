@@ -473,12 +473,6 @@
 				
 		<!-- END GOOGLE CLOUD -->
 		
-		<!-- https://mvnrepository.com/artifact/com.sendgrid/sendgrid-java -->
-		<dependency>
-		    <groupId>com.sendgrid</groupId>
-		    <artifactId>sendgrid-java</artifactId>
-		</dependency>
-		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
 		
 		<dependency>

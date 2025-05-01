@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/deepthought42/CrawlerApi/compare/v1.1.8...v1.2.0) (2025-04-28)
+
+
+### Features
+
+* removed auth0 for portability and ease of deployment ([900a08e](https://github.com/deepthought42/CrawlerApi/commit/900a08ede0b6d8635f70f2dbaec526bb677449df))
+
 ## [1.1.8](https://github.com/deepthought42/CrawlerApi/compare/v1.1.7...v1.1.8) (2025-04-28)
 
 

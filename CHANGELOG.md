@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/deepthought42/CrawlerApi/compare/v1.2.0...v1.2.1) (2025-05-04)
+
+
+### Bug Fixes
+
+* removed secret from properties file ([ed2eedd](https://github.com/deepthought42/CrawlerApi/commit/ed2eedd0dd304032a4bdb82210ccb2553be39b3a))
+
 # [1.2.0](https://github.com/deepthought42/CrawlerApi/compare/v1.1.8...v1.2.0) (2025-04-28)
 
 

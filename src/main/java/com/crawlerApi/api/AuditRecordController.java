@@ -57,7 +57,6 @@ import com.crawlerApi.services.AuditRecordService;
 import com.crawlerApi.services.AuditService;
 import com.crawlerApi.services.JourneyService;
 import com.crawlerApi.services.PageStateService;
-import com.crawlerApi.services.SendGridMailService;
 import com.crawlerApi.services.UXIssueMessageService;
 import com.crawlerApi.utils.AuditUtils;
 
@@ -93,9 +92,6 @@ public class AuditRecordController {
     @Autowired
     protected PageStateService page_state_service;
     
-    @Autowired
-    protected SendGridMailService sendgrid_service;
-
 	@Autowired
 	protected JourneyService journey_service;
 	
@@ -136,38 +132,11 @@ public class AuditRecordController {
 										@PathVariable("audit_record_id") long audit_record_id,
 										@RequestBody Account acct
 	) {
-		log.warn("requesting report and saving account....");
-    	//create an account
     	Account acct_record = account_service.findByEmail(acct.getEmail());
     	if(acct_record == null) {
     		acct_record = account_service.save(acct);
     	}
-    	log.warn("adding audit record with id :: "+audit_record_id + " to account :: "+acct_record.getId());
     	account_service.addAuditRecord(acct_record.getId(), audit_record_id);
-    	
-    	//PageState page_state = audit_record_service.getPageStateForAuditRecord(audit_record_id);
-    	//log.warn("sending email for user ...."+acct_record.getEmail());
-    	//Optional<AuditRecord> audit_record = audit_record_service.findById(audit_record_id);
-    	/*
-    	String email_msg = "<html>"
-    			+ "<body>"
-    			+ "Hey there!"
-    			+ "<br />"
-    			+ "Your UX audit results for "+ page_state.getUrl() + " are ready."
-    			+ "<br /><br />"
-    			+ "You can <a href='https://app.look-see.com/?audit_record_id="+ audit_record_id +"'>access the results here</a>."
-    			+ "</body>"
-    			+ "</html>";
-    	
-    	Email from = new Email("bkindred@look-see.com");
-    	String subject = "Requesting audit report";
-    	Email to = new Email("support@look-see.com");
-    	*/
-    	//sendgrid_service.sendMail(to, from, subject, email_msg);
-    	//sendgrid_service.sendMail(email_msg);
-    	
-    	
-       	//send request to support@look-see.com to send email once audit is complete
     }
 
     /**

@@ -2,7 +2,6 @@ package com.crawlerApi.api;
 
 import java.net.URL;
 import java.security.Principal;
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +38,6 @@ import com.crawlerApi.models.enums.AuditLevel;
 import com.crawlerApi.models.enums.AuditName;
 import com.crawlerApi.models.enums.BrowserType;
 import com.crawlerApi.models.enums.ExecutionStatus;
-import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.models.message.AuditStartMessage;
 import com.crawlerApi.services.AccountService;
 import com.crawlerApi.services.AuditRecordService;
@@ -86,7 +84,7 @@ public class AuditorController {
 	 * 
 	 * @param request
 	 * @param audit_start
-	 * @return	A new {@link AuditRecord audit record} 
+	 * @return	A new {@link AuditRecord audit record}
 	 * 
 	 * @throws Exception
 	 */
@@ -96,19 +94,12 @@ public class AuditorController {
 			@RequestBody(required=true) AuditRecord audit_start
 	) throws Exception {
 		Principal principal = request.getUserPrincipal();
-		log.warn("looking up acount with principal = "+principal.getName());
 		Account account = account_service.findByUserId(principal.getName());
-		SubscriptionPlan plan =account.getSubscriptionType();
-		LocalDate today = LocalDate.now();
-		
-		int page_audit_cnt = account_service.getPageAuditCountByMonth(account.getId(), today.getMonthValue());
 
     	String lowercase_url = audit_start.getUrl().toLowerCase();
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
 		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     	
-		log.warn("audit start message = "+audit_start);
-		log.warn("audit type = "+audit_start.getType());
 	   	//create new audit record
 		if(AuditLevel.PAGE.equals(audit_start.getType())){
 			log.warn("creating new page audit record...");
@@ -129,10 +120,10 @@ public class AuditorController {
 			account_service.addAuditRecord(account.getId(), audit_record.getId());
 			log.warn("Initiating single page audit = "+sanitized_url);
 
-			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(), 
-																		BrowserType.CHROME, 
-																		audit_record.getId(), 
-																		AuditLevel.PAGE, 
+			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
+																		BrowserType.CHROME,
+																		audit_record.getId(),
+																		AuditLevel.PAGE,
 																		account.getId());
 
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
@@ -148,14 +139,10 @@ public class AuditorController {
 			AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.RUNNING, audit_list);
 			audit_record.setUrl(domain.getUrl());
 			audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
-			log.warn("audit record saved to neo4j = " + audit_record);
 			
 			domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 			account_service.addAuditRecord(account.getId(), audit_record.getId());
 
-			log.warn("added domain audit to domain.");
-			//DomainDto domain_dto = new DomainDto( domain.getId(), domain.getUrl(), 0.0);
-			log.warn("publishing url message to url topic...");
 			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
 																	  BrowserType.CHROME,
 																	  audit_record.getId(),

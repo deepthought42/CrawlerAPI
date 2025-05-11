@@ -72,18 +72,8 @@ Step 6: Delete neo4j instance
 
 # Security
 
-## Configuring SSL with GoDaddy - This shoudl be replaced with a more reasonoble provider by February 2024
+## Configuring SSL - This should be replaced with API Gateway endpoint and ssl certificate
 
-When a new certificate is issued by GoDaddy it doesn't have the right key and we don't get the private key from them for whatever reason. Therefore it's necessary to re-key the certificate. 
-
-	1. Retrieve the crawlerApi.com CSR from keys folder
-	2. Paste CSR into field for re-keying SSL certification on GoDaddy
-	3. Select add change and download files
-
-After ensuring that all certificates are generated with the proper CSR you need to combine the CRT files provided by GoDaddy. On the command line, navigate to the folder where the downloaded certificates are located and run the following
-
-	cat c4f2f133293785ad.crt gd_bundle-g2-g1.crt > crawlerApi.com-chain.crt
-	
 
 ## Generating a new PKCS12 certificate for SSL
 

@@ -1,18 +1,19 @@
-name: Build, Push, Release
+name: Build and Release
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
+    types: [closed]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    outputs:
-      VERSION: ${{ steps.get_version.outputs.VERSION }}
+    # This job runs only when a PR is merged to master
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
 
     steps:
       - name: Checkout code
@@ -28,8 +29,10 @@ jobs:
         run: mvn test
 
   bump-version:
-    runs-on: ubuntu-latest
     needs: test
+    # Run only when PR is merged to master
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
     outputs:
       VERSION: ${{ steps.get_version.outputs.VERSION }}
 
@@ -53,9 +56,11 @@ jobs:
       - name: Extract new version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
-
+          
   build-and-release:
     needs: bump-version
+    # Run only when PR is merged to master
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.bump-version.outputs.VERSION }}
@@ -63,7 +68,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        
       - name: Build Docker image
         run: |
           docker build -t deepthought42/crawler-api:${{ env.VERSION }} .
@@ -82,6 +87,8 @@ jobs:
       
   github-release:
     needs: bump-version
+    # Run only when PR is merged to master
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.bump-version.outputs.VERSION }}
@@ -105,6 +112,6 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
           body_path: CHANGELOG.md
-          files: PageBuilder-${{ env.VERSION }}.jar
+          files: CrawlerApi-${{ env.VERSION }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -469,7 +469,7 @@
 		    <artifactId>google-oauth-client-jetty</artifactId>
 		    <version>1.31.5</version>
 		</dependency>
-		<!-- END GOOGLE CLOUD -->				
+		<!-- END GOOGLE CLOUD -->
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
 		<dependency>
@@ -529,7 +529,7 @@
 		    <artifactId>google-cloud-language</artifactId>
 		</dependency>
 		
-		<!-- JIRA integration -->		
+		<!-- JIRA integration -->
 		<dependency>
 		    <groupId>com.atlassian.jira</groupId>
 		    <artifactId>jira-rest-java-client-core</artifactId>
@@ -597,11 +597,10 @@
 	     <!-- [END pubsub_spring_integration] -->
 	    <!-- [START pubsub_spring_cloud_stream_binder] -->
 	    <dependency>
-	      	<groupId>com.google.cloud</groupId>
-	      	<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
 			<version>3.2.1</version>
 	    </dependency>
-	    
 	</dependencies>
 	
 	<repositories>

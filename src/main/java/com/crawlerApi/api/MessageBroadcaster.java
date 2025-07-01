@@ -41,10 +41,10 @@ public class MessageBroadcaster {
      * Message emitter that sends {@link Test} to all registered clients
      * 
      * @param test {@link Test} to be emitted to clients
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
-	public static void broadcastAudit(String host, Audit audit) throws JsonProcessingException {	
-        //Object to JSON in String        
+	public static void broadcastAudit(String host, Audit audit) throws JsonProcessingException {
+        //Object to JSON in String
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String audit_json = mapper.writeValueAsString(audit);

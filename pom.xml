@@ -446,5 +446,12 @@
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.3</version>
 		</dependency>
+	     <!-- [END pubsub_spring_integration] -->
+	    <!-- [START pubsub_spring_cloud_stream_binder] -->
+	    <dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
+			<version>3.2.1</version>
+	    </dependency>
 	</dependencies>
 </project>

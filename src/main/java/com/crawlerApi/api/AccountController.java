@@ -124,7 +124,7 @@ public class AccountController extends BaseApiController {
         @ApiResponse(responseCode = "200", description = "Successfully updated onboarding steps", content = @Content(schema = @Schema(type = "array", implementation = String.class))),
         @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public List<String> setOnboardingStep(HttpServletRequest request, 
+    public List<String> setOnboardingStep(HttpServletRequest request,
     										@Parameter(description = "Name of the onboarding step to mark as completed", required = true)
     										@RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();

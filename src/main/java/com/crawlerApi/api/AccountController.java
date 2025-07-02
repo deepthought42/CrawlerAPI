@@ -29,12 +29,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
-import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.enums.SubscriptionPlan;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.services.AccountService;
+import com.looksee.api.exception.MissingSubscriptionException;
+import com.looksee.models.Account;
+import com.looksee.models.dto.exceptions.UnknownAccountException;
+import com.looksee.models.enums.SubscriptionPlan;
+import com.looksee.services.AccountService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 /**

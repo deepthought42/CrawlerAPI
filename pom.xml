@@ -586,6 +586,21 @@
 			<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
 			<version>3.2.1</version>
 	    </dependency>
+
+		<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.2.31</version>
+		</dependency>
+
+		<dependency>
+            <groupId>com.looksee</groupId>
+            <artifactId>core</artifactId>
+            <version>0.2.2</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/libs/core-0.2.2.jar</systemPath>
+        </dependency>
 	</dependencies>
 	
 	<repositories>

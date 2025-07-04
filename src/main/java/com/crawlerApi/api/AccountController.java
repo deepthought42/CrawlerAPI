@@ -30,10 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.api.exception.MissingSubscriptionException;
+import com.looksee.exceptions.MissingSubscriptionException;
+import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
-import com.looksee.models.dto.exceptions.UnknownAccountException;
-import com.looksee.models.enums.SubscriptionPlan;
 import com.looksee.services.AccountService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
@@ -82,7 +81,6 @@ public class AccountController {
     	customerParams.put("description", "Customer for "+account.getEmail());
 		
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
-    	acct.setSubscriptionType(SubscriptionPlan.FREE);
     	acct.setApiToken(UUID.randomUUID().toString());
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation

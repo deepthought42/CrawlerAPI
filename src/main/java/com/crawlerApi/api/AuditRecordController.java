@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -39,13 +38,14 @@ import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
-import com.looksee.models.audit.stats.DomainAuditStats;
-import com.looksee.models.audit.stats.PageAuditStats;
+import com.looksee.models.audit.PageAuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.AuditRecordDto;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
@@ -459,7 +459,6 @@ public class AuditRecordController extends BaseApiController {
 														typography_score,
 														whitespace_score,
 														branding_score,
-														-1,
 														execution_status,
 														link_score);
 					return audit_stats;

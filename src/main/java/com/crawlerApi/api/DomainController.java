@@ -46,7 +46,6 @@ import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
@@ -57,10 +56,11 @@ import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
@@ -101,6 +101,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 /**
  * API endpoints for interacting with {@link Domain} data

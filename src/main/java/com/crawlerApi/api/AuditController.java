@@ -494,16 +494,3 @@ class PageNotFoundError extends RuntimeException {
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class AuditRecordNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 794045239226319409L;
-
-	public AuditRecordNotFoundException() {
-		super("Audit record not found.");
-	}
-}
-

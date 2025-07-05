@@ -222,8 +222,8 @@ public class AuditController {
 	 */
     @RequestMapping(path="/{audit_id}/report/excel", method = RequestMethod.GET)
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
-    									@PathVariable(value="audit_id", required=true) long audit_id) 
-    											throws UnknownAccountException, 
+    									@PathVariable(value="audit_id", required=true) long audit_id)
+    											throws UnknownAccountException,
 														FileNotFoundException, IOException {
     	Optional<AuditRecord> audit_opt = audit_record_service.findById(audit_id);
     	if(!audit_opt.isPresent()) {
@@ -232,7 +232,7 @@ public class AuditController {
     	
     	List<UXIssueReportDto> ux_issues = new ArrayList<>();
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_opt.get().getId());
-		PageState page = audit_record_service.getPageStateForAuditRecord(audit_opt.get().getId());	
+		PageState page = audit_record_service.getPageStateForAuditRecord(audit_opt.get().getId());
     	for(Audit audit : audits) {
     		log.warn("audit key :: "+audit.getKey());
     		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
@@ -451,19 +451,6 @@ class PageNotFoundError extends RuntimeException {
 
 	public PageNotFoundError() {
 		super("Oh no! We couldn't find the page you want to audit.");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class AuditRecordNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 794045239226319409L;
-
-	public AuditRecordNotFoundException() {
-		super("Audit record not found.");
 	}
 }
 

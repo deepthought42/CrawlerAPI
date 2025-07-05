@@ -247,7 +247,7 @@ public class AuditRecordController {
 	}
     
     /**
-     * Creates a new {@link Observation observation} 
+     * Creates a new {@link Observation observation}
      * 
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 

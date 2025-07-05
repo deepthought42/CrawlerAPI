@@ -3,25 +3,25 @@ package com.crawlerApi.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.crawlerApi.dto.DomainDto;
-import com.crawlerApi.dto.TestCreatedDto;
-import com.crawlerApi.dto.TestDto;
-import com.crawlerApi.dto.TestRecordDto;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.DiscoveryRecord;
-import com.crawlerApi.models.Domain;
-import com.crawlerApi.models.Form;
-import com.crawlerApi.models.LookseeObject;
-import com.crawlerApi.models.Test;
-import com.crawlerApi.models.TestRecord;
-import com.crawlerApi.models.audit.Audit;
-import com.crawlerApi.models.audit.AuditRecord;
-import com.crawlerApi.models.audit.AuditStats;
-import com.crawlerApi.models.audit.UXIssueMessage;
-import com.crawlerApi.models.enums.TestStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.looksee.models.Account;
+import com.looksee.models.DiscoveryRecord;
+import com.looksee.models.Domain;
+import com.looksee.models.Form;
+import com.looksee.models.LookseeObject;
+import com.looksee.models.Test;
+import com.looksee.models.TestRecord;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.dto.DomainDto;
+import com.looksee.models.dto.TestCreatedDto;
+import com.looksee.models.dto.TestDto;
+import com.looksee.models.dto.TestRecordDto;
+import com.looksee.models.enums.TestStatus;
 import com.pusher.rest.Pusher;
 
 /**
@@ -207,19 +207,19 @@ public class MessageBroadcaster {
 
 	public static void sendDomainAdded(String user_id, Domain domain) throws JsonProcessingException {
 		/*
-		DomainDto domain_dto = new DomainDto( domain.getId(), 
-											  domain.getUrl(), 
-											  domain.getPages().size(), 
-											  0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  0, 
-											  0.0, 
-											  false, 
+		DomainDto domain_dto = new DomainDto( domain.getId(),
+											  domain.getUrl(),
+											  domain.getPages().size(),
+											  0,
+											  0,
+											  0.0,
+											  0,
+											  0.0,
+											  0,
+											  0.0,
+											  0,
+											  0.0,
+											  false,
 											  0.0,
 											  "Domain successfully created",
 											  ExecutionStatus.COMPLETE);

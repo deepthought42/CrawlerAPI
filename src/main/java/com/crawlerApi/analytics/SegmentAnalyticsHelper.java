@@ -1,13 +1,14 @@
-package com.looksee.analytics;
+package com.crawlerApi.analytics;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import com.looksee.models.Test;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class SegmentAnalyticsHelper {
 	

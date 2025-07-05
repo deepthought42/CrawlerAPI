@@ -78,32 +78,32 @@
 
 	<dependencyManagement>
 	    <dependencies>
-	      <dependency>
-	        <!-- Import dependency management from Spring Boot -->
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-dependencies</artifactId>
-	        <version>${springboot.version}</version>
-	        <type>pom</type>
-	        <scope>import</scope>
-	      </dependency>
-	      <dependency>
-	        <groupId>org.springframework.cloud</groupId>
-	        <artifactId>spring-cloud-dependencies</artifactId>
-	        <version>2021.0.0</version>
-	        <type>pom</type>
-	        <scope>import</scope>
-	      </dependency>
-	      <dependency>
-	           <groupId>com.google.cloud</groupId>
-	           <artifactId>spring-cloud-gcp-dependencies</artifactId>
-	           <version>3.0.0</version>
-	           <type>pom</type>
-	           <scope>import</scope>
-	       </dependency>
+			<dependency>
+				<!-- Import dependency management from Spring Boot -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2021.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>spring-cloud-gcp-dependencies</artifactId>
+				<version>3.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 	    </dependencies>
 	</dependencyManagement>
 
-  	<dependencies>
+	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
@@ -597,10 +597,22 @@
 		<dependency>
             <groupId>com.looksee</groupId>
             <artifactId>core</artifactId>
-            <version>0.2.2</version>
+            <version>0.2.3</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/libs/core-0.2.2.jar</systemPath>
+            <systemPath>${pom.basedir}/libs/core-0.2.3.jar</systemPath>
         </dependency>
+
+		<!-- Apache POI for Excel file generation -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
 	</dependencies>
 	
 	<repositories>

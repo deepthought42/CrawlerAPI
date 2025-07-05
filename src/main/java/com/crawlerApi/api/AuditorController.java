@@ -22,31 +22,31 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.browsing.Crawler;
-import com.crawlerApi.dto.AuditRecordDto;
-import com.crawlerApi.gcp.PubSubUrlMessagePublisherImpl;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.Domain;
-import com.crawlerApi.models.PageState;
-import com.crawlerApi.models.SimplePage;
-import com.crawlerApi.models.audit.AuditRecord;
-import com.crawlerApi.models.audit.DomainAuditRecord;
-import com.crawlerApi.models.audit.PageAuditRecord;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.enums.AuditLevel;
-import com.crawlerApi.models.enums.AuditName;
-import com.crawlerApi.models.enums.BrowserType;
-import com.crawlerApi.models.enums.ExecutionStatus;
-import com.crawlerApi.models.message.AuditStartMessage;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.AuditRecordService;
-import com.crawlerApi.services.AuditService;
-import com.crawlerApi.services.DomainService;
-import com.crawlerApi.services.PageStateService;
-import com.crawlerApi.utils.BrowserUtils;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.looksee.browsing.Crawler;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
+import com.looksee.models.Account;
+import com.looksee.models.Domain;
+import com.looksee.models.PageState;
+import com.looksee.models.SimplePage;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.message.AuditStartMessage;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.DomainService;
+import com.looksee.services.PageStateService;
+import com.looksee.utils.BrowserUtils;
 
 /**
  *	API for interacting with {@link User} data
@@ -101,7 +101,7 @@ public class AuditorController {
 		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     	
 	   	//create new audit record
-		if(AuditLevel.PAGE.equals(audit_start.getType())){
+		if(AuditLevel.PAGE.equals(audit_start.getLevel())){
 			log.warn("creating new page audit record...");
 			PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS,
 																new HashSet<>(),
@@ -131,7 +131,7 @@ public class AuditorController {
 
 			return audit_record_service.buildAudit(audit_record);
 		}
-		else if(AuditLevel.DOMAIN.equals(audit_start.getType())){
+		else if(AuditLevel.DOMAIN.equals(audit_start.getLevel())){
 			Domain domain = domain_service.createDomain(sanitized_url, account.getId());
 			
 			// create new audit record
@@ -144,10 +144,10 @@ public class AuditorController {
 			account_service.addAuditRecord(account.getId(), audit_record.getId());
 
 			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
-																	  BrowserType.CHROME,
-																	  audit_record.getId(),
-																	  AuditLevel.DOMAIN,
-																	  account.getId());
+																	BrowserType.CHROME,
+																	audit_record.getId(),
+																	AuditLevel.DOMAIN,
+																	account.getId());
 
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
 			url_topic.publish(url_msg_str);
@@ -196,14 +196,13 @@ public class AuditorController {
         log.info("finding page :: "+page.getKey());
         
         SimplePage simple_page = new SimplePage(
-        								page.getUrl(),
-        								page.getViewportScreenshotUrl(),
-        								page.getFullPageScreenshotUrl(),
-        								page.getFullPageScreenshotUrl(),
-        								page.getFullPageWidth(),
-        								page.getFullPageHeight(),
-        								page.getSrc(),
-        								page.getKey(), page.getId());
+										page.getUrl(),
+										page.getViewportScreenshotUrl(),
+										page.getFullPageScreenshotUrl(),
+										page.getFullPageWidth(),
+										page.getFullPageHeight(),
+										page.getSrc(),
+										page.getKey(), page.getId());
         return simple_page;
     }
     

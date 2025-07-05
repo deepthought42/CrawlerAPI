@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -450,6 +451,19 @@ class PageNotFoundError extends RuntimeException {
 
 	public PageNotFoundError() {
 		super("Oh no! We couldn't find the page you want to audit.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+class AuditRecordNotFoundException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 794045239226319409L;
+
+	public AuditRecordNotFoundException() {
+		super("Audit record not found.");
 	}
 }
 

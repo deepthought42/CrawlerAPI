@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.models.Account;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.services.AccountService;
+import com.looksee.models.Account;
+import com.looksee.models.dto.User;
+import com.looksee.services.AccountService;
 import com.nimbusds.jwt.JWT;
 
 /**
@@ -60,8 +60,7 @@ public class IntegrationsController {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
-    	com.crawlerApi.models.dto.integration.User user = 
-    						new com.crawlerApi.models.dto.integration.User(acct.getEmail(), acct.getName());
+    	User user = new User(acct.getEmail(), acct.getName());
     	/*
     	Instant now = Instant.now();
 

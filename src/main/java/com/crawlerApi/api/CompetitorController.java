@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.crawlerApi.api.exception.InsufficientSubscriptionException;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.competitiveanalysis.Competitor;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.message.CompetitorMessage;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.CompetitorService;
+import com.looksee.exceptions.InsufficientSubscriptionException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Account;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.message.CompetitorMessage;
+import com.looksee.services.AccountService;
+import com.looksee.services.CompetitorService;
 
 /**
  *	API for interacting with {@link User} data

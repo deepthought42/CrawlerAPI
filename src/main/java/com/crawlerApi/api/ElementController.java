@@ -21,19 +21,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.api.exception.ExistingRuleException;
-import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.api.exception.RuleValueRequiredException;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.Element;
-import com.crawlerApi.models.ElementState;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.rules.Rule;
-import com.crawlerApi.models.rules.RuleType;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.ElementStateService;
-import com.crawlerApi.services.RuleService;
+import com.looksee.exceptions.ExistingRuleException;
+import com.looksee.exceptions.MissingSubscriptionException;
+import com.looksee.exceptions.RuleValueRequiredException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Account;
+import com.looksee.models.ElementState;
+import com.looksee.models.rules.Rule;
+import com.looksee.models.rules.RuleType;
+import com.looksee.services.AccountService;
+import com.looksee.services.ElementStateService;
+import com.looksee.services.RuleService;
 
 
 /**
@@ -56,10 +55,10 @@ public class ElementController {
     protected SecurityConfig appConfig;
 
     /**
-     * Adds {@link Rule} to {@link Element element} with a given id
+     * Adds {@link Rule} to {@link ElementState element} with a given id
      *
      * @param id element id
-     * @return {@link Element element}
+     * @return {@link ElementState element}
      * @throws UnknownAccountException 
      */
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
@@ -163,10 +162,10 @@ public class ElementController {
 	}
 
 	/**
-     * Adds {@link Rule} to {@link Element element} with a given id
+     * Adds {@link Rule} to {@link ElementState element} with a given id
      *
      * @param id element id
-     * @return {@link Element element}
+     * @return {@link ElementState element}
      * @throws UnknownAccountException 
      */
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
@@ -194,10 +193,10 @@ public class ElementController {
     }
 
     /**
-     * Adds {@link Rule} to {@link Element element} with a given id
+     * Adds {@link Rule} to {@link ElementState element} with a given id
      *
      * @param id element id
-     * @return {@link Element element}
+     * @return {@link ElementState element}
      * @throws UnknownAccountException 
      */
     //@ApiOperation(value = "updates given Element", response = Iterable.class)
@@ -227,10 +226,10 @@ public class ElementController {
     }
     
     /**
-     * Adds {@link Rule} to {@link Element element} with a given id
+     * Adds {@link Rule} to {@link ElementState element} with a given id
      *
      * @param id element id
-     * @return {@link Element element}
+     * @return {@link ElementState element}
      * @throws UnknownAccountException 
      */
     //@ApiOperation(value = "updates form element", response = Iterable.class)

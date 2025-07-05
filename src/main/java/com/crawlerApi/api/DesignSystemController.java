@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.browsing.Crawler;
-import com.crawlerApi.models.designsystem.DesignSystem;
-import com.crawlerApi.services.AuditRecordService;
-import com.crawlerApi.services.AuditService;
-import com.crawlerApi.services.DesignSystemService;
+import com.looksee.browsing.Crawler;
+import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.DesignSystemService;
 
 /**
  *	API for interacting with {@link User} data

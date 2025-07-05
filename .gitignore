@@ -30,3 +30,5 @@ api_key.p12.old
 
 GCP-MyFirstProject-1c31159db52c.json
 gmail_credentials.json
+
+libs/*

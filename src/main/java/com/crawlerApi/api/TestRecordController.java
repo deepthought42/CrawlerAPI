@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.api.exception.DomainNotOwnedByAccountException;
-import com.crawlerApi.models.Test;
-import com.crawlerApi.models.TestRecord;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.repository.TestRecordRepository;
+import com.looksee.exceptions.DomainNotOwnedByAccountException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Test;
+import com.looksee.models.TestRecord;
+import com.looksee.models.repository.TestRecordRepository;
 
 
 /**

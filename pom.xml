@@ -464,9 +464,21 @@
 		<dependency>
             <groupId>com.looksee</groupId>
             <artifactId>core</artifactId>
-            <version>0.2.2</version>
+            <version>0.2.3</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/libs/core-0.2.2.jar</systemPath>
+            <systemPath>${pom.basedir}/libs/core-0.2.3.jar</systemPath>
         </dependency>
+
+		<!-- Apache POI for Excel file generation -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
 	</dependencies>
 </project>

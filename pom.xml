@@ -22,14 +22,43 @@
 
     <build>
       	<plugins>
-	  	 	<plugin>
-	            <groupId>org.apache.maven.plugins</groupId>
-	            <artifactId>maven-compiler-plugin</artifactId>
-	            <configuration>
-	                <source>1.8</source>
-	                <target>1.8</target>
-	            </configuration>
-	        </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<source>21</source>
+					<target>21</target>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.30</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>download-core-jar</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>bash</executable>
+							<arguments>
+								<argument>scripts/download-core.sh</argument>
+							</arguments>
+							<workingDirectory>${project.basedir}</workingDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 	        <plugin>
 		        <groupId>org.apache.maven.plugins</groupId>
 		        <artifactId>maven-surefire-plugin</artifactId>
@@ -78,39 +107,32 @@
 
 	<dependencyManagement>
 	    <dependencies>
-	      <dependency>
-	        <!-- Import dependency management from Spring Boot -->
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-dependencies</artifactId>
-	        <version>${springboot.version}</version>
-	        <type>pom</type>
-	        <scope>import</scope>
-	      </dependency>
-	      <dependency>
-	        <groupId>org.springframework.cloud</groupId>
-	        <artifactId>spring-cloud-dependencies</artifactId>
-	        <version>2021.0.0</version>
-	        <type>pom</type>
-	        <scope>import</scope>
-	      </dependency>
-	      <dependency>
-	           <groupId>com.google.cloud</groupId>
-	           <artifactId>spring-cloud-gcp-dependencies</artifactId>
-	           <version>3.0.0</version>
-	           <type>pom</type>
-	           <scope>import</scope>
-	       </dependency>
+			<dependency>
+				<!-- Import dependency management from Spring Boot -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2021.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>spring-cloud-gcp-dependencies</artifactId>
+				<version>3.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 	    </dependencies>
 	</dependencyManagement>
 
-  	<dependencies>
-		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml</artifactId>
-			<version>4.1.2</version>
-		</dependency>
-
+	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
@@ -199,8 +221,8 @@
 		</dependency>
 
 		<dependency>
-		  <groupId>org.springframework.boot</groupId>
-		  <artifactId>spring-boot-starter-actuator</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
 		<!-- http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
@@ -446,15 +468,7 @@
             <version>0.9.0</version>
         </dependency>
 
-		<!--  GOOGLE CLOUD -->
-		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-pagespeedonline -->
-		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-pagespeedonline -->
-		<dependency>
-		    <groupId>com.google.apis</groupId>
-		    <artifactId>google-api-services-pagespeedonline</artifactId>
-		    <version>v5-rev19-1.25.0</version>
-		</dependency>
-
+		
 		
 		<!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
 		<dependency>
@@ -469,7 +483,7 @@
 		    <artifactId>google-oauth-client-jetty</artifactId>
 		    <version>1.31.5</version>
 		</dependency>
-		<!-- END GOOGLE CLOUD -->				
+		<!-- END GOOGLE CLOUD -->
 		
 		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
 		<dependency>
@@ -529,7 +543,7 @@
 		    <artifactId>google-cloud-language</artifactId>
 		</dependency>
 		
-		<!-- JIRA integration -->		
+		<!-- JIRA integration -->
 		<dependency>
 		    <groupId>com.atlassian.jira</groupId>
 		    <artifactId>jira-rest-java-client-core</artifactId>
@@ -597,11 +611,37 @@
 	     <!-- [END pubsub_spring_integration] -->
 	    <!-- [START pubsub_spring_cloud_stream_binder] -->
 	    <dependency>
-	      	<groupId>com.google.cloud</groupId>
-	      	<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>spring-cloud-gcp-pubsub-stream-binder</artifactId>
 			<version>3.2.1</version>
 	    </dependency>
-	    
+
+		<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.2.31</version>
+		</dependency>
+
+		<dependency>
+            <groupId>com.looksee</groupId>
+            <artifactId>core</artifactId>
+            <version>0.2.3</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/libs/core-0.2.3.jar</systemPath>
+        </dependency>
+
+		<!-- Apache POI for Excel file generation -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
 	</dependencies>
 	
 	<repositories>

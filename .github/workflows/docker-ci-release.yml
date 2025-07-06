@@ -23,7 +23,10 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
-          java-version: '17'
+          java-version: '21'
+
+      - name: Download core JAR
+        run: bash scripts/download-core.sh
 
       - name: Test with Maven
         run: mvn test
@@ -71,8 +74,8 @@ jobs:
         
       - name: Build Docker image
         run: |
-          docker build -t deepthought42/crawler-api:${{ env.VERSION }} .
-          docker tag deepthought42/crawler-api:${{ env.VERSION }} deepthought42/crawler-api:latest
+          docker build -t deepthought42/looksee-api:${{ env.VERSION }} .
+          docker tag deepthought42/looksee-api:${{ env.VERSION }} deepthought42/looksee-api:latest
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -82,8 +85,8 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push deepthought42/crawler-api:${{ env.VERSION }}
-          docker push deepthought42/crawler-api:latest
+          docker push deepthought42/looksee-api:${{ env.VERSION }}
+          docker push deepthought42/looksee-api:latest
       
   github-release:
     needs: bump-version
@@ -101,8 +104,10 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
-          java-version: '17'
+          java-version: '21'
       
+      - name: Download core JAR
+        run: bash scripts/download-core.sh
       - name: Test with Maven
         run: mvn install -DskipTests
 
@@ -112,6 +117,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
           body_path: CHANGELOG.md
-          files: CrawlerApi-${{ env.VERSION }}.jar
+          files: looksee-api-${{ env.VERSION }}.jar
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

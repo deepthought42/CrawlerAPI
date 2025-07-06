@@ -26,39 +26,39 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.browsing.Crawler;
-import com.crawlerApi.dto.AuditRecordDto;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.ElementState;
-import com.crawlerApi.models.PageState;
-import com.crawlerApi.models.SimpleElement;
-import com.crawlerApi.models.SimplePage;
-import com.crawlerApi.models.audit.Audit;
-import com.crawlerApi.models.audit.AuditRecord;
-import com.crawlerApi.models.audit.AuditScore;
-import com.crawlerApi.models.audit.AuditStats;
-import com.crawlerApi.models.audit.DomainAuditRecord;
-import com.crawlerApi.models.audit.DomainAuditStats;
-import com.crawlerApi.models.audit.ElementIssueTwoWayMapping;
-import com.crawlerApi.models.audit.PageAuditRecord;
-import com.crawlerApi.models.audit.PageAuditStats;
-import com.crawlerApi.models.audit.UXIssueMessage;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.enums.AuditCategory;
-import com.crawlerApi.models.enums.AuditName;
-import com.crawlerApi.models.enums.AuditSubcategory;
-import com.crawlerApi.models.enums.ExecutionStatus;
-import com.crawlerApi.models.enums.JourneyStatus;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.AuditRecordService;
-import com.crawlerApi.services.AuditService;
-import com.crawlerApi.services.JourneyService;
-import com.crawlerApi.services.PageStateService;
-import com.crawlerApi.services.UXIssueMessageService;
-import com.crawlerApi.utils.AuditUtils;
+import com.looksee.browsing.Crawler;
+import com.looksee.exceptions.MissingSubscriptionException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Account;
+import com.looksee.models.ElementState;
+import com.looksee.models.PageState;
+import com.looksee.models.SimpleElement;
+import com.looksee.models.SimplePage;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.DomainAuditStats;
+import com.looksee.models.audit.ElementIssueTwoWayMapping;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.PageAuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.JourneyStatus;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.JourneyService;
+import com.looksee.services.PageStateService;
+import com.looksee.services.UXIssueMessageService;
+import com.looksee.utils.AuditUtils;
 
 /**
  *	API for interacting with {@link User} data
@@ -96,11 +96,11 @@ public class AuditRecordController {
 	protected JourneyService journey_service;
 	
 	/**
-     * Creates a new {@link Observation observation} 
+     * Creates a new {@link AuditRecord observation}
      * 
      * @return returns a List of {@link AuditRecord audits}
 	 * 
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody List<AuditRecordDto> getAuditRecords(
@@ -140,10 +140,10 @@ public class AuditRecordController {
     }
 
     /**
-     * Creates a new {@link Observation observation} 
+     * Creates a new {@link Observation observation}
      * 
      * @return returns set of {@link SimplePage pages}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException thrown if the account is not found
      */
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/pages")
     public @ResponseBody Set<SimplePage> getPages(
@@ -160,15 +160,14 @@ public class AuditRecordController {
     			
     			Set<SimplePage> pages = new HashSet<>();
     			
-    			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
-    													 page_state.getViewportScreenshotUrl(), 
-    													 page_state.getFullPageScreenshotUrl(), 
-    													 page_state.getFullPageScreenshotUrl(),
-    													 page_state.getFullPageWidth(), 
-    													 page_state.getFullPageHeight(),
-    													 page_state.getSrc(), 
-    													 page_state.getKey(), 
-    													 page_state.getId());
+    			SimplePage simple_page = new SimplePage( page_state.getUrl(),
+														page_state.getViewportScreenshotUrl(),
+														page_state.getFullPageScreenshotUrl(),
+														page_state.getFullPageWidth(),
+														page_state.getFullPageHeight(),
+														page_state.getSrc(),
+														page_state.getKey(),
+														page_state.getId());
     			pages.add(simple_page);
     			return pages;
     		}
@@ -180,15 +179,14 @@ public class AuditRecordController {
     			Set<SimplePage> pages = new HashSet<>();
     			
     			for(PageState page_state: page_states) {
-	    			SimplePage simple_page = new SimplePage( page_state.getUrl(), 
-	    													 page_state.getViewportScreenshotUrl(), 
-	    													 page_state.getFullPageScreenshotUrl(), 
-	    													 page_state.getFullPageScreenshotUrl(),
-	    													 page_state.getFullPageWidth(),
-	    													 page_state.getFullPageHeight(),
-	    													 page_state.getSrc(), 
-	    													 page_state.getKey(), 
-	    													 page_state.getId());
+	    			SimplePage simple_page = new SimplePage( page_state.getUrl(),
+															page_state.getViewportScreenshotUrl(),
+															page_state.getFullPageScreenshotUrl(),
+															page_state.getFullPageWidth(),
+															page_state.getFullPageHeight(),
+															page_state.getSrc(),
+															page_state.getKey(),
+															page_state.getId());
 	    			pages.add(simple_page);
     			}
     			
@@ -208,7 +206,7 @@ public class AuditRecordController {
      * @throws MalformedURLException 
      */
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
-    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
+    public @ResponseBody com.looksee.models.audit.ElementIssueTwoWayMapping getPageAuditElements(
 														HttpServletRequest request,
 														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
@@ -249,7 +247,7 @@ public class AuditRecordController {
 	}
     
     /**
-     * Creates a new {@link Observation observation} 
+     * Creates a new {@link Observation observation}
      * 
      * @return {@link PerformanceInsight insight}
      * @throws UnknownAccountException 
@@ -507,7 +505,7 @@ public class AuditRecordController {
 
 			auditDtoList.add(new AuditRecordDto(audit_record.getId(),
 									audit_record.getStatus(),
-									audit_record.getType(),
+									audit_record.getLevel(),
 									audit_record.getStartTime(),
 									visual_design_score,
 									content_score,

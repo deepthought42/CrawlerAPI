@@ -42,57 +42,57 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.dto.DomainDto;
-import com.crawlerApi.dto.PageStatisticDto;
-import com.crawlerApi.gcp.PubSubUrlMessagePublisherImpl;
 import com.crawlerApi.generators.report.GeneratePDFReport;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.Domain;
-import com.crawlerApi.models.Element;
-import com.crawlerApi.models.PageState;
-import com.crawlerApi.models.TestUser;
-import com.crawlerApi.models.UXIssueReportDto;
-import com.crawlerApi.models.audit.Audit;
-import com.crawlerApi.models.audit.AuditRecord;
-import com.crawlerApi.models.audit.AuditStats;
-import com.crawlerApi.models.audit.DomainAuditRecord;
-import com.crawlerApi.models.audit.PageAuditRecord;
-import com.crawlerApi.models.audit.UXIssueMessage;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.competitiveanalysis.Competitor;
-import com.crawlerApi.models.competitiveanalysis.brand.Brand;
-import com.crawlerApi.models.designsystem.DesignSystem;
-import com.crawlerApi.models.dto.AuditUpdateDto;
-import com.crawlerApi.models.dto.CompetitorDto;
-import com.crawlerApi.models.dto.DomainSettingsDto;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.enums.AuditCategory;
-import com.crawlerApi.models.enums.AuditLevel;
-import com.crawlerApi.models.enums.AuditName;
-import com.crawlerApi.models.enums.AuditSubcategory;
-import com.crawlerApi.models.enums.BrowserType;
-import com.crawlerApi.models.enums.ExecutionStatus;
-import com.crawlerApi.models.enums.JourneyStatus;
-import com.crawlerApi.models.enums.ObservationType;
-import com.crawlerApi.models.enums.WCAGComplianceLevel;
-import com.crawlerApi.models.message.DomainAuditUrlMessage;
-import com.crawlerApi.models.repository.TestUserRepository;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.AuditRecordService;
-import com.crawlerApi.services.AuditService;
-import com.crawlerApi.services.CompetitorService;
-import com.crawlerApi.services.DesignSystemService;
-import com.crawlerApi.services.DomainService;
-import com.crawlerApi.services.ReportService;
-import com.crawlerApi.services.UXIssueMessageService;
-import com.crawlerApi.utils.AuditUtils;
-import com.crawlerApi.utils.BrowserUtils;
-import com.crawlerApi.utils.ContentUtils;
-import com.crawlerApi.utils.PDFDocUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.looksee.exceptions.MissingSubscriptionException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
+import com.looksee.models.Account;
+import com.looksee.models.Domain;
+import com.looksee.models.Element;
+import com.looksee.models.PageState;
+import com.looksee.models.TestUser;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.competitiveanalysis.Competitor;
+import com.looksee.models.competitiveanalysis.brand.Brand;
+import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.dto.AuditUpdateDto;
+import com.looksee.models.dto.CompetitorDto;
+import com.looksee.models.dto.DomainDto;
+import com.looksee.models.dto.DomainSettingsDto;
+import com.looksee.models.dto.PageStatisticDto;
+import com.looksee.models.dto.UXIssueReportDto;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.enums.JourneyStatus;
+import com.looksee.models.enums.ObservationType;
+import com.looksee.models.enums.WCAGComplianceLevel;
+import com.looksee.models.message.DomainAuditUrlMessage;
+import com.looksee.models.repository.TestUserRepository;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.CompetitorService;
+import com.looksee.services.DesignSystemService;
+import com.looksee.services.DomainService;
+import com.looksee.services.ReportService;
+import com.looksee.services.UXIssueMessageService;
+import com.looksee.utils.AuditUtils;
+import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ContentUtils;
+import com.looksee.utils.PDFDocUtils;
 
 /**
  * API endpoints for interacting with {@link Domain} data
@@ -152,7 +152,7 @@ public class DomainController {
 		
 		Set<DomainDto> domain_info_set = new HashSet<>();
 		for (Domain domain : domains) {
-			Optional<AuditRecord> audit_opt = audit_record_service.findMostRecentDomainAuditRecord(domain.getId());
+			Optional<DomainAuditRecord> audit_opt = audit_record_service.findMostRecentDomainAuditRecord(domain.getId());
 			double data_extraction_progress = 0.0;
 			if(audit_opt.isPresent()) {
 				DomainAuditRecord domain_audit = (DomainAuditRecord)audit_opt.get();
@@ -174,8 +174,8 @@ public class DomainController {
 	 */
 	@PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(method = RequestMethod.POST)
-	public @ResponseBody Domain create(HttpServletRequest request, 
-									   @RequestBody(required = true) Domain domain)
+	public @ResponseBody Domain create(HttpServletRequest request,
+									@RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
 
 		Principal principal = request.getUserPrincipal();
@@ -368,7 +368,7 @@ public class DomainController {
 		Set<PageStatisticDto> page_stats = new HashSet<>();
 		// get latest domain audit record
 		try {
-			Optional<AuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
+			Optional<DomainAuditRecord> domain_audit_record = audit_record_service.findMostRecentDomainAuditRecord(domain_id);
 
 			if (!domain_audit_record.isPresent()) {
 				throw new DomainAuditNotFound();
@@ -380,7 +380,7 @@ public class DomainController {
 		    Set<Audit> audit_list = audit_record_service.getAllAuditsForDomainAudit(domain_audit_record.get().getId());
 
 			Map<String, Boolean> key_map = new HashMap<>();
-			List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
+			Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit_record.get().getId());
 			for (AuditRecord page_audit : page_audits) {
 				PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
 				PageState page_state = audit_record_service.getPageStateForAuditRecord(page_audit_record.getId());
@@ -640,7 +640,7 @@ public class DomainController {
 		}
 
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
+		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.get().getId());
 		for (AuditRecord page_audit : page_audits) {
 			PageAuditRecord page_audit_record = (PageAuditRecord)page_audit;
 			Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(page_audit_record.getId());
@@ -717,9 +717,7 @@ public class DomainController {
 		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
 		List<UXIssueReportDto> ux_issues = new ArrayList<>();
-		List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
-		
-		
+		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
 		
 		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl());
@@ -764,34 +762,34 @@ public class DomainController {
 																								domain_audit.getTargetUserEducation());
 		String avg_grade_level = ContentUtils.getReadingGradeLevel(avg_reading_complexity);
 		
-		pdf_report.writeDocument(needs_improvement, 
-								 domain.getUrl(), 
-								 page_audits.size(), 
-								 (int)overall_score,
-								 (int)aesthetic_score, 
-								 (int)color_palette_score, 
-								 (int)text_contrast_score,
-								 (int)percentage_of_passing_large_text_items, 
-								 (int)percent_failing_large_text_items, 
-								 (int)percent_failing_small_text_items, 
-								 (int)non_text_contrast_score, 
-								 (int)percentage_pages_non_text_issues, 
-								 (int)written_content_score, 
-								 (int)ease_of_understanding_score, 
-								 (int)paragraphing_score, 
-								 (int)number_of_pages_paragraphing_issues, 
-								 (int)average_words_per_sentence, 
-								 (int)visuals_score, 
-								 (int)visuals_imagery_score, 
-								 (int)percent_custom_images, 
-								 (int)stock_image_percentage, 
-								 wcag_company_compliance_level, 
-								 (int)information_architecture_score, 
-								 (int)branding_score, 
-								 domain_audit.getColors(),
-								 avg_difficulty_string, 
-								 avg_grade_level, 
-								 non_ada_compliant_pages);
+		pdf_report.writeDocument(needs_improvement,
+								domain.getUrl(),
+								page_audits.size(),
+								(int)overall_score,
+								(int)aesthetic_score,
+								(int)color_palette_score,
+								(int)text_contrast_score,
+								(int)percentage_of_passing_large_text_items,
+								(int)percent_failing_large_text_items,
+								(int)percent_failing_small_text_items,
+								(int)non_text_contrast_score,
+								(int)percentage_pages_non_text_issues,
+								(int)written_content_score,
+								(int)ease_of_understanding_score,
+								(int)paragraphing_score,
+								(int)number_of_pages_paragraphing_issues,
+								(int)average_words_per_sentence,
+								(int)visuals_score,
+								(int)visuals_imagery_score,
+								(int)percent_custom_images,
+								(int)stock_image_percentage,
+								wcag_company_compliance_level,
+								(int)information_architecture_score,
+								(int)branding_score,
+								domain_audit.getColors(),
+								avg_difficulty_string,
+								avg_grade_level,
+								non_ada_compliant_pages);
 		
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 			pdf_report.write(outputStream);
@@ -1048,7 +1046,7 @@ public class DomainController {
 	 */
 	private AuditUpdateDto buildDomainAuditRecordDTO(long audit_record_id) {
 		DomainAuditRecord domain_audit = (DomainAuditRecord)audit_record_service.findById(audit_record_id).get();
-	    List<AuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
+	    Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 	    log.warn("total page audits found = "+page_audits.size());
 	    int total_pages = page_audits.size();
 	    //Set<AuditName> audit_labels = domain_audit.getAuditLabels();
@@ -1090,19 +1088,13 @@ public class DomainController {
 									AuditLevel.DOMAIN,
 									content_score,
 									content_progress,
-									0.0,
-									0.0,
 									info_architecture_score,
 									info_architecture_progress,
-									0.0,
-									0.0,
-									a11y_score, 
-									visual_design_score, 
-									visual_design_progress, 
-									text_contrast_score, 
-									element_contrast_score, 
-									data_extraction_progress, 
-									message, 
+									a11y_score,
+									visual_design_score,
+									visual_design_progress,
+									data_extraction_progress,
+									message,
 									execution_status);
 	}
 	

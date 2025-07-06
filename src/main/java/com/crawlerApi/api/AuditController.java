@@ -36,37 +36,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.crawlerApi.api.exception.MissingSubscriptionException;
-import com.crawlerApi.browsing.Crawler;
-import com.crawlerApi.dto.AuditRecordDto;
 import com.crawlerApi.generators.report.GeneratePDFReport;
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.ElementState;
-import com.crawlerApi.models.PageState;
-import com.crawlerApi.models.UXIssueReportDto;
-import com.crawlerApi.models.audit.Audit;
-import com.crawlerApi.models.audit.AuditRecord;
-import com.crawlerApi.models.audit.UXIssueMessage;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.designsystem.DesignSystem;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.enums.AuditCategory;
-import com.crawlerApi.models.enums.AuditName;
-import com.crawlerApi.models.enums.AuditSubcategory;
-import com.crawlerApi.models.enums.ObservationType;
-import com.crawlerApi.models.enums.WCAGComplianceLevel;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.AuditRecordService;
-import com.crawlerApi.services.AuditService;
-import com.crawlerApi.services.ElementStateService;
-import com.crawlerApi.services.PageStateService;
-import com.crawlerApi.services.ReportService;
-import com.crawlerApi.services.UXIssueMessageService;
-import com.crawlerApi.utils.AuditUtils;
-import com.crawlerApi.utils.BrowserUtils;
-import com.crawlerApi.utils.ContentUtils;
-import com.crawlerApi.utils.PDFDocUtils;
+import com.looksee.browsing.Crawler;
+import com.looksee.exceptions.MissingSubscriptionException;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Account;
+import com.looksee.models.ElementState;
+import com.looksee.models.PageState;
+import com.looksee.models.audit.Audit;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.designsystem.DesignSystem;
+import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.dto.UXIssueReportDto;
+import com.looksee.models.enums.AuditCategory;
+import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.ObservationType;
+import com.looksee.models.enums.WCAGComplianceLevel;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.ElementStateService;
+import com.looksee.services.PageStateService;
+import com.looksee.services.ReportService;
+import com.looksee.services.UXIssueMessageService;
+import com.looksee.utils.AuditUtils;
+import com.looksee.utils.BrowserUtils;
+import com.looksee.utils.ContentUtils;
+import com.looksee.utils.PDFDocUtils;
 
 /**
  *	API for interacting with {@link User} data
@@ -139,23 +140,27 @@ public class AuditController {
      * @param id
      * @return {@link Audit audit} with given ID
 	 * 
-	 * @throws UnknownAccountException 
-	 * @throws MissingSubscriptionException 
+	 * @throws UnknownAccountException
+	 * @throws MissingSubscriptionException
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
     public @ResponseBody List<AuditRecordDto> getAudit(HttpServletRequest request,
 									@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
     {
 		account_service.retrieveAndValidateAccount(request.getUserPrincipal());
-		List<AuditRecord> audits_records = audit_record_service.getAllPageAudits(id);
-		return audit_record_service.buildAudits(audits_records);
+		Set<PageAuditRecord> audits_records = audit_record_service.getAllPageAudits(id);
+		List<AuditRecord> audit_records = new ArrayList<>();
+		audits_records.forEach(audit_record -> {
+			audit_records.add(audit_record);
+		});
+		return audit_record_service.buildAudits(audit_records);
     }
 
 	/**
-     * Creates a new {@link Observation observation} 
+     * Creates a new {@link Observation observation}
      * 
      * @return {@link PerformanceInsight insight}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.POST, value="/$key/issues")
     public @ResponseBody UXIssueMessage addIssue(
@@ -217,8 +222,8 @@ public class AuditController {
 	 */
     @RequestMapping(path="/{audit_id}/report/excel", method = RequestMethod.GET)
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
-    									@PathVariable(value="audit_id", required=true) long audit_id) 
-    											throws UnknownAccountException, 
+    									@PathVariable(value="audit_id", required=true) long audit_id)
+    											throws UnknownAccountException,
 														FileNotFoundException, IOException {
     	Optional<AuditRecord> audit_opt = audit_record_service.findById(audit_id);
     	if(!audit_opt.isPresent()) {
@@ -227,7 +232,7 @@ public class AuditController {
     	
     	List<UXIssueReportDto> ux_issues = new ArrayList<>();
 		Set<Audit> audits = audit_record_service.getAllAuditsForPageAuditRecord(audit_opt.get().getId());
-		PageState page = audit_record_service.getPageStateForAuditRecord(audit_opt.get().getId());	
+		PageState page = audit_record_service.getPageStateForAuditRecord(audit_opt.get().getId());
     	for(Audit audit : audits) {
     		log.warn("audit key :: "+audit.getKey());
     		Set<UXIssueMessage> messages = audit_service.getIssues(audit.getId());
@@ -248,16 +253,16 @@ public class AuditController {
     			}
     			
     			UXIssueReportDto issue_dto = new UXIssueReportDto(message.getRecommendation(),
-    															  message.getPriority(),
-    															  message.getDescription(),
-    															  message.getType(),
-    															  message.getCategory(),
-    															  message.getWcagCompliance(),
-    															  message.getLabels(),
-    															  audit.getWhyItMatters(),
-    															  message.getTitle(),
-    															  element_selector,
-    															  page.getUrl());
+																message.getPriority(),
+																message.getDescription(),
+																message.getType(),
+																message.getCategory(),
+																message.getWcagCompliance(),
+																message.getLabels(),
+																audit.getWhyItMatters(),
+																message.getTitle(),
+																element_selector,
+																page.getUrl());
     			ux_issues.add(issue_dto);
     		}
     		

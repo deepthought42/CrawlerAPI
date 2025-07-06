@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.crawlerApi.models.TestUser;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.models.repository.TestUserRepository;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.TestUser;
+import com.looksee.models.repository.TestUserRepository;
 
 /**
  * REST controller that defines endpoints to access test users

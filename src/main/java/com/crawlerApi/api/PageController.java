@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.crawlerApi.models.Account;
-import com.crawlerApi.models.PageState;
-import com.crawlerApi.models.SimplePage;
-import com.crawlerApi.models.audit.performance.PerformanceInsight;
-import com.crawlerApi.models.dto.exceptions.UnknownAccountException;
-import com.crawlerApi.services.AccountService;
-import com.crawlerApi.services.PageStateService;
+import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.models.Account;
+import com.looksee.models.PageState;
+import com.looksee.models.SimplePage;
+import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.services.AccountService;
+import com.looksee.services.PageStateService;
 
 /**
  *	API for interacting with {@link User} data
@@ -61,15 +61,14 @@ public class PageController {
         log.info("finding page :: "+page.getKey());
         
         SimplePage simple_page = new SimplePage(
-        								page.getUrl(), 
-        								page.getViewportScreenshotUrl(), 
-        								page.getFullPageScreenshotUrl(), 
-        								page.getFullPageScreenshotUrl(), 
+        								page.getUrl(),
+        								page.getViewportScreenshotUrl(),
+        								page.getFullPageScreenshotUrl(),
         								page.getFullPageWidth(),
         								page.getFullPageHeight(),
-        								page.getSrc(), 
-        								page.getKey(), 
-        								page.getId());	
+        								page.getSrc(),
+        								page.getKey(),
+        								page.getId());
         return simple_page;
     }
     
@@ -78,7 +77,7 @@ public class PageController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException
      */
     @PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET, path="/$page_key/insights")

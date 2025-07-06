@@ -17,11 +17,11 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.joda.time.LocalDate;
 
-import com.crawlerApi.models.audit.ColorData;
-import com.crawlerApi.models.enums.AuditSubcategory;
-import com.crawlerApi.models.enums.WCAGComplianceLevel;
-import com.crawlerApi.utils.ColorUtils;
-import com.crawlerApi.utils.ImageUtils;
+import com.looksee.models.ColorData;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.WCAGComplianceLevel;
+import com.looksee.utils.ColorUtils;
+import com.looksee.utils.ImageUtils;
 
 public class GeneratePDFReport {
 
@@ -2481,9 +2481,11 @@ public class GeneratePDFReport {
 	 * Draws boxes with color palette colors as background and hex values as labels
 	 * 
 	 * @param primary_colors {@link List} of rgb values
-	 * @param x_offset TODO
-	 * @param y_offset TODO
-	 * @throws IOException 
+	 * @param x_offset x offset of the color palette
+	 * @param y_offset y offset of the color palette
+	 * @param content_stream {@link PDPageContentStream} to draw the color palette on
+	 * 
+	 * @throws IOException thrown if there is an error drawing the color palette
 	 */
 	private void drawColorPaletteColors(List<String> primary_colors, 
 										int x_offset, 
@@ -2500,15 +2502,17 @@ public class GeneratePDFReport {
 	 * Draws a single square and fills it with the rgb value provided as well
 	 *   as the hex value of the color
 	 *   
-	 * @param string
-	 * @param x_offset
-	 * @param y_offset
-	 * @throws IOException 
+	 * @param rgb rgb value of the color
+	 * @param x_offset x offset of the color
+	 * @param y_offset y offset of the color
+	 * @param content_stream {@link PDPageContentStream} to draw the color on
+	 * 
+	 * @throws IOException thrown if there is an error drawing the color
 	 */
-	private void drawColorBoxWithLabel(String rgb, 
-							  int x_offset, 
-							  int y_offset, 
-							  PDPageContentStream content_stream
+	private void drawColorBoxWithLabel(String rgb,
+										int x_offset,
+										int y_offset,
+										PDPageContentStream content_stream
     ) throws IOException {
 		ColorData color_data = new ColorData(rgb);
 		content_stream.setNonStrokingColor(new Color(color_data.getRed(), 
@@ -2530,10 +2534,14 @@ public class GeneratePDFReport {
 	 * Draws a single square and fills it with the rgb value provided as well
 	 *   as the hex value of the color
 	 *   
-	 * @param string
-	 * @param x_offset
-	 * @param y_offset
-	 * @throws IOException 
+	 * @param color_data {@link ColorData} to draw the color on
+	 * @param x_offset x offset of the color
+	 * @param y_offset y offset of the color
+	 * @param width width of the color
+	 * @param height height of the color
+	 * @param content_stream {@link PDPageContentStream} to draw the color on
+	 * 
+	 * @throws IOException thrown if there is an error drawing the color
 	 */
 	private void drawColorBox(ColorData color_data, 
 							  int x_offset, 
@@ -2551,13 +2559,16 @@ public class GeneratePDFReport {
 
 	/**
 	 * Creates items with icon and category name for areas of improvement
-	 * @param category
-	 * @param i
-	 * @throws IOException 
+	 * 
+	 * @param content_stream {@link PDPageContentStream} to draw the category on
+	 * @param category {@link AuditSubcategory} to draw the category on
+	 * @param index index of the category
+	 * 
+	 * @throws IOException thrown if there is an error drawing the category
 	 */
 	private void drawImprovementCategory(PDPageContentStream content_stream, 
-										 AuditSubcategory category, 
-										 int index
+										AuditSubcategory category, 
+										int index
 	) throws IOException {
 		assert category != null;
 		

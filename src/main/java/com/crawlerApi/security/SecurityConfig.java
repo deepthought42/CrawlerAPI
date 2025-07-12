@@ -1,6 +1,9 @@
 package com.crawlerApi.security;
 
-import org.springframework.beans.factory.annotation.Value;
+import java.security.Principal;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,25 +18,28 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.crawlerApi.config.Auth0Config;
+import com.crawlerApi.service.Auth0Service;
+import com.looksee.models.Account;
+
 @EnableWebSecurity
 @PropertySource("classpath:auth0.properties")
+@Component
 public class SecurityConfig {
 	
-	@Value(value = "${auth0.apiAudience}")
-	private String audience;
+	private final Auth0Config auth0Config;
+	private final Auth0Service auth0Service;
 	
-	@Value(value = "${auth0.issuer}")
-	private String issuer;
-	
-	@Value(value = "${auth0.clientId}")
-	private String clientId;
-	
-	@Value(value = "${auth0.clientSecret}")
-	private String clientSecret;
+	@Autowired
+	public SecurityConfig(Auth0Config auth0Config, Auth0Service auth0Service) {
+		this.auth0Config = auth0Config;
+		this.auth0Service = auth0Service;
+	}
 	
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -54,15 +60,68 @@ public class SecurityConfig {
     
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = JwtDecoders.fromOidcIssuerLocation(issuer);
+        NimbusJwtDecoder jwtDecoder = JwtDecoders.fromOidcIssuerLocation(auth0Config.getAuth0Issuer());
         
-        OAuth2TokenValidator<Jwt> withIssuer = new JwtIssuerValidator(issuer);
+        OAuth2TokenValidator<Jwt> withIssuer = new JwtIssuerValidator(auth0Config.getAuth0Issuer());
         OAuth2TokenValidator<Jwt> withTimestamp = new JwtTimestampValidator();
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, withTimestamp);
         
         jwtDecoder.setJwtValidator(withAudience);
         
         return jwtDecoder;
+    }
+    
+    /**
+     * Get the current user's account
+     * @param principal The authenticated principal
+     * @return Optional containing the Account if found
+     */
+    public Optional<Account> getCurrentUserAccount(Principal principal) {
+        return auth0Service.getCurrentUserAccount(principal);
+    }
+    
+    /**
+     * Get user information from Auth0
+     * @param accessToken The Auth0 access token
+     * @return Optional containing user information
+     */
+    public Optional<String> getUsername(String accessToken) {
+        return auth0Service.getUsername(accessToken);
+    }
+    
+    /**
+     * Get user nickname from Auth0
+     * @param accessToken The Auth0 access token
+     * @return Optional containing the nickname
+     */
+    public Optional<String> getNickname(String accessToken) {
+        return auth0Service.getNickname(accessToken);
+    }
+    
+    /**
+     * Get user email from Auth0
+     * @param accessToken The Auth0 access token
+     * @return Optional containing the email
+     */
+    public Optional<String> getEmail(String accessToken) {
+        return auth0Service.getEmail(accessToken);
+    }
+    
+    /**
+     * Extract user ID from Auth0 principal name
+     * @param principalName The principal name
+     * @return The user ID without the "auth0|" prefix
+     */
+    public String extractUserId(String principalName) {
+        return auth0Service.extractUserId(principalName);
+    }
+    
+    /**
+     * Check if Auth0 is properly configured
+     * @return true if Auth0 is configured and initialized
+     */
+    public boolean isAuth0Configured() {
+        return auth0Service.isConfigured();
     }
 	
     @Bean

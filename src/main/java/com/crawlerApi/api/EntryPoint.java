@@ -16,7 +16,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import com.crawlerApi.config.Auth0Config;
 
 /**
- * Initializes the system and launches it. 
+ * Initializes the system and launches it.
  *
  */
 

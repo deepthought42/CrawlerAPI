@@ -407,7 +407,7 @@ public class AuditRecordController {
 				PageAuditStats audit_stats = new PageAuditStats(audit_record.getId(),
 														audit_record.getStartTime(),
 														audit_record.getEndTime(),
-														overall_score,
+														a11y_score,
 														content_score,
 														written_content_score,
 														imagery_score,
@@ -423,6 +423,7 @@ public class AuditRecordController {
 														typography_score,
 														whitespace_score,
 														branding_score,
+														-1,
 														execution_status,
 														link_score);
 					return audit_stats;

@@ -33,7 +33,7 @@ CREATE INDEX FOR (var:ElementState) ON var.classification
 CREATE INDEX FOR (var:ElementState) ON var.xpath
 
 
-CREATE INDEX FOR (var:DomainAuditRecord) ON var.key
+CREATE INDEX FOR (var:DomainAuditRecord) ON var.key 
 CREATE INDEX FOR (var:PageAuditRecord) ON var.key
 CREATE INDEX FOR (var:ImageElementState) ON var.key
 CREATE INDEX FOR (var:LandingStep) ON var.key

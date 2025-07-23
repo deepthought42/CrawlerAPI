@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.service.Auth0Service;
+import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
 import com.looksee.services.AccountService;
@@ -49,9 +49,6 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
-    
-    @Autowired
-    private Auth0Service auth0Service;
 
     /**
      * Create new account
@@ -106,14 +103,15 @@ public class AccountController {
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
-    	
-    	if(accountOpt.isEmpty()){
+    	String id = principal.getName();
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	
-    	Account acct = accountOpt.get();
-    	
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
         List<String> onboarding = acct.getOnboardedSteps();
         onboarding.add(step_name);
         acct.setOnboardedSteps(onboarding);
@@ -126,13 +124,15 @@ public class AccountController {
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
-    	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
-    	
-    	if(accountOpt.isEmpty()){
+    	String id = principal.getName();
+    	Account acct = account_service.findByUserId(id);
+
+        if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	
-    	Account acct = accountOpt.get();
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
 
         return acct.getOnboardedSteps();
     }
@@ -150,15 +150,17 @@ public class AccountController {
     		throws UnknownAccountException 
 	{
     	Principal principal = request.getUserPrincipal();
-    	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
 
-		if(accountOpt.isEmpty()){
+		if(acct == null){
         	log.warn("Unknown account exception thrown");
     		throw new UnknownAccountException();
     	}
-    	
-    	Account acct = accountOpt.get();
-    	
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
         return acct;
     }
 
@@ -193,27 +195,24 @@ public class AccountController {
 	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest request) throws UnirestException, UnknownAccountException{
+    public void delete(HttpServletRequest request) throws UnirestException{
 		Principal principal = request.getUserPrincipal();
-    	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
-    	
-    	if(accountOpt.isEmpty()){
-    		throw new UnknownAccountException();
-    	}
-    	
-    	Account account = accountOpt.get();
-    	
-    	//remove account
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_service.findByUserId(id);
+		
+		//remove account
         account_service.deleteAccount(account.getId());
     }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class AccountExistsException extends RuntimeException {
+	/**
+	 *
+	 */
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public AccountExistsException() {
-		super("Account already exists");
+		super("This account already exists.");
 	}
 }
-

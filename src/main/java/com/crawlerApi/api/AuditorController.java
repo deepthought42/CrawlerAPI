@@ -94,10 +94,13 @@ public class AuditorController {
 			@RequestBody(required=true) AuditRecord audit_start
 	) throws Exception {
 		Principal principal = request.getUserPrincipal();
+		log.info("Looking up user: " + principal.getName());
 		Account account = account_service.findByUserId(principal.getName());
+		log.info("Found account: " + account.getId());
 
     	String lowercase_url = audit_start.getUrl().toLowerCase();
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+		log.info("Sanitized URL: " + sanitized_url);
 		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     	
 	   	//create new audit record

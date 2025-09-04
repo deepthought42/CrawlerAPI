@@ -6,13 +6,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.looksee.exceptions.DomainNotOwnedByAccountException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -25,13 +26,15 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
  */
-@RestController
-@RequestMapping("/testrecords")
+@Controller
+@RequestMapping(path = "v1/testrecords", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "TestRecords V1", description = "TestRecords API")
 public class TestRecordController {
 
 	@Autowired

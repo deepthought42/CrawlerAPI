@@ -65,12 +65,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 /**
  *	API for interacting with {@link User} data
  */
 @Controller
-@RequestMapping(path = "auditrecords", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "v1/auditrecords", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "AuditRecords V1", description = "AuditRecords API")
 public class AuditRecordController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

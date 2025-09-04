@@ -13,13 +13,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.security.SecurityConfig;
 import com.looksee.exceptions.ExistingRuleException;
@@ -39,12 +40,15 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
+@Controller
+@RequestMapping(path = "v1/elements", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Elements V1", description = "Elements API")
 public class ElementController {
 	private static Logger log = LoggerFactory.getLogger(ElementController.class);
 
@@ -69,7 +73,7 @@ public class ElementController {
      */
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/$element_key/rules", method = RequestMethod.POST)
+    @RequestMapping(path="/$element_key/rules", method = RequestMethod.POST)
 	@Operation(summary = "Add a rule to the given element", description = "Add a rule to the given element")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully added rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
@@ -178,11 +182,13 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
+     * @throws RuleValueRequiredException {@link RuleValueRequiredException}
+     * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
+    @RequestMapping(path="/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
     @Operation(summary = "Remove rule from element", description = "Remove a rule from the given element")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully removed rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),

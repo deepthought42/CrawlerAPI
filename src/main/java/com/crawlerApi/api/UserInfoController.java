@@ -5,11 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.service.Auth0Service;
 import com.looksee.models.Account;
@@ -19,12 +20,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller for retrieving user information from Auth0
  */
-@RestController
-@RequestMapping("/user")
+@Controller
+@RequestMapping(path = "v1/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "UserInfo V1", description = "UserInfo API")
 public class UserInfoController {
     
     @Autowired

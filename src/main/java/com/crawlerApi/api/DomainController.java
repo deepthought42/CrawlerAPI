@@ -105,7 +105,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
  * API endpoints for interacting with {@link Domain} data
  */
 @Controller
-@RequestMapping("/domains")
+@RequestMapping(path = "v1/domains", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DomainController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -780,17 +780,16 @@ public class DomainController {
 	/**
 	 * Get Excel file for domain with the given id
 	 * 
-	 * @param request
-	 * @param domain_id
-	 * @param username
-	 * @param password
-	 * @param role
+	 * @param request {@link HttpServletRequest}
+	 * @param domain_id {@link long}
+	 * @param username {@link String}
+	 * @param password {@link String}
+	 * @param role {@link String}
 	 * 
-	 * 
-	 * @throws UnknownAccountException
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 * @throws URISyntaxException 
+	 * @throws UnknownAccountException {@link UnknownAccountException}
+	 * @throws IOException {@link IOException}
+	 * @throws FileNotFoundException {@link FileNotFoundException}
+	 * @throws URISyntaxException {@link URISyntaxException}
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
 	@RequestMapping(path = "/{domain_id}/pdf", method = RequestMethod.GET)

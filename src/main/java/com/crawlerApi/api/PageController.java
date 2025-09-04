@@ -8,12 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.UnknownAccountException;
@@ -28,12 +29,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
-@RequestMapping("/pages")
+@Controller
+@RequestMapping(path = "v1/pages", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Pages V1", description = "Pages API")
 public class PageController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 

@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
@@ -42,12 +42,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
-@RequestMapping("/accounts")
+@Controller
+@RequestMapping(path = "v1/accounts", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Accounts V1", description = "Accounts API")
 public class AccountController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -72,7 +74,7 @@ public class AccountController {
      */
 
     @CrossOrigin(origins = "18.232.225.224, 34.233.19.82, 52.204.128.250, 3.132.201.78, 3.19.44.88, 3.20.244.231", maxAge = 3600)
-    @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.POST)
     @Operation(summary = "Create a new account", description = "Create a new account with the provided details")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully created account", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),

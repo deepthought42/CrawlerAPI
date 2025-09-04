@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,12 +26,14 @@ import com.looksee.models.repository.TestUserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * REST controller that defines endpoints to access test users
  */
 @Controller
-@RequestMapping("/test_users")
+@RequestMapping(path = "v1/testusers", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "TestUsers V1", description = "TestUsers API")
 public class TestUserController {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestUserController.class);

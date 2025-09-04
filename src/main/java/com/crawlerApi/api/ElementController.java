@@ -74,7 +74,6 @@ public class ElementController {
      * @throws ExistingRuleException {@link ExistingRuleException}
      * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
-    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/$element_key/rules", method = RequestMethod.POST)
 	@Operation(summary = "Add a rule to the given element", description = "Add a rule to the given element")
@@ -193,7 +192,6 @@ public class ElementController {
      * @throws RuleValueRequiredException {@link RuleValueRequiredException}
      * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
-    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
     @Operation(summary = "Remove rule from element", description = "Remove a rule from the given element")
@@ -231,7 +229,6 @@ public class ElementController {
      * @return {@link ElementState element}
      * @throws UnknownAccountException {@link UnknownAccountException}
      */
-    //@ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     @Operation(summary = "Update element", description = "Update the given element")

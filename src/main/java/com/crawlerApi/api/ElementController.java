@@ -183,6 +183,13 @@ public class ElementController {
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
+    @Operation(summary = "Remove rule from element", description = "Remove a rule from the given element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully removed rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "404", description = "Element or rule not found")
+    })
     public ElementState removeRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
@@ -214,6 +221,13 @@ public class ElementController {
     //@ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
+    @Operation(summary = "Update element", description = "Update the given element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated element", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "400", description = "Invalid element data")
+    })
     public ElementState update(
     		HttpServletRequest request,
     		@RequestBody ElementState element_state
@@ -247,6 +261,14 @@ public class ElementController {
     //@ApiOperation(value = "updates form element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/forms/$form_key/elements", method = RequestMethod.PUT)
+    @Operation(summary = "Update form element", description = "Update the given form element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated form element", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "400", description = "Invalid element data"),
+        @ApiResponse(responseCode = "404", description = "Form not found")
+    })
     public ElementState updateFormElement(
     		HttpServletRequest request,
     		@PathVariable(value="form_key", required=true) String form_key,

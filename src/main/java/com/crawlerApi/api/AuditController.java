@@ -70,6 +70,7 @@ import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -164,7 +165,8 @@ public class AuditController {
         @ApiResponse(responseCode = "404", description = "Audit not found")
     })
     public @ResponseBody List<AuditRecordDto> getAudit(HttpServletRequest request,
-									@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
+    													@Parameter(description = "ID of the audit to retrieve", required = true)
+													@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
     {
 		account_service.retrieveAndValidateAccount(request.getUserPrincipal());
 		Set<PageAuditRecord> audits_records = audit_record_service.getAllPageAudits(id);
@@ -219,9 +221,11 @@ public class AuditController {
 	@Operation(summary = "Stop audit", description = "Stop the audit for the given URL")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully stopped audit"),
-		@ApiResponse(responseCode = "401", description = "Authentication required")
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription")
 	})
 	public @ResponseBody void stopAudit(HttpServletRequest request, 
+				@Parameter(description = "URL of the audit to stop", required = true)
 				@RequestParam(value="url", required=true) String url)
 			throws MalformedURLException, UnknownAccountException 
 	{
@@ -255,9 +259,12 @@ public class AuditController {
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully exported Excel report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "404", description = "Audit not found")
+		@ApiResponse(responseCode = "403", description = "Missing subscription"),
+		@ApiResponse(responseCode = "404", description = "Audit not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
 	})
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
+    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id)
     											throws UnknownAccountException,
 														FileNotFoundException, IOException {
@@ -339,9 +346,12 @@ public class AuditController {
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully exported PDF report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "404", description = "Audit not found")
+		@ApiResponse(responseCode = "403", description = "Missing subscription"),
+		@ApiResponse(responseCode = "404", description = "Audit not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
 	})
     public @ResponseBody ResponseEntity<Resource> exportPDFReport(HttpServletRequest request,
+    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id) 
     											throws UnknownAccountException, 
 														FileNotFoundException, IOException {

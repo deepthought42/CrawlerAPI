@@ -95,6 +95,7 @@ import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -296,8 +297,9 @@ public class DomainController {
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
 		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
 	})
-	public @ResponseBody DomainSettingsDto getDesignSystem(@PathVariable("domain_id") long domain_id,
-			HttpServletRequest request) {
+	public @ResponseBody DomainSettingsDto getDesignSystem(@Parameter(description = "ID of the domain", required = true)
+													@PathVariable("domain_id") long domain_id,
+													HttpServletRequest request) {
 		DesignSystem design_system = null;
 		Optional<DesignSystem> design_system_opt = domain_service.getDesignSystem(domain_id);
 		if (!design_system_opt.isPresent()) {
@@ -408,6 +410,7 @@ public class DomainController {
 		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
 	})
 	public @ResponseBody Set<PageStatisticDto> getPages(HttpServletRequest request,
+			@Parameter(description = "ID of the domain", required = true)
 			@PathVariable(value = "domain_id", required = true) long domain_id) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
@@ -528,7 +531,8 @@ public class DomainController {
 		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
 	})
 	public @ResponseBody AuditUpdateDto getAuditStat(HttpServletRequest request, 
-												 @PathVariable("domain_id") long domain_id)
+													@Parameter(description = "ID of the domain", required = true)
+													@PathVariable("domain_id") long domain_id)
 										 throws UnknownAccountException
 	{
 		// get most recent audit record for the domain

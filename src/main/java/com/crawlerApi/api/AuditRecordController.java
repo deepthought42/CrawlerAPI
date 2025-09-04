@@ -111,9 +111,9 @@ public class AuditRecordController {
     @RequestMapping(method = RequestMethod.GET)
 	@Operation(summary = "Get audit records for the given account", description = "Get the audit records for the given account")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit records", content = @Content(schema = @Schema(type = "object", implementation = List.class))),
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit records", content = @Content(schema = @Schema(type = "array", implementation = AuditRecordDto.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+		@ApiResponse(responseCode = "403", description = "Missing subscription")
 	})
     public @ResponseBody List<AuditRecordDto> getAuditRecords(
 												HttpServletRequest request
@@ -143,7 +143,7 @@ public class AuditRecordController {
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully requested report"),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
 	})
     public @ResponseBody void requestReport(
 										HttpServletRequest request,
@@ -166,9 +166,9 @@ public class AuditRecordController {
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/pages")
 	@Operation(summary = "Get pages for the given audit record", description = "Get the pages for the given audit record")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved pages", content = @Content(schema = @Schema(type = "object", implementation = Set.class))),
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved pages", content = @Content(schema = @Schema(type = "array", implementation = SimplePage.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
 	})
     public @ResponseBody Set<SimplePage> getPages(
 						    		HttpServletRequest request,
@@ -230,11 +230,12 @@ public class AuditRecordController {
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
 	@Operation(summary = "Get page audit elements", description = "Get the elements for the given audit record")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved page audit elements", content = @Content(schema = @Schema(type = "object", implementation = com.looksee.models.audit.ElementIssueTwoWayMapping.class))),
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved page audit elements", content = @Content(schema = @Schema(type = "object", implementation = ElementIssueTwoWayMapping.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+		@ApiResponse(responseCode = "404", description = "Audit record not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
 	})
-    public @ResponseBody com.looksee.models.audit.ElementIssueTwoWayMapping getPageAuditElements(
+    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
 														HttpServletRequest request,
 														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
@@ -285,7 +286,7 @@ public class AuditRecordController {
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit stats", content = @Content(schema = @Schema(type = "object", implementation = AuditStats.class))),
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
 	})
     public @ResponseBody AuditStats getAuditStat(
 									HttpServletRequest request,

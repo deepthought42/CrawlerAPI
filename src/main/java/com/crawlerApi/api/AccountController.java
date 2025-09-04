@@ -37,6 +37,7 @@ import com.looksee.services.AccountService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -120,7 +121,9 @@ public class AccountController {
         @ApiResponse(responseCode = "200", description = "Successfully updated onboarding steps", content = @Content(schema = @Schema(type = "array", implementation = String.class))),
         @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
+    public List<String> setOnboardingStep(HttpServletRequest request, 
+    										@Parameter(description = "Name of the onboarding step to mark as completed", required = true)
+    										@RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
     	
@@ -233,6 +236,12 @@ public class AccountController {
 	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
+    @Operation(summary = "Delete account", description = "Delete the current authenticated user's account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully deleted account"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
     public void delete(HttpServletRequest request) throws UnirestException, UnknownAccountException{
 		Principal principal = request.getUserPrincipal();
     	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);

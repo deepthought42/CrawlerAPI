@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,11 +24,17 @@ import com.looksee.models.message.CompetitorMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.CompetitorService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  *	API for interacting with {@link User} data
  */
 @Controller
-@RequestMapping("/competitors")
+@RequestMapping(path = "v1/competitors", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Competitors V1", description = "Competitors API")
 public class CompetitorController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -47,6 +54,13 @@ public class CompetitorController {
      * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.GET, path="/{competitor_id}")
+    @Operation(summary = "Start competitor analysis", description = "Start analysis for the given competitor")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully started competitor analysis"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient subscription"),
+        @ApiResponse(responseCode = "404", description = "Competitor not found")
+    })
     public void startAnalysis(HttpServletRequest request,
 			@PathVariable(value="competitor_id", required=true) long competitor_id
 	) throws InsufficientSubscriptionException {

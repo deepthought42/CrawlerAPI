@@ -14,6 +14,12 @@ import org.springframework.context.annotation.PropertySources;
 
 import com.crawlerApi.config.Auth0Config;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.annotations.servers.Server;
+
 /**
  * Initializes the system and launches it.
  *
@@ -29,6 +35,26 @@ import com.crawlerApi.config.Auth0Config;
 @EnableConfigurationProperties(Auth0Config.class)
 //@ConfigurationProperties("spring.cloud.gcp.vision")
 @EntityScan(basePackages = { "com.crawlerApi.models"} )
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Crawler API",
+        version = "1.0.0",
+        description = "API for web crawling and auditing functionality",
+        contact = @Contact(
+            name = "API Support",
+            email = "support@looksee.com"
+        ),
+        license = @License(
+            name = "MIT License",
+            url = "https://opensource.org/licenses/MIT"
+        )
+    ),
+    servers = {
+        @Server(url = "https://api.looksee.com/v1", description = "Production Server"),
+        @Server(url = "https://staging-api.looksee.com/v1", description = "Staging Server"),
+        @Server(url = "http://localhost:8080/v1", description = "Local Development")
+    }
+)
 public class EntryPoint {
 	
 	public static void main(String[] args){

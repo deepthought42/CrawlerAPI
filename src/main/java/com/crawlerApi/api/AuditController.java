@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -69,11 +68,20 @@ import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  *	API for interacting with {@link User} data
  */
 @Controller
-@RequestMapping(path = "audits", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "v1/audits", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Audits V1", description = "Audits API")
 public class AuditController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -112,10 +120,16 @@ public class AuditController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
-     * @throws MalformedURLException 
-     * @throws UnknownAccountException 
+     * @throws MalformedURLException {@link MalformedURLException}
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
     @RequestMapping(method = RequestMethod.GET)
+    @Operation(summary = "Get all audits", description = "Retrieve list of audits from last 30 days")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved audits", content = @Content(schema = @Schema(type = "array", implementation = AuditRecordDto.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription")
+    })
     public @ResponseBody List<AuditRecordDto> getAudits(HttpServletRequest request)
 		throws MalformedURLException, UnknownAccountException
     {
@@ -144,8 +158,16 @@ public class AuditController {
 	 * @throws MissingSubscriptionException
      */
     @RequestMapping(method= RequestMethod.GET, path="/{id}")
+    @Operation(summary = "Get audit by ID", description = "Retrieve audit with the given ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved audit", content = @Content(schema = @Schema(type = "array", implementation = AuditRecordDto.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "404", description = "Audit not found")
+    })
     public @ResponseBody List<AuditRecordDto> getAudit(HttpServletRequest request,
-									@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
+    													@Parameter(description = "ID of the audit to retrieve", required = true)
+													@PathVariable("id") long id) throws MissingSubscriptionException, UnknownAccountException
     {
 		account_service.retrieveAndValidateAccount(request.getUserPrincipal());
 		Set<PageAuditRecord> audits_records = audit_record_service.getAllPageAudits(id);
@@ -163,6 +185,12 @@ public class AuditController {
      * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.POST, value="/$key/issues")
+    @Operation(summary = "Add issue to audit", description = "Create a new UX issue for the given audit")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully added issue", content = @Content(schema = @Schema(type = "object", implementation = UXIssueMessage.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "404", description = "Audit not found")
+    })
     public @ResponseBody UXIssueMessage addIssue(
 										HttpServletRequest request,
 										@PathVariable("key") String key,
@@ -191,7 +219,14 @@ public class AuditController {
 
 	
 	@RequestMapping("/stop")
+	@Operation(summary = "Stop audit", description = "Stop the audit for the given URL")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully stopped audit"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription")
+	})
 	public @ResponseBody void stopAudit(HttpServletRequest request, 
+				@Parameter(description = "URL of the audit to stop", required = true)
 				@RequestParam(value="url", required=true) String url)
 			throws MalformedURLException, UnknownAccountException 
 	{
@@ -221,7 +256,16 @@ public class AuditController {
 	 * @throws FileNotFoundException 
 	 */
     @RequestMapping(path="/{audit_id}/report/excel", method = RequestMethod.GET)
+	@Operation(summary = "Export Excel report for the given audit ID", description = "Export an Excel report for the given audit ID")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully exported Excel report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription"),
+		@ApiResponse(responseCode = "404", description = "Audit not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
+    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id)
     											throws UnknownAccountException,
 														FileNotFoundException, IOException {
@@ -299,7 +343,16 @@ public class AuditController {
 	 * @throws FileNotFoundException 
 	 */
     @RequestMapping(path="/{audit_id}/report/pdf", method = RequestMethod.GET)
+	@Operation(summary = "Export PDF report for the given audit ID", description = "Export a PDF report for the given audit ID")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully exported PDF report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription"),
+		@ApiResponse(responseCode = "404", description = "Audit not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
     public @ResponseBody ResponseEntity<Resource> exportPDFReport(HttpServletRequest request,
+    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id) 
     											throws UnknownAccountException, 
 														FileNotFoundException, IOException {

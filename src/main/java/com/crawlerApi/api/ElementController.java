@@ -13,13 +13,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.security.SecurityConfig;
 import com.looksee.exceptions.ExistingRuleException;
@@ -34,11 +35,20 @@ import com.looksee.services.AccountService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.RuleService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
+@Controller
+@RequestMapping(path = "v1/elements", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Elements V1", description = "Elements API")
 public class ElementController {
 	private static Logger log = LoggerFactory.getLogger(ElementController.class);
 
@@ -59,11 +69,19 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
+     * @throws RuleValueRequiredException {@link RuleValueRequiredException}
+     * @throws ExistingRuleException {@link ExistingRuleException}
+     * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
-    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/$element_key/rules", method = RequestMethod.POST)
+    @RequestMapping(path="/$element_key/rules", method = RequestMethod.POST)
+	@Operation(summary = "Add a rule to the given element", description = "Add a rule to the given element")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully added rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
     public ElementState addRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
@@ -94,6 +112,10 @@ public class ElementController {
     	return element_service.findByKey(element_key);
     }
     
+	/**
+	 * Validates the rule
+	 * @param rule {@link Rule}
+	 */
     private void validateRule(Rule rule) {
 
     	Rule min_value_rule = null;
@@ -166,11 +188,19 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
+     * @throws RuleValueRequiredException {@link RuleValueRequiredException}
+     * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
-    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
-    @RequestMapping(path="/elements/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
+    @RequestMapping(path="/$element_key/rules/$rule_key", method = RequestMethod.DELETE)
+    @Operation(summary = "Remove rule from element", description = "Remove a rule from the given element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully removed rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "404", description = "Element or rule not found")
+    })
     public ElementState removeRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,
@@ -197,11 +227,17 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
-    //@ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
+    @Operation(summary = "Update element", description = "Update the given element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated element", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "400", description = "Invalid element data")
+    })
     public ElementState update(
     		HttpServletRequest request,
     		@RequestBody ElementState element_state
@@ -230,11 +266,19 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
     //@ApiOperation(value = "updates form element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/forms/$form_key/elements", method = RequestMethod.PUT)
+    @Operation(summary = "Update form element", description = "Update the given form element")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated form element", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Missing subscription"),
+        @ApiResponse(responseCode = "400", description = "Invalid element data"),
+        @ApiResponse(responseCode = "404", description = "Form not found")
+    })
     public ElementState updateFormElement(
     		HttpServletRequest request,
     		@PathVariable(value="form_key", required=true) String form_key,
@@ -259,6 +303,10 @@ public class ElementController {
       return element_service.findByKey(element_state.getKey());
     }
 
+	/**
+	 * Validates the rules
+	 * @param rules {@link Set<Rule>}
+	 */
 	private void validateRules(Set<Rule> rules) {
 		Rule min_value_rule = null;
     	Rule max_value_rule = null;

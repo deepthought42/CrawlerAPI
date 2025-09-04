@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.crawlerApi.security.SecurityConfig;
 import com.looksee.models.Account;
@@ -21,11 +21,19 @@ import com.looksee.models.dto.User;
 import com.looksee.services.AccountService;
 import com.nimbusds.jwt.JWT;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
-@RequestMapping("/integrations")
+@Controller
+@RequestMapping(path = "v1/integrations", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Integrations V1", description = "Integrations API")
 public class IntegrationsController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -49,7 +57,12 @@ public class IntegrationsController {
      * @throws Exception
      */
 
-    @RequestMapping(path="/product-board", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(path="/product-board", method = RequestMethod.POST)
+    @Operation(summary = "Create Product Board integration", description = "Create a JWT token for Product Board integration")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully created integration token", content = @Content(schema = @Schema(type = "object", implementation = JWT.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
     @ResponseBody
     public JWT create(
     		HttpServletRequest request,

@@ -60,11 +60,18 @@ import com.looksee.services.PageStateService;
 import com.looksee.services.UXIssueMessageService;
 import com.looksee.utils.AuditUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 /**
  *	API for interacting with {@link User} data
  */
 @Controller
-@RequestMapping(path = "auditrecords", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "v1/auditrecords", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Audit Records V1", description = "Audit Records API")
 public class AuditRecordController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -103,6 +110,12 @@ public class AuditRecordController {
      * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.GET)
+	@Operation(summary = "Get audit records for the given account", description = "Get the audit records for the given account")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit records", content = @Content(schema = @Schema(type = "array", implementation = AuditRecordDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription")
+	})
     public @ResponseBody List<AuditRecordDto> getAuditRecords(
 												HttpServletRequest request
 	) throws UnknownAccountException {
@@ -127,6 +140,12 @@ public class AuditRecordController {
 	 * 
      */
     @RequestMapping(method = RequestMethod.POST, value="/{audit_record_id}/report")
+	@Operation(summary = "Request a report for the given audit record", description = "Request a report for the given audit record")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully requested report"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
+	})
     public @ResponseBody void requestReport(
 										HttpServletRequest request,
 										@PathVariable("audit_record_id") long audit_record_id,
@@ -146,6 +165,12 @@ public class AuditRecordController {
      * @throws UnknownAccountException thrown if the account is not found
      */
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/pages")
+	@Operation(summary = "Get pages for the given audit record", description = "Get the pages for the given audit record")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved pages", content = @Content(schema = @Schema(type = "array", implementation = SimplePage.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
+	})
     public @ResponseBody Set<SimplePage> getPages(
 						    		HttpServletRequest request,
 									@PathVariable("audit_record_id") long audit_record_id
@@ -174,8 +199,6 @@ public class AuditRecordController {
     		else {
     			//get all page states for domain audit record
     			Set<PageState> page_states = audit_record_service.getPageStatesForDomainAuditRecord(audit_record_id);
-    			
-    			
     			Set<SimplePage> pages = new HashSet<>();
     			
     			for(PageState page_state: page_states) {
@@ -203,10 +226,17 @@ public class AuditRecordController {
      * 
      * @param id
      * @return {@link Audit audit} with given ID
-     * @throws MalformedURLException 
+     * @throws MalformedURLException {@link MalformedURLException}
      */
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
-    public @ResponseBody com.looksee.models.audit.ElementIssueTwoWayMapping getPageAuditElements(
+	@Operation(summary = "Get page audit elements", description = "Get the elements for the given audit record")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved page audit elements", content = @Content(schema = @Schema(type = "object", implementation = ElementIssueTwoWayMapping.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "404", description = "Audit record not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
+    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
 														HttpServletRequest request,
 														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
@@ -253,6 +283,12 @@ public class AuditRecordController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET, value="/{audit_record_id}/stats")
+	@Operation(summary = "Get audit stats for the given audit record", description = "Get the stats for the given audit record")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit stats", content = @Content(schema = @Schema(type = "object", implementation = AuditStats.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "404", description = "Audit record not found")
+	})
     public @ResponseBody AuditStats getAuditStat(
 									HttpServletRequest request,
 									@PathVariable("audit_record_id") long audit_record_id
@@ -435,58 +471,12 @@ public class AuditRecordController {
 			throw new AuditRecordNotFoundException();
 		}
     }
-    
-    
-	/**
-	 * Retrieves journeys from the domain audit and calculates a value between 0 and 1 that indicates the progress
-	 * based on the number of journey's that are still in the CANDIDATE status vs the journeys that don't have the CANDIDATE STATUS
-	 * 
-	 * NOTE : Progress is based on a magic number(10000). Be aware that all progress will be based on an assumed maximum element 
-	 *        count of 1000
-	 * 
-	 * @param audit_record_id
-	 * 
-	 * @return progress percentage as a value between 0 and 1
-	 */
-	private double getPageDataExtractionProgress(long audit_record_id) {
-		double milestone_count = 1.0;
-		
-		PageState page = audit_record_service.findPage(audit_record_id);
-		
-		int audit_count = audit_record_service.getAllAudits(audit_record_id).size();
-		//if the audit_record has audits return 1
-		if(audit_count > 0) {
-			return 1.0;
-		}
-		
-		//if audit_record has page associated with it add 1 point
-		if(page != null) {
-			milestone_count += 1;
-		}
-		else {
-			return 0.0;
-		}
-		
-		int element_count = page_state_service.getElementStateCount(page.getId());
-		
-		//if the associated page has elements add 1000/element_count
-		int max_elements = 1000;
-		if(element_count > 0) {
-			if(element_count > max_elements) {
-				max_elements = element_count;
-			}
-			milestone_count += max_elements / (double)element_count;
-		}
-		
-		return milestone_count / 3.0;
-	}
-
 
 	/**
 	 * Convert list of {@link AuditRecord audit_records} to list of {@link AuditDTO}
 	 * 
-	 * @param audits_records
-	 * @return
+	 * @param audits_records {@link AuditRecord audit records}
+	 * @return {@link AuditRecordDto audit record dto}
 	 */
 	private List<AuditRecordDto> buildAudits(List<AuditRecord> audits_records) {
 		List<AuditRecordDto> auditDtoList = new ArrayList<>();

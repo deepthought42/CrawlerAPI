@@ -7,14 +7,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Request object for starting an audit
+ */
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class AuditStartRequest {
-    @Getter
-    @Setter
-    private String url;
 
-    @Getter
-    @Setter
-    private AuditLevel type;
+    private String url;
+    private AuditLevel level;
 }

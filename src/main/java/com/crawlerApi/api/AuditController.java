@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
+import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -47,8 +48,7 @@ import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.audit.messages.UXIssueMessage;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.dto.AuditRecordDto;
 import com.looksee.models.dto.UXIssueReportDto;

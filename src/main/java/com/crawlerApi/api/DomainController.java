@@ -270,6 +270,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(path = "/select", method = RequestMethod.PUT)
+	@Operation(summary = "Select domain", description = "Select a domain for the current account")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully selected domain"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Missing subscription")
+	})
 	public @ResponseBody void selectDomain(HttpServletRequest request, @RequestBody Domain domain)
 			throws UnknownAccountException, MalformedURLException {
 
@@ -435,7 +441,6 @@ public class DomainController {
 			
 			//Set<AuditName> audit_labels = domain_audit_record.get().getAuditLabels();
 			Set<AuditName> audit_labels = new HashSet<>();
-
 		    Set<Audit> audit_list = audit_record_service.getAllAuditsForDomainAudit(domain_audit_record.get().getId());
 
 			Map<String, Boolean> key_map = new HashMap<>();
@@ -532,11 +537,11 @@ public class DomainController {
 		@ApiResponse(responseCode = "401", description = "Authentication required"),
 		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
 	})
-	public @ResponseBody AuditUpdateDto getAuditStat(HttpServletRequest request, 
+	public @ResponseBody AuditUpdateDto getAuditStat(HttpServletRequest request,
 													@Parameter(description = "ID of the domain", required = true)
 													@PathVariable("domain_id") long domain_id)
-										 throws UnknownAccountException
-	{
+										throws UnknownAccountException {
+	
 		// get most recent audit record for the domain
 		Optional<AuditRecord> audit_record_opt = audit_record_service.getMostRecentAuditRecordForDomain(domain_id);
 

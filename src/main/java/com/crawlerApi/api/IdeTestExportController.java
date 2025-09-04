@@ -76,8 +76,9 @@ public class IdeTestExportController {
     @RequestMapping(method = RequestMethod.PUT)
     @Operation(summary = "Update IDE test", description = "Update a test using JSON data containing page states, elements, and actions")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "202", description = "Successfully updated test", content = @Content(schema = @Schema(type = "boolean"))),
-        @ApiResponse(responseCode = "400", description = "Invalid JSON data")
+        @ApiResponse(responseCode = "200", description = "Successfully updated test", content = @Content(schema = @Schema(type = "boolean"))),
+        @ApiResponse(responseCode = "400", description = "Invalid JSON data"),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
     })
     public ResponseEntity<Boolean> update(HttpServletRequest request,
     									  @RequestBody(required=true) String json_str)
@@ -99,8 +100,9 @@ public class IdeTestExportController {
     @RequestMapping(method = RequestMethod.POST)
     @Operation(summary = "Create IDE test", description = "Create a new test using JSON data containing page states, elements, and actions")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "202", description = "Successfully created test", content = @Content(schema = @Schema(type = "boolean"))),
-        @ApiResponse(responseCode = "400", description = "Invalid JSON data")
+        @ApiResponse(responseCode = "200", description = "Successfully created test", content = @Content(schema = @Schema(type = "boolean"))),
+        @ApiResponse(responseCode = "400", description = "Invalid JSON data"),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
     })
     public ResponseEntity<Boolean> create(HttpServletRequest request,
     									  @RequestBody(required=true) String json_str)

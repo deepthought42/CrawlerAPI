@@ -61,6 +61,7 @@ public class DesignSystemController {
 	@Operation(summary = "Update design system colors", description = "Update the color palette for the design system")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully updated color palette"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
 		@ApiResponse(responseCode = "404", description = "Design system not found")
 	})
 	public @ResponseBody void updateColors(

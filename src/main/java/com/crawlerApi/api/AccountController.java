@@ -79,6 +79,7 @@ public class AccountController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully created account", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),
         @ApiResponse(responseCode = "400", description = "Bad request"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "409", description = "Account already exists")
     })
     @ResponseBody

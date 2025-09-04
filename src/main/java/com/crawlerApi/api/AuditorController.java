@@ -43,7 +43,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/auditor", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Auditor V1", description = "Auditor API")
-public class AuditorController {
+public class AuditorController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final Auth0Service auth0Service;

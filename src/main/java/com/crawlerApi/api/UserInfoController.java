@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "User Info V1", description = "User Info API")
-public class UserInfoController {
+public class UserInfoController extends BaseApiController {
     
     @Autowired
     private Auth0Service auth0Service;

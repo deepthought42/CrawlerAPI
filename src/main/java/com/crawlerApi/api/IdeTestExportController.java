@@ -1,7 +1,6 @@
 package com.crawlerApi.api;
 
 import java.net.URL;
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +46,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/ide-test-export", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "IDE Test Export V1", description = "IDE Test Export API")
-public class IdeTestExportController {
+public class IdeTestExportController extends BaseApiController {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -107,9 +106,7 @@ public class IdeTestExportController {
     public ResponseEntity<Boolean> create(HttpServletRequest request,
     									  @RequestBody(required=true) String json_str)
     										throws Exception {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_repo.findByUserId(id);
+    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
 
     	JSONObject test_json = new JSONObject(json_str);
     	

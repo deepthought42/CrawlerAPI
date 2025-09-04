@@ -94,6 +94,12 @@ import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  * API endpoints for interacting with {@link Domain} data
  */
@@ -134,6 +140,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET)
+    @Operation(summary = "List all domains", description = "Get paginated list of domains with search and filtering")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved domains", content = @Content(schema = @Schema(type = "object", implementation = DomainDto.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
 	public @ResponseBody Set<DomainDto> getAll(HttpServletRequest request) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
 		String id = principal.getName();
@@ -174,6 +186,12 @@ public class DomainController {
 	 */
 	@PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(method = RequestMethod.POST)
+	@Operation(summary = "Create a new domain", description = "Create a new domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully created domain", content = @Content(schema = @Schema(type = "object", implementation = DomainDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Domain create(HttpServletRequest request,
 									@RequestBody(required = true) Domain domain)
 			throws UnknownAccountException, MalformedURLException {
@@ -212,6 +230,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('write:domains')")
 	@RequestMapping(method = RequestMethod.PUT)
+	@Operation(summary = "Update a domain", description = "Update a domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully updated domain", content = @Content(schema = @Schema(type = "object", implementation = DomainDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Domain update(HttpServletRequest request,
 			@RequestParam(value = "key", required = true) String key,
 			@RequestParam(value = "protocol", required = true) String protocol,
@@ -266,6 +290,12 @@ public class DomainController {
 	 * @return list of competitors
 	 */
 	@RequestMapping(method = RequestMethod.GET, path = "{domain_id}/settings")
+	@Operation(summary = "Get the design system for the given domain", description = "Get the design system for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved design system", content = @Content(schema = @Schema(type = "object", implementation = DomainSettingsDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody DomainSettingsDto getDesignSystem(@PathVariable("domain_id") long domain_id,
 			HttpServletRequest request) {
 		DesignSystem design_system = null;
@@ -295,6 +325,12 @@ public class DomainController {
 	 * @throws MalformedURLException
 	 */
 	@RequestMapping(method = RequestMethod.POST, path = "/{domain_id}/settings/wcag")
+	@Operation(summary = "Update the WCAG level for the given domain", description = "Update the WCAG level for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully updated WCAG level", content = @Content(schema = @Schema(type = "object", implementation = DesignSystem.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody DesignSystem updateWcagLevel(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, @RequestBody(required = true) DesignSystem settings)
 			throws MalformedURLException {
@@ -310,6 +346,12 @@ public class DomainController {
 	 * @throws MalformedURLException
 	 */
 	@RequestMapping(method = RequestMethod.POST, path = "/{domain_id}/settings/expertise")
+	@Operation(summary = "Update the expertise level for the given domain", description = "Update the expertise level for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully updated expertise level", content = @Content(schema = @Schema(type = "object", implementation = DesignSystem.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody DesignSystem updateExpertise(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, @RequestBody(required = true) DesignSystem settings)
 			throws MalformedURLException {
@@ -328,6 +370,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('delete:domains')")
 	@RequestMapping(method = RequestMethod.DELETE, path = "/{domain_id}")
+	@Operation(summary = "Remove the given domain", description = "Remove the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully removed domain"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody void remove(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -353,6 +401,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET, path = "/{domain_id}/pages")
+	@Operation(summary = "Get the pages for the given domain", description = "Get the pages for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved pages", content = @Content(schema = @Schema(type = "object", implementation = PageStatisticDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Set<PageStatisticDto> getPages(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -467,6 +521,12 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/{domain_id}/stats")
+	@Operation(summary = "Get the audit statistics for the given domain", description = "Get the audit statistics for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved audit statistics", content = @Content(schema = @Schema(type = "object", implementation = AuditUpdateDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody AuditUpdateDto getAuditStat(HttpServletRequest request, 
 												 @PathVariable("domain_id") long domain_id)
 										 throws UnknownAccountException
@@ -486,6 +546,12 @@ public class DomainController {
 
 	// @PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET, path = "/pages")
+	@Operation(summary = "Get all pages for the given URL", description = "Get all pages for the given URL")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved pages", content = @Content(schema = @Schema(type = "object", implementation = PageState.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Set<PageState> getAllPages(HttpServletRequest request,
 			@RequestParam(value = "url", required = true) String url)
 			throws UnknownAccountException, MalformedURLException {
@@ -525,6 +591,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('read:domains')")
 	@RequestMapping(method = RequestMethod.GET, path = "/page_elements")
+	@Operation(summary = "Get all element states for the given host", description = "Get all element states for the given host")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved element states", content = @Content(schema = @Schema(type = "object", implementation = Element.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Set<Element> getAllElementStates(HttpServletRequest request,
 			@RequestParam(value = "host", required = true) String host) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -557,6 +629,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
 	@RequestMapping(path = "/{domain_id}/users", method = RequestMethod.POST)
+	@Operation(summary = "Add a user to the given domain", description = "Add a user to the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully added user", content = @Content(schema = @Schema(type = "object", implementation = TestUser.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody TestUser addUser(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@RequestBody TestUser test_user)
@@ -596,6 +674,12 @@ public class DomainController {
 	}
 
 	@RequestMapping(path = "/{domain_id}/users/{user_id}", method = RequestMethod.DELETE)
+	@Operation(summary = "Delete a user from the given domain", description = "Delete a user from the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully deleted user"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody boolean deleteUser(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@PathVariable(value = "user_id", required = true) long user_id)
@@ -626,6 +710,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
 	@RequestMapping(path = "/{domain_id}/report/excel", method = RequestMethod.GET)
+	@Operation(summary = "Export the excel report for the given domain", description = "Export the excel report for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully exported excel report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, FileNotFoundException, IOException {
@@ -700,6 +790,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
 	@RequestMapping(path = "/{domain_id}/pdf", method = RequestMethod.GET)
+	@Operation(summary = "Export the pdf report for the given domain", description = "Export the pdf report for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully exported pdf report", content = @Content(schema = @Schema(type = "object", implementation = Resource.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody ResponseEntity<Resource> exportPdfReport(HttpServletRequest request,
 												@PathVariable(value = "domain_id", required = true) long domain_id
 	) throws UnknownAccountException, FileNotFoundException, IOException, URISyntaxException {
@@ -813,6 +909,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('create:test_user')")
 	@RequestMapping(path = "/{domain_id}/test_users/{user_id}", method = RequestMethod.DELETE)
+	@Operation(summary = "Delete a user from the given domain", description = "Delete a user from the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully deleted user"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody void delete(HttpServletRequest request,
 			@PathVariable(value = "domain_id") long domain_id,
 			@PathVariable(value = "user_id") long user_id) throws UnknownAccountException {
@@ -837,6 +939,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('create:domains')")
 	@RequestMapping(path = "{domain_id}/users", method = RequestMethod.GET)
+	@Operation(summary = "Get the users for the given domain", description = "Get the users for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved users", content = @Content(schema = @Schema(type = "object", implementation = TestUser.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, MalformedURLException {
@@ -863,6 +971,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('execute:audits')")
 	@RequestMapping(path = "/{domain_id}/start", method = RequestMethod.POST)
+	@Operation(summary = "Start an audit on the given domain", description = "Start an audit on the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully started audit", content = @Content(schema = @Schema(type = "object", implementation = DomainDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
 			throws Exception
 	{
@@ -892,20 +1006,6 @@ public class DomainController {
 		domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
 		DomainDto domain_dto = new DomainDto( domain.getId(), domain.getUrl(), 0.0);
 
-
-		/*
-		ActorRef audit_manager = actor_system.actorOf(SpringExtProvider.get(actor_system).props("auditManager"),
-														"auditManager" + UUID.randomUUID());
-		
-		CrawlActionMessage crawl_action = new CrawlActionMessage(CrawlAction.START, 
-																 domain.getId(), 
-																 account.getId(),
-																 audit_record.getId(), 
-																 false, 
-																 sanitized_url, 
-																 domain.getUrl());
-		audit_manager.tell(crawl_action, null);
-		*/
 		log.warn("publishing url message to url topic...");
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 		DomainAuditUrlMessage url_msg = new DomainAuditUrlMessage(account.getId(),
@@ -949,6 +1049,12 @@ public class DomainController {
 	 */
 	// @PreAuthorize("hasAuthority('read:actions')")
 	@RequestMapping(method = RequestMethod.GET, path = "/audits")
+	@Operation(summary = "Get the most recent domain audit record for the given host", description = "Get the most recent domain audit record for the given host")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved domain audit record", content = @Content(schema = @Schema(type = "object", implementation = DomainAuditRecord.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
 			@PathVariable(value = "host", required = true) String host) throws UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -970,6 +1076,12 @@ public class DomainController {
 	 * @return list of competitors
 	 */
 	@RequestMapping(method = RequestMethod.GET, path = "{domain_id}/competitors")
+	@Operation(summary = "Get all competitors for the given domain", description = "Get all competitors for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved competitors", content = @Content(schema = @Schema(type = "object", implementation = CompetitorDto.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody List<CompetitorDto> getAllCompetitors(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id) {
 		return domain_service.getCompetitors(domain_id).parallelStream().map(x -> {
@@ -987,6 +1099,12 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 */
 	@RequestMapping(method = RequestMethod.POST, path = "{domain_id}/competitors")
+	@Operation(summary = "Create a new competitor for the given domain", description = "Create a new competitor for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully created competitor", content = @Content(schema = @Schema(type = "object", implementation = Competitor.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody Competitor createCompetitor(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, 
 			@RequestBody Competitor competitor) {
@@ -1002,6 +1120,12 @@ public class DomainController {
 	 * @return List of color Lists
 	 */
 	@RequestMapping(method = RequestMethod.GET, path = "{domain_id}/competitors/palettes")
+	@Operation(summary = "Get all competitor palettes for the given domain", description = "Get all competitor palettes for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved competitor palettes", content = @Content(schema = @Schema(type = "object", implementation = List.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody List<List<String>> getAllCompetitorPalettes(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id) {
 		List<List<String>> color_palettes = domain_service.getCompetitors(domain_id).parallelStream()
@@ -1020,6 +1144,12 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 */
 	@RequestMapping(method = RequestMethod.POST, path = "{domain_id}/policies")
+	@Operation(summary = "Set the allowed image characteristics policy for the given domain", description = "Set the allowed image characteristics policy for the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully set allowed image characteristics policy"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody void setAllowedImageCharacteristicsPolicy(HttpServletRequest request,
 			@PathVariable("domain_id") long domain_id, @RequestBody List<String> allowed_image_characteristics) {
 		domain_service.updateAllowedImageCharacteristics(domain_id, allowed_image_characteristics);
@@ -1032,6 +1162,12 @@ public class DomainController {
 	 * @param competitor_id id value for a valid {@link Competitor}
 	 */
 	@RequestMapping(method = RequestMethod.DELETE, path = "{domain_id}/competitors/{competitor_id}")
+	@Operation(summary = "Delete a competitor from the given domain", description = "Delete a competitor from the given domain")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully deleted competitor"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
 	public @ResponseBody void deleteCompetitor(HttpServletRequest request, @PathVariable("domain_id") long domain_id,
 			@PathVariable("competitor_id") long competitor_id) {
 		competitor_service.deleteById(competitor_id);

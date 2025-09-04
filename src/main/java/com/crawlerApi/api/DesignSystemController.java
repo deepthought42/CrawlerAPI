@@ -22,6 +22,10 @@ import com.looksee.services.AuditRecordService;
 import com.looksee.services.AuditService;
 import com.looksee.services.DesignSystemService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -51,11 +55,16 @@ public class DesignSystemController {
      * @throws Exception
      */
 	@RequestMapping(path="/{id}/color", method = RequestMethod.POST)
+	@Operation(summary = "Update design system colors", description = "Update the color palette for the design system")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully updated color palette"),
+		@ApiResponse(responseCode = "404", description = "Design system not found")
+	})
 	public @ResponseBody void updateColors(
 			HttpServletRequest request,
 			@PathVariable(value="id", required=true) long id,
 			@RequestBody(required=true) List<String> colors
-	) throws Exception {		
+	) throws Exception {
 		Optional<DesignSystem> design_system_opt = design_system_service.findById(id);
 		if(design_system_opt.isPresent()){
 			DesignSystem design_system = design_system_opt.get();

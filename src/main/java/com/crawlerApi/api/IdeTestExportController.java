@@ -33,6 +33,12 @@ import com.looksee.services.AccountService;
 import com.looksee.services.DomainService;
 import com.looksee.utils.BrowserUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -65,6 +71,11 @@ public class IdeTestExportController {
 	 * @throws Exception
 	 */
     @RequestMapping(method = RequestMethod.PUT)
+    @Operation(summary = "Update IDE test", description = "Update a test using JSON data containing page states, elements, and actions")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "202", description = "Successfully updated test", content = @Content(schema = @Schema(type = "boolean"))),
+        @ApiResponse(responseCode = "400", description = "Invalid JSON data")
+    })
     public ResponseEntity<Boolean> update(HttpServletRequest request,
     									  @RequestBody(required=true) String json_str)
     										throws Exception {
@@ -83,6 +94,11 @@ public class IdeTestExportController {
 	 * @throws Exception
 	 */
     @RequestMapping(method = RequestMethod.POST)
+    @Operation(summary = "Create IDE test", description = "Create a new test using JSON data containing page states, elements, and actions")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "202", description = "Successfully created test", content = @Content(schema = @Schema(type = "boolean"))),
+        @ApiResponse(responseCode = "400", description = "Invalid JSON data")
+    })
     public ResponseEntity<Boolean> create(HttpServletRequest request,
     									  @RequestBody(required=true) String json_str)
     										throws Exception {

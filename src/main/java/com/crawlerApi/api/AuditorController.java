@@ -29,6 +29,12 @@ import com.looksee.models.SimplePage;
 import com.looksee.models.dto.AuditRecordDto;
 import com.looksee.services.PageStateService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  * API for interacting with audit functionality
  */
@@ -63,6 +69,13 @@ public class AuditorController {
 	 * @throws AuditCreationException if the audit cannot be created
 	 */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
+	@Operation(summary = "Start audit", description = "Start an audit on the provided URL based on the audit level")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully started audit", content = @Content(schema = @Schema(type = "object", implementation = AuditRecordDto.class))),
+		@ApiResponse(responseCode = "400", description = "Invalid audit request"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
 	public @ResponseBody ResponseEntity<AuditRecordDto> startAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) AuditStartRequest auditRequest
@@ -118,6 +131,14 @@ public class AuditorController {
 	 * @return SimplePage containing page information
 	 */
     @RequestMapping(method = RequestMethod.GET)
+	@Operation(summary = "Get page by URL", description = "Retrieve page information for the given URL")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved page", content = @Content(schema = @Schema(type = "object", implementation = SimplePage.class))),
+		@ApiResponse(responseCode = "400", description = "Invalid URL"),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "404", description = "Page not found"),
+		@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
     public ResponseEntity<SimplePage> getPage(
     		HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url) {
@@ -165,6 +186,12 @@ public class AuditorController {
      */
     @PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET, path="/{page_key}/insights")
+	@Operation(summary = "Get page insights", description = "Retrieve performance insights for the given page")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved page insights", content = @Content(schema = @Schema(type = "object", implementation = PerformanceInsight.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
     public ResponseEntity<PerformanceInsight> getInsights(
     		HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String pageKey

@@ -17,15 +17,12 @@ public class UXIssueMessageController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-
-    
-    
     /**
      * Retrieves list of {@link PerformanceInsight insights} with a given key
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
    // @PreAuthorize("hasAuthority('read:actions')")
     /*

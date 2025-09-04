@@ -23,6 +23,12 @@ import com.looksee.models.SimplePage;
 import com.looksee.services.AccountService;
 import com.looksee.services.PageStateService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -45,6 +51,12 @@ public class PageController {
      * @throws UnknownAccountException 
      */
     @RequestMapping(method = RequestMethod.GET)
+    @Operation(summary = "Get page by URL", description = "Retrieve page information for the given URL")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved page", content = @Content(schema = @Schema(type = "object", implementation = SimplePage.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "404", description = "Page not found")
+    })
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url
 	) throws UnknownAccountException  {
@@ -81,6 +93,12 @@ public class PageController {
      */
     @PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET, path="/$page_key/insights")
+    @Operation(summary = "Get page insights", description = "Retrieve performance insights for the given page")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved page insights", content = @Content(schema = @Schema(type = "object", implementation = PerformanceInsight.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
     public PerformanceInsight getInsights(HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String page_key
 	) throws UnknownAccountException {

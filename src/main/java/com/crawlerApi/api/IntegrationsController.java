@@ -21,6 +21,12 @@ import com.looksee.models.dto.User;
 import com.looksee.services.AccountService;
 import com.nimbusds.jwt.JWT;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -50,6 +56,11 @@ public class IntegrationsController {
      */
 
     @RequestMapping(path="/product-board", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create Product Board integration", description = "Create a JWT token for Product Board integration")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully created integration token", content = @Content(schema = @Schema(type = "object", implementation = JWT.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
     @ResponseBody
     public JWT create(
     		HttpServletRequest request,

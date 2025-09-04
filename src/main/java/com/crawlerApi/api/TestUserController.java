@@ -22,6 +22,10 @@ import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.TestUser;
 import com.looksee.models.repository.TestUserRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  * REST controller that defines endpoints to access test users
  */
@@ -49,6 +53,13 @@ public class TestUserController {
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
     @RequestMapping(path="$user_id", method = RequestMethod.PUT)
+    @Operation(summary = "Update test user", description = "Update a test user with the given ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated test user"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+        @ApiResponse(responseCode = "404", description = "Test user not found")
+    })
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="isEnabled", required=true) boolean isEnabled,

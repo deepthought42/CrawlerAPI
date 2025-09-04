@@ -36,6 +36,12 @@ import com.looksee.models.Account;
 import com.looksee.services.AccountService;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -66,6 +72,12 @@ public class AccountController {
 
     @CrossOrigin(origins = "18.232.225.224, 34.233.19.82, 52.204.128.250, 3.132.201.78, 3.19.44.88, 3.20.244.231", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new account", description = "Create a new account with the provided details")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully created account", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),
+        @ApiResponse(responseCode = "400", description = "Bad request"),
+        @ApiResponse(responseCode = "409", description = "Account already exists")
+    })
     @ResponseBody
     public Account create(
     		HttpServletRequest request,
@@ -89,8 +101,7 @@ public class AccountController {
         // log username of user requesting account creation
         acct = account_service.save(acct);
 
-    	
-	   	SegmentAnalyticsHelper.identify(Long.toString(acct.getId()));
+    	SegmentAnalyticsHelper.identify(Long.toString(acct.getId()));
 	   	//SegmentAnalyticsHelper.signupEvent(acct.getUserId());
 
         return acct;
@@ -104,6 +115,11 @@ public class AccountController {
      * @throws UnknownAccountException
      */
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
+    @Operation(summary = "Set onboarding step", description = "Mark an onboarding step as completed")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated onboarding steps", content = @Content(schema = @Schema(type = "array", implementation = String.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
@@ -124,6 +140,11 @@ public class AccountController {
 
     //@PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
+    @Operation(summary = "Get onboarding steps", description = "Get all completed onboarding steps")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved onboarding steps", content = @Content(schema = @Schema(type = "array", implementation = String.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
@@ -146,6 +167,12 @@ public class AccountController {
      */
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping( method = RequestMethod.GET)
+    @Operation(summary = "Get current account", description = "Get the current authenticated user's account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved account", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
     public Account get(HttpServletRequest request)
     		throws UnknownAccountException 
 	{
@@ -164,6 +191,12 @@ public class AccountController {
 
 	@PreAuthorize("hasAuthority('update:accounts')")
     @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
+    @Operation(summary = "Update account", description = "Update the account with the given ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated account", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
     public Account update(final @PathVariable String key,
     					  final @Validated @RequestBody Account account) {
         log.info("update invoked");
@@ -172,6 +205,13 @@ public class AccountController {
 
 	@PreAuthorize("hasAuthority('update:accounts')")
     @RequestMapping(value ="/{id}/refreshToken", method = RequestMethod.PUT)
+    @Operation(summary = "Refresh API token", description = "Generate a new API token for the account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully refreshed API token", content = @Content(schema = @Schema(type = "object", implementation = Account.class))),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+        @ApiResponse(responseCode = "404", description = "Account not found")
+    })
     public Account updateApiToken(final @PathVariable long id) throws AccountNotFoundException {
         log.info("update invoked");
         Optional<Account> optional_acct = account_service.findById(id);

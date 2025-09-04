@@ -34,6 +34,12 @@ import com.looksee.services.AccountService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.RuleService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 
 /**
  *	API for interacting with {@link User} data
@@ -64,6 +70,12 @@ public class ElementController {
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements/$element_key/rules", method = RequestMethod.POST)
+	@Operation(summary = "Add a rule to the given element", description = "Add a rule to the given element")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully added rule", content = @Content(schema = @Schema(type = "object", implementation = ElementState.class))),
+		@ApiResponse(responseCode = "401", description = "Authentication required"),
+		@ApiResponse(responseCode = "403", description = "Insufficient permissions")
+	})
     public ElementState addRule(
     		HttpServletRequest request,
 			@PathVariable(value="element_key", required=true) String element_key,

@@ -23,6 +23,10 @@ import com.looksee.models.message.CompetitorMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.CompetitorService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *	API for interacting with {@link User} data
  */
@@ -47,6 +51,13 @@ public class CompetitorController {
      * @throws UnknownAccountException
      */
     @RequestMapping(method = RequestMethod.GET, path="/{competitor_id}")
+    @Operation(summary = "Start competitor analysis", description = "Start analysis for the given competitor")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully started competitor analysis"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient subscription"),
+        @ApiResponse(responseCode = "404", description = "Competitor not found")
+    })
     public void startAnalysis(HttpServletRequest request,
 			@PathVariable(value="competitor_id", required=true) long competitor_id
 	) throws InsufficientSubscriptionException {

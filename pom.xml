@@ -414,6 +414,13 @@
             <systemPath>${project.basedir}/libs/core-${looksee-core.version}.jar</systemPath>
         </dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+
 		<!-- Neo4j Spring Data dependency required by Looksee Core -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

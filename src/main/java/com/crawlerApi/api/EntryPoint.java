@@ -11,7 +11,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
-import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 import com.crawlerApi.config.Auth0Config;
 
@@ -29,7 +28,6 @@ import com.crawlerApi.config.Auth0Config;
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 @EnableConfigurationProperties(Auth0Config.class)
 //@ConfigurationProperties("spring.cloud.gcp.vision")
-@EnableNeo4jRepositories("com.crawlerApi.models.repository")
 @EntityScan(basePackages = { "com.crawlerApi.models"} )
 public class EntryPoint {
 	

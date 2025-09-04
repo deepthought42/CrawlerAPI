@@ -46,6 +46,7 @@ import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
@@ -56,11 +57,10 @@ import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.models.audit.performance.PerformanceInsight;
+import com.looksee.models.audit.messages.UXIssueMessage;
+import com.looksee.models.audit.stats.AuditStats;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
@@ -468,8 +468,8 @@ public class DomainController {
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/{domain_id}/stats")
 	public @ResponseBody AuditUpdateDto getAuditStat(HttpServletRequest request, 
-												 @PathVariable("domain_id") long domain_id) 
-										 throws UnknownAccountException 
+												 @PathVariable("domain_id") long domain_id)
+										 throws UnknownAccountException
 	{
 		// get most recent audit record for the domain
 		Optional<AuditRecord> audit_record_opt = audit_record_service.getMostRecentAuditRecordForDomain(domain_id);

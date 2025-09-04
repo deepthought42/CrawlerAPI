@@ -45,7 +45,7 @@ public class TestRecordController {
 
     
     /**
-	 * Retrieves list of all tests from the database 
+	 * Retrieves list of all tests from the database
 	 * 
 	 * @param name test name to lookup
 	 * 

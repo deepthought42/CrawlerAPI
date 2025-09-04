@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
-import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.services.AccountService;
 import com.looksee.services.PageStateService;
 

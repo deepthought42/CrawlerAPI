@@ -35,7 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/testrecords", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Test Records V1", description = "Test Records API")
-public class TestRecordController {
+public class TestRecordController extends BaseApiController {
 
 	@Autowired
 	private TestRecordRepository test_record_repo;

@@ -35,7 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/competitors", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Competitors V1", description = "Competitors API")
-public class CompetitorController {
+public class CompetitorController extends BaseApiController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +37,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
+import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -82,7 +82,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/audits", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Audits V1", description = "Audits API")
-public class AuditController {
+public class AuditController extends BaseApiController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -133,9 +133,7 @@ public class AuditController {
     public @ResponseBody List<AuditRecordDto> getAudits(HttpServletRequest request)
 		throws MalformedURLException, UnknownAccountException
     {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName();
-		Account acct = account_service.findByUserId(id);
+		Account acct = getAuthenticatedAccount(request.getUserPrincipal());
 		
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -196,13 +194,7 @@ public class AuditController {
 										@PathVariable("key") String key,
 										@RequestBody UXIssueMessage issue_message
 	) throws UnknownAccountException {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
-
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
+    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
     	
 
     	//find audit by key
@@ -230,14 +222,9 @@ public class AuditController {
 				@RequestParam(value="url", required=true) String url)
 			throws MalformedURLException, UnknownAccountException 
 	{
-	   	Principal principal = request.getUserPrincipal();
-	   	String id = principal.getName().replace("auth0|", "");
-	   	Account acct = account_service.findByUserId(id);
+	   	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
 	
-	   	if(acct == null){
-	   		throw new UnknownAccountException();
-	   	}
-	   	else if(acct.getSubscriptionToken() == null){
+	   	if(acct.getSubscriptionToken() == null){
 	   		throw new MissingSubscriptionException();
 	   	}
 	}

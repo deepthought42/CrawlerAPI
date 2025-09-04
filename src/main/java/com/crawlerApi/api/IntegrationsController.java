@@ -1,7 +1,5 @@
 package com.crawlerApi.api;
 
-import java.security.Principal;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -34,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/integrations", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Integrations V1", description = "Integrations API")
-public class IntegrationsController {
+public class IntegrationsController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Value("integrations.product-board.private_key")
@@ -70,9 +68,7 @@ public class IntegrationsController {
     ) throws Exception{
     	log.warn("product board integratin request");
     	
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
     	User user = new User(acct.getEmail(), acct.getName());
     	/*
     	Instant now = Instant.now();

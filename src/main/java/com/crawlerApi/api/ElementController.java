@@ -1,6 +1,5 @@
 package com.crawlerApi.api;
 
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +48,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/elements", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Elements V1", description = "Elements API")
-public class ElementController {
+public class ElementController extends BaseApiController {
 	private static Logger log = LoggerFactory.getLogger(ElementController.class);
 
 	@Autowired
@@ -89,14 +88,9 @@ public class ElementController {
 			@RequestParam(value="value", required=false) String value
 		) throws RuleValueRequiredException, UnknownAccountException, ExistingRuleException
     {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
     	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
+    	if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
     	
@@ -207,14 +201,9 @@ public class ElementController {
 			@PathVariable(value="rule_key", required=true) String rule_key
     	) throws RuleValueRequiredException, UnknownAccountException
     {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
     	
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
+    	if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
     	
@@ -243,14 +232,9 @@ public class ElementController {
     		@RequestBody ElementState element_state
 		) throws UnknownAccountException
     {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account account = account_service.findByUserId(id);
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 		
-		if(account == null){
-			throw new UnknownAccountException();
-		}
-		else if(account.getSubscriptionToken() == null){
+		if(account.getSubscriptionToken() == null){
 			throw new MissingSubscriptionException();
 		}
 		
@@ -285,14 +269,9 @@ public class ElementController {
     		@RequestBody ElementState element_state
 		) throws UnknownAccountException
     {
-    	Principal principal = request.getUserPrincipal();
-    	String id = principal.getName().replace("auth0|", "");
-    	Account account = account_service.findByUserId(id);
+    	Account account = getAuthenticatedAccount(request.getUserPrincipal());
     	
-    	if(account == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(account.getSubscriptionToken() == null){
+    	if(account.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
     	

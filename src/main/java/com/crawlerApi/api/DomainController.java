@@ -108,7 +108,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/domains", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Domains V1", description = "Domains API")
-public class DomainController {
+public class DomainController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -566,13 +566,9 @@ public class DomainController {
 	public @ResponseBody Set<PageState> getAllPages(HttpServletRequest request,
 			@RequestParam(value = "url", required = true) String url)
 			throws UnknownAccountException, MalformedURLException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account acct = account_service.findByUserId(id);
+		Account acct = getAuthenticatedAccount(request.getUserPrincipal());
 
-		if (acct == null) {
-			throw new UnknownAccountException();
-		} else if (acct.getSubscriptionToken() == null) {
+		if (acct.getSubscriptionToken() == null) {
 			throw new MissingSubscriptionException();
 		}
 
@@ -610,13 +606,9 @@ public class DomainController {
 	})
 	public @ResponseBody Set<Element> getAllElementStates(HttpServletRequest request,
 			@RequestParam(value = "host", required = true) String host) throws UnknownAccountException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account acct = account_service.findByUserId(id);
+		Account acct = getAuthenticatedAccount(request.getUserPrincipal());
 
-		if (acct == null) {
-			throw new UnknownAccountException();
-		} else if (acct.getSubscriptionToken() == null) {
+		if (acct.getSubscriptionToken() == null) {
 			throw new MissingSubscriptionException();
 		}
 
@@ -650,9 +642,7 @@ public class DomainController {
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@RequestBody TestUser test_user)
 			throws UnknownAccountException, MalformedURLException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account account = account_service.findByUserId(id);
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 
 		if (account == null) {
 			throw new UnknownAccountException();
@@ -695,13 +685,7 @@ public class DomainController {
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@PathVariable(value = "user_id", required = true) long user_id)
 			throws UnknownAccountException, MalformedURLException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account account = account_service.findByUserId(id);
-
-		if (account == null) {
-			throw new UnknownAccountException();
-		}
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -928,13 +912,7 @@ public class DomainController {
 	public @ResponseBody void delete(HttpServletRequest request,
 			@PathVariable(value = "domain_id") long domain_id,
 			@PathVariable(value = "user_id") long user_id) throws UnknownAccountException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName().replace("auth0|", "");
-		Account account = account_service.findByUserId(id);
-
-		if (account == null) {
-			throw new UnknownAccountException();
-		}
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 
 		domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -958,13 +936,7 @@ public class DomainController {
 	public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, MalformedURLException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName();
-		Account account = account_service.findByUserId(id);
-
-		if (account == null) {
-			throw new UnknownAccountException();
-		}
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.getTestUsers(domain_id);
 	}
@@ -990,13 +962,7 @@ public class DomainController {
 	public @ResponseBody DomainDto startAudit(HttpServletRequest request, @PathVariable("domain_id") long domain_id)
 			throws Exception
 	{
-		Principal principal = request.getUserPrincipal();
-		String user_id = principal.getName();
-		Account account = account_service.findByUserId(user_id);
-
-		if (account == null) {
-			throw new UnknownAccountException();
-		}
+		Account account = getAuthenticatedAccount(request.getUserPrincipal());
 		
 		Optional<Domain> domain_opt = domain_service.findById(domain_id);
 		if (!domain_opt.isPresent()) {

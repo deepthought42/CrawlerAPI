@@ -50,7 +50,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping(path = "v1/accounts", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Accounts V1", description = "Accounts API")
-public class AccountController {
+public class AccountController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired

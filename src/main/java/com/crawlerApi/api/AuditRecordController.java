@@ -71,7 +71,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @Controller
 @RequestMapping(path = "v1/auditrecords", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "AuditRecords V1", description = "AuditRecords API")
+@Tag(name = "Audit Records V1", description = "Audit Records API")
 public class AuditRecordController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

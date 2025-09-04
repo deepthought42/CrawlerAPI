@@ -100,12 +100,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * API endpoints for interacting with {@link Domain} data
  */
 @Controller
 @RequestMapping(path = "v1/domains", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Domains V1", description = "Domains API")
 public class DomainController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 

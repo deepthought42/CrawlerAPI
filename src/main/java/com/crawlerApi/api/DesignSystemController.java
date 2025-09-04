@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @Controller
 @RequestMapping(path = "v1/designsystem", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "DesignSystem V1", description = "DesignSystem API")
+@Tag(name = "Design System V1", description = "Design System API")
 public class DesignSystemController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());

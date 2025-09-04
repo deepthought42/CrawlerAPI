@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -121,8 +120,8 @@ public class AuditController {
      * 
      * @param key account key
      * @return {@link PerformanceInsight insight}
-     * @throws MalformedURLException 
-     * @throws UnknownAccountException 
+     * @throws MalformedURLException {@link MalformedURLException}
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
     @RequestMapping(method = RequestMethod.GET)
     @Operation(summary = "Get all audits", description = "Retrieve list of audits from last 30 days")

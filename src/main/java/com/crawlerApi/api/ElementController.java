@@ -69,7 +69,10 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
+     * @throws RuleValueRequiredException {@link RuleValueRequiredException}
+     * @throws ExistingRuleException {@link ExistingRuleException}
+     * @throws MissingSubscriptionException {@link MissingSubscriptionException}
      */
     //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
@@ -110,6 +113,10 @@ public class ElementController {
     	return element_service.findByKey(element_key);
     }
     
+	/**
+	 * Validates the rule
+	 * @param rule {@link Rule}
+	 */
     private void validateRule(Rule rule) {
 
     	Rule min_value_rule = null;
@@ -222,7 +229,7 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
     //@ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
@@ -262,7 +269,7 @@ public class ElementController {
      *
      * @param id element id
      * @return {@link ElementState element}
-     * @throws UnknownAccountException 
+     * @throws UnknownAccountException {@link UnknownAccountException}
      */
     //@ApiOperation(value = "updates form element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
@@ -299,6 +306,10 @@ public class ElementController {
       return element_service.findByKey(element_state.getKey());
     }
 
+	/**
+	 * Validates the rules
+	 * @param rules {@link Set<Rule>}
+	 */
 	private void validateRules(Set<Rule> rules) {
 		Rule min_value_rule = null;
     	Rule max_value_rule = null;

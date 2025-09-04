@@ -46,7 +46,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @Controller
 @RequestMapping(path = "v1/ide-test-export", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "IdeTestExport V1", description = "IdeTestExport API")
+@Tag(name = "IDE Test Export V1", description = "IDE Test Export API")
 public class IdeTestExportController {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());

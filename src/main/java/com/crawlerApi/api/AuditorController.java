@@ -26,6 +26,7 @@ import com.crawlerApi.service.Auth0Service;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
@@ -40,6 +41,9 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditStartMessage;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.AuditService;
+import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
 
@@ -60,13 +64,21 @@ public class AuditorController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final Auth0Service auth0Service;
-	private final com.crawlerApi.service.AuditService auditService;
-	private final PageStateService pageService;
+	private final AuditService auditService;
+
+	@Autowired
+	private AuditRecordService auditRecordService;
+	@Autowired
+	private DomainService domainService;
+	@Autowired
+	private PageStateService pageService;
+	@Autowired
+	private PubSubUrlMessagePublisherImpl urlTopic;
 	
 	@Autowired
 	public AuditorController(
 			Auth0Service auth0Service,
-			com.crawlerApi.service.AuditService auditService,
+			AuditService auditService,
 			PageStateService pageService) {
 		this.auth0Service = auth0Service;
 		this.auditService = auditService;

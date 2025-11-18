@@ -22,7 +22,23 @@
 	</properties>
 
     <build>
-	    <plugins>
+      	<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<source>21</source>
+					<target>21</target>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.30</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -44,33 +60,43 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- [START cloudrun_pubsub_jib] -->
-			<!-- [START run_pubsub_jib] -->
-			<plugin>
-				<groupId>com.google.cloud.tools</groupId>
-				<artifactId>jib-maven-plugin</artifactId>
-				<version>3.2.1</version>
-				<configuration>
-				<to>
-					<image>gcr.io/PROJECT_ID/pubsub</image>
-				</to>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${springboot.version}</version>
-				<configuration>
-					<fork>true</fork>
-					<mainClass>com.looksee.crawlerApi.api.EntryPoint</mainClass>
-				</configuration>
-				<executions>
-					<execution>
-					<goals>
-						<goal>repackage</goal>
-					</goals>
-					</execution>
-				</executions>
+	        <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-surefire-plugin</artifactId>
+	  			<version>3.0.0-M5</version>
+		        <dependencies>
+			      <dependency>
+			        <groupId>org.apache.maven.surefire</groupId>
+			        <artifactId>surefire-junit47</artifactId>
+	    			<version>3.0.0-M5</version>
+			      </dependency>
+			    </dependencies>
+		    </plugin>
+		    <plugin>
+		       <groupId>org.springframework.boot</groupId>
+	          <artifactId>spring-boot-maven-plugin</artifactId>
+	          <version>${springboot.version}</version>
+	          <configuration>
+	              <fork>true</fork>
+	              <mainClass>com.crawlerApi.api.EntryPoint</mainClass>
+	          </configuration>
+	          <executions>
+	              <execution>
+	                <goals>
+	                  <goal>repackage</goal>
+	                </goals>
+	              </execution>
+	          </executions>
+		    </plugin>
+	        <plugin>
+		        <groupId>com.google.cloud.tools</groupId>
+		        <artifactId>jib-maven-plugin</artifactId>
+		        <version>3.2.1</version>
+		        <configuration>
+		          <to>
+		            <image>gcr.io/PROJECT_ID/pubsub</image>
+		          </to>
+		        </configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -100,6 +126,30 @@
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
+	    <dependencies>
+			<dependency>
+				<!-- Import dependency management from Spring Boot -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2021.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>spring-cloud-gcp-dependencies</artifactId>
+				<version>3.0.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+	    </dependencies>
 	</dependencyManagement>
 
 	<dependencies>
@@ -311,6 +361,9 @@
             <version>0.9.0</version>
         </dependency>
 
+
+		
+		
 		<!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
 		<dependency>
 		    <groupId>com.google.api-client</groupId>
@@ -325,6 +378,14 @@
 		    <version>1.31.5</version>
 		</dependency>
 		<!-- END GOOGLE CLOUD -->
+		<!-- END GOOGLE CLOUD -->
+		
+		<!-- https://mvnrepository.com/artifact/net.sf.cssbox/jstyleparser -->
+		<dependency>
+		    <groupId>net.sf.cssbox</groupId>
+		    <artifactId>jstyleparser</artifactId>
+		    <version>3.5</version>
+		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/net.sourceforge.cssparser/cssparser -->
 		<!--  uncomment this when ready to convert to css parser. JSTYLEPARSER swallows errors and that's not cool -->
@@ -350,6 +411,13 @@
 		</dependency>
 		
 		<!-- JIRA integration
+		<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-language -->
+		<dependency>
+		    <groupId>com.google.cloud</groupId>
+		    <artifactId>google-cloud-language</artifactId>
+		</dependency>
+		
+		<!-- JIRA integration -->
 		<dependency>
 		    <groupId>com.atlassian.jira</groupId>
 		    <artifactId>jira-rest-java-client-core</artifactId>

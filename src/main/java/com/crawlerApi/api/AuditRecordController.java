@@ -229,14 +229,7 @@ public class AuditRecordController extends BaseApiController {
      * @throws MalformedURLException {@link MalformedURLException}
      */
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
-	@Operation(summary = "Get page audit elements", description = "Get the elements for the given audit record")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved page audit elements", content = @Content(schema = @Schema(type = "object", implementation = ElementIssueTwoWayMapping.class))),
-		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "404", description = "Audit record not found"),
-		@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
-    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
+    public @ResponseBody com.looksee.models.audit.ElementIssueTwoWayMapping getPageAuditElements(
 														HttpServletRequest request,
 														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {

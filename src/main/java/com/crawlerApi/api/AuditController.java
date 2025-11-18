@@ -68,14 +68,6 @@ import com.looksee.utils.BrowserUtils;
 import com.looksee.utils.ContentUtils;
 import com.looksee.utils.PDFDocUtils;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 /**
  *	API for interacting with {@link User} data
  */
@@ -252,7 +244,6 @@ public class AuditController extends BaseApiController {
 		@ApiResponse(responseCode = "500", description = "Internal server error")
 	})
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
-    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id)
     											throws UnknownAccountException,
 														FileNotFoundException, IOException {

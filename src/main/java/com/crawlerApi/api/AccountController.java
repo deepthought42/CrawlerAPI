@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
-import com.crawlerApi.service.Auth0Service;
+import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
 import com.looksee.services.AccountService;

@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
@@ -15,19 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.InsufficientSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.message.CompetitorMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.CompetitorService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  *	API for interacting with {@link User} data

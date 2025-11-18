@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.looksee.exceptions.AuditCreationException;
 import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
@@ -59,9 +58,9 @@ public class AuditService {
      * @param auditLevel The level of audit (PAGE or DOMAIN)
      * @param account The account requesting the audit
      * @return AuditRecordDto containing the audit details
-     * @throws AuditCreationException if audit creation fails
+     * @throws IllegalArgumentException if audit creation fails
      */
-    public AuditRecordDto startAudit(String url, AuditLevel auditLevel, Account account) throws AuditCreationException {
+    public AuditRecordDto startAudit(String url, AuditLevel auditLevel, Account account) throws IllegalArgumentException {
         try {
             URL sanitizedUrl = sanitizeUrl(url);
             log.info("Starting {} audit for URL: {} for account: {}", auditLevel, sanitizedUrl, account.getId());
@@ -72,11 +71,11 @@ public class AuditService {
                 case DOMAIN:
                     return startDomainAudit(sanitizedUrl, account);
                 default:
-                    throw new AuditCreationException("Unsupported audit level: " + auditLevel);
+                    throw new IllegalArgumentException("Unsupported audit level: " + auditLevel);
             }
         } catch (Exception e) {
             log.error("Failed to start audit for URL: {} and account: {}", url, account.getId(), e);
-            throw new AuditCreationException("Failed to start audit: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Failed to start audit: " + e.getMessage(), e);
         }
     }
     

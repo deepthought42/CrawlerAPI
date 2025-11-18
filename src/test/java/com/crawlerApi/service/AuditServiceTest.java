@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.looksee.exceptions.AuditCreationException;
 import com.looksee.models.Account;
 import com.looksee.models.dto.AuditRecordDto;
 import com.looksee.models.enums.AuditLevel;
@@ -64,53 +63,53 @@ public class AuditServiceTest {
         assertEquals(100L, result.getId());
         
         // Verify interactions
-        verify(auditService).startAudit(eq(testUrl), eq(AuditLevel.PAGE), eq(testAccount));
+        verify(auditService.startAudit(eq(testUrl), eq(AuditLevel.PAGE), eq(testAccount)));
     }
     
     @Test
-    void testStartAudit_InvalidUrl_ThrowsException() throws AuditCreationException {
+    void testStartAudit_InvalidUrl_ThrowsException() {
         // Arrange
         String invalidUrl = "";
         Account testAccount = new Account();
         testAccount.setId(1L);
         
         when(auditService.startAudit(eq(invalidUrl), eq(AuditLevel.PAGE), eq(testAccount)))
-            .thenThrow(new AuditCreationException("URL cannot be null or empty"));
+            .thenThrow(new IllegalArgumentException("URL cannot be null or empty"));
         
         // Act & Assert
-        assertThrows(AuditCreationException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             auditService.startAudit(invalidUrl, AuditLevel.PAGE, testAccount);
         });
     }
     
     @Test
-    void testStartAudit_NullUrl_ThrowsException() throws AuditCreationException {
+    void testStartAudit_NullUrl_ThrowsException() {
         // Arrange
         String nullUrl = null;
         Account testAccount = new Account();
         testAccount.setId(1L);
         
         when(auditService.startAudit(eq(nullUrl), eq(AuditLevel.PAGE), eq(testAccount)))
-            .thenThrow(new AuditCreationException("URL cannot be null or empty"));
+            .thenThrow(new IllegalArgumentException("URL cannot be null or empty"));
         
         // Act & Assert
-        assertThrows(AuditCreationException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             auditService.startAudit(nullUrl, AuditLevel.PAGE, testAccount);
         });
     }
     
     @Test
-    void testStartAudit_UnsupportedAuditLevel_ThrowsException() throws AuditCreationException {
+    void testStartAudit_UnsupportedAuditLevel_ThrowsException() {
         // Arrange
         String testUrl = "https://example.com";
         Account testAccount = new Account();
         testAccount.setId(1L);
         
         when(auditService.startAudit(eq(testUrl), isNull(), eq(testAccount)))
-            .thenThrow(new AuditCreationException("Unsupported audit level: null"));
+            .thenThrow(new IllegalArgumentException("Unsupported audit level: null"));
         
         // Act & Assert
-        assertThrows(AuditCreationException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             auditService.startAudit(testUrl, null, testAccount);
         });
     }

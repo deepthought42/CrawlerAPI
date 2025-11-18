@@ -10,7 +10,6 @@ import java.util.UUID;
 import javax.security.auth.login.AccountNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.exceptions.MissingSubscriptionException;
+import com.crawlerApi.service.Auth0Service;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
 import com.looksee.services.AccountService;

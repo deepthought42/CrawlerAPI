@@ -1,6 +1,7 @@
 package com.crawlerApi.api;
 
-import org.slf4j.Logger;
+import java.text.Normalizer.Form;
+
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,7 +10,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.models.Account;
 import com.looksee.models.DiscoveryRecord;
 import com.looksee.models.Domain;
-import com.looksee.models.Form;
 import com.looksee.models.LookseeObject;
 import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
@@ -17,20 +17,6 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.models.dto.DomainDto;
-import com.looksee.models.dto.TestCreatedDto;
-import com.looksee.models.dto.TestDto;
-import com.looksee.models.dto.TestRecordDto;
-import com.looksee.models.enums.TestStatus;
-import com.looksee.models.Account;
-import com.looksee.models.DiscoveryRecord;
-import com.looksee.models.Domain;
-import com.looksee.models.Form;
-import com.looksee.models.LookseeObject;
-import com.looksee.models.Test;
-import com.looksee.models.TestRecord;
-import com.looksee.models.audit.Audit;
-import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.messages.UXIssueMessage;
 import com.looksee.models.audit.stats.AuditStats;
 import com.looksee.models.dto.DomainDto;
@@ -270,7 +256,7 @@ public class MessageBroadcaster {
 
 		try {
 			String audit_record_json = mapper.writeValueAsString(issue);
-			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);		
+			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

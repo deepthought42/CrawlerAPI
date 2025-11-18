@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.crawlerApi.service.Auth0Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.exceptions.UnknownAccountException;
@@ -41,8 +42,8 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditStartMessage;
+import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
 import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
@@ -63,26 +64,29 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AuditorController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	private final Auth0Service auth0Service;
-	private final AuditService auditService;
-
+	@Autowired
+	private Auth0Service auth0Service;
+	@Autowired
+	private AccountService accountService;
 	@Autowired
 	private AuditRecordService auditRecordService;
 	@Autowired
 	private DomainService domainService;
+	@Autowired	
+	private PubSubUrlMessagePublisherImpl urlTopic;
 	@Autowired
 	private PageStateService pageService;
 	@Autowired
-	private PubSubUrlMessagePublisherImpl urlTopic;
-	
-	@Autowired
 	public AuditorController(
 			Auth0Service auth0Service,
-			AuditService auditService,
-			PageStateService pageService) {
+			AccountService accountService,
+			AuditRecordService auditRecordService,
+			DomainService domainService,
+			PubSubUrlMessagePublisherImpl urlTopic) {
 		this.auth0Service = auth0Service;
-		this.auditService = auditService;
-		this.pageService = pageService;
+		this.accountService = accountService;
+		this.auditRecordService = auditRecordService;
+		this.domainService = domainService;
 	}
 	
 	/**
@@ -94,7 +98,7 @@ public class AuditorController extends BaseApiController {
 	 * @param auditRequest The audit request containing URL and level
 	 * @return A new audit record DTO
 	 * @throws UnknownAccountException if the user account cannot be found
-	 * @throws AuditCreationException if the audit cannot be created
+	 * @throws IllegalArgumentException if the audit level is unsupported
 	 */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	@Operation(summary = "Start audit", description = "Start an audit on the provided URL based on the audit level")
@@ -107,7 +111,8 @@ public class AuditorController extends BaseApiController {
 	public @ResponseBody ResponseEntity<AuditRecordDto> startAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) AuditStartRequest auditRequest
-	) throws UnknownAccountException {
+	) throws UnknownAccountException, JsonProcessingException, java.net.MalformedURLException,
+			java.util.concurrent.ExecutionException, InterruptedException {
 		
 		log.info("Received audit start request for URL: {} with level: {}",
 				auditRequest.getUrl(), auditRequest.getLevel());
@@ -148,9 +153,9 @@ public class AuditorController extends BaseApiController {
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
 			urlTopic.publish(url_msg_str);
 
-			return auditRecordService.buildAudit(audit_record);
+			return ResponseEntity.ok(auditRecordService.buildAudit(audit_record));
 		}
-		else if(AuditLevel.DOMAIN.equals(audit_start.getLevel())){
+		else if(AuditLevel.DOMAIN.equals(auditRequest.getLevel())){
 			Domain domain = domainService.createDomain(sanitized_url, account.getId());
 			
 			// create new audit record
@@ -170,11 +175,11 @@ public class AuditorController extends BaseApiController {
 
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
 			urlTopic.publish(url_msg_str);
-			return auditRecordService.buildAudit(audit_record);
+			return ResponseEntity.ok(auditRecordService.buildAudit(audit_record));
 		}
 		
 
-		throw new AuditCreationException("Unsupported audit level: " + auditRequest.getLevel());
+		throw new IllegalArgumentException("Unsupported audit level: " + auditRequest.getLevel());
 	}
     
     private Set<AuditName> getAuditList() {

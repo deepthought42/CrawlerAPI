@@ -1,14 +1,16 @@
 package com.crawlerApi.api;
 
+import java.net.URL;
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,14 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
+import com.crawlerApi.service.Auth0Service;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.UnknownAccountException;
-import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.PageState;
@@ -41,12 +40,15 @@ import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.BrowserType;
 import com.looksee.models.enums.ExecutionStatus;
 import com.looksee.models.message.AuditStartMessage;
-import com.looksee.services.AccountService;
-import com.looksee.services.AuditRecordService;
-import com.looksee.services.AuditService;
-import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
 import com.looksee.utils.BrowserUtils;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * API for interacting with audit functionality
@@ -93,21 +95,20 @@ public class AuditorController extends BaseApiController {
 	public @ResponseBody ResponseEntity<AuditRecordDto> startAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) AuditStartRequest auditRequest
-	) throws UnknownAccountException, AuditCreationException {
+	) throws UnknownAccountException {
 		
 		log.info("Received audit start request for URL: {} with level: {}",
 				auditRequest.getUrl(), auditRequest.getLevel());
-		
 		// Get the authenticated user's account
 		Principal principal = request.getUserPrincipal();
-		Account account = account_service.findByUserId(principal.getName());
+		Account account = accountService.findByUserId(principal.getName());
 
-    	String lowercase_url = audit_start.getUrl().toLowerCase();
+    	String lowercase_url = auditRequest.getUrl().toLowerCase();
     	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
 		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     	
 	   	//create new audit record
-		if(AuditLevel.PAGE.equals(audit_start.getLevel())){
+		if(AuditLevel.PAGE.equals(auditRequest.getLevel())){
 			log.warn("creating new page audit record...");
 			PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS,
 																new HashSet<>(),
@@ -122,8 +123,8 @@ public class AuditorController extends BaseApiController {
 			audit_record.setContentAuditProgress(0.0);
 			audit_record.setInfoArchScore(0.0);
 			audit_record.setInfoArchitectureAuditProgress(0.0);
-			audit_record = (PageAuditRecord)audit_record_service.save(audit_record, null, null);
-			account_service.addAuditRecord(account.getId(), audit_record.getId());
+			audit_record = (PageAuditRecord)auditRecordService.save(audit_record, null, null);
+			accountService.addAuditRecord(account.getId(), audit_record.getId());
 			log.warn("Initiating single page audit = "+sanitized_url);
 
 			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
@@ -133,21 +134,21 @@ public class AuditorController extends BaseApiController {
 																		account.getId());
 
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
-			url_topic.publish(url_msg_str);
+			urlTopic.publish(url_msg_str);
 
-			return audit_record_service.buildAudit(audit_record);
+			return auditRecordService.buildAudit(audit_record);
 		}
 		else if(AuditLevel.DOMAIN.equals(audit_start.getLevel())){
-			Domain domain = domain_service.createDomain(sanitized_url, account.getId());
+			Domain domain = domainService.createDomain(sanitized_url, account.getId());
 			
 			// create new audit record
 			Set<AuditName> audit_list = getAuditList();
 			AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.RUNNING, audit_list);
 			audit_record.setUrl(domain.getUrl());
-			audit_record = audit_record_service.save(audit_record, account.getId(), domain.getId());
+			audit_record = auditRecordService.save(audit_record, account.getId(), domain.getId());
 			
-			domain_service.addAuditRecord(domain.getId(), audit_record.getKey());
-			account_service.addAuditRecord(account.getId(), audit_record.getId());
+			domainService.addAuditRecord(domain.getId(), audit_record.getKey());
+			accountService.addAuditRecord(account.getId(), audit_record.getId());
 
 			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
 																	BrowserType.CHROME,
@@ -156,12 +157,12 @@ public class AuditorController extends BaseApiController {
 																	account.getId());
 
 			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
-			url_topic.publish(url_msg_str);
-			return audit_record_service.buildAudit(audit_record);
+			urlTopic.publish(url_msg_str);
+			return auditRecordService.buildAudit(audit_record);
 		}
 		
 
-		throw new AuditRunException();
+		throw new AuditCreationException("Unsupported audit level: " + auditRequest.getLevel());
 	}
     
     private Set<AuditName> getAuditList() {
@@ -197,7 +198,7 @@ public class AuditorController extends BaseApiController {
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url
 	)  {
-    	PageState page = page_service.findByUrl(url);
+    	PageState page = pageService.findByUrl(url);
     	
         log.info("finding page :: "+page.getKey());
         

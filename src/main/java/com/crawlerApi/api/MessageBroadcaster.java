@@ -2,6 +2,7 @@ package com.crawlerApi.api;
 
 import java.text.Normalizer.Form;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,8 +18,6 @@ import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.UXIssueMessage;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
 import com.looksee.models.dto.DomainDto;
 import com.looksee.models.dto.TestCreatedDto;
 import com.looksee.models.dto.TestDto;

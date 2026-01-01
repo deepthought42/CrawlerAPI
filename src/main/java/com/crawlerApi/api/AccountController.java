@@ -13,20 +13,16 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.crawlerApi.security.SecurityConfig;
@@ -73,7 +69,6 @@ public class AccountController extends BaseApiController {
      * @throws Exception
      */
 
-    @CrossOrigin(origins = "18.232.225.224, 34.233.19.82, 52.204.128.250, 3.132.201.78, 3.19.44.88, 3.20.244.231", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST)
     @Operation(summary = "Create a new account", description = "Create a new account with the provided details")
     @ApiResponses(value = {
@@ -101,12 +96,9 @@ public class AccountController extends BaseApiController {
 		
     	acct = new Account(account.getUserId(), account.getEmail(), "", "");
     	acct.setApiToken(UUID.randomUUID().toString());
-        //final String username = usernameService.getUsername();
-        // log username of user requesting account creation
         acct = account_service.save(acct);
 
     	SegmentAnalyticsHelper.identify(Long.toString(acct.getId()));
-	   	//SegmentAnalyticsHelper.signupEvent(acct.getUserId());
 
         return acct;
     }
@@ -144,7 +136,6 @@ public class AccountController extends BaseApiController {
         return acct.getOnboardedSteps();
     }
 
-    //@PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     @Operation(summary = "Get onboarding steps", description = "Get all completed onboarding steps")
     @ApiResponses(value = {
@@ -258,14 +249,5 @@ public class AccountController extends BaseApiController {
     	//remove account
         account_service.deleteAccount(account.getId());
     }
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class AccountExistsException extends RuntimeException {
-	private static final long serialVersionUID = 7200878662560716216L;
-
-	public AccountExistsException() {
-		super("Account already exists");
-	}
 }
 

@@ -7,10 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.looksee.models.Account;
-import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
@@ -39,18 +35,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.looksee.models.Account;
-import com.looksee.models.ActionOLD;
-import com.looksee.models.Domain;
-import com.looksee.models.Element;
-import com.looksee.models.PageState;
-import com.looksee.models.Test;
-import com.looksee.models.enums.BrowserType;
-import com.looksee.models.repository.AccountRepository;
-import com.looksee.models.repository.TestRepository;
-import com.looksee.services.AccountService;
-import com.looksee.services.DomainService;
-import com.looksee.utils.BrowserUtils;
 
 /**
  *	API for interacting with {@link User} data
@@ -59,9 +43,6 @@ import com.looksee.utils.BrowserUtils;
 @RequestMapping(path = "v1/ide-test-export", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "IDE Test Export V1", description = "IDE Test Export API")
 public class IdeTestExportController extends BaseApiController {
-	@SuppressWarnings("unused")
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
 	@Autowired
 	private AccountRepository account_repo;
 
@@ -76,7 +57,7 @@ public class IdeTestExportController extends BaseApiController {
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link ActionOLD}s
+     *  {@link Element}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -100,7 +81,7 @@ public class IdeTestExportController extends BaseApiController {
 
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link ActionOLD}s
+     *  {@link Element}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -150,14 +131,6 @@ public class IdeTestExportController extends BaseApiController {
 		
 		account_service.addDomainToAccount(acct, domain);
 
-		/*
-		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options, domain);
-
-		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());
-
-		testCreationActor.tell(message, null);
-*/
 		return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

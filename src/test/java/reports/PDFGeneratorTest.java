@@ -1,7 +1,17 @@
 package reports;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import com.crawlerApi.generators.report.GeneratePDFReport;
+import com.looksee.models.enums.AuditSubcategory;
+import com.looksee.models.enums.WCAGComplianceLevel;
+
 public class PDFGeneratorTest {
-	/*
 
 	@Test
 	public void tableOfContentsPageTest() throws IOException, URISyntaxException {
@@ -157,5 +167,4 @@ public class PDFGeneratorTest {
 		pdf_report.generateAppendixCoverPage();
 		pdf_report.writeToDoc();
 	}
-		*/
 }

@@ -813,7 +813,7 @@ public class DomainController extends BaseApiController {
 		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
-		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
+		URL sanitized_domain_url = new URI(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false)).toURL();
 		
 		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl(), pdfReportAssetConfig);
 		

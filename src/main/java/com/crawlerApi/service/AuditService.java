@@ -26,7 +26,6 @@ import com.looksee.models.message.AuditStartMessage;
 import com.looksee.services.AccountService;
 import com.looksee.services.AuditRecordService;
 import com.looksee.services.DomainService;
-import com.looksee.utils.BrowserUtils;
 
 @Service
 public class AuditService {
@@ -37,6 +36,7 @@ public class AuditService {
     private final AuditRecordService auditRecordService;
     private final DomainService domainService;
     private final PubSubUrlMessagePublisherImpl urlTopic;
+    private final UrlSanitizerService urlSanitizerService;
     private final JsonMapper jsonMapper;
     
     @Autowired
@@ -44,11 +44,13 @@ public class AuditService {
             AccountService accountService,
             AuditRecordService auditRecordService,
             DomainService domainService,
-            PubSubUrlMessagePublisherImpl urlTopic) {
+            PubSubUrlMessagePublisherImpl urlTopic,
+            UrlSanitizerService urlSanitizerService) {
         this.accountService = accountService;
         this.auditRecordService = auditRecordService;
         this.domainService = domainService;
         this.urlTopic = urlTopic;
+        this.urlSanitizerService = urlSanitizerService;
         this.jsonMapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
     }
     
@@ -62,6 +64,11 @@ public class AuditService {
      */
     public AuditRecordDto startAudit(String url, AuditLevel auditLevel, Account account) throws IllegalArgumentException {
         try {
+            // Validate audit level first before attempting URL sanitization
+            if (auditLevel == null) {
+                throw new IllegalArgumentException("Unsupported audit level: null");
+            }
+            
             URL sanitizedUrl = sanitizeUrl(url);
             log.info("Starting {} audit for URL: {} for account: {}", auditLevel, sanitizedUrl, account.getId());
             
@@ -73,6 +80,9 @@ public class AuditService {
                 default:
                     throw new IllegalArgumentException("Unsupported audit level: " + auditLevel);
             }
+        } catch (IllegalArgumentException e) {
+            // Re-throw IllegalArgumentException as-is
+            throw e;
         } catch (Exception e) {
             log.error("Failed to start audit for URL: {} and account: {}", url, account.getId(), e);
             throw new IllegalArgumentException("Failed to start audit: " + e.getMessage(), e);
@@ -125,8 +135,9 @@ public class AuditService {
     
     /**
      * Create a new PageAuditRecord with default values
+     * Protected visibility allows tests to mock this method
      */
-    private PageAuditRecord createPageAuditRecord(URL sanitizedUrl) {
+    protected PageAuditRecord createPageAuditRecord(URL sanitizedUrl) {
         PageAuditRecord auditRecord = new PageAuditRecord(
             ExecutionStatus.IN_PROGRESS,
             new HashSet<>(),
@@ -169,13 +180,7 @@ public class AuditService {
      * Sanitize and validate the input URL
      */
     private URL sanitizeUrl(String url) throws Exception {
-        if (url == null || url.trim().isEmpty()) {
-            throw new IllegalArgumentException("URL cannot be null or empty");
-        }
-        
-        String lowercaseUrl = url.toLowerCase();
-        String sanitizedUrlString = BrowserUtils.sanitizeUserUrl(lowercaseUrl);
-        return new URL(sanitizedUrlString);
+        return urlSanitizerService.sanitizeUrl(url);
     }
     
     /**

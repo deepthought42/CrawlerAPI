@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.crawlerApi.config.PdfReportAssetConfig;
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -138,6 +139,9 @@ public class DomainController extends BaseApiController {
 	
 	@Autowired
 	private PubSubUrlMessagePublisherImpl url_topic;
+	
+	@Autowired
+	private PdfReportAssetConfig pdfReportAssetConfig;
 
 
 	/**
@@ -811,7 +815,7 @@ public class DomainController extends BaseApiController {
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
 		
-		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl());
+		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl(), pdfReportAssetConfig);
 		
 		Set<Audit> audits = new HashSet<Audit>();
 		for(AuditRecord page_audit : page_audits) {

@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.crawlerApi.config.PdfReportAssetConfig;
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
 import com.looksee.browsing.Crawler;
@@ -114,6 +115,9 @@ public class AuditController extends BaseApiController {
     
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
+	
+	@Autowired
+	protected PdfReportAssetConfig pdfReportAssetConfig;
     
     /**
      * Retrieves list of audits {@link Audit audits} from last 30 days
@@ -429,7 +433,7 @@ public class AuditController extends BaseApiController {
 		
 		GeneratePDFReport pdf_report = null;
 		try {
-			pdf_report = new GeneratePDFReport(page.getUrl());
+			pdf_report = new GeneratePDFReport(page.getUrl(), pdfReportAssetConfig);
 		
 			pdf_report.writeDocument(needs_improvement, 
 									page.getUrl(), 

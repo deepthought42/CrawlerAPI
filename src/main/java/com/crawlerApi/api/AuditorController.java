@@ -205,12 +205,32 @@ public class AuditorController extends BaseApiController {
 	}
 
 	/**
-     * Retrieves list of {@link PerformanceInsight insights} with a given key
+     * Retrieves a page by URL
      * 
-     * @param key account key
-     * @return {@link PerformanceInsight insight}
+     * @param request HTTP request containing the authenticated user
+     * @param url The URL of the page to retrieve
+     * @return {@link SimplePage page} with the given URL
      * @throws UnknownAccountException 
      */
+    @Operation(
+        summary = "Get page by URL",
+        description = "Retrieve a page state by its URL"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved page",
+            content = @Content(schema = @Schema(implementation = SimplePage.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Authentication required"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Page not found"
+        )
+    })
     @RequestMapping(method = RequestMethod.GET)
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url

@@ -46,6 +46,7 @@ import com.looksee.models.audit.PageAuditStats;
 import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.dto.User;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;

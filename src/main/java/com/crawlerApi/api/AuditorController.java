@@ -87,6 +87,7 @@ public class AuditorController extends BaseApiController {
 		this.accountService = accountService;
 		this.auditRecordService = auditRecordService;
 		this.domainService = domainService;
+		this.urlTopic = urlTopic;
 	}
 	
 	/**

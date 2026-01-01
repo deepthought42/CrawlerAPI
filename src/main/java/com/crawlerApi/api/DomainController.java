@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
@@ -941,7 +942,7 @@ public class DomainController extends BaseApiController {
 	public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, MalformedURLException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.getTestUsers(domain_id);
 	}
@@ -976,7 +977,7 @@ public class DomainController extends BaseApiController {
 
 		Domain domain = domain_opt.get();
 		String lowercase_url = domain.getUrl().toLowerCase();
-		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
+		URL sanitized_url = new URI(BrowserUtils.sanitizeUserUrl(lowercase_url)).toURL();
 		
 		// create new audit record
 		Set<AuditName> audit_list = getAuditList();
@@ -991,7 +992,7 @@ public class DomainController extends BaseApiController {
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 		DomainAuditUrlMessage url_msg = new DomainAuditUrlMessage(account.getId(),
 																	audit_record.getId(),
-																	sanitized_url.toString(), 
+																	sanitized_url.toString(),
 																	BrowserType.CHROME);
 		
 		String url_msg_str = mapper.writeValueAsString(url_msg);

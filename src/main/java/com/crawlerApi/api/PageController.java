@@ -15,11 +15,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.looksee.exceptions.UnknownAccountException;
-import com.looksee.models.Account;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
 import com.looksee.models.audit.performance.PerformanceInsight;
-import com.looksee.services.AccountService;
 import com.looksee.services.PageStateService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,9 +35,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Pages V1", description = "Pages API")
 public class PageController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	private AccountService account_service;
 	
 	@Autowired
 	private PageStateService page_service;
@@ -61,7 +56,7 @@ public class PageController extends BaseApiController {
     public SimplePage getPage(HttpServletRequest request,
 			@RequestParam(value="url", required=true) String url
 	) throws UnknownAccountException  {
-    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
+    	getAuthenticatedAccount(request.getUserPrincipal());
     	
     	PageState page = page_service.findByUrl(url);
     	
@@ -97,7 +92,7 @@ public class PageController extends BaseApiController {
     public PerformanceInsight getInsights(HttpServletRequest request,
 			@PathVariable(value="page_key", required=true) String page_key
 	) throws UnknownAccountException {
-    	Account acct = getAuthenticatedAccount(request.getUserPrincipal());
+    	getAuthenticatedAccount(request.getUserPrincipal());
     	
         log.info("finding all page insights :: "+page_key);
         return null; //page_service.getAuditInsights(page_state_key);

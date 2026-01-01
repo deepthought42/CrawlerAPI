@@ -1,5 +1,6 @@
 package com.crawlerApi.api;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +23,8 @@ import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.Test;
+import com.looksee.models.dto.User;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.repository.AccountRepository;
 import com.looksee.models.repository.TestRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.DomainService;
@@ -43,8 +44,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping(path = "v1/ide-test-export", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "IDE Test Export V1", description = "IDE Test Export API")
 public class IdeTestExportController extends BaseApiController {
-	@Autowired
-	private AccountRepository account_repo;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -105,7 +104,7 @@ public class IdeTestExportController extends BaseApiController {
     	
     	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"), false);
 		formatted_url = BrowserUtils.sanitizeUrl(formatted_url, false);
-		URL domain_url = new URL(formatted_url);
+		URL domain_url = new URI(formatted_url).toURL();
 	
 		
 		if(test_json.has("key")){

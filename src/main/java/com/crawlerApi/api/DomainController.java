@@ -691,7 +691,7 @@ public class DomainController extends BaseApiController {
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@PathVariable(value = "user_id", required = true) long user_id)
 			throws UnknownAccountException, MalformedURLException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -812,7 +812,6 @@ public class DomainController extends BaseApiController {
 
 		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
-		List<UXIssueReportDto> ux_issues = new ArrayList<>();
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
 		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
 		
@@ -918,7 +917,7 @@ public class DomainController extends BaseApiController {
 	public @ResponseBody void delete(HttpServletRequest request,
 			@PathVariable(value = "domain_id") long domain_id,
 			@PathVariable(value = "user_id") long user_id) throws UnknownAccountException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -1039,13 +1038,7 @@ public class DomainController extends BaseApiController {
 	})
 	public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
 			@PathVariable(value = "host", required = true) String host) throws UnknownAccountException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName();
-		Account acct = account_service.findByUserId(id);
-
-		if (acct == null) {
-			throw new UnknownAccountException();
-		}
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		log.info("finding all page insights :: " + host);
 		

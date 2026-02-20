@@ -272,12 +272,11 @@ public class AuditController extends BaseApiController {
     			String element_selector = "";
     			if(ObservationType.ELEMENT.equals(message.getType()) 
 					|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
-					ElementState element = ux_issue_service.getElement(audit_id);
+					ElementState element = ux_issue_service.getElement(message.getId());
 					if(element == null){
 						continue;
 					}
-					System.out.println("ux_issue_service.getElement(message.getId()) = "+ux_issue_service.getElement(message.getId()));
-    				element_selector = element.getCssSelector();
+					element_selector = element.getCssSelector();
     			}
     			else {
     				element_selector = "No specific element is associated with this issue";
@@ -360,12 +359,11 @@ public class AuditController extends BaseApiController {
     			String element_selector = "";
     			if(ObservationType.ELEMENT.equals(message.getType()) 
 					|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
-					ElementState element = ux_issue_service.getElement(audit_id);
+					ElementState element = ux_issue_service.getElement(message.getId());
 					if(element == null){
 						continue;
 					}
-					System.out.println("ux_issue_service.getElement(message.getId()) = "+ux_issue_service.getElement(message.getId()));
-    				element_selector = element.getCssSelector();
+					element_selector = element.getCssSelector();
     			}
     			else {
     				element_selector = "No specific element is associated with this issue";
@@ -461,11 +459,11 @@ public class AuditController extends BaseApiController {
 									avg_grade_level, 
 									non_ada_compliant_pages);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Failed to generate PDF report for audit {}", audit_id, e);
+			throw new IOException("Failed to generate PDF report", e);
 		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			//return error response with error "URI is invalid"
+			log.error("Invalid URI generated while building PDF report for audit {}", audit_id, e);
+			throw new IOException("Invalid URI while generating report", e);
 		}
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

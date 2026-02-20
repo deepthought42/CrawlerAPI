@@ -57,12 +57,10 @@ public class Auth0Client {
             log.info("Getting user Info ... " + username);
         } catch (APIException exception) {
             // api error
-            log.error(exception.getError() + " \n " + exception.getMessage());
-            exception.printStackTrace();
+            log.error("Auth0 API error while retrieving username: {} - {}", exception.getError(), exception.getMessage(), exception);
         } catch (Auth0Exception exception) {
             // request error
-            exception.printStackTrace();
-            log.error(exception.getMessage());
+            log.error("Auth0 request error while retrieving username", exception);
         }
         
         return username;
@@ -82,12 +80,10 @@ public class Auth0Client {
             log.info("Getting user Info ... " + nickname);
         } catch (APIException exception) {
             // api error
-            log.error(exception.getError() + " \n " + exception.getMessage());
-            exception.printStackTrace();
+            log.error("Auth0 API error while retrieving nickname: {} - {}", exception.getError(), exception.getMessage(), exception);
         } catch (Auth0Exception exception) {
             // request error
-            exception.printStackTrace();
-            log.error(exception.getMessage());
+            log.error("Auth0 request error while retrieving nickname", exception);
         }
         
         return nickname;

@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -210,7 +211,7 @@ public class DomainController extends BaseApiController {
 		}
 
 		if(domain.getUrl() == null) {
-			return null;
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Domain URL is required");
 		}
 		String lowercase_url = domain.getUrl().toLowerCase();
 		URL formatted_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
@@ -518,7 +519,7 @@ public class DomainController extends BaseApiController {
 				page_stats.add(page);
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to build page stats for domain {}", domain_id, e);
 		}
 		
 		return page_stats;

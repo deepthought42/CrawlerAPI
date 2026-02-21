@@ -70,6 +70,9 @@ public class SecurityConfig {
         OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
             String expectedAudience = auth0Config.getApiAudience();
             if (expectedAudience == null || expectedAudience.isBlank()) {
+                expectedAudience = auth0Config.getAudience();
+            }
+            if (expectedAudience == null || expectedAudience.isBlank()) {
                 return OAuth2TokenValidatorResult.success();
             }
 

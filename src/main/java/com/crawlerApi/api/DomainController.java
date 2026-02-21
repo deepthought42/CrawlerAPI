@@ -54,6 +54,7 @@ import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.Audit;
@@ -738,7 +739,11 @@ public class DomainController extends BaseApiController {
 					String element_selector = "";
 					if (ObservationType.ELEMENT.equals(message.getType())
 							|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
-						element_selector = ux_issue_service.getElement(message.getId()).getCssSelector();
+						ElementState element = ux_issue_service.getElement(message.getId());
+						if (element == null) {
+							continue;
+						}
+						element_selector = element.getCssSelector();
 					} else {
 						element_selector = "No specific element is associated with this issue";
 					}

@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,6 +54,7 @@ import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
+import com.looksee.models.ElementState;
 import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.Audit;
@@ -210,7 +212,7 @@ public class DomainController extends BaseApiController {
 		}
 
 		if(domain.getUrl() == null) {
-			return null;
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Domain URL is required");
 		}
 		String lowercase_url = domain.getUrl().toLowerCase();
 		URL formatted_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
@@ -518,7 +520,7 @@ public class DomainController extends BaseApiController {
 				page_stats.add(page);
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to build page stats for domain {}", domain_id, e);
 		}
 		
 		return page_stats;
@@ -737,7 +739,11 @@ public class DomainController extends BaseApiController {
 					String element_selector = "";
 					if (ObservationType.ELEMENT.equals(message.getType())
 							|| ObservationType.COLOR_CONTRAST.equals(message.getType())) {
-						element_selector = ux_issue_service.getElement(message.getId()).getCssSelector();
+						ElementState element = ux_issue_service.getElement(message.getId());
+						if (element == null) {
+							continue;
+						}
+						element_selector = element.getCssSelector();
 					} else {
 						element_selector = "No specific element is associated with this issue";
 					}

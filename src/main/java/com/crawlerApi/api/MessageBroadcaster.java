@@ -28,7 +28,7 @@ import com.pusher.rest.Pusher;
  * Defines methods for emitting data to subscribed clients
  */
 public class MessageBroadcaster {
-	private static Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
+	private static final Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
 	
 	private static Pusher pusher = new Pusher("1149966", "c88f4e4c6e128ed219c2", "149f5a3cb7f7c8d7205b");
 	
@@ -256,7 +256,7 @@ public class MessageBroadcaster {
 			String audit_record_json = mapper.writeValueAsString(issue);
 			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);		
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			log.error("Failed to broadcast UX issue message for page {}", page_id, e);
 		}
 	}
 	

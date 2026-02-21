@@ -88,4 +88,4 @@ public class Auth0Client {
         
         return nickname;
     }
-} 
+}

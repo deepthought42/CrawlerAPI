@@ -1,0 +1,753 @@
+openapi: 3.0.3
+info:
+  title: Crawler API
+  version: 1.0.0
+  description: |
+    OpenAPI specification generated from Spring controller mappings under `src/main/java/com/crawlerApi/api`.
+    Many endpoints require an authenticated account context and return domain-specific DTOs.
+servers:
+  - url: http://localhost:9080
+    description: Local default server port from application.properties
+security:
+  - bearerAuth: []
+tags:
+  - name: Accounts
+  - name: Audits
+  - name: Audit Records
+  - name: Auditor
+  - name: Competitors
+  - name: Design System
+  - name: Domains
+  - name: Elements
+  - name: IDE Test Export
+  - name: Integrations
+  - name: Pages
+  - name: Test Records
+  - name: Test Users
+  - name: User Info
+paths:
+  /v1/accounts:
+    get:
+      tags: [Accounts]
+      summary: Get current account
+      responses:
+        '200': { description: Account retrieved, content: { application/json: { schema: { $ref: '#/components/schemas/Account' } } } }
+    post:
+      tags: [Accounts]
+      summary: Create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Object' }
+      responses:
+        '200': { description: Account created }
+    delete:
+      tags: [Accounts]
+      summary: Delete current account
+      responses:
+        '200': { description: Account deleted }
+
+  /v1/accounts/onboarding_step:
+    post:
+      tags: [Accounts]
+      summary: Set onboarding step complete
+      parameters:
+        - in: query
+          name: step_name
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Steps returned }
+
+  /v1/accounts/onboarding_steps_completed:
+    get:
+      tags: [Accounts]
+      summary: Get onboarding steps completed
+      responses:
+        '200': { description: Steps returned }
+
+  /v1/accounts/{id}:
+    put:
+      tags: [Accounts]
+      summary: Update account
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Account updated }
+
+  /v1/accounts/{id}/refreshToken:
+    put:
+      tags: [Accounts]
+      summary: Refresh account API token
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200': { description: Token refreshed }
+
+  /v1/audits:
+    get:
+      tags: [Audits]
+      summary: Get audits
+      responses:
+        '200': { description: Audits list }
+
+  /v1/audits/{id}:
+    get:
+      tags: [Audits]
+      summary: Get audit by id
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200': { description: Audit retrieved }
+
+  /v1/audits/{key}/issues:
+    post:
+      tags: [Audits]
+      summary: Add UX issue to audit
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Issue added }
+
+  /v1/audits/stop:
+    get:
+      tags: [Audits]
+      summary: Stop audit by URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Audit stopped }
+
+  /v1/audits/{audit_id}/report/excel:
+    get:
+      tags: [Audits]
+      summary: Export audit Excel report
+      parameters:
+        - $ref: '#/components/parameters/audit_id'
+      responses:
+        '200':
+          description: Excel file
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+
+  /v1/audits/{audit_id}/report/pdf:
+    get:
+      tags: [Audits]
+      summary: Export audit PDF report
+      parameters:
+        - $ref: '#/components/parameters/audit_id'
+      responses:
+        '200':
+          description: PDF file
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  /v1/auditrecords:
+    get:
+      tags: [Audit Records]
+      summary: Get audit records
+      responses:
+        '200': { description: Audit records list }
+
+  /v1/auditrecords/{audit_record_id}/report:
+    post:
+      tags: [Audit Records]
+      summary: Request audit record report
+      parameters:
+        - $ref: '#/components/parameters/audit_record_id'
+      responses:
+        '200': { description: Report requested }
+
+  /v1/auditrecords/{audit_record_id}/pages:
+    get:
+      tags: [Audit Records]
+      summary: Get pages for audit record
+      parameters:
+        - $ref: '#/components/parameters/audit_record_id'
+      responses:
+        '200': { description: Pages returned }
+
+  /v1/auditrecords/{audit_record_id}/elements:
+    get:
+      tags: [Audit Records]
+      summary: Get elements for audit record
+      parameters:
+        - $ref: '#/components/parameters/audit_record_id'
+      responses:
+        '200': { description: Elements returned }
+
+  /v1/auditrecords/{audit_record_id}/stats:
+    get:
+      tags: [Audit Records]
+      summary: Get stats for audit record
+      parameters:
+        - $ref: '#/components/parameters/audit_record_id'
+      responses:
+        '200': { description: Stats returned }
+
+  /v1/auditor/start:
+    post:
+      tags: [Auditor]
+      summary: Start manual auditor run
+      responses:
+        '200': { description: Auditor started }
+
+  /v1/auditor:
+    get:
+      tags: [Auditor]
+      summary: Get page by URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Page returned }
+
+  /v1/auditor/{page_key}/insights:
+    get:
+      tags: [Auditor]
+      summary: Get auditor insights
+      parameters:
+        - in: path
+          name: page_key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Insights returned }
+
+  /v1/competitors/{competitor_id}:
+    get:
+      tags: [Competitors]
+      summary: Get competitor by id
+      parameters:
+        - $ref: '#/components/parameters/competitor_id'
+      responses:
+        '200': { description: Competitor returned }
+
+  /v1/designsystem/{id}/color:
+    post:
+      tags: [Design System]
+      summary: Update design system colors
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: array, items: { type: string } } } }
+      responses:
+        '200': { description: Colors updated }
+
+  /v1/domains:
+    get:
+      tags: [Domains]
+      summary: Get all domains
+      responses:
+        '200': { description: Domains returned }
+    post:
+      tags: [Domains]
+      summary: Create domain
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Domain created }
+    put:
+      tags: [Domains]
+      summary: Update domain
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema: { type: string }
+        - in: query
+          name: protocol
+          required: true
+          schema: { type: string }
+        - in: query
+          name: browser_name
+          required: true
+          schema: { type: string }
+        - in: query
+          name: logo_url
+          required: false
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Domain updated }
+
+  /v1/domains/select:
+    put:
+      tags: [Domains]
+      summary: Select active domain
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Domain selected }
+
+  /v1/domains/{domain_id}:
+    delete:
+      tags: [Domains]
+      summary: Delete domain
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Domain deleted }
+
+  /v1/domains/{domain_id}/settings:
+    get:
+      tags: [Domains]
+      summary: Get domain settings
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Settings returned }
+
+  /v1/domains/{domain_id}/settings/wcag:
+    post:
+      tags: [Domains]
+      summary: Update domain WCAG setting
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: WCAG level updated }
+
+  /v1/domains/{domain_id}/settings/expertise:
+    post:
+      tags: [Domains]
+      summary: Update domain expertise setting
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Expertise updated }
+
+  /v1/domains/{domain_id}/pages:
+    get:
+      tags: [Domains]
+      summary: Get domain pages
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Pages returned }
+
+  /v1/domains/{domain_id}/stats:
+    get:
+      tags: [Domains]
+      summary: Get domain audit stats
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Stats returned }
+
+  /v1/domains/pages:
+    get:
+      tags: [Domains]
+      summary: Get all pages by URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Pages returned }
+
+  /v1/domains/page_elements:
+    get:
+      tags: [Domains]
+      summary: Get all elements by host
+      parameters:
+        - in: query
+          name: host
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Elements returned }
+
+  /v1/domains/{domain_id}/users:
+    get:
+      tags: [Domains]
+      summary: Get domain users
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Users returned }
+    post:
+      tags: [Domains]
+      summary: Add domain user
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: User added }
+
+  /v1/domains/{domain_id}/users/{user_id}:
+    delete:
+      tags: [Domains]
+      summary: Delete domain user
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200': { description: User deleted }
+
+  /v1/domains/{domain_id}/test_users/{user_id}:
+    delete:
+      tags: [Domains]
+      summary: Delete test user from domain
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200': { description: Test user deleted }
+
+  /v1/domains/{domain_id}/report/excel:
+    get:
+      tags: [Domains]
+      summary: Export domain Excel report
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200':
+          description: Excel file
+          content: { application/octet-stream: { schema: { type: string, format: binary } } }
+
+  /v1/domains/{domain_id}/pdf:
+    get:
+      tags: [Domains]
+      summary: Export domain PDF report
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200':
+          description: PDF file
+          content: { application/pdf: { schema: { type: string, format: binary } } }
+
+  /v1/domains/{domain_id}/start:
+    post:
+      tags: [Domains]
+      summary: Start domain audit
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Audit started }
+
+  /v1/domains/audits:
+    get:
+      tags: [Domains]
+      summary: Get most recent domain audit record
+      responses:
+        '200': { description: Domain audit record returned }
+
+  /v1/domains/{domain_id}/competitors:
+    get:
+      tags: [Domains]
+      summary: Get domain competitors
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Competitors returned }
+    post:
+      tags: [Domains]
+      summary: Create competitor for domain
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Competitor created }
+
+  /v1/domains/{domain_id}/competitors/palettes:
+    get:
+      tags: [Domains]
+      summary: Get competitor palettes
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      responses:
+        '200': { description: Palettes returned }
+
+  /v1/domains/{domain_id}/policies:
+    post:
+      tags: [Domains]
+      summary: Set allowed image characteristics policy
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: array, items: { type: string } } } }
+      responses:
+        '200': { description: Policy updated }
+
+  /v1/domains/{domain_id}/competitors/{competitor_id}:
+    delete:
+      tags: [Domains]
+      summary: Delete domain competitor
+      parameters:
+        - $ref: '#/components/parameters/domain_id'
+        - $ref: '#/components/parameters/competitor_id'
+      responses:
+        '200': { description: Competitor deleted }
+
+  /v1/elements/{element_key}/rules:
+    post:
+      tags: [Elements]
+      summary: Add element rule
+      parameters:
+        - in: path
+          name: element_key
+          required: true
+          schema: { type: string }
+        - in: query
+          name: type
+          required: true
+          schema: { type: string }
+        - in: query
+          name: value
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { description: Rule added }
+
+  /v1/elements/{element_key}/rules/{rule_key}:
+    delete:
+      tags: [Elements]
+      summary: Delete element rule
+      parameters:
+        - in: path
+          name: element_key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: rule_key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Rule deleted }
+
+  /v1/elements/elements:
+    put:
+      tags: [Elements]
+      summary: Batch update element states
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Object' } } } }
+      responses:
+        '200': { description: Elements updated }
+
+  /v1/elements/forms/{form_key}/elements:
+    put:
+      tags: [Elements]
+      summary: Add form elements
+      parameters:
+        - in: path
+          name: form_key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Object' } } } }
+      responses:
+        '200': { description: Form elements updated }
+
+  /v1/ide-test-export:
+    put:
+      tags: [IDE Test Export]
+      summary: Update IDE test export record
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Record updated }
+    post:
+      tags: [IDE Test Export]
+      summary: Create IDE test export record
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Record created }
+
+  /v1/integrations/product-board:
+    post:
+      tags: [Integrations]
+      summary: Create Productboard integration item
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+      responses:
+        '200': { description: Integration item created }
+
+  /v1/pages:
+    get:
+      tags: [Pages]
+      summary: Get page by URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Page returned }
+
+  /v1/pages/{page_key}/insights:
+    get:
+      tags: [Pages]
+      summary: Get page insights
+      parameters:
+        - in: path
+          name: page_key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Insights returned }
+
+  /v1/testrecords:
+    get:
+      tags: [Test Records]
+      summary: Get test records by URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200': { description: Test records returned }
+
+  /v1/testrecords/{key}:
+    get:
+      tags: [Test Records]
+      summary: Get test record by key
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Test record returned }
+
+  /v1/testusers/{user_id}:
+    put:
+      tags: [Test Users]
+      summary: Update test user
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - in: query
+          name: isEnabled
+          required: true
+          schema: { type: boolean }
+        - in: query
+          name: password
+          required: true
+          schema: { type: string }
+        - in: query
+          name: username
+          required: true
+          schema: { type: string }
+        - in: query
+          name: role
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { description: Test user updated }
+
+  /v1/userinfo/account:
+    get:
+      tags: [User Info]
+      summary: Get current user account
+      responses:
+        '200': { description: Account returned }
+
+  /v1/userinfo/info:
+    get:
+      tags: [User Info]
+      summary: Get user info map
+      responses:
+        '200': { description: User info returned }
+
+  /v1/userinfo/username:
+    get:
+      tags: [User Info]
+      summary: Get current username
+      responses:
+        '200': { description: Username returned }
+
+  /v1/userinfo/email:
+    get:
+      tags: [User Info]
+      summary: Get current email
+      responses:
+        '200': { description: Email returned }
+
+  /v1/userinfo/config/status:
+    get:
+      tags: [User Info]
+      summary: Get user config status
+      responses:
+        '200': { description: Config status returned }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+    domain_id:
+      in: path
+      name: domain_id
+      required: true
+      schema: { type: integer, format: int64 }
+    audit_id:
+      in: path
+      name: audit_id
+      required: true
+      schema: { type: integer, format: int64 }
+    audit_record_id:
+      in: path
+      name: audit_record_id
+      required: true
+      schema: { type: integer, format: int64 }
+    user_id:
+      in: path
+      name: user_id
+      required: true
+      schema: { type: integer, format: int64 }
+    competitor_id:
+      in: path
+      name: competitor_id
+      required: true
+      schema: { type: integer, format: int64 }
+  schemas:
+    Object:
+      type: object
+      additionalProperties: true
+    Account:
+      type: object
+      additionalProperties: true

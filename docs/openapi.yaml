@@ -640,13 +640,115 @@ paths:
       responses:
         '200': { description: Record created }
 
+  /v1/integrations:
+    get:
+      tags: [Integrations]
+      summary: List available integrations
+      description: Returns metadata for all available integration types.
+      responses:
+        '200':
+          description: List of integration metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IntegrationMetadata' }
+        '401': { description: Authentication required }
+
+  /v1/integrations/{type}:
+    get:
+      tags: [Integrations]
+      summary: Get integration by type
+      description: Returns metadata and current account config (masked) for the given integration type.
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema: { type: string }
+          description: Integration type (e.g. jira, slack)
+      responses:
+        '200':
+          description: Integration metadata and config
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IntegrationWithConfigResponse' }
+        '401': { description: Authentication required }
+        '404': { description: Unknown integration type }
+
+  /v1/integrations/{type}/config:
+    get:
+      tags: [Integrations]
+      summary: Get integration config
+      description: Returns current account config for the integration type (for backend use).
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Config map
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IntegrationConfigMap' }
+        '401': { description: Authentication required }
+        '404': { description: Unknown integration type or no config }
+    put:
+      tags: [Integrations]
+      summary: Create or update integration config
+      description: Validates and saves config for the current account.
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IntegrationConfigMap' }
+      responses:
+        '200': { description: Config saved }
+        '400': { description: Invalid config }
+        '401': { description: Authentication required }
+        '404': { description: Unknown integration type }
+    delete:
+      tags: [Integrations]
+      summary: Delete integration config
+      description: Removes stored config for the current account and integration type.
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Config deleted }
+        '401': { description: Authentication required }
+        '404': { description: Unknown integration type }
+
+  /v1/integrations/{type}/test:
+    post:
+      tags: [Integrations]
+      summary: Test integration connection
+      description: Tests connection using the current account's stored config.
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Connection succeeded }
+        '502': { description: Connection failed }
+        '401': { description: Authentication required }
+        '404': { description: Unknown integration type or no config }
+
   /v1/integrations/product-board:
     post:
       tags: [Integrations]
-      summary: Create Product Board integration
-      description: Create a JWT token for Product Board integration (user/account context).
+      summary: Create Product Board integration token
+      description: Create a JWT token for Product Board integration (backward compatibility).
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema: { $ref: '#/components/schemas/Account' }
@@ -878,3 +980,27 @@ components:
       type: object
       description: Test record
       additionalProperties: true
+    IntegrationMetadata:
+      type: object
+      description: Metadata for an integration type
+      properties:
+        id: { type: string, description: Integration type id (e.g. jira, slack) }
+        name: { type: string, description: Display name }
+        category: { type: string, description: Category (e.g. Product Management, CI/CD) }
+        configSchema:
+          type: array
+          items: { type: string }
+          description: Required config keys for this integration
+    IntegrationWithConfigResponse:
+      type: object
+      description: Integration metadata plus optional masked config for current account
+      properties:
+        metadata: { $ref: '#/components/schemas/IntegrationMetadata' }
+        config:
+          type: object
+          additionalProperties: true
+          description: Masked config (secrets redacted), or null if not configured
+    IntegrationConfigMap:
+      type: object
+      additionalProperties: true
+      description: Key-value config for an integration (keys depend on integration type)

@@ -3,8 +3,9 @@ info:
   title: Crawler API
   version: 1.0.0
   description: |
-    OpenAPI specification generated from Spring controller mappings under `src/main/java/com/crawlerApi/api`.
-    Many endpoints require an authenticated account context and return domain-specific DTOs.
+    OpenAPI specification for the Crawler API. Generated from Spring controller mappings
+    under `src/main/java/com/crawlerApi/api`. Many endpoints require an authenticated account
+    context (JWT) and return domain-specific DTOs for domains, audits, pages, elements, and test records.
 servers:
   - url: http://localhost:9080
     description: Local default server port from application.properties
@@ -35,13 +36,17 @@ paths:
     post:
       tags: [Accounts]
       summary: Create account
+      description: Create a new account with the provided details (email, userId, etc.).
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Object' }
+            schema: { $ref: '#/components/schemas/Account' }
       responses:
-        '200': { description: Account created }
+        '200': { description: Account created, content: { application/json: { schema: { $ref: '#/components/schemas/Account' } } } }
+        '400': { description: Bad request }
+        '401': { description: Authentication required }
+        '409': { description: Account already exists }
     delete:
       tags: [Accounts]
       summary: Delete current account
@@ -71,13 +76,18 @@ paths:
     put:
       tags: [Accounts]
       summary: Update account
+      description: Update the account with the given ID.
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
         required: true
-        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Account' }
       responses:
-        '200': { description: Account updated }
+        '200': { description: Account updated, content: { application/json: { schema: { $ref: '#/components/schemas/Account' } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
 
   /v1/accounts/{id}/refreshToken:
     put:
@@ -123,13 +133,17 @@ paths:
     get:
       tags: [Audits]
       summary: Stop audit by URL
+      description: Stop the audit for the given URL.
       parameters:
         - in: query
           name: url
           required: true
           schema: { type: string, format: uri }
+          description: URL of the audit to stop
       responses:
         '200': { description: Audit stopped }
+        '401': { description: Authentication required }
+        '403': { description: Missing subscription }
 
   /v1/audits/{audit_id}/report/excel:
     get:
@@ -168,10 +182,18 @@ paths:
     post:
       tags: [Audit Records]
       summary: Request audit record report
+      description: Request a report for the given audit record; creates/links account by email.
       parameters:
         - $ref: '#/components/parameters/audit_record_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Account' }
       responses:
         '200': { description: Report requested }
+        '401': { description: Authentication required }
+        '404': { description: Audit record not found }
 
   /v1/auditrecords/{audit_record_id}/pages:
     get:
@@ -203,33 +225,53 @@ paths:
   /v1/auditor/start:
     post:
       tags: [Auditor]
-      summary: Start manual auditor run
+      summary: Start audit
+      description: Start an audit on the provided URL based on the audit level (page or domain).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuditStartRequest' }
       responses:
-        '200': { description: Auditor started }
+        '200': { description: Audit started, content: { application/json: { schema: { $ref: '#/components/schemas/AuditRecordDto' } } } }
+        '400': { description: Invalid audit request (missing url or level) }
+        '401': { description: Authentication required }
+        '500': { description: Internal server error }
 
   /v1/auditor:
     get:
       tags: [Auditor]
       summary: Get page by URL
+      description: Retrieve page information for the given URL.
       parameters:
         - in: query
           name: url
           required: true
           schema: { type: string, format: uri }
+          description: Page URL
       responses:
-        '200': { description: Page returned }
+        '200': { description: Page returned, content: { application/json: { schema: { $ref: '#/components/schemas/SimplePage' } } } }
+        '400': { description: Invalid URL }
+        '401': { description: Authentication required }
+        '404': { description: Page not found }
+        '500': { description: Internal server error }
 
   /v1/auditor/{page_key}/insights:
     get:
       tags: [Auditor]
-      summary: Get auditor insights
+      summary: Get page insights
+      description: Retrieve performance insights for the given page.
       parameters:
         - in: path
           name: page_key
           required: true
           schema: { type: string }
+          description: Key of the page
       responses:
-        '200': { description: Insights returned }
+        '200': { description: Insights returned, content: { application/json: { schema: { $ref: '#/components/schemas/PerformanceInsight' } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
+        '404': { description: Page not found }
 
   /v1/competitors/{competitor_id}:
     get:
@@ -456,9 +498,18 @@ paths:
   /v1/domains/audits:
     get:
       tags: [Domains]
-      summary: Get most recent domain audit record
+      summary: Get most recent domain audit record for host
+      description: Get the most recent domain audit record for the given host.
+      parameters:
+        - in: query
+          name: host
+          required: true
+          schema: { type: string }
+          description: Domain host to get the most recent audit for
       responses:
-        '200': { description: Domain audit record returned }
+        '200': { description: Domain audit record returned, content: { application/json: { schema: { $ref: '#/components/schemas/DomainAuditRecord' } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
 
   /v1/domains/{domain_id}/competitors:
     get:
@@ -592,12 +643,16 @@ paths:
   /v1/integrations/product-board:
     post:
       tags: [Integrations]
-      summary: Create Productboard integration item
+      summary: Create Product Board integration
+      description: Create a JWT token for Product Board integration (user/account context).
       requestBody:
         required: true
-        content: { application/json: { schema: { $ref: '#/components/schemas/Object' } } }
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Account' }
       responses:
-        '200': { description: Integration item created }
+        '200': { description: Integration token created, content: { application/json: { schema: { type: object, description: JWT } } } }
+        '401': { description: Authentication required }
 
   /v1/pages:
     get:
@@ -615,37 +670,50 @@ paths:
     get:
       tags: [Pages]
       summary: Get page insights
+      description: Retrieve performance insights for the given page.
       parameters:
         - in: path
           name: page_key
           required: true
           schema: { type: string }
+          description: Key of the page
       responses:
-        '200': { description: Insights returned }
+        '200': { description: Insights returned, content: { application/json: { schema: { $ref: '#/components/schemas/PerformanceInsight' } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
 
   /v1/testrecords:
     get:
       tags: [Test Records]
-      summary: Get test records by URL
+      summary: Get all test records
+      description: Retrieve list of all test records (filtered by URL when provided).
       parameters:
         - in: query
           name: url
           required: true
           schema: { type: string, format: uri }
+          description: URL to filter test records
       responses:
-        '200': { description: Test records returned }
+        '200': { description: Test records returned, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TestRecord' } } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
 
   /v1/testrecords/{key}:
     get:
       tags: [Test Records]
       summary: Get test record by key
+      description: Retrieve test record with the given key.
       parameters:
         - in: path
           name: key
           required: true
           schema: { type: string }
+          description: Test record key
       responses:
-        '200': { description: Test record returned }
+        '200': { description: Test record returned, content: { application/json: { schema: { $ref: '#/components/schemas/TestRecord' } } } }
+        '401': { description: Authentication required }
+        '403': { description: Insufficient permissions }
+        '404': { description: Test record not found }
 
   /v1/testusers/{user_id}:
     put:
@@ -704,8 +772,17 @@ paths:
     get:
       tags: [User Info]
       summary: Get user config status
+      description: Returns whether Auth0/user configuration is configured (e.g. for onboarding).
       responses:
-        '200': { description: Config status returned }
+        '200':
+          description: Config status returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured: { type: boolean }
+                additionalProperties: true
 
 components:
   securitySchemes:
@@ -750,4 +827,54 @@ components:
       additionalProperties: true
     Account:
       type: object
+      description: User account (Auth0-linked)
+      properties:
+        id: { type: integer, format: int64 }
+        userId: { type: string, description: "Auth0 user ID" }
+        email: { type: string, format: email }
+        name: { type: string }
+        apiToken: { type: string }
+        onboardedSteps: { type: array, items: { type: string } }
+      additionalProperties: true
+    AuditStartRequest:
+      type: object
+      required: [url, level]
+      description: Request body for starting an audit
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL to audit (page or domain root)
+        level:
+          type: string
+          enum: [PAGE, DOMAIN]
+          description: Audit level (single page or full domain)
+    AuditRecordDto:
+      type: object
+      description: Audit record summary DTO
+      additionalProperties: true
+    DomainAuditRecord:
+      type: object
+      description: Domain audit record
+      additionalProperties: true
+    PerformanceInsight:
+      type: object
+      description: Performance insights for a page
+      additionalProperties: true
+    SimplePage:
+      type: object
+      description: Simplified page representation
+      properties:
+        url: { type: string, format: uri }
+        viewportScreenshotUrl: { type: string }
+        fullPageScreenshotUrl: { type: string }
+        fullPageWidth: { type: integer }
+        fullPageHeight: { type: integer }
+        src: { type: string }
+        key: { type: string }
+        id: { type: integer, format: int64 }
+      additionalProperties: true
+    TestRecord:
+      type: object
+      description: Test record
       additionalProperties: true

@@ -10,33 +10,50 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class SimpleCORSFilter implements Filter {
+public class SimpleCORSFilter extends OncePerRequestFilter {
+	
+	@Autowired
+	private Environment environment;
 	
 	@Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-		final HttpServletResponse response = (HttpServletResponse) res;
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
+    		throws ServletException, IOException {
 		
-		response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH");
-        response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, " +
-                "Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-        chain.doFilter(req, res);
+		// Only apply permissive CORS in non-production environments
+		// In production, rely on SecurityConfig's CORS configuration
+		if (!isProductionProfile()) {
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH");
+			response.setHeader("Access-Control-Max-Age", "3600");
+			response.setHeader("Access-Control-Allow-Headers", "Authorization, Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, " +
+					"Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+		}
+        chain.doFilter(request, response);
     }
-
-	@Override
-    public void init(FilterConfig filterConfig) throws ServletException  {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
+	
+	/**
+	 * Check if the application is running in production profile
+	 * @return true if production profile is active
+	 */
+	private boolean isProductionProfile() {
+		if (environment == null) {
+			return false;
+		}
+		String[] activeProfiles = environment.getActiveProfiles();
+		for (String profile : activeProfiles) {
+			if (profile.equalsIgnoreCase("prod") || profile.equalsIgnoreCase("production")) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -37,11 +38,13 @@ public class SecurityConfig {
 	
 	private final Auth0Config auth0Config;
 	private final Auth0Service auth0Service;
+	private final Environment environment;
 	
 	@Autowired
-	public SecurityConfig(Auth0Config auth0Config, Auth0Service auth0Service) {
+	public SecurityConfig(Auth0Config auth0Config, Auth0Service auth0Service, Environment environment) {
 		this.auth0Config = auth0Config;
 		this.auth0Service = auth0Service;
+		this.environment = environment;
 	}
 	
     @Bean
@@ -148,13 +151,43 @@ public class SecurityConfig {
     @Bean
 	CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
+        
+        // Check if we're in production
+        boolean isProduction = isProductionProfile();
+        
+        if (isProduction) {
+            // Strict CORS for production - only allow specific origins
+            // TODO: Replace with your actual production frontend URLs
+            configuration.addAllowedOrigin("https://your-production-domain.com");
+            configuration.addAllowedOrigin("https://www.your-production-domain.com");
+            configuration.setAllowCredentials(true);
+        } else {
+            // Permissive CORS for development
+            configuration.addAllowedOriginPattern("*");
+            configuration.setAllowCredentials(false);
+        }
+        
+        // Common settings for both environments
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(false);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+    
+    /**
+     * Check if the application is running in production profile
+     * @return true if production profile is active
+     */
+    private boolean isProductionProfile() {
+        String[] activeProfiles = environment.getActiveProfiles();
+        for (String profile : activeProfiles) {
+            if (profile.equalsIgnoreCase("prod") || profile.equalsIgnoreCase("production")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

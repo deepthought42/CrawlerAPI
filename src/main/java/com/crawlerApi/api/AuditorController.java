@@ -1,14 +1,16 @@
 package com.crawlerApi.api;
 
+import java.net.URL;
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,14 +23,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.crawlerApi.service.Auth0Service;
-import com.looksee.audits.performance.PerformanceInsight;
-import com.looksee.exceptions.AuditCreationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.looksee.exceptions.UnknownAccountException;
+import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
 import com.looksee.models.Account;
+import com.looksee.models.Domain;
 import com.looksee.models.PageState;
 import com.looksee.models.SimplePage;
+import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.PageAuditRecord;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.enums.AuditLevel;
+import com.looksee.models.enums.AuditName;
+import com.looksee.models.enums.BrowserType;
+import com.looksee.models.enums.ExecutionStatus;
+import com.looksee.models.message.AuditStartMessage;
+import com.looksee.services.AccountService;
+import com.looksee.services.AuditRecordService;
+import com.looksee.services.DomainService;
 import com.looksee.services.PageStateService;
+import com.looksee.utils.BrowserUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,18 +64,30 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AuditorController extends BaseApiController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	private final Auth0Service auth0Service;
-	private final com.crawlerApi.service.AuditService auditService;
-	private final PageStateService pageService;
-	
+	@Autowired
+	private Auth0Service auth0Service;
+	@Autowired
+	private AccountService accountService;
+	@Autowired
+	private AuditRecordService auditRecordService;
+	@Autowired
+	private DomainService domainService;
+	@Autowired	
+	private PubSubUrlMessagePublisherImpl urlTopic;
+	@Autowired
+	private PageStateService pageService;
 	@Autowired
 	public AuditorController(
 			Auth0Service auth0Service,
-			com.crawlerApi.service.AuditService auditService,
-			PageStateService pageService) {
+			AccountService accountService,
+			AuditRecordService auditRecordService,
+			DomainService domainService,
+			PubSubUrlMessagePublisherImpl urlTopic) {
 		this.auth0Service = auth0Service;
-		this.auditService = auditService;
-		this.pageService = pageService;
+		this.accountService = accountService;
+		this.auditRecordService = auditRecordService;
+		this.domainService = domainService;
+		this.urlTopic = urlTopic;
 	}
 	
 	/**
@@ -69,7 +99,7 @@ public class AuditorController extends BaseApiController {
 	 * @param auditRequest The audit request containing URL and level
 	 * @return A new audit record DTO
 	 * @throws UnknownAccountException if the user account cannot be found
-	 * @throws AuditCreationException if the audit cannot be created
+	 * @throws IllegalArgumentException if the audit level is unsupported
 	 */
 	@RequestMapping(path="/start", method = RequestMethod.POST)
 	@Operation(summary = "Start audit", description = "Start an audit on the provided URL based on the audit level")
@@ -82,101 +112,143 @@ public class AuditorController extends BaseApiController {
 	public @ResponseBody ResponseEntity<AuditRecordDto> startAudit(
 			HttpServletRequest request,
 			@RequestBody(required=true) AuditStartRequest auditRequest
-	) throws UnknownAccountException, AuditCreationException {
+	) throws UnknownAccountException, JsonProcessingException, java.net.MalformedURLException,
+			java.util.concurrent.ExecutionException, InterruptedException {
 		
 		log.info("Received audit start request for URL: {} with level: {}",
 				auditRequest.getUrl(), auditRequest.getLevel());
-		
 		// Get the authenticated user's account
 		Principal principal = request.getUserPrincipal();
-		Optional<Account> accountOpt = auth0Service.getCurrentUserAccount(principal);
-		
-		if (accountOpt.isEmpty()) {
-			log.warn("Unknown account for principal: {}", principal.getName());
-			throw new UnknownAccountException();
+		Account account = accountService.findByUserId(principal.getName());
+
+    	String lowercase_url = auditRequest.getUrl().toLowerCase();
+    	URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url ));
+		JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
+    	
+	   	//create new audit record
+		if(AuditLevel.PAGE.equals(auditRequest.getLevel())){
+			log.warn("creating new page audit record...");
+			PageAuditRecord audit_record = new PageAuditRecord(ExecutionStatus.IN_PROGRESS,
+																new HashSet<>(),
+																null,
+																false,
+																new HashSet<>());
+			audit_record.setUrl(sanitized_url.toString());
+			audit_record.setDataExtractionProgress(1.0/50.0);
+			audit_record.setAestheticScore(0.0);
+			audit_record.setAestheticAuditProgress(0.0);
+			audit_record.setContentAuditScore(0.0);
+			audit_record.setContentAuditProgress(0.0);
+			audit_record.setInfoArchScore(0.0);
+			audit_record.setInfoArchitectureAuditProgress(0.0);
+			audit_record = (PageAuditRecord)auditRecordService.save(audit_record, null, null);
+			accountService.addAuditRecord(account.getId(), audit_record.getId());
+			log.warn("Initiating single page audit = "+sanitized_url);
+
+			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
+																		BrowserType.CHROME,
+																		audit_record.getId(),
+																		AuditLevel.PAGE,
+																		account.getId());
+
+			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
+			urlTopic.publish(url_msg_str);
+
+			return ResponseEntity.ok(auditRecordService.buildAudit(audit_record));
 		}
-		
-		Account account = accountOpt.get();
-		log.info("Starting audit for account: {}", account.getId());
-		
-		// Validate audit request
-		if (auditRequest.getUrl() == null || auditRequest.getUrl().trim().isEmpty()) {
-			return ResponseEntity.badRequest().build();
-		}
-		
-		if (auditRequest.getLevel() == null) {
-			return ResponseEntity.badRequest().build();
-		}
-		
-		// Start the audit using the service
-		try {
-			AuditRecordDto auditRecord = auditService.startAudit(
-				auditRequest.getUrl(),
-				auditRequest.getLevel(),
-				account
-			);
+		else if(AuditLevel.DOMAIN.equals(auditRequest.getLevel())){
+			Domain domain = domainService.createDomain(sanitized_url, account.getId());
 			
-			log.info("Successfully started audit with ID: {}", auditRecord.getId());
-			return ResponseEntity.ok(auditRecord);
+			// create new audit record
+			Set<AuditName> audit_list = getAuditList();
+			AuditRecord audit_record = new DomainAuditRecord(ExecutionStatus.RUNNING, audit_list);
+			audit_record.setUrl(domain.getUrl());
+			audit_record = auditRecordService.save(audit_record, account.getId(), domain.getId());
 			
-		} catch (AuditCreationException e) {
-			log.error("Failed to create audit for URL: {} and account: {}",
-					auditRequest.getUrl(), account.getId(), e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			domainService.addAuditRecord(domain.getId(), audit_record.getKey());
+			accountService.addAuditRecord(account.getId(), audit_record.getId());
+
+			AuditStartMessage audit_start_msg = new AuditStartMessage(sanitized_url.toString(),
+																	BrowserType.CHROME,
+																	audit_record.getId(),
+																	AuditLevel.DOMAIN,
+																	account.getId());
+
+			String url_msg_str = mapper.writeValueAsString(audit_start_msg);
+			urlTopic.publish(url_msg_str);
+			return ResponseEntity.ok(auditRecordService.buildAudit(audit_record));
 		}
+		
+
+		throw new IllegalArgumentException("Unsupported audit level: " + auditRequest.getLevel());
 	}
     
+    private Set<AuditName> getAuditList() {
+		Set<AuditName> audit_list = new HashSet<>();
+		//VISUAL DESIGN AUDIT
+		audit_list.add(AuditName.TEXT_BACKGROUND_CONTRAST);
+		audit_list.add(AuditName.NON_TEXT_BACKGROUND_CONTRAST);
+		
+		//INFO ARCHITECTURE AUDITS
+		audit_list.add(AuditName.LINKS);
+		audit_list.add(AuditName.TITLES);
+		audit_list.add(AuditName.ENCRYPTED);
+		audit_list.add(AuditName.METADATA);
+		
+		//CONTENT AUDIT
+		audit_list.add(AuditName.ALT_TEXT);
+		audit_list.add(AuditName.READING_COMPLEXITY);
+		audit_list.add(AuditName.PARAGRAPHING);
+		audit_list.add(AuditName.IMAGE_COPYRIGHT);
+		audit_list.add(AuditName.IMAGE_POLICY);
+
+		return audit_list;
+	}
+
 	/**
-	 * Retrieves page information for a given URL
-	 * 
-	 * @param request HTTP request
-	 * @param url The URL of the page to retrieve
-	 * @return SimplePage containing page information
-	 */
+     * Retrieves a page by URL
+     * 
+     * @param request HTTP request containing the authenticated user
+     * @param url The URL of the page to retrieve
+     * @return {@link SimplePage page} with the given URL
+     * @throws UnknownAccountException 
+     */
+    @Operation(
+        summary = "Get page by URL",
+        description = "Retrieve a page state by its URL"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved page",
+            content = @Content(schema = @Schema(implementation = SimplePage.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Authentication required"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Page not found"
+        )
+    })
     @RequestMapping(method = RequestMethod.GET)
-	@Operation(summary = "Get page by URL", description = "Retrieve page information for the given URL")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved page", content = @Content(schema = @Schema(type = "object", implementation = SimplePage.class))),
-		@ApiResponse(responseCode = "400", description = "Invalid URL"),
-		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "404", description = "Page not found"),
-		@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
-    public ResponseEntity<SimplePage> getPage(
-    		HttpServletRequest request,
-			@RequestParam(value="url", required=true) String url) {
+    public SimplePage getPage(HttpServletRequest request,
+			@RequestParam(value="url", required=true) String url
+	)  {
+    	PageState page = pageService.findByUrl(url);
     	
-    	if (url == null || url.trim().isEmpty()) {
-    		return ResponseEntity.badRequest().build();
-    	}
-    	
-    	try {
-    		PageState page = pageService.findByUrl(url);
-    		
-    		if (page == null) {
-    			log.warn("Page not found for URL: {}", url);
-    			return ResponseEntity.notFound().build();
-    		}
-    		
-    		log.info("Found page with key: {}", page.getKey());
-    		
-    		SimplePage simplePage = new SimplePage(
-    			page.getUrl(),
-    			page.getViewportScreenshotUrl(),
-    			page.getFullPageScreenshotUrl(),
-    			page.getFullPageWidth(),
-    			page.getFullPageHeight(),
-    			page.getSrc(),
-    			page.getKey(), 
-    			page.getId()
-    		);
-    		
-    		return ResponseEntity.ok(simplePage);
-    		
-    	} catch (Exception e) {
-    		log.error("Error retrieving page for URL: {}", url, e);
-    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    	}
+        log.info("finding page :: "+page.getKey());
+        
+        SimplePage simple_page = new SimplePage(
+										page.getUrl(),
+										page.getViewportScreenshotUrl(),
+										page.getFullPageScreenshotUrl(),
+										page.getFullPageWidth(),
+										page.getFullPageHeight(),
+										page.getSrc(),
+										page.getKey(), page.getId());
+        return simple_page;
     }
     
     /**

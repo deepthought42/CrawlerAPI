@@ -35,9 +35,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.crawlerApi.config.PdfReportAssetConfig;
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -47,7 +47,8 @@ import com.looksee.models.PageState;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.designsystem.DesignSystem;
 import com.looksee.models.dto.AuditRecordDto;
 import com.looksee.models.dto.UXIssueReportDto;
@@ -114,6 +115,9 @@ public class AuditController extends BaseApiController {
     
 	@Autowired
 	private UXIssueMessageService ux_issue_service;
+	
+	@Autowired
+	protected PdfReportAssetConfig pdfReportAssetConfig;
     
     /**
      * Retrieves list of audits {@link Audit audits} from last 30 days
@@ -252,7 +256,6 @@ public class AuditController extends BaseApiController {
 		@ApiResponse(responseCode = "500", description = "Internal server error")
 	})
     public @ResponseBody ResponseEntity<Resource> exportExcelReport(HttpServletRequest request,
-    									@Parameter(description = "ID of the audit to export", required = true)
     									@PathVariable(value="audit_id", required=true) long audit_id)
     											throws UnknownAccountException,
 														FileNotFoundException, IOException {
@@ -428,7 +431,7 @@ public class AuditController extends BaseApiController {
 		
 		GeneratePDFReport pdf_report = null;
 		try {
-			pdf_report = new GeneratePDFReport(page.getUrl());
+			pdf_report = new GeneratePDFReport(page.getUrl(), pdfReportAssetConfig);
 		
 			pdf_report.writeDocument(needs_improvement, 
 									page.getUrl(), 

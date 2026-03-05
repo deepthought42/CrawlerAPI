@@ -30,7 +30,6 @@ import com.looksee.models.Account;
 import com.looksee.models.ElementState;
 import com.looksee.models.rules.Rule;
 import com.looksee.models.rules.RuleType;
-import com.looksee.services.AccountService;
 import com.looksee.services.ElementStateService;
 import com.looksee.services.RuleService;
 
@@ -53,9 +52,6 @@ public class ElementController extends BaseApiController {
 
 	@Autowired
 	private ElementStateService element_service;
-
-	@Autowired
-	private AccountService account_service;
 
 	@Autowired
 	private RuleService rule_service;

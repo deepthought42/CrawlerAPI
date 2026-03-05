@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.InsufficientSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.message.CompetitorMessage;
 import com.looksee.services.AccountService;

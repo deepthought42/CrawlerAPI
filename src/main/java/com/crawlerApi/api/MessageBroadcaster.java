@@ -15,8 +15,8 @@ import com.looksee.models.Test;
 import com.looksee.models.TestRecord;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
+import com.looksee.models.audit.AuditStats;
+import com.looksee.models.audit.UXIssueMessage;
 import com.looksee.models.dto.DomainDto;
 import com.looksee.models.dto.TestCreatedDto;
 import com.looksee.models.dto.TestDto;
@@ -89,9 +89,12 @@ public class MessageBroadcaster {
 	}
 
     /**
-     * Message emitter that sends {@link Form} to all registered clients
+     * Message emitter that sends Form to all registered clients
      * 
-     * @param test {@link Test} to be emitted to clients
+     * NOTE: Form type needs to be resolved - proper import required
+     * 
+     * @param form Form to be emitted to clients
+     * @param domain_id Domain ID
      * @throws JsonProcessingException 
      */
 	public static void broadcastDiscoveredForm(Form form, long domain_id) throws JsonProcessingException {	
@@ -206,24 +209,6 @@ public class MessageBroadcaster {
 	}
 
 	public static void sendDomainAdded(String user_id, Domain domain) throws JsonProcessingException {
-		/*
-		DomainDto domain_dto = new DomainDto( domain.getId(),
-											  domain.getUrl(),
-											  domain.getPages().size(),
-											  0,
-											  0,
-											  0.0,
-											  0,
-											  0.0,
-											  0,
-											  0.0,
-											  0,
-											  0.0,
-											  false,
-											  0.0,
-											  "Domain successfully created",
-											  ExecutionStatus.COMPLETE);
-		*/
 		DomainDto domain_dto = new DomainDto( domain.getId(), domain.getUrl(), 0.01);
 
 		
@@ -254,7 +239,7 @@ public class MessageBroadcaster {
 
 		try {
 			String audit_record_json = mapper.writeValueAsString(issue);
-			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);		
+			pusher.trigger(page_id+"", "ux-issue-added", audit_record_json);
 		} catch (JsonProcessingException e) {
 			log.error("Failed to broadcast UX issue message for page {}", page_id, e);
 		}

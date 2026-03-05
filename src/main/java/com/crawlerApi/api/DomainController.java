@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
@@ -43,11 +44,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.crawlerApi.config.PdfReportAssetConfig;
 import com.crawlerApi.generators.report.GeneratePDFReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.gcp.PubSubUrlMessagePublisherImpl;
@@ -59,10 +60,11 @@ import com.looksee.models.PageState;
 import com.looksee.models.TestUser;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.competitiveanalysis.Competitor;
 import com.looksee.models.competitiveanalysis.brand.Brand;
 import com.looksee.models.designsystem.DesignSystem;
@@ -104,6 +106,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+
 /**
  * API endpoints for interacting with {@link Domain} data
  */
@@ -139,6 +142,9 @@ public class DomainController extends BaseApiController {
 	
 	@Autowired
 	private PubSubUrlMessagePublisherImpl url_topic;
+	
+	@Autowired
+	private PdfReportAssetConfig pdfReportAssetConfig;
 
 
 	/**
@@ -687,7 +693,7 @@ public class DomainController extends BaseApiController {
 			@PathVariable(value = "domain_id", required = true) long domain_id,
 			@PathVariable(value = "user_id", required = true) long user_id)
 			throws UnknownAccountException, MalformedURLException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -812,11 +818,10 @@ public class DomainController extends BaseApiController {
 
 		DomainAuditRecord domain_audit = (DomainAuditRecord)domain_audit_opt.get();
 		
-		List<UXIssueReportDto> ux_issues = new ArrayList<>();
 		Set<PageAuditRecord> page_audits = audit_record_service.getAllPageAudits(domain_audit.getId());
-		URL sanitized_domain_url = new URL(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false));
+		URL sanitized_domain_url = new URI(BrowserUtils.sanitizeUrl(domain_opt.get().getUrl(), false)).toURL();
 		
-		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl());
+		GeneratePDFReport pdf_report = new GeneratePDFReport(domain.getUrl(), pdfReportAssetConfig);
 		
 		Set<Audit> audits = new HashSet<Audit>();
 		for(AuditRecord page_audit : page_audits) {
@@ -918,7 +923,7 @@ public class DomainController extends BaseApiController {
 	public @ResponseBody void delete(HttpServletRequest request,
 			@PathVariable(value = "domain_id") long domain_id,
 			@PathVariable(value = "user_id") long user_id) throws UnknownAccountException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		domain_service.deleteTestUser(domain_id, user_id);
 	}
@@ -942,7 +947,7 @@ public class DomainController extends BaseApiController {
 	public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
 			@PathVariable(value = "domain_id", required = true) long domain_id)
 			throws UnknownAccountException, MalformedURLException {
-		Account account = getAuthenticatedAccount(request.getUserPrincipal());
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		return domain_service.getTestUsers(domain_id);
 	}
@@ -977,7 +982,7 @@ public class DomainController extends BaseApiController {
 
 		Domain domain = domain_opt.get();
 		String lowercase_url = domain.getUrl().toLowerCase();
-		URL sanitized_url = new URL(BrowserUtils.sanitizeUserUrl(lowercase_url));
+		URL sanitized_url = new URI(BrowserUtils.sanitizeUserUrl(lowercase_url)).toURL();
 		
 		// create new audit record
 		Set<AuditName> audit_list = getAuditList();
@@ -992,7 +997,7 @@ public class DomainController extends BaseApiController {
 	    JsonMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
 		DomainAuditUrlMessage url_msg = new DomainAuditUrlMessage(account.getId(),
 																	audit_record.getId(),
-																	sanitized_url.toString(), 
+																	sanitized_url.toString(),
 																	BrowserType.CHROME);
 		
 		String url_msg_str = mapper.writeValueAsString(url_msg);
@@ -1039,13 +1044,7 @@ public class DomainController extends BaseApiController {
 	})
 	public DomainAuditRecord getMostRecentDomainAuditRecord(HttpServletRequest request,
 			@PathVariable(value = "host", required = true) String host) throws UnknownAccountException {
-		Principal principal = request.getUserPrincipal();
-		String id = principal.getName();
-		Account acct = account_service.findByUserId(id);
-
-		if (acct == null) {
-			throw new UnknownAccountException();
-		}
+		getAuthenticatedAccount(request.getUserPrincipal());
 
 		log.info("finding all page insights :: " + host);
 		

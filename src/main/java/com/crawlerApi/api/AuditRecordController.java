@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -28,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.security.SecurityConfig;
-import com.looksee.audits.performance.PerformanceInsight;
 import com.looksee.browsing.Crawler;
 import com.looksee.exceptions.MissingSubscriptionException;
 import com.looksee.exceptions.UnknownAccountException;
@@ -40,14 +38,16 @@ import com.looksee.models.SimplePage;
 import com.looksee.models.audit.Audit;
 import com.looksee.models.audit.AuditRecord;
 import com.looksee.models.audit.AuditScore;
+import com.looksee.models.audit.AuditStats;
 import com.looksee.models.audit.DomainAuditRecord;
+import com.looksee.models.audit.DomainAuditStats;
 import com.looksee.models.audit.ElementIssueTwoWayMapping;
 import com.looksee.models.audit.PageAuditRecord;
-import com.looksee.models.audit.messages.UXIssueMessage;
-import com.looksee.models.audit.stats.AuditStats;
-import com.looksee.models.audit.stats.DomainAuditStats;
-import com.looksee.models.audit.stats.PageAuditStats;
+import com.looksee.models.audit.PageAuditStats;
+import com.looksee.models.audit.UXIssueMessage;
+import com.looksee.models.audit.performance.PerformanceInsight;
 import com.looksee.models.dto.AuditRecordDto;
+import com.looksee.models.dto.User;
 import com.looksee.models.enums.AuditCategory;
 import com.looksee.models.enums.AuditName;
 import com.looksee.models.enums.AuditSubcategory;
@@ -229,15 +229,27 @@ public class AuditRecordController extends BaseApiController {
      * @return {@link Audit audit} with given ID
      * @throws MalformedURLException {@link MalformedURLException}
      */
+    @Operation(
+        summary = "Get page audit elements",
+        description = "Retrieve element issues and mappings for a specific page audit record"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved page audit elements",
+            content = @Content(schema = @Schema(implementation = ElementIssueTwoWayMapping.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Authentication required"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Audit record not found"
+        )
+    })
     @RequestMapping(method= RequestMethod.GET, path="/{audit_record_id}/elements")
-	@Operation(summary = "Get page audit elements", description = "Get the elements for the given audit record")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved page audit elements", content = @Content(schema = @Schema(type = "object", implementation = ElementIssueTwoWayMapping.class))),
-		@ApiResponse(responseCode = "401", description = "Authentication required"),
-		@ApiResponse(responseCode = "404", description = "Audit record not found"),
-		@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
-    public @ResponseBody ElementIssueTwoWayMapping getPageAuditElements(
+    public @ResponseBody com.looksee.models.audit.ElementIssueTwoWayMapping getPageAuditElements(
 														HttpServletRequest request,
 														@PathVariable("audit_record_id") long audit_record_id
 	) throws MalformedURLException {
@@ -459,7 +471,6 @@ public class AuditRecordController extends BaseApiController {
 														typography_score,
 														whitespace_score,
 														branding_score,
-														-1,
 														execution_status,
 														link_score);
 					return audit_stats;

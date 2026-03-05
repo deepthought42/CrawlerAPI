@@ -1,5 +1,6 @@
 package com.crawlerApi.api;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,10 +8,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +19,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.crawlerApi.analytics.SegmentAnalyticsHelper;
 import com.looksee.models.Account;
-import com.looksee.models.ActionOLD;
 import com.looksee.models.Domain;
 import com.looksee.models.Element;
 import com.looksee.models.PageState;
 import com.looksee.models.Test;
+import com.looksee.models.dto.User;
 import com.looksee.models.enums.BrowserType;
-import com.looksee.models.repository.AccountRepository;
 import com.looksee.models.repository.TestRepository;
 import com.looksee.services.AccountService;
 import com.looksee.services.DomainService;
@@ -47,11 +44,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping(path = "v1/ide-test-export", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "IDE Test Export V1", description = "IDE Test Export API")
 public class IdeTestExportController extends BaseApiController {
-	@SuppressWarnings("unused")
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-	@Autowired
-	private AccountRepository account_repo;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -64,7 +56,7 @@ public class IdeTestExportController extends BaseApiController {
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link ActionOLD}s
+     *  {@link Element}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -88,7 +80,7 @@ public class IdeTestExportController extends BaseApiController {
 
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link Element}s and {@link ActionOLD}s
+     *  {@link Element}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -112,7 +104,7 @@ public class IdeTestExportController extends BaseApiController {
     	
     	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"), false);
 		formatted_url = BrowserUtils.sanitizeUrl(formatted_url, false);
-		URL domain_url = new URL(formatted_url);
+		URL domain_url = new URI(formatted_url).toURL();
 	
 		
 		if(test_json.has("key")){
@@ -138,14 +130,6 @@ public class IdeTestExportController extends BaseApiController {
 		
 		account_service.addDomainToAccount(acct, domain);
 
-		/*
-		Message<JSONObject> message = new Message<JSONObject>(acct.getUserId(), test_json, options, domain);
-
-		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());
-
-		testCreationActor.tell(message, null);
-*/
 		return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

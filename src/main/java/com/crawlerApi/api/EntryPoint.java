@@ -33,7 +33,6 @@ import io.swagger.v3.oas.annotations.servers.Server;
 })
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 @EnableConfigurationProperties(Auth0Config.class)
-//@ConfigurationProperties("spring.cloud.gcp.vision")
 @EntityScan(basePackages = { "com.crawlerApi.models"} )
 @OpenAPIDefinition(
     info = @Info(

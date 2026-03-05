@@ -118,6 +118,5 @@ jobs:
           name: Release v${{ env.VERSION }}
           body_path: CHANGELOG.md
           files: looksee-api-${{ env.VERSION }}.jar
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

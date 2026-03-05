@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.joda.time.LocalDate;
 
+import com.crawlerApi.config.PdfReportAssetConfig;
 import com.looksee.models.ColorData;
 import com.looksee.models.enums.AuditSubcategory;
 import com.looksee.models.enums.WCAGComplianceLevel;
@@ -31,6 +32,7 @@ public class GeneratePDFReport {
 	private PDFont light_font;
 	private PDFont medium_font;
 	private PDFont bold_font;
+	private PdfReportAssetConfig assetConfig;
 	
 	private final int HEADER_XL = 56;
 	private final int HEADER_0 = 40;
@@ -45,17 +47,28 @@ public class GeneratePDFReport {
 	private final int LEFT_MARGIN_LG = 120;
 	
 	
+	/**
+	 * Constructor with domain URL only (for backward compatibility)
+	 */
 	public GeneratePDFReport(String domain_url) throws IOException, URISyntaxException {
+		this(domain_url, null);
+	}
+	
+	/**
+	 * Constructor with domain URL and optional asset configuration
+	 */
+	public GeneratePDFReport(String domain_url, PdfReportAssetConfig assetConfig) throws IOException, URISyntaxException {
 		 setDocument(new PDDocument());
 		 setDocumentName(domain_url+"-"+LocalDate.now()+".pdf");
+		 this.assetConfig = assetConfig;
 		 setBaseFont(PDType0Font.load(document, 
-				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProBlack.ttf")));
+				 getClass().getResourceAsStream("/fonts/cera-pro/fonts_cera-pro_CeraProBlack.ttf")));
 		 setLightFont(PDType0Font.load(document, 
-				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProLight.ttf")));
+				 getClass().getResourceAsStream("/fonts/cera-pro/fonts_cera-pro_CeraProLight.ttf")));
 		 setMediumFont(PDType0Font.load(document, 
-				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProMedium.ttf")));
+				 getClass().getResourceAsStream("/fonts/cera-pro/fonts_cera-pro_CeraProMedium.ttf")));
 		 setBoldFont(PDType0Font.load(document, 
-				 getClass().getResourceAsStream("/fonts/cera-pro/CeraProBold.ttf")));
+				 getClass().getResourceAsStream("/fonts/cera-pro/fonts_cera-pro_CeraProBold.ttf")));
 	}
 	
 	/**
@@ -325,8 +338,8 @@ public class GeneratePDFReport {
 		addPage(page);
 		PDPageContentStream content_stream = new PDPageContentStream(document, page);
 	
-		URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
-		addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
+		//URL background_url =new URL("https://storage.googleapis.com/look-see-inc-assets/report-images/backgrounds/background-path-pattern-light.png");
+		//addImageToPage(document, 0, 0, 1.0f, background_url, content_stream);
 		
 		content_stream.setNonStrokingColor(Color.WHITE);
 		content_stream.addRect(LEFT_MARGIN_SM, 80, 450, 640);
@@ -354,8 +367,8 @@ public class GeneratePDFReport {
 		
 		//add emoji icons and scoring
 		//poor score
-		URL needs_work_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
-		addImageToPage(document, LEFT_MARGIN_LG, 450, 0.3f, needs_work_emoji_url, content_stream);
+		//URL needs_work_emoji_url =new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
+		//addImageToPage(document, LEFT_MARGIN_LG, 450, 0.3f, needs_work_emoji_url, content_stream);
 		
 		content_stream.setFont(getBoldFont(), HEADER_3);
 		content_stream.setNonStrokingColor(new Color(57, 183, 255));
@@ -2808,7 +2821,9 @@ public class GeneratePDFReport {
 		//addImageToPage(document, x, y, 1.0f, score_overview_card, content_stream);
 		
 		URL emoji = getScoreEmojiImage(score);
-		addImageToPage(document, x+40, y+LEFT_MARGIN_LG, 0.4f, emoji, content_stream);
+		if (emoji != null) {
+			addImageToPage(document, x+40, y+LEFT_MARGIN_LG, 0.4f, emoji, content_stream);
+		}
 		
 		content_stream.beginText();
 		content_stream.setNonStrokingColor(Color.BLACK);
@@ -2905,20 +2920,32 @@ public class GeneratePDFReport {
 	}
 
 	private URL getScoreEmojiImage(int overall_score) throws MalformedURLException {
+		if (assetConfig == null) {
+			return null;
+		}
+		
+		String urlString = null;
 		if(overall_score >= 80.0) {
-			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Happy-Face-128px.png");
-			//return new URL(HAPPY_FACE_PNG_URL);
-			return new URL("");
+			urlString = assetConfig.getHappyFaceIconUrl();
 		}
 		else if(overall_score >= 60.0 && overall_score < 80.0) {
-			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Average-Face-128px-2.png");
-			//return new URL(AVERAGE_FACE_PNG_URL);
-			return new URL("");
+			urlString = assetConfig.getAverageFaceIconUrl();
 		}
 		else {
-			//return new URL("https://storage.googleapis.com/look-see-inc-assets/icons/C-Sad-Face-128px.png");
-			//return new URL(SAD_FACE_PNG_URL);
-			return new URL("");
+			urlString = assetConfig.getSadFaceIconUrl();
+		}
+		
+		// Return null if URL is not configured or empty
+		if (urlString == null || urlString.trim().isEmpty()) {
+			return null;
+		}
+		
+		try {
+			return new URL(urlString);
+		} catch (MalformedURLException e) {
+			// Log and return null if URL is malformed
+			System.err.println("Warning: Invalid emoji URL configured: " + urlString);
+			return null;
 		}
 	}
 

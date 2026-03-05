@@ -1,6 +1,7 @@
 package com.crawlerApi.security;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
@@ -67,9 +70,27 @@ public class SecurityConfig {
         
         OAuth2TokenValidator<Jwt> withIssuer = new JwtIssuerValidator(auth0Config.getAuth0Issuer());
         OAuth2TokenValidator<Jwt> withTimestamp = new JwtTimestampValidator();
-        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, withTimestamp);
-        
-        jwtDecoder.setJwtValidator(withAudience);
+        OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
+            String expectedAudience = auth0Config.getApiAudience();
+            if (expectedAudience == null || expectedAudience.isBlank()) {
+                expectedAudience = auth0Config.getAudience();
+            }
+            if (expectedAudience == null || expectedAudience.isBlank()) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            List<String> audiences = jwt.getAudience();
+            if (audiences != null && audiences.contains(expectedAudience)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            OAuth2Error error = new OAuth2Error("invalid_token", "The required audience is missing", null);
+            return OAuth2TokenValidatorResult.failure(error);
+        };
+
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withTimestamp, audienceValidator);
+
+        jwtDecoder.setJwtValidator(validator);
         
         return jwtDecoder;
     }

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.crawlerApi.security.SecurityConfig;
@@ -282,10 +283,9 @@ public class AuditRecordController extends BaseApiController {
 			return mapping;
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			log.error("Failed to create issue-element mapping for audit record {}", audit_record_id, e);
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to build issue map", e);
 		}
-
-		return null;
 	}
     
     /**
@@ -476,7 +476,7 @@ public class AuditRecordController extends BaseApiController {
 					return audit_stats;
 			}
 			
-			return null;
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unknown audit record type");
 		}
 		else {
 			throw new AuditRecordNotFoundException();

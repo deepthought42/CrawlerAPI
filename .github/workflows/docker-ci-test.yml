@@ -37,8 +37,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create Docker-safe image tag
+        run: |
+          SAFE_TAG=$(echo "${BRANCH_NAME}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's|[^a-z0-9_.-]|-|g' \
+            | sed 's|^[.-]*||; s|[.-]*$||' \
+            | cut -c1-128)
+
+          if [ -z "$SAFE_TAG" ]; then
+            SAFE_TAG="pr-${{ github.event.pull_request.number }}"
+          fi
+
+          echo "IMAGE_TAG=$SAFE_TAG" >> "$GITHUB_ENV"
+          echo "Using Docker tag: $SAFE_TAG"
         
       - name: Build Docker image
         run: |
-          docker build -t deepthought42/looksee-api:${{ env.BRANCH_NAME }} .
-          docker tag deepthought42/looksee-api:${{ env.BRANCH_NAME }} deepthought42/looksee-api:latest
+          docker build -t deepthought42/looksee-api:${{ env.IMAGE_TAG }} .
+          docker tag deepthought42/looksee-api:${{ env.IMAGE_TAG }} deepthought42/looksee-api:latest

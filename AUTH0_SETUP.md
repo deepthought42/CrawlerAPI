@@ -164,4 +164,25 @@ The singleton architecture provides:
 - **Type Safety**: Configuration values are strongly typed
 - **Dependency Injection**: Clean separation of concerns
 - **Easy Testing**: Configuration can be easily mocked or tested
-- **Performance**: No repeated initialization of Auth0 API clients 
+- **Performance**: No repeated initialization of Auth0 API clients
+
+## 12. Integrations configuration
+
+The API exposes an integration layer (Jira, Slack, Github, etc.) that is configurable per account via REST. Integration config is stored per (account, integration type).
+
+### Environment variables / application.properties
+
+- **integrations.encryption.key** (optional): If set to a 16+ character string, integration config is encrypted at rest using AES-GCM. Omit or leave empty to store config as plain JSON.
+- **integrations.product-board.private_key**: Used for Product Board JWT signing (existing).
+- **integrations.\<type\>.\***: Per-integration app-level keys (e.g. `integrations.jira.private_key`, `integrations.slack.webhook_secret`) for signing or API defaults. See `application.properties` for the full list of placeholders.
+
+### API endpoints
+
+- `GET /v1/integrations` – list available integration types (metadata).
+- `GET /v1/integrations/{type}` – metadata + current account config (masked).
+- `GET /v1/integrations/{type}/config` – current account config (for backend use).
+- `PUT /v1/integrations/{type}/config` – create/update config (body: JSON map; validated by provider).
+- `DELETE /v1/integrations/{type}/config` – remove config.
+- `POST /v1/integrations/{type}/test` – test connection using stored config.
+
+All require an authenticated account (JWT). Other microservices can call these endpoints with the user’s JWT to read or update integration config.

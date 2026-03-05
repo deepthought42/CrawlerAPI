@@ -2712,7 +2712,6 @@ public class GeneratePDFReport {
 								AuditSubcategory category
 	) throws IOException {
 		if(AuditSubcategory.COLOR_MANAGEMENT.equals(category)) {
-			System.out.println("Drawing color management box");
 			content_stream.setFont(getMediumFont(), TEXT_SIZE);
 			content_stream.setNonStrokingColor(Color.BLACK);
 			content_stream.newLineAtOffset( 100, 15);

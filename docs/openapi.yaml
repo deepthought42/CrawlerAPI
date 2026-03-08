@@ -712,6 +712,7 @@ paths:
         '400': { description: Invalid config }
         '401': { description: Authentication required }
         '404': { description: Unknown integration type }
+        '405': { description: Slack config is OAuth-only; use /v1/integrations/slack/connect }
     delete:
       tags: [Integrations]
       summary: Delete integration config
@@ -741,6 +742,53 @@ paths:
         '502': { description: Connection failed }
         '401': { description: Authentication required }
         '404': { description: Unknown integration type or no config }
+
+
+  /v1/integrations/slack/connect:
+    get:
+      tags: [Integrations]
+      summary: Start Slack OAuth connect
+      description: Returns a Slack authorization URL for user click-to-connect flow.
+      responses:
+        '200':
+          description: Authorization URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorizationUrl: { type: string }
+        '401': { description: Authentication required }
+        '503': { description: Slack OAuth not configured }
+
+  /v1/integrations/slack/callback:
+    get:
+      tags: [Integrations]
+      summary: Handle Slack OAuth callback
+      description: Exchanges Slack OAuth code for access token and stores account integration config.
+      parameters:
+        - in: query
+          name: code
+          required: true
+          schema: { type: string }
+        - in: query
+          name: state
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Slack connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected: { type: boolean }
+                  workspace: { type: string }
+        '400': { description: Invalid callback payload/state }
+        '401': { description: Authentication required }
+        '502': { description: Slack token exchange failed }
+        '503': { description: Slack OAuth not configured }
 
   /v1/integrations/product-board:
     post:

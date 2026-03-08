@@ -1,5 +1,6 @@
 package com.crawlerApi.api;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,11 +18,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.crawlerApi.integrations.IntegrationFacade;
 import com.crawlerApi.integrations.IntegrationMetadata;
 import com.crawlerApi.integrations.IntegrationWithConfigResponse;
+import com.crawlerApi.integrations.SlackOAuthService;
 import com.looksee.exceptions.UnknownAccountException;
 import com.looksee.models.Account;
 import com.nimbusds.jwt.JWT;
@@ -45,6 +48,9 @@ public class IntegrationsController extends BaseApiController {
 
     @Autowired
     private IntegrationFacade integrationFacade;
+
+    @Autowired
+    private SlackOAuthService slackOAuthService;
 
     @RequestMapping(method = RequestMethod.GET)
     @Operation(summary = "List available integrations", description = "Returns metadata for all available integration types")
@@ -116,6 +122,9 @@ public class IntegrationsController extends BaseApiController {
         if (integrationFacade.getProvider(type).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        if ("slack".equalsIgnoreCase(type)) {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
+        }
         if (!integrationFacade.putConfig(acct.getId(), type, config)) {
             return ResponseEntity.badRequest().build();
         }
@@ -161,6 +170,64 @@ public class IntegrationsController extends BaseApiController {
         return ok ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
     }
 
+
+
+    @RequestMapping(path = "/slack/connect", method = RequestMethod.GET)
+    @Operation(summary = "Start Slack OAuth connect", description = "Returns Slack OAuth authorization URL for click-to-connect user flow")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Authorization URL generated"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "503", description = "Slack OAuth not configured")
+    })
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> startSlackConnect(HttpServletRequest request) throws UnknownAccountException {
+        Account acct = getAuthenticatedAccount(request.getUserPrincipal());
+        try {
+            String url = slackOAuthService.buildAuthorizationUrl(acct.getId());
+            Map<String, String> response = new HashMap<>();
+            response.put("authorizationUrl", url);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException ex) {
+            log.warn("Slack OAuth init failed", ex);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+    }
+
+    @RequestMapping(path = "/slack/callback", method = RequestMethod.GET)
+    @Operation(summary = "Handle Slack OAuth callback", description = "Exchanges Slack OAuth code for access token and stores integration config")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Slack connected"),
+        @ApiResponse(responseCode = "400", description = "Invalid callback payload/state"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "502", description = "Slack token exchange failed"),
+        @ApiResponse(responseCode = "503", description = "Slack OAuth not configured")
+    })
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> handleSlackCallback(
+            HttpServletRequest request,
+            @RequestParam("code") String code,
+            @RequestParam("state") String state) throws UnknownAccountException {
+        Account acct = getAuthenticatedAccount(request.getUserPrincipal());
+        try {
+            Map<String, Object> oauthConfig = slackOAuthService.exchangeCodeForConfig(acct.getId(), code, state);
+            if (!integrationFacade.putConfig(acct.getId(), "slack", oauthConfig)) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("connected", true);
+            response.put("workspace", oauthConfig.getOrDefault("teamName", ""));
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException ex) {
+            String msg = ex.getMessage() == null ? "" : ex.getMessage();
+            if (msg.contains("not configured")) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            }
+            log.warn("Slack OAuth callback failed", ex);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
     @RequestMapping(path = "/product-board", method = RequestMethod.POST)
     @Operation(summary = "Create Product Board integration token", description = "Create a JWT token for Product Board integration (backward compatibility)")
     @ApiResponses(value = {
